@@ -48,31 +48,36 @@
 <style>.cbtn{display:flex;justify-content:space-between;align-items:center;gap:10px;text-align:left;background:#f4f7f9!important;color:#1b232a!important;border:1px solid #c9d3da!important}
 .cbtn small{font:500 12px 'IBM Plex Mono',monospace;color:#5d6b76}.cbtn.exp{background:#fbeceb!important}.cbtn.exp small{color:#b4372f}
 .cped{background:#e0972e!important;color:#1b1206!important}</style>
-<div class="gate" id="sugBox" hidden><form class="gcard" id="sugForm">
-  <div class="eb">Treinamento FC 3D</div><h1>Sugestão ou feedback</h1>
-  <p>Conte o que achou, o que ficou confuso ou o que podemos melhorar. A FC lê todas.</p>
-  <label>Tipo<select name="tipo" id="sugTipo"><option>Sugestão de melhoria</option><option>Algo não funcionou</option><option>Dúvida</option><option>Elogio</option></select></label>
-  <label>Sua mensagem<textarea name="txt" id="sugTxt" required minlength="3" maxlength="1000" rows="5" style="font:inherit;padding:10px;border:1px solid #c9d3da;border-radius:8px"></textarea></label>
-  <button type="submit">Enviar</button><button type="button" id="sugFechar" style="background:#fff;color:#1d3f57;border:1px solid #c9d3da">Cancelar</button>
+<div class="gate" id="sugBox" hidden><form class="gcard" id="sugForm" style="width:min(520px,100%);max-height:92vh;overflow:auto">
+  <div class="eb">Treinamento FC 3D</div><h1>Dúvidas e sugestões</h1>
+  <div id="sugResp" style="display:flex;flex-direction:column;gap:8px;font-size:14px"></div>
+  <label>Tipo<select name="tipo" id="sugTipo"><option>Dúvida</option><option>Sugestão de melhoria</option><option>Algo não funcionou</option><option>Elogio</option></select></label>
+  <label>Sua mensagem<textarea name="txt" id="sugTxt" required minlength="3" maxlength="1000" rows="4" style="font:inherit;padding:10px;border:1px solid #c9d3da;border-radius:8px"></textarea></label>
+  <button type="submit">Enviar para a FC</button><button type="button" id="sugFechar" style="background:#fff;color:#1d3f57;border:1px solid #c9d3da">← Voltar ao treinamento</button><a id="sugPainel" href="painel.html" hidden style="text-align:center;font:600 14px Barlow,sans-serif;color:#1f6f9a">← Voltar ao Painel da Matriz</a>
   <p class="gmsg" id="sugMsg" role="status" style="color:#2f9a55!important"></p>
-  <div id="sugResp" hidden style="border-top:1px solid #dfe5ea;padding-top:10px;font-size:14px"></div>
  </form></div>
-<div class="ubar" id="ubar" hidden><span id="uname"></span><button type="button" id="quemTag" hidden title="Trocar quem está estudando"></button><button type="button" id="sugBtn" title="Enviar sugestão ou feedback para a FC">💬 Sugestão</button><a href="guia/" target="_blank" rel="noopener" style="background:#e0972e;border-color:#e0972e;color:#1b1206;font-weight:600">Guia do aluno</a><a id="upainel" href="painel.html" hidden>Painel da matriz</a><button type="button" onclick="sair()">Sair</button></div>
+<div class="gate" id="imgBox" hidden style="background:rgba(10,15,20,.85);z-index:120" onclick="this.hidden=true"><img id="imgBig" alt="Imagem enviada pela FC" style="max-width:96vw;max-height:92vh;border-radius:8px;background:#fff"></div>
+<div class="ubar" id="ubar" hidden><span id="uname"></span><button type="button" id="quemTag" hidden title="Trocar quem está estudando"></button><button type="button" id="sugBtn" title="Dúvidas e sugestões: fale com a FC">💬 Dúvidas e sugestões</button><a href="guia/" target="_blank" rel="noopener" style="background:#e0972e;border-color:#e0972e;color:#1b1206;font-weight:600">Guia do aluno</a><a id="upainel" href="painel.html" hidden>Painel da matriz</a><button type="button" onclick="sair()">Sair</button></div>
 <div id="appLoad" hidden style="padding:40px 20px;text-align:center;font:500 16px system-ui;color:#5d6b76">Carregando o treinamento…</div><div id="appRoot"></div>
 <script>
 function sugInit(){const box=document.getElementById('sugBox'),f=document.getElementById('sugForm'),m=document.getElementById('sugMsg');
-  const esc=v=>String(v||'').replace(/</g,'&lt;'),btn=document.getElementById('sugBtn'),rb=document.getElementById('sugResp');let RES=[];
-  const load=async()=>{const {data}=await sb.from('trein_eventos').select('detalhe,criado_em').eq('tipo','resposta').order('criado_em',{ascending:false});RES=data||[];
-    let seen=0;try{seen=+(localStorage.getItem('treinFC-resp-vistas')||0);}catch(e){}const novas=RES.filter(r=>Date.parse(r.criado_em)>seen).length;
-    btn.textContent=novas?`💬 Sugestão · ${novas} resposta${novas>1?'s':''} da FC`:'💬 Sugestão';btn.style.background=novas?'#e0972e':'';btn.style.color=novas?'#1b1206':'';};
-  load();setInterval(load,120000);
-  btn.onclick=()=>{m.textContent='';box.hidden=false;document.getElementById('sugTxt').focus();
-    rb.hidden=!RES.length;rb.innerHTML='<b>Respostas da FC</b>'+RES.map(r=>`<div style="margin-top:8px;padding:6px 9px;border-left:3px solid #0e6b62;background:#eef7f5;border-radius:4px"><small style="color:#5c6d68">${new Date(r.criado_em).toLocaleString('pt-BR')}</small><br>${esc((r.detalhe||{}).txt)}</div>`).join('');
-    try{localStorage.setItem('treinFC-resp-vistas',String(Date.now()));}catch(e){}load();};
+  const esc=v=>String(v||'').replace(/</g,'&lt;'),btn=document.getElementById('sugBtn'),rb=document.getElementById('sugResp');let MSG=[];
+  const meu=d=>window.ALUNO_CID?(d.cid===window.ALUNO_CID||(!d.cid&&d.quem===window.ALUNO_NOME)):true;
+  const vk=()=>'treinFC-resp-vistas-'+(window.ALUNO_CID||'x');
+  const load=async()=>{const {data:{session}}=await sb.auth.getSession();if(!session)return;
+    const [a,b]=await Promise.all([sb.from('trein_eventos').select('detalhe,criado_em').eq('user_id',session.user.id).eq('tipo','sugestao'),sb.from('trein_eventos').select('detalhe,criado_em').eq('tipo','resposta')]);
+    const mine=(a.data||[]).filter(r=>meu(r.detalhe||{})),refs=new Set(mine.map(r=>Date.parse(r.criado_em)));
+    const res=(b.data||[]).filter(r=>{const d=r.detalhe||{};return refs.has(Date.parse(d.ref))||(d.quem&&d.quem===window.ALUNO_NOME);});
+    MSG=[...mine.map(r=>({eu:1,t:r.criado_em,d:r.detalhe||{}})),...res.map(r=>({eu:0,t:r.criado_em,d:r.detalhe||{}}))].sort((x,y)=>Date.parse(x.t)-Date.parse(y.t));
+    let seen=0;try{seen=+(localStorage.getItem(vk())||0);}catch(e){}const novas=MSG.filter(x=>!x.eu&&Date.parse(x.t)>seen).length;
+    btn.textContent=novas?`💬 Dúvidas · ${novas} resposta${novas>1?'s':''} da FC`:'💬 Dúvidas e sugestões';btn.style.background=novas?'#e0972e':'';btn.style.color=novas?'#1b1206':'';};
+  const draw=()=>{rb.innerHTML=MSG.length?MSG.map(x=>`<div style="align-self:${x.eu?'flex-end':'flex-start'};max-width:88%;padding:7px 10px;border-radius:10px;background:${x.eu?'#e1eef5':'#eef7f5'};border-left:${x.eu?'0':'3px solid #0e6b62'}"><small style="color:#5c6d68">${x.eu?'Você':'FC Consultoria'} · ${new Date(x.t).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}${x.eu&&x.d.tipo?' · '+esc(x.d.tipo):''}</small><br>${esc(x.d.txt)}${x.d.img?`<br><img src="${x.d.img}" alt="Imagem da FC" style="max-width:100%;margin-top:6px;border-radius:6px;cursor:zoom-in" onclick="document.getElementById('imgBig').src=this.src;document.getElementById('imgBox').hidden=false">`:''}</div>`).join(''):'<p style="margin:0;color:#5d6b76">Mande sua dúvida ou sugestão. A resposta da FC aparece aqui.</p>';rb.scrollTop=rb.scrollHeight;};
+  load();setInterval(load,120000);window.SUG_LOAD=load;
+  btn.onclick=async()=>{m.textContent='';await load();draw();box.hidden=false;document.getElementById('sugTxt').focus();try{localStorage.setItem(vk(),String(Date.now()));}catch(e){}load();};
   document.getElementById('sugFechar').onclick=()=>{box.hidden=true;};
   f.onsubmit=async e=>{e.preventDefault();const txt=document.getElementById('sugTxt').value.trim();if(txt.length<3)return;
     const tipo=document.getElementById('sugTipo').value;if(window.TRK){TRK('sugestao',{tipo,txt,t:(typeof S!=='undefined'?S.typo:'')});if(window.TRKFLUSH)await TRKFLUSH();}
-    m.textContent='Obrigado! Sua mensagem foi enviada para a FC.';document.getElementById('sugTxt').value='';setTimeout(()=>{box.hidden=true;},1600);};}
+    m.textContent='Enviado! A resposta da FC aparece aqui e no botão “Dúvidas”.';document.getElementById('sugTxt').value='';await load();draw();};}
 const HOJE=()=>new Date(Date.now()-4*3600e3).toISOString().slice(0,10),DOW=()=>new Date(Date.now()-4*3600e3).getUTCDay();
 const fmtR=ms=>{const h=Math.floor(ms/3600e3),m=Math.floor(ms%3600e3/60e3);return h>=1?h+' h '+String(m).padStart(2,'0'):m+' min';};
 async function estadoEmpresa(uid){
@@ -159,7 +164,7 @@ function vigiaPrazo(uid,perfil){setInterval(()=>{if(window.ALUNO_CID&&window.COL
     try{const {data}=await sb.from('trein_eventos').select('detalhe').eq('tipo','chave_app').limit(1);
       const kb=Uint8Array.from(atob(data[0].detalhe.k),c=>c.charCodeAt(0));
       const key=await crypto.subtle.importKey('raw',kb,'AES-GCM',false,['decrypt']);
-      const buf=new Uint8Array(await (await fetch('app.enc?v=1791928932',{cache:'no-cache'})).arrayBuffer());
+      const buf=new Uint8Array(await (await fetch('app.enc?v=1791929460',{cache:'no-cache'})).arrayBuffer());
       const plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:buf.slice(0,12)},key,buf.slice(12));
       const html=await new Response(new Blob([plain]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
       const root=document.getElementById('appRoot');root.innerHTML=html;
@@ -177,7 +182,7 @@ function vigiaPrazo(uid,perfil){setInterval(()=>{if(window.ALUNO_CID&&window.COL
     document.getElementById('ubar').hidden=false;
     document.getElementById('uname').textContent=(perfil.nome||perfil.login)+(perfil.papel==='admin'?' · matriz':'');
     sugInit();
-    document.getElementById('upainel').hidden=perfil.papel!=='admin';
+    document.getElementById('upainel').hidden=perfil.papel!=='admin';document.getElementById('sugPainel').hidden=perfil.papel!=='admin';
     fila.push({user_id:uid,tipo:'login',tipologia:(typeof S!=='undefined'?S.typo:null)||null,detalhe:window.ALUNO_NOME?{quem:window.ALUNO_NOME,cid:window.ALUNO_CID||null}:{}});
     TRK('tipologia',{t:(typeof S!=='undefined'?S.typo:null)||''});
     try{PROG={};localStorage.removeItem('treinFC-prog');if(typeof LV!=='undefined'){for(const k in LV)delete LV[k];}localStorage.removeItem('treinFC-lv');}catch(e){}
