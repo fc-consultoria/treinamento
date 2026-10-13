@@ -51,7 +51,7 @@ td{padding:6px 8px;border-bottom:1px solid #eef1f3}td.n{font-family:'IBM Plex Mo
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="auth.js"></script>
 <script>
-const TIPOS={jcr200:'Suprema JCR 200',jcr200a:'Suprema JCR 200A',jcr300:'Suprema JCR 300',jcr205:'Suprema JCR 205',pcr200:'Suprema PCR 200',pvz300:'Suprema PVZ 300',pgr100:'Suprema PGR 100',max800:'Suprema MAX 800',gjc2f:'Gold JC-2F',gpc3fvz:'Gold PC3F-VZ',gpc2fpe:'Gold PC-2FPE'};
+const TIPOS={jcr200:'Suprema JCR 200',jcr200a:'Suprema JCR 200A',jcr300:'Suprema JCR 300',jcr205:'Suprema JCR 205',pcr200:'Suprema PCR 200',pvz300:'Suprema PVZ 300',pgr100:'Suprema PGR 100',max800:'Suprema MAX 800',gjc2f:'Gold JC-2F',gpc3fvz:'Gold PC3F-VZ',gpc2fpe:'Gold PC-2FPE',gjc4f:'Gold JC-4F',gjc4fs:'Gold JC-4FS',gpc2f:'Gold PC-2F',gpc2fm:'Gold PC-2F MAC',gmax:'Gold MAX'};
 const NT=Object.keys(TIPOS).length,esc=v=>String(v||'').replace(/&/g,'&amp;').replace(/</g,'&lt;');
 const fD=d=>new Date(d).toLocaleDateString('pt-BR'),fDH=d=>new Date(d).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
 const fH=s=>{const m=Math.round(s/60);return m<60?m+' min':Math.floor(m/60)+' h '+String(m%60).padStart(2,'0');};
@@ -75,13 +75,13 @@ gateUI(async({session,perfil})=>{
       if(e.tipo==='colab_inicio'&&!ini)ini=e.criado_em;if(e.tipologia&&TIPOS[e.tipologia]&&e.tipo!=='login')tip.add(e.tipologia);
       if(e.tipo==='perfil')per.add(d.c);if(e.tipo==='corte')cor.add((d.t||'')+d.k);
       if(e.tipo==='teste'){const pct=d.pct!=null?d.pct:Math.round((d.tot||0)/(((d.tot||0)+(d.err||0))||1)*100),st=d.stars!=null?d.stars:(pct>=90?3:pct>=70?2:1);
-        const m=mont[d.t]||(mont[d.t]={n:0,best:null,err:0});m.n++;m.err+=d.err||0;if(!m.best||st>m.best.st||(st===m.best.st&&pct>m.best.pct)||(st===m.best.st&&pct===m.best.pct&&d.ms<m.best.ms))m.best={st,pct,ms:d.ms,nivel:d.nivel};}
+        const m=mont[d.t]||(mont[d.t]={n:0,best:null,err:0,lv:0});m.n++;{const r={mont:1,desm:2,esp:3}[d.nivel]||1;if(r>m.lv&&(r===1?pct>=70:st>=1))m.lv=r;}m.err+=d.err||0;if(!m.best||st>m.best.st||(st===m.best.st&&pct>m.best.pct)||(st===m.best.st&&pct===m.best.pct&&d.ms<m.best.ms))m.best={st,pct,ms:d.ms,nivel:d.nivel};}
       if(e.tipo==='wvetro'){wv.push(d);(d.erros||[]).forEach(k=>errW[k]=(errW[k]||0)+1);}if(e.tipo==='cem'){cm.push(d);(d.erros||[]).forEach(k=>errC[k]=(errC[k]||0)+1);}});
     const best=a=>a.slice().sort((p,q)=>(q.stars||0)-(p.stars||0)||q.pct-p.pct||(p.ms||0)-(q.ms||0))[0];
     const bW=best(wv),bC=best(cm),allP=[...Object.values(mont).map(m=>m.best.pct),...wv.map(d=>d.pct),...cm.map(d=>d.pct)];
     H+=seg;ND+=Object.values(mont).reduce((s,m)=>s+m.n,0)+wv.length+cm.length;allP.forEach(p=>{SP+=p;SN++;});
     const fortes=[],melhorar=[];
-    Object.entries(mont).forEach(([t,m])=>{if(m.best.st===3)fortes.push(`Montagem ${TIPOS[t]||t}: 3 estrelas (${m.best.pct}%)`);else if(m.best.pct<70)melhorar.push(`Montagem ${TIPOS[t]||t}: melhor resultado ${m.best.pct}%`);});
+    Object.entries(mont).forEach(([t,m])=>{if(m.lv===3)fortes.push(`Nível 3 (Especialista) na ${TIPOS[t]||t}`);if(m.best.st===3)fortes.push(`Montagem ${TIPOS[t]||t}: 3 estrelas (${m.best.pct}%)`);else if(m.best.pct<70)melhorar.push(`Montagem ${TIPOS[t]||t}: melhor resultado ${m.best.pct}%`);});
     if(bW&&SZ.wv){if(bW.pct>=85)fortes.push(`Lançamento no WVetro: ${bW.pct}%`);else melhorar.push(`Lançamento no WVetro: melhor resultado ${bW.pct}%`);}
     if(bC&&SZ.cem){if(bC.pct>=85)fortes.push(`Lançamento no CEM: ${bC.pct}%`);else melhorar.push(`Lançamento no CEM: melhor resultado ${bC.pct}%`);}
     const top=(o,p)=>Object.entries(o).sort((a,b)=>b[1]-a[1]).slice(0,4).forEach(([k,n])=>melhorar.push(`${p}: errou “${k}” ${n}×`));if(SZ.wv)top(errW,'WVetro');if(SZ.cem)top(errC,'CEM');
@@ -90,7 +90,7 @@ gateUI(async({session,perfil})=>{
     if(!Object.keys(mont).length)melhorar.push('Ainda não fez o desafio Monte a esquadria');if(SZ.wv&&!wv.length)melhorar.push('Ainda não fez o desafio WVetro');if(SZ.cem&&!cm.length)melhorar.push('Ainda não fez o desafio CEM');
     const fim=ini?Date.parse(ini)+(x.horas||72)*3600e3:null;
     const sit=!ini?'ainda não começou':fim<Date.now()?`prazo de ${x.horas||72} h encerrado em ${fDH(fim)}`:`em andamento · prazo até ${fDH(fim)}`;
-    const rows=Object.entries(mont).map(([t,m])=>`<tr><td>Monte a esquadria · ${esc(TIPOS[t]||t)}</td><td>${stars(m.best.st)}</td><td class="n">${m.best.pct}%</td><td class="n">${fT(m.best.ms)}</td><td class="n">${m.n}</td></tr>`)
+    const rows=Object.entries(mont).map(([t,m])=>`<tr><td>Monte a esquadria · ${esc(TIPOS[t]||t)}${m.lv?` <span class="note">· chegou ao Nível ${m.lv}</span>`:''}</td><td>${stars(m.best.st)}</td><td class="n">${m.best.pct}%</td><td class="n">${fT(m.best.ms)}</td><td class="n">${m.n}</td></tr>`)
       .concat(bW&&SZ.wv?[`<tr><td>Lançamento no WVetro</td><td>${stars(bW.stars)}</td><td class="n">${bW.pct}%</td><td class="n">${fT(bW.ms)}</td><td class="n">${wv.length}</td></tr>`]:[])
       .concat(bC&&SZ.cem?[`<tr><td>Lançamento no CEM</td><td>${stars(bC.stars)}</td><td class="n">${bC.pct}%</td><td class="n">${fT(bC.ms)}</td><td class="n">${cm.length}</td></tr>`]:[]).join('');
     out.push(`<section class="cb"><div class="ch"><h2>${esc(x.nome)}${x.removido?' <span class="note">(removido)</span>':''}</h2><span class="note">${sit}</span></div>

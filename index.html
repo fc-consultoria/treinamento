@@ -132,7 +132,7 @@ function vigiaPrazo(uid,perfil){setInterval(()=>{if(window.ALUNO_FIM&&Date.now()
     try{const {data}=await sb.from('trein_eventos').select('detalhe').eq('tipo','chave_app').limit(1);
       const kb=Uint8Array.from(atob(data[0].detalhe.k),c=>c.charCodeAt(0));
       const key=await crypto.subtle.importKey('raw',kb,'AES-GCM',false,['decrypt']);
-      const buf=new Uint8Array(await (await fetch('app.enc?v=1791918565',{cache:'no-cache'})).arrayBuffer());
+      const buf=new Uint8Array(await (await fetch('app.enc?v=1791918753',{cache:'no-cache'})).arrayBuffer());
       const plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:buf.slice(0,12)},key,buf.slice(12));
       const html=await new Response(new Blob([plain]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
       const root=document.getElementById('appRoot');root.innerHTML=html;
@@ -157,7 +157,7 @@ function vigiaPrazo(uid,perfil){setInterval(()=>{if(window.ALUNO_FIM&&Date.now()
     sb.from('trein_eventos').select('detalhe').eq('user_id',uid).eq('tipo','teste').then(({data})=>{
       if(!data||typeof mergeProg!=='function')return;
       mergeProg(data.map(r=>{const x=r.detalhe||{},pct=x.pct!=null?x.pct:Math.round((x.tot||0)/((x.tot||0)+(x.err||0)||1)*100);
-        return {t:x.t,pct,stars:x.stars!=null?x.stars:(pct>=90?3:pct>=70?2:1),ms:x.ms||359999000};}));});
+        return {t:x.t,pct,stars:x.stars!=null?x.stars:(pct>=90?3:pct>=70?2:1),ms:x.ms||359999000,nivel:x.nivel||null};}));});
     enviar();
     dispatchEvent(new Event('resize'));
   });
