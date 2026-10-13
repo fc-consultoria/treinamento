@@ -125,6 +125,7 @@ button.ok{background:var(--ok);border-color:var(--ok);color:#fff}button.no{color
     <div class="edit"><input id="eCol" placeholder="Nome do colaborador" maxlength="40" aria-label="Nome do colaborador"><button type="button" id="bCol">Cadastrar</button></div>
     <h3>Sistema liberado <span class="note">clique para ligar/desligar · verde = liberado</span></h3><div class="edit" id="cSis"></div>
     <h3>Acesso do gestor <span class="note" id="gSt"></span></h3><div class="edit"><input id="eGes" placeholder="Senha do gestor (mín. 4)" autocomplete="off" aria-label="Senha do gestor"><button type="button" id="bGes">Salvar senha do gestor</button><button type="button" id="bEmp">Abrir Painel da Empresa</button></div>
+    <div class="edit"><button type="button" class="no" id="bZer" style="color:var(--bad);border-color:#e3b5b1">Zerar histórico desta empresa (testes)</button><span class="note">Apaga do painel entradas, tempo, tipologias e desafios. Cadastros, códigos e senhas ficam.</span></div>
     <h3>Mensagens para o WhatsApp <span class="note">geradas com os dados acima · copie e envie</span></h3>
     <div class="wam"><div><b>Para os colaboradores</b><textarea id="wmA" rows="14"></textarea><div class="edit"><button type="button" data-w="wmA">📋 Copiar</button><button type="button" data-z="wmA">Abrir no WhatsApp</button></div></div>
     <div><b>Para o gestor</b><textarea id="wmG" rows="14"></textarea><div class="edit"><button type="button" data-w="wmG">📋 Copiar</button><button type="button" data-z="wmG">Abrir no WhatsApp</button></div></div></div>
@@ -140,6 +141,9 @@ button.ok{background:var(--ok);border-color:var(--ok);color:#fff}button.no{color
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="auth.js"></script>
 <script>
+const ZCFG=new Set(['colab','liberacao','sistema','gestor','chave_app','sugestao','resposta','sug_excluida','zerar']);
+function zerarFiltro(ev,zs){const Z={};(zs||ev).forEach(e=>{if(e.tipo==='zerar'){const p=(e.detalhe||{}).para,t=Date.parse(e.criado_em);if(!Z[p]||t>Z[p])Z[p]=t;}});
+  return ev.filter(e=>ZCFG.has(e.tipo)||!Z[e.user_id]||Date.parse(e.criado_em)>Z[e.user_id]);}
 const TIPOS={jcr200:'Suprema JCR 200',jcr200a:'Suprema JCR 200A',jcr300:'Suprema JCR 300',jcr205:'Suprema JCR 205',pcr200:'Suprema PCR 200',pvz300:'Suprema PVZ 300',pgr100:'Suprema PGR 100',max800:'Suprema MAX 800',gjc2f:'Gold JC-2F',gpc3fvz:'Gold PC3F-VZ',gpc2fpe:'Gold PC-2FPE',gjc4f:'Gold JC-4F',gjc4fs:'Gold JC-4FS',gpc2f:'Gold PC-2F',gpc2fm:'Gold PC-2F MAC',gmax:'Gold MAX'};
 const NT=Object.keys(TIPOS).length;
 let ALUNOS=[],EV=[],sel=null;
@@ -148,6 +152,7 @@ const fmtH=s=>{const m=Math.round(s/60);return m<60?m+' min':Math.floor(m/60)+' 
 async function carregar(){
   const a=await sb.from('trein_alunos').select('*').order('login');ALUNOS=(a.data||[]).filter(x=>x.papel==='aluno');
   EV=[];for(let i=0;;i+=1000){const r=await sb.from('trein_eventos').select('user_id,tipo,tipologia,detalhe,criado_em').order('criado_em',{ascending:false}).range(i,i+999);if(r.error||!r.data.length)break;EV.push(...r.data);if(r.data.length<1000)break;}
+  EV=zerarFiltro(EV);
   render();
 }
 function resumo(uid){
@@ -276,6 +281,7 @@ function colabUI(a){const L=colabs(a.user_id),esc=v=>String(v||'').replace(/</g,
    document.getElementById('wmG').value=`*Treinamento FC 3D · Acesso do gestor · ${nm}* 📊\n\n🔗 Painel da Empresa: ${URL0}empresa.html\n👤 Login: ${a.login}\n🔑 Senha: ${sen}\n🛡 Senha do gestor: ${gp}\n\nNo painel você acompanha cada colaborador: prazo de 72 h, horas de estudo, tipologias, nível no Monte a esquadria, resultados e pontos a melhorar. Também dá para baixar o relatório em PDF.\n\n⚠️ A senha do gestor é só sua. Não compartilhe com a equipe.\n\nFC Consultoria · (66) 9 9986-7984`;
    document.querySelectorAll('.wam [data-w]').forEach(b=>b.onclick=async()=>{const t=document.getElementById(b.dataset.w);try{await navigator.clipboard.writeText(t.value);}catch(e){t.select();document.execCommand('copy');}b.textContent='✔ Copiado';setTimeout(()=>b.textContent='📋 Copiar',1800);});
    document.querySelectorAll('.wam [data-z]').forEach(b=>b.onclick=()=>window.open('https://wa.me/?text='+encodeURIComponent(document.getElementById(b.dataset.z).value),'_blank'));}
+  document.getElementById('bZer').onclick=async()=>{if(!confirm('Zerar o histórico de '+(a.nome||a.login)+'? As 72 h dos colaboradores também recomeçam.'))return;await ins('zerar',{para:a.user_id});carregar();};
   document.getElementById('bRel').onclick=()=>window.open('relatorio.html?e='+a.user_id,'_blank');
   const bl=document.getElementById('bLib'),ok=libOk(a.user_id);bl.textContent=ok?'Encerrar acesso da semana':'Liberar até sábado '+fDia(SAB());bl.className=ok?'no':'ok';
   bl.onclick=async()=>{await liberar(a.user_id,!ok);carregar();};}

@@ -52,6 +52,9 @@ table.et th,table.et td{white-space:nowrap}tr.er{cursor:pointer}tr.er:hover td{b
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="auth.js"></script>
 <script>
+const ZCFG=new Set(['colab','liberacao','sistema','gestor','chave_app','sugestao','resposta','sug_excluida','zerar']);
+function zerarFiltro(ev,zs){const Z={};(zs||ev).forEach(e=>{if(e.tipo==='zerar'){const p=(e.detalhe||{}).para,t=Date.parse(e.criado_em);if(!Z[p]||t>Z[p])Z[p]=t;}});
+  return ev.filter(e=>ZCFG.has(e.tipo)||!Z[e.user_id]||Date.parse(e.criado_em)>Z[e.user_id]);}
 const TIPOS={jcr200:'Suprema JCR 200',jcr200a:'Suprema JCR 200A',jcr300:'Suprema JCR 300',jcr205:'Suprema JCR 205',pcr200:'Suprema PCR 200',pvz300:'Suprema PVZ 300',pgr100:'Suprema PGR 100',max800:'Suprema MAX 800',gjc2f:'Gold JC-2F',gpc3fvz:'Gold PC3F-VZ',gpc2fpe:'Gold PC-2FPE',gjc4f:'Gold JC-4F',gjc4fs:'Gold JC-4FS',gpc2f:'Gold PC-2F',gpc2fm:'Gold PC-2F MAC',gmax:'Gold MAX'};
 const NT=Object.keys(TIPOS).length,esc=v=>String(v||'').replace(/&/g,'&amp;').replace(/</g,'&lt;');
 const fD=d=>new Date(d).toLocaleDateString('pt-BR'),fDH=d=>new Date(d).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
@@ -76,6 +79,7 @@ gateUI(async({session,perfil})=>{
   if(perfil.papel!=='admin'&&!(await gestorOk(emp)))return;
   const [ra,rc,rs]=await Promise.all([sb.from('trein_alunos').select('login,nome').eq('user_id',emp).maybeSingle(),sb.from('trein_eventos').select('detalhe,criado_em').eq('tipo','colab').order('criado_em'),sb.from('trein_eventos').select('detalhe,criado_em').eq('tipo','sistema').order('criado_em')]);
   const EV=[];for(let i=0;;i+=1000){const r=await sb.from('trein_eventos').select('tipo,tipologia,detalhe,criado_em').eq('user_id',emp).order('criado_em').range(i,i+999);if(r.error||!r.data.length)break;EV.push(...r.data);if(r.data.length<1000)break;}
+  {const zr=await sb.from('trein_eventos').select('tipo,detalhe,criado_em').eq('tipo','zerar');const zz=(zr.data||[]).filter(e=>(e.detalhe||{}).para===emp);const t=Math.max(0,...zz.map(e=>Date.parse(e.criado_em)));if(t){const keep=EV.filter(e=>ZCFG.has(e.tipo)||Date.parse(e.criado_em)>t);EV.length=0;EV.push(...keep);}}
   const E=ra.data||{};document.getElementById('emp').textContent=E.nome||E.login||'Empresa';
   const C={};(rc.data||[]).forEach(r=>{const d=r.detalhe||{};if(d.para!==emp)return;C[d.id]=Object.assign({},C[d.id]||{},d);});
   const L=Object.values(C).filter(x=>x.nome);let SZ={wv:true,cem:true};{const r=(rs.data||[]).filter(r=>(r.detalhe||{}).para===emp).pop();if(r)SZ=r.detalhe;}const byNome=n=>L.find(x=>x.nome.trim().toLowerCase()===String(n||'').trim().toLowerCase());

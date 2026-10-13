@@ -76,11 +76,12 @@ function sugInit(){const box=document.getElementById('sugBox'),f=document.getEle
 const HOJE=()=>new Date(Date.now()-4*3600e3).toISOString().slice(0,10),DOW=()=>new Date(Date.now()-4*3600e3).getUTCDay();
 const fmtR=ms=>{const h=Math.floor(ms/3600e3),m=Math.floor(ms%3600e3/60e3);return h>=1?h+' h '+String(m).padStart(2,'0'):m+' min';};
 async function estadoEmpresa(uid){
-  const [c,e,l]=await Promise.all([sb.from('trein_eventos').select('detalhe,criado_em').eq('tipo','colab').order('criado_em'),
+  const [c,e,l,zr]=await Promise.all([sb.from('trein_eventos').select('detalhe,criado_em').eq('tipo','colab').order('criado_em'),
     sb.from('trein_eventos').select('tipo,detalhe,criado_em').eq('user_id',uid).in('tipo',['colab_inicio','pedido_tempo']).order('criado_em'),
-    sb.from('trein_eventos').select('detalhe').eq('tipo','liberacao').order('criado_em',{ascending:false}).limit(1)]);
+    sb.from('trein_eventos').select('detalhe').eq('tipo','liberacao').order('criado_em',{ascending:false}).limit(1),sb.from('trein_eventos').select('criado_em').eq('tipo','zerar')]);
+  const zt=Math.max(0,...(zr.data||[]).map(r=>Date.parse(r.criado_em)));window.ZERAR_T=zt;
   const C={};(c.data||[]).forEach(r=>{const d=r.detalhe||{};if(d.para!==uid)return;C[d.id]=Object.assign({},C[d.id]||{},d,{alt:r.criado_em});});
-  (e.data||[]).forEach(r=>{const d=r.detalhe||{},x=C[d.cid];if(!x)return;if(r.tipo==='colab_inicio'){if(!x.ini)x.ini=r.criado_em;}else x.ped=r.criado_em;});
+  (e.data||[]).filter(r=>Date.parse(r.criado_em)>zt).forEach(r=>{const d=r.detalhe||{},x=C[d.cid];if(!x)return;if(r.tipo==='colab_inicio'){if(!x.ini)x.ini=r.criado_em;}else x.ped=r.criado_em;});
   const lst=Object.values(C).filter(x=>!x.removido).map(x=>{x.fim=x.ini?Date.parse(x.ini)+(x.horas||72)*3600e3:null;x.resta=x.fim?x.fim-Date.now():null;
     x.pend=x.ped&&Date.parse(x.ped)>Date.parse(x.alt);return x;});
   const ate=((l.data||[])[0]||{}).detalhe?.ate||null;
@@ -158,7 +159,7 @@ function vigiaPrazo(uid,perfil){setInterval(()=>{if(window.ALUNO_CID&&window.COL
     try{const {data}=await sb.from('trein_eventos').select('detalhe').eq('tipo','chave_app').limit(1);
       const kb=Uint8Array.from(atob(data[0].detalhe.k),c=>c.charCodeAt(0));
       const key=await crypto.subtle.importKey('raw',kb,'AES-GCM',false,['decrypt']);
-      const buf=new Uint8Array(await (await fetch('app.enc?v=1791919715',{cache:'no-cache'})).arrayBuffer());
+      const buf=new Uint8Array(await (await fetch('app.enc?v=1791928932',{cache:'no-cache'})).arrayBuffer());
       const plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:buf.slice(0,12)},key,buf.slice(12));
       const html=await new Response(new Blob([plain]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
       const root=document.getElementById('appRoot');root.innerHTML=html;
@@ -179,8 +180,8 @@ function vigiaPrazo(uid,perfil){setInterval(()=>{if(window.ALUNO_CID&&window.COL
     document.getElementById('upainel').hidden=perfil.papel!=='admin';
     fila.push({user_id:uid,tipo:'login',tipologia:(typeof S!=='undefined'?S.typo:null)||null,detalhe:window.ALUNO_NOME?{quem:window.ALUNO_NOME,cid:window.ALUNO_CID||null}:{}});
     TRK('tipologia',{t:(typeof S!=='undefined'?S.typo:null)||''});
-    try{PROG={};localStorage.removeItem('treinFC-prog');}catch(e){}
-    sb.from('trein_eventos').select('detalhe').eq('user_id',uid).eq('tipo','teste').then(({data})=>{
+    try{PROG={};localStorage.removeItem('treinFC-prog');if(typeof LV!=='undefined'){for(const k in LV)delete LV[k];}localStorage.removeItem('treinFC-lv');}catch(e){}
+    sb.from('trein_eventos').select('detalhe,criado_em').eq('user_id',uid).eq('tipo','teste').then(({data})=>{data=(data||[]).filter(r=>Date.parse(r.criado_em)>(window.ZERAR_T||0));
       if(!data||typeof mergeProg!=='function')return;
       mergeProg(data.map(r=>{const x=r.detalhe||{},pct=x.pct!=null?x.pct:Math.round((x.tot||0)/((x.tot||0)+(x.err||0)||1)*100);
         return {t:x.t,pct,stars:x.stars!=null?x.stars:(pct>=90?3:pct>=70?2:1),ms:x.ms||359999000,nivel:x.nivel||null};}));});
