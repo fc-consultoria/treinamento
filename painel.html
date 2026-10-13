@@ -73,6 +73,7 @@ tbody tr:hover td{background:#f5f8fa}
 button.ok{background:var(--ok);border-color:var(--ok);color:#fff}button.no{color:var(--bad);border-color:#e3b5b1}
 .cl{list-style:none;margin:0 0 10px;padding:0}.cl li{display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid #eef1f3}
 .cl li .bt{display:flex;gap:4px}.cl li button{padding:3px 8px;font-size:12px}
+.stg{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--line);border-radius:14px;padding:3px 9px;font:600 12px var(--f-display);cursor:pointer;margin-right:3px;background:#fff;color:var(--muted)}.stg i{width:8px;height:8px;border-radius:50%;background:#c4ccd2}.stg.on{background:var(--ok-soft);border-color:#b9dfc8;color:var(--ok)}.stg.on i{background:var(--ok)}
 .sem{font:500 12px var(--f-mono);white-space:nowrap}
 @media (max-width:820px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.det{grid-template-columns:1fr}header,main{padding-left:16px;padding-right:16px}}
 </style>
@@ -108,7 +109,7 @@ button.ok{background:var(--ok);border-color:var(--ok);color:#fff}button.no{color
   <p class="ihint">Clique no nome, no login ou em nova senha para editar · Enter salva · Esc desfaz. O login novo vale no próximo acesso do aluno (a senha continua a mesma). Maiúsculas aparecem no painel, mas o aluno pode digitar o login com ou sem maiúsculas.</p>
   <p class="msg bad" id="tbMsg" hidden></p>
   <div class="tw"><table>
-   <thead><tr><th>Empresa</th><th>Login</th><th>Senha</th><th>Situação</th><th>Semana</th><th>Colab.</th><th>Último acesso</th><th>Tempo</th><th>Tipologias vistas</th><th>Cortes</th><th>Perfis</th><th>Desafios</th><th>Estrelas</th><th>Melhor teste</th></tr></thead>
+   <thead><tr><th>Empresa</th><th>Login</th><th>Senha</th><th>Situação</th><th>Semana</th><th>Colab.</th><th>Sistema</th><th>Último acesso</th><th>Tempo</th><th>Tipologias vistas</th><th>Cortes</th><th>Perfis</th><th>Desafios</th><th>Estrelas</th><th>Melhor teste</th></tr></thead>
    <tbody id="tb"></tbody>
   </table></div>
  </section>
@@ -162,7 +163,7 @@ function render(){
     const tr=document.createElement('tr');if(sel===a.user_id)tr.className='sel';
     const esc=v=>String(v||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
     tr.innerHTML=`<td><input class="ied" data-e="nome" value="${esc(a.nome)}" placeholder="sem nome – digite" aria-label="Nome do ${esc(a.login)}" title="Clique para editar o nome; Enter salva"></td><td><input class="ied lg" data-e="login" value="${esc(a.login)}" aria-label="Login do ${esc(a.login)}" title="Clique para editar o login; Enter salva"></td><td><input class="ied lg" data-e="senha" value="${esc(senhaLoc(a.user_id))}" placeholder="nova senha" autocomplete="new-password" aria-label="Nova senha do ${esc(a.login)}" title="Digite a nova senha (mín. 6) e aperte Enter"></td>
-      <td><span class="tag ${a.ativo?'':'off'}">${a.ativo?'ativo':'bloqueado'}</span></td><td>${semTag(a.user_id)}</td><td class="n">${colabs(a.user_id).length}/6</td><td class="n">${fmtD(r.ult)}</td><td class="n">${fmtH(r.seg)}</td>
+      <td><span class="tag ${a.ativo?'':'off'}">${a.ativo?'ativo':'bloqueado'}</span></td><td>${semTag(a.user_id)}</td><td class="n">${colabs(a.user_id).length}/6</td><td style="white-space:nowrap">${sisBtns(a.user_id)}</td><td class="n">${fmtD(r.ult)}</td><td class="n">${fmtH(r.seg)}</td>
       <td><div style="display:flex;gap:8px;align-items:center"><div class="bar" style="flex:1"><i style="width:${Math.round(r.tip.size/NT*100)}%"></i></div><span class="n">${r.tip.size}/${NT}</span></div></td>
       <td class="n">${r.cor.size}</td><td class="n">${r.per.size}</td><td class="n">${r.tes.length}</td><td class="n" style="color:#b8860b">★ ${r.estrelas}/${NT*3}</td>
       <td class="n">${r.melhor?`${r.melhor.pct}% · ${TIPOS[r.melhor.t]||''}`:'—'}</td>`;
@@ -251,6 +252,10 @@ function pedUI(){const P=[];ALUNOS.forEach(a=>colabs(a.user_id).forEach(x=>{if(x
   const c=document.getElementById('pedCard');c.hidden=!P.length;document.getElementById('pedN').textContent=P.length?P.length+' aguardando':'';
   document.getElementById('pedList').innerHTML=P.map(([a,x],i)=>`<div class="rowl"><span><b>${esc(x.nome)}</b> · ${esc(a.nome||a.login)} <span class="note">pediu em ${fmtD(x.ped)} · ${stTxt(x)}</span></span><span class="bt"><button type="button" class="ok" data-i="${i}" data-n="24">+24 h</button><button type="button" class="ok" data-i="${i}" data-n="48">+48 h</button><button type="button" class="ok" data-i="${i}" data-n="72">+72 h</button></span></div>`).join('');
   document.querySelectorAll('#pedList button').forEach(b=>b.onclick=()=>{b.disabled=true;const [a,x]=P[+b.dataset.i];prorrogar(a.user_id,x,+b.dataset.n);});}
+const sisOf=uid=>{const r=EV.find(e=>e.tipo==='sistema'&&(e.detalhe||{}).para===uid);return r?r.detalhe:{wv:false,cem:false};};
+const sisBtns=uid=>{const z=sisOf(uid);return ['wv','cem'].map(k=>`<button type="button" class="stg ${z[k]?'on':''}" data-sis="${k}" data-u="${uid}" title="Clique para ${z[k]?'tirar':'liberar'}"><i></i>${k==='wv'?'WVetro':'CEM'}</button>`).join('');};
+document.addEventListener('click',async e=>{const b=e.target.closest('[data-sis]');if(!b)return;e.stopPropagation();b.disabled=true;const u=b.dataset.u,z=Object.assign({wv:false,cem:false},sisOf(u));z[b.dataset.sis]=!z[b.dataset.sis];
+  await ins('sistema',{para:u,wv:!!z.wv,cem:!!z.cem});carregar();},true);
 const senhaLoc=id=>{try{return (JSON.parse(localStorage.getItem('treinFC-senhas')||'{}'))[id]||'';}catch(e){return '';}};
 const senhaSave=(id,v)=>{try{const o=JSON.parse(localStorage.getItem('treinFC-senhas')||'{}');o[id]=v;localStorage.setItem('treinFC-senhas',JSON.stringify(o));}catch(e){}};
 const alert0=t=>{const m=document.getElementById('tbMsg');if(m){m.textContent='Não salvou: '+t;m.hidden=false;setTimeout(()=>m.hidden=true,5000);}};

@@ -131,19 +131,20 @@ function vigiaPrazo(uid,perfil){setInterval(()=>{if(window.ALUNO_FIM&&Date.now()
     try{const {data}=await sb.from('trein_eventos').select('detalhe').eq('tipo','chave_app').limit(1);
       const kb=Uint8Array.from(atob(data[0].detalhe.k),c=>c.charCodeAt(0));
       const key=await crypto.subtle.importKey('raw',kb,'AES-GCM',false,['decrypt']);
-      const buf=new Uint8Array(await (await fetch('app.enc?v=1791906674',{cache:'no-cache'})).arrayBuffer());
+      const buf=new Uint8Array(await (await fetch('app.enc?v=1791907007',{cache:'no-cache'})).arrayBuffer());
       const plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:buf.slice(0,12)},key,buf.slice(12));
       const html=await new Response(new Blob([plain]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
       const root=document.getElementById('appRoot');root.innerHTML=html;
       for(const old of [...root.querySelectorAll('script')]){const n=document.createElement('script');
         if(old.src){n.src=old.src;await new Promise((ok,er)=>{n.onload=ok;n.onerror=er;old.replaceWith(n);});}
         else{n.textContent=old.textContent;old.replaceWith(n);}}
-      ld.hidden=true;
+      ld.hidden=true;if(window.applySis)applySis();
     }catch(e){ld.textContent='Não foi possível abrir o treinamento. Atualize a página (Ctrl+F5). Se continuar, fale com a FC Consultoria.';console.error(e);throw e;}
   }
   gateUI(async({session,perfil})=>{
     uid=session.user.id;
     if(perfil.papel!=='admin'){document.getElementById('ubar').hidden=false;document.getElementById('uname').textContent=perfil.nome||perfil.login;await escolherColab(uid,perfil);vigiaPrazo(uid,perfil);}
+    if(perfil.papel==='admin')window.SIS={wv:true,cem:true};else{const {data:sr}=await sb.from('trein_eventos').select('detalhe').eq('tipo','sistema').order('criado_em',{ascending:false}).limit(1);const z=((sr||[])[0]||{}).detalhe||{};window.SIS={wv:!!z.wv,cem:!!z.cem};}
     await loadApp();
     document.getElementById('ubar').hidden=false;
     document.getElementById('uname').textContent=(perfil.nome||perfil.login)+(perfil.papel==='admin'?' · matriz':'');

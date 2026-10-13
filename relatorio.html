@@ -60,11 +60,11 @@ const stars=n=>`<span class="st">${'★'.repeat(n||0)}<i>${'★'.repeat(3-(n||0)
 gateUI(async({session,perfil})=>{
   const q=new URLSearchParams(location.search);let emp=perfil.papel==='admin'?q.get('e'):perfil.user_id;
   if(!emp){document.getElementById('pg').hidden=false;document.getElementById('emp').textContent='Escolha a empresa no Painel da Matriz';return;}
-  const [ra,rc]=await Promise.all([sb.from('trein_alunos').select('login,nome').eq('user_id',emp).maybeSingle(),sb.from('trein_eventos').select('detalhe,criado_em').eq('tipo','colab').order('criado_em')]);
+  const [ra,rc,rs]=await Promise.all([sb.from('trein_alunos').select('login,nome').eq('user_id',emp).maybeSingle(),sb.from('trein_eventos').select('detalhe,criado_em').eq('tipo','colab').order('criado_em'),sb.from('trein_eventos').select('detalhe,criado_em').eq('tipo','sistema').order('criado_em')]);
   const EV=[];for(let i=0;;i+=1000){const r=await sb.from('trein_eventos').select('tipo,tipologia,detalhe,criado_em').eq('user_id',emp).order('criado_em').range(i,i+999);if(r.error||!r.data.length)break;EV.push(...r.data);if(r.data.length<1000)break;}
   const E=ra.data||{};document.getElementById('emp').textContent=E.nome||E.login||'Empresa';
   const C={};(rc.data||[]).forEach(r=>{const d=r.detalhe||{};if(d.para!==emp)return;C[d.id]=Object.assign({},C[d.id]||{},d);});
-  const L=Object.values(C).filter(x=>x.nome);const byNome=n=>L.find(x=>x.nome.trim().toLowerCase()===String(n||'').trim().toLowerCase());
+  const L=Object.values(C).filter(x=>x.nome);let SZ={wv:true,cem:true};{const r=(rs.data||[]).filter(r=>(r.detalhe||{}).para===emp).pop();if(r)SZ=r.detalhe;}const byNome=n=>L.find(x=>x.nome.trim().toLowerCase()===String(n||'').trim().toLowerCase());
   const G={};L.forEach(x=>G[x.id]={x,ev:[]});
   EV.forEach(e=>{const d=e.detalhe||{};let k=d.cid&&G[d.cid]?d.cid:(byNome(d.quem)||{}).id;if(!k)return;G[k].ev.push(e);});
   let H=0,ND=0,SP=0,SN=0;const out=[];
@@ -82,16 +82,16 @@ gateUI(async({session,perfil})=>{
     H+=seg;ND+=Object.values(mont).reduce((s,m)=>s+m.n,0)+wv.length+cm.length;allP.forEach(p=>{SP+=p;SN++;});
     const fortes=[],melhorar=[];
     Object.entries(mont).forEach(([t,m])=>{if(m.best.st===3)fortes.push(`Montagem ${TIPOS[t]||t}: 3 estrelas (${m.best.pct}%)`);else if(m.best.pct<70)melhorar.push(`Montagem ${TIPOS[t]||t}: melhor resultado ${m.best.pct}%`);});
-    if(bW){if(bW.pct>=85)fortes.push(`Lançamento no WVetro: ${bW.pct}%`);else melhorar.push(`Lançamento no WVetro: melhor resultado ${bW.pct}%`);}
-    if(bC){if(bC.pct>=85)fortes.push(`Lançamento no CEM: ${bC.pct}%`);else melhorar.push(`Lançamento no CEM: melhor resultado ${bC.pct}%`);}
-    const top=(o,p)=>Object.entries(o).sort((a,b)=>b[1]-a[1]).slice(0,4).forEach(([k,n])=>melhorar.push(`${p}: errou “${k}” ${n}×`));top(errW,'WVetro');top(errC,'CEM');
+    if(bW&&SZ.wv){if(bW.pct>=85)fortes.push(`Lançamento no WVetro: ${bW.pct}%`);else melhorar.push(`Lançamento no WVetro: melhor resultado ${bW.pct}%`);}
+    if(bC&&SZ.cem){if(bC.pct>=85)fortes.push(`Lançamento no CEM: ${bC.pct}%`);else melhorar.push(`Lançamento no CEM: melhor resultado ${bC.pct}%`);}
+    const top=(o,p)=>Object.entries(o).sort((a,b)=>b[1]-a[1]).slice(0,4).forEach(([k,n])=>melhorar.push(`${p}: errou “${k}” ${n}×`));if(SZ.wv)top(errW,'WVetro');if(SZ.cem)top(errC,'CEM');
     if(tip.size>=NT)fortes.push('Estudou todas as tipologias');else if(tip.size)melhorar.push(`Ainda não abriu ${NT-tip.size} tipologia${NT-tip.size>1?'s':''}`);
-    if(!Object.keys(mont).length)melhorar.push('Ainda não fez o desafio Monte a esquadria');if(!wv.length)melhorar.push('Ainda não fez o desafio WVetro');if(!cm.length)melhorar.push('Ainda não fez o desafio CEM');
+    if(!Object.keys(mont).length)melhorar.push('Ainda não fez o desafio Monte a esquadria');if(SZ.wv&&!wv.length)melhorar.push('Ainda não fez o desafio WVetro');if(SZ.cem&&!cm.length)melhorar.push('Ainda não fez o desafio CEM');
     const fim=ini?Date.parse(ini)+(x.horas||72)*3600e3:null;
     const sit=!ini?'ainda não começou':fim<Date.now()?`prazo de ${x.horas||72} h encerrado em ${fDH(fim)}`:`em andamento · prazo até ${fDH(fim)}`;
     const rows=Object.entries(mont).map(([t,m])=>`<tr><td>Monte a esquadria · ${esc(TIPOS[t]||t)}</td><td>${stars(m.best.st)}</td><td class="n">${m.best.pct}%</td><td class="n">${fT(m.best.ms)}</td><td class="n">${m.n}</td></tr>`)
-      .concat(bW?[`<tr><td>Lançamento no WVetro</td><td>${stars(bW.stars)}</td><td class="n">${bW.pct}%</td><td class="n">${fT(bW.ms)}</td><td class="n">${wv.length}</td></tr>`]:[])
-      .concat(bC?[`<tr><td>Lançamento no CEM</td><td>${stars(bC.stars)}</td><td class="n">${bC.pct}%</td><td class="n">${fT(bC.ms)}</td><td class="n">${cm.length}</td></tr>`]:[]).join('');
+      .concat(bW&&SZ.wv?[`<tr><td>Lançamento no WVetro</td><td>${stars(bW.stars)}</td><td class="n">${bW.pct}%</td><td class="n">${fT(bW.ms)}</td><td class="n">${wv.length}</td></tr>`]:[])
+      .concat(bC&&SZ.cem?[`<tr><td>Lançamento no CEM</td><td>${stars(bC.stars)}</td><td class="n">${bC.pct}%</td><td class="n">${fT(bC.ms)}</td><td class="n">${cm.length}</td></tr>`]:[]).join('');
     out.push(`<section class="cb"><div class="ch"><h2>${esc(x.nome)}${x.removido?' <span class="note">(removido)</span>':''}</h2><span class="note">${sit}</span></div>
       <div class="mini"><span><b>${dias.size}</b>dia${dias.size===1?'':'s'} de estudo</span><span><b>${fH(seg)}</b>tempo de estudo</span><span><b>${tip.size}/${NT}</b>tipologias</span><span><b>${per.size}</b>perfis estudados</span><span><b>${cor.size}</b>cortes vistos</span></div>
       <h3>Tipologias vistas</h3><ul class="chips">${Object.entries(TIPOS).map(([k,n])=>`<li class="${tip.has(k)?'on':''}">${n}</li>`).join('')}</ul>
