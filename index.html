@@ -164,7 +164,7 @@ function vigiaPrazo(uid,perfil){setInterval(()=>{if(window.ALUNO_CID&&window.COL
     try{const {data}=await sb.from('trein_eventos').select('detalhe').eq('tipo','chave_app').limit(1);
       const kb=Uint8Array.from(atob(data[0].detalhe.k),c=>c.charCodeAt(0));
       const key=await crypto.subtle.importKey('raw',kb,'AES-GCM',false,['decrypt']);
-      const buf=new Uint8Array(await (await fetch('app.enc?v=1791932968',{cache:'no-cache'})).arrayBuffer());
+      const buf=new Uint8Array(await (await fetch('app.enc?v=1791933386',{cache:'no-cache'})).arrayBuffer());
       const plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:buf.slice(0,12)},key,buf.slice(12));
       const html=await new Response(new Blob([plain]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
       const root=document.getElementById('appRoot');root.innerHTML=html;
@@ -195,7 +195,7 @@ function vigiaPrazo(uid,perfil){setInterval(()=>{if(window.ALUNO_CID&&window.COL
   });
 })();
 </script>
-<script>(function(){const V='1791932968';async function chk(){try{const t=(await (await fetch('version.txt?'+Date.now(),{cache:'no-store'})).text()).trim();
+<script>(function(){const V='1791933386';async function chk(){try{const t=(await (await fetch('version.txt?'+Date.now(),{cache:'no-store'})).text()).trim();
 if(t&&/^\d+$/.test(t)&&t!==V&&!document.getElementById('updBar')){const b=document.createElement('div');b.id='updBar';
 b.style.cssText='position:fixed;left:50%;top:10px;transform:translateX(-50%);z-index:9999;background:#1f6f9a;color:#fff;padding:10px 12px 10px 16px;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.25);font:600 14px system-ui,sans-serif;display:flex;gap:12px;align-items:center;max-width:calc(100% - 24px)';
 b.innerHTML='<span>🔄 Nova versão do treinamento disponível</span><button type="button" style="border:0;border-radius:7px;padding:7px 14px;font:700 14px system-ui,sans-serif;background:#e0972e;color:#1b232a;cursor:pointer">Atualizar</button>';
