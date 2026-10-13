@@ -118,7 +118,7 @@ button.ok{background:var(--ok);border-color:var(--ok);color:#fff}button.no{color
   <div class="det">
    <div>
     <div class="edit"><input id="eNome" placeholder="Nome do aluno" aria-label="Nome do aluno"><button type="button" id="bNome">Salvar nome</button><button type="button" id="bAtivo"></button></div>
-    <div class="edit"><input id="eSenha" placeholder="Nova senha (mín. 6)" aria-label="Nova senha"><button type="button" id="bSenha">Trocar senha</button></div>
+    <div class="edit"><input id="eSenha" placeholder="Digite a nova senha da empresa (mín. 6) e clique em Salvar senha" aria-label="Nova senha"><button type="button" class="pri" id="bSenha">💾 Salvar senha</button></div>
     <p class="msg" id="eMsg" role="status"></p>
     <h3>Colaboradores <span class="note" id="cColN"></span></h3><ul class="cl" id="cCol"></ul>
     <div class="edit"><input id="eCol" placeholder="Nome do colaborador" maxlength="40" aria-label="Nome do colaborador"><button type="button" id="bCol">Cadastrar</button></div>
@@ -281,8 +281,12 @@ const alert0=t=>{const m=document.getElementById('tbMsg');if(m){m.textContent='N
 const msg=(t,ok)=>{const m=document.getElementById('eMsg');m.textContent=t;m.className='msg '+(ok?'ok':'bad');};
 document.getElementById('bNome').addEventListener('click',async()=>{const {error}=await sb.from('trein_alunos').update({nome:document.getElementById('eNome').value.trim()||null}).eq('user_id',sel);msg(error?'Não salvou: '+error.message:'Nome salvo.',!error);if(!error)carregar();});
 document.getElementById('bAtivo').addEventListener('click',async()=>{const a=ALUNOS.find(x=>x.user_id===sel);const {error}=await sb.from('trein_alunos').update({ativo:!a.ativo}).eq('user_id',sel);msg(error?'Não salvou: '+error.message:(a.ativo?'Acesso bloqueado.':'Acesso liberado.'),!error);if(!error)carregar();});
-document.getElementById('bSenha').addEventListener('click',async()=>{const v=document.getElementById('eSenha').value.trim();if(v.length<6){msg('A senha precisa ter pelo menos 6 caracteres.',false);return;}
-  const {error}=await sb.rpc('trein_set_senha',{alvo:sel,nova:v});msg(error?'Não trocou: '+error.message:'Senha trocada. Passe a nova senha para o aluno.',!error);if(!error)document.getElementById('eSenha').value='';});
+document.getElementById('bSenha').addEventListener('click',async()=>{const inp=document.getElementById('eSenha'),v=inp.value.trim(),b=document.getElementById('bSenha');
+  if(v.length<6){msg('A senha precisa ter pelo menos 6 caracteres (você digitou '+v.length+').',false);return;}
+  b.disabled=true;b.textContent='Salvando…';const {error}=await sb.rpc('trein_set_senha',{alvo:sel,nova:v});b.disabled=false;b.textContent='💾 Salvar senha';
+  if(error){msg('Não salvou: '+error.message,false);return;}
+  senhaSave(sel,v);inp.value='';const a=ALUNOS.find(x=>x.user_id===sel)||{};msg('✔ Senha salva! Login '+(a.login||'')+' · senha '+v+'. Passe para a empresa.',true);render();});
+document.getElementById('eSenha').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('bSenha').click();});
 document.getElementById('recarregar').addEventListener('click',carregar);
 gateUI(()=>carregar(),{soMatriz:true});
 </script>
