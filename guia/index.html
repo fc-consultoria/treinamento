@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>[hidden]{display:none!important}img{max-width:100%}</style>
+<title>Guia do Aluno FC 3D</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap">
+<style>
+/* Layout: guia de campo — faixa de acesso rápido no topo, depois capítulos com print grande + passos curtos ao lado */
+:root{
+  --bg:#f1f5f3; --panel:#ffffff; --fg:#14231f; --muted:#56675f; --line:#d6e2dd;
+  --teal:#0e6b62; --teal-soft:#e2f0ec; --amber:#d98a1f; --amber-soft:#fbecd5;
+  --f-display:'Space Grotesk',ui-sans-serif,system-ui,sans-serif; --f-body:'Inter',ui-sans-serif,system-ui,sans-serif;
+  --f-mono:ui-monospace,'SFMono-Regular',Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1916;--panel:#16241f;--fg:#e9f2ee;--muted:#9fb3ab;--line:#28403a;--teal:#46b8a8;--teal-soft:#183530;--amber:#f0a947;--amber-soft:#33260f;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0f1916;--panel:#16241f;--fg:#e9f2ee;--muted:#9fb3ab;--line:#28403a;--teal:#46b8a8;--teal-soft:#183530;--amber:#f0a947;--amber-soft:#33260f;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font:400 16px/1.6 var(--f-body);margin:0}
+.wrap{max-width:1080px;margin:0 auto;padding-inline:20px;padding-block:28px 64px;display:flex;flex-direction:column;gap:40px}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;line-height:1.15}
+h1{font-size:clamp(30px,5vw,46px);font-weight:700}
+h2{font-size:clamp(23px,3.4vw,30px);font-weight:700}
+h3{font-size:18px;font-weight:600}
+p{margin:0}
+.eb{font:600 12px var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--teal)}
+.bars{display:flex;gap:4px;height:26px}.bars i{width:6px;border-radius:2px;display:block}
+.bars i:nth-child(1){background:var(--teal);height:60%;align-self:flex-end}.bars i:nth-child(2){background:var(--fg);height:100%}.bars i:nth-child(3){background:var(--amber);height:78%;align-self:flex-end}
+header{display:flex;flex-direction:column;gap:14px}
+.brand{display:flex;align-items:center;gap:10px;font:700 15px var(--f-display)}
+.lead{font-size:18px;color:var(--muted);max-width:60ch}
+/* faixa de acesso */
+.acesso{display:grid;grid-template-columns:1.4fr 1fr;gap:16px}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 20px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.box.hl{border-color:var(--teal);box-shadow:0 0 0 3px var(--teal-soft)}
+.url{font:600 15px var(--f-mono);background:var(--teal-soft);color:var(--teal);padding:10px 12px;border-radius:8px;word-break:break-all}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.btn{font:600 14px var(--f-display);padding:9px 14px;border-radius:8px;border:1px solid var(--teal);background:var(--teal);color:#fff;text-decoration:none;cursor:pointer}
+.btn.sec{background:transparent;color:var(--teal)}
+.btn:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+.dev{display:flex;gap:14px;flex-wrap:wrap;font-size:14px;color:var(--muted)}
+.dev span{display:inline-flex;align-items:center;gap:6px}
+.dev svg{width:18px;height:18px;stroke:var(--teal);fill:none;stroke-width:1.8}
+/* índice */
+nav.toc{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(6px);padding-block:10px;margin-block:-10px}
+nav.toc ol{list-style:none;margin:0;padding:0;display:flex;gap:6px;overflow-x:auto;scrollbar-width:thin}
+nav.toc a{display:inline-flex;gap:6px;align-items:center;white-space:nowrap;font:600 13.5px var(--f-display);padding:7px 12px;border:1px solid var(--line);border-radius:20px;background:var(--panel);color:var(--fg);text-decoration:none}
+nav.toc a b{font-family:var(--f-mono);color:var(--teal)}
+nav.toc a:hover{border-color:var(--teal)}
+/* capítulos */
+section{display:flex;flex-direction:column;gap:18px;scroll-margin-top:64px}
+.cap{display:flex;align-items:baseline;gap:12px}
+.num{font:700 15px var(--f-mono);color:#fff;background:var(--teal);border-radius:8px;padding:3px 9px;flex:none}
+.intro{color:var(--muted);max-width:68ch}
+.fig{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:20px;align-items:start}
+.fig.rev{grid-template-columns:minmax(0,1fr) minmax(0,1.55fr)}.fig.rev figure{order:2}
+figure{margin:0;background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+figure img{display:block;width:100%;height:auto}
+.vbox video{display:block;width:100%;height:auto;background:#252b33;aspect-ratio:16/9}
+.vid{scroll-margin-top:64px}
+figcaption{font-size:13px;color:var(--muted);padding:8px 12px;border-top:1px solid var(--line)}
+.steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px;counter-reset:s}
+.steps li{display:grid;grid-template-columns:28px 1fr;gap:10px;align-items:start;min-width:0}
+.steps li::before{counter-increment:s;content:counter(s);display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--teal-soft);color:var(--teal);font:700 14px var(--f-mono)}
+.steps.dot li::before{content:'';width:10px;height:10px;margin:8px 9px;background:var(--teal)}
+.steps strong{font-weight:600}
+kbd,.k{font:600 13px var(--f-mono);background:var(--panel);border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:1px 6px;white-space:nowrap}
+.tip{background:var(--amber-soft);border-left:4px solid var(--amber);border-radius:8px;padding:12px 14px;font-size:15px}
+.tip b{font-family:var(--f-display)}
+/* desafios */
+.trio{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.trio .box h3{display:flex;gap:8px;align-items:center}
+.trio .box h3 i{font:700 13px var(--f-mono);font-style:normal;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:var(--amber);color:#fff;flex:none}
+.trio .box p{font-size:14.5px;color:var(--muted)}
+.meta{font:600 12.5px var(--f-mono);color:var(--teal)}
+.faq{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.faq h3{font-size:16px}
+.faq p{font-size:15px;color:var(--muted)}
+footer{font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:18px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+@media (max-width:760px){.acesso,.fig,.fig.rev,.trio,.faq{grid-template-columns:1fr}.fig.rev figure{order:0}}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+html{scroll-behavior:smooth}
+</style>
+
+</head><body>
+<div class="wrap">
+<header>
+  <div class="brand"><img src="img/logo-fc-160.jpg" alt="" width="52" height="52" style="border-radius:11px">FC Consultoria e Representação</div>
+  <div class="eb">Treinamento FC 3D · Guia do aluno</div>
+  <h1>Como usar o Treinamento FC 3D</h1>
+  <p class="lead">Você vai estudar as janelas e portas das linhas Suprema e Gold em 3D, peça por peça, e depois praticar em três desafios: montar a esquadria e lançar o pedido no WVetro e no CEM.</p>
+</header>
+
+<div class="acesso">
+  <div class="box hl">
+    <div class="eb">Link de acesso</div>
+    <div class="url" id="u">fc-consultoria.github.io/treinamento/</div>
+    <div class="row">
+      <a class="btn" href="https://fc-consultoria.github.io/treinamento/" target="_blank" rel="noopener">Abrir o treinamento</a>
+      <button class="btn sec" type="button" id="cp">Copiar link</button>
+    </div>
+    <div class="dev">
+      <span><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="11" rx="1.5"/><path d="M1 19h22"/></svg>Notebook</span>
+      <span><svg viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M11 18h2"/></svg>Tablet</span>
+      <span><svg viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg>Celular</span>
+    </div>
+  </div>
+  <div class="box">
+    <div class="eb">Seu acesso</div>
+    <p><b>Login:</b> o que a FC te passou (ex.: <span class="k">aluno01</span>)<br><b>Senha:</b> a senha que veio junto</p>
+    <p class="intro" style="font-size:14px">O login é pessoal. Tudo o que você estuda e os desafios que faz ficam guardados nele.</p>
+  </div>
+</div>
+
+<section id="video" class="vid">
+  <div class="cap"><span class="num">▶</span><h2>Assista primeiro: o tutorial em vídeo</h2></div>
+  <p class="intro">Em menos de 3 minutos você vê tudo funcionando: entrar, girar a janela, peças e perfis, desmontar, cortes e os 3 desafios.</p>
+  <figure class="vbox"><video controls preload="metadata" playsinline poster="video/capa.jpg" src="video/tutorial_treinamento_fc3d.mp4">Seu navegador não abre o vídeo.</video><figcaption>Tutorial · Treinamento FC 3D (sem som, com legendas)</figcaption></figure>
+</section>
+
+<nav class="toc" aria-label="Capítulos do guia"><ol>
+  <li><a href="#video"><b>▶</b>Vídeo</a></li>
+  <li><a href="#entrar"><b>1</b>Entrar</a></li>
+  <li><a href="#tela"><b>2</b>A tela</a></li>
+  <li><a href="#conhecer"><b>3</b>Conhecer a esquadria</a></li>
+  <li><a href="#pecas"><b>4</b>Peças e perfis</a></li>
+  <li><a href="#pratique"><b>5</b>Pratique o conhecimento</a></li>
+  <li><a href="#duvidas"><b>6</b>Dúvidas</a></li>
+</ol></nav>
+
+<section id="entrar">
+  <div class="cap"><span class="num">1</span><h2>Entrar</h2></div>
+  <div class="fig">
+    <figure><img src="img/01-login.jpg" alt="Tela de entrada com os campos Login e Senha e o botão Entrar" width="640" height="486"><figcaption>Tela de entrada</figcaption></figure>
+    <ol class="steps">
+      <li><span>Abra o link no navegador (Chrome, Edge ou Safari).</span></li>
+      <li><span>Digite seu <strong>Login</strong>. Pode ser com ou sem letra maiúscula.</span></li>
+      <li><span>Digite a <strong>Senha</strong> e toque em <strong>Entrar</strong>.</span></li>
+      <li><span>Seu nome aparece na barra escura no alto. Para sair, use <strong>Sair</strong>.</span></li>
+    </ol>
+  </div>
+</section>
+
+<section id="tela">
+  <div class="cap"><span class="num">2</span><h2>A tela</h2></div>
+  <div class="fig">
+    <figure><img src="img/02-conhecer.jpg" alt="Tela principal com a janela 3D à esquerda e os painéis à direita" width="1280" height="760" loading="lazy"><figcaption>Janela de correr 2 folhas · SUP JCR 200</figcaption></figure>
+    <ol class="steps dot">
+      <li><span><strong>Tipologia:</strong> escolha a esquadria. São 11, da linha Suprema e da linha Gold.</span></li>
+      <li><span><strong>Conhecer a esquadria:</strong> para estudar.</span></li>
+      <li><span><strong>Pratique o conhecimento:</strong> para os 3 desafios.</span></li>
+      <li><span><strong>Janela 3D</strong> no centro e <strong>painéis</strong> do lado (no celular, ficam embaixo).</span></li>
+      <li><span>Embaixo, à direita, a <strong>medida</strong> da esquadria.</span></li>
+    </ol>
+  </div>
+</section>
+
+<section id="conhecer">
+  <div class="cap"><span class="num">3</span><h2>Conhecer a esquadria</h2></div>
+  <p class="intro">Gire, abra as folhas, desmonte e veja os cortes. Nada aqui vale nota: é para explorar à vontade.</p>
+  <div class="fig rev">
+    <ol class="steps dot">
+      <li><span><strong>Girar:</strong> arraste com o mouse ou com um dedo. <strong>Zoom:</strong> rodinha do mouse ou dois dedos.</span></li>
+      <li><span><strong>Setas no canto</strong> ▲ ◀ ▶ ▼: giram 15° e inclinam 10° por toque. <strong>FRENTE</strong> volta de frente.</span></li>
+      <li><span><strong>Perspectiva, Frente, Lateral:</strong> vistas prontas.</span></li>
+      <li><span><strong>Abrir as folhas:</strong> passe o mouse na folha, ou use o controle de abertura no painel.</span></li>
+      <li><span><strong>Desmontar:</strong> separa as peças como um quebra-cabeça. <strong>Montar</strong> junta de novo.</span></li>
+    </ol>
+    <figure><img src="img/04-desmontar.jpg" alt="Janela desmontada com marco, folhas e travessas separados" width="1280" height="760" loading="lazy"><figcaption>Desmontar: cada peça no seu lugar</figcaption></figure>
+  </div>
+  <div class="fig">
+    <figure><img src="img/05-corte.jpg" alt="Corte superior mostrando o trilho SU-001 e a travessa SU-053" width="1280" height="760" loading="lazy"><figcaption>Corte superior: trilho SU-001 e travessa SU-053</figcaption></figure>
+    <ol class="steps dot">
+      <li><span>Os botões <strong>+</strong> na janela abrem o <strong>corte</strong> daquela junção, igual ao desenho do catálogo.</span></li>
+      <li><span>Também pelo painel <strong>Cortes das junções</strong>.</span></li>
+      <li><span><strong>Voltar à janela</strong> sai do corte.</span></li>
+    </ol>
+  </div>
+  <div class="fig rev">
+    <ol class="steps dot">
+      <li><span>Na <strong>Porta com persiana</strong> (linha Gold), o botão <strong>Só a persiana</strong> mostra a caixa transparente e as lâminas enrolando no eixo.</span></li>
+      <li><span><strong>Pausar</strong> para parar o movimento.</span></li>
+    </ol>
+    <figure><img src="img/11-persiana.jpg" alt="Persiana de enrolar com a caixa transparente" width="1280" height="760" loading="lazy"><figcaption>Gold PC-2FPE · Só a persiana</figcaption></figure>
+  </div>
+</section>
+
+<section id="pecas">
+  <div class="cap"><span class="num">4</span><h2>Peças e perfis</h2></div>
+  <div class="fig">
+    <figure><img src="img/05b-pecas.jpg" alt="Painel Peças com a folha interna separada em travessas e montantes" width="1280" height="760" loading="lazy"><figcaption>Peças: a travessa SU-053 da folha interna em destaque</figcaption></figure>
+    <ol class="steps dot">
+      <li><span>Abra <strong>Peças</strong> e toque num grupo: marco, trilho, folha interna (travessas / montante lateral e mão de amigo), folha externa, baguete.</span></li>
+      <li><span>A peça ganha cor na janela e aparece o código do perfil.</span></li>
+      <li><span>Toque no código para ver o <strong>Perfil em 3D</strong>.</span></li>
+      <li><span>Em <strong>Buscar perfil</strong>, digite só o número (ex.: <span class="k">053</span>).</span></li>
+    </ol>
+  </div>
+  <div class="fig rev">
+    <ol class="steps dot">
+      <li><span>O <strong>Perfil em 3D</strong> mostra a peça sozinha, com nome e para que serve.</span></li>
+      <li><span>Gire a peça com o dedo ou com as setinhas no canto. <strong>0°</strong> volta à posição inicial.</span></li>
+      <li><span><strong>Trocar este perfil:</strong> quando o catálogo tem outra opção para aquela posição, ela aparece embaixo. Toque para trocar e ver como fica na janela.</span></li>
+      <li><span><strong>← Voltar</strong> fecha o perfil e volta para a esquadria inteira.</span></li>
+      <li><span>Mais painéis: <strong>Trocar perfis</strong> (opções do catálogo), <strong>Componentes</strong>, <strong>Usinagens</strong> e <strong>Configuração</strong> (cor, vidro, medida).</span></li>
+    </ol>
+    <figure><img src="img/03-perfil3d.jpg" alt="Painel Perfil em 3D com o montante SU-245 e as opções de troca" width="1280" height="760" loading="lazy"><figcaption>Perfil em 3D · trocando o SU-039 pelo SU-245</figcaption></figure>
+  </div>
+</section>
+
+<section id="pratique">
+  <div class="cap"><span class="num">5</span><h2>Pratique o conhecimento</h2></div>
+  <p class="intro">Toque em <strong>Pratique o conhecimento</strong> e escolha um dos 3 desafios. Faça na ordem: primeiro monte, depois lance no sistema.</p>
+  <div class="trio">
+    <div class="box"><h3><i>1</i>Monte a esquadria</h3><p>Arraste cada perfil do painel até o lugar certo na janela. Acertou, a peça ganha cor e se encaixa.</p><span class="meta">Desmontada ou Montada · tempo · estrelas</span></div>
+    <div class="box"><h3><i>2</i>Lançamento no WVetro</h3><p>Leia o pedido do cliente, preencha os Dados do projeto e responda as Variáveis. A janela muda a cada resposta.</p><span class="meta">5 min · conferir · nova simulação</span></div>
+    <div class="box"><h3><i>3</i>Lançamento no CEM</h3><p>As 3 abas do CEM: Informações Gerais, Vidros e as 19 Opções de Montagem da A2.</p><span class="meta">8 min · conferir · nova simulação</span></div>
+  </div>
+
+  <h3>Desafio 1 · Monte a esquadria</h3>
+  <div class="fig">
+    <figure><img src="img/06-desafio.jpg" alt="Desafio monte a esquadria com as peças separadas e os perfis no painel" width="1280" height="760" loading="lazy"><figcaption>Nível Desmontada: quebra-cabeça</figcaption></figure>
+    <ol class="steps">
+      <li><span>Escolha <strong>Desmontada</strong> (quebra-cabeça, vale até 3 estrelas) ou <strong>Montada</strong> (com dicas).</span></li>
+      <li><span>Arraste um perfil do painel e solte sobre a peça certa.</span></li>
+      <li><span>Errou? Aparece uma dica do porquê. Tente de novo.</span></li>
+      <li><span>O tempo começa no primeiro perfil. Encaixe tudo antes do limite.</span></li>
+      <li><span>No fim aparecem as estrelas, a % de acerto e seu recorde. <strong>Reiniciar o desafio</strong> começa de novo.</span></li>
+    </ol>
+  </div>
+
+  <h3>Desafio 2 · Lançamento no WVetro</h3>
+  <div class="fig rev">
+    <ol class="steps">
+      <li><span>Leia o <strong>Pedido do cliente</strong> no alto do painel.</span></li>
+      <li><span><strong>1 · Dados do projeto:</strong> quantidade, largura, altura, cores, vidro, contramarco e arremate.</span></li>
+      <li><span>Toque em <strong>Avançar para as variáveis</strong>.</span></li>
+      <li><span><strong>2 · Variáveis:</strong> responda cada pergunta como no WVetro. A peça escolhida aparece em 3D logo abaixo.</span></li>
+      <li><span><strong>Ver no 3D</strong> leva a câmera até a peça na janela.</span></li>
+      <li><span><strong>Conferir respostas</strong> mostra o que acertou e o que errou. <strong>Nova simulação</strong> traz outro pedido.</span></li>
+    </ol>
+    <figure><img src="img/07-wvetro-dados.jpg" alt="Desafio WVetro com o pedido do cliente e a etapa Dados do projeto" width="1280" height="760" loading="lazy"><figcaption>Pedido do cliente e Dados do projeto</figcaption></figure>
+  </div>
+  <div class="fig">
+    <figure><img src="img/08-wvetro-var.jpg" alt="Variável E respondida com SU-044 e o perfil em 3D abaixo" width="1280" height="760" loading="lazy"><figcaption>Respondeu SU044: o perfil aparece em 3D e na janela</figcaption></figure>
+    <div class="tip"><b>As folgas X e Y</b> vêm com 5 e 4 mm. Elas são auxílio para o plano de corte: não altere sem orientação técnica da produção da serralheria.</div>
+  </div>
+
+  <h3>Desafio 3 · Lançamento no CEM</h3>
+  <div class="fig rev">
+    <ol class="steps">
+      <li><span><strong>Informações Gerais:</strong> largura e altura (dentro do mínimo e máximo do fabricante) e o tratamento dos perfis.</span></li>
+      <li><span><strong>Vidros:</strong> marque os filtros do pedido. Com os filtros certos aparece o vidro: toque nele para selecionar.</span></li>
+      <li><span><strong>Opções de Montagem:</strong> toque numa linha para abrir as opções e escolha. O que o pedido não pede fica no padrão.</span></li>
+      <li><span><strong>Conferir respostas</strong> marca em verde e vermelho cada item.</span></li>
+    </ol>
+    <figure><img src="img/09-cem.jpg" alt="Desafio CEM com as Opções de Montagem e a opção Contramarco aberta" width="1280" height="760" loading="lazy"><figcaption>Opções de Montagem · A2</figcaption></figure>
+  </div>
+  <div class="fig">
+    <figure><img src="img/10-resultado.jpg" alt="Resultado do desafio com estrelas, porcentagem e a lista do que errou" width="1280" height="760" loading="lazy"><figcaption>Resultado: estrelas, % e o que corrigir</figcaption></figure>
+    <div class="tip"><b>A lista gerada</b> (perfis e componentes) só aparece depois de conferir. Abra para estudar o que aquele pedido usa.</div>
+  </div>
+</section>
+
+<section id="duvidas">
+  <div class="cap"><span class="num">6</span><h2>Dúvidas</h2></div>
+  <div class="faq">
+    <div class="box"><h3>Esqueci a senha</h3><p>Fale com a FC Consultoria. A senha é trocada pelo painel e você recebe a nova.</p></div>
+    <div class="box"><h3>Login ou senha não conferem</h3><p>Confira se não há espaço antes ou depois do login. Maiúscula não importa no login, mas importa na senha.</p></div>
+    <div class="box"><h3>A janela 3D não aparece</h3><p>Atualize a página. No celular, use o Chrome ou o Safari atualizado.</p></div>
+    <div class="box"><h3>Meu progresso some?</h3><p>Não. Fica guardado no seu login e a FC acompanha seu andamento pelo painel.</p></div>
+  </div>
+  <div class="box"><h3>Contato FC Consultoria</h3><p>WhatsApp <b class="k">(66) 9 9986-7984</b> · Instagram <b class="k">@fc__consultoria</b></p></div>
+</section>
+
+<footer><span>FC Consultoria em Esquadria · Sinop-MT</span><span>Treinamento FC 3D · Linhas Suprema e Gold</span></footer>
+</div>
+<script>
+document.getElementById('cp').addEventListener('click',async e=>{const b=e.currentTarget,t='https://fc-consultoria.github.io/treinamento/';
+  try{await navigator.clipboard.writeText(t);b.textContent='Link copiado';}catch(_){const r=document.createRange();r.selectNodeContents(document.getElementById('u'));const s=getSelection();s.removeAllRanges();s.addRange(r);b.textContent='Selecionado: copie';}
+  setTimeout(()=>b.textContent='Copiar link',2000);});
+</script>
+</body></html>

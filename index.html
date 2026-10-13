@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Treinamento FC 3D</title>
+
+<style>
+.gate{position:fixed;inset:0;z-index:100;display:grid;place-items:center;background:#e9edf0;padding:16px}
+.gate[hidden]{display:none}
+.gcard{width:min(380px,100%);background:#fff;border:1px solid #d5dce1;border-radius:12px;padding:28px 24px;display:flex;flex-direction:column;gap:14px;box-shadow:0 10px 30px rgba(27,35,42,.08)}
+.gcard .eb{font:500 12px/1.2 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#5d6b76}
+.gcard h1{margin:0;font:700 26px/1.1 'Barlow',sans-serif;color:#1b232a}
+.gcard p{margin:0;font:400 14px/1.4 'Barlow Semi Condensed',sans-serif;color:#5d6b76}
+.gcard label{display:flex;flex-direction:column;gap:6px;font:500 14px 'Barlow',sans-serif;color:#1b232a}
+.gcard input{font:400 16px 'IBM Plex Mono',monospace;padding:10px 12px;border:1px solid #c4ccd2;border-radius:8px}
+.gcard input:focus{outline:2px solid #1f6f9a;outline-offset:1px}
+.gcard button{font:600 15px 'Barlow',sans-serif;padding:11px;border:0;border-radius:8px;background:#1f6f9a;color:#fff;cursor:pointer}
+.gcard button:disabled{opacity:.6}
+.gguia{display:block;padding:10px;border:2px solid #e0972e;border-radius:8px;background:#fdf1df;color:#7a4a08!important;text-decoration:none;font-weight:600!important;font:600 14px 'Barlow',sans-serif;color:#1f6f9a;text-align:center}
+.gmsg{min-height:18px;color:#b4372f!important}
+.ubar{display:flex;justify-content:flex-end;align-items:center;gap:10px;padding:6px 16px;background:#1b232a;color:#e9edf0;font:400 13px 'Barlow Semi Condensed',sans-serif}
+.ubar a,.ubar button{color:#fff;background:transparent;border:1px solid rgba(255,255,255,.35);border-radius:6px;padding:4px 10px;font:500 13px 'Barlow',sans-serif;cursor:pointer;text-decoration:none}
+</style>
+</head>
+<body>
+<div class="gate" id="gate" hidden>
+ <form class="gcard" id="gateForm" autocomplete="on">
+  <img src="data:image/jpeg;base64,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" alt="FC Consultoria e Representação" width="72" height="72" style="border-radius:14px;align-self:center">
+  <div class="eb">FC Consultoria · Linhas Suprema e Gold</div>
+  <h1>Treinamento FC 3D</h1>
+  <p>Entre com o login e a senha que você recebeu.</p>
+  <label>Login<input name="login" autocomplete="username" required placeholder="ex.: aluno01"></label>
+  <label>Senha<input name="senha" type="password" autocomplete="current-password" required></label>
+  <button type="submit">Entrar</button>
+  <p class="gmsg" id="gateMsg" role="alert"></p>
+  <a class="gguia" href="guia/" target="_blank" rel="noopener">Primeira vez? Veja o guia do aluno →</a>
+ </form>
+</div>
+<div class="gate" id="quemBox" hidden><form class="gcard" id="quemForm" autocomplete="on">
+  <div class="eb">Treinamento FC 3D</div><h1>Quem está estudando agora?</h1>
+  <p>Digite seu nome. Ele aparece no resultado dos desafios, para a FC saber quem fez.</p>
+  <label>Seu nome<input name="quem" id="quemIn" required minlength="2" maxlength="40" autocomplete="name" placeholder="ex.: Maria Souza"></label>
+  <button type="submit">Começar</button>
+ </form></div>
+<div class="gate" id="sugBox" hidden><form class="gcard" id="sugForm">
+  <div class="eb">Treinamento FC 3D</div><h1>Sugestão ou feedback</h1>
+  <p>Conte o que achou, o que ficou confuso ou o que podemos melhorar. A FC lê todas.</p>
+  <label>Tipo<select name="tipo" id="sugTipo"><option>Sugestão de melhoria</option><option>Algo não funcionou</option><option>Dúvida</option><option>Elogio</option></select></label>
+  <label>Sua mensagem<textarea name="txt" id="sugTxt" required minlength="3" maxlength="1000" rows="5" style="font:inherit;padding:10px;border:1px solid #c9d3da;border-radius:8px"></textarea></label>
+  <button type="submit">Enviar</button><button type="button" id="sugFechar" style="background:#fff;color:#1d3f57;border:1px solid #c9d3da">Cancelar</button>
+  <p class="gmsg" id="sugMsg" role="status" style="color:#2f9a55!important"></p>
+  <div id="sugResp" hidden style="border-top:1px solid #dfe5ea;padding-top:10px;font-size:14px"></div>
+ </form></div>
+<div class="ubar" id="ubar" hidden><span id="uname"></span><button type="button" id="quemTag" hidden title="Trocar quem está estudando"></button><button type="button" id="sugBtn" title="Enviar sugestão ou feedback para a FC">💬 Sugestão</button><a href="guia/" target="_blank" rel="noopener" style="background:#e0972e;border-color:#e0972e;color:#1b1206;font-weight:600">Guia do aluno</a><a id="upainel" href="painel.html" hidden>Painel da matriz</a><button type="button" onclick="sair()">Sair</button></div>
+<div id="appLoad" hidden style="padding:40px 20px;text-align:center;font:500 16px system-ui;color:#5d6b76">Carregando o treinamento…</div><div id="appRoot"></div>
+<script>
+function sugInit(){const box=document.getElementById('sugBox'),f=document.getElementById('sugForm'),m=document.getElementById('sugMsg');
+  const esc=v=>String(v||'').replace(/</g,'&lt;'),btn=document.getElementById('sugBtn'),rb=document.getElementById('sugResp');let RES=[];
+  const load=async()=>{const {data}=await sb.from('trein_eventos').select('detalhe,criado_em').eq('tipo','resposta').order('criado_em',{ascending:false});RES=data||[];
+    let seen=0;try{seen=+(localStorage.getItem('treinFC-resp-vistas')||0);}catch(e){}const novas=RES.filter(r=>Date.parse(r.criado_em)>seen).length;
+    btn.textContent=novas?`💬 Sugestão · ${novas} resposta${novas>1?'s':''} da FC`:'💬 Sugestão';btn.style.background=novas?'#e0972e':'';btn.style.color=novas?'#1b1206':'';};
+  load();setInterval(load,120000);
+  btn.onclick=()=>{m.textContent='';box.hidden=false;document.getElementById('sugTxt').focus();
+    rb.hidden=!RES.length;rb.innerHTML='<b>Respostas da FC</b>'+RES.map(r=>`<div style="margin-top:8px;padding:6px 9px;border-left:3px solid #0e6b62;background:#eef7f5;border-radius:4px"><small style="color:#5c6d68">${new Date(r.criado_em).toLocaleString('pt-BR')}</small><br>${esc((r.detalhe||{}).txt)}</div>`).join('');
+    try{localStorage.setItem('treinFC-resp-vistas',String(Date.now()));}catch(e){}load();};
+  document.getElementById('sugFechar').onclick=()=>{box.hidden=true;};
+  f.onsubmit=async e=>{e.preventDefault();const txt=document.getElementById('sugTxt').value.trim();if(txt.length<3)return;
+    const tipo=document.getElementById('sugTipo').value;if(window.TRK){TRK('sugestao',{tipo,txt,t:(typeof S!=='undefined'?S.typo:'')});if(window.TRKFLUSH)await TRKFLUSH();}
+    m.textContent='Obrigado! Sua mensagem foi enviada para a FC.';document.getElementById('sugTxt').value='';setTimeout(()=>{box.hidden=true;},1600);};}
+function pedirNome(perfil){const box=document.getElementById('quemBox'),inp=document.getElementById('quemIn'),tag=document.getElementById('quemTag');
+  let last='';try{last=sessionStorage.getItem('treinFC-quem')||'';}catch(e){}
+  const set=n=>{window.ALUNO_NOME=n;try{sessionStorage.setItem('treinFC-quem',n);localStorage.setItem('treinFC-quem-ult',n);}catch(e){}tag.textContent='Estudando: '+n+' · trocar';tag.hidden=false;box.hidden=true;};
+  if(last){set(last);}else{try{inp.value=localStorage.getItem('treinFC-quem-ult')||'';}catch(e){}box.hidden=false;setTimeout(()=>inp.focus(),50);}
+  document.getElementById('quemForm').onsubmit=e=>{e.preventDefault();const n=inp.value.trim().replace(/\s+/g,' ');if(n.length<2)return;set(n);if(window.TRK)TRK('quem',{n});};
+  tag.onclick=()=>{inp.value='';box.hidden=false;inp.focus();};}
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="auth.js"></script>
+<script>
+/* Registro do andamento do aluno */
+(function(){
+  let uid=null,vistos=new Set(),ultimo=Date.now(),fila=[];
+  const enviar=async()=>{if(!uid||!fila.length)return;const lote=fila.splice(0);const {error}=await sb.from('trein_eventos').insert(lote);if(error)fila.unshift(...lote);};
+  window.TRK=(tipo,d)=>{if(!uid)return;d=d||{};
+    if(tipo==='perfil'||tipo==='componente'||tipo==='corte'){const k=tipo+'|'+(d.t||'')+'|'+(d.c||d.k||'');if(vistos.has(k))return;vistos.add(k);}
+    if(window.ALUNO_NOME)d=Object.assign({quem:window.ALUNO_NOME},d);
+    fila.push({user_id:uid,tipo,tipologia:d.t||null,detalhe:d});ultimo=Date.now();};
+  ['pointerdown','keydown','wheel'].forEach(ev=>addEventListener(ev,()=>{ultimo=Date.now();},{passive:true}));
+  setInterval(()=>{if(uid&&document.visibilityState==='visible'&&Date.now()-ultimo<180000)fila.push({user_id:uid,tipo:'tempo',tipologia:(typeof S!=='undefined'?S.typo:null)||null,detalhe:{s:60}});},60000);
+  setInterval(enviar,15000);window.TRKFLUSH=enviar;
+  addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')enviar();});
+  async function loadApp(){
+    const ld=document.getElementById('appLoad');ld.hidden=false;
+    try{const {data}=await sb.from('trein_eventos').select('detalhe').eq('tipo','chave_app').limit(1);
+      const kb=Uint8Array.from(atob(data[0].detalhe.k),c=>c.charCodeAt(0));
+      const key=await crypto.subtle.importKey('raw',kb,'AES-GCM',false,['decrypt']);
+      const buf=new Uint8Array(await (await fetch('app.enc?v=1791842560',{cache:'no-cache'})).arrayBuffer());
+      const plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:buf.slice(0,12)},key,buf.slice(12));
+      const html=await new Response(new Blob([plain]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
+      const root=document.getElementById('appRoot');root.innerHTML=html;
+      for(const old of [...root.querySelectorAll('script')]){const n=document.createElement('script');
+        if(old.src){n.src=old.src;await new Promise((ok,er)=>{n.onload=ok;n.onerror=er;old.replaceWith(n);});}
+        else{n.textContent=old.textContent;old.replaceWith(n);}}
+      ld.hidden=true;
+    }catch(e){ld.textContent='Não foi possível abrir o treinamento. Atualize a página (Ctrl+F5). Se continuar, fale com a FC Consultoria.';console.error(e);throw e;}
+  }
+  gateUI(async({session,perfil})=>{
+    uid=session.user.id;
+    await loadApp();
+    document.getElementById('ubar').hidden=false;
+    document.getElementById('uname').textContent=(perfil.nome||perfil.login)+(perfil.papel==='admin'?' · matriz':'');
+    if(perfil.papel!=='admin')pedirNome(perfil);sugInit();
+    document.getElementById('upainel').hidden=perfil.papel!=='admin';
+    fila.push({user_id:uid,tipo:'login',tipologia:(typeof S!=='undefined'?S.typo:null)||null,detalhe:{}});
+    TRK('tipologia',{t:(typeof S!=='undefined'?S.typo:null)||''});
+    try{PROG={};localStorage.removeItem('treinFC-prog');}catch(e){}
+    sb.from('trein_eventos').select('detalhe').eq('user_id',uid).eq('tipo','teste').then(({data})=>{
+      if(!data||typeof mergeProg!=='function')return;
+      mergeProg(data.map(r=>{const x=r.detalhe||{},pct=x.pct!=null?x.pct:Math.round((x.tot||0)/((x.tot||0)+(x.err||0)||1)*100);
+        return {t:x.t,pct,stars:x.stars!=null?x.stars:(pct>=90?3:pct>=70?2:1),ms:x.ms||359999000};}));});
+    enviar();
+    dispatchEvent(new Event('resize'));
+  });
+})();
+</script>
+</body>
+</html>
