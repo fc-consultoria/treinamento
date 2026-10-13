@@ -86,7 +86,7 @@ html{scroll-behavior:smooth}
   <div class="brand"><img src="img/logo-fc-160.jpg" alt="" width="52" height="52" style="border-radius:11px">FC Consultoria e Representação</div>
   <div class="eb">Treinamento FC 3D · Guia do aluno</div>
   <h1>Como usar o Treinamento FC 3D</h1>
-  <p class="lead">Você vai estudar as janelas e portas das linhas Suprema e Gold em 3D, peça por peça, e depois praticar em três desafios: montar a esquadria e lançar o pedido no WVetro e no CEM.</p>
+  <p class="lead">Você vai estudar as janelas e portas das linhas Suprema e Gold em 3D, peça por peça, e depois praticar: montar a esquadria em 3 níveis, lançar o pedido no WVetro e no CEM e ler o diagrama de dimensões (pressão de vento).</p>
 </header>
 
 <div class="acesso">
@@ -105,15 +105,15 @@ html{scroll-behavior:smooth}
   </div>
   <div class="box">
     <div class="eb">Seu acesso</div>
-    <p><b>Login:</b> o que a FC te passou (ex.: <span class="k">aluno01</span>)<br><b>Senha:</b> a senha que veio junto</p>
-    <p class="intro" style="font-size:14px">O login é pessoal. Tudo o que você estuda e os desafios que faz ficam guardados nele.</p>
+    <p><b>Login e senha:</b> os da sua empresa (a FC passa para o gestor)<br><b>Seu nome:</b> depois de entrar, toque no seu nome<br><b>Código pessoal:</b> 4 números, só seu</p>
+    <p class="intro" style="font-size:14px">Cada colaborador tem <b>72 horas corridas</b> a partir do primeiro acesso, de <b>segunda a sábado</b>, em um aparelho por vez. O que você estuda e os desafios ficam guardados no seu nome.</p>
   </div>
 </div>
 
 <section id="video" class="vid">
   <div class="cap"><span class="num">▶</span><h2>Assista primeiro: o tutorial em vídeo</h2></div>
   <p class="intro">Em menos de 3 minutos você vê tudo funcionando: entrar, girar a janela, peças e perfis, desmontar, cortes e os 3 desafios.</p>
-  <figure class="vbox"><video controls preload="metadata" playsinline poster="video/capa.jpg" src="video/tutorial_treinamento_fc3d.mp4">Seu navegador não abre o vídeo.</video><figcaption>Tutorial · Treinamento FC 3D (sem som, com legendas)</figcaption></figure>
+  <figure class="vbox"><video controls preload="metadata" playsinline poster="video/capa.jpg" src="video/tutorial_treinamento_fc3d.mp4">Seu navegador não abre o vídeo.</video><figcaption>Tutorial · Treinamento FC 3D (sem som, com legendas). O vídeo é da versão anterior: alguns botões mudaram de nome e este guia já está atualizado.</figcaption></figure>
 </section>
 
 <nav class="toc" aria-label="Capítulos do guia"><ol>
@@ -122,8 +122,10 @@ html{scroll-behavior:smooth}
   <li><a href="#tela"><b>2</b>A tela</a></li>
   <li><a href="#conhecer"><b>3</b>Conhecer a esquadria</a></li>
   <li><a href="#pecas"><b>4</b>Peças e perfis</a></li>
-  <li><a href="#pratique"><b>5</b>Pratique o conhecimento</a></li>
-  <li><a href="#duvidas"><b>6</b>Dúvidas</a></li>
+  <li><a href="#monte"><b>5</b>Monte a esquadria</a></li>
+  <li><a href="#sistema"><b>6</b>Treinamento em Sistema</a></li>
+  <li><a href="#diagrama"><b>7</b>Diagrama de dimensões</a></li>
+  <li><a href="#duvidas"><b>8</b>Dúvidas</a></li>
 </ol></nav>
 
 <section id="entrar">
@@ -132,25 +134,36 @@ html{scroll-behavior:smooth}
     <figure><img src="img/01-login.jpg" alt="Tela de entrada com os campos Login e Senha e o botão Entrar" width="640" height="486"><figcaption>Tela de entrada</figcaption></figure>
     <ol class="steps">
       <li><span>Abra o link no navegador (Chrome, Edge ou Safari).</span></li>
-      <li><span>Digite seu <strong>Login</strong>. Pode ser com ou sem letra maiúscula.</span></li>
-      <li><span>Digite a <strong>Senha</strong> e toque em <strong>Entrar</strong>.</span></li>
-      <li><span>Seu nome aparece na barra escura no alto. Para sair, use <strong>Sair</strong>.</span></li>
+      <li><span>Digite o <strong>Login</strong> e a <strong>Senha</strong> da sua empresa e toque em <strong>Entrar</strong>.</span></li>
+      <li><span>Na tela <strong>Quem está estudando agora?</strong>, toque no seu nome.</span></li>
+      <li><span>Digite seu <strong>código pessoal de 4 números</strong> (você recebeu da FC Consultoria).</span></li>
+      <li><span>Seu nome aparece na barra escura no alto. Para trocar de pessoa, toque no nome. Para sair, <strong>Sair</strong>.</span></li>
     </ol>
+  </div>
+  <div class="fig rev">
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div class="tip"><b>Prazo de 72 horas.</b> Conta a partir do seu primeiro acesso. Acabou o prazo? Toque em <strong>Solicitar mais tempo</strong> no seu nome e aguarde a FC liberar. Aos domingos o treinamento fica fechado.</div>
+      <div class="tip"><b>Um aparelho por vez.</b> Se o seu nome estiver aberto em outro aparelho, este fica bloqueado. Feche o treinamento no outro aparelho e entre de novo.</div>
+    </div>
+    <figure><img src="img/12-colaborador.jpg" alt="Tela Quem está estudando agora com a lista de colaboradores e o prazo de cada um" width="520" height="400" loading="lazy"><figcaption>Escolha o seu nome: o prazo de cada um aparece ao lado</figcaption></figure>
   </div>
 </section>
 
 <section id="tela">
   <div class="cap"><span class="num">2</span><h2>A tela</h2></div>
   <div class="fig">
-    <figure><img src="img/02-conhecer.jpg" alt="Tela principal com a janela 3D à esquerda e os painéis à direita" width="1280" height="760" loading="lazy"><figcaption>Janela de correr 2 folhas · SUP JCR 200</figcaption></figure>
+    <figure><img src="img/02-conhecer.jpg" alt="Tela principal com a janela 3D, as abas e os painéis à direita" width="1280" height="760" loading="lazy"><figcaption>Janela de correr 2 folhas · SUP JCR 200</figcaption></figure>
     <ol class="steps dot">
-      <li><span><strong>Tipologia:</strong> escolha a esquadria. São 11, da linha Suprema e da linha Gold.</span></li>
+      <li><span><strong>Tipologia:</strong> escolha a esquadria. São 16, das linhas Suprema e Gold.</span></li>
       <li><span><strong>Conhecer a esquadria:</strong> para estudar.</span></li>
-      <li><span><strong>Pratique o conhecimento:</strong> para os 3 desafios.</span></li>
-      <li><span><strong>Janela 3D</strong> no centro e <strong>painéis</strong> do lado (no celular, ficam embaixo).</span></li>
+      <li><span><strong>Monte a esquadria:</strong> o desafio de montar, em 3 níveis.</span></li>
+      <li><span><strong>Treinamento em Sistema:</strong> lançamento no WVetro e no CEM.</span></li>
+      <li><span><strong>Diagrama de dimensões:</strong> pressão de vento e tamanho máximo.</span></li>
+      <li><span>Na barra escura: <strong>Dúvidas e sugestões</strong>, <strong>Guia do aluno</strong> e <strong>Sair</strong>.</span></li>
       <li><span>Embaixo, à direita, a <strong>medida</strong> da esquadria.</span></li>
     </ol>
   </div>
+  <div class="tip"><b>Treinamento em Sistema e Diagrama de dimensões</b> aparecem quando estão incluídos no treinamento da sua empresa. Apareceu a faixa <strong>🔄 Nova versão do treinamento disponível</strong>? Toque em <strong>Atualizar</strong>: seu progresso não se perde.</div>
 </section>
 
 <section id="conhecer">
@@ -159,8 +172,9 @@ html{scroll-behavior:smooth}
   <div class="fig rev">
     <ol class="steps dot">
       <li><span><strong>Girar:</strong> arraste com o mouse ou com um dedo. <strong>Zoom:</strong> rodinha do mouse ou dois dedos.</span></li>
-      <li><span><strong>Setas no canto</strong> ▲ ◀ ▶ ▼: giram 15° e inclinam 10° por toque. <strong>FRENTE</strong> volta de frente.</span></li>
-      <li><span><strong>Perspectiva, Frente, Lateral:</strong> vistas prontas.</span></li>
+      <li><span><strong>Setas no canto</strong> ▲ ◀ ▶ ▼: giram 15° e inclinam 10° por toque. <strong>INT.</strong> volta de frente.</span></li>
+      <li><span><strong>Perspectiva, Vista interna, Vista externa, Lateral:</strong> vistas prontas. Vista interna é olhando de dentro da casa.</span></li>
+      <li><span><strong>Travar folhas</strong> deixa as folhas paradas. <strong>Junções</strong> mostra ou esconde os botões <strong>+</strong>.</span></li>
       <li><span><strong>Abrir as folhas:</strong> passe o mouse na folha, ou use o controle de abertura no painel.</span></li>
       <li><span><strong>Desmontar:</strong> separa as peças como um quebra-cabeça. <strong>Montar</strong> junta de novo.</span></li>
     </ol>
@@ -200,34 +214,47 @@ html{scroll-behavior:smooth}
       <li><span>Gire a peça com o dedo ou com as setinhas no canto. <strong>0°</strong> volta à posição inicial.</span></li>
       <li><span><strong>Trocar este perfil:</strong> quando o catálogo tem outra opção para aquela posição, ela aparece embaixo. Toque para trocar e ver como fica na janela.</span></li>
       <li><span><strong>← Voltar</strong> fecha o perfil e volta para a esquadria inteira.</span></li>
-      <li><span>Mais painéis: <strong>Trocar perfis</strong> (opções do catálogo), <strong>Componentes</strong>, <strong>Usinagens</strong> e <strong>Configuração</strong> (cor, vidro, medida).</span></li>
+      <li><span>Mais painéis: <strong>Trocar perfis</strong> (opções do catálogo), <strong>Componentes</strong>, <strong>Usinagens</strong> e <strong>Configuração</strong> (medida, vidro e cor do alumínio: Branco, Preto fosco, Bronze, Natural, Cerejeira Real, Aço Corten e Linheiro Real).</span></li>
     </ol>
     <figure><img src="img/03-perfil3d.jpg" alt="Painel Perfil em 3D com o montante SU-245 e as opções de troca" width="1280" height="760" loading="lazy"><figcaption>Perfil em 3D · trocando o SU-039 pelo SU-245</figcaption></figure>
   </div>
 </section>
 
-<section id="pratique">
-  <div class="cap"><span class="num">5</span><h2>Pratique o conhecimento</h2></div>
-  <p class="intro">Toque em <strong>Pratique o conhecimento</strong> e escolha um dos 3 desafios. Faça na ordem: primeiro monte, depois lance no sistema.</p>
+<section id="monte">
+  <div class="cap"><span class="num">5</span><h2>Monte a esquadria</h2></div>
+  <p class="intro">Toque em <strong>Monte a esquadria</strong> e arraste cada perfil do painel até o lugar certo na janela. Acertou, a peça ganha cor e se encaixa. São 3 níveis por tipologia: o próximo libera quando você vai bem no anterior.</p>
   <div class="trio">
-    <div class="box"><h3><i>1</i>Monte a esquadria</h3><p>Arraste cada perfil do painel até o lugar certo na janela. Acertou, a peça ganha cor e se encaixa.</p><span class="meta">Desmontada ou Montada · tempo · estrelas</span></div>
-    <div class="box"><h3><i>2</i>Lançamento no WVetro</h3><p>Leia o pedido do cliente, preencha os Dados do projeto e responda as Variáveis. A janela muda a cada resposta.</p><span class="meta">5 min · conferir · nova simulação</span></div>
-    <div class="box"><h3><i>3</i>Lançamento no CEM</h3><p>As 3 abas do CEM: Informações Gerais, Vidros e as 19 Opções de Montagem da A2.</p><span class="meta">8 min · conferir · nova simulação</span></div>
+    <div class="box"><h3><i>1</i>Montada</h3><p>A esquadria está montada. Passe o mouse para ver o nome de cada peça e arraste o perfil certo.</p><span class="meta">com dicas · até 2★</span></div>
+    <div class="box"><h3><i>2</i>Desmontada</h3><p>Quebra-cabeça: as peças ficam separadas. Libera com 70% ou mais no Nível 1 da tipologia.</p><span class="meta">quebra-cabeça · até 3★</span></div>
+    <div class="box"><h3><i>3</i>Especialista</h3><p>O painel mostra só a seção do perfil, sem o nome. Libera com 3 estrelas no Nível 2.</p><span class="meta">só a seção · metade do tempo</span></div>
   </div>
-
-  <h3>Desafio 1 · Monte a esquadria</h3>
   <div class="fig">
-    <figure><img src="img/06-desafio.jpg" alt="Desafio monte a esquadria com as peças separadas e os perfis no painel" width="1280" height="760" loading="lazy"><figcaption>Nível Desmontada: quebra-cabeça</figcaption></figure>
+    <figure><img src="img/13-niveis.jpg" alt="Painel Monte a esquadria com os 3 níveis, o placar e os perfis para arrastar" width="1280" height="760" loading="lazy"><figcaption>Os 3 níveis no alto do painel</figcaption></figure>
     <ol class="steps">
-      <li><span>Escolha <strong>Desmontada</strong> (quebra-cabeça, vale até 3 estrelas) ou <strong>Montada</strong> (com dicas).</span></li>
+      <li><span>Escolha o <strong>nível</strong>. Os níveis travados mostram o cadeado e o que falta para liberar.</span></li>
       <li><span>Arraste um perfil do painel e solte sobre a peça certa.</span></li>
       <li><span>Errou? Aparece uma dica do porquê. Tente de novo.</span></li>
       <li><span>O tempo começa no primeiro perfil. Encaixe tudo antes do limite.</span></li>
-      <li><span>No fim aparecem as estrelas, a % de acerto e seu recorde. <strong>Reiniciar o desafio</strong> começa de novo.</span></li>
+      <li><span>No fim aparecem as estrelas, a % de acerto e o seu recorde. Se liberou o próximo nível, o botão <strong>Ir para o Nível</strong> leva direto.</span></li>
     </ol>
   </div>
+  <div class="fig rev">
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div class="tip"><b>Pergunta bônus.</b> Na Maxim-ar da linha Gold, depois de montar, vem um desafio extra: descobrir qual peça está faltando na esquadria.</div>
+      <div class="tip"><b>Meu progresso</b>, embaixo do painel, mostra as estrelas de cada tipologia.</div>
+    </div>
+    <figure><img src="img/06-desafio.jpg" alt="Desafio monte a esquadria com as peças separadas e os perfis no painel" width="1280" height="760" loading="lazy"><figcaption>Nível 2 · Desmontada: quebra-cabeça</figcaption></figure>
+  </div>
+  <div class="fig">
+    <figure><img src="img/10-resultado.jpg" alt="Resultado do desafio com estrelas, porcentagem e a lista do que errou" width="1280" height="760" loading="lazy"><figcaption>Resultado: estrelas, % e o que corrigir</figcaption></figure>
+    <div class="tip"><b>A lista gerada</b> (perfis e componentes) só aparece depois de conferir. Abra para estudar o que aquele pedido usa.</div>
+  </div>
+</section>
 
-  <h3>Desafio 2 · Lançamento no WVetro</h3>
+<section id="sistema">
+  <div class="cap"><span class="num">6</span><h2>Treinamento em Sistema</h2></div>
+  <p class="intro">Toque em <strong>Treinamento em Sistema</strong> e escolha <strong>Lançamento no WVetro</strong> ou <strong>Lançamento no CEM</strong>. A tipologia do desafio é a <strong>SUP JCR 200</strong> (janela de correr 2 folhas). Aparece quando o sistema está incluído no treinamento da sua empresa.</p>
+  <h3>Lançamento no WVetro</h3>
   <div class="fig rev">
     <ol class="steps">
       <li><span>Leia o <strong>Pedido do cliente</strong> no alto do painel.</span></li>
@@ -244,7 +271,7 @@ html{scroll-behavior:smooth}
     <div class="tip"><b>As folgas X e Y</b> vêm com 5 e 4 mm. Elas são auxílio para o plano de corte: não altere sem orientação técnica da produção da serralheria.</div>
   </div>
 
-  <h3>Desafio 3 · Lançamento no CEM</h3>
+  <h3>Lançamento no CEM</h3>
   <div class="fig rev">
     <ol class="steps">
       <li><span><strong>Informações Gerais:</strong> largura e altura (dentro do mínimo e máximo do fabricante) e o tratamento dos perfis.</span></li>
@@ -254,20 +281,53 @@ html{scroll-behavior:smooth}
     </ol>
     <figure><img src="img/09-cem.jpg" alt="Desafio CEM com as Opções de Montagem e a opção Contramarco aberta" width="1280" height="760" loading="lazy"><figcaption>Opções de Montagem · A2</figcaption></figure>
   </div>
+</section>
+
+<section id="diagrama">
+  <div class="cap"><span class="num">7</span><h2>Diagrama de dimensões</h2></div>
+  <p class="intro">Mostra até que tamanho cada mão de amigo aguenta a <strong>pressão de vento</strong>, com a janela em 3D e o gráfico do catálogo. Toque em <strong>Diagrama de dimensões</strong>, escolha <strong>Linha Gold</strong> ou <strong>Linha Suprema</strong> e toque num diagrama.</p>
+  <div class="tip"><b>Apenas demonstrativo.</b> Os valores foram lidos dos gráficos do catálogo de forma aproximada e não podem ser usados como base técnica para fabricar ou especificar as tipologias. Para fabricar, consulte sempre o catálogo oficial do fabricante e o projeto técnico.</div>
   <div class="fig">
-    <figure><img src="img/10-resultado.jpg" alt="Resultado do desafio com estrelas, porcentagem e a lista do que errou" width="1280" height="760" loading="lazy"><figcaption>Resultado: estrelas, % e o que corrigir</figcaption></figure>
-    <div class="tip"><b>A lista gerada</b> (perfis e componentes) só aparece depois de conferir. Abra para estudar o que aquele pedido usa.</div>
+    <figure><img src="img/14-diagrama.jpg" alt="Porta de correr 2 folhas Gold em 3D com setas de vento e a mão de amigo em verde" width="1280" height="760" loading="lazy"><figcaption>Gold · pág. 27 · mão de amigo LG-021 + LG-049</figcaption></figure>
+    <ol class="steps dot">
+      <li><span>As <strong>setas azuis</strong> são o vento empurrando a esquadria.</span></li>
+      <li><span>A mão de amigo fica <strong>verde</strong> quando aguenta e <strong>vermelha</strong> quando passa do limite. A linha colorida mostra ela dobrar (exagerado para enxergar).</span></li>
+      <li><span>Mude a <strong>largura</strong>, a <strong>altura</strong> e a <strong>pressão de ensaio</strong> (80, 100, 120 ou 150 kgf/m²).</span></li>
+      <li><span>O painel mostra se <strong>aprova</strong> ou <strong>não aprova</strong>, o uso do limite do perfil e a força do vento em kgf.</span></li>
+      <li><span>No gráfico do catálogo, o <strong>ponto</strong> é a sua esquadria: abaixo da curva aguenta, acima não.</span></li>
+    </ol>
+  </div>
+  <div class="fig rev">
+    <ol class="steps dot">
+      <li><span>O <strong>+ laranja</strong> no encontro das folhas abre o <strong>corte</strong> com os perfis da mão de amigo encaixados.</span></li>
+      <li><span>A tabela mostra o <strong>Jx</strong> de cada perfil: quanto maior, mais o perfil resiste a dobrar e maior a esquadria que ele aguenta.</span></li>
+      <li><span><strong>Voltar à janela</strong> sai do corte. <strong>← Voltar aos diagramas</strong> volta para a lista.</span></li>
+    </ol>
+    <figure><img src="img/15-diagrama-corte.jpg" alt="Corte da mão de amigo com os perfis LG-021 e LG-049 etiquetados" width="1280" height="760" loading="lazy"><figcaption>Corte da mão de amigo · LG-021 + LG-049</figcaption></figure>
+  </div>
+  <div class="fig">
+    <figure><img src="img/16-diagrama-desafio.jpg" alt="Desafio do diagrama com o gráfico e as linhas tracejadas da dica" width="1280" height="760" loading="lazy"><figcaption>Desafio com a 💡 Dica: as linhas tracejadas mostram como ler</figcaption></figure>
+    <ol class="steps">
+      <li><span>Leia o pedido do cliente: tipologia, medida e pressão.</span></li>
+      <li><span>Ache a <strong>largura L</strong> embaixo do gráfico.</span></li>
+      <li><span>Suba até a <strong>curva da pressão</strong> pedida (a mais grossa).</span></li>
+      <li><span>Vá para a esquerda e leia a <strong>altura máxima</strong>.</span></li>
+      <li><span>Altura do cliente menor ou igual: <strong>Aprova</strong>. Maior: <strong>Não aprova</strong>. Travou? Toque em <strong>💡 Dica</strong>.</span></li>
+    </ol>
   </div>
 </section>
 
 <section id="duvidas">
-  <div class="cap"><span class="num">6</span><h2>Dúvidas</h2></div>
+  <div class="cap"><span class="num">8</span><h2>Dúvidas</h2></div>
   <div class="faq">
-    <div class="box"><h3>Esqueci a senha</h3><p>Fale com a FC Consultoria. A senha é trocada pelo painel e você recebe a nova.</p></div>
+    <div class="box"><h3>Esqueci meu código ou a senha</h3><p>Fale com o gestor da sua empresa ou com a FC Consultoria. O código é trocado pelo painel e você recebe o novo.</p></div>
     <div class="box"><h3>Login ou senha não conferem</h3><p>Confira se não há espaço antes ou depois do login. Maiúscula não importa no login, mas importa na senha.</p></div>
-    <div class="box"><h3>A janela 3D não aparece</h3><p>Atualize a página. No celular, use o Chrome ou o Safari atualizado.</p></div>
-    <div class="box"><h3>Meu progresso some?</h3><p>Não. Fica guardado no seu login e a FC acompanha seu andamento pelo painel.</p></div>
+    <div class="box"><h3>Diz que meu nome está em outro aparelho</h3><p>Feche o treinamento no outro aparelho e aguarde 2 minutos. Cada colaborador usa um aparelho por vez.</p></div>
+    <div class="box"><h3>Meu prazo acabou</h3><p>Toque no seu nome e em <b>Solicitar mais tempo</b>. A FC recebe o pedido e libera.</p></div>
+    <div class="box"><h3>A janela 3D não aparece</h3><p>Atualize a página (no computador, <span class="k">Ctrl</span> + <span class="k">F5</span>). No celular, use o Chrome ou o Safari atualizado.</p></div>
+    <div class="box"><h3>Meu progresso some?</h3><p>Não. Fica guardado no seu nome e a sua empresa acompanha o andamento pelo painel.</p></div>
   </div>
+  <div class="box"><h3>Dúvidas e sugestões</h3><p>Use o botão <b>Dúvidas e sugestões</b> na barra escura do treinamento. Escreva a sua pergunta e a FC responde ali mesmo, como uma conversa.</p></div>
   <div class="box"><h3>Contato FC Consultoria</h3><p>WhatsApp <b class="k">(66) 9 9986-7984</b> · Instagram <b class="k">@fc__consultoria</b></p></div>
 </section>
 
