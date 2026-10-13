@@ -122,6 +122,7 @@ button.ok{background:var(--ok);border-color:var(--ok);color:#fff}button.no{color
     <p class="msg" id="eMsg" role="status"></p>
     <h3>Colaboradores <span class="note" id="cColN"></span></h3><ul class="cl" id="cCol"></ul>
     <div class="edit"><input id="eCol" placeholder="Nome do colaborador" maxlength="40" aria-label="Nome do colaborador"><button type="button" id="bCol">Cadastrar</button></div>
+    <h3>Sistema liberado <span class="note">clique para ligar/desligar · verde = liberado</span></h3><div class="edit" id="cSis"></div>
     <div class="edit"><button type="button" class="pri" id="bRel">📄 Relatório para o cliente</button><button type="button" id="bLib"></button></div>
     <h3>Tipologias estudadas</h3><ul class="chips" id="cTip"></ul>
     <h3>Cortes das junções vistos</h3><p class="note" id="cCor"></p>
@@ -239,6 +240,7 @@ function colabUI(a){const L=colabs(a.user_id),esc=v=>String(v||'').replace(/</g,
   const bc=document.getElementById('bCol'),ec=document.getElementById('eCol');bc.disabled=L.length>=6;ec.disabled=L.length>=6;ec.placeholder=L.length>=6?'Limite de 6 colaboradores':'Nome do colaborador';
   bc.onclick=async()=>{const n=ec.value.trim().replace(/\s+/g,' ');if(n.length<2||L.length>=6)return;bc.disabled=true;await ins('colab',{para:a.user_id,id:Math.random().toString(36).slice(2,9),nome:n,horas:72});ec.value='';carregar();};
   ec.onkeydown=e=>{if(e.key==='Enter')bc.click();};
+  document.getElementById('cSis').innerHTML=sisBtns(a.user_id).replace(/class="stg/g,'style="font-size:14px;padding:6px 14px" class="stg');
   document.getElementById('bRel').onclick=()=>window.open('relatorio.html?e='+a.user_id,'_blank');
   const bl=document.getElementById('bLib'),ok=libOk(a.user_id);bl.textContent=ok?'Encerrar acesso da semana':'Liberar até sábado '+fDia(SAB());bl.className=ok?'no':'ok';
   bl.onclick=async()=>{await liberar(a.user_id,!ok);carregar();};}
