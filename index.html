@@ -113,7 +113,14 @@ function escolherColab(uid,perfil){return new Promise(res=>{
         if(x.ph&&!pinOk(x.id)){const ok=await pedirPin(x);if(!ok)return;}
         if(!x.ini){b.disabled=true;await sb.from('trein_eventos').insert({user_id:uid,tipo:'colab_inicio',tipologia:null,detalhe:{cid:x.id,quem:x.nome}});x.fim=Date.now()+(x.horas||72)*3600e3;}
         window.ALUNO_NOME=x.nome;window.ALUNO_CID=x.id;window.ALUNO_FIM=x.fim;try{sessionStorage.setItem('treinFC-cid',x.id);}catch(e){}
-        window.COLAB_S=Math.random().toString(36).slice(2,10);await sb.from('trein_eventos').insert({user_id:uid,tipo:'colab_sessao',tipologia:null,detalhe:{cid:x.id,quem:x.nome,s:window.COLAB_S}});
+        {let mys='';try{mys=sessionStorage.getItem('treinFC-s-'+x.id)||'';}catch(e){}
+         const {data:ev}=await sb.from('trein_eventos').select('tipo,detalhe,criado_em').eq('user_id',uid).in('tipo',['colab_sessao','hb','tempo']).order('criado_em',{ascending:false}).limit(60);
+         const sid=r=>{const d=r.detalhe||{};return r.tipo==='tempo'?d.ss:d.s;},u=(ev||[]).find(r=>(r.detalhe||{}).cid===x.id&&sid(r));
+         if(u&&sid(u)!==mys&&Date.now()-Date.parse(u.criado_em)<120000){b.disabled=false;M.style.color='';
+           M.textContent='O nome '+x.nome+' já está em uso em outro aparelho. Cada colaborador só pode usar um aparelho por vez. Se for você, feche o outro aparelho e tente de novo em 2 minutos.';
+           window.ALUNO_NOME=null;window.ALUNO_CID=null;return;}
+         window.COLAB_S=mys||Math.random().toString(36).slice(2,10);try{sessionStorage.setItem('treinFC-s-'+x.id,window.COLAB_S);}catch(e){}}
+        await sb.from('trein_eventos').insert({user_id:uid,tipo:'colab_sessao',tipologia:null,detalhe:{cid:x.id,quem:x.nome,s:window.COLAB_S}});
         const tag=document.getElementById('quemTag');tag.textContent='Estudando: '+x.nome+' · trocar';tag.hidden=false;box.hidden=true;res(x);};
       L.appendChild(b);});
     let last='';try{last=sessionStorage.getItem('treinFC-cid')||'';}catch(e){}
@@ -121,7 +128,8 @@ function escolherColab(uid,perfil){return new Promise(res=>{
   window.COLAB_DRAW=draw;draw();});}
 function escolherColabAviso(uid,perfil,nome){escolherColab(uid,perfil);setTimeout(()=>{const M=document.getElementById('quemMsg');M.style.color='';
   M.textContent='O nome '+nome+' foi aberto em outro aparelho, e este foi desconectado. Cada colaborador só pode usar um aparelho por vez. Para continuar aqui, toque no seu nome de novo.';},700);}
-function vigiaPrazo(uid,perfil){setInterval(async()=>{if(!window.ALUNO_CID||!window.COLAB_S)return;
+function vigiaPrazo(uid,perfil){setInterval(()=>{if(window.ALUNO_CID&&window.COLAB_S&&document.visibilityState==='visible')sb.from('trein_eventos').insert({user_id:uid,tipo:'hb',tipologia:null,detalhe:{cid:window.ALUNO_CID,s:window.COLAB_S}});},60000);
+  setInterval(async()=>{if(!window.ALUNO_CID||!window.COLAB_S)return;
     const {data}=await sb.from('trein_eventos').select('detalhe').eq('user_id',uid).eq('tipo','colab_sessao').order('criado_em',{ascending:false}).limit(30);
     const ult=(data||[]).map(r=>r.detalhe||{}).find(d=>d.cid===window.ALUNO_CID);
     if(ult&&ult.s!==window.COLAB_S){const nome=window.ALUNO_NOME;window.ALUNO_CID=null;window.COLAB_S=null;window.ALUNO_FIM=null;if(window.TRKFLUSH)TRKFLUSH();
@@ -142,7 +150,7 @@ function vigiaPrazo(uid,perfil){setInterval(async()=>{if(!window.ALUNO_CID||!win
     if(window.ALUNO_NOME)d=Object.assign({quem:window.ALUNO_NOME,cid:window.ALUNO_CID||null},d);
     fila.push({user_id:uid,tipo,tipologia:d.t||null,detalhe:d});ultimo=Date.now();};
   ['pointerdown','keydown','wheel'].forEach(ev=>addEventListener(ev,()=>{ultimo=Date.now();},{passive:true}));
-  setInterval(()=>{if(uid&&document.visibilityState==='visible'&&Date.now()-ultimo<180000)fila.push({user_id:uid,tipo:'tempo',tipologia:(typeof S!=='undefined'?S.typo:null)||null,detalhe:window.ALUNO_NOME?{s:60,quem:window.ALUNO_NOME,cid:window.ALUNO_CID||null}:{s:60}});},60000);
+  setInterval(()=>{if(uid&&document.visibilityState==='visible'&&Date.now()-ultimo<180000)fila.push({user_id:uid,tipo:'tempo',tipologia:(typeof S!=='undefined'?S.typo:null)||null,detalhe:window.ALUNO_NOME?{s:60,quem:window.ALUNO_NOME,cid:window.ALUNO_CID||null,ss:window.COLAB_S||null}:{s:60}});},60000);
   setInterval(enviar,15000);window.TRKFLUSH=enviar;
   addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')enviar();});
   async function loadApp(){
@@ -150,7 +158,7 @@ function vigiaPrazo(uid,perfil){setInterval(async()=>{if(!window.ALUNO_CID||!win
     try{const {data}=await sb.from('trein_eventos').select('detalhe').eq('tipo','chave_app').limit(1);
       const kb=Uint8Array.from(atob(data[0].detalhe.k),c=>c.charCodeAt(0));
       const key=await crypto.subtle.importKey('raw',kb,'AES-GCM',false,['decrypt']);
-      const buf=new Uint8Array(await (await fetch('app.enc?v=1791919122',{cache:'no-cache'})).arrayBuffer());
+      const buf=new Uint8Array(await (await fetch('app.enc?v=1791919715',{cache:'no-cache'})).arrayBuffer());
       const plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:buf.slice(0,12)},key,buf.slice(12));
       const html=await new Response(new Blob([plain]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
       const root=document.getElementById('appRoot');root.innerHTML=html;
