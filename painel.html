@@ -74,6 +74,7 @@ button.ok{background:var(--ok);border-color:var(--ok);color:#fff}button.no{color
 .cl{list-style:none;margin:0 0 10px;padding:0}.cl li{display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid #eef1f3}
 .cl li .bt{display:flex;gap:4px}.cl li button{padding:3px 8px;font-size:12px}
 .stg{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--line);border-radius:14px;padding:3px 9px;font:600 12px var(--f-display);cursor:pointer;margin-right:3px;background:#fff;color:var(--muted)}.stg i{width:8px;height:8px;border-radius:50%;background:#c4ccd2}.stg.on{background:var(--ok-soft);border-color:#b9dfc8;color:var(--ok)}.stg.on i{background:var(--ok)}
+.wam{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}.wam textarea{width:100%;font:13px/1.35 var(--f-body);padding:8px;border:1px solid var(--line);border-radius:8px;resize:vertical;margin-top:4px}@media(max-width:820px){.wam{grid-template-columns:1fr}}
 .sem{font:500 12px var(--f-mono);white-space:nowrap}
 @media (max-width:820px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.det{grid-template-columns:1fr}header,main{padding-left:16px;padding-right:16px}}
 </style>
@@ -124,6 +125,9 @@ button.ok{background:var(--ok);border-color:var(--ok);color:#fff}button.no{color
     <div class="edit"><input id="eCol" placeholder="Nome do colaborador" maxlength="40" aria-label="Nome do colaborador"><button type="button" id="bCol">Cadastrar</button></div>
     <h3>Sistema liberado <span class="note">clique para ligar/desligar · verde = liberado</span></h3><div class="edit" id="cSis"></div>
     <h3>Acesso do gestor <span class="note" id="gSt"></span></h3><div class="edit"><input id="eGes" placeholder="Senha do gestor (mín. 4)" autocomplete="off" aria-label="Senha do gestor"><button type="button" id="bGes">Salvar senha do gestor</button><button type="button" id="bEmp">Abrir Painel da Empresa</button></div>
+    <h3>Mensagens para o WhatsApp <span class="note">geradas com os dados acima · copie e envie</span></h3>
+    <div class="wam"><div><b>Para os colaboradores</b><textarea id="wmA" rows="14"></textarea><div class="edit"><button type="button" data-w="wmA">📋 Copiar</button><button type="button" data-z="wmA">Abrir no WhatsApp</button></div></div>
+    <div><b>Para o gestor</b><textarea id="wmG" rows="14"></textarea><div class="edit"><button type="button" data-w="wmG">📋 Copiar</button><button type="button" data-z="wmG">Abrir no WhatsApp</button></div></div></div>
     <div class="edit"><button type="button" class="pri" id="bRel">📄 Relatório para o cliente</button><button type="button" id="bLib"></button></div>
     <h3>Tipologias estudadas</h3><ul class="chips" id="cTip"></ul>
     <h3>Cortes das junções vistos</h3><p class="note" id="cCor"></p>
@@ -267,6 +271,11 @@ function colabUI(a){const L=colabs(a.user_id),esc=v=>String(v||'').replace(/</g,
    document.getElementById('bGes').onclick=async()=>{const v=document.getElementById('eGes').value.trim();if(v.length<4){alert0('A senha do gestor precisa ter pelo menos 4 caracteres.');return;}
      await ins('gestor',{para:a.user_id,ph:await sha(a.user_id+':'+v)});locSet('treinFC-gestor',a.user_id,v);document.getElementById('eGes').value='';carregar();};
    document.getElementById('bEmp').onclick=()=>window.open('empresa.html?e='+a.user_id,'_blank');}
+  {const URL0='https://fc-consultoria.github.io/treinamento/',sen=senhaLoc(a.user_id)||'[SENHA]',pins=locGet('treinFC-pins'),gp=locGet('treinFC-gestor')[a.user_id]||'[SENHA DO GESTOR]',nm=a.nome||a.login;
+   document.getElementById('wmA').value=`*Treinamento FC 3D · ${nm}* 🪟\n\n🔗 ${URL0}\n👤 Login: ${a.login}\n🔑 Senha: ${sen}\n\nDepois de entrar, toque no seu nome e digite seu código:\n${L.map(x=>`• ${x.nome} · ${pins[x.id]||'[CÓDIGO]'}`).join('\n')}\n\n⏱️ 72 h a partir do 1º acesso · segunda a sábado\n💻 Um aparelho por vez · código pessoal, não compartilhe\n📘 Guia do aluno: ${URL0}guia/\n\nDúvidas: FC Consultoria · (66) 9 9986-7984`;
+   document.getElementById('wmG').value=`*Treinamento FC 3D · Acesso do gestor · ${nm}* 📊\n\n🔗 Painel da Empresa: ${URL0}empresa.html\n👤 Login: ${a.login}\n🔑 Senha: ${sen}\n🛡 Senha do gestor: ${gp}\n\nNo painel você acompanha cada colaborador: prazo de 72 h, horas de estudo, tipologias, nível no Monte a esquadria, resultados e pontos a melhorar. Também dá para baixar o relatório em PDF.\n\n⚠️ A senha do gestor é só sua. Não compartilhe com a equipe.\n\nFC Consultoria · (66) 9 9986-7984`;
+   document.querySelectorAll('.wam [data-w]').forEach(b=>b.onclick=async()=>{const t=document.getElementById(b.dataset.w);try{await navigator.clipboard.writeText(t.value);}catch(e){t.select();document.execCommand('copy');}b.textContent='✔ Copiado';setTimeout(()=>b.textContent='📋 Copiar',1800);});
+   document.querySelectorAll('.wam [data-z]').forEach(b=>b.onclick=()=>window.open('https://wa.me/?text='+encodeURIComponent(document.getElementById(b.dataset.z).value),'_blank'));}
   document.getElementById('bRel').onclick=()=>window.open('relatorio.html?e='+a.user_id,'_blank');
   const bl=document.getElementById('bLib'),ok=libOk(a.user_id);bl.textContent=ok?'Encerrar acesso da semana':'Liberar até sábado '+fDia(SAB());bl.className=ok?'no':'ok';
   bl.onclick=async()=>{await liberar(a.user_id,!ok);carregar();};}
