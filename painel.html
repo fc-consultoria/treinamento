@@ -103,7 +103,7 @@ button.ok{background:var(--ok);border-color:var(--ok);color:#fff}button.no{color
  </section>
  <section class="card dom" id="domCard" hidden><h2>Domingo · liberar a próxima semana?</h2><p class="note" style="padding:10px 16px 0">O acesso das empresas vale de segunda a sábado. Escolha quem continua na semana que vem (até sábado <b id="domSab"></b>). Quem não for liberado fica sem acesso a partir de segunda.</p><div style="padding:8px 16px"><button class="ok" type="button" id="domTodas">Liberar todas</button></div><div id="domList"></div></section>
  <section class="card ped" id="pedCard" hidden><h2>⏱ Pedidos de mais tempo <span class="sgn" id="pedN"></span></h2><div id="pedList"></div></section>
- <section class="card" id="sugCard"><h2>💬 Sugestões e feedback dos alunos <span class="sgn" id="sugN"></span></h2><p class="note" style="padding:0 16px">O aluno envia pelo botão “💬 Sugestão” na barra escura do treinamento. Escreva a resposta embaixo da mensagem e clique em Responder: ela aparece para o aluno no mesmo botão.</p><ul class="tl" id="sugList"></ul></section>
+ <section class="card" id="sugCard"><h2 style="display:flex;justify-content:space-between;align-items:center;gap:8px">💬 Sugestões e feedback dos alunos <span class="sgn" id="sugN" style="flex:1"></span><button type="button" id="sugTog" style="font-size:12px;padding:4px 10px">Mostrar</button></h2><div id="sugBody" hidden><p class="note" style="padding:0 16px">O aluno envia pelo botão “💬 Sugestão” na barra escura do treinamento. Escreva a resposta embaixo da mensagem e clique em Responder: ela aparece para o aluno no mesmo botão.</p><ul class="tl" id="sugList"></ul></div></section>
  <section class="card">
   <h2>Empresas</h2>
   <p class="ihint">Clique no nome, no login ou em nova senha para editar · Enter salva · Esc desfaz. O login novo vale no próximo acesso do aluno (a senha continua a mesma). Maiúsculas aparecem no painel, mas o aluno pode digitar o login com ou sem maiúsculas.</p>
@@ -189,15 +189,19 @@ function render(){
   document.getElementById('k4').textContent=t;
   if(sel)detalhe();
   domUI();pedUI();
-  const esc=v=>String(v||'').replace(/</g,'&lt;'),SG=EV.filter(e=>e.tipo==='sugestao');
+  const esc=v=>String(v||'').replace(/</g,'&lt;'),EXC=new Set(EV.filter(e=>e.tipo==='sug_excluida').map(e=>Date.parse((e.detalhe||{}).ref))),SG=EV.filter(e=>e.tipo==='sugestao'&&!EXC.has(Date.parse(e.criado_em)));
   const RS=EV.filter(e=>e.tipo==='resposta'),pend=SG.filter(e=>!RS.some(r=>(r.detalhe||{}).ref===e.criado_em)).length;
   document.getElementById('sugN').textContent=SG.length?`${SG.length} recebida${SG.length>1?'s':''}${pend?` · ${pend} sem resposta`:''}`:'';
   document.getElementById('sugTop').textContent=pend?`💬 Sugestões (${pend} nova${pend>1?'s':''})`:'💬 Sugestões';
   document.getElementById('sugList').innerHTML=SG.map((e,i)=>{const d=e.detalhe||{},a=ALUNOS.find(x=>x.user_id===e.user_id)||{};
     const rs=RS.filter(r=>(r.detalhe||{}).ref===e.criado_em).reverse().map(r=>`<div class="sgr"><b>FC respondeu</b> <span class="note">${fmtD(r.criado_em)}</span><br>${esc((r.detalhe||{}).txt)}</div>`).join('');
     return `<li><time>${fmtD(e.criado_em)}</time><span><b>${esc(d.quem||a.nome||a.login||'aluno')}</b> <span class="note">(${esc(a.login||'')})</span> · <strong>${esc(d.tipo)}</strong><br>${esc(d.txt)}${rs}
-      <div class="sgf"><textarea data-i="${i}" rows="2" placeholder="Escreva a resposta para o aluno"></textarea><button type="button" data-i="${i}">Responder</button></div></span></li>`;}).join('')||'<li><span class="note">Nenhuma sugestão ainda.</span></li>';
-  document.querySelectorAll('#sugList .sgf button').forEach(b=>b.addEventListener('click',async()=>{const e=SG[+b.dataset.i],ta=b.previousElementSibling,txt=ta.value.trim();if(!txt)return;
+      <div class="sgf"><textarea data-i="${i}" rows="2" placeholder="Escreva a resposta para o aluno"></textarea><button type="button" data-i="${i}">Responder</button><button type="button" class="sgx" data-x="${i}" style="color:var(--bad);border-color:#e3b5b1">Excluir</button></div></span></li>`;}).join('')||'<li><span class="note">Nenhuma sugestão ainda.</span></li>';
+  {const sb2=document.getElementById('sugBody'),tg=document.getElementById('sugTog');if(pend&&!window.SUG_T)sb2.hidden=false;tg.textContent=sb2.hidden?'Mostrar':'Ocultar';
+   tg.onclick=()=>{window.SUG_T=1;sb2.hidden=!sb2.hidden;tg.textContent=sb2.hidden?'Mostrar':'Ocultar';};}
+  document.querySelectorAll('#sugList .sgx').forEach(b=>b.addEventListener('click',async()=>{const e=SG[+b.dataset.x];if(!confirm('Excluir esta sugestão do painel?'))return;
+    b.disabled=true;const {data:{session}}=await sb.auth.getSession();await sb.from('trein_eventos').insert({user_id:session.user.id,tipo:'sug_excluida',tipologia:null,detalhe:{ref:e.criado_em,u:e.user_id}});carregar();}));
+  document.querySelectorAll('#sugList .sgf button:not(.sgx)').forEach(b=>b.addEventListener('click',async()=>{const e=SG[+b.dataset.i],ta=b.previousElementSibling,txt=ta.value.trim();if(!txt)return;
     b.disabled=true;const {data:{session}}=await sb.auth.getSession();
     const {error}=await sb.from('trein_eventos').insert({user_id:session.user.id,tipo:'resposta',tipologia:null,detalhe:{para:e.user_id,ref:e.criado_em,txt,quem:(e.detalhe||{}).quem||null}});
     b.disabled=false;if(error){b.textContent='Erro: '+error.message;return;}carregar();}));
