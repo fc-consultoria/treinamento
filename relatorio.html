@@ -85,6 +85,7 @@ gateUI(async({session,perfil})=>{
     if(bW&&SZ.wv){if(bW.pct>=85)fortes.push(`Lançamento no WVetro: ${bW.pct}%`);else melhorar.push(`Lançamento no WVetro: melhor resultado ${bW.pct}%`);}
     if(bC&&SZ.cem){if(bC.pct>=85)fortes.push(`Lançamento no CEM: ${bC.pct}%`);else melhorar.push(`Lançamento no CEM: melhor resultado ${bC.pct}%`);}
     const top=(o,p)=>Object.entries(o).sort((a,b)=>b[1]-a[1]).slice(0,4).forEach(([k,n])=>melhorar.push(`${p}: errou “${k}” ${n}×`));if(SZ.wv)top(errW,'WVetro');if(SZ.cem)top(errC,'CEM');
+    {const fl=ev.filter(e=>e.tipo==='falta');if(fl.length){if(fl.some(e=>(e.detalhe||{}).ok))fortes.push('Percebeu a peça que faltava na maxim-ar Gold (pingadeira LG-091)');else melhorar.push('Não percebeu que faltava a pingadeira LG-091 na maxim-ar Gold');}}
     if(tip.size>=NT)fortes.push('Estudou todas as tipologias');else if(tip.size)melhorar.push(`Ainda não abriu ${NT-tip.size} tipologia${NT-tip.size>1?'s':''}`);
     if(!Object.keys(mont).length)melhorar.push('Ainda não fez o desafio Monte a esquadria');if(SZ.wv&&!wv.length)melhorar.push('Ainda não fez o desafio WVetro');if(SZ.cem&&!cm.length)melhorar.push('Ainda não fez o desafio CEM');
     const fim=ini?Date.parse(ini)+(x.horas||72)*3600e3:null;
