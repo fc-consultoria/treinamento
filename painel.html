@@ -123,6 +123,7 @@ button.ok{background:var(--ok);border-color:var(--ok);color:#fff}button.no{color
     <h3>Colaboradores <span class="note" id="cColN"></span></h3><ul class="cl" id="cCol"></ul>
     <div class="edit"><input id="eCol" placeholder="Nome do colaborador" maxlength="40" aria-label="Nome do colaborador"><button type="button" id="bCol">Cadastrar</button></div>
     <h3>Sistema liberado <span class="note">clique para ligar/desligar · verde = liberado</span></h3><div class="edit" id="cSis"></div>
+    <h3>Acesso do gestor <span class="note" id="gSt"></span></h3><div class="edit"><input id="eGes" placeholder="Senha do gestor (mín. 4)" autocomplete="off" aria-label="Senha do gestor"><button type="button" id="bGes">Salvar senha do gestor</button><button type="button" id="bEmp">Abrir Painel da Empresa</button></div>
     <div class="edit"><button type="button" class="pri" id="bRel">📄 Relatório para o cliente</button><button type="button" id="bLib"></button></div>
     <h3>Tipologias estudadas</h3><ul class="chips" id="cTip"></ul>
     <h3>Cortes das junções vistos</h3><p class="note" id="cCor"></p>
@@ -201,7 +202,7 @@ function render(){
     const {error}=await sb.from('trein_eventos').insert({user_id:session.user.id,tipo:'resposta',tipologia:null,detalhe:{para:e.user_id,ref:e.criado_em,txt,quem:(e.detalhe||{}).quem||null}});
     b.disabled=false;if(error){b.textContent='Erro: '+error.message;return;}carregar();}));
 }
-const ROT={falta:'Desafio extra (peça faltando):',colab_inicio:'Começou as 72 h:',pedido_tempo:'Pediu mais tempo:',sugestao:'Enviou sugestão:',quem:'Começou a estudar:',wvetro:'Concluiu o desafio WVetro',cem:'Concluiu o desafio CEM',reinicio:'Reiniciou o desafio',desmontar:null,login:'Entrou no treinamento',tipologia:'Abriu a tipologia',corte:'Viu o corte',perfil:'Estudou o perfil',componente:'Viu o componente',troca:'Trocou perfil',modo:'Mudou o modo',teste:'Concluiu o desafio',tempo:null};
+const ROT={colab_sessao:'Entrou (aparelho):',falta:'Desafio extra (peça faltando):',colab_inicio:'Começou as 72 h:',pedido_tempo:'Pediu mais tempo:',sugestao:'Enviou sugestão:',quem:'Começou a estudar:',wvetro:'Concluiu o desafio WVetro',cem:'Concluiu o desafio CEM',reinicio:'Reiniciou o desafio',desmontar:null,login:'Entrou no treinamento',tipologia:'Abriu a tipologia',corte:'Viu o corte',perfil:'Estudou o perfil',componente:'Viu o componente',troca:'Trocou perfil',modo:'Mudou o modo',teste:'Concluiu o desafio',tempo:null};
 function detalhe(){
   const a=ALUNOS.find(x=>x.user_id===sel);if(!a)return;const r=resumo(a.user_id);
   document.getElementById('detCard').hidden=false;document.getElementById('detTit').textContent=(a.nome||a.login)+' · '+a.login;
@@ -212,7 +213,7 @@ function detalhe(){
   document.getElementById('cTes').textContent=r.tes.length?Object.values(r.best).map(x=>`${TIPOS[x.t]||x.t}: ${'★'.repeat(x.stars)}${'☆'.repeat(3-x.stars)} ${x.pct}%${x.nivel?(x.nivel==='desm'?' (desmontada)':' (montada)'):''}`).join(' · ')+` — ${r.tes.length} desafio${r.tes.length===1?'':'s'} feito${r.tes.length===1?'':'s'}, ${r.rein} reinício${r.rein===1?'':'s'}`:'Nenhum desafio concluído ainda.';
   document.getElementById('tl').innerHTML=r.ev.filter(e=>ROT[e.tipo]).slice(0,150).map(e=>{const d=e.detalhe||{};
     const CK={esq:'lateral esquerda',dir:'lateral direita',sup:'superior',inf:'inferior',trav:'travessa'};const x=e.tipo==='perfil'?d.c:e.tipo==='componente'?d.c:e.tipo==='corte'?(CK[d.k]||'encontro das folhas'):e.tipo==='troca'?`${d.de} → ${d.para}`:e.tipo==='sugestao'?(d.txt||'').replace(/</g,''):(e.tipo==='wvetro'||e.tipo==='cem')?`${d.pct}%${d.stars?' '+'★'.repeat(d.stars):''}`:e.tipo==='teste'?`${d.pct!=null?d.pct:Math.round(d.tot/((d.tot+d.err)||1)*100)}%${d.stars?' '+'★'.repeat(d.stars):''}`:e.tipo==='modo'?(d.m==='test'?'Desafio':'Explorar'):e.tipo==='falta'?(d.ok?'acertou (LG-091)':'errou, marcou '+d.resp):'';
-    const qn=(d.quem||'').replace(/</g,'');return `<li><time>${fmtD(e.criado_em)}</time><span>${qn&&e.tipo!=='quem'?'<b style="color:#0e6b62">'+qn+'</b> · ':''}${ROT[e.tipo]} ${(e.tipo==='quem'||e.tipo==='colab_inicio'||e.tipo==='pedido_tempo')?'<strong>'+qn+'</strong>':x?'<strong>'+x+'</strong>':''} <span class="note">${TIPOS[e.tipologia]||''}</span></span></li>`;}).join('')||'<li><span class="note">Sem atividades.</span></li>';
+    const qn=(d.quem||'').replace(/</g,'');return `<li><time>${fmtD(e.criado_em)}</time><span>${qn&&e.tipo!=='quem'?'<b style="color:#0e6b62">'+qn+'</b> · ':''}${ROT[e.tipo]} ${(e.tipo==='quem'||e.tipo==='colab_inicio'||e.tipo==='pedido_tempo'||e.tipo==='colab_sessao')?'<strong>'+qn+'</strong>':x?'<strong>'+x+'</strong>':''} <span class="note">${TIPOS[e.tipologia]||''}</span></span></li>`;}).join('')||'<li><span class="note">Sem atividades.</span></li>';
 }
 const HOJE=()=>new Date(Date.now()-4*3600e3).toISOString().slice(0,10),DOW=()=>new Date(Date.now()-4*3600e3).getUTCDay();
 const SAB=()=>{const d=new Date(Date.now()-4*3600e3);d.setUTCDate(d.getUTCDate()+6-d.getUTCDay());return d.toISOString().slice(0,10);};
@@ -230,17 +231,33 @@ function colabs(uid,todos){const C={};
 async function ins(tipo,detalhe){const {data:{session}}=await sb.auth.getSession();const r=await sb.from('trein_eventos').insert({user_id:session.user.id,tipo,tipologia:null,detalhe});if(r.error)alert0(r.error.message);return r;}
 async function prorrogar(uid,x,n){const h=x.ini&&x.resta<=0?Math.ceil((Date.now()-Date.parse(x.ini))/3600e3)+n:(x.horas||72)+n;await ins('colab',{para:uid,id:x.id,nome:x.nome,horas:h});carregar();}
 async function liberar(uid,sim){await ins('liberacao',sim?{para:uid,ate:SAB()}:{para:uid,ate:ONTEM(),enc:true});}
+const sha=async t=>[...new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t)))].map(b=>b.toString(16).padStart(2,'0')).join('');
+const locGet=k=>{try{return JSON.parse(localStorage.getItem(k)||'{}');}catch(e){return {};}},locSet=(k,id,v)=>{try{const o=locGet(k);o[id]=v;localStorage.setItem(k,JSON.stringify(o));}catch(e){}};
+const novoPin=()=>String(Math.floor(1000+Math.random()*9000));
+async function setPin(uid,x,pin){await ins('colab',{para:uid,id:x.id,ph:await sha(x.id+':'+pin)});locSet('treinFC-pins',x.id,pin);carregar();}
 const stTxt=x=>x.resta==null?'ainda não começou':x.resta<=0?'prazo encerrado':'restam '+fmtR(x.resta);
+let VAG={};
 function colabUI(a){const L=colabs(a.user_id),esc=v=>String(v||'').replace(/</g,'&lt;');
+  if(!L.length&&!VAG[a.user_id]&&!colabs(a.user_id,true).length){VAG[a.user_id]=1;(async()=>{for(let n=1;n<=6;n++){const id=Math.random().toString(36).slice(2,9),pin=novoPin();
+      await ins('colab',{para:a.user_id,id,nome:'Colaborador '+n,horas:72,ph:await sha(id+':'+pin)});locSet('treinFC-pins',id,pin);}carregar();})();}
   document.getElementById('cColN').textContent=`${L.length} de 6 · 72 h corridas a partir do 1º acesso`;
-  document.getElementById('cCol').innerHTML=L.map((x,i)=>`<li><span><b>${esc(x.nome)}</b> <span class="note">· ${stTxt(x)}${x.pend?' · <b style="color:var(--bad)">pediu mais tempo</b>':''} · estudou ${fmtH(x.seg)}${x.horas&&x.horas!==72?' · total '+x.horas+' h':''}</span></span><span class="bt"><button type="button" data-i="${i}" data-n="24">+24 h</button><button type="button" data-i="${i}" data-n="72">+72 h</button><button type="button" class="no" data-i="${i}" data-x="1">Remover</button></span></li>`).join('')||'<li class="note">Nenhum colaborador cadastrado. Digite o nome abaixo.</li>';
+  document.getElementById('cCol').innerHTML=L.map((x,i)=>`<li><span><input class="ied cn" data-i="${i}" value="${esc(x.nome).replace(/"/g,'&quot;')}" title="Clique para editar o nome; Enter salva" style="width:auto;min-width:150px;font-weight:600"> <span class="note">· ${stTxt(x)}${x.pend?' · <b style="color:var(--bad)">pediu mais tempo</b>':''} · estudou ${fmtH(x.seg)}${x.horas&&x.horas!==72?' · total '+x.horas+' h':''}</span></span><span class="bt"><span class="note" style="font-family:var(--f-mono)">${x.ph?'código '+(locGet('treinFC-pins')[x.id]||'definido'):'<b style="color:var(--bad)">sem código</b>'}</span><button type="button" data-i="${i}" data-p="1">${x.ph?'Novo código':'Gerar código'}</button><button type="button" data-i="${i}" data-n="24">+24 h</button><button type="button" data-i="${i}" data-n="72">+72 h</button><button type="button" class="no" data-i="${i}" data-x="1">Remover</button></span></li>`).join('')||'<li class="note">Nenhum colaborador cadastrado. Digite o nome abaixo.</li>';
+  document.querySelectorAll('#cCol input.cn').forEach(inp=>{const x=L[+inp.dataset.i],orig=inp.value;
+    inp.addEventListener('keydown',e=>{if(e.key==='Enter')inp.blur();if(e.key==='Escape'){inp.value=orig;inp.blur();}});
+    inp.addEventListener('blur',async()=>{const v=inp.value.trim().replace(/\s+/g,' ');if(!v||v===orig){inp.value=orig;return;}inp.disabled=true;await ins('colab',{para:a.user_id,id:x.id,nome:v});carregar();});});
   document.querySelectorAll('#cCol button').forEach(b=>b.onclick=async()=>{const x=L[+b.dataset.i];
+    if(b.dataset.p){const p=prompt('Código pessoal de '+x.nome+' (4 números):',novoPin());if(p&&/^\d{4,6}$/.test(p.trim()))setPin(a.user_id,x,p.trim());return;}
     if(b.dataset.x){if(!confirm('Remover '+x.nome+'? Os resultados dele continuam no relatório.'))return;await ins('colab',{para:a.user_id,id:x.id,removido:true});carregar();}
     else prorrogar(a.user_id,x,+b.dataset.n);});
   const bc=document.getElementById('bCol'),ec=document.getElementById('eCol');bc.disabled=L.length>=6;ec.disabled=L.length>=6;ec.placeholder=L.length>=6?'Limite de 6 colaboradores':'Nome do colaborador';
-  bc.onclick=async()=>{const n=ec.value.trim().replace(/\s+/g,' ');if(n.length<2||L.length>=6)return;bc.disabled=true;await ins('colab',{para:a.user_id,id:Math.random().toString(36).slice(2,9),nome:n,horas:72});ec.value='';carregar();};
+  bc.onclick=async()=>{const n=ec.value.trim().replace(/\s+/g,' ');if(n.length<2||L.length>=6)return;bc.disabled=true;const id=Math.random().toString(36).slice(2,9),pin=novoPin();await ins('colab',{para:a.user_id,id,nome:n,horas:72,ph:await sha(id+':'+pin)});locSet('treinFC-pins',id,pin);ec.value='';carregar();};
   ec.onkeydown=e=>{if(e.key==='Enter')bc.click();};
   document.getElementById('cSis').innerHTML=sisBtns(a.user_id).replace(/class="stg/g,'style="font-size:14px;padding:6px 14px" class="stg');
+  {const gs=EV.find(e=>e.tipo==='gestor'&&(e.detalhe||{}).para===a.user_id),pv=locGet('treinFC-gestor')[a.user_id];
+   document.getElementById('gSt').textContent=gs?('· senha '+(pv||'definida')):'· ainda sem senha do gestor';
+   document.getElementById('bGes').onclick=async()=>{const v=document.getElementById('eGes').value.trim();if(v.length<4){alert0('A senha do gestor precisa ter pelo menos 4 caracteres.');return;}
+     await ins('gestor',{para:a.user_id,ph:await sha(a.user_id+':'+v)});locSet('treinFC-gestor',a.user_id,v);document.getElementById('eGes').value='';carregar();};
+   document.getElementById('bEmp').onclick=()=>window.open('empresa.html?e='+a.user_id,'_blank');}
   document.getElementById('bRel').onclick=()=>window.open('relatorio.html?e='+a.user_id,'_blank');
   const bl=document.getElementById('bLib'),ok=libOk(a.user_id);bl.textContent=ok?'Encerrar acesso da semana':'Liberar até sábado '+fDia(SAB());bl.className=ok?'no':'ok';
   bl.onclick=async()=>{await liberar(a.user_id,!ok);carregar();};}

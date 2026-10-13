@@ -85,6 +85,15 @@ async function estadoEmpresa(uid){
     x.pend=x.ped&&Date.parse(x.ped)>Date.parse(x.alt);return x;});
   const ate=((l.data||[])[0]||{}).detalhe?.ate||null;
   return {lst,ate,liberado:DOW()!==0&&!!ate&&ate>=HOJE()};}
+const sha=async t=>[...new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t)))].map(b=>b.toString(16).padStart(2,'0')).join('');
+const pinOk=cid=>{try{return sessionStorage.getItem('treinFC-pin-'+cid)==='1';}catch(e){return false;}};
+function pedirPin(x){return new Promise(res=>{const L=document.getElementById('quemLista'),T=document.getElementById('quemTit'),X=document.getElementById('quemTxt'),M=document.getElementById('quemMsg');
+  T.textContent=x.nome;X.textContent='Digite o seu código pessoal de 4 números (você recebeu da FC Consultoria).';M.textContent='';
+  L.innerHTML='<input id="pinIn" inputmode="numeric" maxlength="6" autocomplete="off" placeholder="código" style="font:400 22px IBM Plex Mono,monospace;letter-spacing:.3em;text-align:center;padding:10px;border:1px solid #c4ccd2;border-radius:8px"><button type="button" id="pinOk">Entrar</button><button type="button" id="pinVolta" style="background:#fff;color:#1d3f57;border:1px solid #c9d3da">← Voltar</button>';
+  const inp=document.getElementById('pinIn');setTimeout(()=>inp.focus(),50);
+  const go=async()=>{const h=await sha(x.id+':'+inp.value.trim());if(h===x.ph){try{sessionStorage.setItem('treinFC-pin-'+x.id,'1');}catch(e){}res(true);}else{M.style.color='';M.textContent='Código não confere. Confira com a FC Consultoria.';inp.select();}};
+  document.getElementById('pinOk').onclick=go;inp.onkeydown=e=>{if(e.key==='Enter')go();};
+  document.getElementById('pinVolta').onclick=()=>{res(false);window.COLAB_DRAW&&COLAB_DRAW();};});}
 function escolherColab(uid,perfil){return new Promise(res=>{
   const box=document.getElementById('quemBox'),L=document.getElementById('quemLista'),M=document.getElementById('quemMsg'),T=document.getElementById('quemTit'),X=document.getElementById('quemTxt');
   document.getElementById('quemSair').onclick=sair;const esc=v=>String(v||'').replace(/</g,'&lt;');
@@ -101,14 +110,23 @@ function escolherColab(uid,perfil){return new Promise(res=>{
       b.onclick=async()=>{if(exp){T.textContent=x.nome+': prazo encerrado';X.textContent='As '+(x.horas||72)+' horas deste colaborador terminaram. Peça mais tempo para a FC Consultoria.';L.innerHTML='';
           const p=document.createElement('button');p.type='button';p.className='cped';p.textContent=x.pend?'Pedido já enviado · enviar de novo':'Solicitar mais tempo';p.onclick=()=>pedir(x);
           const v=document.createElement('button');v.type='button';v.textContent='← Voltar';v.style.cssText='background:#fff;color:#1d3f57;border:1px solid #c9d3da';v.onclick=draw;L.append(p,v);return;}
+        if(x.ph&&!pinOk(x.id)){const ok=await pedirPin(x);if(!ok)return;}
         if(!x.ini){b.disabled=true;await sb.from('trein_eventos').insert({user_id:uid,tipo:'colab_inicio',tipologia:null,detalhe:{cid:x.id,quem:x.nome}});x.fim=Date.now()+(x.horas||72)*3600e3;}
         window.ALUNO_NOME=x.nome;window.ALUNO_CID=x.id;window.ALUNO_FIM=x.fim;try{sessionStorage.setItem('treinFC-cid',x.id);}catch(e){}
+        window.COLAB_S=Math.random().toString(36).slice(2,10);await sb.from('trein_eventos').insert({user_id:uid,tipo:'colab_sessao',tipologia:null,detalhe:{cid:x.id,quem:x.nome,s:window.COLAB_S}});
         const tag=document.getElementById('quemTag');tag.textContent='Estudando: '+x.nome+' · trocar';tag.hidden=false;box.hidden=true;res(x);};
       L.appendChild(b);});
     let last='';try{last=sessionStorage.getItem('treinFC-cid')||'';}catch(e){}
     const lx=st.lst.find(x=>x.id===last&&x.ini&&x.resta>0);if(lx&&!window.ALUNO_CID){[...L.children][st.lst.indexOf(lx)].click();}}
   window.COLAB_DRAW=draw;draw();});}
-function vigiaPrazo(uid,perfil){setInterval(()=>{if(window.ALUNO_FIM&&Date.now()>window.ALUNO_FIM){window.ALUNO_FIM=null;window.ALUNO_CID=null;
+function escolherColabAviso(uid,perfil,nome){escolherColab(uid,perfil);setTimeout(()=>{const M=document.getElementById('quemMsg');M.style.color='';
+  M.textContent='O nome '+nome+' foi aberto em outro aparelho, e este foi desconectado. Cada colaborador só pode usar um aparelho por vez. Para continuar aqui, toque no seu nome de novo.';},700);}
+function vigiaPrazo(uid,perfil){setInterval(async()=>{if(!window.ALUNO_CID||!window.COLAB_S)return;
+    const {data}=await sb.from('trein_eventos').select('detalhe').eq('user_id',uid).eq('tipo','colab_sessao').order('criado_em',{ascending:false}).limit(30);
+    const ult=(data||[]).map(r=>r.detalhe||{}).find(d=>d.cid===window.ALUNO_CID);
+    if(ult&&ult.s!==window.COLAB_S){const nome=window.ALUNO_NOME;window.ALUNO_CID=null;window.COLAB_S=null;window.ALUNO_FIM=null;if(window.TRKFLUSH)TRKFLUSH();
+      await escolherColabAviso(uid,perfil,nome);}},45000);
+  setInterval(()=>{if(window.ALUNO_FIM&&Date.now()>window.ALUNO_FIM){window.ALUNO_FIM=null;window.ALUNO_CID=null;
     if(window.TRKFLUSH)TRKFLUSH();escolherColab(uid,perfil);}},30000);
   document.getElementById('quemTag').onclick=()=>{window.ALUNO_CID=null;try{sessionStorage.removeItem('treinFC-cid');}catch(e){}escolherColab(uid,perfil);};}
 </script>
@@ -132,7 +150,7 @@ function vigiaPrazo(uid,perfil){setInterval(()=>{if(window.ALUNO_FIM&&Date.now()
     try{const {data}=await sb.from('trein_eventos').select('detalhe').eq('tipo','chave_app').limit(1);
       const kb=Uint8Array.from(atob(data[0].detalhe.k),c=>c.charCodeAt(0));
       const key=await crypto.subtle.importKey('raw',kb,'AES-GCM',false,['decrypt']);
-      const buf=new Uint8Array(await (await fetch('app.enc?v=1791918753',{cache:'no-cache'})).arrayBuffer());
+      const buf=new Uint8Array(await (await fetch('app.enc?v=1791919122',{cache:'no-cache'})).arrayBuffer());
       const plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:buf.slice(0,12)},key,buf.slice(12));
       const html=await new Response(new Blob([plain]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
       const root=document.getElementById('appRoot');root.innerHTML=html;
