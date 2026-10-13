@@ -37,12 +37,16 @@
   <a class="gguia" href="guia/" target="_blank" rel="noopener">Primeira vez? Veja o guia do aluno →</a>
  </form>
 </div>
-<div class="gate" id="quemBox" hidden><form class="gcard" id="quemForm" autocomplete="on">
-  <div class="eb">Treinamento FC 3D</div><h1>Quem está estudando agora?</h1>
-  <p>Digite seu nome. Ele aparece no resultado dos desafios, para a FC saber quem fez.</p>
-  <label>Seu nome<input name="quem" id="quemIn" required minlength="2" maxlength="40" autocomplete="name" placeholder="ex.: Maria Souza"></label>
-  <button type="submit">Começar</button>
- </form></div>
+<div class="gate" id="quemBox" hidden><div class="gcard" id="quemCard">
+  <div class="eb">Treinamento FC 3D</div><h1 id="quemTit">Quem está estudando agora?</h1>
+  <p id="quemTxt">Toque no seu nome. Cada colaborador tem 72 horas corridas a partir do primeiro acesso.</p>
+  <div id="quemLista" style="display:flex;flex-direction:column;gap:8px"></div>
+  <p class="gmsg" id="quemMsg" role="status"></p>
+  <button type="button" id="quemSair" style="background:#fff;color:#1d3f57;border:1px solid #c9d3da">Sair</button>
+ </div></div>
+<style>.cbtn{display:flex;justify-content:space-between;align-items:center;gap:10px;text-align:left;background:#f4f7f9!important;color:#1b232a!important;border:1px solid #c9d3da!important}
+.cbtn small{font:500 12px 'IBM Plex Mono',monospace;color:#5d6b76}.cbtn.exp{background:#fbeceb!important}.cbtn.exp small{color:#b4372f}
+.cped{background:#e0972e!important;color:#1b1206!important}</style>
 <div class="gate" id="sugBox" hidden><form class="gcard" id="sugForm">
   <div class="eb">Treinamento FC 3D</div><h1>Sugestão ou feedback</h1>
   <p>Conte o que achou, o que ficou confuso ou o que podemos melhorar. A FC lê todas.</p>
@@ -68,12 +72,44 @@ function sugInit(){const box=document.getElementById('sugBox'),f=document.getEle
   f.onsubmit=async e=>{e.preventDefault();const txt=document.getElementById('sugTxt').value.trim();if(txt.length<3)return;
     const tipo=document.getElementById('sugTipo').value;if(window.TRK){TRK('sugestao',{tipo,txt,t:(typeof S!=='undefined'?S.typo:'')});if(window.TRKFLUSH)await TRKFLUSH();}
     m.textContent='Obrigado! Sua mensagem foi enviada para a FC.';document.getElementById('sugTxt').value='';setTimeout(()=>{box.hidden=true;},1600);};}
-function pedirNome(perfil){const box=document.getElementById('quemBox'),inp=document.getElementById('quemIn'),tag=document.getElementById('quemTag');
-  let last='';try{last=sessionStorage.getItem('treinFC-quem')||'';}catch(e){}
-  const set=n=>{window.ALUNO_NOME=n;try{sessionStorage.setItem('treinFC-quem',n);localStorage.setItem('treinFC-quem-ult',n);}catch(e){}tag.textContent='Estudando: '+n+' · trocar';tag.hidden=false;box.hidden=true;};
-  if(last){set(last);}else{try{inp.value=localStorage.getItem('treinFC-quem-ult')||'';}catch(e){}box.hidden=false;setTimeout(()=>inp.focus(),50);}
-  document.getElementById('quemForm').onsubmit=e=>{e.preventDefault();const n=inp.value.trim().replace(/\s+/g,' ');if(n.length<2)return;set(n);if(window.TRK)TRK('quem',{n});};
-  tag.onclick=()=>{inp.value='';box.hidden=false;inp.focus();};}
+const HOJE=()=>new Date(Date.now()-4*3600e3).toISOString().slice(0,10),DOW=()=>new Date(Date.now()-4*3600e3).getUTCDay();
+const fmtR=ms=>{const h=Math.floor(ms/3600e3),m=Math.floor(ms%3600e3/60e3);return h>=1?h+' h '+String(m).padStart(2,'0'):m+' min';};
+async function estadoEmpresa(uid){
+  const [c,e,l]=await Promise.all([sb.from('trein_eventos').select('detalhe,criado_em').eq('tipo','colab').order('criado_em'),
+    sb.from('trein_eventos').select('tipo,detalhe,criado_em').eq('user_id',uid).in('tipo',['colab_inicio','pedido_tempo']).order('criado_em'),
+    sb.from('trein_eventos').select('detalhe').eq('tipo','liberacao').order('criado_em',{ascending:false}).limit(1)]);
+  const C={};(c.data||[]).forEach(r=>{const d=r.detalhe||{};if(d.para!==uid)return;C[d.id]=Object.assign({},C[d.id]||{},d,{alt:r.criado_em});});
+  (e.data||[]).forEach(r=>{const d=r.detalhe||{},x=C[d.cid];if(!x)return;if(r.tipo==='colab_inicio'){if(!x.ini)x.ini=r.criado_em;}else x.ped=r.criado_em;});
+  const lst=Object.values(C).filter(x=>!x.removido).map(x=>{x.fim=x.ini?Date.parse(x.ini)+(x.horas||72)*3600e3:null;x.resta=x.fim?x.fim-Date.now():null;
+    x.pend=x.ped&&Date.parse(x.ped)>Date.parse(x.alt);return x;});
+  const ate=((l.data||[])[0]||{}).detalhe?.ate||null;
+  return {lst,ate,liberado:DOW()!==0&&!!ate&&ate>=HOJE()};}
+function escolherColab(uid,perfil){return new Promise(res=>{
+  const box=document.getElementById('quemBox'),L=document.getElementById('quemLista'),M=document.getElementById('quemMsg'),T=document.getElementById('quemTit'),X=document.getElementById('quemTxt');
+  document.getElementById('quemSair').onclick=sair;const esc=v=>String(v||'').replace(/</g,'&lt;');
+  async function pedir(x){M.style.color='';M.textContent='Enviando…';
+    const {error}=await sb.from('trein_eventos').insert({user_id:uid,tipo:'pedido_tempo',tipologia:null,detalhe:{cid:x.id,quem:x.nome}});
+    await draw();M.style.color='#2f9a55';M.textContent=error?'Não foi possível enviar: '+error.message:'Pedido de mais tempo enviado para a FC Consultoria. Assim que liberar, é só entrar de novo.';}
+  async function draw(){box.hidden=false;M.textContent='';L.innerHTML='<p>Carregando…</p>';const st=await estadoEmpresa(uid);
+    if(!st.liberado){T.textContent=DOW()===0?'Hoje é domingo':'Acesso da semana encerrado';
+      X.textContent=DOW()===0?'O treinamento funciona de segunda a sábado. Volte amanhã.':'O acesso desta empresa não foi liberado para esta semana. Fale com a FC Consultoria: WhatsApp (66) 9 9986-7984.';L.innerHTML='';return;}
+    T.textContent='Quem está estudando agora?';X.textContent='Toque no seu nome. Cada colaborador tem 72 horas corridas a partir do primeiro acesso.';
+    if(!st.lst.length){L.innerHTML='<p>Nenhum colaborador cadastrado para '+esc(perfil.nome||perfil.login)+'. Peça à FC Consultoria para cadastrar os nomes.</p>';return;}
+    L.innerHTML='';st.lst.forEach(x=>{const exp=x.resta!=null&&x.resta<=0,b=document.createElement('button');b.type='button';b.className='cbtn'+(exp?' exp':'');
+      b.innerHTML=`<span>${esc(x.nome)}</span><small>${x.resta==null?'72 h · ainda não começou':exp?(x.pend?'prazo encerrado · pedido enviado':'prazo encerrado'):'restam '+fmtR(x.resta)}</small>`;
+      b.onclick=async()=>{if(exp){T.textContent=x.nome+': prazo encerrado';X.textContent='As '+(x.horas||72)+' horas deste colaborador terminaram. Peça mais tempo para a FC Consultoria.';L.innerHTML='';
+          const p=document.createElement('button');p.type='button';p.className='cped';p.textContent=x.pend?'Pedido já enviado · enviar de novo':'Solicitar mais tempo';p.onclick=()=>pedir(x);
+          const v=document.createElement('button');v.type='button';v.textContent='← Voltar';v.style.cssText='background:#fff;color:#1d3f57;border:1px solid #c9d3da';v.onclick=draw;L.append(p,v);return;}
+        if(!x.ini){b.disabled=true;await sb.from('trein_eventos').insert({user_id:uid,tipo:'colab_inicio',tipologia:null,detalhe:{cid:x.id,quem:x.nome}});x.fim=Date.now()+(x.horas||72)*3600e3;}
+        window.ALUNO_NOME=x.nome;window.ALUNO_CID=x.id;window.ALUNO_FIM=x.fim;try{sessionStorage.setItem('treinFC-cid',x.id);}catch(e){}
+        const tag=document.getElementById('quemTag');tag.textContent='Estudando: '+x.nome+' · trocar';tag.hidden=false;box.hidden=true;res(x);};
+      L.appendChild(b);});
+    let last='';try{last=sessionStorage.getItem('treinFC-cid')||'';}catch(e){}
+    const lx=st.lst.find(x=>x.id===last&&x.ini&&x.resta>0);if(lx&&!window.ALUNO_CID){[...L.children][st.lst.indexOf(lx)].click();}}
+  window.COLAB_DRAW=draw;draw();});}
+function vigiaPrazo(uid,perfil){setInterval(()=>{if(window.ALUNO_FIM&&Date.now()>window.ALUNO_FIM){window.ALUNO_FIM=null;window.ALUNO_CID=null;
+    if(window.TRKFLUSH)TRKFLUSH();escolherColab(uid,perfil);}},30000);
+  document.getElementById('quemTag').onclick=()=>{window.ALUNO_CID=null;try{sessionStorage.removeItem('treinFC-cid');}catch(e){}escolherColab(uid,perfil);};}
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="auth.js"></script>
@@ -84,10 +120,10 @@ function pedirNome(perfil){const box=document.getElementById('quemBox'),inp=docu
   const enviar=async()=>{if(!uid||!fila.length)return;const lote=fila.splice(0);const {error}=await sb.from('trein_eventos').insert(lote);if(error)fila.unshift(...lote);};
   window.TRK=(tipo,d)=>{if(!uid)return;d=d||{};
     if(tipo==='perfil'||tipo==='componente'||tipo==='corte'){const k=tipo+'|'+(d.t||'')+'|'+(d.c||d.k||'');if(vistos.has(k))return;vistos.add(k);}
-    if(window.ALUNO_NOME)d=Object.assign({quem:window.ALUNO_NOME},d);
+    if(window.ALUNO_NOME)d=Object.assign({quem:window.ALUNO_NOME,cid:window.ALUNO_CID||null},d);
     fila.push({user_id:uid,tipo,tipologia:d.t||null,detalhe:d});ultimo=Date.now();};
   ['pointerdown','keydown','wheel'].forEach(ev=>addEventListener(ev,()=>{ultimo=Date.now();},{passive:true}));
-  setInterval(()=>{if(uid&&document.visibilityState==='visible'&&Date.now()-ultimo<180000)fila.push({user_id:uid,tipo:'tempo',tipologia:(typeof S!=='undefined'?S.typo:null)||null,detalhe:{s:60}});},60000);
+  setInterval(()=>{if(uid&&document.visibilityState==='visible'&&Date.now()-ultimo<180000)fila.push({user_id:uid,tipo:'tempo',tipologia:(typeof S!=='undefined'?S.typo:null)||null,detalhe:window.ALUNO_NOME?{s:60,quem:window.ALUNO_NOME,cid:window.ALUNO_CID||null}:{s:60}});},60000);
   setInterval(enviar,15000);window.TRKFLUSH=enviar;
   addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')enviar();});
   async function loadApp(){
@@ -95,7 +131,7 @@ function pedirNome(perfil){const box=document.getElementById('quemBox'),inp=docu
     try{const {data}=await sb.from('trein_eventos').select('detalhe').eq('tipo','chave_app').limit(1);
       const kb=Uint8Array.from(atob(data[0].detalhe.k),c=>c.charCodeAt(0));
       const key=await crypto.subtle.importKey('raw',kb,'AES-GCM',false,['decrypt']);
-      const buf=new Uint8Array(await (await fetch('app.enc?v=1791842560',{cache:'no-cache'})).arrayBuffer());
+      const buf=new Uint8Array(await (await fetch('app.enc?v=1791906674',{cache:'no-cache'})).arrayBuffer());
       const plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:buf.slice(0,12)},key,buf.slice(12));
       const html=await new Response(new Blob([plain]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
       const root=document.getElementById('appRoot');root.innerHTML=html;
@@ -107,12 +143,13 @@ function pedirNome(perfil){const box=document.getElementById('quemBox'),inp=docu
   }
   gateUI(async({session,perfil})=>{
     uid=session.user.id;
+    if(perfil.papel!=='admin'){document.getElementById('ubar').hidden=false;document.getElementById('uname').textContent=perfil.nome||perfil.login;await escolherColab(uid,perfil);vigiaPrazo(uid,perfil);}
     await loadApp();
     document.getElementById('ubar').hidden=false;
     document.getElementById('uname').textContent=(perfil.nome||perfil.login)+(perfil.papel==='admin'?' · matriz':'');
-    if(perfil.papel!=='admin')pedirNome(perfil);sugInit();
+    sugInit();
     document.getElementById('upainel').hidden=perfil.papel!=='admin';
-    fila.push({user_id:uid,tipo:'login',tipologia:(typeof S!=='undefined'?S.typo:null)||null,detalhe:{}});
+    fila.push({user_id:uid,tipo:'login',tipologia:(typeof S!=='undefined'?S.typo:null)||null,detalhe:window.ALUNO_NOME?{quem:window.ALUNO_NOME,cid:window.ALUNO_CID||null}:{}});
     TRK('tipologia',{t:(typeof S!=='undefined'?S.typo:null)||''});
     try{PROG={};localStorage.removeItem('treinFC-prog');}catch(e){}
     sb.from('trein_eventos').select('detalhe').eq('user_id',uid).eq('tipo','teste').then(({data})=>{
