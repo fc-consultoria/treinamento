@@ -300,10 +300,10 @@ function pedUI(){const P=[];ALUNOS.forEach(a=>colabs(a.user_id).forEach(x=>{if(x
   const c=document.getElementById('pedCard');c.hidden=!P.length;document.getElementById('pedN').textContent=P.length?P.length+' aguardando':'';
   document.getElementById('pedList').innerHTML=P.map(([a,x],i)=>`<div class="rowl"><span><b>${esc(x.nome)}</b> · ${esc(a.nome||a.login)} <span class="note">pediu em ${fmtD(x.ped)} · ${stTxt(x)}</span></span><span class="bt"><button type="button" class="ok" data-i="${i}" data-n="24">+24 h</button><button type="button" class="ok" data-i="${i}" data-n="48">+48 h</button><button type="button" class="ok" data-i="${i}" data-n="72">+72 h</button></span></div>`).join('');
   document.querySelectorAll('#pedList button').forEach(b=>b.onclick=()=>{b.disabled=true;const [a,x]=P[+b.dataset.i];prorrogar(a.user_id,x,+b.dataset.n);});}
-const sisOf=uid=>{const r=EV.find(e=>e.tipo==='sistema'&&(e.detalhe||{}).para===uid);return r?r.detalhe:{wv:false,cem:false};};
-const sisBtns=uid=>{const z=sisOf(uid);return ['wv','cem'].map(k=>`<button type="button" class="stg ${z[k]?'on':''}" data-sis="${k}" data-u="${uid}" title="Clique para ${z[k]?'tirar':'liberar'}"><i></i>${k==='wv'?'WVetro':'CEM'}</button>`).join('');};
-document.addEventListener('click',async e=>{const b=e.target.closest('[data-sis]');if(!b)return;e.stopPropagation();b.disabled=true;const u=b.dataset.u,z=Object.assign({wv:false,cem:false},sisOf(u));z[b.dataset.sis]=!z[b.dataset.sis];
-  await ins('sistema',{para:u,wv:!!z.wv,cem:!!z.cem});carregar();},true);
+const sisOf=uid=>{const r=EV.find(e=>e.tipo==='sistema'&&(e.detalhe||{}).para===uid);return r?r.detalhe:{wv:false,cem:false,dia:false};};
+const sisBtns=uid=>{const z=sisOf(uid);return ['wv','cem','dia'].map(k=>`<button type="button" class="stg ${z[k]?'on':''}" data-sis="${k}" data-u="${uid}" title="Clique para ${z[k]?'tirar':'liberar'}"><i></i>${k==='wv'?'WVetro':k==='cem'?'CEM':'Diagrama'}</button>`).join('');};
+document.addEventListener('click',async e=>{const b=e.target.closest('[data-sis]');if(!b)return;e.stopPropagation();b.disabled=true;const u=b.dataset.u,z=Object.assign({wv:false,cem:false,dia:false},sisOf(u));z[b.dataset.sis]=!z[b.dataset.sis];
+  await ins('sistema',{para:u,wv:!!z.wv,cem:!!z.cem,dia:!!z.dia});carregar();},true);
 const senhaLoc=id=>{try{return (JSON.parse(localStorage.getItem('treinFC-senhas')||'{}'))[id]||'';}catch(e){return '';}};
 const senhaSave=(id,v)=>{try{const o=JSON.parse(localStorage.getItem('treinFC-senhas')||'{}');o[id]=v;localStorage.setItem('treinFC-senhas',JSON.stringify(o));}catch(e){}};
 const alert0=t=>{const m=document.getElementById('tbMsg');if(m){m.textContent='Não salvou: '+t;m.hidden=false;setTimeout(()=>m.hidden=true,5000);}};
