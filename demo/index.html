@@ -2877,8 +2877,8 @@ function demo2Init(){
     if(r.estado==='expirado'){fim('O seu demonstrativo terminou','As 24 horas de teste acabaram. Se quiser mais tempo ou contratar para a sua equipe, fale com a FC.');return;}
     if(r.estado==='encerrado'){fim('Demonstrativo encerrado','Este link foi encerrado pela FC Consultoria.');return;}
     NOME=r.nome||'';FIM=Date.now()+r.restante*1000;gate.remove();
-    const bar=document.createElement('div');bar.className='d2bar';bar.innerHTML=`<span><b>Demonstrativo${NOME?' · '+NOME.replace(/</g,'&lt;'):''}</b> · 2 tipologias da Suprema e 2 da Gold. Gire, abra as folhas, desmonte e veja os cortes.</span><span class="tm" id="d2tm"></span><button type="button" id="d2Op" style="margin-left:auto;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.5);color:#fff;font:600 14px var(--f-display);padding:8px 12px;border-radius:8px;cursor:pointer">⭐ Dar opinião</button><a href="#" id="d2Q" style="margin-left:0">Quero para minha empresa</a>`;
-    const wr=document.querySelector('.wrap');wr.insertBefore(bar,wr.firstChild);document.getElementById('d2Q').onclick=e=>{e.preventDefault();quero('Faixa do demonstrativo');};document.getElementById('d2Op').onclick=()=>opiniao(false);tick();setInterval(tick,30000);
+    const bar=document.createElement('div');bar.className='d2bar';bar.innerHTML=`<span><b>Demonstrativo${NOME?' · '+NOME.replace(/</g,'&lt;'):''}</b> · 2 tipologias da Suprema e 2 da Gold. Gire, abra as folhas, desmonte e veja os cortes.</span><span class="tm" id="d2tm"></span><button type="button" id="d2Op" style="margin-left:auto;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.5);color:#fff;font:600 14px var(--f-display);padding:8px 12px;border-radius:8px;cursor:pointer">⭐ Dar opinião</button><a href="#" id="d2Q" style="margin-left:0">💳 Contratar agora</a>`;
+    const wr=document.querySelector('.wrap');wr.insertBefore(bar,wr.firstChild);document.getElementById('d2Q').onclick=e=>{e.preventDefault();contratar('Faixa do demonstrativo');};document.getElementById('d2Op').onclick=()=>opiniao(false);tick();setInterval(tick,30000);
     setInterval(()=>{if(document.visibilityState==='visible')send('tempo',{s:60,t:S.typo});},60000);
     setTypo('jcr200');
   }).catch(()=>fim('Sem conexão','Verifique a internet e abra o link de novo.'));
@@ -2891,6 +2891,43 @@ function demo2Init(){
     document.body.appendChild(o);document.getElementById('d2Qx').onclick=()=>o.remove();o.addEventListener('click',e=>{if(e.target===o)o.remove();});
     document.getElementById('d2F').onsubmit=e=>{e.preventDefault();const f=document.getElementById('d2Fone').value.trim();if(f.replace(/\D/g,'').length<10){document.getElementById('d2Fone').focus();return;}send('contato',{fone:f,m});document.getElementById('d2Fok').hidden=false;};
     setTimeout(()=>{const i=document.getElementById('d2Fone');if(i)i.focus();},50);}
+  /* contratar agora: proposta, dados e PIX */
+  function contratar(m){send('interesse',{m:'Contratar · '+m});send('contratar_aberto',{m});let o=document.getElementById('d2Ct');if(o)o.remove();o=document.createElement('div');o.id='d2Ct';
+    o.style.cssText='position:fixed;inset:0;z-index:9150;background:rgba(10,16,22,.72);display:grid;place-items:center;padding:14px;overflow:auto';
+    const inp='width:100%;box-sizing:border-box;font:500 15px system-ui;padding:9px 11px;border:1px solid #c9d3da;border-radius:8px';
+    o.innerHTML=`<div style="background:#fff;color:#1b232a;border-radius:16px;max-width:560px;width:100%;font:400 15px/1.5 system-ui,sans-serif;box-shadow:0 24px 60px rgba(0,0,0,.45);overflow:hidden">
+     <div style="background:linear-gradient(120deg,#0e6b62,#1f6f9a);color:#fff;padding:18px 22px"><div style="font:600 12px var(--f-mono);letter-spacing:.12em;opacity:.85">FC CONSULTORIA · ORIENTATIVO FC 3D</div>
+      <div style="display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-top:6px"><div style="font:800 34px/1 var(--f-display)">R$ 150<span style="font-size:18px">,00</span></div><div style="opacity:.9;padding-bottom:3px">a cada 30 dias de acesso</div></div></div>
+     <div style="padding:18px 22px">
+      <div style="font-weight:700;margin-bottom:6px">O que está incluso</div>
+      <ul style="margin:0 0 14px;padding-left:20px;color:#3a4650">
+       <li>1 acesso da empresa para até <b>6 colaboradores</b>, de domingo a domingo</li>
+       <li>Tipologias das linhas <b>Suprema e Gold</b> em 3D: girar, abrir, desmontar e ver os cortes</li>
+       <li><b>Monte a esquadria</b>, <b>Orientação em Sistema</b> (WVetro e CEM) e <b>Diagrama de dimensões</b></li>
+       <li><b>Painel do Gestor</b> (até 4 aparelhos) com o progresso de cada colaborador</li>
+       <li>Catálogos técnicos Suprema e Gold para consulta</li></ul>
+      <div id="d2C1"><div style="font-weight:700;margin-bottom:8px">1 · Seus dados para criar o acesso</div>
+       <form id="d2CF" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <input id="d2Ce" required placeholder="Nome da empresa" style="${inp};grid-column:1/-1" value="${(NOME||'').replace(/"/g,'&quot;')}">
+        <input id="d2Cn" required placeholder="Seu nome" style="${inp}"><input id="d2Cfone" required type="tel" inputmode="tel" placeholder="WhatsApp (66) 9 9999-9999" style="${inp}">
+        <input id="d2Cc" placeholder="Cidade / UF" style="${inp};grid-column:1/-1">
+        <button type="submit" style="grid-column:1/-1;border:0;border-radius:9px;padding:11px;background:#1f6f9a;color:#fff;font:700 16px system-ui;cursor:pointer">Continuar para o pagamento →</button></form></div>
+      <div id="d2C2" hidden><div style="font-weight:700;margin-bottom:8px">2 · Pague pelo PIX</div>
+       <div style="border:2px dashed #1f8a4c;border-radius:12px;padding:12px 14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap"><div><div style="font-size:12.5px;color:#5d6b76">Chave PIX (celular)</div><div style="font:700 20px var(--f-mono)">(66) 9 9986-7984</div><div style="font-size:12.5px;color:#5d6b76">Valor: <b>R$ 150,00</b></div></div>
+        <button type="button" id="d2Cp" style="margin-left:auto;border:0;border-radius:9px;padding:10px 14px;background:#1f8a4c;color:#fff;font:700 14px system-ui;cursor:pointer">📋 Copiar chave</button></div>
+       <div style="font-weight:700;margin:14px 0 6px">3 · Envie o comprovante</div><p style="margin:0 0 10px;color:#4b5a63">Mande o comprovante no WhatsApp da FC. A liberação é <b>no mesmo dia</b>: você recebe o login, a senha e o acesso do gestor.</p>
+       <a id="d2Cw" target="_blank" rel="noopener" style="display:block;text-align:center;background:#1f9d55;color:#fff;text-decoration:none;font:700 16px system-ui;padding:12px;border-radius:10px">💬 Enviar comprovante no WhatsApp</a></div>
+      <div style="text-align:right;margin-top:12px"><button type="button" id="d2Cx" style="border:1px solid #c9d3da;background:#fff;border-radius:8px;padding:8px 14px;font:600 14px system-ui;cursor:pointer">← Voltar ao demonstrativo</button></div>
+     </div></div>`;
+    document.body.appendChild(o);document.getElementById('d2Cx').onclick=()=>o.remove();o.addEventListener('click',e=>{if(e.target===o)o.remove();});
+    document.getElementById('d2CF').onsubmit=e=>{e.preventDefault();const D={empresa:document.getElementById('d2Ce').value.trim(),nome:document.getElementById('d2Cn').value.trim(),fone:document.getElementById('d2Cfone').value.trim(),cidade:document.getElementById('d2Cc').value.trim(),m};
+      if(D.fone.replace(/\D/g,'').length<10){document.getElementById('d2Cfone').focus();return;}
+      send('contratar',D);send('contato',{fone:D.fone,m:'Contratar'});
+      document.getElementById('d2C1').hidden=true;document.getElementById('d2C2').hidden=false;
+      document.getElementById('d2Cw').href=WA(`Olá Fernando! Quero contratar o Orientativo FC 3D (R$ 150,00 / 30 dias).\nEmpresa: ${D.empresa}\nResponsável: ${D.nome}\nCidade: ${D.cidade}\nSegue o comprovante do PIX:`);
+      document.getElementById('d2Cw').onclick=()=>send('contratar_whats',{});
+      document.getElementById('d2Cp').onclick=async ev=>{try{await navigator.clipboard.writeText('66999867984');ev.target.textContent='✔ Chave copiada';}catch(_){prompt('Copie a chave PIX:','66999867984');}send('contratar_pix',{});};};
+    setTimeout(()=>{const i=document.getElementById(NOME?'d2Cn':'d2Ce');if(i)i.focus();},60);}
   /* opinião: aparece sozinha depois que o cliente navega pelo demonstrativo */
   const VIS={t:new Set(),cortes:0,t0:Date.now()};let OPD=false;try{OPD=localStorage.getItem('fcd2-op-'+code)==='1';}catch(_){}
   const oTRK=window.TRK;window.TRK=(t,d)=>{oTRK(t,d);if(t==='tipologia'&&d&&d.t)VIS.t.add(d.t);if(t==='corte')VIS.cortes++;gatilho();};
@@ -2918,10 +2955,10 @@ function demo2Init(){
     'm-prat':['Orientação em Sistema','tut_sistema.mp4','Lançamento do pedido no WVetro e no CEM, conferido item a item, como na empresa.'],
     'm-dia':['Diagrama de dimensões','tut_diagrama.mp4','Pressão de vento e tamanho máximo de cada mão de amigo, com a estrutura reagindo em 3D.']};
   const vid=id=>{const [t,f,x]=TUT[id];TRK('tutorial',{m:t});let o=document.getElementById('d2Vid');if(o)o.remove();o=document.createElement('div');o.id='d2Vid';
-    o.innerHTML=`<div><h3>▶ Como funciona: ${t}</h3><video src="${f}" controls autoplay muted playsinline></video><p style="margin:10px 0 0;color:#b9c8d0">${x} Disponível no <b>Orientativo FC 3D completo</b>.</p><div class="r"><button type="button" id="d2X">← Voltar ao demonstrativo</button><a href="#" id="d2W">💬 Quero para minha empresa</a></div></div>`;
+    o.innerHTML=`<div><h3>▶ Como funciona: ${t}</h3><video src="${f}" controls autoplay muted playsinline></video><p style="margin:10px 0 0;color:#b9c8d0">${x} Disponível no <b>Orientativo FC 3D completo</b>.</p><div class="r"><button type="button" id="d2X">← Voltar ao demonstrativo</button><a href="#" id="d2W">💳 Contratar agora</a></div></div>`;
     document.body.appendChild(o);const v=o.querySelector('video');v.onended=()=>document.getElementById('d2W').classList.add('big');
     document.getElementById('d2X').onclick=()=>o.remove();o.addEventListener('click',e=>{if(e.target===o)o.remove();});
-    document.getElementById('d2W').addEventListener('click',ev=>{ev.preventDefault();o.remove();quero('Tutorial: '+t);});};
+    document.getElementById('d2W').addEventListener('click',ev=>{ev.preventDefault();o.remove();contratar('Tutorial: '+t);});};
   Object.keys(TUT).forEach(id=>{const b=document.getElementById(id);if(!b)return;b.hidden=false;b.classList.add('dlk');b.title='Ver como funciona';const n=b.cloneNode(true);b.replaceWith(n);n.addEventListener('click',e=>{e.stopImmediatePropagation();vid(id);});});
   ['c-swap','c-us'].forEach(id=>{const e=document.getElementById(id);if(e)e.classList.add('dhide');});
   const gb=document.querySelector('.guiabtn');if(gb)gb.classList.add('dhide');
