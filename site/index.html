@@ -24,7 +24,7 @@ header.top .w{display:flex;align-items:center;gap:18px;height:64px}
 .brand{display:flex;align-items:center;gap:10px;text-decoration:none;font:700 16px var(--f-d)}.brand img{width:40px;height:40px;border-radius:9px}
 .brand small{display:block;font:500 11px var(--f-b);color:var(--mu);letter-spacing:.06em}
 nav.mn{margin-left:auto;display:flex;gap:4px}nav.mn a{text-decoration:none;font:500 14.5px var(--f-b);padding:8px 10px;border-radius:8px;color:#d7e4ea}nav.mn a:hover{background:#1b3442;color:#fff}
-.top .btn{padding:9px 14px;font-size:14px}
+.top .btn{padding:9px 14px;font-size:14px}.top .btn.ac{margin-left:4px}
 .mbtn{display:none;margin-left:auto;background:none;border:1px solid #3a5866;color:#fff;border-radius:8px;padding:6px 10px;font-size:18px}
 /* hero */
 .hero{background:radial-gradient(1200px 500px at 85% -10%,#15495a 0,transparent 60%),linear-gradient(160deg,var(--ink) 0,var(--ink2) 100%);color:var(--fg);overflow:hidden}
@@ -77,13 +77,14 @@ section{padding:72px 0;scroll-margin-top:64px}
 footer{padding:28px 0 90px;color:var(--tm);font-size:13.5px}footer .w{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .wfix{position:fixed;right:18px;bottom:18px;z-index:60;width:58px;height:58px;border-radius:50%;background:#1f9d55;display:grid;place-items:center;box-shadow:0 8px 22px rgba(0,0,0,.3);text-decoration:none;font-size:28px}
 @media(max-width:960px){.hero .w,.trg,.sob,.ct{grid-template-columns:1fr}.srv{grid-template-columns:1fr 1fr}.rep{grid-template-columns:1fr 1fr}.nums{grid-template-columns:1fr 1fr}.hero .ph img{margin:0 auto}.shots{min-height:300px}
- nav.mn{display:none;position:absolute;top:64px;left:0;right:0;background:var(--ink);flex-direction:column;padding:10px 20px 16px;border-bottom:1px solid #22394a}nav.mn.on{display:flex}.mbtn{display:block}.top .btn.wz{display:none}}
+ nav.mn{display:none;position:absolute;top:64px;left:0;right:0;background:var(--ink);flex-direction:column;padding:10px 20px 16px;border-bottom:1px solid #22394a}nav.mn.on{display:flex}.mbtn{display:block;margin-left:0}.top .btn.wz{display:none}.top .btn.ac{margin-left:auto;padding:7px 10px;font-size:13px}}
 @media(max-width:560px){.srv,.rep{grid-template-columns:1fr}.ct{padding:26px}section{padding:52px 0}.hero .tag{position:static;margin:0 auto 10px;max-width:440px}}
 </style></head><body>
 <header class="top"><div class="w">
  <a class="brand" href="#inicio"><img src="img/logo-fc-160.jpg" alt=""><span>FC Consultoria<small>EM ESQUADRIA · REPRESENTAÇÃO</small></span></a>
  <button class="mbtn" id="mb" aria-label="Abrir menu">☰</button>
  <nav class="mn" id="mn"><a href="#servicos">Serviços</a><a href="#treinamento">Treinamento FC 3D</a><a href="#representacao">Representação</a><a href="#onde">Onde atendemos</a><a href="#sobre">Sobre</a><a href="#contato">Contato</a></nav>
+ <a class="btn cy ac" href="https://fc-consultoria.github.io/treinamento/">🔐 Área do cliente</a>
  <a class="btn wz" href="https://wa.me/5566999867984?text=Ol%C3%A1%20Fernando%2C%20vim%20pelo%20site%20da%20FC." target="_blank" rel="noopener">💬 WhatsApp</a>
 </div></header>
 
