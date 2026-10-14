@@ -2892,6 +2892,7 @@ function demo2Init(){
     const bar=document.createElement('div');bar.className='d2bar';bar.innerHTML=`<span><b>Demonstrativo${NOME?' · '+NOME.replace(/</g,'&lt;'):''}</b> · 2 tipologias da Suprema e 2 da Gold. Gire, abra as folhas, desmonte e veja os cortes.</span><span class="tm" id="d2tm"></span><button type="button" id="d2Cat" style="margin-left:auto;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.5);color:#fff;font:600 14px var(--f-display);padding:8px 12px;border-radius:8px;cursor:pointer">📄 Catálogos 🔒</button><button type="button" id="d2Op" style="background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.5);color:#fff;font:600 14px var(--f-display);padding:8px 12px;border-radius:8px;cursor:pointer">⭐ Dar opinião</button><a href="#" id="d2Q" style="margin-left:0">${PROMO?'🔥 Oferta: contratar agora':'💳 Contratar agora'}</a>`;
     const wr=document.querySelector('.wrap');wr.insertBefore(bar,wr.firstChild);document.getElementById('d2Q').onclick=e=>{e.preventDefault();contratar('Faixa do demonstrativo');};document.getElementById('d2Op').onclick=()=>opiniao(false);document.getElementById('d2Cat').onclick=catalogos;tick();setInterval(tick,30000);
     if(!PREV)setInterval(()=>{if(document.visibilityState==='visible')send('tempo',{s:60,t:S.typo});},60000);
+    chatInit();
   }
   function previa(){NOME='Cliente exemplo';FIM=Date.now()+24*3600e3;gate.remove();
     let tk=null;try{tk=JSON.parse(localStorage.getItem('trein-fc-auth')).access_token;}catch(_){}
@@ -2899,7 +2900,7 @@ function demo2Init(){
       montarBarra();setTypo('jcr200');
       const tb=document.createElement('div');tb.id='d2Prev';tb.style.cssText='position:fixed;left:12px;bottom:12px;z-index:9600;background:#0f1a22;color:#fff;border-radius:12px;padding:10px 12px;box-shadow:0 10px 30px rgba(0,0,0,.4);font:600 13px system-ui,sans-serif;max-width:calc(100vw - 24px)';
       const bt='border:1px solid #3a5866;background:#16262f;color:#fff;border-radius:7px;padding:6px 9px;font:600 12.5px system-ui;cursor:pointer;margin:3px';
-      tb.innerHTML=`<div style="margin-bottom:4px">👁 <b>Visualização da Matriz</b> · nada é registrado${PROMO?' · 🔥 oferta ligada':''}</div><button style="${bt};background:#1fb3c9;border-color:#1fb3c9;color:#06222a" data-p="volta">← Voltar ao Painel da Matriz</button><button style="${bt}" data-p="cv">📨 Convite</button><button style="${bt}" data-p="ct">💳 Contratar</button><button style="${bt}" data-p="op">⭐ Opinião</button><button style="${bt}" data-p="tu">▶ Tutorial</button><button style="${bt}" data-p="fim">⏱ Prazo encerrado</button><button style="${bt}" data-p="x">✕</button>`;
+      tb.innerHTML=`<div style="margin-bottom:4px">👁 <b>Visualização da Matriz</b> · nada é registrado${PROMO?' · 🔥 oferta ligada':''}</div><button style="${bt};background:#1fb3c9;border-color:#1fb3c9;color:#06222a" data-p="volta">← Voltar ao Painel da Matriz</button><button style="${bt}" data-p="cv">📨 Convite</button><button style="${bt}" data-p="ct">💳 Contratar</button><button style="${bt}" data-p="op">⭐ Opinião</button><button style="${bt}" data-p="tu">▶ Tutorial</button><button style="${bt}" data-p="chat">💬 Conversa</button><button style="${bt}" data-p="fim">⏱ Prazo encerrado</button><button style="${bt}" data-p="x">✕</button>`;
       document.body.appendChild(tb);
       const act=k=>{
         if(k==='volta'){try{if(window.opener&&!window.opener.closed){window.opener.focus();window.close();return;}}catch(_){}location.href='../painel.html';return;}
@@ -2907,11 +2908,12 @@ function demo2Init(){
         else if(k==='ct')contratar('Visualização');else if(k==='op'){const o=document.getElementById('d2Op2');if(o)o.remove();opiniao(true);}
         else if(k==='tu')document.getElementById('m-test').click();
         else if(k==='cat')catalogos();
+        else if(k==='chat')chatAbrir();
         else if(k==='fim'){const g=document.createElement('div');g.id='d2Gate';g.innerHTML=`<div class="c"><div style="font:600 13px var(--f-mono);letter-spacing:.12em;color:#1fb3c9">ORIENTATIVO FC 3D · DEMONSTRATIVO</div><h2>O seu demonstrativo terminou</h2><p>As 24 horas de teste acabaram. Se quiser mais tempo ou contratar para a sua equipe, fale com a FC.</p><a href="#" onclick="return false">💬 Falar com a FC no WhatsApp</a><div><button type="button" style="margin-top:18px;border:1px solid #3a5866;background:#16262f;color:#fff;border-radius:8px;padding:8px 12px;cursor:pointer" onclick="this.closest('#d2Gate').remove()">← Fechar visualização</button></div></div>`;document.body.appendChild(g);}
         else tb.remove();};
       tb.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>act(b.dataset.p));
       if(window.top!==window){tb.remove();addEventListener('message',e=>{if(e.origin!==location.origin||!e.data||!e.data.fcPrev)return;
-        document.querySelectorAll('#d2Gate,#d2Op2,#d2Q2,#d2Ct,#d2Vid,#d2Cv,#d2Ca').forEach(x=>x.remove());if(e.data.fcPrev!=='limpar')act(e.data.fcPrev);});
+        document.querySelectorAll('#d2Gate,#d2Op2,#d2Q2,#d2Ct,#d2Vid,#d2Cv,#d2Ca,#d2ChP').forEach(x=>x.remove());{const cb=document.getElementById('d2ChB');if(cb)cb.style.display='';CH.open=false;}if(e.data.fcPrev!=='limpar')act(e.data.fcPrev);});
         try{parent.postMessage({fcPrevPronto:1,promo:!!PROMO},location.origin);}catch(_){}}});}
   function catalogos(){send('catalogo',{});let o=document.getElementById('d2Ca');if(o)o.remove();o=document.createElement('div');o.id='d2Ca';o.style.cssText='position:fixed;inset:0;z-index:9100;background:rgba(10,16,22,.7);display:grid;place-items:center;padding:16px;overflow:auto';
     const card=(n,c,d,mb)=>`<div style="display:flex;gap:12px;align-items:center;border:1px solid #d6dee4;border-radius:11px;padding:11px 12px;margin-bottom:8px;background:#f7f9fa"><div style="width:42px;height:54px;border-radius:6px;background:${c};display:grid;place-items:center;color:#fff;font:700 11px system-ui;flex:none">PDF</div><div style="flex:1"><b>${n}</b><div style="font-size:13px;color:#5d6b76">${d} · ${mb}</div></div><span style="font-size:13px;font-weight:700;color:#8a5a00;background:#fff3d6;border:1px solid #f0c48a;border-radius:7px;padding:5px 9px;white-space:nowrap">🔒 Bloqueado</span></div>`;
@@ -2924,14 +2926,55 @@ function demo2Init(){
      <div style="text-align:right;margin-top:10px"><button type="button" id="d2CaX" style="border:1px solid #c9d3da;background:#fff;border-radius:8px;padding:8px 14px;font:600 14px system-ui;cursor:pointer">← Voltar ao demonstrativo</button></div></div>`;
     document.body.appendChild(o);o.addEventListener('click',e=>{if(e.target===o)o.remove();});document.getElementById('d2CaX').onclick=()=>o.remove();
     document.getElementById('d2CaGo').onclick=()=>{o.remove();contratar('Catálogos');};}
+  /* ===== Conversa com a FC dentro do link ===== */
+  const CH={last:0,open:false,init:false,intro:false,seen:0,itens:[]};try{CH.seen=+localStorage.getItem('fcd2-ch-'+code)||0;}catch(_){}
+  function chatInit(){if(CH.init)return;CH.init=true;
+    const st=document.createElement('style');st.textContent=`#d2ChB{position:fixed;right:16px;bottom:16px;z-index:9050;border:0;border-radius:28px;padding:12px 18px;background:#1f9d55;color:#fff;font:700 15px var(--f-display);box-shadow:0 8px 24px rgba(0,0,0,.28);cursor:pointer;display:flex;gap:8px;align-items:center}
+#d2ChB i{font-style:normal;background:#e8912d;color:#fff;border-radius:10px;padding:0 7px;font-size:12.5px;display:none}#d2ChB.nv i{display:inline-block}#d2ChB.nv{animation:d2pulse 1.4s infinite}
+@keyframes d2pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+#d2ChP{position:fixed;right:16px;bottom:16px;z-index:9060;width:360px;max-width:calc(100vw - 32px);height:min(500px,calc(100vh - 32px));background:#fff;border-radius:14px;box-shadow:0 20px 50px rgba(0,0,0,.35);display:flex;flex-direction:column;overflow:hidden;font:400 15px/1.45 system-ui,sans-serif;color:#1b232a}
+#d2ChP .h{background:#0f1a22;color:#fff;padding:12px 14px;display:flex;gap:10px;align-items:center}#d2ChP .h b{font-size:15.5px}#d2ChP .h small{display:block;opacity:.75;font-size:12.5px}
+#d2ChP .l{flex:1;overflow:auto;padding:12px;background:#eef1f3;display:flex;flex-direction:column;gap:8px}
+#d2ChP .m{max-width:84%;border-radius:12px;padding:7px 10px;white-space:pre-wrap;word-wrap:break-word}#d2ChP .m.fc{align-self:flex-start;background:#fff;border:1px solid #d6dee4}#d2ChP .m.eu{align-self:flex-end;background:#d9f2e3;border:1px solid #a8dcbc}
+#d2ChP .m small{display:block;font-size:11px;color:#7a8790;margin-top:2px}
+#d2ChP form{display:flex;gap:8px;padding:10px;border-top:1px solid #e1e7eb}#d2ChP textarea{flex:1;font:400 15px system-ui;padding:8px 10px;border:1px solid #c9d3da;border-radius:9px;resize:none}
+#d2ChP form button{border:0;border-radius:9px;background:#1f6f9a;color:#fff;font:700 14px system-ui;padding:0 14px;cursor:pointer}
+#d2ChP .wz{font-size:12.5px;text-align:center;padding:0 10px 8px;color:#5d6b76}#d2ChP .wz a{color:#1f8a4c;font-weight:600}
+@media(max-width:600px){#d2ChP{right:0;bottom:0;width:100vw;max-width:100vw;height:75vh;border-radius:14px 14px 0 0}#d2ChB{right:12px;bottom:12px;padding:10px 14px}}`;document.head.appendChild(st);
+    const b=document.createElement('button');b.type='button';b.id='d2ChB';b.innerHTML='💬 Falar com a FC <i id="d2ChN"></i>';b.onclick=()=>chatAbrir();document.body.appendChild(b);
+    poll();}
+  const hora=t=>new Date(t||Date.now()).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  const escH=v=>String(v||'').replace(/&/g,'&amp;').replace(/</g,'&lt;');
+  function chatDraw(){const l=document.querySelector('#d2ChP .l');if(!l)return;
+    const intro=`<div class="m fc">Olá${NOME?', '+escH(NOME):''}! 👋 Ficou alguma dúvida ou quer negociar para a sua empresa? Escreva aqui que o <b>Fernando</b> responde por aqui mesmo.<small>FC Consultoria</small></div>`;
+    l.innerHTML=intro+CH.itens.map(x=>`<div class="m ${x.q==='fc'?'fc':'eu'}">${escH(x.tx)}<small>${x.q==='fc'?'Fernando · FC':'Você'} · ${hora(x.em)}</small></div>`).join('');l.scrollTop=l.scrollHeight;}
+  function marcarVisto(){const mx=CH.itens.reduce((m,x)=>x.q==='fc'&&x.id>m?x.id:m,0);if(mx>CH.seen){CH.seen=mx;try{localStorage.setItem('fcd2-ch-'+code,String(mx));}catch(_){}}badge();}
+  function badge(){const n=CH.itens.filter(x=>x.q==='fc'&&x.id>CH.seen).length,b=document.getElementById('d2ChB');if(!b)return;b.classList.toggle('nv',!!n);const i=document.getElementById('d2ChN');if(i)i.textContent=n||'';}
+  function chatAbrir(ctx){if(document.getElementById('d2ChP')){chatDraw();return;}CH.open=true;const b=document.getElementById('d2ChB');if(b)b.style.display='none';
+    const p=document.createElement('div');p.id='d2ChP';p.innerHTML=`<div class="h"><div style="flex:1"><b>💬 Fale com a FC Consultoria</b><small>O Fernando responde por aqui mesmo</small></div><button type="button" id="d2ChX" style="background:transparent;border:0;color:#fff;font-size:20px;cursor:pointer" aria-label="Fechar">✕</button></div>
+      <div class="l"></div><form id="d2ChF"><textarea id="d2ChT" rows="2" placeholder="${ctx?escH(ctx):'Escreva sua mensagem…'}"></textarea><button type="submit">Enviar</button></form><div class="wz">ou, se preferir, <a href="${WA('Olá Fernando! Estou no demonstrativo do Orientativo FC 3D'+(NOME?' ('+NOME+')':'')+'.')}" target="_blank" rel="noopener">chame no WhatsApp</a></div>`;
+    document.body.appendChild(p);chatDraw();marcarVisto();send('chat_aberto',{});
+    document.getElementById('d2ChX').onclick=()=>{p.remove();CH.open=false;if(b)b.style.display='';badge();};
+    const T=document.getElementById('d2ChT');T.onkeydown=ev=>{if(ev.key==='Enter'&&!ev.shiftKey){ev.preventDefault();document.getElementById('d2ChF').requestSubmit();}};setTimeout(()=>T.focus(),60);
+    document.getElementById('d2ChF').onsubmit=async ev=>{ev.preventDefault();const tx=T.value.trim().slice(0,1000);if(!tx)return;T.value='';
+      CH.itens.push({id:0,q:'cli',tx,em:new Date().toISOString(),tmp:1});chatDraw();
+      if(!PREV){try{await rpc('demo_log',{p_code:code,p_tipo:'msg',p_detalhe:{tx}});}catch(_){}poll(true);}
+      else setTimeout(()=>{CH.itens.push({id:999999,q:'fc',tx:'(Prévia) Aqui aparece a resposta que você escrever no painel.',em:new Date().toISOString()});chatDraw();},700);};}
+  let pollT=null;
+  async function poll(agora){clearTimeout(pollT);
+    if(!PREV&&document.visibilityState==='visible'){try{const r=await rpc('demo_msgs',{p_code:code,p_desde:CH.last});
+      if(Array.isArray(r)&&r.length){CH.itens=CH.itens.filter(x=>!x.tmp);r.forEach(x=>{if(!CH.itens.some(y=>y.id===x.id))CH.itens.push(x);});CH.last=Math.max(CH.last,...r.map(x=>x.id));
+        const novaFC=r.some(x=>x.q==='fc'&&x.id>CH.seen);if(CH.open){chatDraw();marcarVisto();}else if(novaFC&&!agora){chatAbrir();}else badge();}}catch(_){}}
+    pollT=setTimeout(poll,CH.open?6000:15000);}
   function quero(m){send('interesse',{m});let o=document.getElementById('d2Q2');if(o)o.remove();o=document.createElement('div');o.id='d2Q2';o.style.cssText='position:fixed;inset:0;z-index:9100;background:rgba(10,16,22,.7);display:grid;place-items:center;padding:16px';
     o.innerHTML=`<div style="background:#fff;color:#1b232a;border-radius:14px;max-width:440px;width:100%;padding:22px;font:400 15px/1.5 system-ui,sans-serif;box-shadow:0 20px 50px rgba(0,0,0,.4)">
      <h3 style="margin:0 0 6px;font:700 21px var(--f-display)">✔ Recebemos o seu interesse!</h3><p style="margin:0 0 12px;color:#4b5a63">A FC Consultoria já foi avisada${NOME?' que <b>'+NOME.replace(/</g,'&lt;')+'</b> tem interesse':''}. Deixe o seu WhatsApp que o Fernando te chama:</p>
      <form id="d2F" style="display:flex;gap:8px;flex-wrap:wrap"><input id="d2Fone" type="tel" inputmode="tel" placeholder="(66) 9 9999-9999" style="flex:1;min-width:180px;font:500 16px system-ui;padding:10px 12px;border:1px solid #c9d3da;border-radius:9px"><button type="submit" style="border:0;border-radius:9px;padding:10px 14px;background:#1f6f9a;color:#fff;font:700 15px system-ui;cursor:pointer">Enviar</button></form>
      <div style="font-size:12px;color:#7a8790;margin-top:8px">🔒 Seus dados serão usados só pela FC Consultoria para contato sobre o Orientativo FC 3D.</div>
+     <button type="button" id="d2QCh" style="margin-top:12px;width:100%;border:0;border-radius:9px;padding:11px;background:#0f1a22;color:#fff;font:700 15px system-ui;cursor:pointer">💬 Conversar com a FC aqui mesmo</button>
      <p id="d2Fok" style="margin:10px 0 0;color:#1f8a4c;font-weight:600" hidden>✔ Número enviado. Obrigado!</p>
      <div style="display:flex;gap:8px;justify-content:space-between;flex-wrap:wrap;margin-top:16px"><a href="${WA('Olá Fernando, testei o demonstrativo do Orientativo FC 3D'+(NOME?' ('+NOME+')':'')+' e quero para a minha empresa.')}" target="_blank" rel="noopener" style="background:#1f9d55;color:#fff;text-decoration:none;font:600 14px system-ui;padding:9px 12px;border-radius:8px">💬 Prefiro chamar agora no WhatsApp</a><button type="button" id="d2Qx" style="border:1px solid #c9d3da;background:#fff;border-radius:8px;padding:9px 12px;font:600 14px system-ui;cursor:pointer">← Voltar</button></div></div>`;
-    document.body.appendChild(o);document.getElementById('d2Qx').onclick=()=>o.remove();o.addEventListener('click',e=>{if(e.target===o)o.remove();});
+    document.body.appendChild(o);document.getElementById('d2Qx').onclick=()=>o.remove();document.getElementById('d2QCh').onclick=()=>{o.remove();chatAbrir('Ex.: quero para a minha empresa, quantas pessoas, valores…');};o.addEventListener('click',e=>{if(e.target===o)o.remove();});
     document.getElementById('d2F').onsubmit=e=>{e.preventDefault();const f=document.getElementById('d2Fone').value.trim();if(f.replace(/\D/g,'').length<10){document.getElementById('d2Fone').focus();return;}send('contato',{fone:f,m});document.getElementById('d2Fok').hidden=false;};
     setTimeout(()=>{const i=document.getElementById('d2Fone');if(i)i.focus();},50);}
   const PRECO=()=>PROMO?Number(PROMO.por)||150:150,brl2=v=>'R$ '+Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -2982,23 +3025,23 @@ function demo2Init(){
        <div style="border:2px dashed #1f8a4c;border-radius:12px;padding:12px 14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap"><div><div style="font-size:12.5px;color:#5d6b76">Chave PIX (CNPJ)</div><div style="font:700 20px var(--f-mono)">52.985.682/0001-32</div><div style="font-size:12.5px;color:#5d6b76">Favorecido: FC Desenvolvimento de Projetos de Compra e Venda LTDA</div><div style="font-size:12.5px;color:#5d6b76">Valor: <b>${brl2(PRECO())}</b>${PROMO?' (oferta)':''}</div></div>
         <button type="button" id="d2Cp" style="margin-left:auto;border:0;border-radius:9px;padding:10px 14px;background:#1f8a4c;color:#fff;font:700 14px system-ui;cursor:pointer">📋 Copiar chave</button></div>
        <div style="font-weight:700;margin:14px 0 6px">3 · Envie o comprovante</div><p style="margin:0 0 10px;color:#4b5a63">Mande o comprovante no WhatsApp da FC. A liberação é <b>no mesmo dia</b>: você recebe o login, a senha e o acesso do gestor.</p>
-       <a id="d2Cw" target="_blank" rel="noopener" style="display:block;text-align:center;background:#1f9d55;color:#fff;text-decoration:none;font:700 16px system-ui;padding:12px;border-radius:10px">💬 Enviar comprovante no WhatsApp</a></div>
+       <a id="d2Cw" target="_blank" rel="noopener" style="display:block;text-align:center;background:#1f9d55;color:#fff;text-decoration:none;font:700 16px system-ui;padding:12px;border-radius:10px">💬 Enviar comprovante no WhatsApp</a><div style="text-align:center;margin-top:8px;font-size:13.5px">Dúvidas? <a href="#" id="d2CCh" style="color:#1f6f9a;font-weight:700">Fale com a FC aqui mesmo</a></div></div>
       <div style="text-align:right;margin-top:12px"><button type="button" id="d2Cx" style="border:1px solid #c9d3da;background:#fff;border-radius:8px;padding:8px 14px;font:600 14px system-ui;cursor:pointer">← Voltar ao demonstrativo</button></div>
      </div></div>`;
-    document.body.appendChild(o);document.getElementById('d2Cx').onclick=()=>o.remove();o.addEventListener('click',e=>{if(e.target===o)o.remove();});
+    document.body.appendChild(o);document.getElementById('d2Cx').onclick=()=>{const pre=!document.getElementById('d2C2')||document.getElementById('d2C2').hidden;o.remove();if(pre&&!CH.intro){CH.intro=true;setTimeout(()=>chatAbrir('Ficou alguma dúvida sobre a proposta? Escreva aqui.'),400);}};o.addEventListener('click',e=>{if(e.target===o)o.remove();});
     document.getElementById('d2CF').onsubmit=e=>{e.preventDefault();const D={empresa:document.getElementById('d2Ce').value.trim(),nome:document.getElementById('d2Cn').value.trim(),fone:document.getElementById('d2Cfone').value.trim(),cidade:document.getElementById('d2Cc').value.trim(),sistema:document.getElementById('d2Cs').value,m};if(!D.sistema){document.getElementById('d2Cs').focus();return;}
       if(D.fone.replace(/\D/g,'').length<10){document.getElementById('d2Cfone').focus();return;}
       if(!document.getElementById('d2Cacc').checked){document.getElementById('d2Cacc').focus();return;}D.termos=true;
       D.valor=PRECO();D.promo=!!PROMO;send('contratar',D);send('contato',{fone:D.fone,m:'Contratar'});
       document.getElementById('d2C1').hidden=true;document.getElementById('d2C2').hidden=false;
       document.getElementById('d2Cw').href=WA(`Olá Fernando! Quero contratar o Orientativo FC 3D (${brl2(PRECO())} / 30 dias${PROMO?' · oferta de lançamento':''}).\nEmpresa: ${D.empresa}\nResponsável: ${D.nome}\nCidade: ${D.cidade}\nSistema que usamos: ${D.sistema}\nSegue o comprovante do PIX:`);
-      document.getElementById('d2Cw').onclick=()=>send('contratar_whats',{});
+      document.getElementById('d2Cw').onclick=()=>send('contratar_whats',{});document.getElementById('d2CCh').onclick=ev=>{ev.preventDefault();chatAbrir('Escreva sua dúvida sobre o pagamento ou a liberação…');};
       document.getElementById('d2Cp').onclick=async ev=>{try{await navigator.clipboard.writeText('52985682000132');ev.target.textContent='✔ Chave copiada';}catch(_){prompt('Copie a chave PIX:','52985682000132');}send('contratar_pix',{});};};
     setTimeout(()=>{const i=document.getElementById(NOME?'d2Cn':'d2Ce');if(i)i.focus();},60);}
   /* opinião: aparece sozinha depois que o cliente navega pelo demonstrativo */
   const VIS={t:new Set(),cortes:0,t0:Date.now()};let OPD=false;try{OPD=localStorage.getItem('fcd2-op-'+code)==='1';}catch(_){}
   const oTRK=window.TRK;window.TRK=(t,d)=>{oTRK(t,d);if(t==='tipologia'&&d&&d.t)VIS.t.add(d.t);if(t==='corte')VIS.cortes++;gatilho();};
-  function gatilho(){if(OPD||document.getElementById('d2Op2')||document.getElementById('d2Vid')||document.getElementById('d2Q2'))return;
+  function gatilho(){if(OPD||document.getElementById('d2Op2')||document.getElementById('d2ChP')||document.getElementById('d2Vid')||document.getElementById('d2Q2'))return;
     const min=(Date.now()-VIS.t0)/60000;if((VIS.t.size>=4&&VIS.cortes>=2)||(VIS.t.size>=3&&min>=6)||min>=12)setTimeout(()=>opiniao(true),2500);}
   setInterval(gatilho,60000);
   function opiniao(auto){if(document.getElementById('d2Op2'))return;OPD=true;try{localStorage.setItem('fcd2-op-'+code,'1');}catch(_){}send('opiniao_aberta',{auto});
