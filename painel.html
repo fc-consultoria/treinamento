@@ -52,6 +52,11 @@ main{max-width:1280px;margin:0 auto;padding:0 24px 40px;display:flex;flex-direct
 .nvf input,.nvf textarea,.nvf select{font:inherit;font-size:14px;color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:6px 8px}.nv3{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .nvl{list-style:none;margin:12px 0 0;padding:0;display:flex;flex-direction:column;gap:8px}.nvl li{display:flex;gap:10px;align-items:center;border:1px solid var(--line);border-radius:8px;padding:6px}.nvl img{width:54px;height:54px;object-fit:cover;border-radius:6px;cursor:pointer}.nvl li div{flex:1}
 @media(max-width:700px){.nvw{grid-template-columns:1fr}}
+.ptabs{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 2px}
+.ptabs button{font:600 14px var(--f-display);padding:9px 14px;border:1px solid var(--line);border-radius:9px;background:var(--panel);color:var(--fg);cursor:pointer}
+.ptabs button[aria-selected=true]{background:var(--accent);border-color:var(--accent);color:#fff}
+.ptabs span:not(:empty){display:inline-block;min-width:20px;padding:0 6px;margin-left:4px;border-radius:10px;background:#d86f00;color:#fff;font-size:12px}
+section.tabOff{display:none!important}
 .card h2{margin:0;padding:14px 16px;font:600 15px var(--f-display);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--line)}
 .tw{overflow-x:auto}
 table{width:100%;border-collapse:collapse;font-size:14px}
@@ -114,7 +119,7 @@ button.ok{background:var(--ok);border-color:var(--ok);color:#fff}button.no{color
 </div>
 <header>
  <div style="display:flex;gap:14px;align-items:center"><img src="data:image/jpeg;base64,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" alt="FC Consultoria e Representação" width="56" height="56" style="border-radius:11px"><div><div class="eb">Treinamento FC 3D · Linhas Suprema e Gold</div><h1>Andamento das empresas</h1></div></div>
- <div class="acts"><button type="button" id="bNot" title="Avisar quando alguém entrar no treinamento">🔔 Ativar avisos</button><a href="visao.html" style="font-weight:700">📊 Visão geral</a><a href="#sugCard" id="sugTop">💬 Sugestões</a><a href="index.html">Abrir o treinamento</a><button type="button" id="recarregar">Atualizar</button><button type="button" onclick="sair()">Sair</button></div>
+ <div class="acts"><button type="button" id="bNot" title="Avisar quando alguém entrar no treinamento">🔔 Ativar avisos</button><a href="visao.html" style="font-weight:700">📊 Visão geral</a><a href="#" id="sugTop" onclick="ptab('sug');return false;">💬 Sugestões</a><a href="index.html">Abrir o treinamento</a><button type="button" id="recarregar">Atualizar</button><button type="button" onclick="sair()">Sair</button></div>
 </header>
 <main>
  <section class="kpis" aria-label="Resumo">
@@ -123,10 +128,12 @@ button.ok{background:var(--ok);border-color:var(--ok);color:#fff}button.no{color
   <div class="kpi"><b id="k3">–</b><span>horas de estudo no total</span></div>
   <div class="kpi"><b id="k4">–</b><span>desafios concluídos</span></div>
  </section>
- <section class="card dom" id="domCard" hidden><h2>Domingo · liberar a próxima semana?</h2><p class="note" style="padding:10px 16px 0">O acesso das empresas vale de segunda a sábado. Escolha quem continua na semana que vem (até sábado <b id="domSab"></b>). Quem não for liberado fica sem acesso a partir de segunda.</p><div style="padding:8px 16px"><button class="ok" type="button" id="domTodas">Liberar todas</button></div><div id="domList"></div></section>
- <section class="card ped" id="pedCard" hidden><h2>⏱ Pedidos de mais tempo <span class="sgn" id="pedN"></span></h2><div id="pedList"></div></section>
- <section class="card" id="intCard" hidden><h2>🤝 Interessados <span class="sgn" id="intN"></span></h2><p class="note" style="padding:10px 16px 0">Alunos que tocaram em “Tenho interesse” numa divulgação ou novidade. Entre em contato e marque como atendido.</p><div class="tw"><table><thead><tr><th>Quando</th><th>Empresa</th><th>Colaborador</th><th>Arte / novidade</th><th></th></tr></thead><tbody id="intList"></tbody></table></div></section>
- <section class="card" id="dvCard"><h2 style="display:flex;justify-content:space-between;align-items:center;gap:8px">📣 Divulgação e Novidades <span class="sgn" id="dvN" style="flex:1"></span><button type="button" id="dvTog" style="font-size:12px;padding:4px 10px">Mostrar</button></h2>
+ <nav class="ptabs" id="ptabs" role="tablist"><button type="button" data-tab="emp">🏢 Empresas</button><button type="button" data-tab="ped">⏱ Pedidos e interessados <span id="tbPed"></span></button><button type="button" data-tab="div">📣 Divulgação</button><button type="button" data-tab="sug">💬 Sugestões <span id="tbSug"></span></button></nav>
+ <section class="card" id="pedVazio" data-tab="ped"><p class="note" style="padding:14px 16px">Nenhum pedido de mais tempo e nenhum interessado aguardando. 👍</p></section>
+ <section class="card dom" id="domCard" data-tab="emp" hidden><h2>Domingo · liberar a próxima semana?</h2><p class="note" style="padding:10px 16px 0">O acesso das empresas vale de segunda a sábado. Escolha quem continua na semana que vem (até sábado <b id="domSab"></b>). Quem não for liberado fica sem acesso a partir de segunda.</p><div style="padding:8px 16px"><button class="ok" type="button" id="domTodas">Liberar todas</button></div><div id="domList"></div></section>
+ <section class="card ped" id="pedCard" data-tab="ped" hidden><h2>⏱ Pedidos de mais tempo <span class="sgn" id="pedN"></span></h2><div id="pedList"></div></section>
+ <section class="card" id="intCard" data-tab="ped" hidden><h2>🤝 Interessados <span class="sgn" id="intN"></span></h2><p class="note" style="padding:10px 16px 0">Alunos que tocaram em “Tenho interesse” numa divulgação ou novidade. Entre em contato e marque como atendido.</p><div class="tw"><table><thead><tr><th>Quando</th><th>Empresa</th><th>Colaborador</th><th>Arte / novidade</th><th></th></tr></thead><tbody id="intList"></tbody></table></div></section>
+ <section class="card" id="dvCard" data-tab="div"><h2 style="display:flex;justify-content:space-between;align-items:center;gap:8px">📣 Divulgação e Novidades <span class="sgn" id="dvN" style="flex:1"></span><button type="button" id="dvTog" style="font-size:12px;padding:4px 10px">Mostrar</button></h2>
   <div id="dvBody" hidden style="padding:12px 16px 16px">
    <h3 class="dvt">A · Sequência automática</h3>
    <p class="note">Cada arte aparece uma vez para cada colaborador, na faixa de horas do prazo dele. Faixa sem foto é pulada. Nunca abre durante um desafio com tempo.</p>
@@ -146,8 +153,8 @@ button.ok{background:var(--ok);border-color:var(--ok);color:#fff}button.no{color
      <div><button type="button" class="pri" id="nvPub">Publicar agora</button> <span class="msg" id="nvMsg"></span></div></div></div>
    <ul class="nvl" id="nvList"></ul>
   </div></section>
- <section class="card" id="sugCard"><h2 style="display:flex;justify-content:space-between;align-items:center;gap:8px">💬 Dúvidas e sugestões dos alunos <span class="sgn" id="sugN" style="flex:1"></span><button type="button" id="sugTog" style="font-size:12px;padding:4px 10px">Mostrar</button></h2><div id="sugBody" hidden><p class="note" style="padding:0 16px">O aluno envia pelo botão “💬 Sugestão” na barra escura do treinamento. Escreva a resposta embaixo da mensagem e clique em Responder: ela aparece para o aluno no mesmo botão.</p><ul class="tl" id="sugList"></ul></div></section>
- <section class="card">
+ <section class="card" id="sugCard" data-tab="sug"><h2 style="display:flex;justify-content:space-between;align-items:center;gap:8px">💬 Dúvidas e sugestões dos alunos <span class="sgn" id="sugN" style="flex:1"></span><button type="button" id="sugTog" style="font-size:12px;padding:4px 10px">Mostrar</button></h2><div id="sugBody" hidden><p class="note" style="padding:0 16px">O aluno envia pelo botão “💬 Sugestão” na barra escura do treinamento. Escreva a resposta embaixo da mensagem e clique em Responder: ela aparece para o aluno no mesmo botão.</p><ul class="tl" id="sugList"></ul></div></section>
+ <section class="card" data-tab="emp">
   <h2>Empresas</h2>
   <p class="ihint">Clique no nome, no login ou em nova senha para editar · Enter salva · Esc desfaz. O login novo vale no próximo acesso do aluno (a senha continua a mesma). Maiúsculas aparecem no painel, mas o aluno pode digitar o login com ou sem maiúsculas.</p>
   <p class="msg bad" id="tbMsg" hidden></p>
@@ -156,7 +163,7 @@ button.ok{background:var(--ok);border-color:var(--ok);color:#fff}button.no{color
    <tbody id="tb"></tbody>
   </table></div>
  </section>
- <section class="card" id="detCard" hidden>
+ <section class="card" id="detCard" data-tab="emp" hidden>
   <h2 id="detTit">Aluno</h2>
   <div class="det">
    <div>
@@ -239,7 +246,7 @@ function render(){
   document.getElementById('k3').textContent=(h/3600).toFixed(1).replace('.',',');
   document.getElementById('k4').textContent=t;
   if(sel)detalhe();
-  domUI();pedUI();intUI();if(DCFG)divRender();else divCarregar();
+  domUI();pedUI();intUI();tabBadges();if(DCFG)divRender();else divCarregar();
   const esc=v=>String(v||'').replace(/</g,'&lt;'),EXC=new Set(EV.filter(e=>e.tipo==='sug_excluida').map(e=>Date.parse((e.detalhe||{}).ref))),SG=EV.filter(e=>e.tipo==='sugestao'&&!EXC.has(Date.parse(e.criado_em)));
   const RS=EV.filter(e=>e.tipo==='resposta'),pend=SG.filter(e=>!RS.some(r=>(r.detalhe||{}).ref===e.criado_em)).length;
   document.getElementById('sugN').textContent=SG.length?`${SG.length} recebida${SG.length>1?'s':''}${pend?` · ${pend} sem resposta`:''}`:'';
@@ -431,6 +438,17 @@ function divBind(){const C=()=>DCFG;
     b.disabled=false;m.textContent='✔ Publicada: aparece na próxima entrada de cada aluno.';m.className='msg ok';NIMG=null;ni.style.backgroundImage='';ni.querySelector('span').hidden=false;document.getElementById('nvT').value='';document.getElementById('nvX').value='';divCarregar();};}
 divBind();
 
+function tabBadges(){const ped=!document.getElementById('pedCard').hidden?document.querySelectorAll('#pedList > *').length:0,intn=(document.getElementById('intN').textContent.match(/^(\d+)/)||[0,0])[1]*1,sg=(document.getElementById('sugN').textContent.match(/(\d+) sem resposta/)||[0,0])[1]*1;
+  document.getElementById('tbPed').textContent=(ped+intn)||'';document.getElementById('tbSug').textContent=sg||'';
+  document.getElementById('pedVazio').hidden=!(document.getElementById('pedCard').hidden&&document.getElementById('intCard').hidden);ptab(PTAB,true);}
+let PTAB='emp';try{PTAB=localStorage.getItem('treinFC-ptab')||'emp';}catch(e){}
+function ptab(t,silent){PTAB=t;try{localStorage.setItem('treinFC-ptab',t);}catch(e){}
+  document.querySelectorAll('#ptabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===t));
+  document.querySelectorAll('main section[data-tab]').forEach(sx=>sx.classList.toggle('tabOff',sx.dataset.tab!==t));
+  if(t==='div'){const b=document.getElementById('dvBody');if(b.hidden){b.hidden=false;document.getElementById('dvTog').textContent='Ocultar';}}
+  if(t==='sug'){const b=document.getElementById('sugBody');if(b&&b.hidden){b.hidden=false;window.SUG_T=1;document.getElementById('sugTog').textContent='Ocultar';}}
+  if(!silent)window.scrollTo({top:document.getElementById('ptabs').offsetTop-10,behavior:'smooth'});}
+document.querySelectorAll('#ptabs button').forEach(b=>b.onclick=()=>ptab(b.dataset.tab));ptab(PTAB,true);
 gateUI(()=>carregar(),{soMatriz:true});
 </script>
 </body>
