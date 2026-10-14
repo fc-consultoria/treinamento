@@ -57,6 +57,8 @@ main{max-width:1280px;margin:0 auto;padding:0 24px 40px;display:flex;flex-direct
 .ptabs button[aria-selected=true]{background:var(--accent);border-color:var(--accent);color:#fff}
 .ptabs span:not(:empty){display:inline-block;min-width:20px;padding:0 6px;margin-left:4px;border-radius:10px;background:#d86f00;color:#fff;font-size:12px}
 section.tabOff{display:none!important}
+.mpf{display:grid;grid-template-columns:1.6fr .6fr 1fr .7fr auto;gap:8px;align-items:end;margin:10px 0}.mpf label{display:flex;flex-direction:column;gap:3px;font-size:12.5px;color:var(--muted)}.mpf input,.mpf select{font:inherit;font-size:14px;border:1px solid var(--line);border-radius:8px;padding:7px 9px}.mpf .msg{grid-column:1/-1}
+@media(max-width:700px){.mpf{grid-template-columns:1fr 1fr}}
 .card h2{margin:0;padding:14px 16px;font:600 15px var(--f-display);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--line)}
 .tw{overflow-x:auto}
 table{width:100%;border-collapse:collapse;font-size:14px}
@@ -128,7 +130,7 @@ button.ok{background:var(--ok);border-color:var(--ok);color:#fff}button.no{color
   <div class="kpi"><b id="k3">–</b><span>horas de estudo no total</span></div>
   <div class="kpi"><b id="k4">–</b><span>desafios concluídos</span></div>
  </section>
- <nav class="ptabs" id="ptabs" role="tablist"><button type="button" data-tab="emp">🏢 Empresas</button><button type="button" data-tab="ped">⏱ Pedidos e interessados <span id="tbPed"></span></button><button type="button" data-tab="div">📣 Divulgação</button><button type="button" data-tab="sug">💬 Sugestões <span id="tbSug"></span></button></nav>
+ <nav class="ptabs" id="ptabs" role="tablist"><button type="button" data-tab="emp">🏢 Empresas</button><button type="button" data-tab="ped">⏱ Pedidos e interessados <span id="tbPed"></span></button><button type="button" data-tab="div">📣 Divulgação</button><button type="button" data-tab="sug">💬 Sugestões <span id="tbSug"></span></button><button type="button" data-tab="map">📍 FC no Brasil</button></nav>
  <section class="card" id="pedVazio" data-tab="ped"><p class="note" style="padding:14px 16px">Nenhum pedido de mais tempo e nenhum interessado aguardando. 👍</p></section>
  <section class="card dom" id="domCard" data-tab="emp" hidden><h2>Domingo · liberar a próxima semana?</h2><p class="note" style="padding:10px 16px 0">O acesso das empresas vale de segunda a sábado. Escolha quem continua na semana que vem (até sábado <b id="domSab"></b>). Quem não for liberado fica sem acesso a partir de segunda.</p><div style="padding:8px 16px"><button class="ok" type="button" id="domTodas">Liberar todas</button></div><div id="domList"></div></section>
  <section class="card ped" id="pedCard" data-tab="ped" hidden><h2>⏱ Pedidos de mais tempo <span class="sgn" id="pedN"></span></h2><div id="pedList"></div></section>
@@ -139,7 +141,7 @@ button.ok{background:var(--ok);border-color:var(--ok);color:#fff}button.no{color
    <p class="note">Cada arte aparece uma vez para cada colaborador, na faixa de horas do prazo dele. Faixa sem foto é pulada. Nunca abre durante um desafio com tempo.</p>
    <div class="dvbar"><span class="dvtg" id="dvOn"><i></i><span id="dvOnT">Divulgação ligada</span></span>
     <label>Trocar a cada <select id="dvIv"><option value="3">3 h</option><option value="6">6 h</option><option value="12">12 h</option><option value="24">24 h</option></select></label>
-    <label>Na tela por <select id="dvDu"><option value="5">5 s</option><option value="6">6 s</option><option value="8">8 s</option><option value="12">12 s</option></select></label>
+    <label>Na tela por <select id="dvDu"><option value="0">0 s · fica até o aluno fechar</option><option value="3">3 s</option><option value="6">6 s</option><option value="8">8 s</option><option value="12">12 s</option><option value="20">20 s</option></select></label>
     <label>Para <select id="dvPara"><option value="todas">Todas as empresas</option><option value="escolher">Escolher empresas…</option></select></label><span class="msg ok" id="dvMsg"></span></div>
    <div class="dvpl" id="dvParaL" hidden></div>
    <div class="dvg" id="dvGrid"></div>
@@ -152,6 +154,15 @@ button.ok{background:var(--ok);border-color:var(--ok);color:#fff}button.no{color
      <label>Texto curto (opcional)<textarea id="nvX" rows="2"></textarea></label>
      <div><button type="button" class="pri" id="nvPub">Publicar agora</button> <span class="msg" id="nvMsg"></span></div></div></div>
    <ul class="nvl" id="nvList"></ul>
+  </div></section>
+ <section class="card" id="mapCard" data-tab="map"><h2>📍 FC no Brasil · mapa para os alunos</h2>
+  <div style="padding:12px 16px 16px">
+   <p class="note">Cadastre as cidades onde a FC atende. O aluno vê o mapa pelo botão <b>📍 FC no Brasil</b> na barra escura do treinamento (o botão só aparece quando há pelo menos uma cidade). Só aparecem cidade e quantidade, nunca o nome do cliente.</p>
+   <form id="mpF" class="mpf"><label>Cidade<input id="mpC" list="mpL" placeholder="Ex.: Sorriso" required autocomplete="off"></label><label>UF<select id="mpU"></select></label>
+    <label>Atendimento<select id="mpT"><option value="on">💻 On-line</option><option value="pr">📍 Presencial</option></select></label><label>Nº de empresas<input id="mpN" type="number" min="1" value="1"></label><button type="submit" class="pri">Adicionar</button><span class="msg ok" id="mpMsg"></span></form>
+   <datalist id="mpL"></datalist>
+   <div class="tw"><table><thead><tr><th>Cidade</th><th>UF</th><th>Atendimento</th><th>Empresas</th><th></th></tr></thead><tbody id="mpTb"></tbody></table></div>
+   <h3 class="dvt" style="margin:16px 0 8px">Como o aluno vê</h3><div id="mpPrev"></div>
   </div></section>
  <section class="card" id="sugCard" data-tab="sug"><h2 style="display:flex;justify-content:space-between;align-items:center;gap:8px">💬 Dúvidas e sugestões dos alunos <span class="sgn" id="sugN" style="flex:1"></span><button type="button" id="sugTog" style="font-size:12px;padding:4px 10px">Mostrar</button></h2><div id="sugBody" hidden><p class="note" style="padding:0 16px">O aluno envia pelo botão “💬 Sugestão” na barra escura do treinamento. Escreva a resposta embaixo da mensagem e clique em Responder: ela aparece para o aluno no mesmo botão.</p><ul class="tl" id="sugList"></ul></div></section>
  <section class="card" data-tab="emp">
@@ -189,6 +200,7 @@ button.ok{background:var(--ok);border-color:var(--ok);color:#fff}button.no{color
 </main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="auth.js"></script>
+<script src="mapa.js"></script>
 <script>
 const ZCFG=new Set(['colab','liberacao','sistema','gestor','chave_app','sugestao','resposta','sug_excluida','zerar','interesse','interesse_ok']);
 function zerarFiltro(ev,zs){const Z={};(zs||ev).forEach(e=>{if(e.tipo==='zerar'){const p=(e.detalhe||{}).para,t=Date.parse(e.criado_em);if(!Z[p]||t>Z[p])Z[p]=t;}});
@@ -449,6 +461,21 @@ function ptab(t,silent){PTAB=t;try{localStorage.setItem('treinFC-ptab',t);}catch
   if(t==='sug'){const b=document.getElementById('sugBody');if(b&&b.hidden){b.hidden=false;window.SUG_T=1;document.getElementById('sugTog').textContent='Ocultar';}}
   if(!silent)window.scrollTo({top:document.getElementById('ptabs').offsetTop-10,behavior:'smooth'});}
 document.querySelectorAll('#ptabs button').forEach(b=>b.onclick=()=>ptab(b.dataset.tab));ptab(PTAB,true);
+/* ===== Mapa FC no Brasil (Matriz) ===== */
+let MPD=null;
+async function mpCarregar(){const r=await sb.from('trein_eventos').select('detalhe').eq('tipo','mapa').order('criado_em',{ascending:false}).limit(1);MPD=((((r.data||[])[0]||{}).detalhe)||{}).itens||[];mpRender();}
+function mpRender(){if(!MPD||!window.FCM)return;const esc=v=>String(v||'').replace(/</g,'&lt;');
+  document.getElementById('mpTb').innerHTML=MPD.length?MPD.map((x,i)=>`<tr><td>${esc(x.c)}</td><td>${esc(x.u)}</td><td>${x.t==='pr'?'📍 Presencial':'💻 On-line'}</td><td class="n">${x.n}</td><td><button type="button" class="no" data-mrm="${i}">Excluir</button></td></tr>`).join(''):'<tr><td colspan="5" class="note">Nenhuma cidade ainda.</td></tr>';
+  document.querySelectorAll('[data-mrm]').forEach(b=>b.onclick=async()=>{MPD.splice(+b.dataset.mrm,1);await ins('mapa',{itens:MPD});mpRender();});
+  if(!document.getElementById('mapCard').classList.contains('tabOff'))FCM.render(document.getElementById('mpPrev'),MPD);}
+if(window.FCM){document.getElementById('mpU').innerHTML=Object.keys(FCM.NOME).sort().map(k=>`<option${k==='MT'?' selected':''}>${k}</option>`).join('');
+  document.getElementById('mpL').innerHTML=FCM.cidades.map(k=>`<option value="${k.split('/')[0]}">${k}</option>`).join('');}
+document.getElementById('mpC').oninput=()=>{const v=document.getElementById('mpC').value.trim().toLowerCase(),k=(window.FCM?FCM.cidades:[]).find(k=>k.split('/')[0].toLowerCase()===v);if(k)document.getElementById('mpU').value=k.split('/')[1];};
+document.getElementById('mpF').onsubmit=async e=>{e.preventDefault();const c=document.getElementById('mpC').value.trim();if(!c||!MPD)return;
+  MPD.push({c,u:document.getElementById('mpU').value,t:document.getElementById('mpT').value,n:Math.max(1,+document.getElementById('mpN').value||1)});await ins('mapa',{itens:MPD});
+  document.getElementById('mpC').value='';document.getElementById('mpN').value=1;const m=document.getElementById('mpMsg');m.textContent='✔ Salvo · já aparece para os alunos';setTimeout(()=>m.textContent='',4000);mpRender();};
+document.querySelector('#ptabs [data-tab=map]').addEventListener('click',()=>{if(MPD)setTimeout(mpRender,50);else mpCarregar();});
+if(PTAB==='map')setTimeout(mpCarregar,800);
 gateUI(()=>carregar(),{soMatriz:true});
 </script>
 </body>
