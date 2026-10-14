@@ -2906,14 +2906,16 @@ function demo2Init(){
       <ul style="margin:0 0 14px;padding-left:20px;color:#3a4650">
        <li>1 acesso da empresa para até <b>6 colaboradores</b>, de domingo a domingo</li>
        <li>Tipologias das linhas <b>Suprema e Gold</b> em 3D: girar, abrir, desmontar e ver os cortes</li>
-       <li><b>Monte a esquadria</b>, <b>Orientação em Sistema</b> (WVetro e CEM) e <b>Diagrama de dimensões</b></li>
+       <li><b>Monte a esquadria</b>, <b>Diagrama de dimensões</b> e <b>Orientação em Sistema</b>: como lançar os pedidos no sistema que a sua empresa já usa (WVetro ou CEM)</li>
        <li><b>Painel do Gestor</b> (até 4 aparelhos) com o progresso de cada colaborador</li>
        <li>Catálogos técnicos Suprema e Gold para consulta</li></ul>
+      <div style="margin:0 0 14px;padding:9px 12px;border-radius:9px;background:#fff7e8;border:1px solid #f0c48a;font-size:13.5px;color:#5a3d0c">⚠ <b>Importante:</b> o Orientativo FC 3D é um material de orientação. <b>Não inclui a licença do WVetro nem do CEM</b>; esses sistemas são contratados direto com os seus fornecedores.</div>
       <div id="d2C1"><div style="font-weight:700;margin-bottom:8px">1 · Seus dados para criar o acesso</div>
        <form id="d2CF" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
         <input id="d2Ce" required placeholder="Nome da empresa" style="${inp};grid-column:1/-1" value="${(NOME||'').replace(/"/g,'&quot;')}">
         <input id="d2Cn" required placeholder="Seu nome" style="${inp}"><input id="d2Cfone" required type="tel" inputmode="tel" placeholder="WhatsApp (66) 9 9999-9999" style="${inp}">
         <input id="d2Cc" placeholder="Cidade / UF" style="${inp};grid-column:1/-1">
+        <select id="d2Cs" required style="${inp};grid-column:1/-1"><option value="">Qual sistema de cálculo a sua empresa usa?</option><option>WVetro</option><option>CEM</option><option>WVetro e CEM</option><option>Outro sistema</option><option>Ainda não usa sistema</option></select>
         <button type="submit" style="grid-column:1/-1;border:0;border-radius:9px;padding:11px;background:#1f6f9a;color:#fff;font:700 16px system-ui;cursor:pointer">Continuar para o pagamento →</button></form></div>
       <div id="d2C2" hidden><div style="font-weight:700;margin-bottom:8px">2 · Pague pelo PIX</div>
        <div style="border:2px dashed #1f8a4c;border-radius:12px;padding:12px 14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap"><div><div style="font-size:12.5px;color:#5d6b76">Chave PIX (celular)</div><div style="font:700 20px var(--f-mono)">(66) 9 9986-7984</div><div style="font-size:12.5px;color:#5d6b76">Valor: <b>${brl2(PRECO())}</b>${PROMO?' (oferta)':''}</div></div>
@@ -2923,11 +2925,11 @@ function demo2Init(){
       <div style="text-align:right;margin-top:12px"><button type="button" id="d2Cx" style="border:1px solid #c9d3da;background:#fff;border-radius:8px;padding:8px 14px;font:600 14px system-ui;cursor:pointer">← Voltar ao demonstrativo</button></div>
      </div></div>`;
     document.body.appendChild(o);document.getElementById('d2Cx').onclick=()=>o.remove();o.addEventListener('click',e=>{if(e.target===o)o.remove();});
-    document.getElementById('d2CF').onsubmit=e=>{e.preventDefault();const D={empresa:document.getElementById('d2Ce').value.trim(),nome:document.getElementById('d2Cn').value.trim(),fone:document.getElementById('d2Cfone').value.trim(),cidade:document.getElementById('d2Cc').value.trim(),m};
+    document.getElementById('d2CF').onsubmit=e=>{e.preventDefault();const D={empresa:document.getElementById('d2Ce').value.trim(),nome:document.getElementById('d2Cn').value.trim(),fone:document.getElementById('d2Cfone').value.trim(),cidade:document.getElementById('d2Cc').value.trim(),sistema:document.getElementById('d2Cs').value,m};if(!D.sistema){document.getElementById('d2Cs').focus();return;}
       if(D.fone.replace(/\D/g,'').length<10){document.getElementById('d2Cfone').focus();return;}
       D.valor=PRECO();D.promo=!!PROMO;send('contratar',D);send('contato',{fone:D.fone,m:'Contratar'});
       document.getElementById('d2C1').hidden=true;document.getElementById('d2C2').hidden=false;
-      document.getElementById('d2Cw').href=WA(`Olá Fernando! Quero contratar o Orientativo FC 3D (${brl2(PRECO())} / 30 dias${PROMO?' · oferta de lançamento':''}).\nEmpresa: ${D.empresa}\nResponsável: ${D.nome}\nCidade: ${D.cidade}\nSegue o comprovante do PIX:`);
+      document.getElementById('d2Cw').href=WA(`Olá Fernando! Quero contratar o Orientativo FC 3D (${brl2(PRECO())} / 30 dias${PROMO?' · oferta de lançamento':''}).\nEmpresa: ${D.empresa}\nResponsável: ${D.nome}\nCidade: ${D.cidade}\nSistema que usamos: ${D.sistema}\nSegue o comprovante do PIX:`);
       document.getElementById('d2Cw').onclick=()=>send('contratar_whats',{});
       document.getElementById('d2Cp').onclick=async ev=>{try{await navigator.clipboard.writeText('66999867984');ev.target.textContent='✔ Chave copiada';}catch(_){prompt('Copie a chave PIX:','66999867984');}send('contratar_pix',{});};};
     setTimeout(()=>{const i=document.getElementById(NOME?'d2Cn':'d2Ce');if(i)i.focus();},60);}
