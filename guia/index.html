@@ -1,5 +1,8 @@
 <!doctype html>
-<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>[hidden]{display:none!important}img{max-width:100%}</style>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>[hidden]{display:none!important}img{max-width:100%}.voltar{position:fixed;top:12px;left:12px;z-index:50;font:600 14px var(--f-display);background:var(--teal);color:#fff;text-decoration:none;padding:9px 14px;border-radius:9px;box-shadow:0 4px 14px rgba(0,0,0,.18)}
+.voltar:hover{filter:brightness(1.1)}.voltar:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+@media (max-width:760px){.voltar{top:auto;bottom:12px;left:50%;transform:translateX(-50%)}}
+</style>
 <title>Guia do Aluno FC 3D</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap">
@@ -81,6 +84,7 @@ html{scroll-behavior:smooth}
 </style>
 
 </head><body>
+<a href="../" id="voltarT" class="voltar">← Voltar ao treinamento</a>
 <div class="wrap">
 <header>
   <div class="brand"><img src="img/logo-fc-160.jpg" alt="" width="52" height="52" style="border-radius:11px">FC Consultoria e Representação</div>
@@ -336,6 +340,7 @@ html{scroll-behavior:smooth}
 <footer><span>FC Consultoria em Esquadria · Sinop-MT</span><span>Treinamento FC 3D · Linhas Suprema e Gold</span></footer>
 </div>
 <script>
+document.getElementById('voltarT').addEventListener('click',e=>{e.preventDefault();try{window.close();}catch(_){}setTimeout(()=>{location.href='../';},250);});
 document.getElementById('cp').addEventListener('click',async e=>{const b=e.currentTarget,t='https://fc-consultoria.github.io/treinamento/';
   try{await navigator.clipboard.writeText(t);b.textContent='Link copiado';}catch(_){const r=document.createRange();r.selectNodeContents(document.getElementById('u'));const s=getSelection();s.removeAllRanges();s.addRange(r);b.textContent='Selecionado: copie';}
   setTimeout(()=>b.textContent='Copiar link',2000);});
