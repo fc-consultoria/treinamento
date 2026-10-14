@@ -139,7 +139,7 @@ tr.mfin td{background:#eef5fc}
  <section class="card" id="pedVazio" data-tab="ped"><p class="note" style="padding:14px 16px">Nenhum pedido de mais tempo e nenhum interessado aguardando. 👍</p></section>
  <section class="card dom" id="domCard" data-tab="emp" hidden><h2>Domingo · liberar a próxima semana?</h2><p class="note" style="padding:10px 16px 0">O acesso das empresas vale de segunda a sábado. Escolha quem continua na semana que vem (até sábado <b id="domSab"></b>). Quem não for liberado fica sem acesso a partir de segunda.</p><div style="padding:8px 16px"><button class="ok" type="button" id="domTodas">Liberar todas</button></div><div id="domList"></div></section>
  <section class="card ped" id="pedCard" data-tab="ped" hidden><h2>⏱ Pedidos de mais tempo <span class="sgn" id="pedN"></span></h2><div id="pedList"></div></section>
- <section class="card" id="intCard" data-tab="ped" hidden><h2>🤝 Interessados <span class="sgn" id="intN"></span></h2><p class="note" style="padding:10px 16px 0">Alunos que tocaram em “Tenho interesse” numa divulgação ou novidade. Entre em contato e marque como atendido.</p><div class="tw"><table><thead><tr><th>Quando</th><th>Empresa</th><th>Colaborador</th><th>Arte / novidade</th><th></th></tr></thead><tbody id="intList"></tbody></table></div></section>
+ <section class="card" id="intCard" data-tab="ped" hidden><h2>🤝 Interessados <span class="sgn" id="intN"></span></h2><p class="note" style="padding:10px 16px 0">Quem tocou em “Tenho interesse” (alunos) ou em “Quero para minha empresa” (link demonstrativo). O interesse fica registrado na hora do toque, mesmo que a pessoa não mande mensagem no WhatsApp. Entre em contato e marque como atendido.</p><div class="tw"><table><thead><tr><th>Quando</th><th>Empresa</th><th>Colaborador</th><th>Arte / novidade</th><th></th></tr></thead><tbody id="intList"></tbody></table></div></section>
  <section class="card" id="dvCard" data-tab="div"><h2 style="display:flex;justify-content:space-between;align-items:center;gap:8px">📣 Divulgação e Novidades <span class="sgn" id="dvN" style="flex:1"></span><button type="button" id="dvTog" style="font-size:12px;padding:4px 10px">Mostrar</button></h2>
   <div id="dvBody" hidden style="padding:12px 16px 16px">
    <h3 class="dvt">A · Sequência automática</h3>
@@ -162,7 +162,7 @@ tr.mfin td{background:#eef5fc}
   </div></section>
 <section class="card" id="demoCard" data-tab="demo"><h2>🧪 Demonstrativos · links de teste</h2><div style="padding:12px 16px 16px">
   <p class="note">Gere um link para o cliente testar 2 tipologias da Suprema e 2 da Gold (Conhecendo as Esquadrias). Os outros painéis aparecem com 🔒 e um vídeo de como funcionam. As horas começam a contar quando o cliente abre o link pela primeira vez.</p>
-  <form id="dmF" class="mpf"><label>Cliente / empresa<input id="dmN" required placeholder="Ex.: Vidraçaria Silva" autocomplete="off"></label><label>Cidade<input id="dmC" placeholder="Ex.: Sorriso-MT" autocomplete="off"></label><label>Tempo de acesso<select id="dmH"><option value="24">24 horas</option><option value="48">48 horas</option><option value="72">72 horas</option><option value="12">12 horas</option></select></label><button class="pri" type="submit">Gerar link</button></form>
+  <form id="dmF" class="mpf"><label>Cliente / empresa<input id="dmN" required placeholder="Ex.: Vidraçaria Silva" autocomplete="off"></label><label>Cidade<input id="dmC" placeholder="Ex.: Sorriso" autocomplete="off"></label><label>UF<select id="dmU"><option value="">—</option><option>AC</option><option>AL</option><option>AM</option><option>AP</option><option>BA</option><option>CE</option><option>DF</option><option>ES</option><option>GO</option><option>MA</option><option>MG</option><option>MS</option><option>MT</option><option>PA</option><option>PB</option><option>PE</option><option>PI</option><option>PR</option><option>RJ</option><option>RN</option><option>RO</option><option>RR</option><option>RS</option><option>SC</option><option>SE</option><option>SP</option><option>TO</option></select></label><label>Tempo de acesso<select id="dmH"><option value="24">24 horas</option><option value="48">48 horas</option><option value="72">72 horas</option><option value="12">12 horas</option></select></label><button class="pri" type="submit">Gerar link</button></form>
   <div id="dmNovo"></div>
   <div class="tw"><table><thead><tr><th>Cliente</th><th>Situação</th><th>Abriu em</th><th>Tempo usado</th><th>O que viu</th><th></th></tr></thead><tbody id="dmTb"></tbody></table></div>
   <div id="dmDet"></div>
@@ -194,6 +194,7 @@ tr.mfin td{background:#eef5fc}
    <div>
     <div class="edit"><input id="eNome" placeholder="Nome do aluno" aria-label="Nome do aluno"><button type="button" id="bNome">Salvar nome</button><button type="button" id="bAtivo"></button></div>
     <div class="edit"><input id="eSenha" placeholder="Digite a nova senha da empresa (mín. 6) e clique em Salvar senha" aria-label="Nova senha"><button type="button" class="pri" id="bSenha">💾 Salvar senha</button></div>
+    <div class="edit"><input id="eCid" placeholder="Cidade da empresa" aria-label="Cidade da empresa" style="max-width:260px"><select id="eUf" aria-label="Estado"><option value="">UF</option><option>AC</option><option>AL</option><option>AM</option><option>AP</option><option>BA</option><option>CE</option><option>DF</option><option>ES</option><option>GO</option><option>MA</option><option>MG</option><option>MS</option><option>MT</option><option>PA</option><option>PB</option><option>PE</option><option>PI</option><option>PR</option><option>RJ</option><option>RN</option><option>RO</option><option>RR</option><option>RS</option><option>SC</option><option>SE</option><option>SP</option><option>TO</option></select><button type="button" id="bLocal">📍 Salvar cidade</button></div>
     <p class="msg" id="eMsg" role="status"></p>
     <h3>Colaboradores <span class="note" id="cColN"></span></h3><ul class="cl" id="cCol"></ul><div class="edit"><button type="button" class="pri" id="bColSv" disabled>💾 Salvar colaboradores</button><span class="note">Edite os nomes acima e clique em salvar.</span></div>
     <div class="edit"><input id="eCol" placeholder="Nome do colaborador" maxlength="40" aria-label="Nome do colaborador"><button type="button" id="bCol">Cadastrar</button></div>
@@ -217,7 +218,7 @@ tr.mfin td{background:#eef5fc}
 <script src="auth.js"></script>
 <script src="mapa.js"></script>
 <script>
-const ZCFG=new Set(['gestor_in','gestor_hb','gestor_acao','colab','liberacao','sistema','gestor','chave_app','sugestao','resposta','sug_excluida','zerar','interesse','interesse_ok']);
+const ZCFG=new Set(['empresa_local','gestor_in','gestor_hb','gestor_acao','colab','liberacao','sistema','gestor','chave_app','sugestao','resposta','sug_excluida','zerar','interesse','interesse_ok']);
 function zerarFiltro(ev,zs){const Z={};(zs||ev).forEach(e=>{if(e.tipo==='zerar'){const p=(e.detalhe||{}).para,t=Date.parse(e.criado_em);if(!Z[p]||t>Z[p])Z[p]=t;}});
   return ev.filter(e=>ZCFG.has(e.tipo)||!Z[e.user_id]||Date.parse(e.criado_em)>Z[e.user_id]);}
 const TIPOS={jcr200:'Suprema JCR 200',jcr200a:'Suprema JCR 200A',jcr300:'Suprema JCR 300',jcr205:'Suprema JCR 205',pcr200:'Suprema PCR 200',pvz300:'Suprema PVZ 300',pgr100:'Suprema PGR 100',max800:'Suprema MAX 800',gjc2f:'Gold JC-2F',gpc3fvz:'Gold PC3F-VZ',gpc2fpe:'Gold PC-2FPE',gjc4f:'Gold JC-4F',gjc4fs:'Gold JC-4FS',gpc2f:'Gold PC-2F',gpc2fm:'Gold PC-2F MAC',gmax:'Gold MAX'};
@@ -311,6 +312,8 @@ function detalhe(){
   document.getElementById('detCard').hidden=false;document.getElementById('detTit').textContent=(a.nome||a.login)+' · '+a.login;
   document.getElementById('eNome').value=a.nome||'';document.getElementById('bAtivo').textContent=a.ativo?'Bloquear acesso':'Liberar acesso';
   colabUI(a);
+  {const lc=localDe(a.user_id);document.getElementById('eCid').value=lc.cidade||'';document.getElementById('eUf').value=lc.uf||'';
+   document.getElementById('bLocal').onclick=async()=>{const b=document.getElementById('bLocal');b.disabled=true;await ins('empresa_local',{para:a.user_id,cidade:document.getElementById('eCid').value.trim(),uf:document.getElementById('eUf').value});b.disabled=false;b.textContent='✔ Salvo';setTimeout(()=>b.textContent='📍 Salvar cidade',2500);carregar();};}
   {const g=gestorRes(a.user_id),el=document.getElementById('cGes');if(el)el.innerHTML=!g.tot?'O gestor ainda não entrou no Painel da Empresa.':
     `${g.tot} acesso${g.tot===1?'':'s'} no total · ${g.n30} nos últimos 30 dias · tempo aberto ${fmtH(g.min*60)} · último ${fmtD(g.ult)}${g.agora?' · <b style="color:#1f8a4c">🟢 aberto agora em '+g.agora+' aparelho'+(g.agora>1?'s':'')+'</b>':''}<br>`+
     `Últimas entradas: ${g.ins.slice(0,6).map(e=>fmtD(e.criado_em)+' ('+((e.detalhe||{}).ua||'aparelho')+')').join(' · ')}<br>`+
@@ -457,12 +460,26 @@ function divRender(){const C=DCFG,n=Math.min(DMAX,Math.ceil(72/C.iv)),el=documen
   document.querySelectorAll('[data-nrm]').forEach(b=>b.onclick=async()=>{if(!confirm('Excluir esta novidade? Ela some para os alunos.'))return;b.disabled=true;const x=DNOV[b.dataset.nrm];await ins('novidade',{id:x.id,removido:true});divCarregar();});
   document.querySelectorAll('[data-npv]').forEach(b=>b.onclick=()=>{const x=DNOV[b.dataset.npv];divPrev(x.img,x.t);});
   intUI();}
+function localDe(uid){let r={};EV.forEach(e=>{if(e.tipo==='empresa_local'&&(e.detalhe||{}).para===uid&&(!r.t||e.criado_em>r.t))r=Object.assign({t:e.criado_em},e.detalhe);});return r;}
+const ufDe=c=>{const m=String(c||'').toUpperCase().match(/(?:^|[^A-Z])([A-Z]{2})\s*$/);return m?m[1]:'';};
 function intUI(){const OK=new Set(EV.filter(e=>e.tipo==='interesse_ok').map(e=>Date.parse((e.detalhe||{}).ref)+'|'+(e.detalhe||{}).u));
-  const L=EV.filter(e=>e.tipo==='interesse'),pend=L.filter(e=>!OK.has(Date.parse(e.criado_em)+'|'+e.user_id));
+  const A=EV.filter(e=>e.tipo==='interesse').map(e=>{const d=e.detalhe||{},a=ALUNOS.find(x=>x.user_id===e.user_id)||{},lc=localDe(e.user_id);
+    return {k:'a',quando:e.criado_em,quem:a.nome||a.login||'empresa',sub:d.quem||'',oque:d.t||'',cidade:lc.cidade||'',uf:lc.uf||'',fone:'',ok:OK.has(Date.parse(e.criado_em)+'|'+e.user_id),e};});
+  const DD=window.DEMO_DATA||{DM:[],EV:[]},DOK=new Set(DD.EV.filter(x=>x.tipo==='interesse_ok').map(x=>x.code));
+  const vistos=new Set(),D=[];DD.EV.filter(x=>x.tipo==='interesse').slice().reverse().forEach(x=>{if(vistos.has(x.code))return;vistos.add(x.code);const dm=DD.DM.find(y=>y.code===x.code)||{},d=x.detalhe||{};
+    D.push({k:'d',quando:x.criado_em,quem:dm.nome||x.code,sub:'🧪 demonstrativo',oque:d.m?'Tutorial: '+d.m:'Quero para minha empresa',cidade:(dm.cidade||'').replace(/\s*[-–\/]\s*[A-Za-z]{2}\s*$/,''),uf:ufDe(dm.cidade),fone:(DD.EV.filter(y=>y.code===x.code&&y.tipo==='contato').map(y=>(y.detalhe||{}).fone).pop())||'',ok:DOK.has(x.code),code:x.code});});
+  const L=A.concat(D).sort((x,y)=>x.quando<y.quando?1:-1),pend=L.filter(x=>!x.ok);
   const card=document.getElementById('intCard');card.hidden=!L.length;document.getElementById('intN').textContent=pend.length?`${pend.length} para atender`:'todos atendidos';
-  document.getElementById('intList').innerHTML=L.map((e,i)=>{const d=e.detalhe||{},a=ALUNOS.find(x=>x.user_id===e.user_id)||{},ok=OK.has(Date.parse(e.criado_em)+'|'+e.user_id);
-    return `<tr><td>${fmtD(e.criado_em)}</td><td>${desc(a.nome||a.login||'empresa')}</td><td>${desc(d.quem||'—')}</td><td>${desc(d.t||'')}</td><td>${ok?'<span style="color:var(--ok);font-weight:600">✔ atendido</span>':`<button type="button" class="ok" data-iok="${i}">Marcar atendido</button>`}</td></tr>`;}).join('');
-  document.querySelectorAll('[data-iok]').forEach(b=>b.onclick=async()=>{const e=L[+b.dataset.iok];b.disabled=true;await ins('interesse_ok',{ref:e.criado_em,u:e.user_id});carregar();});}
+  const G={};L.forEach(x=>{const u=x.uf||'sem UF';const g=G[u]||(G[u]={n:0,ok:0,cid:{}});g.n++;if(x.ok)g.ok++;const c=x.cidade||'—';g.cid[c]=(g.cid[c]||0)+1;});
+  const ufs=Object.keys(G).sort((a,b)=>G[b].n-G[a].n);
+  let box=document.getElementById('intUf');if(!box){box=document.createElement('div');box.id='intUf';box.style.cssText='padding:10px 16px 0';card.querySelector('.tw').before(box);}
+  box.innerHTML=`<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px"><div class="kpi"><b>${L.length}</b><span>tiveram interesse</span></div><div class="kpi"><b style="color:#c47d12">${pend.length}</b><span>ainda não atendidos</span></div><div class="kpi"><b style="color:#1f8a4c">${L.length-pend.length}</b><span>atendidos</span></div></div>
+   <table style="margin-bottom:12px"><thead><tr><th>Estado</th><th>Interessados</th><th>Não atendidos</th><th>Cidades</th></tr></thead><tbody>${ufs.map(u=>{const g=G[u];return `<tr><td><b>${desc(u)}</b></td><td class="n">${g.n}</td><td class="n" style="color:${g.n-g.ok?'#c47d12':'inherit'};font-weight:700">${g.n-g.ok}</td><td>${Object.entries(g.cid).map(([c,n])=>desc(c)+(n>1?' ('+n+')':'')).join(' · ')}</td></tr>`;}).join('')}</tbody></table>`;
+  card.querySelector('.tw thead').innerHTML='<tr><th>Quando</th><th>Quem</th><th>Cidade</th><th>Interesse</th><th>WhatsApp</th><th></th></tr>';
+  document.getElementById('intList').innerHTML=L.map((x,i)=>`<tr><td>${fmtD(x.quando)}</td><td><b>${desc(x.quem)}</b><br><span class="note">${desc(x.sub)}</span></td><td>${desc(x.cidade)}${x.uf?' / '+x.uf:''}</td><td>${desc(x.oque)}</td><td>${x.fone?`<a href="https://wa.me/55${x.fone.replace(/\D/g,'').replace(/^55/,'')}" target="_blank" rel="noopener">${desc(x.fone)}</a>`:'—'}</td><td>${x.ok?'<span style="color:var(--ok);font-weight:600">✔ atendido</span>':`<button type="button" class="ok" data-iok="${i}">Marcar atendido</button>`}</td></tr>`).join('');
+  document.querySelectorAll('[data-iok]').forEach(b=>b.onclick=async()=>{const x=L[+b.dataset.iok];b.disabled=true;
+    if(x.k==='a')await ins('interesse_ok',{ref:x.e.criado_em,u:x.e.user_id});else await sb.from('trein_demo_ev').insert({code:x.code,tipo:'interesse_ok',detalhe:null});
+    if(x.k==='d'&&window.DEMO_RELOAD)await DEMO_RELOAD();carregar();});}
 function divBind(){const C=()=>DCFG;
   document.getElementById('dvOn').onclick=()=>{C().on=!C().on;divSalvar(true);divRender();};
   document.getElementById('dvIv').onchange=e=>{C().iv=+e.target.value;divSalvar(true);divRender();};
@@ -534,15 +551,17 @@ const dt=t=>t?new Date(t).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',
 const hm=s=>{s=Math.max(0,Math.round(s));const h=Math.floor(s/3600),m=Math.floor(s%3600/60);return h?`${h} h ${String(m).padStart(2,'0')}`:`${m} min`;};
 const fimDe=d=>d.inicio?Date.parse(d.inicio)+d.horas*3600e3:null;
 function sit(d){if(d.encerrado)return ['Encerrado','#8d99a3'];if(!d.inicio)return ['Ainda não abriu','#c47d12'];const f=fimDe(d);if(Date.now()>f)return ['Terminou','#a33'];return ['Ativo · restam '+hm((f-Date.now())/1000),'#1f8a4c'];}
-function resumo(code){const L=EV.filter(x=>x.code===code),T=new Set(),C=[],K=new Set(),U=new Set();let min=0,des=0,int=0,ent=0;
-  L.forEach(x=>{const d=x.detalhe||{};if(x.tipo==='tempo')min++;else if(x.tipo==='tipologia')T.add(TN[d.t]||d.t);else if(x.tipo==='corte')C.push((TN[d.t]||d.t)+' · '+(CN[d.k]||d.k));else if(x.tipo==='desmontar'&&d.on)des++;else if(x.tipo==='cor')K.add(d.c);else if(x.tipo==='tutorial')U.add(d.m);else if(x.tipo==='interesse')int++;else if(x.tipo==='entrada')ent++;});
-  return {min,T:[...T],C,des,K:[...K],U:[...U],int,ent,L};}
+function resumo(code){const L=EV.filter(x=>x.code===code),T=new Set(),C=[],K=new Set(),U=new Set();let min=0,des=0,int=0,ent=0,fone='',op=null,nota=null;
+  L.forEach(x=>{const d=x.detalhe||{};if(x.tipo==='tempo')min++;else if(x.tipo==='tipologia')T.add(TN[d.t]||d.t);else if(x.tipo==='corte')C.push((TN[d.t]||d.t)+' · '+(CN[d.k]||d.k));else if(x.tipo==='desmontar'&&d.on)des++;else if(x.tipo==='cor')K.add(d.c);else if(x.tipo==='tutorial')U.add(d.m);else if(x.tipo==='interesse')int++;else if(x.tipo==='entrada')ent++;else if(x.tipo==='contato')fone=d.fone||fone;else if(x.tipo==='opiniao')op=d;else if(x.tipo==='nota')nota=Object.assign({t:x.criado_em},d);});
+  return {min,T:[...T],C,des,K:[...K],U:[...U],int,ent,L,fone,op,nota};}
 async function carregar(){const a=await sb.from('trein_demo').select('*').order('criado_em',{ascending:false});DM=a.data||[];
-  const b=await sb.from('trein_demo_ev').select('code,tipo,detalhe,criado_em').order('criado_em').limit(10000);EV=b.data||[];render();}
+  const b=await sb.from('trein_demo_ev').select('code,tipo,detalhe,criado_em').order('criado_em').limit(10000);EV=b.data||[];window.DEMO_DATA={DM,EV};render();try{intUI();}catch(_){}}
+window.DEMO_RELOAD=()=>carregar();
 function render(){const tb=document.getElementById('dmTb');if(!tb)return;
   tb.innerHTML=DM.length?DM.map(d=>{const [s,c]=sit(d),r=resumo(d.code);
-   const viu=[r.T.length?'🪟 '+r.T.join(', '):'',r.C.length?'✂️ '+r.C.length+' corte'+(r.C.length>1?'s':''):'',r.des?'🧩 desmontou':'',r.K.length?'🎨 '+r.K.length+' cor'+(r.K.length>1?'es':''):'',r.U.length?'▶ tutorial: '+r.U.join(', '):'',r.int?'<b style="color:#1f8a4c">💬 clicou em Quero</b>':''].filter(Boolean).join('<br>')||'<span class="note">—</span>';
-   return `<tr><td><b>${e(d.nome)}</b><br><span class="note">${e(d.cidade||'')} · criado ${dt(d.criado_em)}</span></td><td><span style="color:${c};font-weight:700">${s}</span><br><span class="note">${d.horas} h de acesso</span></td><td>${dt(d.inicio)}<br><span class="note">último: ${dt(d.ultimo)}</span></td><td>${r.min} min<br><span class="note">${r.ent} entrada${r.ent===1?'':'s'}</span></td><td style="font-size:13px">${viu}</td>
+   const viu=[r.T.length?'🪟 '+r.T.join(', '):'',r.C.length?'✂️ '+r.C.length+' corte'+(r.C.length>1?'s':''):'',r.des?'🧩 desmontou':'',r.K.length?'🎨 '+r.K.length+' cor'+(r.K.length>1?'es':''):'',r.U.length?'▶ tutorial: '+r.U.join(', '):'',r.int?'<b style="color:#1f8a4c">💬 clicou em Quero</b>':'',r.fone?`<b>📱 <a href="https://wa.me/55${r.fone.replace(/\D/g,'').replace(/^55/,'')}" target="_blank" rel="noopener">${e(r.fone)}</a></b>`:''].filter(Boolean).join('<br>')||'<span class="note">—</span>';
+   return `<tr><td><b>${e(d.nome)}</b><br><span class="note">${e(d.cidade||'')} · criado ${dt(d.criado_em)}</span></td><td><span style="color:${c};font-weight:700">${s}</span><br><span class="note">${d.horas} h de acesso</span></td><td>${dt(d.inicio)}<br><span class="note">último: ${dt(d.ultimo)}</span></td><td>${r.min} min<br><span class="note">${r.ent} entrada${r.ent===1?'':'s'}</span></td><td style="font-size:13px">${viu}${r.op?`<div style="margin-top:6px;padding:6px 8px;border-radius:8px;background:#fff7e8;border:1px solid #f0c48a"><b>⭐ ${'★'.repeat(r.op.nota||0)}${'☆'.repeat(5-(r.op.nota||0))}</b>${r.op.texto?' · “'+e(r.op.texto)+'”':''}</div>`:''}
+   <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;align-items:center"><select data-ns="${d.code}" style="font-size:12.5px;padding:3px 6px">${['','Em negociação','Fechou ✔','Não fechou','Sem resposta','Retornar depois'].map(o=>`<option${r.nota&&r.nota.st===o?' selected':''} value="${o}">${o||'Situação…'}</option>`).join('')}</select><input data-nt="${d.code}" value="${e(r.nota&&r.nota.tx||'')}" placeholder="Anotação: o que o cliente decidiu…" style="flex:1;min-width:160px;font-size:12.5px;padding:4px 8px"><button type="button" data-nsv="${d.code}" style="font-size:12px;padding:4px 8px">Salvar</button></div>${r.nota?`<span class="note">anotado em ${dt(r.nota.t)}</span>`:''}</td>
    <td style="white-space:nowrap"><button type="button" data-cp="${d.code}">📋 Copiar link</button> <button type="button" data-wa="${d.code}">💬 WhatsApp</button><br><button type="button" data-h="${d.code}" data-n="12">+12 h</button> <button type="button" data-h="${d.code}" data-n="24">+24 h</button> <button type="button" class="${d.encerrado?'ok':'no'}" data-en="${d.code}">${d.encerrado?'Reabrir':'Encerrar'}</button> <button type="button" data-det="${d.code}">Ver tudo</button></td></tr>`;}).join(''):'<tr><td colspan="6" class="note">Nenhum demonstrativo gerado ainda.</td></tr>';
   tb.querySelectorAll('[data-cp]').forEach(b=>b.onclick=async()=>{try{await navigator.clipboard.writeText(URLD+b.dataset.cp);b.textContent='✔ Copiado';}catch(_){prompt('Copie o link:',URLD+b.dataset.cp);}});
   tb.querySelectorAll('[data-wa]').forEach(b=>b.onclick=()=>{const d=DM.find(x=>x.code===b.dataset.wa);open('https://wa.me/?text='+encodeURIComponent(msg(d)),'_blank');});
@@ -550,14 +569,16 @@ function render(){const tb=document.getElementById('dmTb');if(!tb)return;
     if(d.inicio){const f=fimDe(d);if(Date.now()>f)h=Math.ceil((Date.now()+n*3600e3-Date.parse(d.inicio))/3600e3);}
     b.disabled=true;await sb.from('trein_demo').update({horas:h,encerrado:false}).eq('code',d.code);carregar();});
   tb.querySelectorAll('[data-en]').forEach(b=>b.onclick=async()=>{const d=DM.find(x=>x.code===b.dataset.en);if(!d.encerrado&&!confirm('Encerrar o demonstrativo de '+d.nome+'? O link para de funcionar.'))return;await sb.from('trein_demo').update({encerrado:!d.encerrado}).eq('code',d.code);carregar();});
-  tb.querySelectorAll('[data-det]').forEach(b=>b.onclick=()=>det(b.dataset.det));}
+  tb.querySelectorAll('[data-det]').forEach(b=>b.onclick=()=>det(b.dataset.det));
+  tb.querySelectorAll('[data-nsv]').forEach(b=>b.onclick=async()=>{const c=b.dataset.nsv,st=tb.querySelector(`[data-ns="${c}"]`).value,tx=tb.querySelector(`[data-nt="${c}"]`).value.trim();b.disabled=true;
+    await sb.from('trein_demo_ev').insert({code:c,tipo:'nota',detalhe:{st,tx}});b.textContent='✔';carregar();});}
 function msg(d){return `Olá${d.nome?' '+d.nome:''}! Aqui é o Fernando, da FC Consultoria.\n\nSegue o link para você testar o *Orientativo FC 3D*: esquadrias das linhas Suprema e Gold em 3D, para girar, abrir as folhas, desmontar e ver os cortes dos perfis.\n\n👉 ${URLD+d.code}\n\nO acesso fica liberado por ${d.horas} horas a partir da primeira vez que você abrir. Qualquer dúvida, me chame aqui.`;}
 function det(code){const d=DM.find(x=>x.code===code),r=resumo(code),box=document.getElementById('dmDet');
-  const NM={entrada:'Abriu o link',tipologia:'Abriu a tipologia',corte:'Viu o corte',desmontar:'Desmontou',cor:'Trocou a cor',tutorial:'Assistiu tutorial',interesse:'Clicou em Quero para minha empresa',componente:'Viu componente',perfil:'Viu perfil',tempo:null};
-  const linhas=r.L.filter(x=>NM[x.tipo]!==null).map(x=>{const q=x.detalhe||{};const extra=q.t?(TN[q.t]||q.t):'';const k=q.k?' · '+(CN[q.k]||q.k):'';const m=q.m?' · '+q.m:'';const c=q.c?' · '+q.c:'';return `<li><span class="note">${dt(x.criado_em)}</span> — ${NM[x.tipo]||x.tipo} ${e(extra+k+m+c)}</li>`;}).join('');
+  const NM={opiniao:'Deixou a opinião',opiniao_aberta:null,nota:'Sua anotação',contato:'Deixou o WhatsApp',entrada:'Abriu o link',tipologia:'Abriu a tipologia',corte:'Viu o corte',desmontar:'Desmontou',cor:'Trocou a cor',tutorial:'Assistiu tutorial',interesse:'Clicou em Quero para minha empresa',componente:'Viu componente',perfil:'Viu perfil',tempo:null};
+  const linhas=r.L.filter(x=>NM[x.tipo]!==null).map(x=>{const q=x.detalhe||{};const extra=q.t?(TN[q.t]||q.t):'';const k=q.k?' · '+(CN[q.k]||q.k):'';const m=q.m?' · '+q.m:'';const c=q.c?' · '+q.c:'';const op=x.tipo==='opiniao'?' · '+'★'.repeat(q.nota||0)+(q.texto?' “'+q.texto+'”':'')+(q.fone?' · '+q.fone:''):'';const nt=x.tipo==='nota'?' · '+[q.st,q.tx].filter(Boolean).join(' — '):'';const fo=x.tipo==='contato'?' · '+(q.fone||''):'';return `<li><span class="note">${dt(x.criado_em)}</span> — ${NM[x.tipo]||x.tipo} ${e(extra+k+m+c+op+nt+fo)}</li>`;}).join('');
   box.innerHTML=`<h3 class="dvt" style="margin:16px 0 8px">📋 ${e(d.nome)} · tudo o que fez</h3><ul class="tl" style="max-height:340px;overflow:auto">${linhas||'<li class="note">Ainda não usou.</li>'}</ul>`;box.scrollIntoView({behavior:'smooth',block:'nearest'});}
 document.getElementById('dmF').onsubmit=async ev=>{ev.preventDefault();const nome=document.getElementById('dmN').value.trim();if(!nome)return;
-  const d={code:gen(),nome,cidade:document.getElementById('dmC').value.trim()||null,horas:+document.getElementById('dmH').value};
+  const d={code:gen(),nome,cidade:((document.getElementById('dmC').value.trim())+(document.getElementById('dmU').value?' - '+document.getElementById('dmU').value:''))||null,horas:+document.getElementById('dmH').value};
   const r=await sb.from('trein_demo').insert(d);if(r.error){alert('Não foi possível gerar: '+r.error.message);return;}
   document.getElementById('dmN').value='';document.getElementById('dmC').value='';
   document.getElementById('dmNovo').innerHTML=`<div style="border:2px solid #1f8a4c;background:#eaf6ef;border-radius:10px;padding:12px 14px;margin:10px 0"><b>✔ Link gerado para ${e(nome)}</b><br><input readonly value="${URLD+d.code}" style="width:100%;margin:8px 0;font:600 15px var(--f-mono)" onclick="this.select()"><button type="button" class="pri" id="dmWa">💬 Enviar pelo WhatsApp</button> <button type="button" id="dmCp">📋 Copiar link</button> <button type="button" id="dmMs">📋 Copiar mensagem pronta</button></div>`;
@@ -565,16 +586,16 @@ document.getElementById('dmF').onsubmit=async ev=>{ev.preventDefault();const nom
   document.getElementById('dmCp').onclick=async()=>{try{await navigator.clipboard.writeText(URLD+d.code);document.getElementById('dmCp').textContent='✔ Copiado';}catch(_){}};
   document.getElementById('dmMs').onclick=async()=>{try{await navigator.clipboard.writeText(msg(d));document.getElementById('dmMs').textContent='✔ Mensagem copiada';}catch(_){}};
   carregar();};
-async function avisos(){const q=sb.from('trein_demo_ev').select('code,tipo,detalhe,criado_em').in('tipo',['entrada','interesse']).order('criado_em',{ascending:false}).limit(20);const {data}=await q;if(!data)return;
+async function avisos(){const q=sb.from('trein_demo_ev').select('code,tipo,detalhe,criado_em').in('tipo',['entrada','interesse','contato','opiniao']).order('criado_em',{ascending:false}).limit(20);const {data}=await q;if(!data)return;
   if(LASTT===null){LASTT=data.length?data[0].criado_em:new Date(0).toISOString();return;}
   const novos=data.filter(x=>x.criado_em>LASTT).reverse();if(!novos.length)return;LASTT=novos[novos.length-1].criado_em;
   if(!DM.length)await carregar();
-  novos.forEach(x=>{const d=DM.find(y=>y.code===x.code)||{nome:x.code};const t=x.tipo==='entrada'?`🧪 ${d.nome} abriu o demonstrativo`:`💬 ${d.nome} clicou em "Quero para minha empresa"`;
+  novos.forEach(x=>{const d=DM.find(y=>y.code===x.code)||{nome:x.code};const t=x.tipo==='opiniao'?`⭐ ${d.nome} deixou a opinião: ${'★'.repeat((x.detalhe||{}).nota||0)} ${((x.detalhe||{}).texto||'').slice(0,80)}`:x.tipo==='entrada'?`🧪 ${d.nome} abriu o demonstrativo`:x.tipo==='contato'?`📱 ${d.nome} deixou o WhatsApp: ${(x.detalhe||{}).fone||''}`:`💬 ${d.nome} clicou em "Quero para minha empresa"`;
     try{toast(t);}catch(_){}try{if('Notification' in window&&Notification.permission==='granted')new Notification('Orientativo FC 3D',{body:t});}catch(_){} });
   try{beep();}catch(_){}carregar();}
 document.querySelector('#ptabs [data-tab=demo]').addEventListener('click',()=>carregar());
 if(PTAB==='demo')setTimeout(carregar,800);
-setTimeout(avisos,3000);setInterval(avisos,60000);setInterval(()=>{if(PTAB==='demo')render();},60000);
+setTimeout(avisos,3000);setTimeout(carregar,1500);setInterval(avisos,60000);setInterval(()=>{if(PTAB==='demo')render();},60000);
 })();
 </script>
 </body>

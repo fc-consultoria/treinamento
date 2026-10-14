@@ -169,7 +169,7 @@ function vigiaPrazo(uid,perfil){setInterval(()=>{if(window.ALUNO_CID&&window.COL
     try{const {data}=await sb.from('trein_eventos').select('detalhe').eq('tipo','chave_app').limit(1);
       const kb=Uint8Array.from(atob(data[0].detalhe.k),c=>c.charCodeAt(0));
       const key=await crypto.subtle.importKey('raw',kb,'AES-GCM',false,['decrypt']);window.__CK=key;
-      const buf=new Uint8Array(await (await fetch('app.enc?v=1791987196',{cache:'no-cache'})).arrayBuffer());
+      const buf=new Uint8Array(await (await fetch('app.enc?v=1791989499',{cache:'no-cache'})).arrayBuffer());
       const plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:buf.slice(0,12)},key,buf.slice(12));
       const html=await new Response(new Blob([plain]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
       const root=document.getElementById('appRoot');root.innerHTML=html;
@@ -203,7 +203,7 @@ function vigiaPrazo(uid,perfil){setInterval(()=>{if(window.ALUNO_CID&&window.COL
   });
 })();
 </script>
-<script>(function(){const V='1791987196';async function chk(){try{const t=(await (await fetch('version.txt?'+Date.now(),{cache:'no-store'})).text()).trim();
+<script>(function(){const V='1791989499';async function chk(){try{const t=(await (await fetch('version.txt?'+Date.now(),{cache:'no-store'})).text()).trim();
 if(t&&/^\d+$/.test(t)&&t!==V&&!document.getElementById('updBar')){const b=document.createElement('div');b.id='updBar';
 b.style.cssText='position:fixed;left:50%;top:10px;transform:translateX(-50%);z-index:9999;background:#1f6f9a;color:#fff;padding:10px 12px 10px 16px;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.25);font:600 14px system-ui,sans-serif;display:flex;gap:12px;align-items:center;max-width:calc(100% - 24px)';
 b.innerHTML='<span>🔄 Nova versão do orientativo disponível</span><button type="button" style="border:0;border-radius:7px;padding:7px 14px;font:700 14px system-ui,sans-serif;background:#e0972e;color:#1b232a;cursor:pointer">Atualizar</button>';
@@ -259,8 +259,8 @@ function show(x,rever,L){cur=x;OPEN=true;held=false;GAL=(L||itens());if(!GAL.som
   document.getElementById('dvP').onclick=()=>{const w=open('','_blank');if(!w)return;w.document.write(`<title>${esc(x.t)}</title><body style="margin:0;text-align:center"><img src="${x.img}" style="max-width:100%;max-height:100vh" onload="setTimeout(()=>print(),200)"></body>`);w.document.close();};
   document.getElementById('dvW').onclick=async()=>{held=true;const b=document.getElementById('dvW');b.disabled=true;
     try{await sb.from('trein_eventos').insert({user_id:UID,tipo:'interesse',tipologia:null,detalhe:{ref:x.id,t:x.t,cid:window.ALUNO_CID||null,quem:window.ALUNO_NOME||null}});}catch(e){}
-    const ok=document.getElementById('dvOk');ok.hidden=false;ok.textContent='✔ A FC recebeu seu interesse e vai entrar em contato.';
-    open('https://wa.me/'+PHONE+'?text='+encodeURIComponent(`Olá Fernando, vi no Orientativo FC 3D: "${x.t}". Tenho interesse. (${window.ALUNO_NOME||''} · ${EMP})`),'_blank');};
+    const ok=document.getElementById('dvOk');ok.hidden=false;b.hidden=true;
+    ok.innerHTML='✔ <b>Pronto! A FC já recebeu o seu interesse</b> e vai entrar em contato com a sua empresa.<br><a href="'+'https://wa.me/'+PHONE+'?text='+encodeURIComponent(`Olá Fernando, vi no Orientativo FC 3D: "${x.t}". Tenho interesse. (${window.ALUNO_NOME||''} · ${EMP})`)+'" target="_blank" rel="noopener" style="display:inline-block;margin-top:8px;background:#1f8a4c;color:#fff;text-decoration:none;font:600 14px system-ui,sans-serif;padding:8px 12px;border-radius:8px">💬 Quer adiantar? Falar agora no WhatsApp</a>';};
   const A=document.getElementById('dvA'),Z=document.getElementById('dvZ');if(A)A.onclick=()=>{clearInterval(tmr);show(GAL[i-1],true,L);};if(Z)Z.onclick=()=>{clearInterval(tmr);show(GAL[i+1],true,L);};
   if(!x.visto&&!rever){x.visto=true;VISTO.add(window.ALUNO_CID+'|'+x.id);sb.from('trein_eventos').insert({user_id:UID,tipo:'div_visto',tipologia:null,detalhe:{ref:x.id,cid:window.ALUNO_CID||null,quem:window.ALUNO_NOME||null,nov:!!x.nov}}).then(()=>{});}
   clearInterval(tmr);if(auto){t0=Date.now();tmr=setInterval(()=>{if(held)return;const r=Math.max(0,1-(Date.now()-t0)/(du*1000)),pb=document.getElementById('dvPb'),tm=document.getElementById('dvTm');if(pb)pb.style.width=r*100+'%';if(tm)tm.textContent=`Fecha sozinha em ${Math.ceil(r*du)} s`;if(r<=0)close();},100);}
@@ -292,7 +292,7 @@ function abrir(){let o=document.getElementById('catOv');if(o)o.remove();o=docume
   catch(e){b.textContent='Tente de novo';}setTimeout(()=>{b.disabled=false;b.textContent=t;},4000);});}
 window.catInit=function(){const ub=document.getElementById('ubar');if(!ub||document.getElementById('catBtn'))return;const b=document.createElement('button');b.type='button';b.id='catBtn';b.textContent='📘 Catálogos';b.title='Catálogos técnicos Suprema e Gold (fonte do orientativo)';b.onclick=abrir;ub.insertBefore(b,document.getElementById('sugBtn'));};
 })();
-</script><script src="mapa.js?v=1791987196"></script><script>/* ===== Mapa "FC no Brasil" (tela do aluno) ===== */
+</script><script src="mapa.js?v=1791989499"></script><script>/* ===== Mapa "FC no Brasil" (tela do aluno) ===== */
 (function(){
 window.mapaInit=async function(){try{const r=await sb.from('trein_eventos').select('detalhe').eq('tipo','mapa').order('criado_em',{ascending:false}).limit(1);
   const dd=(((r.data||[])[0]||{}).detalhe)||{};if(dd.pub===false)return;const it=dd.itens||[];const ub=document.getElementById('ubar');if(!it.length||!ub||!window.FCM||document.getElementById('mpBtn'))return;
