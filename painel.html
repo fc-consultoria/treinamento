@@ -135,7 +135,7 @@ tr.mfin td{background:#eef5fc}
   <div class="kpi"><b id="k3">–</b><span>horas de estudo no total</span></div>
   <div class="kpi"><b id="k4">–</b><span>desafios concluídos</span></div>
  </section>
- <nav class="ptabs" id="ptabs" role="tablist"><button type="button" data-tab="emp">🏢 Empresas</button><button type="button" data-tab="ped">⏱ Pedidos e interessados <span id="tbPed"></span></button><button type="button" data-tab="div">📣 Divulgação</button><button type="button" data-tab="sug">💬 Sugestões <span id="tbSug"></span></button><button type="button" data-tab="map">📍 FC no Brasil</button></nav>
+ <nav class="ptabs" id="ptabs" role="tablist"><button type="button" data-tab="emp">🏢 Empresas</button><button type="button" data-tab="ped">⏱ Pedidos e interessados <span id="tbPed"></span></button><button type="button" data-tab="div">📣 Divulgação</button><button type="button" data-tab="sug">💬 Sugestões <span id="tbSug"></span></button><button type="button" data-tab="map">📍 FC no Brasil</button><button type="button" data-tab="demo">🧪 Demonstrativos</button></nav>
  <section class="card" id="pedVazio" data-tab="ped"><p class="note" style="padding:14px 16px">Nenhum pedido de mais tempo e nenhum interessado aguardando. 👍</p></section>
  <section class="card dom" id="domCard" data-tab="emp" hidden><h2>Domingo · liberar a próxima semana?</h2><p class="note" style="padding:10px 16px 0">O acesso das empresas vale de segunda a sábado. Escolha quem continua na semana que vem (até sábado <b id="domSab"></b>). Quem não for liberado fica sem acesso a partir de segunda.</p><div style="padding:8px 16px"><button class="ok" type="button" id="domTodas">Liberar todas</button></div><div id="domList"></div></section>
  <section class="card ped" id="pedCard" data-tab="ped" hidden><h2>⏱ Pedidos de mais tempo <span class="sgn" id="pedN"></span></h2><div id="pedList"></div></section>
@@ -160,7 +160,14 @@ tr.mfin td{background:#eef5fc}
      <div><button type="button" class="pri" id="nvPub">Publicar agora</button> <span class="msg" id="nvMsg"></span></div></div></div>
    <ul class="nvl" id="nvList"></ul>
   </div></section>
- <section class="card" id="mapCard" data-tab="map"><h2>📍 FC no Brasil · mapa para os alunos</h2>
+<section class="card" id="demoCard" data-tab="demo"><h2>🧪 Demonstrativos · links de teste</h2><div style="padding:12px 16px 16px">
+  <p class="note">Gere um link para o cliente testar 2 tipologias da Suprema e 2 da Gold (Conhecendo as Esquadrias). Os outros painéis aparecem com 🔒 e um vídeo de como funcionam. As horas começam a contar quando o cliente abre o link pela primeira vez.</p>
+  <form id="dmF" class="mpf"><label>Cliente / empresa<input id="dmN" required placeholder="Ex.: Vidraçaria Silva" autocomplete="off"></label><label>Cidade<input id="dmC" placeholder="Ex.: Sorriso-MT" autocomplete="off"></label><label>Tempo de acesso<select id="dmH"><option value="24">24 horas</option><option value="48">48 horas</option><option value="72">72 horas</option><option value="12">12 horas</option></select></label><button class="pri" type="submit">Gerar link</button></form>
+  <div id="dmNovo"></div>
+  <div class="tw"><table><thead><tr><th>Cliente</th><th>Situação</th><th>Abriu em</th><th>Tempo usado</th><th>O que viu</th><th></th></tr></thead><tbody id="dmTb"></tbody></table></div>
+  <div id="dmDet"></div>
+ </div></section>
+  <section class="card" id="mapCard" data-tab="map"><h2>📍 FC no Brasil · mapa para os alunos</h2>
   <div style="padding:12px 16px 16px">
    <div class="mpPub" id="mpPub"><div><b id="mpPubT">…</b><span id="mpPubS"></span></div><button type="button" id="mpPubB">…</button></div>
    <div class="mpRes" id="mpRes"></div>
@@ -501,6 +508,60 @@ document.getElementById('mpF').onsubmit=async e=>{e.preventDefault();let c=docum
 document.querySelector('#ptabs [data-tab=map]').addEventListener('click',()=>{if(MPD)setTimeout(mpRender,50);else mpCarregar();});
 if(PTAB==='map')setTimeout(mpCarregar,800);
 gateUI(()=>carregar(),{soMatriz:true});
+</script>
+<script>/* ===== Demonstrativos (links de 24 h) ===== */
+(function(){
+const URLD='https://fc-consultoria.github.io/treinamento/demo/?c=';
+const TN={jcr200:'Janela correr 2F Suprema',pcr200:'Porta correr 2F Suprema',gjc2f:'Janela correr 2F Gold',gpc2f:'Porta correr 2F Gold'};
+const CN={esq:'lateral esq.',dir:'lateral dir.',sup:'superior',inf:'inferior',m0:'encontro das folhas'};
+let DM=[],EV=[],LASTT=null;const e=v=>String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+const gen=()=>{const A='ABCDEFGHJKMNPQRSTUVWXYZ23456789';let s='';const r=crypto.getRandomValues(new Uint8Array(8));r.forEach(x=>s+=A[x%A.length]);return s;};
+const dt=t=>t?new Date(t).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
+const hm=s=>{s=Math.max(0,Math.round(s));const h=Math.floor(s/3600),m=Math.floor(s%3600/60);return h?`${h} h ${String(m).padStart(2,'0')}`:`${m} min`;};
+const fimDe=d=>d.inicio?Date.parse(d.inicio)+d.horas*3600e3:null;
+function sit(d){if(d.encerrado)return ['Encerrado','#8d99a3'];if(!d.inicio)return ['Ainda não abriu','#c47d12'];const f=fimDe(d);if(Date.now()>f)return ['Terminou','#a33'];return ['Ativo · restam '+hm((f-Date.now())/1000),'#1f8a4c'];}
+function resumo(code){const L=EV.filter(x=>x.code===code),T=new Set(),C=[],K=new Set(),U=new Set();let min=0,des=0,int=0,ent=0;
+  L.forEach(x=>{const d=x.detalhe||{};if(x.tipo==='tempo')min++;else if(x.tipo==='tipologia')T.add(TN[d.t]||d.t);else if(x.tipo==='corte')C.push((TN[d.t]||d.t)+' · '+(CN[d.k]||d.k));else if(x.tipo==='desmontar'&&d.on)des++;else if(x.tipo==='cor')K.add(d.c);else if(x.tipo==='tutorial')U.add(d.m);else if(x.tipo==='interesse')int++;else if(x.tipo==='entrada')ent++;});
+  return {min,T:[...T],C,des,K:[...K],U:[...U],int,ent,L};}
+async function carregar(){const a=await sb.from('trein_demo').select('*').order('criado_em',{ascending:false});DM=a.data||[];
+  const b=await sb.from('trein_demo_ev').select('code,tipo,detalhe,criado_em').order('criado_em').limit(10000);EV=b.data||[];render();}
+function render(){const tb=document.getElementById('dmTb');if(!tb)return;
+  tb.innerHTML=DM.length?DM.map(d=>{const [s,c]=sit(d),r=resumo(d.code);
+   const viu=[r.T.length?'🪟 '+r.T.join(', '):'',r.C.length?'✂️ '+r.C.length+' corte'+(r.C.length>1?'s':''):'',r.des?'🧩 desmontou':'',r.K.length?'🎨 '+r.K.length+' cor'+(r.K.length>1?'es':''):'',r.U.length?'▶ tutorial: '+r.U.join(', '):'',r.int?'<b style="color:#1f8a4c">💬 clicou em Quero</b>':''].filter(Boolean).join('<br>')||'<span class="note">—</span>';
+   return `<tr><td><b>${e(d.nome)}</b><br><span class="note">${e(d.cidade||'')} · criado ${dt(d.criado_em)}</span></td><td><span style="color:${c};font-weight:700">${s}</span><br><span class="note">${d.horas} h de acesso</span></td><td>${dt(d.inicio)}<br><span class="note">último: ${dt(d.ultimo)}</span></td><td>${r.min} min<br><span class="note">${r.ent} entrada${r.ent===1?'':'s'}</span></td><td style="font-size:13px">${viu}</td>
+   <td style="white-space:nowrap"><button type="button" data-cp="${d.code}">📋 Copiar link</button> <button type="button" data-wa="${d.code}">💬 WhatsApp</button><br><button type="button" data-h="${d.code}" data-n="12">+12 h</button> <button type="button" data-h="${d.code}" data-n="24">+24 h</button> <button type="button" class="${d.encerrado?'ok':'no'}" data-en="${d.code}">${d.encerrado?'Reabrir':'Encerrar'}</button> <button type="button" data-det="${d.code}">Ver tudo</button></td></tr>`;}).join(''):'<tr><td colspan="6" class="note">Nenhum demonstrativo gerado ainda.</td></tr>';
+  tb.querySelectorAll('[data-cp]').forEach(b=>b.onclick=async()=>{try{await navigator.clipboard.writeText(URLD+b.dataset.cp);b.textContent='✔ Copiado';}catch(_){prompt('Copie o link:',URLD+b.dataset.cp);}});
+  tb.querySelectorAll('[data-wa]').forEach(b=>b.onclick=()=>{const d=DM.find(x=>x.code===b.dataset.wa);open('https://wa.me/?text='+encodeURIComponent(msg(d)),'_blank');});
+  tb.querySelectorAll('[data-h]').forEach(b=>b.onclick=async()=>{const d=DM.find(x=>x.code===b.dataset.h),n=+b.dataset.n;let h=d.horas+n;
+    if(d.inicio){const f=fimDe(d);if(Date.now()>f)h=Math.ceil((Date.now()+n*3600e3-Date.parse(d.inicio))/3600e3);}
+    b.disabled=true;await sb.from('trein_demo').update({horas:h,encerrado:false}).eq('code',d.code);carregar();});
+  tb.querySelectorAll('[data-en]').forEach(b=>b.onclick=async()=>{const d=DM.find(x=>x.code===b.dataset.en);if(!d.encerrado&&!confirm('Encerrar o demonstrativo de '+d.nome+'? O link para de funcionar.'))return;await sb.from('trein_demo').update({encerrado:!d.encerrado}).eq('code',d.code);carregar();});
+  tb.querySelectorAll('[data-det]').forEach(b=>b.onclick=()=>det(b.dataset.det));}
+function msg(d){return `Olá${d.nome?' '+d.nome:''}! Aqui é o Fernando, da FC Consultoria.\n\nSegue o link para você testar o *Orientativo FC 3D*: esquadrias das linhas Suprema e Gold em 3D, para girar, abrir as folhas, desmontar e ver os cortes dos perfis.\n\n👉 ${URLD+d.code}\n\nO acesso fica liberado por ${d.horas} horas a partir da primeira vez que você abrir. Qualquer dúvida, me chame aqui.`;}
+function det(code){const d=DM.find(x=>x.code===code),r=resumo(code),box=document.getElementById('dmDet');
+  const NM={entrada:'Abriu o link',tipologia:'Abriu a tipologia',corte:'Viu o corte',desmontar:'Desmontou',cor:'Trocou a cor',tutorial:'Assistiu tutorial',interesse:'Clicou em Quero para minha empresa',componente:'Viu componente',perfil:'Viu perfil',tempo:null};
+  const linhas=r.L.filter(x=>NM[x.tipo]!==null).map(x=>{const q=x.detalhe||{};const extra=q.t?(TN[q.t]||q.t):'';const k=q.k?' · '+(CN[q.k]||q.k):'';const m=q.m?' · '+q.m:'';const c=q.c?' · '+q.c:'';return `<li><span class="note">${dt(x.criado_em)}</span> — ${NM[x.tipo]||x.tipo} ${e(extra+k+m+c)}</li>`;}).join('');
+  box.innerHTML=`<h3 class="dvt" style="margin:16px 0 8px">📋 ${e(d.nome)} · tudo o que fez</h3><ul class="tl" style="max-height:340px;overflow:auto">${linhas||'<li class="note">Ainda não usou.</li>'}</ul>`;box.scrollIntoView({behavior:'smooth',block:'nearest'});}
+document.getElementById('dmF').onsubmit=async ev=>{ev.preventDefault();const nome=document.getElementById('dmN').value.trim();if(!nome)return;
+  const d={code:gen(),nome,cidade:document.getElementById('dmC').value.trim()||null,horas:+document.getElementById('dmH').value};
+  const r=await sb.from('trein_demo').insert(d);if(r.error){alert('Não foi possível gerar: '+r.error.message);return;}
+  document.getElementById('dmN').value='';document.getElementById('dmC').value='';
+  document.getElementById('dmNovo').innerHTML=`<div style="border:2px solid #1f8a4c;background:#eaf6ef;border-radius:10px;padding:12px 14px;margin:10px 0"><b>✔ Link gerado para ${e(nome)}</b><br><input readonly value="${URLD+d.code}" style="width:100%;margin:8px 0;font:600 15px var(--f-mono)" onclick="this.select()"><button type="button" class="pri" id="dmWa">💬 Enviar pelo WhatsApp</button> <button type="button" id="dmCp">📋 Copiar link</button> <button type="button" id="dmMs">📋 Copiar mensagem pronta</button></div>`;
+  document.getElementById('dmWa').onclick=()=>open('https://wa.me/?text='+encodeURIComponent(msg(d)),'_blank');
+  document.getElementById('dmCp').onclick=async()=>{try{await navigator.clipboard.writeText(URLD+d.code);document.getElementById('dmCp').textContent='✔ Copiado';}catch(_){}};
+  document.getElementById('dmMs').onclick=async()=>{try{await navigator.clipboard.writeText(msg(d));document.getElementById('dmMs').textContent='✔ Mensagem copiada';}catch(_){}};
+  carregar();};
+async function avisos(){const q=sb.from('trein_demo_ev').select('code,tipo,detalhe,criado_em').in('tipo',['entrada','interesse']).order('criado_em',{ascending:false}).limit(20);const {data}=await q;if(!data)return;
+  if(LASTT===null){LASTT=data.length?data[0].criado_em:new Date(0).toISOString();return;}
+  const novos=data.filter(x=>x.criado_em>LASTT).reverse();if(!novos.length)return;LASTT=novos[novos.length-1].criado_em;
+  if(!DM.length)await carregar();
+  novos.forEach(x=>{const d=DM.find(y=>y.code===x.code)||{nome:x.code};const t=x.tipo==='entrada'?`🧪 ${d.nome} abriu o demonstrativo`:`💬 ${d.nome} clicou em "Quero para minha empresa"`;
+    try{toast(t);}catch(_){}try{if('Notification' in window&&Notification.permission==='granted')new Notification('Orientativo FC 3D',{body:t});}catch(_){} });
+  try{beep();}catch(_){}carregar();}
+document.querySelector('#ptabs [data-tab=demo]').addEventListener('click',()=>carregar());
+if(PTAB==='demo')setTimeout(carregar,800);
+setTimeout(avisos,3000);setInterval(avisos,60000);setInterval(()=>{if(PTAB==='demo')render();},60000);
+})();
 </script>
 </body>
 </html>
