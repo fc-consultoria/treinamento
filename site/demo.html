@@ -41,6 +41,7 @@ h1{font-family:var(--f-display);font-weight:700;font-size:clamp(22px,3vw,30px);m
 .linsel button{border:2px solid var(--lc)!important;border-radius:8px}
 .linsel button{border:0;background:transparent;padding:8px 14px;font:600 14px var(--f-display);cursor:pointer;color:var(--fg);display:flex;align-items:center;gap:6px}
 .linsel button i{width:10px;height:10px;border-radius:50%;background:var(--lc)}
+.linsel{flex-wrap:wrap}.linsel button.soon{border-style:dashed!important;opacity:.75;flex-direction:row}.linsel button.soon small{font:600 10.5px var(--f-mono);letter-spacing:.04em;background:var(--lc);color:#fff;border-radius:10px;padding:1px 7px;margin-left:2px}.linsel button.soon:hover{opacity:1}
 .linsel button[aria-pressed="true"]{background:var(--lc);color:#fff}.linsel button[aria-pressed="true"] i{background:#fff}
 .typo{font-size:12px}.typo select{font-family:var(--f-display);font-weight:600;font-size:14px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--fg);min-width:240px}
 .modes{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--panel)}
@@ -2799,6 +2800,13 @@ function linSync(t){const L=linOf(t);if(LINCUR!==L.k){LINCUR=L.k;tsel.innerHTML=
   document.querySelectorAll('#linSel button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.l===L.k));}
 document.getElementById('linSel').innerHTML=LINHAS.map(l=>`<button type="button" data-l="${l.k}" style="--lc:${l.c}" aria-pressed="false"><i></i>Linha ${l.n}</button>`).join('');
 document.querySelectorAll('#linSel button').forEach(b=>b.onclick=()=>{const L=LINHAS.find(l=>l.k===b.dataset.l);if(L.k===LINCUR)return;linSync(L.t[0]);setTypo(L.t[0]);});
+/* novas linhas em breve (sem valor exposto) */
+{const LS=document.getElementById('linSel');[['chroma','Chroma','#7a5bd0'],['ecoline','Ecoline','#2f9a6a']].forEach(([k,n,c])=>{const b=document.createElement('button');b.type='button';b.className='soon';b.style.setProperty('--lc',c);b.title='Linha '+n+' · em breve';
+  b.innerHTML=`<i></i>Linha ${n}<small>em breve</small>`;b.onclick=()=>{trk('linha_em_breve',{l:k});let o=document.getElementById('soonOv');if(o)o.remove();o=document.createElement('div');o.id='soonOv';
+   o.style.cssText='position:fixed;inset:0;z-index:9000;background:rgba(10,16,22,.6);display:grid;place-items:center;padding:16px';
+   o.innerHTML=`<div style="background:#fff;border-radius:14px;max-width:420px;padding:22px;font:400 15px/1.5 var(--f-body,system-ui);box-shadow:0 20px 50px rgba(0,0,0,.4);border-top:6px solid ${c}"><div style="font:600 12px var(--f-mono);letter-spacing:.1em;color:${c}">NOVO MÓDULO · EM BREVE</div><h3 style="margin:6px 0 8px;font:700 21px var(--f-display)">Linha ${n}</h3><p style="margin:0 0 14px;color:#4b5a63">As tipologias da Linha ${n} estão sendo preparadas e vão chegar ao Orientativo FC 3D em breve, como um módulo novo.</p><div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap"><button type="button" id="soonX" style="border:1px solid #c9d3da;background:#fff;border-radius:8px;padding:9px 14px;font:600 14px var(--f-display);cursor:pointer">Fechar</button><button type="button" id="soonY" style="border:0;background:${c};color:#fff;border-radius:8px;padding:9px 14px;font:600 14px var(--f-display);cursor:pointer">🔔 Quero ser avisado</button></div></div>`;
+   document.body.appendChild(o);document.getElementById('soonX').onclick=()=>o.remove();o.addEventListener('click',e=>{if(e.target===o)o.remove();});
+   document.getElementById('soonY').onclick=e=>{trk('linha_interesse',{l:k,n});e.target.textContent='✔ Você será avisado';e.target.disabled=true;};};LS.appendChild(b);});}
 linSync(S.typo);
 tsel.addEventListener('change',e=>setTypo(e.target.value));tsel.value=S.typo;addEventListener('pageshow',()=>{tsel.value=S.typo;});
 applyTypo();build();renderParts();renderCuts();renderUs();renderSliders();renderComp();renderCards();score();renderSwap();renderProg();resize();camera.position.copy(viewPos('persp'));
