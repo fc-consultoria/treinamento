@@ -168,8 +168,8 @@ function vigiaPrazo(uid,perfil){setInterval(()=>{if(window.ALUNO_CID&&window.COL
     const ld=document.getElementById('appLoad');ld.hidden=false;
     try{const {data}=await sb.from('trein_eventos').select('detalhe').eq('tipo','chave_app').limit(1);
       const kb=Uint8Array.from(atob(data[0].detalhe.k),c=>c.charCodeAt(0));
-      const key=await crypto.subtle.importKey('raw',kb,'AES-GCM',false,['decrypt']);
-      const buf=new Uint8Array(await (await fetch('app.enc?v=1791949122',{cache:'no-cache'})).arrayBuffer());
+      const key=await crypto.subtle.importKey('raw',kb,'AES-GCM',false,['decrypt']);window.__CK=key;
+      const buf=new Uint8Array(await (await fetch('app.enc?v=1791953206',{cache:'no-cache'})).arrayBuffer());
       const plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:buf.slice(0,12)},key,buf.slice(12));
       const html=await new Response(new Blob([plain]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
       const root=document.getElementById('appRoot');root.innerHTML=html;
@@ -187,7 +187,7 @@ function vigiaPrazo(uid,perfil){setInterval(()=>{if(window.ALUNO_CID&&window.COL
     try{localStorage.setItem('fcTreinUrl',location.href.split('#')[0]);}catch(e){}
     document.getElementById('ubar').hidden=false;
     document.getElementById('uname').textContent=(perfil.nome||perfil.login)+(perfil.papel==='admin'?' · matriz':'');
-    sugInit();
+    sugInit();if(window.catInit)catInit();
     if(perfil.papel!=='admin'&&window.divInit)divInit(uid,perfil);
     if(window.mapaInit)setTimeout(mapaInit,300);
     document.getElementById('upainel').hidden=perfil.papel!=='admin';document.getElementById('sugPainel').hidden=perfil.papel!=='admin';
@@ -203,7 +203,7 @@ function vigiaPrazo(uid,perfil){setInterval(()=>{if(window.ALUNO_CID&&window.COL
   });
 })();
 </script>
-<script>(function(){const V='1791949122';async function chk(){try{const t=(await (await fetch('version.txt?'+Date.now(),{cache:'no-store'})).text()).trim();
+<script>(function(){const V='1791953206';async function chk(){try{const t=(await (await fetch('version.txt?'+Date.now(),{cache:'no-store'})).text()).trim();
 if(t&&/^\d+$/.test(t)&&t!==V&&!document.getElementById('updBar')){const b=document.createElement('div');b.id='updBar';
 b.style.cssText='position:fixed;left:50%;top:10px;transform:translateX(-50%);z-index:9999;background:#1f6f9a;color:#fff;padding:10px 12px 10px 16px;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.25);font:600 14px system-ui,sans-serif;display:flex;gap:12px;align-items:center;max-width:calc(100% - 24px)';
 b.innerHTML='<span>🔄 Nova versão do treinamento disponível</span><button type="button" style="border:0;border-radius:7px;padding:7px 14px;font:700 14px system-ui,sans-serif;background:#e0972e;color:#1b232a;cursor:pointer">Atualizar</button>';
@@ -271,7 +271,28 @@ window.divInit=async function(uid,perfil){UID=uid;EMP=(perfil&&(perfil.nome||per
     b.onclick=()=>{const L=itens();if(L.length)show(L[0],true,L);};ub.insertBefore(b,document.getElementById('sugBtn'));}
   try{await load();}catch(e){}setTimeout(check,4000);setInterval(check,60000);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')setTimeout(check,1500);});};
 })();
-</script><script src="mapa.js?v=1791949122"></script><script>/* ===== Mapa "FC no Brasil" (tela do aluno) ===== */
+</script><script>/* ===== Catálogos técnicos (fonte do conteúdo) ===== */
+(function(){
+const CAT=[{k:'suprema',n:'Linha Suprema',c:'#2f7fb8',d:'Catálogo Técnico GMPE 009 · ago/2004',f:'Catalogo-Tecnico-Linha-Suprema-Alcoa-2004.pdf',mb:'9,7 MB'},
+           {k:'gold',n:'Linha Gold',c:'#c8932f',d:'Catálogo Técnico GMPE 015 · set/2004',f:'Catalogo-Tecnico-Linha-Gold-Alcoa-2004.pdf',mb:'5,5 MB'}];
+function abrir(){let o=document.getElementById('catOv');if(o)o.remove();o=document.createElement('div');o.id='catOv';o.setAttribute('role','dialog');o.setAttribute('aria-label','Catálogos técnicos');
+ o.style.cssText='position:fixed;inset:0;z-index:9000;background:rgba(10,16,22,.66);display:grid;place-items:center;padding:14px;overflow:auto';
+ o.innerHTML=`<div style="background:#fff;color:#1b232a;border-radius:14px;max-width:560px;width:100%;padding:22px;font:400 15px/1.5 system-ui,sans-serif;box-shadow:0 20px 50px rgba(0,0,0,.4)">
+  <div style="font:600 12px ui-monospace,monospace;letter-spacing:.1em;color:#1f6f9a">FONTE TÉCNICA DO TREINAMENTO</div>
+  <h3 style="margin:6px 0 8px;font:700 21px system-ui,sans-serif">Catálogos técnicos das linhas</h3>
+  <p style="margin:0 0 14px;color:#4b5a63">As informações técnicas deste treinamento (perfis, componentes, cortes e diagramas de dimensões) foram baseadas nos <b>catálogos técnicos oficiais das linhas Suprema e Gold da Alcoa</b>. Consulte o catálogo sempre que precisar do dado original.</p>
+  ${CAT.map(c=>`<div style="display:flex;align-items:center;gap:12px;border:1px solid #d5dde2;border-left:5px solid ${c.c};border-radius:10px;padding:12px;margin-bottom:10px"><div style="flex:1"><b style="font-size:16px">${c.n}</b><br><small style="color:#5d6b76">${c.d} · PDF ${c.mb}</small></div><button type="button" data-cat="${c.k}" style="border:0;border-radius:8px;padding:10px 14px;background:#1f6f9a;color:#fff;font:700 14px system-ui,sans-serif;cursor:pointer;white-space:nowrap">⬇ Baixar</button></div>`).join('')}
+  <p style="margin:6px 0 14px;font-size:12.5px;color:#6b7a84">Suprema e Gold são marcas de seus respectivos titulares. Os catálogos são material de referência do fabricante, disponível só para alunos do treinamento. O Treinamento FC 3D é um material didático da FC Consultoria; em caso de dúvida, vale sempre o catálogo e a orientação do fabricante.</p>
+  <button type="button" id="catX" style="width:100%;border:1px solid #c9d3da;border-radius:9px;padding:10px;background:#f4f7f9;font:600 15px system-ui,sans-serif;cursor:pointer">← Voltar ao treinamento</button></div>`;
+ document.body.appendChild(o);document.getElementById('catX').onclick=()=>o.remove();o.addEventListener('click',e=>{if(e.target===o)o.remove();});
+ o.querySelectorAll('[data-cat]').forEach(b=>b.onclick=async()=>{const c=CAT.find(x=>x.k===b.dataset.cat),t=b.textContent;b.disabled=true;b.textContent='Baixando…';
+  try{if(!window.__CK)throw 0;const buf=new Uint8Array(await (await fetch('cat/'+c.k+'.enc')).arrayBuffer());const plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:buf.slice(0,12)},window.__CK,buf.slice(12));
+   const u=URL.createObjectURL(new Blob([plain],{type:'application/pdf'})),a=document.createElement('a');a.href=u;a.download=c.f;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),60000);b.textContent='✔ Baixado';
+   try{if(window.sb&&window.TRK_UID)sb.from('trein_eventos').insert({user_id:window.TRK_UID,tipo:'catalogo',tipologia:null,detalhe:{k:c.k}});}catch(e){}}
+  catch(e){b.textContent='Tente de novo';}setTimeout(()=>{b.disabled=false;b.textContent=t;},4000);});}
+window.catInit=function(){const ub=document.getElementById('ubar');if(!ub||document.getElementById('catBtn'))return;const b=document.createElement('button');b.type='button';b.id='catBtn';b.textContent='📘 Catálogos';b.title='Catálogos técnicos Suprema e Gold (fonte do treinamento)';b.onclick=abrir;ub.insertBefore(b,document.getElementById('sugBtn'));};
+})();
+</script><script src="mapa.js?v=1791953206"></script><script>/* ===== Mapa "FC no Brasil" (tela do aluno) ===== */
 (function(){
 window.mapaInit=async function(){try{const r=await sb.from('trein_eventos').select('detalhe').eq('tipo','mapa').order('criado_em',{ascending:false}).limit(1);
   const dd=(((r.data||[])[0]||{}).detalhe)||{};if(dd.pub===false)return;const it=dd.itens||[];const ub=document.getElementById('ubar');if(!it.length||!ub||!window.FCM||document.getElementById('mpBtn'))return;
