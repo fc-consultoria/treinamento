@@ -181,10 +181,11 @@ tr.mfin td{background:#eef5fc}
  <section class="card" id="sugCard" data-tab="sug"><h2 style="display:flex;justify-content:space-between;align-items:center;gap:8px">💬 Dúvidas e sugestões dos alunos <span class="sgn" id="sugN" style="flex:1"></span><button type="button" id="sugTog" style="font-size:12px;padding:4px 10px">Mostrar</button></h2><div id="sugBody" hidden><p class="note" style="padding:0 16px">O aluno envia pelo botão “💬 Sugestão” na barra escura do orientativo. Escreva a resposta embaixo da mensagem e clique em Responder: ela aparece para o aluno no mesmo botão.</p><ul class="tl" id="sugList"></ul></div></section>
  <section class="card" data-tab="emp">
   <h2>Empresas</h2>
+  <div id="ctrResumo" style="display:flex;gap:10px;flex-wrap:wrap;padding:10px 16px 0"></div>
   <p class="ihint">Clique no nome, no login ou em nova senha para editar · Enter salva · Esc desfaz. O login novo vale no próximo acesso do aluno (a senha continua a mesma). Maiúsculas aparecem no painel, mas o aluno pode digitar o login com ou sem maiúsculas.</p>
   <p class="msg bad" id="tbMsg" hidden></p>
   <div class="tw"><table>
-   <thead><tr><th>Empresa</th><th>Login</th><th>Senha</th><th>Situação</th><th>Semana</th><th>Colab.</th><th>Sistema</th><th>Último acesso</th><th>Gestor</th><th>Tempo</th><th>Tipologias vistas</th><th>Cortes</th><th>Perfis</th><th>Desafios</th><th>Estrelas</th><th>Melhor teste</th></tr></thead>
+   <thead><tr><th>Empresa</th><th>Login</th><th>Senha</th><th>Situação</th><th>Semana</th><th>Colab.</th><th>Sistema</th><th>Contrato</th><th>Último acesso</th><th>Gestor</th><th>Tempo</th><th>Tipologias vistas</th><th>Cortes</th><th>Perfis</th><th>Desafios</th><th>Estrelas</th><th>Melhor teste</th></tr></thead>
    <tbody id="tb"></tbody>
   </table></div>
  </section>
@@ -208,6 +209,7 @@ tr.mfin td{background:#eef5fc}
     <h3>Tipologias estudadas</h3><ul class="chips" id="cTip"></ul>
     <h3>Cortes das junções vistos</h3><p class="note" id="cCor"></p>
     <h3>Desafios (monte a esquadria)</h3><p class="note" id="cTes"></p>
+    <h3>💳 Contrato mensal (R$ 150 a cada 30 dias)</h3><div id="ctrBox"></div>
     <h3>👔 Uso do gestor (Painel da Empresa)</h3><p class="note" id="cGes"></p>
    </div>
    <div><h3>Últimas atividades</h3><ul class="tl" id="tl"></ul></div>
@@ -218,7 +220,7 @@ tr.mfin td{background:#eef5fc}
 <script src="auth.js"></script>
 <script src="mapa.js"></script>
 <script>
-const ZCFG=new Set(['empresa_local','gestor_in','gestor_hb','gestor_acao','colab','liberacao','sistema','gestor','chave_app','sugestao','resposta','sug_excluida','zerar','interesse','interesse_ok']);
+const ZCFG=new Set(['contrato','empresa_local','gestor_in','gestor_hb','gestor_acao','colab','liberacao','sistema','gestor','chave_app','sugestao','resposta','sug_excluida','zerar','interesse','interesse_ok']);
 function zerarFiltro(ev,zs){const Z={};(zs||ev).forEach(e=>{if(e.tipo==='zerar'){const p=(e.detalhe||{}).para,t=Date.parse(e.criado_em);if(!Z[p]||t>Z[p])Z[p]=t;}});
   return ev.filter(e=>ZCFG.has(e.tipo)||!Z[e.user_id]||Date.parse(e.criado_em)>Z[e.user_id]);}
 const TIPOS={jcr200:'Suprema JCR 200',jcr200a:'Suprema JCR 200A',jcr300:'Suprema JCR 300',jcr205:'Suprema JCR 205',pcr200:'Suprema PCR 200',pvz300:'Suprema PVZ 300',pgr100:'Suprema PGR 100',max800:'Suprema MAX 800',gjc2f:'Gold JC-2F',gpc3fvz:'Gold PC3F-VZ',gpc2fpe:'Gold PC-2FPE',gjc4f:'Gold JC-4F',gjc4fs:'Gold JC-4FS',gpc2f:'Gold PC-2F',gpc2fm:'Gold PC-2F MAC',gmax:'Gold MAX'};
@@ -254,13 +256,14 @@ function gestorCel(uid){const g=gestorRes(uid);if(!g.tot)return '<span style="co
   const dias=g.ult?Math.floor((Date.now()-Date.parse(g.ult))/864e5):99,cor=dias<=3?'#1f8a4c':dias<=10?'#c47d12':'#a33';
   return `<span style="color:${cor};font-weight:700">${g.agora?'🟢 agora · '+g.agora+' aparelho'+(g.agora>1?'s':''):fmtD(g.ult)}</span><br><span class="note">${g.n30} acesso${g.n30===1?'':'s'} em 30 dias · ${fmtH(g.min*60)}</span>`;}
 function render(){
+  try{ctrResumo();}catch(_){}
   const sem=Date.now()-7*864e5;let h=0,t=0,ativos7=0;
   const tb=document.getElementById('tb');tb.innerHTML='';
   ALUNOS.forEach(a=>{const r=resumo(a.user_id);h+=r.seg;t+=r.tes.length;if(r.ult&&new Date(r.ult)>sem)ativos7++;
     const tr=document.createElement('tr');if(sel===a.user_id)tr.className='sel';
     const esc=v=>String(v||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
     tr.innerHTML=`<td><input class="ied" data-e="nome" value="${esc(a.nome)}" placeholder="sem nome – digite" aria-label="Nome do ${esc(a.login)}" title="Clique para editar o nome; Enter salva"></td><td><input class="ied lg" data-e="login" value="${esc(a.login)}" aria-label="Login do ${esc(a.login)}" title="Clique para editar o login; Enter salva"></td><td><input class="ied lg" data-e="senha" value="${esc(senhaLoc(a.user_id))}" placeholder="nova senha" autocomplete="new-password" aria-label="Nova senha do ${esc(a.login)}" title="Digite a nova senha (mín. 6) e aperte Enter"></td>
-      <td><span class="tag ${a.ativo?'':'off'}">${a.ativo?'ativo':'bloqueado'}</span></td><td>${semTag(a.user_id)}</td><td class="n">${colabs(a.user_id).length}/6</td><td style="white-space:nowrap">${sisBtns(a.user_id)}</td><td class="n">${fmtD(r.ult)}</td><td>${gestorCel(a.user_id)}</td><td class="n">${fmtH(r.seg)}</td>
+      <td><span class="tag ${a.ativo?'':'off'}">${a.ativo?'ativo':'bloqueado'}</span></td><td>${semTag(a.user_id)}</td><td class="n">${colabs(a.user_id).length}/6</td><td style="white-space:nowrap">${sisBtns(a.user_id)}</td><td>${ctrCel(a.user_id)}</td><td class="n">${fmtD(r.ult)}</td><td>${gestorCel(a.user_id)}</td><td class="n">${fmtH(r.seg)}</td>
       <td><div style="display:flex;gap:8px;align-items:center"><div class="bar" style="flex:1"><i style="width:${Math.round(r.tip.size/NT*100)}%"></i></div><span class="n">${r.tip.size}/${NT}</span></div></td>
       <td class="n">${r.cor.size}</td><td class="n">${r.per.size}</td><td class="n">${r.tes.length}</td><td class="n" style="color:#b8860b">★ ${r.estrelas}/${NT*3}</td>
       <td class="n">${r.melhor?`${r.melhor.pct}% · ${TIPOS[r.melhor.t]||''}`:'—'}</td>`;
@@ -311,7 +314,7 @@ function detalhe(){
   const a=ALUNOS.find(x=>x.user_id===sel);if(!a)return;const r=resumo(a.user_id);
   document.getElementById('detCard').hidden=false;document.getElementById('detTit').textContent=(a.nome||a.login)+' · '+a.login;
   document.getElementById('eNome').value=a.nome||'';document.getElementById('bAtivo').textContent=a.ativo?'Bloquear acesso':'Liberar acesso';
-  colabUI(a);
+  colabUI(a);ctrUI(a);
   {const lc=localDe(a.user_id);document.getElementById('eCid').value=lc.cidade||'';document.getElementById('eUf').value=lc.uf||'';
    document.getElementById('bLocal').onclick=async()=>{const b=document.getElementById('bLocal');b.disabled=true;await ins('empresa_local',{para:a.user_id,cidade:document.getElementById('eCid').value.trim(),uf:document.getElementById('eUf').value});b.disabled=false;b.textContent='✔ Salvo';setTimeout(()=>b.textContent='📍 Salvar cidade',2500);carregar();};}
   {const g=gestorRes(a.user_id),el=document.getElementById('cGes');if(el)el.innerHTML=!g.tot?'O gestor ainda não entrou no Painel da Empresa.':
@@ -331,7 +334,7 @@ const ONTEM=()=>new Date(Date.now()-28*3600e3).toISOString().slice(0,10),fDia=v=
 const fmtR=ms=>{const h=Math.floor(ms/3600e3),m=Math.floor(ms%3600e3/60e3);return h>=1?h+' h '+String(m).padStart(2,'0'):m+' min';};
 const libAte=uid=>{const r=EV.find(e=>e.tipo==='liberacao'&&(e.detalhe||{}).para===uid);return r?r.detalhe.ate:null;};
 const libOk=uid=>{const a=libAte(uid);return !!a&&a>=HOJE();};
-function semTag(uid){const a=libAte(uid);return a&&a>=HOJE()?`<span class="sem tag">até sáb ${fDia(a)}</span>`:'<span class="sem tag off">encerrada</span>';}
+function semTag(uid){const cf=ctrFim(uid);if(cf&&cf>=HOJE())return `<span class="sem tag">contrato · ${fDia(cf)}</span>`;const a=libAte(uid);return a&&a>=HOJE()?`<span class="sem tag">até sáb ${fDia(a)}</span>`:'<span class="sem tag off">encerrada</span>';}
 function colabs(uid,todos){const C={};
   for(let i=EV.length-1;i>=0;i--){const e=EV[i],d=e.detalhe||{};
     if(e.tipo==='colab'&&d.para===uid)C[d.id]=Object.assign({},C[d.id]||{},d,{alt:e.criado_em});
@@ -340,7 +343,40 @@ function colabs(uid,todos){const C={};
     x.seg=EV.filter(e=>e.tipo==='tempo'&&e.user_id===uid&&(e.detalhe||{}).cid===x.id).reduce((s,e)=>s+((e.detalhe||{}).s||60),0);return x;});}
 async function ins(tipo,detalhe){const {data:{session}}=await sb.auth.getSession();const r=await sb.from('trein_eventos').insert({user_id:session.user.id,tipo,tipologia:null,detalhe});if(r.error)alert0(r.error.message);return r;}
 async function prorrogar(uid,x,n){const h=x.ini&&x.resta<=0?Math.ceil((Date.now()-Date.parse(x.ini))/3600e3)+n:(x.horas||72)+n;await ins('colab',{para:uid,id:x.id,nome:x.nome,horas:h});carregar();}
-async function liberar(uid,sim){await ins('liberacao',sim?{para:uid,ate:SAB()}:{para:uid,ate:ONTEM(),enc:true});}
+async function liberar(uid,sim){const cf=ctrFim(uid);if(sim&&cf&&cf>=HOJE()){await ins('liberacao',{para:uid,ate:cf>SAB()?cf:SAB(),contrato:true});return;}await ins('liberacao',sim?{para:uid,ate:SAB()}:{para:uid,ate:ONTEM(),enc:true});}
+/* ===== Contratos mensais ===== */
+const ctrList=uid=>{const C=EV.filter(e=>e.tipo==='contrato'&&(e.detalhe||{}).para===uid),X=new Set(C.filter(e=>e.detalhe.cancelado).map(e=>e.detalhe.ref));return C.filter(e=>!e.detalhe.cancelado&&!X.has(e.criado_em));};
+const ctrFim=uid=>ctrList(uid).reduce((m,e)=>(e.detalhe.fim>(m||''))?e.detalhe.fim:m,null);
+const addDias=(iso,n)=>{const d=new Date(iso+'T12:00:00Z');d.setUTCDate(d.getUTCDate()+n);return d.toISOString().slice(0,10);};
+const brD=iso=>iso?iso.split('-').reverse().join('/'):'—';const brl=v=>'R$ '+Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+function ctrCel(uid){const f=ctrFim(uid);if(!f)return '<span class="note">sem contrato</span>';const dias=Math.round((Date.parse(f+'T23:59:59-04:00')-Date.now())/864e5);
+  const cor=dias<0?'#a33':dias<=7?'#c47d12':'#1f8a4c';return `<span style="color:${cor};font-weight:700">${dias<0?'⛔ venceu':'⏳ '+dias+' dia'+(dias===1?'':'s')}</span><br><span class="note">até ${brD(f)}</span>`;}
+function ctrResumo(){const el=document.getElementById('ctrResumo');if(!el)return;const H=HOJE(),m=H.slice(0,7);let at=0,v7=0,ven=0,rec=0;
+  ALUNOS.forEach(a=>{const f=ctrFim(a.user_id);if(!f)return;if(f>=H){at++;if(f<=addDias(H,7))v7++;}else ven++;});
+  ALUNOS.forEach(a=>ctrList(a.user_id).filter(e=>e.detalhe.tipo!=='bonus'&&String(e.detalhe.pago_em||'').slice(0,7)===m).forEach(e=>rec+=Number(e.detalhe.valor)||0));
+  el.innerHTML=`<div class="kpi"><b>${at}</b><span>💳 contratos ativos</span></div><div class="kpi"><b style="color:#c47d12">${v7}</b><span>vencem em 7 dias</span></div><div class="kpi"><b style="color:#a33">${ven}</b><span>vencidos</span></div><div class="kpi"><b style="color:#1f8a4c">${brl(rec)}</b><span>recebido neste mês</span></div>`;}
+function ctrUI(a){const box=document.getElementById('ctrBox');if(!box)return;const L=ctrList(a.user_id),f=ctrFim(a.user_id),H=HOJE();
+  const ini0=f&&f>=H?addDias(f,1):H,dias=f?Math.round((Date.parse(f+'T23:59:59-04:00')-Date.now())/864e5):null;
+  box.innerHTML=`${f?`<div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;padding:12px 14px;border-radius:10px;border:2px solid ${dias<0?'#a33':dias<=7?'#c47d12':'#1f8a4c'};background:#fff;margin-bottom:10px"><div style="font:700 30px var(--f-display);color:${dias<0?'#a33':dias<=7?'#c47d12':'#1f8a4c'}">${dias<0?'Vencido':dias+' dia'+(dias===1?'':'s')}</div><div>${dias<0?'Venceu em <b>'+brD(f)+'</b>. O acesso da empresa está bloqueado até renovar.':'Contrato ativo até <b>'+brD(f)+'</b>. Os colaboradores usam sem o limite de 72 h.'}</div></div>`:'<p class="note">Esta empresa não tem contrato mensal registrado (segue as regras de semana e 72 h por colaborador).</p>'}
+   <div class="edit" style="flex-wrap:wrap;gap:8px;align-items:flex-end">
+    <label style="font-size:12.5px">Data do pagamento<br><input type="date" id="cPg" value="${H}"></label>
+    <label style="font-size:12.5px">Valor (R$)<br><input id="cVl" value="150,00" style="width:90px"></label>
+    <label style="font-size:12.5px">Início do período<br><input type="date" id="cIni" value="${ini0}"></label>
+    <label style="font-size:12.5px">Forma<br><select id="cFm"><option>PIX</option><option>Dinheiro</option><option>Transferência</option><option>Cartão</option></select></label>
+    <label style="font-size:12.5px;flex:1;min-width:160px">Observação<br><input id="cObs" placeholder="Ex.: comprovante recebido no WhatsApp" style="width:100%"></label></div>
+   <div class="edit"><button type="button" class="pri" id="cPagar">💾 Registrar pagamento · +30 dias</button><button type="button" id="cBonus">🎁 Bônus +30 dias (sem cobrança)</button></div>
+   ${L.length?`<table style="margin-top:8px"><thead><tr><th>Pagamento</th><th>Período</th><th>Valor</th><th>Tipo</th><th>Obs.</th><th></th></tr></thead><tbody>${L.map((e,i)=>{const d=e.detalhe;return `<tr><td>${brD(d.pago_em)}</td><td>${brD(d.ini)} → ${brD(d.fim)}</td><td class="n">${d.tipo==='bonus'?'—':brl(d.valor)}</td><td>${d.tipo==='bonus'?'🎁 bônus':'💳 '+(d.forma||'PIX')}</td><td>${desc(d.obs||'')}</td><td><button type="button" class="no" data-cx="${i}" style="font-size:12px;padding:3px 8px">Cancelar</button></td></tr>`;}).join('')}</tbody></table>`:''}
+   <p class="msg" id="cMsg"></p>`;
+  const go=async bonus=>{const ini=document.getElementById('cIni').value||ini0,fim=addDias(ini,30),val=Number(String(document.getElementById('cVl').value).replace(/\./g,'').replace(',','.'))||0;
+    if(!bonus&&!val){document.getElementById('cMsg').textContent='Coloque o valor pago.';return;}
+    if(bonus&&!confirm('Dar 30 dias de bônus (sem cobrança) para '+(a.nome||a.login)+'?'))return;
+    await ins('contrato',{para:a.user_id,ini,fim,dias:30,valor:bonus?0:val,pago_em:bonus?HOJE():document.getElementById('cPg').value,forma:bonus?'bônus':document.getElementById('cFm').value,tipo:bonus?'bonus':'pago',obs:document.getElementById('cObs').value.trim()});
+    const nf=[fim,ctrFim(a.user_id)||''].sort().pop();if(nf>=HOJE())await ins('liberacao',{para:a.user_id,ate:nf,contrato:true});
+    await carregar();};
+  document.getElementById('cPagar').onclick=()=>go(false);document.getElementById('cBonus').onclick=()=>go(true);
+  box.querySelectorAll('[data-cx]').forEach(b=>b.onclick=async()=>{const e=L[+b.dataset.cx];if(!confirm('Cancelar este lançamento ('+brD(e.detalhe.ini)+' → '+brD(e.detalhe.fim)+')?'))return;
+    await ins('contrato',Object.assign({},e.detalhe,{cancelado:true,ref:e.criado_em}));
+    const rest=ctrList(a.user_id).filter(x=>x!==e).reduce((m,x)=>x.detalhe.fim>(m||'')?x.detalhe.fim:m,null);await ins('liberacao',rest&&rest>=HOJE()?{para:a.user_id,ate:rest,contrato:true}:{para:a.user_id,ate:ONTEM(),enc:true,contrato:true});await carregar();});}
 const sha=async t=>[...new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t)))].map(b=>b.toString(16).padStart(2,'0')).join('');
 const locGet=k=>{try{return JSON.parse(localStorage.getItem(k)||'{}');}catch(e){return {};}},locSet=(k,id,v)=>{try{const o=locGet(k);o[id]=v;localStorage.setItem(k,JSON.stringify(o));}catch(e){}};
 const novoPin=()=>String(Math.floor(1000+Math.random()*9000));
