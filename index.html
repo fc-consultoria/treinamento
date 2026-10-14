@@ -169,7 +169,7 @@ function vigiaPrazo(uid,perfil){setInterval(()=>{if(window.ALUNO_CID&&window.COL
     try{const {data}=await sb.from('trein_eventos').select('detalhe').eq('tipo','chave_app').limit(1);
       const kb=Uint8Array.from(atob(data[0].detalhe.k),c=>c.charCodeAt(0));
       const key=await crypto.subtle.importKey('raw',kb,'AES-GCM',false,['decrypt']);
-      const buf=new Uint8Array(await (await fetch('app.enc?v=1791947580',{cache:'no-cache'})).arrayBuffer());
+      const buf=new Uint8Array(await (await fetch('app.enc?v=1791948237',{cache:'no-cache'})).arrayBuffer());
       const plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:buf.slice(0,12)},key,buf.slice(12));
       const html=await new Response(new Blob([plain]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
       const root=document.getElementById('appRoot');root.innerHTML=html;
@@ -184,6 +184,7 @@ function vigiaPrazo(uid,perfil){setInterval(()=>{if(window.ALUNO_CID&&window.COL
     if(perfil.papel!=='admin'){document.getElementById('ubar').hidden=false;document.getElementById('uname').textContent=perfil.nome||perfil.login;await escolherColab(uid,perfil);vigiaPrazo(uid,perfil);}
     if(perfil.papel==='admin')window.SIS={wv:true,cem:true,dia:true};else{const {data:sr}=await sb.from('trein_eventos').select('detalhe').eq('tipo','sistema').order('criado_em',{ascending:false}).limit(1);const z=((sr||[])[0]||{}).detalhe||{};window.SIS={wv:!!z.wv,cem:!!z.cem,dia:!!z.dia};}
     await loadApp();
+    try{localStorage.setItem('fcTreinUrl',location.href.split('#')[0]);}catch(e){}
     document.getElementById('ubar').hidden=false;
     document.getElementById('uname').textContent=(perfil.nome||perfil.login)+(perfil.papel==='admin'?' · matriz':'');
     sugInit();
@@ -202,7 +203,7 @@ function vigiaPrazo(uid,perfil){setInterval(()=>{if(window.ALUNO_CID&&window.COL
   });
 })();
 </script>
-<script>(function(){const V='1791947580';async function chk(){try{const t=(await (await fetch('version.txt?'+Date.now(),{cache:'no-store'})).text()).trim();
+<script>(function(){const V='1791948237';async function chk(){try{const t=(await (await fetch('version.txt?'+Date.now(),{cache:'no-store'})).text()).trim();
 if(t&&/^\d+$/.test(t)&&t!==V&&!document.getElementById('updBar')){const b=document.createElement('div');b.id='updBar';
 b.style.cssText='position:fixed;left:50%;top:10px;transform:translateX(-50%);z-index:9999;background:#1f6f9a;color:#fff;padding:10px 12px 10px 16px;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.25);font:600 14px system-ui,sans-serif;display:flex;gap:12px;align-items:center;max-width:calc(100% - 24px)';
 b.innerHTML='<span>🔄 Nova versão do treinamento disponível</span><button type="button" style="border:0;border-radius:7px;padding:7px 14px;font:700 14px system-ui,sans-serif;background:#e0972e;color:#1b232a;cursor:pointer">Atualizar</button>';
@@ -270,7 +271,7 @@ window.divInit=async function(uid,perfil){UID=uid;EMP=(perfil&&(perfil.nome||per
     b.onclick=()=>{const L=itens();if(L.length)show(L[0],true,L);};ub.insertBefore(b,document.getElementById('sugBtn'));}
   try{await load();}catch(e){}setTimeout(check,4000);setInterval(check,60000);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')setTimeout(check,1500);});};
 })();
-</script><script src="mapa.js?v=1791947580"></script><script>/* ===== Mapa "FC no Brasil" (tela do aluno) ===== */
+</script><script src="mapa.js?v=1791948237"></script><script>/* ===== Mapa "FC no Brasil" (tela do aluno) ===== */
 (function(){
 window.mapaInit=async function(){try{const r=await sb.from('trein_eventos').select('detalhe').eq('tipo','mapa').order('criado_em',{ascending:false}).limit(1);
   const it=((((r.data||[])[0]||{}).detalhe)||{}).itens||[];const ub=document.getElementById('ubar');if(!it.length||!ub||!window.FCM||document.getElementById('mpBtn'))return;
