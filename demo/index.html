@@ -2898,9 +2898,10 @@ function demo2Init(){
       montarBarra();setTypo('jcr200');
       const tb=document.createElement('div');tb.id='d2Prev';tb.style.cssText='position:fixed;left:12px;bottom:12px;z-index:9600;background:#0f1a22;color:#fff;border-radius:12px;padding:10px 12px;box-shadow:0 10px 30px rgba(0,0,0,.4);font:600 13px system-ui,sans-serif;max-width:calc(100vw - 24px)';
       const bt='border:1px solid #3a5866;background:#16262f;color:#fff;border-radius:7px;padding:6px 9px;font:600 12.5px system-ui;cursor:pointer;margin:3px';
-      tb.innerHTML=`<div style="margin-bottom:4px">👁 <b>Visualização da Matriz</b> · nada é registrado${PROMO?' · 🔥 oferta ligada':''}</div><button style="${bt}" data-p="cv">📨 Convite</button><button style="${bt}" data-p="ct">💳 Contratar</button><button style="${bt}" data-p="op">⭐ Opinião</button><button style="${bt}" data-p="tu">▶ Tutorial</button><button style="${bt}" data-p="fim">⏱ Prazo encerrado</button><button style="${bt}" data-p="x">✕</button>`;
+      tb.innerHTML=`<div style="margin-bottom:4px">👁 <b>Visualização da Matriz</b> · nada é registrado${PROMO?' · 🔥 oferta ligada':''}</div><button style="${bt};background:#1fb3c9;border-color:#1fb3c9;color:#06222a" data-p="volta">← Voltar ao Painel da Matriz</button><button style="${bt}" data-p="cv">📨 Convite</button><button style="${bt}" data-p="ct">💳 Contratar</button><button style="${bt}" data-p="op">⭐ Opinião</button><button style="${bt}" data-p="tu">▶ Tutorial</button><button style="${bt}" data-p="fim">⏱ Prazo encerrado</button><button style="${bt}" data-p="x">✕</button>`;
       document.body.appendChild(tb);
       tb.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{const k=b.dataset.p;
+        if(k==='volta'){try{if(window.opener&&!window.opener.closed){window.opener.focus();window.close();return;}}catch(_){}location.href='../painel.html';return;}
         if(k==='cv'){CVV.clear();convite({id:-1,msg:'Olá! Vi que você testou o Orientativo FC 3D.\n\nClique abaixo para ver a proposta e contratar. A liberação é no mesmo dia.\n\nFernando · FC Consultoria'});}
         else if(k==='ct')contratar('Visualização');else if(k==='op'){const o=document.getElementById('d2Op2');if(o)o.remove();opiniao(true);}
         else if(k==='tu')document.getElementById('m-test').click();
