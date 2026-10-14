@@ -74,6 +74,13 @@ async function gestorOk(uid){
     if(h===g.ph){try{sessionStorage.setItem('treinFC-gestor',h);}catch(_){}gate.hidden=true;res(true);}else document.getElementById('gsMsg').textContent='Senha do gestor não confere.';};
     setTimeout(()=>document.getElementById('gsIn').focus(),50);});}
 /* Acompanhamento do gestor + limite de 4 aparelhos ao mesmo tempo */
+async function gestorBV(emp,ate,nome){try{
+  const [c,v]=await Promise.all([sb.from('trein_eventos').select('tipo,detalhe').in('tipo',['divulga','div_art']).order('criado_em'),sb.from('trein_eventos').select('detalhe').eq('user_id',emp).eq('tipo','div_visto')]);
+  let B=null;const A={};(c.data||[]).forEach(e=>{const d=e.detalhe||{};if(e.tipo==='divulga')B=d.bv||null;else A[d.id]=Object.assign({},A[d.id]||{},d);});
+  if(!B||!B.on||!B.a||!A[B.a]||A[B.a].rm||!A[B.a].img)return;const ref='bv-'+ate,V=(v.data||[]).map(e=>e.detalhe||{}).filter(d=>d.cid==='gestor');
+  if(V.some(d=>d.ref===ref))return;const ren=V.some(d=>String(d.ref||'').startsWith('bv-'));
+  await sb.from('trein_eventos').insert({user_id:emp,tipo:'div_visto',tipologia:null,detalhe:{ref,cid:'gestor',quem:'Gestor',bv:true,ren}});
+  setTimeout(()=>window.fcBoasVindas({t:B.t,x:ren?B.xr:B.x,img:A[B.a].img,ren,empresa:nome,nome:'',gestor:true}),900);}catch(_){}}
 function gestorTrack(emp){let GS=null;try{GS=sessionStorage.getItem('treinFC-gs');}catch(_){}
   if(!GS){GS=Math.random().toString(36).slice(2,10);try{sessionStorage.setItem('treinFC-gs',GS);}catch(_){}}
   const ua=/Mobi|Android|iPhone/i.test(navigator.userAgent)?'celular':'computador';
@@ -101,7 +108,7 @@ gateUI(async({session,perfil})=>{
     const fim=Date.parse(d.ate+'T23:59:59-04:00'),dias=Math.ceil((fim-Date.now())/864e5),dt=d.ate.split('-').reverse().join('/'),cor=dias<0?'#a33':dias<=5?'#c47d12':'#1f8a4c';
     const b=document.createElement('div');b.style.cssText='margin:0 0 14px;padding:12px 16px;border-radius:12px;border:2px solid '+cor+';background:#fff;display:flex;gap:12px;align-items:center;flex-wrap:wrap;font:500 15px system-ui,sans-serif';
     b.innerHTML='<span style="font-size:22px">📅</span><span><b style="color:'+cor+'">'+(dias<0?'Contrato vencido em '+dt:'Contrato ativo até '+dt+' · restam '+dias+' dia'+(dias===1?'':'s'))+'</b>'+(dias<=5?'<br><span style="color:#4b5a63">Para renovar por mais 30 dias: PIX de R$ 150,00 para a chave CNPJ 52.985.682/0001-32 (FC Consultoria) e envie o comprovante para a FC.</span>':'')+'</span>'+(dias<=5?'<a href="https://wa.me/5566999867984?text='+encodeURIComponent('Olá Fernando, quero renovar o acesso do Orientativo FC 3D.')+'" target="_blank" rel="noopener" style="margin-left:auto;background:#1f9d55;color:#fff;text-decoration:none;font-weight:700;padding:9px 14px;border-radius:9px">💬 Renovar</a>':'');
-    const top=document.querySelector('#pg .top');if(top)top.after(b);});
+    const top=document.querySelector('#pg .top');if(top)top.after(b);if(dias>=0&&perfil.papel!=='admin')gestorBV(emp,d.ate,perfil.nome||perfil.login);});
   const [ra,rc,rs]=await Promise.all([sb.from('trein_alunos').select('login,nome').eq('user_id',emp).maybeSingle(),sb.from('trein_eventos').select('detalhe,criado_em').eq('tipo','colab').order('criado_em'),sb.from('trein_eventos').select('detalhe,criado_em').eq('tipo','sistema').order('criado_em')]);
   const EV=[];for(let i=0;;i+=1000){const r=await sb.from('trein_eventos').select('tipo,tipologia,detalhe,criado_em').eq('user_id',emp).order('criado_em').range(i,i+999);if(r.error||!r.data.length)break;EV.push(...r.data);if(r.data.length<1000)break;}
   {const zr=await sb.from('trein_eventos').select('tipo,detalhe,criado_em').eq('tipo','zerar');const zz=(zr.data||[]).filter(e=>(e.detalhe||{}).para===emp);const t=Math.max(0,...zz.map(e=>Date.parse(e.criado_em)));if(t){const keep=EV.filter(e=>ZCFG.has(e.tipo)||Date.parse(e.criado_em)>t);EV.length=0;EV.push(...keep);}}
@@ -162,6 +169,32 @@ gateUI(async({session,perfil})=>{
   document.getElementById('pg').hidden=false;document.title=(EMPV?'Painel da Empresa · ':'Relatório · ')+(E.nome||E.login);
   if(EMPV){document.querySelector('.top .eb').textContent='Painel da Empresa · acompanhamento da equipe';document.getElementById('bPdf').textContent='📄 Baixar relatório em PDF';document.getElementById('ger').parentNode.hidden=true;}
 });
+</script>
+<script id="bvui">/* ===== Boas-vindas FC (tela do cliente) ===== */
+window.fcBoasVindas=function(o){
+  const esc=v=>String(v||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+  const sub=t=>esc(t).replace(/\{empresa\}/g,'<b>'+esc(o.empresa||'sua empresa')+'</b>').replace(/\{nome\}/g,esc(o.nome||'')).replace(/,\s*!/g,'!').replace(/\n/g,'<br>');
+  let d=document.getElementById('bvOv');if(d)d.remove();d=document.createElement('div');d.id='bvOv';
+  d.style.cssText='position:fixed;inset:0;z-index:9500;background:rgba(7,19,28,.78);backdrop-filter:blur(3px);display:flex;padding:14px;overflow:auto;opacity:0;transition:opacity .35s';
+  if(o.ren)o.img=null;const titulo=o.ren?'Obrigado por continuar com a FC!':(o.t||'Seja bem-vindo à parceria!');
+  const bt='font:700 15px system-ui,sans-serif;border-radius:10px;padding:12px 14px;cursor:pointer;text-decoration:none;text-align:center;display:block';
+  d.innerHTML=`<div class="bvm" style="margin:auto;background:#0f1a22;color:#e9edf0;border:1px solid #2b4a58;border-radius:16px;max-width:${o.ren?'520px':'880px'};width:100%;display:grid;grid-template-columns:${o.img?'minmax(0,380px) 1fr':'1fr'};overflow:hidden;box-shadow:0 30px 70px rgba(0,0,0,.55);transform:translateY(14px) scale(.97);transition:transform .45s cubic-bezier(.2,.8,.2,1)">
+   ${o.img?`<div style="background:#07131c;display:flex;align-items:center;justify-content:center"><img src="${o.img}" alt="" style="display:block;width:100%;height:auto;max-height:86vh;object-fit:contain"></div>`:''}
+   <div style="padding:26px 26px 22px;display:flex;flex-direction:column;gap:12px;font:400 15px/1.55 system-ui,sans-serif">
+    ${o.previa?'<div style="align-self:flex-start;background:#e8912d;color:#1b1206;font:700 11px system-ui;padding:3px 8px;border-radius:6px">PRÉVIA · é assim que o cliente vê</div>':''}
+    <div style="font:600 12px ui-monospace,monospace;letter-spacing:.14em;color:#1fb3c9">${o.ren?'RENOVAÇÃO · ORIENTATIVO FC 3D':'ORIENTATIVO FC 3D · NOVA PARCERIA'}</div>
+    <h2 style="margin:0;font:800 28px/1.15 system-ui,sans-serif;color:#fff">${o.ren?'🤝 ':'👋 '}${esc(titulo)}</h2>
+    <p style="margin:0;color:#c9d6dd;font-size:16px">${sub(o.x)}</p>
+    ${o.ren?'':`<div style="display:grid;gap:7px;margin-top:2px">${[['🪟','Gire, abra e desmonte as janelas e portas das linhas Suprema e Gold'],['💻','Orientação em Sistema: como lançar no sistema da sua empresa'],['📊','O gestor acompanha o progresso de cada colaborador']].map(([i,t])=>`<div style="display:flex;gap:10px;align-items:flex-start;background:#16262f;border:1px solid #23404d;border-radius:10px;padding:9px 11px;font-size:14px"><span style="font-size:18px">${i}</span><span>${t}</span></div>`).join('')}</div>`}
+    <div style="margin-top:auto;display:grid;gap:8px;padding-top:6px">
+     <button type="button" id="bvGo" style="${bt};border:0;background:#1fb3c9;color:#06222a">${o.gestor?'📊 Ver o painel da equipe':'🚀 Começar agora'}</button>
+     ${o.gestor?'':`<a href="${o.guia||'guia/'}" target="_blank" rel="noopener" style="${bt};border:1px solid #3a5866;background:#16262f;color:#e9edf0">📘 Abrir o guia do aluno</a>`}
+     <a href="https://wa.me/5566999867984?text=${encodeURIComponent('Olá Fernando, aqui é '+(o.nome||'')+' da '+(o.empresa||'')+'. Recebi as boas-vindas do Orientativo FC 3D!')}" target="_blank" rel="noopener" style="${bt};border:1px solid #1f8a4c;background:transparent;color:#7fe0a5;font-weight:600">💬 Falar com o Fernando</a></div>
+    <div style="font:italic 500 14px system-ui;color:#9fb3be;border-top:1px solid #23404d;padding-top:10px">Fernando · FC Consultoria em Esquadria</div></div></div>`;
+  document.body.appendChild(d);requestAnimationFrame(()=>{d.style.opacity='1';d.querySelector('.bvm').style.transform='none';});
+  if(innerWidth<760){const m=d.querySelector('.bvm');m.style.gridTemplateColumns='1fr';const im=m.querySelector('img');if(im){im.style.maxHeight='42vh';im.style.width='auto';im.style.margin='0 auto';}}
+  const fe=()=>{d.style.opacity='0';setTimeout(()=>d.remove(),300);if(o.onClose)o.onClose();};
+  document.getElementById('bvGo').onclick=fe;d.addEventListener('click',e=>{if(e.target===d)fe();});};
 </script>
 </body>
 </html>

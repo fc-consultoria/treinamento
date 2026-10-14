@@ -92,7 +92,7 @@ async function estadoEmpresa(uid){
   const zt=Math.max(0,...(zr.data||[]).map(r=>Date.parse(r.criado_em)));window.ZERAR_T=zt;
   const C={};(c.data||[]).forEach(r=>{const d=r.detalhe||{};if(d.para!==uid)return;C[d.id]=Object.assign({},C[d.id]||{},d,{alt:r.criado_em});});
   (e.data||[]).filter(r=>Date.parse(r.criado_em)>zt).forEach(r=>{const d=r.detalhe||{},x=C[d.cid];if(!x)return;if(r.tipo==='colab_inicio'){if(!x.ini)x.ini=r.criado_em;}else x.ped=r.criado_em;});
-  const L0=((l.data||[])[0]||{}).detalhe||{},CT=L0.contrato&&L0.ate?Date.parse(L0.ate+'T23:59:59-04:00'):0;window.CONTRATO_FIM=CT>Date.now()?CT:0;
+  const L0=((l.data||[])[0]||{}).detalhe||{},CT=L0.contrato&&L0.ate?Date.parse(L0.ate+'T23:59:59-04:00'):0;window.CONTRATO_FIM=CT>Date.now()?CT:0;window.CONTRATO_ATE=CT>Date.now()?L0.ate:null;
   const lst=Object.values(C).filter(x=>!x.removido).map(x=>{x.fim=window.CONTRATO_FIM?window.CONTRATO_FIM:x.ini?Date.parse(x.ini)+(x.horas||72)*3600e3:null;x.resta=x.fim?x.fim-Date.now():null;
     x.pend=x.ped&&Date.parse(x.ped)>Date.parse(x.alt);return x;});
   const ate=((l.data||[])[0]||{}).detalhe?.ate||null;
@@ -172,7 +172,7 @@ function vigiaPrazo(uid,perfil){setInterval(()=>{if(window.ALUNO_CID&&window.COL
     try{const {data}=await sb.from('trein_eventos').select('detalhe').eq('tipo','chave_app').limit(1);
       const kb=Uint8Array.from(atob(data[0].detalhe.k),c=>c.charCodeAt(0));
       const key=await crypto.subtle.importKey('raw',kb,'AES-GCM',false,['decrypt']);window.__CK=key;
-      const buf=new Uint8Array(await (await fetch('app.enc?v=1791999444',{cache:'no-cache'})).arrayBuffer());
+      const buf=new Uint8Array(await (await fetch('app.enc?v=1792000296',{cache:'no-cache'})).arrayBuffer());
       const plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:buf.slice(0,12)},key,buf.slice(12));
       const html=await new Response(new Blob([plain]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
       const root=document.getElementById('appRoot');root.innerHTML=html;
@@ -206,12 +206,37 @@ function vigiaPrazo(uid,perfil){setInterval(()=>{if(window.ALUNO_CID&&window.COL
   });
 })();
 </script>
-<script>(function(){const V='1791999444';async function chk(){try{const t=(await (await fetch('version.txt?'+Date.now(),{cache:'no-store'})).text()).trim();
+<script>(function(){const V='1792000296';async function chk(){try{const t=(await (await fetch('version.txt?'+Date.now(),{cache:'no-store'})).text()).trim();
 if(t&&/^\d+$/.test(t)&&t!==V&&!document.getElementById('updBar')){const b=document.createElement('div');b.id='updBar';
 b.style.cssText='position:fixed;left:50%;top:10px;transform:translateX(-50%);z-index:9999;background:#1f6f9a;color:#fff;padding:10px 12px 10px 16px;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.25);font:600 14px system-ui,sans-serif;display:flex;gap:12px;align-items:center;max-width:calc(100% - 24px)';
 b.innerHTML='<span>🔄 Nova versão do orientativo disponível</span><button type="button" style="border:0;border-radius:7px;padding:7px 14px;font:700 14px system-ui,sans-serif;background:#e0972e;color:#1b232a;cursor:pointer">Atualizar</button>';
 b.querySelector('button').onclick=()=>{try{if(window.TRKFLUSH)TRKFLUSH();}catch(e){}setTimeout(()=>location.reload(),400);};document.body.appendChild(b);}}catch(e){}}
-setInterval(chk,180000);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')chk();});})();</script><script>/* ===== Divulgação e Novidades FC (tela do aluno) ===== */
+setInterval(chk,180000);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')chk();});})();</script><script>/* ===== Boas-vindas FC (tela do cliente) ===== */
+window.fcBoasVindas=function(o){
+  const esc=v=>String(v||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+  const sub=t=>esc(t).replace(/\{empresa\}/g,'<b>'+esc(o.empresa||'sua empresa')+'</b>').replace(/\{nome\}/g,esc(o.nome||'')).replace(/,\s*!/g,'!').replace(/\n/g,'<br>');
+  let d=document.getElementById('bvOv');if(d)d.remove();d=document.createElement('div');d.id='bvOv';
+  d.style.cssText='position:fixed;inset:0;z-index:9500;background:rgba(7,19,28,.78);backdrop-filter:blur(3px);display:flex;padding:14px;overflow:auto;opacity:0;transition:opacity .35s';
+  if(o.ren)o.img=null;const titulo=o.ren?'Obrigado por continuar com a FC!':(o.t||'Seja bem-vindo à parceria!');
+  const bt='font:700 15px system-ui,sans-serif;border-radius:10px;padding:12px 14px;cursor:pointer;text-decoration:none;text-align:center;display:block';
+  d.innerHTML=`<div class="bvm" style="margin:auto;background:#0f1a22;color:#e9edf0;border:1px solid #2b4a58;border-radius:16px;max-width:${o.ren?'520px':'880px'};width:100%;display:grid;grid-template-columns:${o.img?'minmax(0,380px) 1fr':'1fr'};overflow:hidden;box-shadow:0 30px 70px rgba(0,0,0,.55);transform:translateY(14px) scale(.97);transition:transform .45s cubic-bezier(.2,.8,.2,1)">
+   ${o.img?`<div style="background:#07131c;display:flex;align-items:center;justify-content:center"><img src="${o.img}" alt="" style="display:block;width:100%;height:auto;max-height:86vh;object-fit:contain"></div>`:''}
+   <div style="padding:26px 26px 22px;display:flex;flex-direction:column;gap:12px;font:400 15px/1.55 system-ui,sans-serif">
+    ${o.previa?'<div style="align-self:flex-start;background:#e8912d;color:#1b1206;font:700 11px system-ui;padding:3px 8px;border-radius:6px">PRÉVIA · é assim que o cliente vê</div>':''}
+    <div style="font:600 12px ui-monospace,monospace;letter-spacing:.14em;color:#1fb3c9">${o.ren?'RENOVAÇÃO · ORIENTATIVO FC 3D':'ORIENTATIVO FC 3D · NOVA PARCERIA'}</div>
+    <h2 style="margin:0;font:800 28px/1.15 system-ui,sans-serif;color:#fff">${o.ren?'🤝 ':'👋 '}${esc(titulo)}</h2>
+    <p style="margin:0;color:#c9d6dd;font-size:16px">${sub(o.x)}</p>
+    ${o.ren?'':`<div style="display:grid;gap:7px;margin-top:2px">${[['🪟','Gire, abra e desmonte as janelas e portas das linhas Suprema e Gold'],['💻','Orientação em Sistema: como lançar no sistema da sua empresa'],['📊','O gestor acompanha o progresso de cada colaborador']].map(([i,t])=>`<div style="display:flex;gap:10px;align-items:flex-start;background:#16262f;border:1px solid #23404d;border-radius:10px;padding:9px 11px;font-size:14px"><span style="font-size:18px">${i}</span><span>${t}</span></div>`).join('')}</div>`}
+    <div style="margin-top:auto;display:grid;gap:8px;padding-top:6px">
+     <button type="button" id="bvGo" style="${bt};border:0;background:#1fb3c9;color:#06222a">${o.gestor?'📊 Ver o painel da equipe':'🚀 Começar agora'}</button>
+     ${o.gestor?'':`<a href="${o.guia||'guia/'}" target="_blank" rel="noopener" style="${bt};border:1px solid #3a5866;background:#16262f;color:#e9edf0">📘 Abrir o guia do aluno</a>`}
+     <a href="https://wa.me/5566999867984?text=${encodeURIComponent('Olá Fernando, aqui é '+(o.nome||'')+' da '+(o.empresa||'')+'. Recebi as boas-vindas do Orientativo FC 3D!')}" target="_blank" rel="noopener" style="${bt};border:1px solid #1f8a4c;background:transparent;color:#7fe0a5;font-weight:600">💬 Falar com o Fernando</a></div>
+    <div style="font:italic 500 14px system-ui;color:#9fb3be;border-top:1px solid #23404d;padding-top:10px">Fernando · FC Consultoria em Esquadria</div></div></div>`;
+  document.body.appendChild(d);requestAnimationFrame(()=>{d.style.opacity='1';d.querySelector('.bvm').style.transform='none';});
+  if(innerWidth<760){const m=d.querySelector('.bvm');m.style.gridTemplateColumns='1fr';const im=m.querySelector('img');if(im){im.style.maxHeight='42vh';im.style.width='auto';im.style.margin='0 auto';}}
+  const fe=()=>{d.style.opacity='0';setTimeout(()=>d.remove(),300);if(o.onClose)o.onClose();};
+  document.getElementById('bvGo').onclick=fe;d.addEventListener('click',e=>{if(e.target===d)fe();});};
+</script><script>/* ===== Divulgação e Novidades FC (tela do aluno) ===== */
 (function(){
 const PHONE='5566999867984';let CFG=null,ART={},NOV={},VISTO=new Set(),LOADED=0,OPEN=false,GAL=[],cur=null,tmr=null,held=false,t0=0,UID=null,EMP='';
 const css=`#dvOv{position:fixed;inset:0;z-index:9000;background:rgba(10,16,22,.66);backdrop-filter:blur(2px);display:grid;place-items:center;padding:12px;opacity:0;transition:opacity .3s}
@@ -228,7 +253,7 @@ const st=document.createElement('style');st.textContent=css;document.head.append
 const esc=v=>String(v||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
 const hoje=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
 async function load(){const r=await sb.from('trein_eventos').select('tipo,detalhe,criado_em').in('tipo',['divulga','div_art','novidade']).order('criado_em');
-  CFG=null;ART={};NOV={};(r.data||[]).forEach(e=>{const d=e.detalhe||{};if(e.tipo==='divulga')CFG=d;else if(e.tipo==='div_art')ART[d.id]=d;else NOV[d.id]=Object.assign({},NOV[d.id]||{},d);});
+  CFG=null;ART={};NOV={};(r.data||[]).forEach(e=>{const d=e.detalhe||{};if(e.tipo==='divulga')CFG=d;else if(e.tipo==='div_art')ART[d.id]=Object.assign({},ART[d.id]||{},d);else NOV[d.id]=Object.assign({},NOV[d.id]||{},d);});
   const v=await sb.from('trein_eventos').select('detalhe').eq('user_id',UID).eq('tipo','div_visto');VISTO=new Set((v.data||[]).map(e=>(e.detalhe||{}).cid+'|'+(e.detalhe||{}).ref));LOADED=Date.now();}
 const paraOk=p=>!p||p==='todas'||(Array.isArray(p)&&p.includes(UID));
 function itens(){const L=[],cid=window.ALUNO_CID;
@@ -242,7 +267,13 @@ function ocupado(){try{if(typeof S!=='undefined'&&S.mode==='test'&&typeof Q!=='u
 async function check(){if(!UID||!window.ALUNO_CID||OPEN||document.visibilityState!=='visible')return;
   try{if(Date.now()-LOADED>10*60e3)await load();}catch(e){return;}
   const L=itens();btnUI(L);if(ocupado())return;
+  if(boasVindas())return;
   const x=L.find(y=>y.nov&&!y.visto)||L.find(y=>y.atual&&!y.visto);if(x)show(x,false,L);}
+function boasVindas(){const B=CFG&&CFG.bv,ate=window.CONTRATO_ATE,cid=window.ALUNO_CID;if(!B||!B.on||!ate||!cid||!window.CONTRATO_FIM)return false;
+  const A=B.a&&ART[B.a];if(!A||A.rm||!A.img)return false;const ref='bv-'+ate;if(VISTO.has(cid+'|'+ref))return false;
+  const ren=[...VISTO].some(k=>k.startsWith(cid+'|bv-'));VISTO.add(cid+'|'+ref);OPEN=true;
+  sb.from('trein_eventos').insert({user_id:UID,tipo:'div_visto',tipologia:null,detalhe:{ref,cid,quem:window.ALUNO_NOME||null,bv:true,ren}}).then(()=>{});
+  window.fcBoasVindas({t:B.t,x:ren?B.xr:B.x,img:A.img,ren,empresa:EMP,nome:window.ALUNO_NOME||'',onClose:()=>{OPEN=false;}});return true;}
 function btnUI(L){const b=document.getElementById('dvBtn');if(!b)return;const n=(L||itens()).length;b.hidden=!n;b.textContent=n>1?`📢 Divulgação (${n})`:'📢 Divulgação';}
 function show(x,rever,L){cur=x;OPEN=true;held=false;GAL=(L||itens());if(!GAL.some(y=>y.id===x.id))GAL.unshift(x);
   let o=document.getElementById('dvOv');if(o)o.remove();o=document.createElement('div');o.id='dvOv';o.setAttribute('role','dialog');o.setAttribute('aria-label','Divulgação FC');
@@ -295,7 +326,7 @@ function abrir(){let o=document.getElementById('catOv');if(o)o.remove();o=docume
   catch(e){b.textContent='Tente de novo';}setTimeout(()=>{b.disabled=false;b.textContent=t;},4000);});}
 window.catInit=function(){const ub=document.getElementById('ubar');if(!ub||document.getElementById('catBtn'))return;const b=document.createElement('button');b.type='button';b.id='catBtn';b.textContent='📘 Catálogos';b.title='Catálogos técnicos Suprema e Gold (fonte do orientativo)';b.onclick=abrir;ub.insertBefore(b,document.getElementById('sugBtn'));};
 })();
-</script><script src="mapa.js?v=1791999444"></script><script>/* ===== Mapa "FC no Brasil" (tela do aluno) ===== */
+</script><script src="mapa.js?v=1792000296"></script><script>/* ===== Mapa "FC no Brasil" (tela do aluno) ===== */
 (function(){
 window.mapaInit=async function(){try{const r=await sb.from('trein_eventos').select('detalhe').eq('tipo','mapa').order('criado_em',{ascending:false}).limit(1);
   const dd=(((r.data||[])[0]||{}).detalhe)||{};if(dd.pub===false)return;const it=dd.itens||[];const ub=document.getElementById('ubar');if(!it.length||!ub||!window.FCM||document.getElementById('mpBtn'))return;

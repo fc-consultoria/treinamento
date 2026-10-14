@@ -47,6 +47,11 @@ main{max-width:1280px;margin:0 auto;padding:0 24px 40px;display:flex;flex-direct
 .dvf{padding:6px;display:flex;flex-direction:column;gap:5px}.dvf input{font:inherit;font-size:12.5px;border:1px solid var(--line);border-radius:6px;padding:4px 6px;width:100%}
 .dvc{display:flex;gap:3px}.dvc button{flex:1;padding:3px 0;font-size:12.5px}.dvm{font:500 10.5px var(--f-mono);color:var(--muted)}
 .nvw{display:grid;grid-template-columns:170px 1fr;gap:12px;margin-top:8px}
+.glg{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:8px}.glc{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#fff;display:flex;flex-direction:column}.glc img{width:100%;aspect-ratio:1;object-fit:cover;display:block;cursor:pointer;background:#e9eef1}.glc input{border:0;border-top:1px solid var(--line);padding:6px 8px;font:500 13px system-ui;min-width:0}.glc .glb{display:flex;gap:4px;padding:4px 6px 6px}.glc .glb button{flex:1;padding:4px;font-size:12.5px}.glc small{padding:0 8px 6px;color:var(--muted);font-size:11.5px}
+.gln{border:2px dashed #b9c4cc;border-radius:10px;display:grid;place-items:center;min-height:150px;cursor:pointer;color:var(--muted);font-size:13px;text-align:center;background:#fff}.gln:hover{border-color:var(--accent);color:var(--accent)}
+.bvw{display:grid;grid-template-columns:220px 1fr;gap:14px;align-items:start}.bvi{border:2px dashed #b9c4cc;border-radius:10px;aspect-ratio:4/5;display:grid;place-items:center;cursor:pointer;color:var(--muted);background:#f8fafb center/cover no-repeat;font-size:13px;text-align:center}
+.bvf{display:flex;flex-direction:column;gap:8px}.bvf label{font-size:12.5px}.bvf input,.bvf textarea{width:100%;box-sizing:border-box}
+@media(max-width:700px){.bvw{grid-template-columns:1fr}.bvi{max-width:260px}}
 .nvi{border:2px dashed #b9c4cc;border-radius:10px;min-height:190px;display:grid;place-items:center;cursor:pointer;color:var(--muted);background:#f8fafb center/cover no-repeat;font-size:13px}
 .nvf{display:flex;flex-direction:column;gap:7px}.nvf label{display:flex;flex-direction:column;gap:3px;font-size:12.5px;color:var(--muted)}
 .nvf input,.nvf textarea,.nvf select{font:inherit;font-size:14px;color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:6px 8px}.nv3{display:grid;grid-template-columns:1fr 1fr;gap:8px}
@@ -153,12 +158,18 @@ tr.mfin td{background:#eef5fc}
    <p class="note">◀ ▶ mudam a ordem · 👁 prévia · ⏸ pausa só aquela arte · 🗑 tira a arte da faixa.</p>
    <h3 class="dvt" style="margin-top:18px">B · Novidade avulsa</h3>
    <p class="note">Produto novo, dica ou aviso. Passa na frente da sequência e aparece na próxima entrada de cada aluno, até a data final.</p>
-   <div class="nvw"><label class="nvi" id="nvImg"><span>＋ Foto da novidade</span><input type="file" accept="image/*" hidden></label>
+   <div class="nvw"><div class="nvi" id="nvImg" role="button" tabindex="0"><span>＋ Foto da novidade<br><small>escolher da galeria ou enviar</small></span></div>
     <div class="nvf"><div class="nv3"><label>Tipo<select id="nvK"><option>PRODUTO</option><option>DICA</option><option>AVISO</option></select></label><label>Até<input type="date" id="nvAte"></label></div>
      <label>Título<input type="text" id="nvT" placeholder="Ex.: SGT Proglaze 2.0 · fita dupla face para pele de vidro"></label>
      <label>Texto curto (opcional)<textarea id="nvX" rows="2"></textarea></label>
      <div><button type="button" class="pri" id="nvPub">Publicar agora</button> <span class="msg" id="nvMsg"></span></div></div></div>
    <ul class="nvl" id="nvList"></ul>
+   <h3 class="dvt" style="margin-top:22px">C · Boas-vindas ao cliente</h3>
+   <p class="note">Aparece uma vez para cada colaborador e para o gestor, na primeira entrada depois que você registra o contrato. Na renovação aparece a mensagem de renovação. Use {empresa} e {nome} no texto.</p>
+   <div id="bvBox"></div>
+   <h3 class="dvt" style="margin-top:22px">D · 🖼 Minhas artes <span class="note" id="glN" style="font-weight:500;text-transform:none;letter-spacing:0"></span></h3>
+   <p class="note">Todas as artes que você enviou ficam guardadas aqui. Na sequência, na novidade e nas boas-vindas é só escolher da galeria, sem enviar de novo.</p>
+   <div class="glg" id="glGrid"></div>
   </div></section>
 <section class="card" id="demoCard" data-tab="demo"><h2 style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">🧪 Demonstrativos · links de teste<span style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap"><button type="button" id="pvTog" style="font:600 14px var(--f-display);text-transform:none;letter-spacing:0;background:#1f6f9a;color:#fff;border:0;padding:8px 14px;border-radius:9px;cursor:pointer">👁 Ver como o cliente vê</button><a href="demo/?previa=1" target="_blank" rel="noopener" title="Abrir em outra aba" style="font:600 14px var(--f-display);text-transform:none;letter-spacing:0;border:1px solid #1f6f9a;color:#1f6f9a;text-decoration:none;padding:7px 12px;border-radius:9px">↗ Outra aba</a></span></h2><div style="padding:12px 16px 16px">
   <div id="pvBox" hidden style="margin:0 0 16px;border:1px solid #cfd9e0;border-radius:12px;overflow:hidden;background:#0f1a22">
@@ -394,7 +405,7 @@ function ctrResumo(){const el=document.getElementById('ctrResumo');if(!el)return
   el.innerHTML=`<div class="kpi"><b>${at}</b><span>💳 contratos ativos</span></div><div class="kpi"><b style="color:#c47d12">${v7}</b><span>vencem em 7 dias</span></div><div class="kpi"><b style="color:#a33">${ven}</b><span>vencidos</span></div><div class="kpi"><b style="color:#1f8a4c">${brl(rec)}</b><span>recebido neste mês</span></div>`;}
 function ctrUI(a){const box=document.getElementById('ctrBox');if(!box)return;const L=ctrList(a.user_id),f=ctrFim(a.user_id),H=HOJE();
   const ini0=f&&f>=H?addDias(f,1):H,dias=f?Math.round((Date.parse(f+'T23:59:59-04:00')-Date.now())/864e5):null;
-  box.innerHTML=`${f?`<div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;padding:12px 14px;border-radius:10px;border:2px solid ${dias<0?'#a33':dias<=7?'#c47d12':'#1f8a4c'};background:#fff;margin-bottom:10px"><div style="font:700 30px var(--f-display);color:${dias<0?'#a33':dias<=7?'#c47d12':'#1f8a4c'}">${dias<0?'Vencido':dias+' dia'+(dias===1?'':'s')}</div><div>${dias<0?'Venceu em <b>'+brD(f)+'</b>. O acesso da empresa está bloqueado até renovar.':'Contrato ativo até <b>'+brD(f)+'</b>. Os colaboradores usam de domingo a domingo, sem o limite de 72 h.'}</div></div>`:'<p class="note">Esta empresa não tem contrato mensal registrado (segue as regras de semana e 72 h por colaborador).</p>'}
+  box.innerHTML=`${f?`<div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;padding:12px 14px;border-radius:10px;border:2px solid ${dias<0?'#a33':dias<=7?'#c47d12':'#1f8a4c'};background:#fff;margin-bottom:10px"><div style="font:700 30px var(--f-display);color:${dias<0?'#a33':dias<=7?'#c47d12':'#1f8a4c'}">${dias<0?'Vencido':dias+' dia'+(dias===1?'':'s')}</div><div>${dias<0?'Venceu em <b>'+brD(f)+'</b>. O acesso da empresa está bloqueado até renovar.':'Contrato ativo até <b>'+brD(f)+'</b>. Os colaboradores usam de domingo a domingo, sem o limite de 72 h.'}${(()=>{const V=new Set(EV.filter(e=>e.user_id===a.user_id&&e.tipo==='div_visto'&&(e.detalhe||{}).ref==='bv-'+f).map(e=>(e.detalhe||{}).cid));const CM={};EV.filter(e=>e.tipo==='colab'&&(e.detalhe||{}).para===a.user_id).forEach(e=>{CM[e.detalhe.id]=Object.assign({},CM[e.detalhe.id]||{},e.detalhe);});const tot=Object.values(CM).filter(c=>!c.removido).length;return dias<0?'':`<br><span class="note">👋 Boas-vindas vista por <b>${[...V].filter(c=>c!=='gestor').length} de ${tot}</b> colaboradores${V.has('gestor')?' · gestor viu':''}</span>`;})()}</div></div>`:'<p class="note">Esta empresa não tem contrato mensal registrado (segue as regras de semana e 72 h por colaborador).</p>'}
    <div class="edit" style="flex-wrap:wrap;gap:8px;align-items:flex-end">
     <label style="font-size:12.5px">Data do pagamento<br><input type="date" id="cPg" value="${H}"></label>
     <label style="font-size:12.5px">Valor (R$)<br><input id="cVl" value="${promoAtiva()?String(promoAtiva().por).replace('.',',')+',00':'150,00'}" style="width:90px"></label>
@@ -422,7 +433,11 @@ async function setPin(uid,x,pin){await ins('colab',{para:uid,id:x.id,ph:await sh
 const stTxt=x=>x.resta==null?'ainda não começou':x.resta<=0?'prazo encerrado':'restam '+fmtR(x.resta);
 let VAG={};
 function colabUI(a){const L=colabs(a.user_id),esc=v=>String(v||'').replace(/</g,'&lt;');
-  if(!L.length&&!VAG[a.user_id]&&!colabs(a.user_id,true).length){VAG[a.user_id]=1;(async()=>{for(let n=1;n<=6;n++){const id=Math.random().toString(36).slice(2,9),pin=novoPin();
+  if(!L.length&&!VAG[a.user_id]&&!colabs(a.user_id,true).length){VAG[a.user_id]=1;(async()=>{
+      /* confere no banco (outra aba ou aparelho pode já ter criado) */
+      const chk=await sb.from('trein_eventos').select('detalhe').eq('tipo','colab').order('criado_em',{ascending:false}).limit(2000);
+      if(chk.error||(chk.data||[]).some(r=>(r.detalhe||{}).para===a.user_id)){carregar();return;}
+      for(let n=1;n<=6;n++){const id=Math.random().toString(36).slice(2,9),pin=novoPin();
       await ins('colab',{para:a.user_id,id,nome:'Colaborador '+n,horas:72,ph:await sha(id+':'+pin)});locSet('treinFC-pins',id,pin);}carregar();})();}
   document.getElementById('cColN').textContent=`${L.length} de 6 · 72 h corridas a partir do 1º acesso`;
   document.getElementById('cCol').innerHTML=L.map((x,i)=>`<li><span><input class="cn" data-i="${i}" value="${esc(x.nome).replace(/"/g,'&quot;')}" title="Edite o nome e clique em Salvar colaboradores" style="width:200px;font:600 14px var(--f-display);padding:5px 8px;border:1px solid var(--line);border-radius:6px"> <span class="note">· ${stTxt(x)}${x.pend?' · <b style="color:var(--bad)">pediu mais tempo</b>':''} · estudou ${fmtH(x.seg)}${x.horas&&x.horas!==72?' · total '+x.horas+' h':''}</span></span><span class="bt"><button type="button" data-i="${i}" data-e="1">✏️ Editar</button><span class="note" style="font-family:var(--f-mono)">${x.ph?'código '+(locGet('treinFC-pins')[x.id]||'definido'):'<b style="color:var(--bad)">sem código</b>'}</span><button type="button" data-i="${i}" data-p="1">${x.ph?'Novo código':'Gerar código'}</button><button type="button" data-i="${i}" data-n="24">+24 h</button><button type="button" data-i="${i}" data-n="72">+72 h</button><button type="button" class="no" data-i="${i}" data-x="1">Remover</button></span></li>`).join('')||'<li class="note">Nenhum colaborador cadastrado. Digite o nome abaixo.</li>';
@@ -501,7 +516,7 @@ setInterval(verAvisos,30000);
 let DCFG=null,DART={},DNOV={};const DMAX=24,PHONE='5566999867984';
 const desc=v=>String(v||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
 async function divCarregar(){const r=await sb.from('trein_eventos').select('tipo,detalhe,criado_em').in('tipo',['divulga','div_art','novidade']).order('criado_em');
-  DCFG=null;DART={};DNOV={};(r.data||[]).forEach(e=>{const d=e.detalhe||{};if(e.tipo==='divulga')DCFG=d;else if(e.tipo==='div_art')DART[d.id]=d;else DNOV[d.id]=Object.assign({},DNOV[d.id]||{},d,{criado:DNOV[d.id]?DNOV[d.id].criado:e.criado_em});});
+  DCFG=null;DART={};DNOV={};(r.data||[]).forEach(e=>{const d=e.detalhe||{};if(e.tipo==='divulga')DCFG=d;else if(e.tipo==='div_art')DART[d.id]=Object.assign({},DART[d.id]||{},d,{criado:(DART[d.id]||{}).criado||e.criado_em});else DNOV[d.id]=Object.assign({},DNOV[d.id]||{},d,{criado:DNOV[d.id]?DNOV[d.id].criado:e.criado_em});});
   if(!DCFG)DCFG={on:true,iv:12,du:6,para:'todas',seq:[]};while(DCFG.seq.length<DMAX)DCFG.seq.push(null);divRender();}
 let DSV=null;function divSalvar(now){clearTimeout(DSV);const go=async()=>{await ins('divulga',JSON.parse(JSON.stringify(DCFG)));document.getElementById('dvMsg').textContent='✔ Salvo · vale para a próxima entrada dos alunos';setTimeout(()=>{const m=document.getElementById('dvMsg');if(m)m.textContent='';},4000);};if(now)go();else DSV=setTimeout(go,900);}
 async function divComp(file){const url=URL.createObjectURL(file),im=new Image();await new Promise(r=>{im.onload=r;im.src=url;});const k=Math.min(1,1080/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(url);return c.toDataURL('image/jpeg',.8);}
@@ -517,12 +532,11 @@ function divRender(){const C=DCFG,n=Math.min(DMAX,Math.ceil(72/C.iv)),el=documen
   pl.querySelectorAll('input').forEach(i=>i.onchange=()=>{C.para=[...pl.querySelectorAll('input:checked')].map(x=>x.value);divSalvar(true);});
   const usados=C.seq.slice(0,n).filter(x=>x&&DART[x.a]).length;document.getElementById('dvN').textContent=`${usados} de ${n} faixas com arte`;
   el.innerHTML=C.seq.slice(0,n).map((x,i)=>{const hd=`<div class="dvh"><span>${i*C.iv}h – ${(i+1)*C.iv}h</span><b>${i+1}</b></div>`;const a=x&&DART[x.a];
-    if(!a)return `<div class="dvs">${hd}<label class="dva">＋ Adicionar foto<small>vazia · não aparece</small><input type="file" accept="image/*" data-up="${i}" hidden></label></div>`;
+    if(!a)return `<div class="dvs">${hd}<div class="dva" role="button" tabindex="0" data-gp="${i}">＋ Adicionar foto<small>vazia · não aparece</small></div></div>`;
     return `<div class="dvs${x.on?'':' off'}">${hd}<div class="dvi"><img src="${a.img}" alt=""><span>${x.on?'● ativa':'⏸ pausada'}</span></div><div class="dvf"><input type="text" value="${desc(x.t)}" data-t="${i}" aria-label="Título da arte ${i+1}">
       <div class="dvc"><button type="button" data-mv="${i}" data-d="-1" title="Antes">◀</button><button type="button" data-pv="${i}" title="Prévia">👁</button><button type="button" data-ps="${i}" title="${x.on?'Pausar':'Ativar'}">${x.on?'⏸':'▶'}</button><button type="button" data-rm="${i}" title="Remover">🗑</button><button type="button" data-mv="${i}" data-d="1" title="Depois">▶</button></div>
       <span class="dvm">vista ${divCnt(x.a,'div_visto')} · interesse ${divCnt(x.a,'interesse')}</span></div></div>`;}).join('');
-  el.querySelectorAll('[data-up]').forEach(inp=>inp.onchange=async()=>{const f=inp.files[0];if(!f)return;const i=+inp.dataset.up;inp.parentNode.textContent='Enviando…';const id=divId(),img=await divComp(f);
-    const r=await ins('div_art',{id,img});if(r.error)return divCarregar();DART[id]={id,img};C.seq[i]={a:id,t:f.name.replace(/\.[^.]+$/,''),on:true};divSalvar(true);divRender();});
+  el.querySelectorAll('[data-gp]').forEach(b=>b.onclick=()=>galEscolher(a=>{C.seq[+b.dataset.gp]={a:a.id,t:a.nome||'',on:true};divSalvar(true);divRender();}));
   el.querySelectorAll('[data-t]').forEach(e=>e.oninput=()=>{C.seq[+e.dataset.t].t=e.value;divSalvar();});
   el.querySelectorAll('[data-mv]').forEach(e=>e.onclick=()=>{const i=+e.dataset.mv,j=i+ +e.dataset.d;if(j<0||j>=n)return;[C.seq[i],C.seq[j]]=[C.seq[j],C.seq[i]];divSalvar(true);divRender();});
   el.querySelectorAll('[data-ps]').forEach(e=>e.onclick=()=>{const x=C.seq[+e.dataset.ps];x.on=!x.on;divSalvar(true);divRender();});
@@ -533,7 +547,48 @@ function divRender(){const C=DCFG,n=Math.min(DMAX,Math.ceil(72/C.iv)),el=documen
   document.getElementById('nvList').innerHTML=NV.length?NV.map(x=>`<li><img src="${x.img}" alt="" data-npv="${x.id}"><div><b>${desc(x.k)} · ${desc(x.t)}</b><br><span class="note">${x.ate>=hoje?'ativa até '+x.ate.split('-').reverse().join('/'):'encerrada em '+x.ate.split('-').reverse().join('/')} · vista ${divCnt(x.id,'div_visto')} · interesse ${divCnt(x.id,'interesse')}</span></div><button type="button" class="no" data-nrm="${x.id}">Excluir</button></li>`).join(''):'<li class="note">Nenhuma novidade publicada.</li>';
   document.querySelectorAll('[data-nrm]').forEach(b=>b.onclick=async()=>{if(!confirm('Excluir esta novidade? Ela some para os alunos.'))return;b.disabled=true;const x=DNOV[b.dataset.nrm];await ins('novidade',{id:x.id,removido:true});divCarregar();});
   document.querySelectorAll('[data-npv]').forEach(b=>b.onclick=()=>{const x=DNOV[b.dataset.npv];divPrev(x.img,x.t);});
+  bvUI();galUI();
   intUI();}
+/* ===== Galeria (Minhas artes) e Boas-vindas ===== */
+const GMAX=40,BVSUG='bv/boas-vindas-fc.jpg';
+const galLista=()=>Object.values(DART).filter(a=>a.img&&!a.rm).sort((a,b)=>(a.criado||'')<(b.criado||'')?1:-1);
+const galUsos=id=>{const u=[];(DCFG&&DCFG.seq||[]).forEach((x,i)=>{if(x&&x.a===id)u.push('faixa '+(i+1));});if(DCFG&&DCFG.bv&&DCFG.bv.a===id)u.push('boas-vindas');return u;};
+async function galNova(f,nome){if(galLista().length>=GMAX){alert('A galeria chegou a '+GMAX+' artes. Apague alguma que não usa mais.');return null;}
+  const id=divId(),img=await divComp(f),n=nome||(f.name||'Arte').replace(/\.[^.]+$/,'');const r=await ins('div_art',{id,img,nome:n});if(r&&r.error){alert('Não consegui salvar a arte. Tente de novo.');return null;}
+  DART[id]={id,img,nome:n,criado:new Date().toISOString()};return DART[id];}
+function galEscolher(cb){let o=document.getElementById('glOv');if(o)o.remove();o=document.createElement('div');o.id='glOv';o.style.cssText='position:fixed;inset:0;z-index:400;background:rgba(10,16,22,.6);display:grid;place-items:center;padding:16px';
+  const L=galLista();o.innerHTML=`<div style="background:#fff;border-radius:14px;max-width:820px;width:100%;max-height:88vh;overflow:auto;padding:18px;box-shadow:0 20px 50px rgba(0,0,0,.4)"><div style="display:flex;align-items:center;gap:10px;margin-bottom:6px"><h3 style="margin:0">🖼 Escolher arte</h3><button type="button" id="glX" style="margin-left:auto">✕ Fechar</button></div>
+   <div class="glg"><label class="gln">＋ Enviar nova do computador<br><small>fica salva na galeria</small><input type="file" accept="image/*" hidden id="glUp"></label>${L.map(a=>`<div class="glc"><img src="${a.img}" alt="" data-gs="${a.id}" title="Usar esta arte"><small style="padding-top:6px">${desc(a.nome||'Sem nome')}</small></div>`).join('')}</div></div>`;
+  document.body.appendChild(o);const fe=()=>o.remove();document.getElementById('glX').onclick=fe;o.addEventListener('click',e=>{if(e.target===o)fe();});
+  o.querySelectorAll('[data-gs]').forEach(i=>i.onclick=()=>{fe();cb(DART[i.dataset.gs]);});
+  document.getElementById('glUp').onchange=async e=>{const f=e.target.files[0];if(!f)return;e.target.parentNode.firstChild.textContent='Enviando…';const a=await galNova(f);fe();if(a){cb(a);galUI();}};}
+function galUI(){const el=document.getElementById('glGrid');if(!el)return;const L=galLista();document.getElementById('glN').textContent=`· ${L.length} de ${GMAX}`;
+  el.innerHTML=`<label class="gln">＋ Enviar nova arte<input type="file" accept="image/*" hidden id="glUp2"></label>`+L.map(a=>{const u=galUsos(a.id);return `<div class="glc"><img src="${a.img}" alt="" data-gv="${a.id}" title="Ver"><input value="${desc(a.nome||'')}" placeholder="Nome da arte" data-gn="${a.id}"><small>${u.length?'em uso: '+u.join(', '):'guardada'}</small><div class="glb"><button type="button" data-gd="${a.id}" title="Baixar">⬇</button><button type="button" class="no" data-gr="${a.id}" title="Apagar">🗑</button></div></div>`;}).join('');
+  document.getElementById('glUp2').onchange=async e=>{const f=e.target.files[0];if(!f)return;e.target.parentNode.firstChild.textContent='Enviando…';await galNova(f);galUI();};
+  el.querySelectorAll('[data-gv]').forEach(i=>i.onclick=()=>divPrev(DART[i.dataset.gv].img,DART[i.dataset.gv].nome||''));
+  let tn={};el.querySelectorAll('[data-gn]').forEach(i=>i.oninput=()=>{const id=i.dataset.gn;DART[id].nome=i.value;clearTimeout(tn[id]);tn[id]=setTimeout(()=>ins('div_art',{id,nome:i.value.trim()}),900);});
+  el.querySelectorAll('[data-gd]').forEach(b=>b.onclick=()=>{const a=DART[b.dataset.gd],l=document.createElement('a');l.href=a.img;l.download=(a.nome||'arte-fc')+'.jpg';document.body.appendChild(l);l.click();l.remove();});
+  el.querySelectorAll('[data-gr]').forEach(b=>b.onclick=async()=>{const id=b.dataset.gr,u=galUsos(id);if(!confirm(u.length?'Esta arte está em uso ('+u.join(', ')+'). Apagar mesmo assim? Ela sai desses lugares.':'Apagar esta arte da galeria?'))return;
+    b.disabled=true;await ins('div_art',{id,rm:true});DART[id].rm=true;let mud=false;DCFG.seq.forEach((x,i)=>{if(x&&x.a===id){DCFG.seq[i]=null;mud=true;}});if(DCFG.bv&&DCFG.bv.a===id){DCFG.bv.a=null;mud=true;}if(mud)divSalvar(true);divRender();});}
+const BVPAD={on:true,a:null,t:'Seja bem-vindo à parceria!',x:'Olá, {nome}! A {empresa} agora faz parte da FC Consultoria. Obrigado pela confiança: a partir de hoje a gente caminha junto para a sua equipe dominar as esquadrias e o sistema.',xr:'{nome}, mais 30 dias de Orientativo FC 3D estão liberados para a {empresa}. Seguimos juntos para a sua equipe ir cada vez mais longe!'};
+function bvUI(){const el=document.getElementById('bvBox');if(!el)return;const B=DCFG.bv;
+  if(!B){el.innerHTML=`<div class="bvw"><div class="bvi" style="background-image:url(${BVSUG});border-style:solid"></div><div class="bvf"><b>Sugestão da FC pronta para usar</b><span class="note">Arte de boas-vindas no padrão FC com a sua foto. Ao ligar, ela entra na sua galeria e passa a aparecer para cada empresa que fechar contrato. Depois você pode trocar a arte e os textos.</span><div><button type="button" class="pri" id="bvLig">✔ Usar esta arte e ligar as boas-vindas</button> <button type="button" id="bvPv0">👁 Ver como o cliente vê</button></div><span class="msg" id="bvMsg"></span></div></div>`;
+    document.getElementById('bvPv0').onclick=()=>bvPrev(Object.assign({},BVPAD),BVSUG,false);
+    document.getElementById('bvLig').onclick=async e=>{e.target.disabled=true;document.getElementById('bvMsg').textContent='Salvando…';try{const bl=await (await fetch(BVSUG)).blob();const a=await galNova(new File([bl],'Boas-vindas FC.jpg',{type:'image/jpeg'}),'Boas-vindas FC');if(!a)throw 0;
+      DCFG.bv=Object.assign({},BVPAD,{a:a.id});divSalvar(true);divRender();}catch(_){e.target.disabled=false;document.getElementById('bvMsg').textContent='Não consegui salvar. Tente de novo.';}};return;}
+  const A=B.a&&DART[B.a]&&!DART[B.a].rm?DART[B.a]:null;
+  el.innerHTML=`<div class="bvw"><div class="bvi" id="bvImg" role="button" tabindex="0" style="${A?'background-image:url('+A.img+');border-style:solid':''}">${A?'':'＋ Escolher arte'}</div><div class="bvf">
+    <div class="dvbar" style="margin:0"><span class="dvtg${B.on?' on':''}" id="bvOn"><i></i><span>${B.on?'Boas-vindas ligadas':'Boas-vindas desligadas'}</span></span><button type="button" id="bvTroca">🖼 Trocar arte</button><button type="button" id="bvPv">👁 Novo cliente</button><button type="button" id="bvPvR">👁 Renovação</button><span class="msg ok" id="bvMsg"></span></div>
+    <label>Título<input id="bvT" value="${desc(B.t)}"></label>
+    <label>Mensagem para cliente novo<textarea id="bvX" rows="3">${desc(B.x)}</textarea></label>
+    <label>Mensagem na renovação<textarea id="bvXr" rows="2">${desc(B.xr)}</textarea></label></div></div>`;
+  const sv=()=>{B.t=document.getElementById('bvT').value;B.x=document.getElementById('bvX').value;B.xr=document.getElementById('bvXr').value;divSalvar();};
+  ['bvT','bvX','bvXr'].forEach(i=>document.getElementById(i).oninput=sv);
+  const troca=()=>galEscolher(a=>{B.a=a.id;divSalvar(true);divRender();});document.getElementById('bvImg').onclick=troca;document.getElementById('bvTroca').onclick=troca;
+  document.getElementById('bvOn').onclick=()=>{B.on=!B.on;divSalvar(true);divRender();};
+  document.getElementById('bvPv').onclick=()=>bvPrev(B,A&&A.img,false);document.getElementById('bvPvR').onclick=()=>bvPrev(B,A&&A.img,true);}
+function bvPrev(B,img,ren){const nm=(ALUNOS[0]&&(ALUNOS[0].nome||ALUNOS[0].login))||'Vidraçaria Silva';
+  if(typeof window.fcBoasVindas==='function')window.fcBoasVindas({t:B.t,x:ren?B.xr:B.x,img,ren,empresa:'Vidraçaria Silva',nome:'Carlos',previa:true});}
 function cvStatus(code){const DD=window.DEMO_DATA||{EV:[]},L=DD.EV.filter(x=>x.code===code),c=L.filter(x=>x.tipo==='convite').pop();if(!c)return '';
   const pos=L.filter(x=>x.criado_em>=c.criado_em),has=t=>pos.some(x=>x.tipo===t);
   return '<br><span class="note">📨 convite '+fmtD(c.criado_em)+' · '+(has('convite_aceito')?'<b style="color:#1f8a4c">abriu a proposta</b>':has('convite_whats')?'<b style="color:#1f8a4c">chamou no WhatsApp</b>':has('convite_visto')?'<b>visto</b>':has('convite_depois')?'viu e deixou para depois':'aguardando ele entrar no link')+'</span>';}
@@ -572,7 +627,7 @@ function divBind(){const C=()=>DCFG;
   document.getElementById('dvPara').onchange=e=>{C().para=e.target.value==='todas'?'todas':[];divSalvar(true);divRender();};
   document.getElementById('dvTog').onclick=()=>{const b=document.getElementById('dvBody');b.hidden=!b.hidden;document.getElementById('dvTog').textContent=b.hidden?'Mostrar':'Ocultar';if(!b.hidden&&!DCFG)divCarregar();};
   let NIMG=null;const ni=document.getElementById('nvImg');
-  ni.querySelector('input').onchange=async e=>{const f=e.target.files[0];if(!f)return;NIMG=await divComp(f);ni.style.backgroundImage=`url(${NIMG})`;ni.querySelector('span').hidden=true;};
+  ni.onclick=()=>galEscolher(a=>{NIMG=a.img;ni.style.backgroundImage=`url(${NIMG})`;ni.querySelector('span').hidden=true;if(!document.getElementById('nvT').value&&a.nome)document.getElementById('nvT').value=a.nome;});
   {const d=new Date(Date.now()+7*864e5);document.getElementById('nvAte').value=d.toISOString().slice(0,10);}
   document.getElementById('nvPub').onclick=async()=>{const t=document.getElementById('nvT').value.trim(),m=document.getElementById('nvMsg');
     if(!NIMG||!t){m.textContent='Coloque a foto e o título.';m.className='msg bad';return;}
@@ -683,6 +738,32 @@ document.querySelector('#ptabs [data-tab=demo]').addEventListener('click',()=>ca
 if(PTAB==='demo')setTimeout(carregar,800);
 setTimeout(avisos,3000);setTimeout(carregar,1500);setInterval(avisos,60000);setInterval(()=>{if(PTAB==='demo')render();},60000);
 })();
+</script>
+<script id="bvui">/* ===== Boas-vindas FC (tela do cliente) ===== */
+window.fcBoasVindas=function(o){
+  const esc=v=>String(v||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+  const sub=t=>esc(t).replace(/\{empresa\}/g,'<b>'+esc(o.empresa||'sua empresa')+'</b>').replace(/\{nome\}/g,esc(o.nome||'')).replace(/,\s*!/g,'!').replace(/\n/g,'<br>');
+  let d=document.getElementById('bvOv');if(d)d.remove();d=document.createElement('div');d.id='bvOv';
+  d.style.cssText='position:fixed;inset:0;z-index:9500;background:rgba(7,19,28,.78);backdrop-filter:blur(3px);display:flex;padding:14px;overflow:auto;opacity:0;transition:opacity .35s';
+  if(o.ren)o.img=null;const titulo=o.ren?'Obrigado por continuar com a FC!':(o.t||'Seja bem-vindo à parceria!');
+  const bt='font:700 15px system-ui,sans-serif;border-radius:10px;padding:12px 14px;cursor:pointer;text-decoration:none;text-align:center;display:block';
+  d.innerHTML=`<div class="bvm" style="margin:auto;background:#0f1a22;color:#e9edf0;border:1px solid #2b4a58;border-radius:16px;max-width:${o.ren?'520px':'880px'};width:100%;display:grid;grid-template-columns:${o.img?'minmax(0,380px) 1fr':'1fr'};overflow:hidden;box-shadow:0 30px 70px rgba(0,0,0,.55);transform:translateY(14px) scale(.97);transition:transform .45s cubic-bezier(.2,.8,.2,1)">
+   ${o.img?`<div style="background:#07131c;display:flex;align-items:center;justify-content:center"><img src="${o.img}" alt="" style="display:block;width:100%;height:auto;max-height:86vh;object-fit:contain"></div>`:''}
+   <div style="padding:26px 26px 22px;display:flex;flex-direction:column;gap:12px;font:400 15px/1.55 system-ui,sans-serif">
+    ${o.previa?'<div style="align-self:flex-start;background:#e8912d;color:#1b1206;font:700 11px system-ui;padding:3px 8px;border-radius:6px">PRÉVIA · é assim que o cliente vê</div>':''}
+    <div style="font:600 12px ui-monospace,monospace;letter-spacing:.14em;color:#1fb3c9">${o.ren?'RENOVAÇÃO · ORIENTATIVO FC 3D':'ORIENTATIVO FC 3D · NOVA PARCERIA'}</div>
+    <h2 style="margin:0;font:800 28px/1.15 system-ui,sans-serif;color:#fff">${o.ren?'🤝 ':'👋 '}${esc(titulo)}</h2>
+    <p style="margin:0;color:#c9d6dd;font-size:16px">${sub(o.x)}</p>
+    ${o.ren?'':`<div style="display:grid;gap:7px;margin-top:2px">${[['🪟','Gire, abra e desmonte as janelas e portas das linhas Suprema e Gold'],['💻','Orientação em Sistema: como lançar no sistema da sua empresa'],['📊','O gestor acompanha o progresso de cada colaborador']].map(([i,t])=>`<div style="display:flex;gap:10px;align-items:flex-start;background:#16262f;border:1px solid #23404d;border-radius:10px;padding:9px 11px;font-size:14px"><span style="font-size:18px">${i}</span><span>${t}</span></div>`).join('')}</div>`}
+    <div style="margin-top:auto;display:grid;gap:8px;padding-top:6px">
+     <button type="button" id="bvGo" style="${bt};border:0;background:#1fb3c9;color:#06222a">${o.gestor?'📊 Ver o painel da equipe':'🚀 Começar agora'}</button>
+     ${o.gestor?'':`<a href="${o.guia||'guia/'}" target="_blank" rel="noopener" style="${bt};border:1px solid #3a5866;background:#16262f;color:#e9edf0">📘 Abrir o guia do aluno</a>`}
+     <a href="https://wa.me/5566999867984?text=${encodeURIComponent('Olá Fernando, aqui é '+(o.nome||'')+' da '+(o.empresa||'')+'. Recebi as boas-vindas do Orientativo FC 3D!')}" target="_blank" rel="noopener" style="${bt};border:1px solid #1f8a4c;background:transparent;color:#7fe0a5;font-weight:600">💬 Falar com o Fernando</a></div>
+    <div style="font:italic 500 14px system-ui;color:#9fb3be;border-top:1px solid #23404d;padding-top:10px">Fernando · FC Consultoria em Esquadria</div></div></div>`;
+  document.body.appendChild(d);requestAnimationFrame(()=>{d.style.opacity='1';d.querySelector('.bvm').style.transform='none';});
+  if(innerWidth<760){const m=d.querySelector('.bvm');m.style.gridTemplateColumns='1fr';const im=m.querySelector('img');if(im){im.style.maxHeight='42vh';im.style.width='auto';im.style.margin='0 auto';}}
+  const fe=()=>{d.style.opacity='0';setTimeout(()=>d.remove(),300);if(o.onClose)o.onClose();};
+  document.getElementById('bvGo').onclick=fe;d.addEventListener('click',e=>{if(e.target===d)fe();});};
 </script>
 </body>
 </html>
