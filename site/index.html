@@ -52,6 +52,11 @@ section{padding:72px 0;scroll-margin-top:64px}
 .shots{position:relative;min-height:380px}.shots img{position:absolute;border-radius:12px;border:1px solid #2b4a58;box-shadow:0 18px 40px rgba(0,0,0,.45)}
 .shots .s1{width:86%;left:0;top:0}.shots .s2{width:62%;right:0;bottom:0}
 .trb{display:flex;gap:12px;flex-wrap:wrap}
+.demo{margin-top:40px;background:#0f1a22;border:1px solid #2b4a58;border-radius:16px;padding:20px}
+.demo h3{color:#fff;font-size:24px;margin:2px 0 4px}.demo p{color:#b9cdd6;margin:0}.demo .dnote{font-size:13.5px;margin-top:10px}
+.dbox{position:relative;margin-top:14px;border-radius:12px;overflow:hidden;border:1px solid #2b4a58;background:#dfe5ea}
+.dbox img{width:100%;filter:brightness(.55)}.dbox iframe{display:block;width:100%;height:min(720px,80vh);border:0;background:#eef1f3}
+#dplay{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font:700 18px var(--f-d);padding:16px 26px;border-radius:12px;border:0;background:var(--cy);color:#06222a;cursor:pointer;box-shadow:0 10px 30px rgba(0,0,0,.4)}#dplay:hover{filter:brightness(1.08)}
 .chip{display:inline-block;font:600 12px ui-monospace,monospace;letter-spacing:.06em;color:#06222a;background:var(--cy);border-radius:6px;padding:3px 8px;margin-bottom:10px}
 /* representação */
 .rep{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
@@ -87,7 +92,7 @@ footer{padding:28px 0 90px;color:var(--tm);font-size:13.5px}footer .w{display:fl
   <span class="eb">Consultoria em esquadrias de alumínio · Sinop-MT</span>
   <h1>Preço certo, sistema configurado e <em>equipe treinada</em>.</h1>
   <p class="lead">A FC ajuda vidraçarias, serralherias e fábricas de esquadrias a calcular o preço de custo e venda, configurar o sistema de cálculo e preparar a equipe, com atendimento on-line e presencial.</p>
-  <div class="cta"><a class="btn wz" href="https://wa.me/5566999867984?text=Ol%C3%A1%20Fernando%2C%20quero%20uma%20consultoria." target="_blank" rel="noopener">💬 Falar com o Fernando</a><a class="btn cy" href="#treinamento">🧊 Conhecer o Treinamento FC 3D</a></div>
+  <div class="cta"><a class="btn wz" href="https://wa.me/5566999867984?text=Ol%C3%A1%20Fernando%2C%20quero%20uma%20consultoria." target="_blank" rel="noopener">💬 Falar com o Fernando</a><a class="btn cy" href="#demo">🧊 Testar a janela em 3D</a></div>
  </div>
  <div class="ph"><img src="img/fernando.jpg" alt="Fernando Carvalho, consultor da FC" width="560" height="928"><div class="tag"><b>Fernando Carvalho</b>Consultor · FC Consultoria</div></div>
 </div>
@@ -118,6 +123,11 @@ footer{padding:28px 0 90px;color:var(--tm);font-size:13.5px}footer .w{display:fl
   </ul>
   <div class="trb"><a class="btn cy" href="https://fc-consultoria.github.io/treinamento/">Acessar o treinamento →</a><a class="btn gh" href="https://fc-consultoria.github.io/treinamento/guia/">Guia do aluno</a><a class="btn gh" href="https://wa.me/5566999867984?text=Ol%C3%A1%20Fernando%2C%20quero%20o%20Treinamento%20FC%203D%20para%20a%20minha%20equipe." target="_blank" rel="noopener">Quero para minha equipe</a></div></div>
   <div class="shots"><img class="s1" src="img/02-conhecer.jpg" alt="Tela do treinamento: janela de correr em 3D" loading="lazy"><img class="s2" src="img/14-diagrama.jpg" alt="Diagrama de dimensões com o vento" loading="lazy"></div>
+ </div>
+ <div class="demo" id="demo">
+  <div class="dhd"><div><span class="chip">GRÁTIS</span><h3>Teste agora: janela de correr 2 folhas em 3D</h3><p>Gire, abra as folhas, desmonte peça por peça e veja os cortes das junções, direto no navegador.</p></div></div>
+  <div class="dbox" id="dbox"><img src="img/02-conhecer.jpg" alt="Prévia da demonstração 3D" loading="lazy"><button type="button" id="dplay">▶ Testar a janela em 3D</button></div>
+  <p class="dnote">Demonstração com 1 tipologia. O treinamento completo tem 16 tipologias, desafios, WVetro/CEM e diagrama de dimensões.</p>
  </div>
 </div></section>
 
@@ -153,6 +163,7 @@ footer{padding:28px 0 90px;color:var(--tm);font-size:13.5px}footer .w{display:fl
 <a class="wfix" href="https://wa.me/5566999867984?text=Ol%C3%A1%20Fernando%2C%20vim%20pelo%20site%20da%20FC." target="_blank" rel="noopener" aria-label="WhatsApp da FC">💬</a>
 <script src="https://fc-consultoria.github.io/treinamento/mapa.js"></script>
 <script>
+document.getElementById('dplay').onclick=()=>{if(innerWidth<760){open('demo.html','_blank');return;}const b=document.getElementById('dbox');b.innerHTML='<iframe src="demo.html" title="Demonstração Treinamento FC 3D" loading="lazy"></iframe>';};
 document.getElementById('mb').onclick=()=>document.getElementById('mn').classList.toggle('on');
 document.querySelectorAll('#mn a').forEach(a=>a.onclick=()=>document.getElementById('mn').classList.remove('on'));
 const MAPA_FALLBACK=[{"c": "Sinop", "n": 3, "s": "and", "t": "on", "u": "MT"}, {"c": "Cuiabá", "n": 1, "s": "and", "t": "pr", "u": "MT"}, {"c": "Cuiabá", "n": 6, "s": "and", "t": "on", "u": "MT"}, {"c": "Manaus", "n": 1, "s": "and", "t": "pr", "u": "AM"}, {"c": "Recife", "n": 1, "s": "and", "t": "pr", "u": "PE"}];
