@@ -165,7 +165,7 @@ tr.mfin td{background:#eef5fc}
      <div><button type="button" class="pri" id="nvPub">Publicar agora</button> <span class="msg" id="nvMsg"></span></div></div></div>
    <ul class="nvl" id="nvList"></ul>
    <h3 class="dvt" style="margin-top:22px">C · Boas-vindas ao cliente</h3>
-   <p class="note">Aparece uma vez para cada colaborador e para o gestor. Com contrato: na primeira entrada depois do pagamento, e na renovação aparece a mensagem de renovação. Escolhendo “Todos os acessos”, quem ainda não tem contrato também recebe na primeira entrada. Use {empresa} e {nome} no texto.</p>
+   <p class="note">Aparece uma vez para cada colaborador e para o gestor. Com contrato: na primeira entrada depois do pagamento, e na renovação aparece a mensagem de renovação. Escolhendo “Todos os acessos”, quem ainda não tem contrato também recebe na primeira entrada. Se quiser personalizar, pode usar {empresa} e {nome} no texto (opcional).</p>
    <div id="bvBox"></div>
    <h3 class="dvt" style="margin-top:22px">D · 🖼 Minhas artes <span class="note" id="glN" style="font-weight:500;text-transform:none;letter-spacing:0"></span></h3>
    <p class="note">Todas as artes que você enviou ficam guardadas aqui. Na sequência, na novidade e nas boas-vindas é só escolher da galeria, sem enviar de novo.</p>
@@ -588,7 +588,7 @@ function galUI(){const el=document.getElementById('glGrid');if(!el)return;const 
   el.querySelectorAll('[data-gd]').forEach(b=>b.onclick=()=>{const a=DART[b.dataset.gd],l=document.createElement('a');l.href=a.img;l.download=(a.nome||'arte-fc')+'.jpg';document.body.appendChild(l);l.click();l.remove();});
   el.querySelectorAll('[data-gr]').forEach(b=>b.onclick=async()=>{const id=b.dataset.gr,u=galUsos(id);if(!confirm(u.length?'Esta arte está em uso ('+u.join(', ')+'). Apagar mesmo assim? Ela sai desses lugares.':'Apagar esta arte da galeria?'))return;
     b.disabled=true;await ins('div_art',{id,rm:true});DART[id].rm=true;let mud=false;DCFG.seq.forEach((x,i)=>{if(x&&x.a===id){DCFG.seq[i]=null;mud=true;}});if(DCFG.bv&&DCFG.bv.a===id){DCFG.bv.a=null;mud=true;}if(mud)divSalvar(true);divRender();});}
-const BVPAD={on:true,a:null,t:'Seja bem-vindo à parceria!',x:'Olá, {nome}! A {empresa} agora faz parte da FC Consultoria. Obrigado pela confiança: a partir de hoje a gente caminha junto para a sua equipe dominar as esquadrias e o sistema.',xr:'{nome}, mais 30 dias de Orientativo FC 3D estão liberados para a {empresa}. Seguimos juntos para a sua equipe ir cada vez mais longe!'};
+const BVPAD={on:true,a:null,t:'Seja bem-vindo à parceria!',x:'Seja muito bem-vindo ao Orientativo FC 3D. Agradecemos a confiança depositada na FC Consultoria em Esquadria. A partir de agora, sua equipe conta com o nosso apoio para conhecer as linhas de esquadrias e aplicar a orientação no sistema.',xr:'Agradecemos por renovar a parceria com a FC Consultoria em Esquadria. O acesso ao Orientativo FC 3D está liberado por mais 30 dias. Seguimos à disposição da sua equipe.'};
 function bvUI(){const el=document.getElementById('bvBox');if(!el)return;const B=DCFG.bv;
   if(!B){el.innerHTML=`<div class="bvw"><div class="bvi" style="background-image:url(${BVSUG});border-style:solid"></div><div class="bvf"><b>Sugestão da FC pronta para usar</b><span class="note">Arte de boas-vindas no padrão FC com a sua foto. Ao ligar, ela entra na sua galeria e passa a aparecer para cada empresa que fechar contrato. Depois você pode trocar a arte e os textos.</span><div><button type="button" class="pri" id="bvLig">✔ Usar esta arte e ligar as boas-vindas</button> <button type="button" id="bvPv0">👁 Ver como o cliente vê</button></div><span class="msg" id="bvMsg"></span></div></div>`;
     document.getElementById('bvPv0').onclick=()=>bvPrev(Object.assign({},BVPAD),BVSUG,false);
@@ -764,7 +764,7 @@ window.fcBoasVindas=function(o){
   const sub=t=>esc(t).replace(/\{empresa\}/g,'<b>'+esc(o.empresa||'sua empresa')+'</b>').replace(/\{nome\}/g,esc(o.nome||'')).replace(/,\s*!/g,'!').replace(/\n/g,'<br>');
   let d=document.getElementById('bvOv');if(d)d.remove();d=document.createElement('div');d.id='bvOv';
   d.style.cssText='position:fixed;inset:0;z-index:9500;background:rgba(7,19,28,.78);backdrop-filter:blur(3px);display:flex;padding:14px;overflow:auto;opacity:0;transition:opacity .35s';
-  if(o.ren)o.img=null;const titulo=o.ren?'Obrigado por continuar com a FC!':(o.t||'Seja bem-vindo à parceria!');
+  if(o.ren)o.img=null;const titulo=o.ren?'Agradecemos a renovação da parceria':(o.t||'Seja bem-vindo à parceria!');
   const bt='font:700 15px system-ui,sans-serif;border-radius:10px;padding:12px 14px;cursor:pointer;text-decoration:none;text-align:center;display:block';
   d.innerHTML=`<div class="bvm" style="margin:auto;background:#0f1a22;color:#e9edf0;border:1px solid #2b4a58;border-radius:16px;max-width:${o.ren?'520px':'880px'};width:100%;display:grid;grid-template-columns:${o.img?'minmax(0,380px) 1fr':'1fr'};overflow:hidden;box-shadow:0 30px 70px rgba(0,0,0,.55);transform:translateY(14px) scale(.97);transition:transform .45s cubic-bezier(.2,.8,.2,1)">
    ${o.img?`<div style="background:#07131c;display:flex;align-items:center;justify-content:center"><img src="${o.img}" alt="" style="display:block;width:100%;height:auto;max-height:86vh;object-fit:contain"></div>`:''}

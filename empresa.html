@@ -177,7 +177,7 @@ window.fcBoasVindas=function(o){
   const sub=t=>esc(t).replace(/\{empresa\}/g,'<b>'+esc(o.empresa||'sua empresa')+'</b>').replace(/\{nome\}/g,esc(o.nome||'')).replace(/,\s*!/g,'!').replace(/\n/g,'<br>');
   let d=document.getElementById('bvOv');if(d)d.remove();d=document.createElement('div');d.id='bvOv';
   d.style.cssText='position:fixed;inset:0;z-index:9500;background:rgba(7,19,28,.78);backdrop-filter:blur(3px);display:flex;padding:14px;overflow:auto;opacity:0;transition:opacity .35s';
-  if(o.ren)o.img=null;const titulo=o.ren?'Obrigado por continuar com a FC!':(o.t||'Seja bem-vindo à parceria!');
+  if(o.ren)o.img=null;const titulo=o.ren?'Agradecemos a renovação da parceria':(o.t||'Seja bem-vindo à parceria!');
   const bt='font:700 15px system-ui,sans-serif;border-radius:10px;padding:12px 14px;cursor:pointer;text-decoration:none;text-align:center;display:block';
   d.innerHTML=`<div class="bvm" style="margin:auto;background:#0f1a22;color:#e9edf0;border:1px solid #2b4a58;border-radius:16px;max-width:${o.ren?'520px':'880px'};width:100%;display:grid;grid-template-columns:${o.img?'minmax(0,380px) 1fr':'1fr'};overflow:hidden;box-shadow:0 30px 70px rgba(0,0,0,.55);transform:translateY(14px) scale(.97);transition:transform .45s cubic-bezier(.2,.8,.2,1)">
    ${o.img?`<div style="background:#07131c;display:flex;align-items:center;justify-content:center"><img src="${o.img}" alt="" style="display:block;width:100%;height:auto;max-height:86vh;object-fit:contain"></div>`:''}
