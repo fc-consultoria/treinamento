@@ -2868,7 +2868,7 @@ function demo2Init(){
   LINHAS[0].t=['jcr200','pcr200'];LINHAS[1].t=['gjc2f','gpc2f'];LINCUR=null;
   let NOME='',FIM=0,q=[],last={},PROMO=null;
   const fmt=s=>{s=Math.max(0,s);const h=Math.floor(s/3600),m=Math.floor(s%3600/60);return h?`${h} h ${String(m).padStart(2,'0')} min`:`${m} min`;};
-  const send=(t,d)=>rpc('demo_log',{p_code:code,p_tipo:t,p_detalhe:d||null}).then(r=>{if(r&&r.ok===false&&r.restante===undefined){FIM=Date.now();tick();}}).catch(()=>{});
+  const send=(t,d)=>rpc('demo_log',{p_code:code,p_tipo:t,p_detalhe:d||null}).then(r=>{if(r&&r.ok===false&&r.restante===undefined){FIM=Date.now();tick();}if(r&&r.convite)setTimeout(()=>convite(r.convite),800);}).catch(()=>{});
   window.TRK=(t,d)=>{const k=t+JSON.stringify(d||{});if(last[k]&&Date.now()-last[k]<4000)return;last[k]=Date.now();send(t,d);};
   function tick(){const r=Math.round((FIM-Date.now())/1000),e=document.getElementById('d2tm');if(e)e.textContent='⏱ restam '+fmt(r);
     if(r<=0){fim('O seu demonstrativo terminou','Obrigado por testar o Orientativo FC 3D. Para liberar mais tempo ou contratar para a sua equipe, fale com a FC.');}}
@@ -2876,7 +2876,7 @@ function demo2Init(){
     if(!r||r.estado==='invalido'){fim('Link não encontrado','Confira se o link foi copiado inteiro ou peça um novo para a FC Consultoria.');return;}
     if(r.estado==='expirado'){fim('O seu demonstrativo terminou','As 24 horas de teste acabaram. Se quiser mais tempo ou contratar para a sua equipe, fale com a FC.');return;}
     if(r.estado==='encerrado'){fim('Demonstrativo encerrado','Este link foi encerrado pela FC Consultoria.');return;}
-    NOME=r.nome||'';FIM=Date.now()+r.restante*1000;PROMO=r.promo||null;gate.remove();
+    NOME=r.nome||'';FIM=Date.now()+r.restante*1000;PROMO=r.promo||null;gate.remove();if(r.convite)setTimeout(()=>convite(r.convite),2500);
     const bar=document.createElement('div');bar.className='d2bar';bar.innerHTML=`<span><b>Demonstrativo${NOME?' · '+NOME.replace(/</g,'&lt;'):''}</b> · 2 tipologias da Suprema e 2 da Gold. Gire, abra as folhas, desmonte e veja os cortes.</span><span class="tm" id="d2tm"></span><button type="button" id="d2Op" style="margin-left:auto;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.5);color:#fff;font:600 14px var(--f-display);padding:8px 12px;border-radius:8px;cursor:pointer">⭐ Dar opinião</button><a href="#" id="d2Q" style="margin-left:0">${PROMO?'🔥 Oferta: contratar agora':'💳 Contratar agora'}</a>`;
     const wr=document.querySelector('.wrap');wr.insertBefore(bar,wr.firstChild);document.getElementById('d2Q').onclick=e=>{e.preventDefault();contratar('Faixa do demonstrativo');};document.getElementById('d2Op').onclick=()=>opiniao(false);tick();setInterval(tick,30000);
     setInterval(()=>{if(document.visibilityState==='visible')send('tempo',{s:60,t:S.typo});},60000);
@@ -2892,6 +2892,17 @@ function demo2Init(){
     document.getElementById('d2F').onsubmit=e=>{e.preventDefault();const f=document.getElementById('d2Fone').value.trim();if(f.replace(/\D/g,'').length<10){document.getElementById('d2Fone').focus();return;}send('contato',{fone:f,m});document.getElementById('d2Fok').hidden=false;};
     setTimeout(()=>{const i=document.getElementById('d2Fone');if(i)i.focus();},50);}
   const PRECO=()=>PROMO?Number(PROMO.por)||150:150,brl2=v=>'R$ '+Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+  /* convite enviado pela FC pelo painel */
+  const CVV=new Set();function convite(c){if(!c||CVV.has(c.id)||document.getElementById('d2Cv')||document.getElementById('d2Ct'))return;CVV.add(c.id);send('convite_visto',{id:c.id});
+    const o=document.createElement('div');o.id='d2Cv';o.style.cssText='position:fixed;inset:0;z-index:9200;background:rgba(10,16,22,.75);display:grid;place-items:center;padding:16px';
+    o.innerHTML=`<div style="background:#fff;color:#1b232a;border-radius:16px;max-width:500px;width:100%;overflow:hidden;font:400 15.5px/1.55 system-ui,sans-serif;box-shadow:0 24px 60px rgba(0,0,0,.5)">
+     <div style="background:#0f1a22;color:#fff;padding:16px 20px;display:flex;gap:12px;align-items:center"><div style="width:42px;height:42px;border-radius:50%;background:#1fb3c9;color:#06222a;display:grid;place-items:center;font:800 18px var(--f-display)">FC</div><div><div style="font:600 11.5px var(--f-mono);letter-spacing:.12em;color:#1fb3c9">MENSAGEM DA FC CONSULTORIA</div><div style="font:700 18px var(--f-display)">Fernando te enviou uma proposta</div></div></div>
+     <div style="padding:18px 20px"><p style="margin:0 0 14px;white-space:pre-wrap">${String(c.msg||'').replace(/</g,'&lt;')}</p>
+      <div style="border:1px solid #d5dde2;border-radius:12px;padding:12px 14px;margin-bottom:16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">${PROMO?`<span style="background:#e0972e;color:#1b1206;font:800 11.5px var(--f-display);padding:3px 9px;border-radius:20px">🔥 OFERTA · RESTAM ${PROMO.restam}</span><s style="color:#8d99a3">${brl2(PROMO.de)}</s>`:''}<b style="font:800 24px var(--f-display)">${brl2(PRECO())}</b><span style="color:#5d6b76">a cada 30 dias · até 6 colaboradores</span></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end"><button type="button" id="d2CvX" style="border:1px solid #c9d3da;background:#fff;border-radius:9px;padding:10px 14px;font:600 14px system-ui;cursor:pointer">Agora não</button><a href="${WA('Olá Fernando, recebi a sua proposta no demonstrativo do Orientativo FC 3D'+(NOME?' ('+NOME+')':'')+'.')}" target="_blank" rel="noopener" id="d2CvW" style="border:0;background:#1f9d55;color:#fff;text-decoration:none;border-radius:9px;padding:10px 14px;font:600 14px system-ui">💬 Falar com o Fernando</a><button type="button" id="d2CvY" style="border:0;background:#1f6f9a;color:#fff;border-radius:9px;padding:10px 16px;font:700 15px system-ui;cursor:pointer">Ver proposta e contratar →</button></div></div></div>`;
+    document.body.appendChild(o);document.getElementById('d2CvX').onclick=()=>{send('convite_depois',{id:c.id});o.remove();};
+    document.getElementById('d2CvW').onclick=()=>send('convite_whats',{id:c.id});
+    document.getElementById('d2CvY').onclick=()=>{send('convite_aceito',{id:c.id});o.remove();contratar('Convite da FC');};}
   /* contratar agora: proposta, dados e PIX */
   function contratar(m){send('interesse',{m:'Contratar · '+m});send('contratar_aberto',{m});let o=document.getElementById('d2Ct');if(o)o.remove();o=document.createElement('div');o.id='d2Ct';
     o.style.cssText='position:fixed;inset:0;z-index:9150;background:rgba(10,16,22,.72);display:grid;place-items:center;padding:14px;overflow:auto';
