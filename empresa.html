@@ -165,6 +165,7 @@ gateUI(async({session,perfil})=>{
   document.getElementById('bLink').onclick=async e=>{const u=location.origin+location.pathname;try{await navigator.clipboard.writeText(u);e.target.textContent='Link copiado';}catch(_){prompt('Link do relatório:',u);}};
   document.getElementById('bVolta').onclick=()=>{const adm=perfil.papel==='admin';
     if(EMPV)location.href=adm?'painel.html':'index.html';else location.href='empresa.html'+(adm?'?e='+emp:'');};
+  if(window.top!==window&&perfil.papel==='admin'){const bv=document.getElementById('bVolta');if(bv)bv.style.display='none';}
   document.getElementById('bVolta').textContent=EMPV?(perfil.papel==='admin'?'← Voltar ao Painel da Matriz':'← Voltar ao orientativo'):'← Voltar ao Painel da Empresa';
   document.getElementById('pg').hidden=false;document.title=(EMPV?'Painel da Empresa · ':'Relatório · ')+(E.nome||E.login);
   if(EMPV){document.querySelector('.top .eb').textContent='Painel da Empresa · acompanhamento da equipe';document.getElementById('bPdf').textContent='📄 Baixar relatório em PDF';document.getElementById('ger').parentNode.hidden=true;}

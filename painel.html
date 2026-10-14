@@ -210,7 +210,13 @@ tr.mfin td{background:#eef5fc}
   </table></div>
  </section>
  <section class="card" id="detCard" data-tab="emp" hidden>
-  <h2 id="detTit">Aluno</h2>
+  <h2 style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span id="detTit">Aluno</span><span style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap"><button type="button" id="gvTog" style="font:600 14px var(--f-display);text-transform:none;letter-spacing:0;background:#1f6f9a;color:#fff;border:0;padding:8px 14px;border-radius:9px;cursor:pointer">👁 Ver como o gestor vê</button></span></h2>
+  <div id="gvBox" hidden style="margin:12px 16px 4px;border:1px solid #cfd9e0;border-radius:12px;overflow:hidden;background:#0f1a22">
+   <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:8px 10px;color:#fff;font:600 13px system-ui,sans-serif">
+    <span>📊 <b>Tela do gestor</b> <span id="gvNm" style="opacity:.75;font-weight:500"></span></span>
+    <span style="margin-left:auto;display:flex;gap:6px;flex-wrap:wrap"><button type="button" class="pvB" id="gvCel">📱 Celular</button><button type="button" class="pvB" id="gvRe">🔄 Atualizar</button><button type="button" class="pvB" id="gvOut">↗ Outra aba</button><button type="button" class="pvB" id="gvX">✕ Fechar</button></span></div>
+   <div style="background:#e9eef1;display:flex;justify-content:center"><iframe id="gvFr" title="Tela do gestor" style="border:0;width:100%;height:760px;background:#fff;display:block;transition:width .2s"></iframe></div>
+   <p style="margin:0;padding:6px 10px;color:#9fb3be;font:500 12px system-ui">É exatamente o que o gestor da empresa vê. Abrindo por aqui, nada conta como acesso do gestor.</p></div>
   <div class="det">
    <div>
     <div class="edit"><input id="eNome" placeholder="Nome do aluno" aria-label="Nome do aluno"><button type="button" id="bNome">Salvar nome</button><button type="button" id="bAtivo"></button></div>
@@ -220,7 +226,7 @@ tr.mfin td{background:#eef5fc}
     <h3>Colaboradores <span class="note" id="cColN"></span></h3><ul class="cl" id="cCol"></ul><div class="edit"><button type="button" class="pri" id="bColSv" disabled>💾 Salvar colaboradores</button><span class="note">Edite os nomes acima e clique em salvar.</span></div>
     <div class="edit"><input id="eCol" placeholder="Nome do colaborador" maxlength="40" aria-label="Nome do colaborador"><button type="button" id="bCol">Cadastrar</button></div>
     <h3>Sistema liberado <span class="note">clique para ligar/desligar · verde = liberado</span></h3><div class="edit" id="cSis"></div>
-    <h3>Acesso do gestor <span class="note" id="gSt"></span></h3><div class="edit"><input id="eGes" placeholder="Senha do gestor (mín. 4)" autocomplete="off" aria-label="Senha do gestor"><button type="button" id="bGes">Salvar senha do gestor</button><button type="button" id="bEmp">Abrir Painel da Empresa</button></div>
+    <h3>Acesso do gestor <span class="note" id="gSt"></span></h3><div class="edit"><input id="eGes" placeholder="Senha do gestor (mín. 4)" autocomplete="off" aria-label="Senha do gestor"><button type="button" id="bGes">Salvar senha do gestor</button><button type="button" id="bEmp">↗ Abrir Painel da Empresa em outra aba</button></div>
     <div class="edit"><button type="button" class="no" id="bZer" style="color:var(--bad);border-color:#e3b5b1">Zerar histórico desta empresa (testes)</button><span class="note">Apaga do painel entradas, tempo, tipologias e desafios. Cadastros, códigos e senhas ficam.</span></div>
     <h3>Mensagens para o WhatsApp <span class="note">geradas com os dados acima · copie e envie</span></h3>
     <div class="wam"><div><b>Para os colaboradores</b><textarea id="wmA" rows="14"></textarea><div class="edit"><button type="button" data-w="wmA">📋 Copiar</button><button type="button" data-z="wmA">Abrir no WhatsApp</button></div></div>
@@ -330,11 +336,23 @@ function render(){
     b.disabled=false;if(error){b.textContent='Erro: '+error.message;return;}carregar();}));
 }
 const ROT={colab_sessao:'Entrou (aparelho):',falta:'Desafio extra (peça faltando):',colab_inicio:'Começou as 72 h:',pedido_tempo:'Pediu mais tempo:',sugestao:'Enviou sugestão:',quem:'Começou a estudar:',wvetro:'Concluiu o desafio WVetro',cem:'Concluiu o desafio CEM',reinicio:'Reiniciou o desafio',desmontar:null,login:'Entrou no orientativo',tipologia:'Abriu a tipologia',corte:'Viu o corte',perfil:'Estudou o perfil',componente:'Viu o componente',troca:'Trocou perfil',modo:'Mudou o modo',teste:'Concluiu o desafio',tempo:null};
+/* ===== Ver como o gestor vê ===== */
+let GVU=null;
+function gvAbrir(a){const box=document.getElementById('gvBox'),fr=document.getElementById('gvFr');GVU=a.user_id;box.hidden=false;fr.src='empresa.html?e='+a.user_id+'&t='+Date.now();
+  document.getElementById('gvNm').textContent='· '+(a.nome||a.login);document.getElementById('gvTog').textContent='👁 Esconder tela do gestor';try{localStorage.setItem('fc-gv','1');}catch(_){}}
+function gvFechar(){document.getElementById('gvBox').hidden=true;document.getElementById('gvFr').src='about:blank';GVU=null;document.getElementById('gvTog').textContent='👁 Ver como o gestor vê';try{localStorage.removeItem('fc-gv');}catch(_){}}
+function gvSync(a){const box=document.getElementById('gvBox');
+  document.getElementById('gvTog').onclick=()=>box.hidden?(gvAbrir(a),box.scrollIntoView({behavior:'smooth',block:'start'})):gvFechar();
+  document.getElementById('gvX').onclick=gvFechar;document.getElementById('gvRe').onclick=()=>gvAbrir(a);
+  document.getElementById('gvOut').onclick=()=>window.open('empresa.html?e='+a.user_id,'_blank');
+  document.getElementById('gvCel').onclick=e=>{const f=document.getElementById('gvFr'),c=f.style.width!=='390px';f.style.width=c?'390px':'100%';e.target.classList.toggle('on',c);};
+  let lembra=false;try{lembra=localStorage.getItem('fc-gv')==='1';}catch(_){}
+  if(!box.hidden&&GVU!==a.user_id)gvAbrir(a);else if(box.hidden&&lembra)gvAbrir(a);}
 function detalhe(){
   const a=ALUNOS.find(x=>x.user_id===sel);if(!a)return;const r=resumo(a.user_id);
   document.getElementById('detCard').hidden=false;document.getElementById('detTit').textContent=(a.nome||a.login)+' · '+a.login;
   document.getElementById('eNome').value=a.nome||'';document.getElementById('bAtivo').textContent=a.ativo?'Bloquear acesso':'Liberar acesso';
-  colabUI(a);ctrUI(a);
+  colabUI(a);ctrUI(a);gvSync(a);
   {const lc=localDe(a.user_id);document.getElementById('eCid').value=lc.cidade||'';document.getElementById('eUf').value=lc.uf||'';
    document.getElementById('bLocal').onclick=async()=>{const b=document.getElementById('bLocal');b.disabled=true;await ins('empresa_local',{para:a.user_id,cidade:document.getElementById('eCid').value.trim(),uf:document.getElementById('eUf').value});b.disabled=false;b.textContent='✔ Salvo';setTimeout(()=>b.textContent='📍 Salvar cidade',2500);carregar();};}
   {const g=gestorRes(a.user_id),el=document.getElementById('cGes');if(el)el.innerHTML=!g.tot?'O gestor ainda não entrou no Painel da Empresa.':
