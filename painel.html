@@ -109,6 +109,7 @@ button.ok{background:var(--ok);border-color:var(--ok);color:#fff}button.no{color
 .mpPub.off{border-color:#e0972e;background:#fdf3e4}.mpPub b{display:block;font-size:16px}.mpPub span{font-size:13px;color:#4b5a63}.mpPub button{font-weight:700;padding:9px 16px}
 .mpRes{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px}.mpRes div{flex:1;min-width:150px;border:1px solid #d5dde2;border-radius:10px;padding:10px 12px;background:#fff}.mpRes b{display:block;font-size:26px;line-height:1.1}.mpRes span{font-size:12.5px;color:#4b5a63}.mpRes .fin{border:2px solid #1f6fb2;background:#eef5fc}.mpRes .fin b{color:#1f6fb2}
 tr.mfin td{background:#eef5fc}
+.mpq{display:inline-flex;align-items:center;gap:6px}.mpq button{width:30px;height:30px;padding:0;font-size:17px;line-height:1}.mpq b{min-width:22px;text-align:center;font-size:17px}
 </style>
 </head>
 <body>
@@ -165,9 +166,9 @@ tr.mfin td{background:#eef5fc}
    <div class="mpRes" id="mpRes"></div>
    <p class="note">Cadastre as cidades onde a FC atende. O aluno vê o mapa pelo botão <b>📍 FC no Brasil</b> na barra escura do treinamento (o botão só aparece quando há pelo menos uma cidade). Só aparecem cidade e quantidade, nunca o nome do cliente.</p>
    <form id="mpF" class="mpf"><label>1 · Estado (UF)<select id="mpU"></select></label><label>2 · Cidade <span id="mpCn" style="font-size:11px"></span><input id="mpC" list="mpL" placeholder="Digite ou escolha a cidade" required autocomplete="off"></label>
-    <label>Atendimento<select id="mpT"><option value="on">💻 On-line</option><option value="pr">📍 Presencial</option></select></label><label>Situação<select id="mpS"><option value="and">● Em andamento</option><option value="fin">✔ Finalizado (sistema alimentado)</option></select></label><label>Nº de empresas<input id="mpN" type="number" min="1" value="1"></label><button type="submit" class="pri">Adicionar</button><span class="msg ok" id="mpMsg"></span></form>
+    <label>Atendimento<select id="mpT"><option value="on">💻 On-line</option><option value="pr">📍 Presencial</option></select></label><label>● Em andamento<input id="mpN" type="number" min="0" value="1"></label><label>✔ Finalizadas<input id="mpFi" type="number" min="0" value="0"></label><button type="submit" class="pri">Adicionar</button><span class="msg ok" id="mpMsg"></span></form>
    <datalist id="mpL"></datalist>
-   <div class="tw"><table><thead><tr><th>Cidade</th><th>UF</th><th>Atendimento</th><th>Situação</th><th>Empresas</th><th></th></tr></thead><tbody id="mpTb"></tbody></table></div>
+   <div class="tw"><table><thead><tr><th>Cidade</th><th>UF</th><th>Atendimento</th><th>● Em andamento</th><th>✔ Finalizadas<br><small style="font-weight:400;text-transform:none;letter-spacing:0">sistema alimentado</small></th><th>Total</th><th></th></tr></thead><tbody id="mpTb"></tbody></table></div>
    <h3 class="dvt" style="margin:16px 0 8px">Como o aluno vê</h3><div id="mpPrev"></div>
   </div></section>
  <section class="card" id="sugCard" data-tab="sug"><h2 style="display:flex;justify-content:space-between;align-items:center;gap:8px">💬 Dúvidas e sugestões dos alunos <span class="sgn" id="sugN" style="flex:1"></span><button type="button" id="sugTog" style="font-size:12px;padding:4px 10px">Mostrar</button></h2><div id="sugBody" hidden><p class="note" style="padding:0 16px">O aluno envia pelo botão “💬 Sugestão” na barra escura do treinamento. Escreva a resposta embaixo da mensagem e clique em Responder: ela aparece para o aluno no mesmo botão.</p><ul class="tl" id="sugList"></ul></div></section>
@@ -469,25 +470,34 @@ function ptab(t,silent){PTAB=t;try{localStorage.setItem('treinFC-ptab',t);}catch
 document.querySelectorAll('#ptabs button').forEach(b=>b.onclick=()=>ptab(b.dataset.tab));ptab(PTAB,true);
 /* ===== Mapa FC no Brasil (Matriz) ===== */
 let MPD=null,MPUB=true;
-async function mpCarregar(){const r=await sb.from('trein_eventos').select('detalhe').eq('tipo','mapa').order('criado_em',{ascending:false}).limit(1);const d=(((r.data||[])[0]||{}).detalhe)||{};MPD=d.itens||[];MPUB=d.pub!==false;mpRender();}
+const mpNorm=x=>{const n=Math.max(0,+x.n||0),f=x.f!=null?Math.min(n,Math.max(0,+x.f||0)):(x.s==='fin'?n:0);return {c:x.c,u:x.u,t:x.t,n,f,s:f>=n?'fin':'and'};};
+const mpSalvar=()=>ins('mapa',{itens:MPD.map(mpNorm),pub:MPUB});
+async function mpCarregar(){const r=await sb.from('trein_eventos').select('detalhe').eq('tipo','mapa').order('criado_em',{ascending:false}).limit(1);const d=(((r.data||[])[0]||{}).detalhe)||{};MPD=(d.itens||[]).map(mpNorm);MPUB=d.pub!==false;mpRender();}
 function mpRender(){if(!MPD||!window.FCM)return;const esc=v=>String(v||'').replace(/</g,'&lt;');
   {const P=document.getElementById('mpPub');P.classList.toggle('off',!MPUB);document.getElementById('mpPubT').textContent=MPUB?'🟢 Mapa ATIVO · aparece para os alunos e no site':'🛠 Mapa EM ATUALIZAÇÃO · oculto para alunos e site';
    document.getElementById('mpPubS').textContent=MPUB?'Os alunos veem o botão 📍 FC no Brasil e o site mostra as cidades.':'Organize as cidades com calma. Ninguém vê até você clicar em Ativar.';
    const B=document.getElementById('mpPubB');B.textContent=MPUB?'🛠 Colocar em atualização':'🟢 Ativar mapa';B.className=MPUB?'':'pri';
-   B.onclick=async()=>{B.disabled=true;MPUB=!MPUB;await ins('mapa',{itens:MPD,pub:MPUB});B.disabled=false;mpRender();};
-   const sm=f=>MPD.filter(f).reduce((a,x)=>a+Math.max(1,+x.n||1),0),fin=sm(x=>x.s==='fin'),and=sm(x=>x.s!=='fin');
+   B.onclick=async()=>{B.disabled=true;MPUB=!MPUB;await mpSalvar();B.disabled=false;mpRender();};
+   const fin=MPD.reduce((a,x)=>a+x.f,0),and=MPD.reduce((a,x)=>a+x.n-x.f,0);
    document.getElementById('mpRes').innerHTML=`<div class="fin"><b>✔ ${fin}</b><span>empresas finalizadas · sistema alimentado</span></div><div><b>● ${and}</b><span>empresas em andamento</span></div><div><b>${new Set(MPD.map(x=>x.c+'|'+x.u)).size} · ${new Set(MPD.map(x=>x.u)).size}</b><span>cidades · estados</span></div>`;}
-  document.getElementById('mpTb').innerHTML=MPD.length?MPD.map((x,i)=>`<tr${x.s==='fin'?' class="mfin"':''}><td>${esc(x.c)}</td><td>${esc(x.u)}</td><td>${x.t==='pr'?'📍 Presencial':'💻 On-line'}</td><td>${x.s==='fin'?'<span style="color:#1f6fb2;font-weight:700">✔ Finalizado · sistema alimentado</span>':'<span style="color:var(--ok);font-weight:600">● Em andamento</span>'}</td><td class="n">${x.n}</td><td style="white-space:nowrap"><button type="button" data-mst="${i}">${x.s==='fin'?'Reabrir':'Finalizar'}</button> <button type="button" class="no" data-mrm="${i}">Excluir</button></td></tr>`).join(''):'<tr><td colspan="6" class="note">Nenhuma cidade ainda.</td></tr>';
-  document.querySelectorAll('[data-mst]').forEach(b=>b.onclick=async()=>{const x=MPD[+b.dataset.mst];x.s=x.s==='fin'?'and':'fin';await ins('mapa',{itens:MPD,pub:MPUB});mpRender();});
-  document.querySelectorAll('[data-mrm]').forEach(b=>b.onclick=async()=>{MPD.splice(+b.dataset.mrm,1);await ins('mapa',{itens:MPD,pub:MPUB});mpRender();});
+  document.getElementById('mpTb').innerHTML=MPD.length?MPD.map((x,i)=>`<tr${x.f>=x.n&&x.n?' class="mfin"':''}><td>${esc(x.c)}</td><td>${esc(x.u)}</td><td>${x.t==='pr'?'📍 Presencial':'💻 On-line'}</td>
+    <td><span class="mpq"><button type="button" data-q="${i}" data-k="a" data-d="-1">−</button><b style="color:var(--ok)">${x.n-x.f}</b><button type="button" data-q="${i}" data-k="a" data-d="1">+</button></span></td>
+    <td><span class="mpq"><button type="button" data-q="${i}" data-k="f" data-d="-1">−</button><b style="color:#1f6fb2">${x.f}</b><button type="button" data-q="${i}" data-k="f" data-d="1">+</button></span>${x.n-x.f>0?` <button type="button" data-mv1="${i}" title="Passa 1 empresa de Em andamento para Finalizada" style="font-size:12px;padding:4px 8px">1 finalizou ➜</button>`:''}</td>
+    <td class="n">${x.n}</td><td style="white-space:nowrap"><button type="button" class="no" data-mrm="${i}">Excluir</button></td></tr>`).join(''):'<tr><td colspan="7" class="note">Nenhuma cidade ainda.</td></tr>';
+  document.querySelectorAll('[data-q]').forEach(b=>b.onclick=async()=>{const x=MPD[+b.dataset.q],d=+b.dataset.d;let a=x.n-x.f,f=x.f;if(b.dataset.k==='a')a=Math.max(0,a+d);else f=Math.max(0,f+d);
+    if(a+f===0){if(!confirm(`${x.c}/${x.u} vai ficar com 0 empresas. Excluir a linha?`))return;MPD.splice(+b.dataset.q,1);}else{x.n=a+f;x.f=f;}await mpSalvar();mpRender();});
+  document.querySelectorAll('[data-mv1]').forEach(b=>b.onclick=async()=>{const x=MPD[+b.dataset.mv1];if(x.f<x.n)x.f++;await mpSalvar();mpRender();});
+  document.querySelectorAll('[data-mrm]').forEach(b=>b.onclick=async()=>{if(!confirm('Excluir esta linha do mapa?'))return;MPD.splice(+b.dataset.mrm,1);await mpSalvar();mpRender();});
   if(!document.getElementById('mapCard').classList.contains('tabOff'))FCM.render(document.getElementById('mpPrev'),MPD);}
 if(window.FCM){document.getElementById('mpU').innerHTML=Object.keys(FCM.NOME).sort().map(k=>`<option${k==='MT'?' selected':''}>${k}</option>`).join('');
   const fill=()=>{const u=document.getElementById('mpU').value,L=FCM.PORUF[u]||[];document.getElementById('mpL').innerHTML=L.map(n=>`<option value="${n}"></option>`).join('');document.getElementById('mpCn').textContent=`(${L.length} cidades de ${u})`;};
   document.getElementById('mpU').onchange=()=>{document.getElementById('mpC').value='';fill();document.getElementById('mpC').focus();};fill();}
 
 document.getElementById('mpF').onsubmit=async e=>{e.preventDefault();let c=document.getElementById('mpC').value.trim();if(!c||!MPD)return;{const u=document.getElementById('mpU').value,nm=s=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase(),f=(FCM.PORUF[u]||[]).find(n=>nm(n)===nm(c));if(f)c=f;else if(!confirm(`“${c}” não está na lista de cidades de ${u}. O ponto vai ficar no meio do estado. Salvar mesmo assim?`))return;}
-  MPD.push({c,u:document.getElementById('mpU').value,t:document.getElementById('mpT').value,s:document.getElementById('mpS').value,n:Math.max(1,+document.getElementById('mpN').value||1)});await ins('mapa',{itens:MPD,pub:MPUB});
-  document.getElementById('mpC').value='';document.getElementById('mpN').value=1;const m=document.getElementById('mpMsg');m.textContent=MPUB?'✔ Salvo · já aparece para os alunos':'✔ Salvo · mapa em atualização (oculto)';setTimeout(()=>m.textContent='',4000);mpRender();};
+  {const a=Math.max(0,+document.getElementById('mpN').value||0),f=Math.max(0,+document.getElementById('mpFi').value||0);if(a+f<1){alert('Coloque pelo menos 1 empresa (em andamento ou finalizada).');return;}
+  const u=document.getElementById('mpU').value,t=document.getElementById('mpT').value,ex=MPD.find(x=>x.c===c&&x.u===u&&x.t===t);
+  if(ex){ex.n+=a+f;ex.f+=f;}else MPD.push({c,u,t,n:a+f,f});}await mpSalvar();
+  document.getElementById('mpC').value='';document.getElementById('mpN').value=1;document.getElementById('mpFi').value=0;const m=document.getElementById('mpMsg');m.textContent=MPUB?'✔ Salvo · já aparece para os alunos':'✔ Salvo · mapa em atualização (oculto)';setTimeout(()=>m.textContent='',4000);mpRender();};
 document.querySelector('#ptabs [data-tab=map]').addEventListener('click',()=>{if(MPD)setTimeout(mpRender,50);else mpCarregar();});
 if(PTAB==='map')setTimeout(mpCarregar,800);
 gateUI(()=>carregar(),{soMatriz:true});
