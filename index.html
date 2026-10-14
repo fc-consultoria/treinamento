@@ -66,18 +66,21 @@
 <div id="appLoad" hidden style="padding:40px 20px;text-align:center;font:500 16px system-ui;color:#5d6b76">Carregando o orientativo…</div><div id="appRoot"></div>
 <script>
 function sugInit(){const box=document.getElementById('sugBox'),f=document.getElementById('sugForm'),m=document.getElementById('sugMsg');
-  const esc=v=>String(v||'').replace(/</g,'&lt;'),btn=document.getElementById('sugBtn'),rb=document.getElementById('sugResp');let MSG=[];
+  const esc=v=>String(v||'').replace(/</g,'&lt;'),btn=document.getElementById('sugBtn'),rb=document.getElementById('sugResp');let MSG=[],VIST=0;
   const meu=d=>window.ALUNO_CID?(d.cid===window.ALUNO_CID||(!d.cid&&d.quem===window.ALUNO_NOME)):true;
   const vk=()=>'treinFC-resp-vistas-'+(window.ALUNO_CID||'x');
   const load=async()=>{const {data:{session}}=await sb.auth.getSession();if(!session)return;
     const [a,b]=await Promise.all([sb.from('trein_eventos').select('detalhe,criado_em').eq('user_id',session.user.id).eq('tipo','sugestao'),sb.from('trein_eventos').select('detalhe,criado_em').eq('tipo','resposta')]);
     const mine=(a.data||[]).filter(r=>meu(r.detalhe||{})),refs=new Set(mine.map(r=>Date.parse(r.criado_em)));
-    const res=(b.data||[]).filter(r=>{const d=r.detalhe||{};return refs.has(Date.parse(d.ref))||(d.quem&&d.quem===window.ALUNO_NOME);});
+    const res=(b.data||[]).filter(r=>{const d=r.detalhe||{};if(d.oculta)return false;if(d.cid==='gestor')return false;return refs.has(Date.parse(d.ref))||(d.cid&&window.ALUNO_CID&&d.cid===window.ALUNO_CID)||(d.quem&&d.quem===window.ALUNO_NOME&&!d.cid);});
     MSG=[...mine.map(r=>({eu:1,t:r.criado_em,d:r.detalhe||{}})),...res.map(r=>({eu:0,t:r.criado_em,d:r.detalhe||{}}))].sort((x,y)=>Date.parse(x.t)-Date.parse(y.t));
     let seen=0;try{seen=+(localStorage.getItem(vk())||0);}catch(e){}const novas=MSG.filter(x=>!x.eu&&Date.parse(x.t)>seen).length;
-    btn.textContent=novas?`💬 Dúvidas · ${novas} resposta${novas>1?'s':''} da FC`:'💬 Dúvidas e sugestões';btn.style.background=novas?'#e0972e':'';btn.style.color=novas?'#1b1206':'';};
+    btn.textContent=novas?`💬 Dúvidas · ${novas} resposta${novas>1?'s':''} da FC`:'💬 Dúvidas e sugestões';btn.style.background=novas?'#e0972e':'';btn.style.color=novas?'#1b1206':'';
+    const ult=MSG.filter(x=>!x.eu).pop(),uk=ult?Date.parse(ult.t):0;
+    if(!box.hidden&&uk>VIST){draw();VIST=uk;try{localStorage.setItem(vk(),String(Date.now()));}catch(e){}}
+    else if(box.hidden&&ult&&ult.d.chat&&uk>seen&&uk>VIST&&Date.now()-uk<10*60e3&&window.ALUNO_CID&&!(typeof S!=='undefined'&&S.mode==='test')&&!document.getElementById('dvOv')&&!document.getElementById('bvOv')){VIST=uk;draw();box.hidden=false;m.textContent='💬 Nova mensagem da FC Consultoria';try{localStorage.setItem(vk(),String(Date.now()));}catch(e){}btn.textContent='💬 Dúvidas e sugestões';btn.style.background='';btn.style.color='';}};
   const draw=()=>{rb.innerHTML=MSG.length?MSG.map(x=>`<div style="align-self:${x.eu?'flex-end':'flex-start'};max-width:88%;padding:7px 10px;border-radius:10px;background:${x.eu?'#e1eef5':'#eef7f5'};border-left:${x.eu?'0':'3px solid #0e6b62'}"><small style="color:#5c6d68">${x.eu?'Você':'FC Consultoria'} · ${new Date(x.t).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}${x.eu&&x.d.tipo?' · '+esc(x.d.tipo):''}</small><br>${esc(x.d.txt)}${x.d.img?`<br><img src="${x.d.img}" alt="Imagem da FC" style="max-width:100%;margin-top:6px;border-radius:6px;cursor:zoom-in" onclick="document.getElementById('imgBig').src=this.src;document.getElementById('imgBox').hidden=false">`:''}</div>`).join(''):'<p style="margin:0;color:#5d6b76">Mande sua dúvida ou sugestão. A resposta da FC aparece aqui.</p>';rb.scrollTop=rb.scrollHeight;};
-  load();setInterval(load,120000);window.SUG_LOAD=load;
+  load();setInterval(()=>{if(document.visibilityState==='visible')load();},20000);window.SUG_LOAD=load;
   btn.onclick=async()=>{m.textContent='';await load();draw();box.hidden=false;document.getElementById('sugTxt').focus();try{localStorage.setItem(vk(),String(Date.now()));}catch(e){}load();};
   document.getElementById('sugFechar').onclick=()=>{box.hidden=true;};
   f.onsubmit=async e=>{e.preventDefault();const txt=document.getElementById('sugTxt').value.trim();if(txt.length<3)return;
@@ -175,7 +178,7 @@ function vigiaPrazo(uid,perfil){setInterval(()=>{if(window.ALUNO_CID&&window.COL
     try{const {data}=await sb.from('trein_eventos').select('detalhe').eq('tipo','chave_app').limit(1);
       const kb=Uint8Array.from(atob(data[0].detalhe.k),c=>c.charCodeAt(0));
       const key=await crypto.subtle.importKey('raw',kb,'AES-GCM',false,['decrypt']);window.__CK=key;
-      const buf=new Uint8Array(await (await fetch('app.enc?v=1792018916',{cache:'no-cache'})).arrayBuffer());
+      const buf=new Uint8Array(await (await fetch('app.enc?v=1792021192',{cache:'no-cache'})).arrayBuffer());
       const plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:buf.slice(0,12)},key,buf.slice(12));
       const html=await new Response(new Blob([plain]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
       const root=document.getElementById('appRoot');root.innerHTML=html;
@@ -209,7 +212,7 @@ function vigiaPrazo(uid,perfil){setInterval(()=>{if(window.ALUNO_CID&&window.COL
   });
 })();
 </script>
-<script>(function(){const V='1792018916';async function chk(){try{const t=(await (await fetch('version.txt?'+Date.now(),{cache:'no-store'})).text()).trim();
+<script>(function(){const V='1792021192';async function chk(){try{const t=(await (await fetch('version.txt?'+Date.now(),{cache:'no-store'})).text()).trim();
 if(t&&/^\d+$/.test(t)&&t!==V&&!document.getElementById('updBar')){const b=document.createElement('div');b.id='updBar';
 b.style.cssText='position:fixed;left:50%;top:10px;transform:translateX(-50%);z-index:9999;background:#1f6f9a;color:#fff;padding:10px 12px 10px 16px;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.25);font:600 14px system-ui,sans-serif;display:flex;gap:12px;align-items:center;max-width:calc(100% - 24px)';
 b.innerHTML='<span>🔄 Nova versão do orientativo disponível</span><button type="button" style="border:0;border-radius:7px;padding:7px 14px;font:700 14px system-ui,sans-serif;background:#e0972e;color:#1b232a;cursor:pointer">Atualizar</button>';
@@ -330,7 +333,7 @@ function abrir(){let o=document.getElementById('catOv');if(o)o.remove();o=docume
   catch(e){b.textContent='Tente de novo';}setTimeout(()=>{b.disabled=false;b.textContent=t;},4000);});}
 window.catInit=function(){const ub=document.getElementById('ubar');if(!ub||document.getElementById('catBtn'))return;const b=document.createElement('button');b.type='button';b.id='catBtn';b.textContent='📘 Catálogos';b.title='Catálogos técnicos Suprema e Gold (fonte do orientativo)';b.onclick=abrir;ub.insertBefore(b,document.getElementById('sugBtn'));};
 })();
-</script><script src="mapa.js?v=1792018916"></script><script>/* ===== Mapa "FC no Brasil" (tela do aluno) ===== */
+</script><script src="mapa.js?v=1792021192"></script><script>/* ===== Mapa "FC no Brasil" (tela do aluno) ===== */
 (function(){
 window.mapaInit=async function(){try{const r=await sb.from('trein_eventos').select('detalhe').eq('tipo','mapa').order('criado_em',{ascending:false}).limit(1);
   const dd=(((r.data||[])[0]||{}).detalhe)||{};if(dd.pub===false)return;const it=dd.itens||[];const ub=document.getElementById('ubar');if(!it.length||!ub||!window.FCM||document.getElementById('mpBtn'))return;
