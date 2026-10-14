@@ -139,7 +139,7 @@ button.ok{background:var(--ok);border-color:var(--ok);color:#fff}button.no{color
    <p class="note">Cada arte aparece uma vez para cada colaborador, na faixa de horas do prazo dele. Faixa sem foto é pulada. Nunca abre durante um desafio com tempo.</p>
    <div class="dvbar"><span class="dvtg" id="dvOn"><i></i><span id="dvOnT">Divulgação ligada</span></span>
     <label>Trocar a cada <select id="dvIv"><option value="3">3 h</option><option value="6">6 h</option><option value="12">12 h</option><option value="24">24 h</option></select></label>
-    <label>Na tela por <select id="dvDu"><option value="8">8 s</option><option value="12">12 s</option><option value="20">20 s</option></select></label>
+    <label>Na tela por <select id="dvDu"><option value="5">5 s</option><option value="6">6 s</option><option value="8">8 s</option><option value="12">12 s</option></select></label>
     <label>Para <select id="dvPara"><option value="todas">Todas as empresas</option><option value="escolher">Escolher empresas…</option></select></label><span class="msg ok" id="dvMsg"></span></div>
    <div class="dvpl" id="dvParaL" hidden></div>
    <div class="dvg" id="dvGrid"></div>
@@ -385,7 +385,7 @@ let DCFG=null,DART={},DNOV={};const DMAX=24,PHONE='5566999867984';
 const desc=v=>String(v||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
 async function divCarregar(){const r=await sb.from('trein_eventos').select('tipo,detalhe,criado_em').in('tipo',['divulga','div_art','novidade']).order('criado_em');
   DCFG=null;DART={};DNOV={};(r.data||[]).forEach(e=>{const d=e.detalhe||{};if(e.tipo==='divulga')DCFG=d;else if(e.tipo==='div_art')DART[d.id]=d;else DNOV[d.id]=Object.assign({},DNOV[d.id]||{},d,{criado:DNOV[d.id]?DNOV[d.id].criado:e.criado_em});});
-  if(!DCFG)DCFG={on:true,iv:6,du:12,para:'todas',seq:[]};while(DCFG.seq.length<DMAX)DCFG.seq.push(null);divRender();}
+  if(!DCFG)DCFG={on:true,iv:12,du:6,para:'todas',seq:[]};while(DCFG.seq.length<DMAX)DCFG.seq.push(null);divRender();}
 let DSV=null;function divSalvar(now){clearTimeout(DSV);const go=async()=>{await ins('divulga',JSON.parse(JSON.stringify(DCFG)));document.getElementById('dvMsg').textContent='✔ Salvo · vale para a próxima entrada dos alunos';setTimeout(()=>{const m=document.getElementById('dvMsg');if(m)m.textContent='';},4000);};if(now)go();else DSV=setTimeout(go,900);}
 async function divComp(file){const url=URL.createObjectURL(file),im=new Image();await new Promise(r=>{im.onload=r;im.src=url;});const k=Math.min(1,1080/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(url);return c.toDataURL('image/jpeg',.8);}
 const divId=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);

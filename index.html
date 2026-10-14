@@ -58,7 +58,7 @@
   <p class="gmsg" id="sugMsg" role="status" style="color:#2f9a55!important"></p>
  </form></div>
 <div class="gate" id="imgBox" hidden style="background:rgba(10,15,20,.85);z-index:120" onclick="this.hidden=true"><img id="imgBig" alt="Imagem enviada pela FC" style="max-width:96vw;max-height:92vh;border-radius:8px;background:#fff"></div>
-<div class="ubar" id="ubar" hidden><span id="uname"></span><button type="button" id="quemTag" hidden title="Trocar quem está estudando"></button><button type="button" id="sugBtn" title="Dúvidas e sugestões: fale com a FC">💬 Dúvidas e sugestões</button><a href="guia/" target="_blank" rel="noopener" style="background:#e0972e;border-color:#e0972e;color:#1b1206;font-weight:600">Guia do aluno</a><a id="upainel" href="painel.html" hidden>Painel da matriz</a><button type="button" onclick="sair()">Sair</button></div>
+<div class="ubar" id="ubar" hidden><span id="uname"></span><button type="button" id="quemTag" hidden title="Trocar quem está estudando"></button><button type="button" id="sugBtn" title="Dúvidas e sugestões: fale com a FC">💬 Dúvidas e sugestões</button><a href="guia/" target="_blank" rel="noopener" style="background:#e0972e;border-color:#e0972e;color:#1b1206;font-weight:600">Guia do aluno</a><a href="https://fcconsultoria.my.canva.site/precificacao-precos-custo-venda" target="_blank" rel="noopener" title="Site da FC Consultoria">🌐 Site FC</a><a id="upainel" href="painel.html" hidden>Painel da matriz</a><button type="button" onclick="sair()">Sair</button></div>
 <div id="appLoad" hidden style="padding:40px 20px;text-align:center;font:500 16px system-ui;color:#5d6b76">Carregando o treinamento…</div><div id="appRoot"></div>
 <script>
 function sugInit(){const box=document.getElementById('sugBox'),f=document.getElementById('sugForm'),m=document.getElementById('sugMsg');
@@ -165,7 +165,7 @@ function vigiaPrazo(uid,perfil){setInterval(()=>{if(window.ALUNO_CID&&window.COL
     try{const {data}=await sb.from('trein_eventos').select('detalhe').eq('tipo','chave_app').limit(1);
       const kb=Uint8Array.from(atob(data[0].detalhe.k),c=>c.charCodeAt(0));
       const key=await crypto.subtle.importKey('raw',kb,'AES-GCM',false,['decrypt']);
-      const buf=new Uint8Array(await (await fetch('app.enc?v=1791938309',{cache:'no-cache'})).arrayBuffer());
+      const buf=new Uint8Array(await (await fetch('app.enc?v=1791939664',{cache:'no-cache'})).arrayBuffer());
       const plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:buf.slice(0,12)},key,buf.slice(12));
       const html=await new Response(new Blob([plain]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
       const root=document.getElementById('appRoot');root.innerHTML=html;
@@ -197,7 +197,7 @@ function vigiaPrazo(uid,perfil){setInterval(()=>{if(window.ALUNO_CID&&window.COL
   });
 })();
 </script>
-<script>(function(){const V='1791938309';async function chk(){try{const t=(await (await fetch('version.txt?'+Date.now(),{cache:'no-store'})).text()).trim();
+<script>(function(){const V='1791939664';async function chk(){try{const t=(await (await fetch('version.txt?'+Date.now(),{cache:'no-store'})).text()).trim();
 if(t&&/^\d+$/.test(t)&&t!==V&&!document.getElementById('updBar')){const b=document.createElement('div');b.id='updBar';
 b.style.cssText='position:fixed;left:50%;top:10px;transform:translateX(-50%);z-index:9999;background:#1f6f9a;color:#fff;padding:10px 12px 10px 16px;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.25);font:600 14px system-ui,sans-serif;display:flex;gap:12px;align-items:center;max-width:calc(100% - 24px)';
 b.innerHTML='<span>🔄 Nova versão do treinamento disponível</span><button type="button" style="border:0;border-radius:7px;padding:7px 14px;font:700 14px system-ui,sans-serif;background:#e0972e;color:#1b232a;cursor:pointer">Atualizar</button>';
@@ -225,7 +225,7 @@ const paraOk=p=>!p||p==='todas'||(Array.isArray(p)&&p.includes(UID));
 function itens(){const L=[],cid=window.ALUNO_CID;
   Object.values(NOV).filter(x=>!x.removido&&x.img&&(x.ate||'9')>=hoje()&&paraOk(x.para)).forEach(x=>L.push({id:x.id,img:x.img,t:x.t,x:x.x,k:x.k,nov:1}));
   if(CFG&&CFG.on&&paraOk(CFG.para)&&window.ALUNO_INI){const iv=CFG.iv||6,h=(Date.now()-window.ALUNO_INI)/3600e3,sl=Math.floor(h/iv);
-    (CFG.seq||[]).slice(0,sl+1).forEach((s,i)=>{if(s&&s.on&&ART[s.a])L.push({id:s.a,img:ART[s.a].img,t:s.t,slot:i,atual:i===sl});});}
+    (CFG.seq||[]).forEach((s,i)=>{if(s&&s.on&&ART[s.a])L.push({id:s.a,img:ART[s.a].img,t:s.t,slot:i,atual:i===sl});});}
   return L.filter(x=>!x.nov||true).map(x=>Object.assign(x,{visto:VISTO.has(cid+'|'+x.id)}));}
 function ocupado(){try{if(typeof S!=='undefined'&&S.mode==='test'&&typeof Q!=='undefined'&&Q.t0&&!Q.fin)return true;
   if(typeof TMR!=='undefined'&&['wv','cm'].some(k=>TMR[k]&&TMR[k].t0&&!TMR[k].fin))return true;}catch(e){}
@@ -234,17 +234,19 @@ async function check(){if(!UID||!window.ALUNO_CID||OPEN||document.visibilityStat
   try{if(Date.now()-LOADED>10*60e3)await load();}catch(e){return;}
   const L=itens();btnUI(L);if(ocupado())return;
   const x=L.find(y=>y.nov&&!y.visto)||L.find(y=>y.atual&&!y.visto);if(x)show(x,false,L);}
-function btnUI(L){const b=document.getElementById('dvBtn');if(!b)return;const n=(L||itens()).filter(x=>x.visto||x.atual||x.nov).length;b.hidden=!n;}
-function show(x,rever,L){cur=x;OPEN=true;held=false;GAL=(L||itens()).filter(y=>y.visto||y.atual||y.nov||y.id===x.id);
+function btnUI(L){const b=document.getElementById('dvBtn');if(!b)return;const n=(L||itens()).length;b.hidden=!n;b.textContent=n>1?`📢 Divulgação (${n})`:'📢 Divulgação';}
+function show(x,rever,L){cur=x;OPEN=true;held=false;GAL=(L||itens());if(!GAL.some(y=>y.id===x.id))GAL.unshift(x);
   let o=document.getElementById('dvOv');if(o)o.remove();o=document.createElement('div');o.id='dvOv';o.setAttribute('role','dialog');o.setAttribute('aria-label','Divulgação FC');
-  const i=GAL.findIndex(y=>y.id===x.id),du=(CFG&&CFG.du)||12;
+  const i=GAL.findIndex(y=>y.id===x.id),du=(CFG&&CFG.du)||6;
   o.innerHTML=`<div class="m"><img src="${x.img}" alt="${esc(x.t)}"><div class="sd"><span class="k">${x.nov?'NOVIDADE FC · '+esc(x.k||''):'FC CONSULTORIA · REPRESENTAÇÃO'}</span><h3>${esc(x.t)}</h3>${x.x?`<p>${esc(x.x)}</p>`:''}
-   ${rever?'':`<div class="pb"><i id="dvPb"></i></div><span class="tm" id="dvTm">Fecha sozinha em ${du} s · toque na arte para parar</span>`}
+   ${rever?'':`<div class="pb"><i id="dvPb"></i></div><span class="tm" id="dvTm">Fecha sozinha em ${du} s</span><button type="button" id="dvPs">⏸ Pausar para ler</button>`}
    <button type="button" class="wz" id="dvW">💬 Tenho interesse</button><span class="ok" id="dvOk" hidden></span><button type="button" id="dvD">⬇ Baixar imagem</button><button type="button" id="dvP">🖨 Imprimir</button>
-   ${GAL.length>1?`<div class="nv"><button type="button" id="dvA"${i<=0?' disabled':''}>◀</button><button type="button" id="dvZ"${i>=GAL.length-1?' disabled':''}>▶</button></div>`:''}
-   <button type="button" class="bk" id="dvB">← Voltar ao treinamento</button></div></div>`;
+   ${GAL.length>1?`<div class="nv"><button type="button" id="dvA"${i<=0?' disabled':''}>◀</button><span style="align-self:center;font:500 12px ui-monospace,monospace;color:#9fb3be;white-space:nowrap">${i+1} de ${GAL.length}</span><button type="button" id="dvZ"${i>=GAL.length-1?' disabled':''}>▶</button></div>`:''}
+   <a href="https://fcconsultoria.my.canva.site/precificacao-precos-custo-venda" target="_blank" rel="noopener" style="font:600 14px system-ui,sans-serif;border-radius:8px;padding:9px 11px;border:1px solid #3a5866;background:#16262f;color:#e9edf0;text-decoration:none">🌐 Conheça o site da FC</a><button type="button" class="bk" id="dvB">← Voltar ao treinamento</button></div></div>`;
   document.body.appendChild(o);requestAnimationFrame(()=>o.classList.add('on'));
-  o.querySelector('.m').addEventListener('click',e=>{if(e.target.tagName!=='BUTTON'&&!held&&!rever){held=true;const t=document.getElementById('dvTm');if(t)t.textContent='Parada · feche quando quiser';}});
+  const hold=v=>{held=v;const t=document.getElementById('dvTm'),p=document.getElementById('dvPs');if(v){if(t)t.textContent='Pausada · leia com calma e feche quando quiser';if(p)p.textContent='▶ Continuar';}else{t0=Date.now()-(1-(parseFloat((document.getElementById('dvPb')||{style:{}}).style.width)||100)/100)*du*1000;if(p)p.textContent='⏸ Pausar para ler';}};
+  {const p=document.getElementById('dvPs');if(p)p.onclick=()=>hold(!held);}
+  o.querySelector('img').addEventListener('click',()=>{if(!rever&&!held)hold(true);});
   o.addEventListener('click',e=>{if(e.target===o)close();});
   document.getElementById('dvB').onclick=close;
   document.getElementById('dvD').onclick=()=>{const a=document.createElement('a');a.href=x.img;a.download=(x.t||'divulgacao-fc').replace(/[\\/:*?"<>|]/g,'')+'.jpg';document.body.appendChild(a);a.click();a.remove();};
@@ -255,12 +257,12 @@ function show(x,rever,L){cur=x;OPEN=true;held=false;GAL=(L||itens()).filter(y=>y
     open('https://wa.me/'+PHONE+'?text='+encodeURIComponent(`Olá Fernando, vi no Treinamento FC 3D: "${x.t}". Tenho interesse. (${window.ALUNO_NOME||''} · ${EMP})`),'_blank');};
   const A=document.getElementById('dvA'),Z=document.getElementById('dvZ');if(A)A.onclick=()=>{clearInterval(tmr);show(GAL[i-1],true,L);};if(Z)Z.onclick=()=>{clearInterval(tmr);show(GAL[i+1],true,L);};
   if(!x.visto&&!rever){x.visto=true;VISTO.add(window.ALUNO_CID+'|'+x.id);sb.from('trein_eventos').insert({user_id:UID,tipo:'div_visto',tipologia:null,detalhe:{ref:x.id,cid:window.ALUNO_CID||null,quem:window.ALUNO_NOME||null,nov:!!x.nov}}).then(()=>{});}
-  clearInterval(tmr);if(!rever){t0=Date.now();tmr=setInterval(()=>{if(held)return;const r=Math.max(0,1-(Date.now()-t0)/(du*1000)),pb=document.getElementById('dvPb'),tm=document.getElementById('dvTm');if(pb)pb.style.width=r*100+'%';if(tm)tm.textContent=`Fecha sozinha em ${Math.ceil(r*du)} s · toque na arte para parar`;if(r<=0)close();},100);}
+  clearInterval(tmr);if(!rever){t0=Date.now();tmr=setInterval(()=>{if(held)return;const r=Math.max(0,1-(Date.now()-t0)/(du*1000)),pb=document.getElementById('dvPb'),tm=document.getElementById('dvTm');if(pb)pb.style.width=r*100+'%';if(tm)tm.textContent=`Fecha sozinha em ${Math.ceil(r*du)} s`;if(r<=0)close();},100);}
   btnUI();}
 function close(){clearInterval(tmr);const o=document.getElementById('dvOv');if(o){o.classList.remove('on');setTimeout(()=>o.remove(),300);}OPEN=false;}
 window.divInit=async function(uid,perfil){UID=uid;EMP=(perfil&&(perfil.nome||perfil.login))||'';
   const ub=document.getElementById('ubar');if(ub&&!document.getElementById('dvBtn')){const b=document.createElement('button');b.type='button';b.id='dvBtn';b.hidden=true;b.textContent='📢 Divulgação';b.style.cssText='background:#1fb3c9;border-color:#1fb3c9;color:#06222a;font-weight:700';
-    b.onclick=()=>{const L=itens(),G=L.filter(x=>x.visto||x.atual||x.nov);if(G.length)show(G[G.length-1],true,L);};ub.insertBefore(b,document.getElementById('sugBtn'));}
+    b.onclick=()=>{const L=itens();if(L.length)show(L[0],true,L);};ub.insertBefore(b,document.getElementById('sugBtn'));}
   try{await load();}catch(e){}setTimeout(check,4000);setInterval(check,60000);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')setTimeout(check,1500);});};
 })();
 </script></body>
