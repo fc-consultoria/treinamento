@@ -165,7 +165,7 @@ tr.mfin td{background:#eef5fc}
      <div><button type="button" class="pri" id="nvPub">Publicar agora</button> <span class="msg" id="nvMsg"></span></div></div></div>
    <ul class="nvl" id="nvList"></ul>
    <h3 class="dvt" style="margin-top:22px">C · Boas-vindas ao cliente</h3>
-   <p class="note">Aparece uma vez para cada colaborador e para o gestor, na primeira entrada depois que você registra o contrato. Na renovação aparece a mensagem de renovação. Use {empresa} e {nome} no texto.</p>
+   <p class="note">Aparece uma vez para cada colaborador e para o gestor. Com contrato: na primeira entrada depois do pagamento, e na renovação aparece a mensagem de renovação. Escolhendo “Todos os acessos”, quem ainda não tem contrato também recebe na primeira entrada. Use {empresa} e {nome} no texto.</p>
    <div id="bvBox"></div>
    <h3 class="dvt" style="margin-top:22px">D · 🖼 Minhas artes <span class="note" id="glN" style="font-weight:500;text-transform:none;letter-spacing:0"></span></h3>
    <p class="note">Todas as artes que você enviou ficam guardadas aqui. Na sequência, na novidade e nas boas-vindas é só escolher da galeria, sem enviar de novo.</p>
@@ -597,13 +597,14 @@ function bvUI(){const el=document.getElementById('bvBox');if(!el)return;const B=
   const A=B.a&&DART[B.a]&&!DART[B.a].rm?DART[B.a]:null;
   el.innerHTML=`<div class="bvw"><div class="bvi" id="bvImg" role="button" tabindex="0" style="${A?'background-image:url('+A.img+');border-style:solid':''}">${A?'':'＋ Escolher arte'}</div><div class="bvf">
     <div class="dvbar" style="margin:0"><span class="dvtg${B.on?' on':''}" id="bvOn"><i></i><span>${B.on?'Boas-vindas ligadas':'Boas-vindas desligadas'}</span></span><button type="button" id="bvTroca">🖼 Trocar arte</button><button type="button" id="bvPv">👁 Novo cliente</button><button type="button" id="bvPvR">👁 Renovação</button><span class="msg ok" id="bvMsg"></span></div>
+    <label>Mostrar para<select id="bvPara"><option value="ctr">Só empresas com contrato (na entrada depois do pagamento)</option><option value="todos">Todos os acessos (com e sem contrato) · diferencial FC</option></select></label>
     <label>Título<input id="bvT" value="${desc(B.t)}"></label>
     <label>Mensagem para cliente novo<textarea id="bvX" rows="3">${desc(B.x)}</textarea></label>
     <label>Mensagem na renovação<textarea id="bvXr" rows="2">${desc(B.xr)}</textarea></label></div></div>`;
   const sv=()=>{B.t=document.getElementById('bvT').value;B.x=document.getElementById('bvX').value;B.xr=document.getElementById('bvXr').value;divSalvar();};
   ['bvT','bvX','bvXr'].forEach(i=>document.getElementById(i).oninput=sv);
   const troca=()=>galEscolher(a=>{B.a=a.id;divSalvar(true);divRender();});document.getElementById('bvImg').onclick=troca;document.getElementById('bvTroca').onclick=troca;
-  document.getElementById('bvOn').onclick=()=>{B.on=!B.on;divSalvar(true);divRender();};
+  document.getElementById('bvOn').onclick=()=>{B.on=!B.on;divSalvar(true);divRender();};document.getElementById('bvPara').value=B.todos?'todos':'ctr';document.getElementById('bvPara').onchange=e=>{B.todos=e.target.value==='todos';divSalvar(true);};
   document.getElementById('bvPv').onclick=()=>bvPrev(B,A&&A.img,false);document.getElementById('bvPvR').onclick=()=>bvPrev(B,A&&A.img,true);}
 function bvPrev(B,img,ren){const nm=(ALUNOS[0]&&(ALUNOS[0].nome||ALUNOS[0].login))||'Vidraçaria Silva';
   if(typeof window.fcBoasVindas==='function')window.fcBoasVindas({t:B.t,x:ren?B.xr:B.x,img,ren,empresa:'Vidraçaria Silva',nome:'Carlos',previa:true});}

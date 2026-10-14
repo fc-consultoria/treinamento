@@ -172,7 +172,7 @@ function vigiaPrazo(uid,perfil){setInterval(()=>{if(window.ALUNO_CID&&window.COL
     try{const {data}=await sb.from('trein_eventos').select('detalhe').eq('tipo','chave_app').limit(1);
       const kb=Uint8Array.from(atob(data[0].detalhe.k),c=>c.charCodeAt(0));
       const key=await crypto.subtle.importKey('raw',kb,'AES-GCM',false,['decrypt']);window.__CK=key;
-      const buf=new Uint8Array(await (await fetch('app.enc?v=1792000296',{cache:'no-cache'})).arrayBuffer());
+      const buf=new Uint8Array(await (await fetch('app.enc?v=1792000751',{cache:'no-cache'})).arrayBuffer());
       const plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:buf.slice(0,12)},key,buf.slice(12));
       const html=await new Response(new Blob([plain]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
       const root=document.getElementById('appRoot');root.innerHTML=html;
@@ -206,7 +206,7 @@ function vigiaPrazo(uid,perfil){setInterval(()=>{if(window.ALUNO_CID&&window.COL
   });
 })();
 </script>
-<script>(function(){const V='1792000296';async function chk(){try{const t=(await (await fetch('version.txt?'+Date.now(),{cache:'no-store'})).text()).trim();
+<script>(function(){const V='1792000751';async function chk(){try{const t=(await (await fetch('version.txt?'+Date.now(),{cache:'no-store'})).text()).trim();
 if(t&&/^\d+$/.test(t)&&t!==V&&!document.getElementById('updBar')){const b=document.createElement('div');b.id='updBar';
 b.style.cssText='position:fixed;left:50%;top:10px;transform:translateX(-50%);z-index:9999;background:#1f6f9a;color:#fff;padding:10px 12px 10px 16px;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.25);font:600 14px system-ui,sans-serif;display:flex;gap:12px;align-items:center;max-width:calc(100% - 24px)';
 b.innerHTML='<span>🔄 Nova versão do orientativo disponível</span><button type="button" style="border:0;border-radius:7px;padding:7px 14px;font:700 14px system-ui,sans-serif;background:#e0972e;color:#1b232a;cursor:pointer">Atualizar</button>';
@@ -269,9 +269,10 @@ async function check(){if(!UID||!window.ALUNO_CID||OPEN||document.visibilityStat
   const L=itens();btnUI(L);if(ocupado())return;
   if(boasVindas())return;
   const x=L.find(y=>y.nov&&!y.visto)||L.find(y=>y.atual&&!y.visto);if(x)show(x,false,L);}
-function boasVindas(){const B=CFG&&CFG.bv,ate=window.CONTRATO_ATE,cid=window.ALUNO_CID;if(!B||!B.on||!ate||!cid||!window.CONTRATO_FIM)return false;
-  const A=B.a&&ART[B.a];if(!A||A.rm||!A.img)return false;const ref='bv-'+ate;if(VISTO.has(cid+'|'+ref))return false;
-  const ren=[...VISTO].some(k=>k.startsWith(cid+'|bv-'));VISTO.add(cid+'|'+ref);OPEN=true;
+function boasVindas(){const B=CFG&&CFG.bv,cid=window.ALUNO_CID;if(!B||!B.on||!cid)return false;
+  const ctr=!!(window.CONTRATO_FIM&&window.CONTRATO_ATE);if(!ctr&&!B.todos)return false;
+  const A=B.a&&ART[B.a];if(!A||A.rm||!A.img)return false;const ref=ctr?'bv-'+window.CONTRATO_ATE:'bv-inicio';if(VISTO.has(cid+'|'+ref))return false;
+  const ren=ctr&&[...VISTO].some(k=>k.startsWith(cid+'|bv-')&&k!==cid+'|bv-inicio');VISTO.add(cid+'|'+ref);OPEN=true;
   sb.from('trein_eventos').insert({user_id:UID,tipo:'div_visto',tipologia:null,detalhe:{ref,cid,quem:window.ALUNO_NOME||null,bv:true,ren}}).then(()=>{});
   window.fcBoasVindas({t:B.t,x:ren?B.xr:B.x,img:A.img,ren,empresa:EMP,nome:window.ALUNO_NOME||'',onClose:()=>{OPEN=false;}});return true;}
 function btnUI(L){const b=document.getElementById('dvBtn');if(!b)return;const n=(L||itens()).length;b.hidden=!n;b.textContent=n>1?`📢 Divulgação (${n})`:'📢 Divulgação';}
@@ -326,7 +327,7 @@ function abrir(){let o=document.getElementById('catOv');if(o)o.remove();o=docume
   catch(e){b.textContent='Tente de novo';}setTimeout(()=>{b.disabled=false;b.textContent=t;},4000);});}
 window.catInit=function(){const ub=document.getElementById('ubar');if(!ub||document.getElementById('catBtn'))return;const b=document.createElement('button');b.type='button';b.id='catBtn';b.textContent='📘 Catálogos';b.title='Catálogos técnicos Suprema e Gold (fonte do orientativo)';b.onclick=abrir;ub.insertBefore(b,document.getElementById('sugBtn'));};
 })();
-</script><script src="mapa.js?v=1792000296"></script><script>/* ===== Mapa "FC no Brasil" (tela do aluno) ===== */
+</script><script src="mapa.js?v=1792000751"></script><script>/* ===== Mapa "FC no Brasil" (tela do aluno) ===== */
 (function(){
 window.mapaInit=async function(){try{const r=await sb.from('trein_eventos').select('detalhe').eq('tipo','mapa').order('criado_em',{ascending:false}).limit(1);
   const dd=(((r.data||[])[0]||{}).detalhe)||{};if(dd.pub===false)return;const it=dd.itens||[];const ub=document.getElementById('ubar');if(!it.length||!ub||!window.FCM||document.getElementById('mpBtn'))return;
