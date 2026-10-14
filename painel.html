@@ -161,6 +161,7 @@ tr.mfin td{background:#eef5fc}
    <ul class="nvl" id="nvList"></ul>
   </div></section>
 <section class="card" id="demoCard" data-tab="demo"><h2>🧪 Demonstrativos · links de teste</h2><div style="padding:12px 16px 16px">
+  <div id="prCard"></div>
   <p class="note">Gere um link para o cliente testar 2 tipologias da Suprema e 2 da Gold (Conhecendo as Esquadrias). Os outros painéis aparecem com 🔒 e um vídeo de como funcionam. As horas começam a contar quando o cliente abre o link pela primeira vez.</p>
   <form id="dmF" class="mpf"><label>Cliente / empresa<input id="dmN" required placeholder="Ex.: Vidraçaria Silva" autocomplete="off"></label><label>Cidade<input id="dmC" placeholder="Ex.: Sorriso" autocomplete="off"></label><label>UF<select id="dmU"><option value="">—</option><option>AC</option><option>AL</option><option>AM</option><option>AP</option><option>BA</option><option>CE</option><option>DF</option><option>ES</option><option>GO</option><option>MA</option><option>MG</option><option>MS</option><option>MT</option><option>PA</option><option>PB</option><option>PE</option><option>PI</option><option>PR</option><option>RJ</option><option>RN</option><option>RO</option><option>RR</option><option>RS</option><option>SC</option><option>SE</option><option>SP</option><option>TO</option></select></label><label>Tempo de acesso<select id="dmH"><option value="24">24 horas</option><option value="48">48 horas</option><option value="72">72 horas</option><option value="12">12 horas</option></select></label><button class="pri" type="submit">Gerar link</button></form>
   <div id="dmNovo"></div>
@@ -220,7 +221,7 @@ tr.mfin td{background:#eef5fc}
 <script src="auth.js"></script>
 <script src="mapa.js"></script>
 <script>
-const ZCFG=new Set(['contrato','empresa_local','gestor_in','gestor_hb','gestor_acao','colab','liberacao','sistema','gestor','chave_app','sugestao','resposta','sug_excluida','zerar','interesse','interesse_ok']);
+const ZCFG=new Set(['promo','contrato','empresa_local','gestor_in','gestor_hb','gestor_acao','colab','liberacao','sistema','gestor','chave_app','sugestao','resposta','sug_excluida','zerar','interesse','interesse_ok']);
 function zerarFiltro(ev,zs){const Z={};(zs||ev).forEach(e=>{if(e.tipo==='zerar'){const p=(e.detalhe||{}).para,t=Date.parse(e.criado_em);if(!Z[p]||t>Z[p])Z[p]=t;}});
   return ev.filter(e=>ZCFG.has(e.tipo)||!Z[e.user_id]||Date.parse(e.criado_em)>Z[e.user_id]);}
 const TIPOS={jcr200:'Suprema JCR 200',jcr200a:'Suprema JCR 200A',jcr300:'Suprema JCR 300',jcr205:'Suprema JCR 205',pcr200:'Suprema PCR 200',pvz300:'Suprema PVZ 300',pgr100:'Suprema PGR 100',max800:'Suprema MAX 800',gjc2f:'Gold JC-2F',gpc3fvz:'Gold PC3F-VZ',gpc2fpe:'Gold PC-2FPE',gjc4f:'Gold JC-4F',gjc4fs:'Gold JC-4FS',gpc2f:'Gold PC-2F',gpc2fm:'Gold PC-2F MAC',gmax:'Gold MAX'};
@@ -256,7 +257,7 @@ function gestorCel(uid){const g=gestorRes(uid);if(!g.tot)return '<span style="co
   const dias=g.ult?Math.floor((Date.now()-Date.parse(g.ult))/864e5):99,cor=dias<=3?'#1f8a4c':dias<=10?'#c47d12':'#a33';
   return `<span style="color:${cor};font-weight:700">${g.agora?'🟢 agora · '+g.agora+' aparelho'+(g.agora>1?'s':''):fmtD(g.ult)}</span><br><span class="note">${g.n30} acesso${g.n30===1?'':'s'} em 30 dias · ${fmtH(g.min*60)}</span>`;}
 function render(){
-  try{ctrResumo();}catch(_){}
+  try{ctrResumo();promoUI();}catch(_){}
   const sem=Date.now()-7*864e5;let h=0,t=0,ativos7=0;
   const tb=document.getElementById('tb');tb.innerHTML='';
   ALUNOS.forEach(a=>{const r=resumo(a.user_id);h+=r.seg;t+=r.tes.length;if(r.ult&&new Date(r.ult)>sem)ativos7++;
@@ -344,6 +345,23 @@ function colabs(uid,todos){const C={};
 async function ins(tipo,detalhe){const {data:{session}}=await sb.auth.getSession();const r=await sb.from('trein_eventos').insert({user_id:session.user.id,tipo,tipologia:null,detalhe});if(r.error)alert0(r.error.message);return r;}
 async function prorrogar(uid,x,n){const h=x.ini&&x.resta<=0?Math.ceil((Date.now()-Date.parse(x.ini))/3600e3)+n:(x.horas||72)+n;await ins('colab',{para:uid,id:x.id,nome:x.nome,horas:h});carregar();}
 async function liberar(uid,sim){const cf=ctrFim(uid);if(sim&&cf&&cf>=HOJE()){await ins('liberacao',{para:uid,ate:cf>SAB()?cf:SAB(),contrato:true});return;}await ins('liberacao',sim?{para:uid,ate:SAB()}:{para:uid,ate:ONTEM(),enc:true});}
+/* ===== Oferta promocional (só aparece no link demonstrativo quando ligada) ===== */
+const promoAtual=()=>{const e=EV.find(x=>x.tipo==='promo');return e?Object.assign({t:e.criado_em},e.detalhe):null;};
+function promoUsadas(p){if(!p)return 0;let n=0;EV.forEach(e=>{if(e.tipo==='contrato'&&e.detalhe&&e.detalhe.promo&&e.criado_em>=p.t)n+=e.detalhe.cancelado?-1:1;});return Math.max(0,n);}
+function promoAtiva(){const p=promoAtual();return p&&p.on&&(p.vagas-promoUsadas(p))>0?p:null;}
+function promoUI(){const el=document.getElementById('prCard');if(!el)return;const p=promoAtual()||{on:false,de:150,por:100,vagas:3,texto:'Oferta de lançamento: R$ 100,00 a cada 30 dias para as 3 primeiras empresas que contratarem.'};
+  const us=promoUsadas(p.t?p:null),rest=Math.max(0,(p.vagas||0)-us),ativa=p.on&&rest>0;
+  el.innerHTML=`<div style="border:2px solid ${ativa?'#e0972e':'#d5dde2'};background:${ativa?'#fff7e8':'#fff'};border-radius:12px;padding:12px 14px;margin-bottom:14px">
+   <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><b style="font-size:16px">🏷 Oferta promocional</b><span style="font-weight:700;color:${ativa?'#c47d12':'#8d99a3'}">${ativa?'🔥 LIGADA · restam '+rest+' de '+p.vagas+' vagas':p.on&&!rest?'vagas esgotadas (desligada sozinha)':'desligada · o link mostra R$ '+(p.de||150)}</span>
+    <button type="button" id="prTog" class="${ativa?'no':'pri'}" style="margin-left:auto">${ativa?'Desligar oferta':'🔥 Ligar oferta'}</button></div>
+   <div class="edit" style="flex-wrap:wrap;gap:8px;align-items:flex-end;margin-top:8px">
+    <label style="font-size:12.5px">Preço normal (R$)<br><input id="prDe" value="${p.de||150}" style="width:80px"></label>
+    <label style="font-size:12.5px">Preço da oferta (R$)<br><input id="prPor" value="${p.por||100}" style="width:80px"></label>
+    <label style="font-size:12.5px">Vagas<br><input id="prVg" type="number" min="1" value="${p.vagas||3}" style="width:70px"></label>
+    <label style="font-size:12.5px;flex:1;min-width:240px">Texto que o cliente vê<br><input id="prTx" value="${desc(p.texto||'')}" style="width:100%"></label></div>
+   <p class="note" style="margin:6px 0 0">Com a oferta ligada, o “Contratar agora” do link mostra <s>R$ ${p.de||150}</s> <b>R$ ${p.por||100}</b> e “restam X vagas”. Cada contrato registrado como promocional conta uma vaga; quando acabam, a oferta desliga sozinha.</p></div>`;
+  document.getElementById('prTog').onclick=async()=>{const n=v=>Number(String(v).replace(',','.'))||0;const b=document.getElementById('prTog');b.disabled=true;
+    await ins('promo',{on:!ativa,de:n(document.getElementById('prDe').value),por:n(document.getElementById('prPor').value),vagas:+document.getElementById('prVg').value||3,texto:document.getElementById('prTx').value.trim()});carregar();};}
 /* ===== Contratos mensais ===== */
 const ctrList=uid=>{const C=EV.filter(e=>e.tipo==='contrato'&&(e.detalhe||{}).para===uid),X=new Set(C.filter(e=>e.detalhe.cancelado).map(e=>e.detalhe.ref));return C.filter(e=>!e.detalhe.cancelado&&!X.has(e.criado_em));};
 const ctrFim=uid=>ctrList(uid).reduce((m,e)=>(e.detalhe.fim>(m||''))?e.detalhe.fim:m,null);
@@ -360,17 +378,18 @@ function ctrUI(a){const box=document.getElementById('ctrBox');if(!box)return;con
   box.innerHTML=`${f?`<div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;padding:12px 14px;border-radius:10px;border:2px solid ${dias<0?'#a33':dias<=7?'#c47d12':'#1f8a4c'};background:#fff;margin-bottom:10px"><div style="font:700 30px var(--f-display);color:${dias<0?'#a33':dias<=7?'#c47d12':'#1f8a4c'}">${dias<0?'Vencido':dias+' dia'+(dias===1?'':'s')}</div><div>${dias<0?'Venceu em <b>'+brD(f)+'</b>. O acesso da empresa está bloqueado até renovar.':'Contrato ativo até <b>'+brD(f)+'</b>. Os colaboradores usam de domingo a domingo, sem o limite de 72 h.'}</div></div>`:'<p class="note">Esta empresa não tem contrato mensal registrado (segue as regras de semana e 72 h por colaborador).</p>'}
    <div class="edit" style="flex-wrap:wrap;gap:8px;align-items:flex-end">
     <label style="font-size:12.5px">Data do pagamento<br><input type="date" id="cPg" value="${H}"></label>
-    <label style="font-size:12.5px">Valor (R$)<br><input id="cVl" value="150,00" style="width:90px"></label>
+    <label style="font-size:12.5px">Valor (R$)<br><input id="cVl" value="${promoAtiva()?String(promoAtiva().por).replace('.',',')+',00':'150,00'}" style="width:90px"></label>
+    ${promoAtiva()?'<label style="font-size:12.5px;display:flex;gap:6px;align-items:center"><input type="checkbox" id="cPromo" checked> 🔥 conta como vaga da oferta</label>':''}
     <label style="font-size:12.5px">Início do período<br><input type="date" id="cIni" value="${ini0}"></label>
     <label style="font-size:12.5px">Forma<br><select id="cFm"><option>PIX</option><option>Dinheiro</option><option>Transferência</option><option>Cartão</option></select></label>
     <label style="font-size:12.5px;flex:1;min-width:160px">Observação<br><input id="cObs" placeholder="Ex.: comprovante recebido no WhatsApp" style="width:100%"></label></div>
    <div class="edit"><button type="button" class="pri" id="cPagar">💾 Registrar pagamento · +30 dias</button><button type="button" id="cBonus">🎁 Bônus +30 dias (sem cobrança)</button></div>
-   ${L.length?`<table style="margin-top:8px"><thead><tr><th>Pagamento</th><th>Período</th><th>Valor</th><th>Tipo</th><th>Obs.</th><th></th></tr></thead><tbody>${L.map((e,i)=>{const d=e.detalhe;return `<tr><td>${brD(d.pago_em)}</td><td>${brD(d.ini)} → ${brD(d.fim)}</td><td class="n">${d.tipo==='bonus'?'—':brl(d.valor)}</td><td>${d.tipo==='bonus'?'🎁 bônus':'💳 '+(d.forma||'PIX')}</td><td>${desc(d.obs||'')}</td><td><button type="button" class="no" data-cx="${i}" style="font-size:12px;padding:3px 8px">Cancelar</button></td></tr>`;}).join('')}</tbody></table>`:''}
+   ${L.length?`<table style="margin-top:8px"><thead><tr><th>Pagamento</th><th>Período</th><th>Valor</th><th>Tipo</th><th>Obs.</th><th></th></tr></thead><tbody>${L.map((e,i)=>{const d=e.detalhe;return `<tr><td>${brD(d.pago_em)}</td><td>${brD(d.ini)} → ${brD(d.fim)}</td><td class="n">${d.tipo==='bonus'?'—':brl(d.valor)}</td><td>${d.tipo==='bonus'?'🎁 bônus':'💳 '+(d.forma||'PIX')}${d.promo?' · 🔥 oferta':''}</td><td>${desc(d.obs||'')}</td><td><button type="button" class="no" data-cx="${i}" style="font-size:12px;padding:3px 8px">Cancelar</button></td></tr>`;}).join('')}</tbody></table>`:''}
    <p class="msg" id="cMsg"></p>`;
   const go=async bonus=>{const ini=document.getElementById('cIni').value||ini0,fim=addDias(ini,30),val=Number(String(document.getElementById('cVl').value).replace(/\./g,'').replace(',','.'))||0;
     if(!bonus&&!val){document.getElementById('cMsg').textContent='Coloque o valor pago.';return;}
     if(bonus&&!confirm('Dar 30 dias de bônus (sem cobrança) para '+(a.nome||a.login)+'?'))return;
-    await ins('contrato',{para:a.user_id,ini,fim,dias:30,valor:bonus?0:val,pago_em:bonus?HOJE():document.getElementById('cPg').value,forma:bonus?'bônus':document.getElementById('cFm').value,tipo:bonus?'bonus':'pago',obs:document.getElementById('cObs').value.trim()});
+    await ins('contrato',{para:a.user_id,ini,fim,dias:30,valor:bonus?0:val,pago_em:bonus?HOJE():document.getElementById('cPg').value,forma:bonus?'bônus':document.getElementById('cFm').value,tipo:bonus?'bonus':'pago',promo:!bonus&&!!(document.getElementById('cPromo')||{}).checked,obs:document.getElementById('cObs').value.trim()});
     const nf=[fim,ctrFim(a.user_id)||''].sort().pop();if(nf>=HOJE())await ins('liberacao',{para:a.user_id,ate:nf,contrato:true});
     await carregar();};
   document.getElementById('cPagar').onclick=()=>go(false);document.getElementById('cBonus').onclick=()=>go(true);
