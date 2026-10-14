@@ -327,6 +327,30 @@ function implNovoUI(){const vg=ALUNOS.filter(livre);let o=document.getElementByI
       await ins('liberacao',{para:a.user_id,ate,contrato:true,impl:true});
       o.remove();await carregar();const a2=Object.assign({},ALUNOS.find(x=>x.user_id===a.user_id)||a,{login:lg,nome:empresa});implMsgUI(a2,implDe(a.user_id));}
     catch(err){b.disabled=false;st('Não deu certo: '+(err.message||err));}};}
+function implEditUI(a,m){let o=document.getElementById('ieOv');if(o)o.remove();o=document.createElement('div');o.id='ieOv';o.style.cssText='position:fixed;inset:0;z-index:400;background:rgba(10,16,22,.6);display:grid;place-items:center;padding:16px';
+  const C=colabs(a.user_id);
+  o.innerHTML=`<form id="ieF" style="background:#fff;border-radius:14px;max-width:540px;width:100%;max-height:92vh;overflow:auto;padding:20px;box-shadow:0 20px 50px rgba(0,0,0,.4);display:grid;gap:10px"><h3 style="margin:0">✏️ Editar cliente da consultoria</h3>
+   <label>Nome do cliente (responsável)<input id="ieC" value="${desc(m.cliente||'')}" style="width:100%"></label>
+   <label>Empresa<input id="ieE" value="${desc(a.nome||m.empresa||'')}" style="width:100%"></label>
+   <label>WhatsApp<input id="ieW" value="${desc(m.fone||'')}" style="width:100%"></label>
+   <div style="display:flex;gap:10px;flex-wrap:wrap"><label style="flex:1">Implantação até<input id="ieA" type="date" value="${m.ate}" style="width:100%"></label><label>Pessoas<select id="ieP">${[1,2,3,4,5,6].map(n=>`<option${n===(+m.pessoas||3)?' selected':''}>${n}</option>`).join('')}</select></label></div>
+   <p class="note" style="margin:0">Hoje a equipe tem ${C.length} pessoa${C.length===1?'':'s'} cadastrada${C.length===1?'':'s'}. Aumentando, as novas vagas são criadas com código. Para diminuir, primeiro remova quem sai em 🔍 Detalhes.</p>
+   <div style="display:flex;gap:10px;flex-wrap:wrap"><label style="flex:1">Login<input id="ieL" value="${desc(a.login)}" style="width:100%"></label><label style="flex:1">Nova senha (opcional)<input id="ieS" placeholder="deixe vazio para manter" style="width:100%"></label></div>
+   <div style="display:flex;gap:8px;justify-content:flex-end"><span class="msg" id="ieMsg" style="margin-right:auto"></span><button type="button" id="ieX">Cancelar</button><button type="submit" class="pri">💾 Salvar</button></div></form>`;
+  document.body.appendChild(o);document.getElementById('ieX').onclick=()=>o.remove();
+  document.getElementById('ieF').onsubmit=async ev=>{ev.preventDefault();const M=document.getElementById('ieMsg'),b=ev.target.querySelector('[type=submit]');b.disabled=true;M.textContent='Salvando…';
+    try{const cliente=document.getElementById('ieC').value.trim(),empresa=document.getElementById('ieE').value.trim(),fone=document.getElementById('ieW').value.trim(),ate=document.getElementById('ieA').value,pessoas=+document.getElementById('ieP').value,lg=document.getElementById('ieL').value.trim(),sen=document.getElementById('ieS').value.trim();
+      if(!empresa)throw new Error('informe a empresa');if(!ate)throw new Error('informe a data');
+      if(pessoas<C.length)throw new Error(`a equipe tem ${C.length} pessoas: remova quem sai em Detalhes antes de diminuir`);
+      if(sen&&sen.length<6)throw new Error('a senha precisa ter pelo menos 6 caracteres');
+      let r;if(lg&&lg!==a.login){r=await sb.rpc('trein_set_login',{alvo:a.user_id,novo:lg});if(r.error)throw r.error;}
+      if(sen){r=await sb.rpc('trein_set_senha',{alvo:a.user_id,nova:sen});if(r.error)throw r.error;senhaSave(a.user_id,sen);}
+      if(empresa!==(a.nome||'')){r=await sb.from('trein_alunos').update({nome:empresa}).eq('user_id',a.user_id);if(r.error)throw r.error;}
+      for(let n=C.length+1;n<=pessoas;n++){const id=Math.random().toString(36).slice(2,9),pin=novoPin();await ins('colab',{para:a.user_id,id,nome:'Colaborador '+n,horas:72,ph:await sha(id+':'+pin)});locSet('treinFC-pins',id,pin);}
+      await ins('implantacao',{para:a.user_id,cliente,empresa,fone,pessoas,ate});
+      if(ate!==m.ate)await ins('liberacao',ate>=HOJE()?{para:a.user_id,ate,contrato:true,impl:true}:{para:a.user_id,ate,enc:true,impl:true});
+      o.remove();await carregar();}
+    catch(err){b.disabled=false;M.className='msg bad';M.textContent='Não salvou: '+(err.message||err);}};}
 async function implData(uid,ate,enc){await ins('implantacao',{para:uid,ate});await ins('liberacao',enc?{para:uid,ate,enc:true,impl:true}:{para:uid,ate,contrato:true,impl:true});carregar();}
 function implUI(){const tb=document.getElementById('implTb');if(!tb)return;const H=HOJE();
   const L=ALUNOS.map(a=>[a,implDe(a.user_id)]).filter(x=>x[1]).sort((x,y)=>(x[1].ate<y[1].ate?1:-1));
@@ -337,9 +361,10 @@ function implUI(){const tb=document.getElementById('implTb');if(!tb)return;const
     return `<tr><td><b>${desc(m.cliente||'')}</b><br><span class="note">${desc(a.nome||m.empresa||'')}${m.fone?' · '+desc(m.fone):''}</span></td><td class="n">${desc(a.login)}</td><td class="n">${desc(senhaLoc(a.user_id)||'—')}</td>
      <td><b style="color:${cor}">${brD(m.ate)}</b><br><span class="note">${dias<0?'terminou · acesso bloqueado':dias===0?'termina hoje':'restam '+dias+' dia'+(dias===1?'':'s')}</span></td>
      <td class="n">${ent} de ${C.length} entraram</td><td class="n">${fmtD(r.ult)}</td><td class="n">${fmtH(r.seg)}</td>
-     <td style="white-space:nowrap"><button type="button" data-im="${i}" data-a="msg">💬 Mensagem</button> <button type="button" data-im="${i}" data-a="pr">📅 Prorrogar</button> <button type="button" data-im="${i}" data-a="cv" class="ok">✅ Converter em contrato</button><br><button type="button" data-im="${i}" data-a="det">🔍 Detalhes</button> <button type="button" data-im="${i}" data-a="gv">👁 Ver como o gestor vê</button> ${dias>=0?`<button type="button" data-im="${i}" data-a="enc" class="no">⛔ Encerrar</button>`:''} <button type="button" data-im="${i}" data-a="exc" class="no" title="Excluir cliente e liberar a vaga">🗑</button></td></tr>`;}).join(''):'<tr><td colspan="8" class="note" style="padding:14px">Nenhum acesso de implantação ainda. Clique em “＋ Cliente da consultoria”.</td></tr>';
+     <td style="white-space:nowrap"><button type="button" data-im="${i}" data-a="ed">✏️ Editar</button> <button type="button" data-im="${i}" data-a="msg">💬 Mensagem</button> <button type="button" data-im="${i}" data-a="pr">📅 Prorrogar</button> <button type="button" data-im="${i}" data-a="cv" class="ok">✅ Converter em contrato</button><br><button type="button" data-im="${i}" data-a="det">🔍 Detalhes</button> <button type="button" data-im="${i}" data-a="gv">👁 Ver como o gestor vê</button> ${dias>=0?`<button type="button" data-im="${i}" data-a="enc" class="no">⛔ Encerrar</button>`:''} <button type="button" data-im="${i}" data-a="exc" class="no" title="Excluir cliente e liberar a vaga">🗑</button></td></tr>`;}).join(''):'<tr><td colspan="8" class="note" style="padding:14px">Nenhum acesso de implantação ainda. Clique em “＋ Cliente da consultoria”.</td></tr>';
   tb.querySelectorAll('[data-im]').forEach(b=>b.onclick=async()=>{const [a,m]=L[+b.dataset.im],k=b.dataset.a;
     if(k==='msg')implMsgUI(a,m);
+    else if(k==='ed')implEditUI(a,m);
     else if(k==='exc')excluirCliente(a);
     else if(k==='pr'){const d=new Date(Math.max(Date.parse(m.ate+'T12:00:00Z'),Date.now())+15*864e5).toISOString().slice(0,10);const v=prompt('Prorrogar a implantação de '+(m.cliente||a.nome)+' até (dd/mm/aaaa):',brD(d));if(!v)return;const p=v.trim().split('/');if(p.length!==3){alert('Use o formato dd/mm/aaaa.');return;}const iso=p[2]+'-'+p[1].padStart(2,'0')+'-'+p[0].padStart(2,'0');if(!/^\d{4}-\d\d-\d\d$/.test(iso)||iso<HOJE()){alert('Data inválida.');return;}b.disabled=true;await implData(a.user_id,iso,false);}
     else if(k==='enc'){if(!confirm('Encerrar agora o acesso de implantação de '+(m.cliente||a.nome)+'? A equipe fica bloqueada e vê a oferta da licença.'))return;b.disabled=true;await implData(a.user_id,ONTEM(),true);}
