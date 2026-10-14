@@ -92,11 +92,11 @@ async function estadoEmpresa(uid){
   const zt=Math.max(0,...(zr.data||[]).map(r=>Date.parse(r.criado_em)));window.ZERAR_T=zt;
   const C={};(c.data||[]).forEach(r=>{const d=r.detalhe||{};if(d.para!==uid)return;C[d.id]=Object.assign({},C[d.id]||{},d,{alt:r.criado_em});});
   (e.data||[]).filter(r=>Date.parse(r.criado_em)>zt).forEach(r=>{const d=r.detalhe||{},x=C[d.cid];if(!x)return;if(r.tipo==='colab_inicio'){if(!x.ini)x.ini=r.criado_em;}else x.ped=r.criado_em;});
-  const L0=((l.data||[])[0]||{}).detalhe||{},CT=L0.contrato&&L0.ate?Date.parse(L0.ate+'T23:59:59-04:00'):0;window.CONTRATO_FIM=CT>Date.now()?CT:0;window.CONTRATO_ATE=CT>Date.now()?L0.ate:null;
+  const L0=((l.data||[])[0]||{}).detalhe||{},CT=L0.contrato&&L0.ate?Date.parse(L0.ate+'T23:59:59-04:00'):0;window.CONTRATO_FIM=CT>Date.now()?CT:0;window.CONTRATO_ATE=CT>Date.now()?L0.ate:null;window.IMPL_ATE=L0.impl&&CT>Date.now()?L0.ate:null;
   const lst=Object.values(C).filter(x=>!x.removido).map(x=>{x.fim=window.CONTRATO_FIM?window.CONTRATO_FIM:x.ini?Date.parse(x.ini)+(x.horas||72)*3600e3:null;x.resta=x.fim?x.fim-Date.now():null;
     x.pend=x.ped&&Date.parse(x.ped)>Date.parse(x.alt);return x;});
   const ate=((l.data||[])[0]||{}).detalhe?.ate||null;
-  return {lst,ate,ctr:L0.contrato?L0.ate:null,liberado:(DOW()!==0||!!L0.contrato)&&!!ate&&ate>=HOJE()};}
+  return {lst,ate,impl:!!L0.impl,ctr:L0.contrato?L0.ate:null,liberado:(DOW()!==0||!!L0.contrato)&&!!ate&&ate>=HOJE()};}
 const sha=async t=>[...new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t)))].map(b=>b.toString(16).padStart(2,'0')).join('');
 const pinOk=cid=>{try{return sessionStorage.getItem('treinFC-pin-'+cid)==='1';}catch(e){return false;}};
 function pedirPin(x){return new Promise(res=>{const L=document.getElementById('quemLista'),T=document.getElementById('quemTit'),X=document.getElementById('quemTxt'),M=document.getElementById('quemMsg');
@@ -113,14 +113,17 @@ function escolherColab(uid,perfil){return new Promise(res=>{
     const {error}=await sb.from('trein_eventos').insert({user_id:uid,tipo:'pedido_tempo',tipologia:null,detalhe:{cid:x.id,quem:x.nome}});
     await draw();M.style.color='#2f9a55';M.textContent=error?'Não foi possível enviar: '+error.message:'Pedido de mais tempo enviado para a FC Consultoria. Assim que liberar, é só entrar de novo.';}
   async function draw(){box.hidden=false;M.textContent='';L.innerHTML='<p>Carregando…</p>';const st=await estadoEmpresa(uid);
+    if(!st.liberado&&st.impl){T.textContent='A implantação terminou';X.innerHTML='O acesso exclusivo da implantação da precificação terminou'+(st.ate?' em <b>'+st.ate.split('-').reverse().join('/')+'</b>':'')+'. Obrigado por usar o Orientativo FC 3D!<br><br><b>Quer continuar com o Orientativo para a sua equipe?</b> Contrate a licença do link: <b>R$ 150,00 a cada 30 dias</b>, com até 6 colaboradores, o Painel do Gestor e os catálogos técnicos. O pagamento é pelo PIX <b>CNPJ 52.985.682/0001-32</b> e a liberação é no mesmo dia, com o mesmo login e o histórico da equipe.';
+      L.innerHTML='<a href="https://wa.me/5566999867984?text='+encodeURIComponent('Olá Fernando, a implantação terminou e quero contratar a licença do Orientativo FC 3D ('+(perfil.nome||perfil.login)+').')+'" target="_blank" rel="noopener" style="display:inline-block;background:#e8912d;color:#fff;text-decoration:none;font:700 15px Barlow,sans-serif;padding:11px 16px;border-radius:9px">💳 Quero contratar a licença</a>';return;}
     if(!st.liberado&&st.ctr&&st.ctr<HOJE()){T.textContent='O acesso da empresa venceu';X.innerHTML='O contrato venceu em <b>'+st.ctr.split('-').reverse().join('/')+'</b>. Para renovar por mais 30 dias, faça o PIX de <b>R$ 150,00</b> para a chave PIX <b>CNPJ 52.985.682/0001-32</b> (FC Consultoria) e envie o comprovante para a FC. A liberação é no mesmo dia.';
       L.innerHTML='<a href="https://wa.me/5566999867984?text='+encodeURIComponent('Olá Fernando, quero renovar o acesso do Orientativo FC 3D ('+(perfil.nome||perfil.login)+').')+'" target="_blank" rel="noopener" style="display:inline-block;background:#1f9d55;color:#fff;text-decoration:none;font:700 15px Barlow,sans-serif;padding:11px 16px;border-radius:9px">💬 Renovar pelo WhatsApp</a>';return;}
     if(!st.liberado){T.textContent=DOW()===0?'Hoje é domingo':'Acesso da semana encerrado';
       X.textContent=DOW()===0?'O orientativo funciona de segunda a sábado. Volte amanhã.':'O acesso desta empresa não foi liberado para esta semana. Fale com a FC Consultoria: WhatsApp (66) 9 9986-7984.';L.innerHTML='';return;}
-    T.textContent='Quem está estudando agora?';X.textContent=window.CONTRATO_FIM?'Toque no seu nome. Acesso liberado pelo contrato até '+new Date(window.CONTRATO_FIM).toLocaleDateString('pt-BR')+'.':'Toque no seu nome. Cada colaborador tem 72 horas corridas a partir do primeiro acesso.';
+    if(window.IMPL_ATE){let tries=0;const put=()=>{if(document.getElementById('implBar'))return true;const wr=document.querySelector('.wrap');if(!wr)return false;const ib=document.createElement('div');ib.id='implBar';ib.style.cssText='margin:0 0 12px;padding:9px 14px;border-radius:10px;background:#fff7e8;border:1px solid #f0c48a;color:#5a3d0c;font:600 14px Barlow,system-ui,sans-serif;display:flex;gap:8px;align-items:center;flex-wrap:wrap';ib.innerHTML='🛠 <span>Acesso exclusivo durante a implantação da precificação · válido até <b>'+window.IMPL_ATE.split('-').reverse().join('/')+'</b></span>';wr.insertBefore(ib,wr.firstChild);return true;};if(!put()){const t=setInterval(()=>{if(put()||++tries>120)clearInterval(t);},500);}}
+    T.textContent='Quem está estudando agora?';X.textContent=window.IMPL_ATE?'Toque no seu nome. Acesso exclusivo da implantação até '+window.IMPL_ATE.split('-').reverse().join('/')+'.':window.CONTRATO_FIM?'Toque no seu nome. Acesso liberado pelo contrato até '+new Date(window.CONTRATO_FIM).toLocaleDateString('pt-BR')+'.':'Toque no seu nome. Cada colaborador tem 72 horas corridas a partir do primeiro acesso.';
     if(!st.lst.length){L.innerHTML='<p>Nenhum colaborador cadastrado para '+esc(perfil.nome||perfil.login)+'. Peça à FC Consultoria para cadastrar os nomes.</p>';return;}
     L.innerHTML='';st.lst.forEach(x=>{const exp=x.resta!=null&&x.resta<=0,b=document.createElement('button');b.type='button';b.className='cbtn'+(exp?' exp':'');
-      b.innerHTML=`<span>${esc(x.nome)}</span><small>${window.CONTRATO_FIM?'contrato até '+new Date(window.CONTRATO_FIM).toLocaleDateString('pt-BR'):x.resta==null?'72 h · ainda não começou':exp?(x.pend?'prazo encerrado · pedido enviado':'prazo encerrado'):'restam '+fmtR(x.resta)}</small>`;
+      b.innerHTML=`<span>${esc(x.nome)}</span><small>${window.IMPL_ATE?'implantação até '+window.IMPL_ATE.split('-').reverse().join('/'):window.CONTRATO_FIM?'contrato até '+new Date(window.CONTRATO_FIM).toLocaleDateString('pt-BR'):x.resta==null?'72 h · ainda não começou':exp?(x.pend?'prazo encerrado · pedido enviado':'prazo encerrado'):'restam '+fmtR(x.resta)}</small>`;
       b.onclick=async()=>{if(exp){T.textContent=x.nome+': prazo encerrado';X.textContent='As '+(x.horas||72)+' horas deste colaborador terminaram. Peça mais tempo para a FC Consultoria.';L.innerHTML='';
           const p=document.createElement('button');p.type='button';p.className='cped';p.textContent=x.pend?'Pedido já enviado · enviar de novo':'Solicitar mais tempo';p.onclick=()=>pedir(x);
           const v=document.createElement('button');v.type='button';v.textContent='← Voltar';v.style.cssText='background:#fff;color:#1d3f57;border:1px solid #c9d3da';v.onclick=draw;L.append(p,v);return;}
@@ -172,7 +175,7 @@ function vigiaPrazo(uid,perfil){setInterval(()=>{if(window.ALUNO_CID&&window.COL
     try{const {data}=await sb.from('trein_eventos').select('detalhe').eq('tipo','chave_app').limit(1);
       const kb=Uint8Array.from(atob(data[0].detalhe.k),c=>c.charCodeAt(0));
       const key=await crypto.subtle.importKey('raw',kb,'AES-GCM',false,['decrypt']);window.__CK=key;
-      const buf=new Uint8Array(await (await fetch('app.enc?v=1792001391',{cache:'no-cache'})).arrayBuffer());
+      const buf=new Uint8Array(await (await fetch('app.enc?v=1792002257',{cache:'no-cache'})).arrayBuffer());
       const plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:buf.slice(0,12)},key,buf.slice(12));
       const html=await new Response(new Blob([plain]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
       const root=document.getElementById('appRoot');root.innerHTML=html;
@@ -206,7 +209,7 @@ function vigiaPrazo(uid,perfil){setInterval(()=>{if(window.ALUNO_CID&&window.COL
   });
 })();
 </script>
-<script>(function(){const V='1792001391';async function chk(){try{const t=(await (await fetch('version.txt?'+Date.now(),{cache:'no-store'})).text()).trim();
+<script>(function(){const V='1792002257';async function chk(){try{const t=(await (await fetch('version.txt?'+Date.now(),{cache:'no-store'})).text()).trim();
 if(t&&/^\d+$/.test(t)&&t!==V&&!document.getElementById('updBar')){const b=document.createElement('div');b.id='updBar';
 b.style.cssText='position:fixed;left:50%;top:10px;transform:translateX(-50%);z-index:9999;background:#1f6f9a;color:#fff;padding:10px 12px 10px 16px;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.25);font:600 14px system-ui,sans-serif;display:flex;gap:12px;align-items:center;max-width:calc(100% - 24px)';
 b.innerHTML='<span>🔄 Nova versão do orientativo disponível</span><button type="button" style="border:0;border-radius:7px;padding:7px 14px;font:700 14px system-ui,sans-serif;background:#e0972e;color:#1b232a;cursor:pointer">Atualizar</button>';
@@ -270,7 +273,7 @@ async function check(){if(!UID||!window.ALUNO_CID||OPEN||document.visibilityStat
   if(boasVindas())return;
   const x=L.find(y=>y.nov&&!y.visto)||L.find(y=>y.atual&&!y.visto);if(x)show(x,false,L);}
 function boasVindas(){const B=CFG&&CFG.bv,cid=window.ALUNO_CID;if(!B||!B.on||!cid)return false;
-  const ctr=!!(window.CONTRATO_FIM&&window.CONTRATO_ATE);if(!ctr&&!B.todos)return false;
+  const ctr=!!(window.CONTRATO_FIM&&window.CONTRATO_ATE&&!window.IMPL_ATE);if(!ctr&&!B.todos&&!window.IMPL_ATE)return false;
   const A=B.a&&ART[B.a];if(!A||A.rm||!A.img)return false;const ref=ctr?'bv-'+window.CONTRATO_ATE:'bv-inicio';if(VISTO.has(cid+'|'+ref))return false;
   const ren=ctr&&[...VISTO].some(k=>k.startsWith(cid+'|bv-')&&k!==cid+'|bv-inicio');VISTO.add(cid+'|'+ref);OPEN=true;
   sb.from('trein_eventos').insert({user_id:UID,tipo:'div_visto',tipologia:null,detalhe:{ref,cid,quem:window.ALUNO_NOME||null,bv:true,ren}}).then(()=>{});
@@ -327,7 +330,7 @@ function abrir(){let o=document.getElementById('catOv');if(o)o.remove();o=docume
   catch(e){b.textContent='Tente de novo';}setTimeout(()=>{b.disabled=false;b.textContent=t;},4000);});}
 window.catInit=function(){const ub=document.getElementById('ubar');if(!ub||document.getElementById('catBtn'))return;const b=document.createElement('button');b.type='button';b.id='catBtn';b.textContent='📘 Catálogos';b.title='Catálogos técnicos Suprema e Gold (fonte do orientativo)';b.onclick=abrir;ub.insertBefore(b,document.getElementById('sugBtn'));};
 })();
-</script><script src="mapa.js?v=1792001391"></script><script>/* ===== Mapa "FC no Brasil" (tela do aluno) ===== */
+</script><script src="mapa.js?v=1792002257"></script><script>/* ===== Mapa "FC no Brasil" (tela do aluno) ===== */
 (function(){
 window.mapaInit=async function(){try{const r=await sb.from('trein_eventos').select('detalhe').eq('tipo','mapa').order('criado_em',{ascending:false}).limit(1);
   const dd=(((r.data||[])[0]||{}).detalhe)||{};if(dd.pub===false)return;const it=dd.itens||[];const ub=document.getElementById('ubar');if(!it.length||!ub||!window.FCM||document.getElementById('mpBtn'))return;
