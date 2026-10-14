@@ -2863,25 +2863,49 @@ function demo2Init(){
   document.head.appendChild(st);
   const gate=document.createElement('div');gate.id='d2Gate';gate.innerHTML='<div class="c"><div style="font:600 13px var(--f-mono);letter-spacing:.12em;color:#1fb3c9">ORIENTATIVO FC 3D · DEMONSTRATIVO</div><h2>Carregando…</h2></div>';document.body.appendChild(gate);
   const fim=(tt,tx)=>{gate.innerHTML=`<div class="c"><div style="font:600 13px var(--f-mono);letter-spacing:.12em;color:#1fb3c9">ORIENTATIVO FC 3D · DEMONSTRATIVO</div><h2>${tt}</h2><p>${tx}</p><a href="${WA('Olá Fernando, usei o demonstrativo do Orientativo FC 3D e quero saber mais.')}" target="_blank" rel="noopener">💬 Falar com a FC no WhatsApp</a></div>`;};
-  if(!code){fim('Link incompleto','Peça para a FC Consultoria enviar o link do demonstrativo de novo.');return;}
+  const PREV=new URLSearchParams(location.search).has('previa');
+  if(PREV){let tk=null,uid=null;try{const a=JSON.parse(localStorage.getItem('trein-fc-auth')||'null');tk=a&&a.access_token;uid=a&&a.user&&a.user.id;}catch(_){}
+    const no=()=>fim('Visualização só para a Matriz','Entre no Painel da Matriz neste mesmo navegador e clique de novo em “👁 Ver como o cliente vê”.');
+    if(!tk||!uid){no();return;}
+    fetch('https://cpkjphodruyxfouirhpd.supabase.co/rest/v1/trein_alunos?select=papel&user_id=eq.'+uid,{headers:{apikey:KEY,Authorization:'Bearer '+tk}}).then(r=>r.json()).then(j=>{if(!Array.isArray(j)||!j[0]||j[0].papel!=='admin'){no();return;}previa();}).catch(no);}
+  else if(!code){fim('Link incompleto','Peça para a FC Consultoria enviar o link do demonstrativo de novo.');return;}
   /* 4 tipologias liberadas */
   LINHAS[0].t=['jcr200','pcr200'];LINHAS[1].t=['gjc2f','gpc2f'];LINCUR=null;
   let NOME='',FIM=0,q=[],last={},PROMO=null;
   const fmt=s=>{s=Math.max(0,s);const h=Math.floor(s/3600),m=Math.floor(s%3600/60);return h?`${h} h ${String(m).padStart(2,'0')} min`:`${m} min`;};
-  const send=(t,d)=>rpc('demo_log',{p_code:code,p_tipo:t,p_detalhe:d||null}).then(r=>{if(r&&r.ok===false&&r.restante===undefined){FIM=Date.now();tick();}if(r&&r.convite)setTimeout(()=>convite(r.convite),800);}).catch(()=>{});
-  window.TRK=(t,d)=>{const k=t+JSON.stringify(d||{});if(last[k]&&Date.now()-last[k]<4000)return;last[k]=Date.now();send(t,d);};
+  const send=(t,d)=>PREV?Promise.resolve():rpc('demo_log',{p_code:code,p_tipo:t,p_detalhe:d||null}).then(r=>{if(r&&r.ok===false&&r.restante===undefined){FIM=Date.now();tick();}if(r&&r.convite)setTimeout(()=>convite(r.convite),800);}).catch(()=>{});
+  window.TRK=(t,d)=>{if(PREV)return;const k=t+JSON.stringify(d||{});if(last[k]&&Date.now()-last[k]<4000)return;last[k]=Date.now();send(t,d);};
   function tick(){const r=Math.round((FIM-Date.now())/1000),e=document.getElementById('d2tm');if(e)e.textContent='⏱ restam '+fmt(r);
     if(r<=0){fim('O seu demonstrativo terminou','Obrigado por testar o Orientativo FC 3D. Para liberar mais tempo ou contratar para a sua equipe, fale com a FC.');}}
-  rpc('demo_start',{p_code:code}).then(r=>{
+  if(!PREV)rpc('demo_start',{p_code:code}).then(r=>{
     if(!r||r.estado==='invalido'){fim('Link não encontrado','Confira se o link foi copiado inteiro ou peça um novo para a FC Consultoria.');return;}
     if(r.estado==='expirado'){fim('O seu demonstrativo terminou','As 24 horas de teste acabaram. Se quiser mais tempo ou contratar para a sua equipe, fale com a FC.');return;}
     if(r.estado==='encerrado'){fim('Demonstrativo encerrado','Este link foi encerrado pela FC Consultoria.');return;}
     NOME=r.nome||'';FIM=Date.now()+r.restante*1000;PROMO=r.promo||null;gate.remove();if(r.convite)setTimeout(()=>convite(r.convite),2500);
-    const bar=document.createElement('div');bar.className='d2bar';bar.innerHTML=`<span><b>Demonstrativo${NOME?' · '+NOME.replace(/</g,'&lt;'):''}</b> · 2 tipologias da Suprema e 2 da Gold. Gire, abra as folhas, desmonte e veja os cortes.</span><span class="tm" id="d2tm"></span><button type="button" id="d2Op" style="margin-left:auto;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.5);color:#fff;font:600 14px var(--f-display);padding:8px 12px;border-radius:8px;cursor:pointer">⭐ Dar opinião</button><a href="#" id="d2Q" style="margin-left:0">${PROMO?'🔥 Oferta: contratar agora':'💳 Contratar agora'}</a>`;
-    const wr=document.querySelector('.wrap');wr.insertBefore(bar,wr.firstChild);document.getElementById('d2Q').onclick=e=>{e.preventDefault();contratar('Faixa do demonstrativo');};document.getElementById('d2Op').onclick=()=>opiniao(false);tick();setInterval(tick,30000);
-    setInterval(()=>{if(document.visibilityState==='visible')send('tempo',{s:60,t:S.typo});},60000);
+    montarBarra();
+
+
     setTypo('jcr200');
   }).catch(()=>fim('Sem conexão','Verifique a internet e abra o link de novo.'));
+  function montarBarra(){
+    const bar=document.createElement('div');bar.className='d2bar';bar.innerHTML=`<span><b>Demonstrativo${NOME?' · '+NOME.replace(/</g,'&lt;'):''}</b> · 2 tipologias da Suprema e 2 da Gold. Gire, abra as folhas, desmonte e veja os cortes.</span><span class="tm" id="d2tm"></span><button type="button" id="d2Op" style="margin-left:auto;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.5);color:#fff;font:600 14px var(--f-display);padding:8px 12px;border-radius:8px;cursor:pointer">⭐ Dar opinião</button><a href="#" id="d2Q" style="margin-left:0">${PROMO?'🔥 Oferta: contratar agora':'💳 Contratar agora'}</a>`;
+    const wr=document.querySelector('.wrap');wr.insertBefore(bar,wr.firstChild);document.getElementById('d2Q').onclick=e=>{e.preventDefault();contratar('Faixa do demonstrativo');};document.getElementById('d2Op').onclick=()=>opiniao(false);tick();setInterval(tick,30000);
+    if(!PREV)setInterval(()=>{if(document.visibilityState==='visible')send('tempo',{s:60,t:S.typo});},60000);
+  }
+  function previa(){NOME='Cliente exemplo';FIM=Date.now()+24*3600e3;gate.remove();
+    let tk=null;try{tk=JSON.parse(localStorage.getItem('trein-fc-auth')).access_token;}catch(_){}
+    fetch('https://cpkjphodruyxfouirhpd.supabase.co/rest/v1/trein_eventos?select=detalhe&tipo=eq.promo&order=criado_em.desc&limit=1',{headers:{apikey:KEY,Authorization:'Bearer '+tk}}).then(r=>r.json()).then(j=>{const p=Array.isArray(j)&&j[0]&&j[0].detalhe;if(p&&p.on)PROMO={de:p.de,por:p.por,texto:p.texto,restam:p.vagas};}).catch(()=>{}).finally(()=>{
+      montarBarra();setTypo('jcr200');
+      const tb=document.createElement('div');tb.id='d2Prev';tb.style.cssText='position:fixed;left:12px;bottom:12px;z-index:9600;background:#0f1a22;color:#fff;border-radius:12px;padding:10px 12px;box-shadow:0 10px 30px rgba(0,0,0,.4);font:600 13px system-ui,sans-serif;max-width:calc(100vw - 24px)';
+      const bt='border:1px solid #3a5866;background:#16262f;color:#fff;border-radius:7px;padding:6px 9px;font:600 12.5px system-ui;cursor:pointer;margin:3px';
+      tb.innerHTML=`<div style="margin-bottom:4px">👁 <b>Visualização da Matriz</b> · nada é registrado${PROMO?' · 🔥 oferta ligada':''}</div><button style="${bt}" data-p="cv">📨 Convite</button><button style="${bt}" data-p="ct">💳 Contratar</button><button style="${bt}" data-p="op">⭐ Opinião</button><button style="${bt}" data-p="tu">▶ Tutorial</button><button style="${bt}" data-p="fim">⏱ Prazo encerrado</button><button style="${bt}" data-p="x">✕</button>`;
+      document.body.appendChild(tb);
+      tb.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{const k=b.dataset.p;
+        if(k==='cv'){CVV.clear();convite({id:-1,msg:'Olá! Vi que você testou o Orientativo FC 3D.\n\nClique abaixo para ver a proposta e contratar. A liberação é no mesmo dia.\n\nFernando · FC Consultoria'});}
+        else if(k==='ct')contratar('Visualização');else if(k==='op'){const o=document.getElementById('d2Op2');if(o)o.remove();opiniao(true);}
+        else if(k==='tu')document.getElementById('m-test').click();
+        else if(k==='fim'){const g=document.createElement('div');g.id='d2Gate';g.innerHTML=`<div class="c"><div style="font:600 13px var(--f-mono);letter-spacing:.12em;color:#1fb3c9">ORIENTATIVO FC 3D · DEMONSTRATIVO</div><h2>O seu demonstrativo terminou</h2><p>As 24 horas de teste acabaram. Se quiser mais tempo ou contratar para a sua equipe, fale com a FC.</p><a href="#" onclick="return false">💬 Falar com a FC no WhatsApp</a><div><button type="button" style="margin-top:18px;border:1px solid #3a5866;background:#16262f;color:#fff;border-radius:8px;padding:8px 12px;cursor:pointer" onclick="this.closest('#d2Gate').remove()">← Fechar visualização</button></div></div>`;document.body.appendChild(g);}
+        else tb.remove();});});}
   function quero(m){send('interesse',{m});let o=document.getElementById('d2Q2');if(o)o.remove();o=document.createElement('div');o.id='d2Q2';o.style.cssText='position:fixed;inset:0;z-index:9100;background:rgba(10,16,22,.7);display:grid;place-items:center;padding:16px';
     o.innerHTML=`<div style="background:#fff;color:#1b232a;border-radius:14px;max-width:440px;width:100%;padding:22px;font:400 15px/1.5 system-ui,sans-serif;box-shadow:0 20px 50px rgba(0,0,0,.4)">
      <h3 style="margin:0 0 6px;font:700 21px var(--f-display)">✔ Recebemos o seu interesse!</h3><p style="margin:0 0 12px;color:#4b5a63">A FC Consultoria já foi avisada${NOME?' que <b>'+NOME.replace(/</g,'&lt;')+'</b> tem interesse':''}. Deixe o seu WhatsApp que o Fernando te chama:</p>
