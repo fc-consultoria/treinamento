@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Treinamento FC 3D</title>
+<title>Orientativo FC 3D</title>
 
 <style>
 .gate{position:fixed;inset:0;z-index:100;display:grid;place-items:center;background:#e9edf0;padding:16px}
@@ -34,7 +34,7 @@
  <form class="gcard" id="gateForm" autocomplete="on">
   <img src="data:image/jpeg;base64,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" alt="FC Consultoria e Representação" width="72" height="72" style="border-radius:14px;align-self:center">
   <div class="eb">FC Consultoria · Linhas Suprema e Gold</div>
-  <h1>Treinamento FC 3D</h1>
+  <h1>Orientativo FC 3D</h1>
   <p>Entre com o login e a senha que você recebeu.</p>
   <label>Login<input name="login" autocomplete="username" required placeholder="ex.: aluno01"></label>
   <label>Senha<input name="senha" type="password" autocomplete="current-password" required></label>
@@ -44,7 +44,7 @@
  </form>
 </div>
 <div class="gate" id="quemBox" hidden><div class="gcard" id="quemCard">
-  <div class="eb">Treinamento FC 3D</div><h1 id="quemTit">Quem está estudando agora?</h1>
+  <div class="eb">Orientativo FC 3D</div><h1 id="quemTit">Quem está estudando agora?</h1>
   <p id="quemTxt">Toque no seu nome. Cada colaborador tem 72 horas corridas a partir do primeiro acesso.</p>
   <div id="quemLista" style="display:flex;flex-direction:column;gap:8px"></div>
   <p class="gmsg" id="quemMsg" role="status"></p>
@@ -54,16 +54,16 @@
 .cbtn small{font:500 12px 'IBM Plex Mono',monospace;color:#5d6b76}.cbtn.exp{background:#fbeceb!important}.cbtn.exp small{color:#b4372f}
 .cped{background:#e0972e!important;color:#1b1206!important}</style>
 <div class="gate" id="sugBox" hidden><form class="gcard" id="sugForm" style="width:min(520px,100%);max-height:92vh;overflow:auto">
-  <div class="eb">Treinamento FC 3D</div><h1>Dúvidas e sugestões</h1>
+  <div class="eb">Orientativo FC 3D</div><h1>Dúvidas e sugestões</h1>
   <div id="sugResp" style="display:flex;flex-direction:column;gap:8px;font-size:14px"></div>
   <label>Tipo<select name="tipo" id="sugTipo"><option>Dúvida</option><option>Sugestão de melhoria</option><option>Algo não funcionou</option><option>Elogio</option></select></label>
   <label>Sua mensagem<textarea name="txt" id="sugTxt" required minlength="3" maxlength="1000" rows="4" style="font:inherit;padding:10px;border:1px solid #c9d3da;border-radius:8px"></textarea></label>
-  <button type="submit">Enviar para a FC</button><button type="button" id="sugFechar" style="background:#fff;color:#1d3f57;border:1px solid #c9d3da">← Voltar ao treinamento</button><a id="sugPainel" href="painel.html" hidden style="text-align:center;font:600 14px Barlow,sans-serif;color:#1f6f9a">← Voltar ao Painel da Matriz</a>
+  <button type="submit">Enviar para a FC</button><button type="button" id="sugFechar" style="background:#fff;color:#1d3f57;border:1px solid #c9d3da">← Voltar ao orientativo</button><a id="sugPainel" href="painel.html" hidden style="text-align:center;font:600 14px Barlow,sans-serif;color:#1f6f9a">← Voltar ao Painel da Matriz</a>
   <p class="gmsg" id="sugMsg" role="status" style="color:#2f9a55!important"></p>
  </form></div>
 <div class="gate" id="imgBox" hidden style="background:rgba(10,15,20,.85);z-index:120" onclick="this.hidden=true"><img id="imgBig" alt="Imagem enviada pela FC" style="max-width:96vw;max-height:92vh;border-radius:8px;background:#fff"></div>
-<div class="ubar" id="ubar" hidden><span id="uname"></span><button type="button" id="quemTag" hidden title="Trocar quem está estudando"></button><button type="button" id="sugBtn" title="Dúvidas e sugestões: fale com a FC">💬 Dúvidas e sugestões</button><a href="guia/" target="_blank" rel="noopener" style="background:#e0972e;border-color:#e0972e;color:#1b1206" title="Passo a passo de como usar o treinamento">❓ Guia do aluno</a><a href="https://fc-consultoria.github.io/" target="_blank" rel="noopener" title="Site da FC Consultoria">🌐 Site da FC</a><a id="upainel" href="painel.html" hidden>Painel da matriz</a><button type="button" class="usair" onclick="sair()" title="Sair do treinamento">⏻ Sair</button></div>
-<div id="appLoad" hidden style="padding:40px 20px;text-align:center;font:500 16px system-ui;color:#5d6b76">Carregando o treinamento…</div><div id="appRoot"></div>
+<div class="ubar" id="ubar" hidden><span id="uname"></span><button type="button" id="quemTag" hidden title="Trocar quem está estudando"></button><button type="button" id="sugBtn" title="Dúvidas e sugestões: fale com a FC">💬 Dúvidas e sugestões</button><a href="guia/" target="_blank" rel="noopener" style="background:#e0972e;border-color:#e0972e;color:#1b1206" title="Passo a passo de como usar o orientativo">❓ Guia do aluno</a><a href="https://fc-consultoria.github.io/" target="_blank" rel="noopener" title="Site da FC Consultoria">🌐 Site da FC</a><a id="upainel" href="painel.html" hidden>Painel da matriz</a><button type="button" class="usair" onclick="sair()" title="Sair do orientativo">⏻ Sair</button></div>
+<div id="appLoad" hidden style="padding:40px 20px;text-align:center;font:500 16px system-ui;color:#5d6b76">Carregando o orientativo…</div><div id="appRoot"></div>
 <script>
 function sugInit(){const box=document.getElementById('sugBox'),f=document.getElementById('sugForm'),m=document.getElementById('sugMsg');
   const esc=v=>String(v||'').replace(/</g,'&lt;'),btn=document.getElementById('sugBtn'),rb=document.getElementById('sugResp');let MSG=[];
@@ -113,7 +113,7 @@ function escolherColab(uid,perfil){return new Promise(res=>{
     await draw();M.style.color='#2f9a55';M.textContent=error?'Não foi possível enviar: '+error.message:'Pedido de mais tempo enviado para a FC Consultoria. Assim que liberar, é só entrar de novo.';}
   async function draw(){box.hidden=false;M.textContent='';L.innerHTML='<p>Carregando…</p>';const st=await estadoEmpresa(uid);
     if(!st.liberado){T.textContent=DOW()===0?'Hoje é domingo':'Acesso da semana encerrado';
-      X.textContent=DOW()===0?'O treinamento funciona de segunda a sábado. Volte amanhã.':'O acesso desta empresa não foi liberado para esta semana. Fale com a FC Consultoria: WhatsApp (66) 9 9986-7984.';L.innerHTML='';return;}
+      X.textContent=DOW()===0?'O orientativo funciona de segunda a sábado. Volte amanhã.':'O acesso desta empresa não foi liberado para esta semana. Fale com a FC Consultoria: WhatsApp (66) 9 9986-7984.';L.innerHTML='';return;}
     T.textContent='Quem está estudando agora?';X.textContent='Toque no seu nome. Cada colaborador tem 72 horas corridas a partir do primeiro acesso.';
     if(!st.lst.length){L.innerHTML='<p>Nenhum colaborador cadastrado para '+esc(perfil.nome||perfil.login)+'. Peça à FC Consultoria para cadastrar os nomes.</p>';return;}
     L.innerHTML='';st.lst.forEach(x=>{const exp=x.resta!=null&&x.resta<=0,b=document.createElement('button');b.type='button';b.className='cbtn'+(exp?' exp':'');
@@ -169,7 +169,7 @@ function vigiaPrazo(uid,perfil){setInterval(()=>{if(window.ALUNO_CID&&window.COL
     try{const {data}=await sb.from('trein_eventos').select('detalhe').eq('tipo','chave_app').limit(1);
       const kb=Uint8Array.from(atob(data[0].detalhe.k),c=>c.charCodeAt(0));
       const key=await crypto.subtle.importKey('raw',kb,'AES-GCM',false,['decrypt']);window.__CK=key;
-      const buf=new Uint8Array(await (await fetch('app.enc?v=1791972714',{cache:'no-cache'})).arrayBuffer());
+      const buf=new Uint8Array(await (await fetch('app.enc?v=1791973339',{cache:'no-cache'})).arrayBuffer());
       const plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:buf.slice(0,12)},key,buf.slice(12));
       const html=await new Response(new Blob([plain]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
       const root=document.getElementById('appRoot');root.innerHTML=html;
@@ -177,7 +177,7 @@ function vigiaPrazo(uid,perfil){setInterval(()=>{if(window.ALUNO_CID&&window.COL
         if(old.src){n.src=old.src;await new Promise((ok,er)=>{n.onload=ok;n.onerror=er;old.replaceWith(n);});}
         else{n.textContent=old.textContent;old.replaceWith(n);}}
       ld.hidden=true;if(window.applySis)applySis();
-    }catch(e){ld.textContent='Não foi possível abrir o treinamento. Atualize a página (Ctrl+F5). Se continuar, fale com a FC Consultoria.';console.error(e);throw e;}
+    }catch(e){ld.textContent='Não foi possível abrir o orientativo. Atualize a página (Ctrl+F5). Se continuar, fale com a FC Consultoria.';console.error(e);throw e;}
   }
   gateUI(async({session,perfil})=>{
     uid=session.user.id;
@@ -203,10 +203,10 @@ function vigiaPrazo(uid,perfil){setInterval(()=>{if(window.ALUNO_CID&&window.COL
   });
 })();
 </script>
-<script>(function(){const V='1791972714';async function chk(){try{const t=(await (await fetch('version.txt?'+Date.now(),{cache:'no-store'})).text()).trim();
+<script>(function(){const V='1791973339';async function chk(){try{const t=(await (await fetch('version.txt?'+Date.now(),{cache:'no-store'})).text()).trim();
 if(t&&/^\d+$/.test(t)&&t!==V&&!document.getElementById('updBar')){const b=document.createElement('div');b.id='updBar';
 b.style.cssText='position:fixed;left:50%;top:10px;transform:translateX(-50%);z-index:9999;background:#1f6f9a;color:#fff;padding:10px 12px 10px 16px;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.25);font:600 14px system-ui,sans-serif;display:flex;gap:12px;align-items:center;max-width:calc(100% - 24px)';
-b.innerHTML='<span>🔄 Nova versão do treinamento disponível</span><button type="button" style="border:0;border-radius:7px;padding:7px 14px;font:700 14px system-ui,sans-serif;background:#e0972e;color:#1b232a;cursor:pointer">Atualizar</button>';
+b.innerHTML='<span>🔄 Nova versão do orientativo disponível</span><button type="button" style="border:0;border-radius:7px;padding:7px 14px;font:700 14px system-ui,sans-serif;background:#e0972e;color:#1b232a;cursor:pointer">Atualizar</button>';
 b.querySelector('button').onclick=()=>{try{if(window.TRKFLUSH)TRKFLUSH();}catch(e){}setTimeout(()=>location.reload(),400);};document.body.appendChild(b);}}catch(e){}}
 setInterval(chk,180000);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')chk();});})();</script><script>/* ===== Divulgação e Novidades FC (tela do aluno) ===== */
 (function(){
@@ -248,7 +248,7 @@ function show(x,rever,L){cur=x;OPEN=true;held=false;GAL=(L||itens());if(!GAL.som
    ${auto?`<div class="pb"><i id="dvPb"></i></div><span class="tm" id="dvTm">Fecha sozinha em ${du} s</span><button type="button" id="dvPs">⏸ Pausar para ler</button>`:''}
    <button type="button" class="wz" id="dvW">💬 Tenho interesse</button><span class="ok" id="dvOk" hidden></span><button type="button" id="dvD">⬇ Baixar imagem</button><button type="button" id="dvP">🖨 Imprimir</button>
    ${GAL.length>1?`<div class="nv"><button type="button" id="dvA"${i<=0?' disabled':''}>◀</button><span style="align-self:center;font:500 12px ui-monospace,monospace;color:#9fb3be;white-space:nowrap">${i+1} de ${GAL.length}</span><button type="button" id="dvZ"${i>=GAL.length-1?' disabled':''}>▶</button></div>`:''}
-   <a href="https://fc-consultoria.github.io/" target="_blank" rel="noopener" style="font:600 14px system-ui,sans-serif;border-radius:8px;padding:9px 11px;border:1px solid #3a5866;background:#16262f;color:#e9edf0;text-decoration:none">🌐 Conheça o site da FC</a><button type="button" class="bk" id="dvB">← Voltar ao treinamento</button></div></div>`;
+   <a href="https://fc-consultoria.github.io/" target="_blank" rel="noopener" style="font:600 14px system-ui,sans-serif;border-radius:8px;padding:9px 11px;border:1px solid #3a5866;background:#16262f;color:#e9edf0;text-decoration:none">🌐 Conheça o site da FC</a><button type="button" class="bk" id="dvB">← Voltar ao orientativo</button></div></div>`;
   document.body.appendChild(o);requestAnimationFrame(()=>o.classList.add('on'));
   const hold=v=>{held=v;const t=document.getElementById('dvTm'),p=document.getElementById('dvPs');if(v){if(t)t.textContent='Pausada · leia com calma e feche quando quiser';if(p)p.textContent='▶ Continuar';}else{t0=Date.now()-(1-(parseFloat((document.getElementById('dvPb')||{style:{}}).style.width)||100)/100)*du*1000;if(p)p.textContent='⏸ Pausar para ler';}};
   {const p=document.getElementById('dvPs');if(p)p.onclick=()=>hold(!held);}
@@ -260,7 +260,7 @@ function show(x,rever,L){cur=x;OPEN=true;held=false;GAL=(L||itens());if(!GAL.som
   document.getElementById('dvW').onclick=async()=>{held=true;const b=document.getElementById('dvW');b.disabled=true;
     try{await sb.from('trein_eventos').insert({user_id:UID,tipo:'interesse',tipologia:null,detalhe:{ref:x.id,t:x.t,cid:window.ALUNO_CID||null,quem:window.ALUNO_NOME||null}});}catch(e){}
     const ok=document.getElementById('dvOk');ok.hidden=false;ok.textContent='✔ A FC recebeu seu interesse e vai entrar em contato.';
-    open('https://wa.me/'+PHONE+'?text='+encodeURIComponent(`Olá Fernando, vi no Treinamento FC 3D: "${x.t}". Tenho interesse. (${window.ALUNO_NOME||''} · ${EMP})`),'_blank');};
+    open('https://wa.me/'+PHONE+'?text='+encodeURIComponent(`Olá Fernando, vi no Orientativo FC 3D: "${x.t}". Tenho interesse. (${window.ALUNO_NOME||''} · ${EMP})`),'_blank');};
   const A=document.getElementById('dvA'),Z=document.getElementById('dvZ');if(A)A.onclick=()=>{clearInterval(tmr);show(GAL[i-1],true,L);};if(Z)Z.onclick=()=>{clearInterval(tmr);show(GAL[i+1],true,L);};
   if(!x.visto&&!rever){x.visto=true;VISTO.add(window.ALUNO_CID+'|'+x.id);sb.from('trein_eventos').insert({user_id:UID,tipo:'div_visto',tipologia:null,detalhe:{ref:x.id,cid:window.ALUNO_CID||null,quem:window.ALUNO_NOME||null,nov:!!x.nov}}).then(()=>{});}
   clearInterval(tmr);if(auto){t0=Date.now();tmr=setInterval(()=>{if(held)return;const r=Math.max(0,1-(Date.now()-t0)/(du*1000)),pb=document.getElementById('dvPb'),tm=document.getElementById('dvTm');if(pb)pb.style.width=r*100+'%';if(tm)tm.textContent=`Fecha sozinha em ${Math.ceil(r*du)} s`;if(r<=0)close();},100);}
@@ -280,26 +280,26 @@ function abrir(){let o=document.getElementById('catOv');if(o)o.remove();o=docume
  o.innerHTML=`<div style="background:#fff;color:#1b232a;border-radius:14px;max-width:560px;width:100%;padding:22px;font:400 15px/1.5 system-ui,sans-serif;box-shadow:0 20px 50px rgba(0,0,0,.4)">
   <div style="font:600 12px ui-monospace,monospace;letter-spacing:.1em;color:#1f6f9a">FONTE TÉCNICA DO TREINAMENTO</div>
   <h3 style="margin:6px 0 8px;font:700 21px system-ui,sans-serif">Catálogos técnicos das linhas</h3>
-  <p style="margin:0 0 14px;color:#4b5a63">As informações técnicas deste treinamento (perfis, componentes, cortes e diagramas de dimensões) foram baseadas nos <b>catálogos técnicos oficiais das linhas Suprema e Gold da Alcoa</b>. Consulte o catálogo sempre que precisar do dado original.</p>
+  <p style="margin:0 0 14px;color:#4b5a63">As informações técnicas deste orientativo (perfis, componentes, cortes e diagramas de dimensões) foram baseadas nos <b>catálogos técnicos oficiais das linhas Suprema e Gold da Alcoa</b>. Consulte o catálogo sempre que precisar do dado original.</p>
   ${CAT.map(c=>`<div style="display:flex;align-items:center;gap:12px;border:1px solid #d5dde2;border-left:5px solid ${c.c};border-radius:10px;padding:12px;margin-bottom:10px"><div style="flex:1"><b style="font-size:16px">${c.n}</b><br><small style="color:#5d6b76">${c.d} · PDF ${c.mb}</small></div><button type="button" data-cat="${c.k}" style="border:0;border-radius:8px;padding:10px 14px;background:#1f6f9a;color:#fff;font:700 14px system-ui,sans-serif;cursor:pointer;white-space:nowrap">⬇ Baixar</button></div>`).join('')}
-  <p style="margin:6px 0 14px;font-size:12.5px;color:#6b7a84">Suprema e Gold são marcas de seus respectivos titulares. Os catálogos são material de referência do fabricante, disponível só para alunos do treinamento. O Treinamento FC 3D é um material didático da FC Consultoria; em caso de dúvida, vale sempre o catálogo e a orientação do fabricante.</p>
-  <button type="button" id="catX" style="width:100%;border:1px solid #c9d3da;border-radius:9px;padding:10px;background:#f4f7f9;font:600 15px system-ui,sans-serif;cursor:pointer">← Voltar ao treinamento</button></div>`;
+  <p style="margin:6px 0 14px;font-size:12.5px;color:#6b7a84">Suprema e Gold são marcas de seus respectivos titulares. Os catálogos são material de referência do fabricante, disponível só para alunos do orientativo. O Orientativo FC 3D é um material didático da FC Consultoria; em caso de dúvida, vale sempre o catálogo e a orientação do fabricante.</p>
+  <button type="button" id="catX" style="width:100%;border:1px solid #c9d3da;border-radius:9px;padding:10px;background:#f4f7f9;font:600 15px system-ui,sans-serif;cursor:pointer">← Voltar ao orientativo</button></div>`;
  document.body.appendChild(o);document.getElementById('catX').onclick=()=>o.remove();o.addEventListener('click',e=>{if(e.target===o)o.remove();});
  o.querySelectorAll('[data-cat]').forEach(b=>b.onclick=async()=>{const c=CAT.find(x=>x.k===b.dataset.cat),t=b.textContent;b.disabled=true;b.textContent='Baixando…';
   try{if(!window.__CK)throw 0;const buf=new Uint8Array(await (await fetch('cat/'+c.k+'.enc')).arrayBuffer());const plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:buf.slice(0,12)},window.__CK,buf.slice(12));
    const u=URL.createObjectURL(new Blob([plain],{type:'application/pdf'})),a=document.createElement('a');a.href=u;a.download=c.f;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),60000);b.textContent='✔ Baixado';
    try{if(window.sb&&window.TRK_UID)sb.from('trein_eventos').insert({user_id:window.TRK_UID,tipo:'catalogo',tipologia:null,detalhe:{k:c.k}});}catch(e){}}
   catch(e){b.textContent='Tente de novo';}setTimeout(()=>{b.disabled=false;b.textContent=t;},4000);});}
-window.catInit=function(){const ub=document.getElementById('ubar');if(!ub||document.getElementById('catBtn'))return;const b=document.createElement('button');b.type='button';b.id='catBtn';b.textContent='📘 Catálogos';b.title='Catálogos técnicos Suprema e Gold (fonte do treinamento)';b.onclick=abrir;ub.insertBefore(b,document.getElementById('sugBtn'));};
+window.catInit=function(){const ub=document.getElementById('ubar');if(!ub||document.getElementById('catBtn'))return;const b=document.createElement('button');b.type='button';b.id='catBtn';b.textContent='📘 Catálogos';b.title='Catálogos técnicos Suprema e Gold (fonte do orientativo)';b.onclick=abrir;ub.insertBefore(b,document.getElementById('sugBtn'));};
 })();
-</script><script src="mapa.js?v=1791972714"></script><script>/* ===== Mapa "FC no Brasil" (tela do aluno) ===== */
+</script><script src="mapa.js?v=1791973339"></script><script>/* ===== Mapa "FC no Brasil" (tela do aluno) ===== */
 (function(){
 window.mapaInit=async function(){try{const r=await sb.from('trein_eventos').select('detalhe').eq('tipo','mapa').order('criado_em',{ascending:false}).limit(1);
   const dd=(((r.data||[])[0]||{}).detalhe)||{};if(dd.pub===false)return;const it=dd.itens||[];const ub=document.getElementById('ubar');if(!it.length||!ub||!window.FCM||document.getElementById('mpBtn'))return;
   const b=document.createElement('button');b.type='button';b.id='mpBtn';b.textContent='📍 FC no Brasil';b.title='Onde a FC Consultoria está atendendo';
   b.onclick=()=>{let o=document.getElementById('mpOv');if(o)o.remove();o=document.createElement('div');o.id='mpOv';o.setAttribute('role','dialog');o.setAttribute('aria-label','FC no Brasil');
     o.style.cssText='position:fixed;inset:0;z-index:9000;background:rgba(10,16,22,.72);overflow:auto;padding:16px;display:flex;align-items:flex-start;justify-content:center';
-    o.innerHTML='<div style="width:min(1100px,100%);margin:auto"><div id="mpBox"></div><div style="text-align:center;margin-top:10px"><button type="button" id="mpX" style="font:600 15px system-ui,sans-serif;border-radius:9px;padding:9px 16px;border:0;background:#e9edf0;color:#1b232a;cursor:pointer">← Voltar ao treinamento</button></div></div>';
+    o.innerHTML='<div style="width:min(1100px,100%);margin:auto"><div id="mpBox"></div><div style="text-align:center;margin-top:10px"><button type="button" id="mpX" style="font:600 15px system-ui,sans-serif;border-radius:9px;padding:9px 16px;border:0;background:#e9edf0;color:#1b232a;cursor:pointer">← Voltar ao orientativo</button></div></div>';
     document.body.appendChild(o);FCM.render(document.getElementById('mpBox'),it);document.getElementById('mpX').onclick=()=>o.remove();o.addEventListener('click',e=>{if(e.target===o)o.remove();});};
   ub.insertBefore(b,document.getElementById('sugBtn'));}catch(e){}};
 })();

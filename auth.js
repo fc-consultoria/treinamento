@@ -1,4 +1,4 @@
-/* Acesso ao Treinamento: login Supabase (mesmo projeto da Central FC) */
+/* Acesso ao Orientativo: login Supabase (mesmo projeto da Central FC) */
 const SB_URL='https://cpkjphodruyxfouirhpd.supabase.co';
 const SB_KEY='sb_publishable_d0HEeWsaqOeZIQKGftlF-Q_B8BUOWWg';
 const sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,storageKey:'trein-fc-auth'}});
