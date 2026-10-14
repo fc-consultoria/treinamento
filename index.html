@@ -62,7 +62,7 @@
   <p class="gmsg" id="sugMsg" role="status" style="color:#2f9a55!important"></p>
  </form></div>
 <div class="gate" id="imgBox" hidden style="background:rgba(10,15,20,.85);z-index:120" onclick="this.hidden=true"><img id="imgBig" alt="Imagem enviada pela FC" style="max-width:96vw;max-height:92vh;border-radius:8px;background:#fff"></div>
-<div class="ubar" id="ubar" hidden><span id="uname"></span><button type="button" id="quemTag" hidden title="Trocar quem está estudando"></button><button type="button" id="sugBtn" title="Dúvidas e sugestões: fale com a FC">💬 Dúvidas e sugestões</button><a href="guia/" target="_blank" rel="noopener" style="background:#e0972e;border-color:#e0972e;color:#1b1206" title="Passo a passo de como usar o treinamento">❓ Guia do aluno</a><a href="https://fcconsultoria.my.canva.site/precificacao-precos-custo-venda" target="_blank" rel="noopener" title="Site da FC Consultoria">🌐 Site da FC</a><a id="upainel" href="painel.html" hidden>Painel da matriz</a><button type="button" class="usair" onclick="sair()" title="Sair do treinamento">⏻ Sair</button></div>
+<div class="ubar" id="ubar" hidden><span id="uname"></span><button type="button" id="quemTag" hidden title="Trocar quem está estudando"></button><button type="button" id="sugBtn" title="Dúvidas e sugestões: fale com a FC">💬 Dúvidas e sugestões</button><a href="guia/" target="_blank" rel="noopener" style="background:#e0972e;border-color:#e0972e;color:#1b1206" title="Passo a passo de como usar o treinamento">❓ Guia do aluno</a><a href="https://fc-consultoria.github.io/" target="_blank" rel="noopener" title="Site da FC Consultoria">🌐 Site da FC</a><a id="upainel" href="painel.html" hidden>Painel da matriz</a><button type="button" class="usair" onclick="sair()" title="Sair do treinamento">⏻ Sair</button></div>
 <div id="appLoad" hidden style="padding:40px 20px;text-align:center;font:500 16px system-ui;color:#5d6b76">Carregando o treinamento…</div><div id="appRoot"></div>
 <script>
 function sugInit(){const box=document.getElementById('sugBox'),f=document.getElementById('sugForm'),m=document.getElementById('sugMsg');
@@ -169,7 +169,7 @@ function vigiaPrazo(uid,perfil){setInterval(()=>{if(window.ALUNO_CID&&window.COL
     try{const {data}=await sb.from('trein_eventos').select('detalhe').eq('tipo','chave_app').limit(1);
       const kb=Uint8Array.from(atob(data[0].detalhe.k),c=>c.charCodeAt(0));
       const key=await crypto.subtle.importKey('raw',kb,'AES-GCM',false,['decrypt']);
-      const buf=new Uint8Array(await (await fetch('app.enc?v=1791940808',{cache:'no-cache'})).arrayBuffer());
+      const buf=new Uint8Array(await (await fetch('app.enc?v=1791947580',{cache:'no-cache'})).arrayBuffer());
       const plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:buf.slice(0,12)},key,buf.slice(12));
       const html=await new Response(new Blob([plain]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
       const root=document.getElementById('appRoot');root.innerHTML=html;
@@ -202,7 +202,7 @@ function vigiaPrazo(uid,perfil){setInterval(()=>{if(window.ALUNO_CID&&window.COL
   });
 })();
 </script>
-<script>(function(){const V='1791940808';async function chk(){try{const t=(await (await fetch('version.txt?'+Date.now(),{cache:'no-store'})).text()).trim();
+<script>(function(){const V='1791947580';async function chk(){try{const t=(await (await fetch('version.txt?'+Date.now(),{cache:'no-store'})).text()).trim();
 if(t&&/^\d+$/.test(t)&&t!==V&&!document.getElementById('updBar')){const b=document.createElement('div');b.id='updBar';
 b.style.cssText='position:fixed;left:50%;top:10px;transform:translateX(-50%);z-index:9999;background:#1f6f9a;color:#fff;padding:10px 12px 10px 16px;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.25);font:600 14px system-ui,sans-serif;display:flex;gap:12px;align-items:center;max-width:calc(100% - 24px)';
 b.innerHTML='<span>🔄 Nova versão do treinamento disponível</span><button type="button" style="border:0;border-radius:7px;padding:7px 14px;font:700 14px system-ui,sans-serif;background:#e0972e;color:#1b232a;cursor:pointer">Atualizar</button>';
@@ -247,7 +247,7 @@ function show(x,rever,L){cur=x;OPEN=true;held=false;GAL=(L||itens());if(!GAL.som
    ${auto?`<div class="pb"><i id="dvPb"></i></div><span class="tm" id="dvTm">Fecha sozinha em ${du} s</span><button type="button" id="dvPs">⏸ Pausar para ler</button>`:''}
    <button type="button" class="wz" id="dvW">💬 Tenho interesse</button><span class="ok" id="dvOk" hidden></span><button type="button" id="dvD">⬇ Baixar imagem</button><button type="button" id="dvP">🖨 Imprimir</button>
    ${GAL.length>1?`<div class="nv"><button type="button" id="dvA"${i<=0?' disabled':''}>◀</button><span style="align-self:center;font:500 12px ui-monospace,monospace;color:#9fb3be;white-space:nowrap">${i+1} de ${GAL.length}</span><button type="button" id="dvZ"${i>=GAL.length-1?' disabled':''}>▶</button></div>`:''}
-   <a href="https://fcconsultoria.my.canva.site/precificacao-precos-custo-venda" target="_blank" rel="noopener" style="font:600 14px system-ui,sans-serif;border-radius:8px;padding:9px 11px;border:1px solid #3a5866;background:#16262f;color:#e9edf0;text-decoration:none">🌐 Conheça o site da FC</a><button type="button" class="bk" id="dvB">← Voltar ao treinamento</button></div></div>`;
+   <a href="https://fc-consultoria.github.io/" target="_blank" rel="noopener" style="font:600 14px system-ui,sans-serif;border-radius:8px;padding:9px 11px;border:1px solid #3a5866;background:#16262f;color:#e9edf0;text-decoration:none">🌐 Conheça o site da FC</a><button type="button" class="bk" id="dvB">← Voltar ao treinamento</button></div></div>`;
   document.body.appendChild(o);requestAnimationFrame(()=>o.classList.add('on'));
   const hold=v=>{held=v;const t=document.getElementById('dvTm'),p=document.getElementById('dvPs');if(v){if(t)t.textContent='Pausada · leia com calma e feche quando quiser';if(p)p.textContent='▶ Continuar';}else{t0=Date.now()-(1-(parseFloat((document.getElementById('dvPb')||{style:{}}).style.width)||100)/100)*du*1000;if(p)p.textContent='⏸ Pausar para ler';}};
   {const p=document.getElementById('dvPs');if(p)p.onclick=()=>hold(!held);}
@@ -270,7 +270,7 @@ window.divInit=async function(uid,perfil){UID=uid;EMP=(perfil&&(perfil.nome||per
     b.onclick=()=>{const L=itens();if(L.length)show(L[0],true,L);};ub.insertBefore(b,document.getElementById('sugBtn'));}
   try{await load();}catch(e){}setTimeout(check,4000);setInterval(check,60000);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')setTimeout(check,1500);});};
 })();
-</script><script src="mapa.js?v=1791940808"></script><script>/* ===== Mapa "FC no Brasil" (tela do aluno) ===== */
+</script><script src="mapa.js?v=1791947580"></script><script>/* ===== Mapa "FC no Brasil" (tela do aluno) ===== */
 (function(){
 window.mapaInit=async function(){try{const r=await sb.from('trein_eventos').select('detalhe').eq('tipo','mapa').order('criado_em',{ascending:false}).limit(1);
   const it=((((r.data||[])[0]||{}).detalhe)||{}).itens||[];const ub=document.getElementById('ubar');if(!it.length||!ub||!window.FCM||document.getElementById('mpBtn'))return;
