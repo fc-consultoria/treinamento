@@ -118,7 +118,7 @@ function escolherColab(uid,perfil){return new Promise(res=>{
           const v=document.createElement('button');v.type='button';v.textContent='← Voltar';v.style.cssText='background:#fff;color:#1d3f57;border:1px solid #c9d3da';v.onclick=draw;L.append(p,v);return;}
         if(x.ph&&!pinOk(x.id)){const ok=await pedirPin(x);if(!ok)return;}
         if(!x.ini){b.disabled=true;await sb.from('trein_eventos').insert({user_id:uid,tipo:'colab_inicio',tipologia:null,detalhe:{cid:x.id,quem:x.nome}});x.fim=Date.now()+(x.horas||72)*3600e3;}
-        window.ALUNO_NOME=x.nome;window.ALUNO_CID=x.id;window.ALUNO_FIM=x.fim;try{sessionStorage.setItem('treinFC-cid',x.id);}catch(e){}
+        window.ALUNO_NOME=x.nome;window.ALUNO_CID=x.id;window.ALUNO_FIM=x.fim;window.ALUNO_INI=x.ini?Date.parse(x.ini):Date.now();try{sessionStorage.setItem('treinFC-cid',x.id);}catch(e){}
         {let mys='';try{mys=sessionStorage.getItem('treinFC-s-'+x.id)||'';}catch(e){}
          const {data:ev}=await sb.from('trein_eventos').select('tipo,detalhe,criado_em').eq('user_id',uid).in('tipo',['colab_sessao','hb','tempo']).order('criado_em',{ascending:false}).limit(60);
          const sid=r=>{const d=r.detalhe||{};return r.tipo==='tempo'?d.ss:d.s;},u=(ev||[]).find(r=>(r.detalhe||{}).cid===x.id&&sid(r));
@@ -164,7 +164,7 @@ function vigiaPrazo(uid,perfil){setInterval(()=>{if(window.ALUNO_CID&&window.COL
     try{const {data}=await sb.from('trein_eventos').select('detalhe').eq('tipo','chave_app').limit(1);
       const kb=Uint8Array.from(atob(data[0].detalhe.k),c=>c.charCodeAt(0));
       const key=await crypto.subtle.importKey('raw',kb,'AES-GCM',false,['decrypt']);
-      const buf=new Uint8Array(await (await fetch('app.enc?v=1791934181',{cache:'no-cache'})).arrayBuffer());
+      const buf=new Uint8Array(await (await fetch('app.enc?v=1791937547',{cache:'no-cache'})).arrayBuffer());
       const plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:buf.slice(0,12)},key,buf.slice(12));
       const html=await new Response(new Blob([plain]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
       const root=document.getElementById('appRoot');root.innerHTML=html;
@@ -182,6 +182,7 @@ function vigiaPrazo(uid,perfil){setInterval(()=>{if(window.ALUNO_CID&&window.COL
     document.getElementById('ubar').hidden=false;
     document.getElementById('uname').textContent=(perfil.nome||perfil.login)+(perfil.papel==='admin'?' · matriz':'');
     sugInit();
+    if(perfil.papel!=='admin'&&window.divInit)divInit(uid,perfil);
     document.getElementById('upainel').hidden=perfil.papel!=='admin';document.getElementById('sugPainel').hidden=perfil.papel!=='admin';
     fila.push({user_id:uid,tipo:'login',tipologia:(typeof S!=='undefined'?S.typo:null)||null,detalhe:window.ALUNO_NOME?{quem:window.ALUNO_NOME,cid:window.ALUNO_CID||null}:{}});
     TRK('tipologia',{t:(typeof S!=='undefined'?S.typo:null)||''});
@@ -195,10 +196,71 @@ function vigiaPrazo(uid,perfil){setInterval(()=>{if(window.ALUNO_CID&&window.COL
   });
 })();
 </script>
-<script>(function(){const V='1791934181';async function chk(){try{const t=(await (await fetch('version.txt?'+Date.now(),{cache:'no-store'})).text()).trim();
+<script>(function(){const V='1791937547';async function chk(){try{const t=(await (await fetch('version.txt?'+Date.now(),{cache:'no-store'})).text()).trim();
 if(t&&/^\d+$/.test(t)&&t!==V&&!document.getElementById('updBar')){const b=document.createElement('div');b.id='updBar';
 b.style.cssText='position:fixed;left:50%;top:10px;transform:translateX(-50%);z-index:9999;background:#1f6f9a;color:#fff;padding:10px 12px 10px 16px;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.25);font:600 14px system-ui,sans-serif;display:flex;gap:12px;align-items:center;max-width:calc(100% - 24px)';
 b.innerHTML='<span>🔄 Nova versão do treinamento disponível</span><button type="button" style="border:0;border-radius:7px;padding:7px 14px;font:700 14px system-ui,sans-serif;background:#e0972e;color:#1b232a;cursor:pointer">Atualizar</button>';
 b.querySelector('button').onclick=()=>{try{if(window.TRKFLUSH)TRKFLUSH();}catch(e){}setTimeout(()=>location.reload(),400);};document.body.appendChild(b);}}catch(e){}}
-setInterval(chk,180000);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')chk();});})();</script></body>
+setInterval(chk,180000);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')chk();});})();</script><script>/* ===== Divulgação e Novidades FC (tela do aluno) ===== */
+(function(){
+const PHONE='5566999867984';let CFG=null,ART={},NOV={},VISTO=new Set(),LOADED=0,OPEN=false,GAL=[],cur=null,tmr=null,held=false,t0=0,UID=null,EMP='';
+const css=`#dvOv{position:fixed;inset:0;z-index:9000;background:rgba(10,16,22,.66);backdrop-filter:blur(2px);display:grid;place-items:center;padding:12px;opacity:0;transition:opacity .3s}
+#dvOv.on{opacity:1}#dvOv .m{background:#0f1a22;border:1px solid #2b4a58;border-radius:14px;box-shadow:0 20px 50px rgba(0,0,0,.5);display:grid;grid-template-columns:auto 250px;max-width:96vw;max-height:94vh;overflow:hidden;transform:scale(.94);transition:transform .3s}
+#dvOv.on .m{transform:scale(1)}#dvOv img{display:block;max-height:86vh;max-width:min(560px,62vw);width:auto;height:auto;margin:auto}
+#dvOv .sd{padding:16px;display:flex;flex-direction:column;gap:9px;color:#e9edf0;font:400 14px system-ui,sans-serif;overflow:auto}
+#dvOv .k{font:600 11px ui-monospace,monospace;letter-spacing:.1em;color:#1fb3c9}#dvOv h3{margin:0;font:700 18px system-ui,sans-serif;line-height:1.25}#dvOv p{margin:0;color:#c9d6dd;font-size:13.5px}
+#dvOv .pb{height:5px;border-radius:3px;background:#2b3b45;overflow:hidden}#dvOv .pb i{display:block;height:100%;background:#1fb3c9;width:100%}#dvOv .tm{font:500 11.5px ui-monospace,monospace;color:#9fb3be}
+#dvOv button{font:600 14px system-ui,sans-serif;border-radius:8px;padding:9px 11px;cursor:pointer;border:1px solid #3a5866;background:#16262f;color:#e9edf0;text-align:left}#dvOv button:hover{border-color:#1fb3c9}
+#dvOv .wz{background:#1f8a4c;border-color:#1f8a4c}#dvOv .bk{margin-top:auto;background:#e9edf0;color:#1b232a}#dvOv .nv{display:flex;gap:6px}#dvOv .nv button{flex:1;text-align:center}
+#dvOv .ok{font-size:13px;color:#7fe0a5}
+@media(max-width:760px){#dvOv .m{grid-template-columns:1fr;overflow:auto}#dvOv img{max-width:100%;max-height:52vh}}`;
+const st=document.createElement('style');st.textContent=css;document.head.appendChild(st);
+const esc=v=>String(v||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+const hoje=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
+async function load(){const r=await sb.from('trein_eventos').select('tipo,detalhe,criado_em').in('tipo',['divulga','div_art','novidade']).order('criado_em');
+  CFG=null;ART={};NOV={};(r.data||[]).forEach(e=>{const d=e.detalhe||{};if(e.tipo==='divulga')CFG=d;else if(e.tipo==='div_art')ART[d.id]=d;else NOV[d.id]=Object.assign({},NOV[d.id]||{},d);});
+  const v=await sb.from('trein_eventos').select('detalhe').eq('user_id',UID).eq('tipo','div_visto');VISTO=new Set((v.data||[]).map(e=>(e.detalhe||{}).cid+'|'+(e.detalhe||{}).ref));LOADED=Date.now();}
+const paraOk=p=>!p||p==='todas'||(Array.isArray(p)&&p.includes(UID));
+function itens(){const L=[],cid=window.ALUNO_CID;
+  Object.values(NOV).filter(x=>!x.removido&&x.img&&(x.ate||'9')>=hoje()&&paraOk(x.para)).forEach(x=>L.push({id:x.id,img:x.img,t:x.t,x:x.x,k:x.k,nov:1}));
+  if(CFG&&CFG.on&&paraOk(CFG.para)&&window.ALUNO_INI){const iv=CFG.iv||6,h=(Date.now()-window.ALUNO_INI)/3600e3,sl=Math.floor(h/iv);
+    (CFG.seq||[]).slice(0,sl+1).forEach((s,i)=>{if(s&&s.on&&ART[s.a])L.push({id:s.a,img:ART[s.a].img,t:s.t,slot:i,atual:i===sl});});}
+  return L.filter(x=>!x.nov||true).map(x=>Object.assign(x,{visto:VISTO.has(cid+'|'+x.id)}));}
+function ocupado(){try{if(typeof S!=='undefined'&&S.mode==='test'&&typeof Q!=='undefined'&&Q.t0&&!Q.fin)return true;
+  if(typeof TMR!=='undefined'&&['wv','cm'].some(k=>TMR[k]&&TMR[k].t0&&!TMR[k].fin))return true;}catch(e){}
+  {const qb=document.getElementById('quemBox');if(qb&&!qb.hidden)return true;}return false;}
+async function check(){if(!UID||!window.ALUNO_CID||OPEN||document.visibilityState!=='visible')return;
+  try{if(Date.now()-LOADED>10*60e3)await load();}catch(e){return;}
+  const L=itens();btnUI(L);if(ocupado())return;
+  const x=L.find(y=>y.nov&&!y.visto)||L.find(y=>y.atual&&!y.visto);if(x)show(x,false,L);}
+function btnUI(L){const b=document.getElementById('dvBtn');if(!b)return;const n=(L||itens()).filter(x=>x.visto||x.atual||x.nov).length;b.hidden=!n;}
+function show(x,rever,L){cur=x;OPEN=true;held=false;GAL=(L||itens()).filter(y=>y.visto||y.atual||y.nov||y.id===x.id);
+  let o=document.getElementById('dvOv');if(o)o.remove();o=document.createElement('div');o.id='dvOv';o.setAttribute('role','dialog');o.setAttribute('aria-label','Divulgação FC');
+  const i=GAL.findIndex(y=>y.id===x.id),du=(CFG&&CFG.du)||12;
+  o.innerHTML=`<div class="m"><img src="${x.img}" alt="${esc(x.t)}"><div class="sd"><span class="k">${x.nov?'NOVIDADE FC · '+esc(x.k||''):'FC CONSULTORIA · REPRESENTAÇÃO'}</span><h3>${esc(x.t)}</h3>${x.x?`<p>${esc(x.x)}</p>`:''}
+   ${rever?'':`<div class="pb"><i id="dvPb"></i></div><span class="tm" id="dvTm">Fecha sozinha em ${du} s · toque na arte para parar</span>`}
+   <button type="button" class="wz" id="dvW">💬 Tenho interesse</button><span class="ok" id="dvOk" hidden></span><button type="button" id="dvD">⬇ Baixar imagem</button><button type="button" id="dvP">🖨 Imprimir</button>
+   ${GAL.length>1?`<div class="nv"><button type="button" id="dvA"${i<=0?' disabled':''}>◀</button><button type="button" id="dvZ"${i>=GAL.length-1?' disabled':''}>▶</button></div>`:''}
+   <button type="button" class="bk" id="dvB">← Voltar ao treinamento</button></div></div>`;
+  document.body.appendChild(o);requestAnimationFrame(()=>o.classList.add('on'));
+  o.querySelector('.m').addEventListener('click',e=>{if(e.target.tagName!=='BUTTON'&&!held&&!rever){held=true;const t=document.getElementById('dvTm');if(t)t.textContent='Parada · feche quando quiser';}});
+  o.addEventListener('click',e=>{if(e.target===o)close();});
+  document.getElementById('dvB').onclick=close;
+  document.getElementById('dvD').onclick=()=>{const a=document.createElement('a');a.href=x.img;a.download=(x.t||'divulgacao-fc').replace(/[\\/:*?"<>|]/g,'')+'.jpg';document.body.appendChild(a);a.click();a.remove();};
+  document.getElementById('dvP').onclick=()=>{const w=open('','_blank');if(!w)return;w.document.write(`<title>${esc(x.t)}</title><body style="margin:0;text-align:center"><img src="${x.img}" style="max-width:100%;max-height:100vh" onload="setTimeout(()=>print(),200)"></body>`);w.document.close();};
+  document.getElementById('dvW').onclick=async()=>{held=true;const b=document.getElementById('dvW');b.disabled=true;
+    try{await sb.from('trein_eventos').insert({user_id:UID,tipo:'interesse',tipologia:null,detalhe:{ref:x.id,t:x.t,cid:window.ALUNO_CID||null,quem:window.ALUNO_NOME||null}});}catch(e){}
+    const ok=document.getElementById('dvOk');ok.hidden=false;ok.textContent='✔ A FC recebeu seu interesse e vai entrar em contato.';
+    open('https://wa.me/'+PHONE+'?text='+encodeURIComponent(`Olá Fernando, vi no Treinamento FC 3D: "${x.t}". Tenho interesse. (${window.ALUNO_NOME||''} · ${EMP})`),'_blank');};
+  const A=document.getElementById('dvA'),Z=document.getElementById('dvZ');if(A)A.onclick=()=>{clearInterval(tmr);show(GAL[i-1],true,L);};if(Z)Z.onclick=()=>{clearInterval(tmr);show(GAL[i+1],true,L);};
+  if(!x.visto&&!rever){x.visto=true;VISTO.add(window.ALUNO_CID+'|'+x.id);sb.from('trein_eventos').insert({user_id:UID,tipo:'div_visto',tipologia:null,detalhe:{ref:x.id,cid:window.ALUNO_CID||null,quem:window.ALUNO_NOME||null,nov:!!x.nov}}).then(()=>{});}
+  clearInterval(tmr);if(!rever){t0=Date.now();tmr=setInterval(()=>{if(held)return;const r=Math.max(0,1-(Date.now()-t0)/(du*1000)),pb=document.getElementById('dvPb'),tm=document.getElementById('dvTm');if(pb)pb.style.width=r*100+'%';if(tm)tm.textContent=`Fecha sozinha em ${Math.ceil(r*du)} s · toque na arte para parar`;if(r<=0)close();},100);}
+  btnUI();}
+function close(){clearInterval(tmr);const o=document.getElementById('dvOv');if(o){o.classList.remove('on');setTimeout(()=>o.remove(),300);}OPEN=false;}
+window.divInit=async function(uid,perfil){UID=uid;EMP=(perfil&&(perfil.nome||perfil.login))||'';
+  const ub=document.getElementById('ubar');if(ub&&!document.getElementById('dvBtn')){const b=document.createElement('button');b.type='button';b.id='dvBtn';b.hidden=true;b.textContent='📢 Divulgação';b.style.cssText='background:#1fb3c9;border-color:#1fb3c9;color:#06222a;font-weight:700';
+    b.onclick=()=>{const L=itens(),G=L.filter(x=>x.visto||x.atual||x.nov);if(G.length)show(G[G.length-1],true,L);};ub.insertBefore(b,document.getElementById('sugBtn'));}
+  try{await load();}catch(e){}setTimeout(check,4000);setInterval(check,60000);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')setTimeout(check,1500);});};
+})();
+</script></body>
 </html>

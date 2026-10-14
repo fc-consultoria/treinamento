@@ -31,6 +31,27 @@ main{max-width:1280px;margin:0 auto;padding:0 24px 40px;display:flex;flex-direct
 .kpi b{display:block;font:600 28px/1.1 var(--f-display);font-variant-numeric:tabular-nums}
 .kpi span{color:var(--muted);font-size:13px}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.dvt{margin:0 0 4px;font:700 14px var(--f-display);text-transform:uppercase;letter-spacing:.04em}
+.dvbar{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin:10px 0}.dvbar label{display:flex;gap:6px;align-items:center;font-size:13px;color:var(--muted)}
+.dvtg{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:20px;padding:5px 12px;font-weight:600;cursor:pointer;user-select:none}
+.dvtg i{width:32px;height:17px;border-radius:9px;background:#c4ccd2;position:relative}.dvtg i::after{content:'';position:absolute;left:2px;top:2px;width:13px;height:13px;border-radius:50%;background:#fff;transition:.2s}
+.dvtg.on i{background:var(--ok)}.dvtg.on i::after{left:17px}
+.dvpl[hidden]{display:none!important}
+.dvpl{display:flex;flex-wrap:wrap;gap:6px 14px;margin-bottom:10px;font-size:13px}
+.dvg{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.dvs{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#f8fafb;display:flex;flex-direction:column;min-height:210px}
+.dvh{display:flex;justify-content:space-between;padding:5px 8px;font:600 11.5px var(--f-mono);background:#1b232a;color:#e9edf0}.dvh b{background:#1fb3c9;color:#06222a;border-radius:9px;padding:0 6px}
+.dva{flex:1;margin:8px;border:2px dashed #b9c4cc;border-radius:8px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:4px;color:var(--muted);font-size:13px;cursor:pointer;background:#fff;text-align:center}.dva:hover{border-color:var(--accent);color:var(--accent)}.dva small{font-size:11px}
+.dvi{position:relative}.dvi img{display:block;width:100%;height:120px;object-fit:cover;object-position:top}.dvi span{position:absolute;left:5px;top:5px;font:600 10px var(--f-mono);background:rgba(0,0,0,.65);color:#fff;border-radius:5px;padding:1px 5px}
+.dvs.off .dvi img{filter:grayscale(1) opacity(.45)}
+.dvf{padding:6px;display:flex;flex-direction:column;gap:5px}.dvf input{font:inherit;font-size:12.5px;border:1px solid var(--line);border-radius:6px;padding:4px 6px;width:100%}
+.dvc{display:flex;gap:3px}.dvc button{flex:1;padding:3px 0;font-size:12.5px}.dvm{font:500 10.5px var(--f-mono);color:var(--muted)}
+.nvw{display:grid;grid-template-columns:170px 1fr;gap:12px;margin-top:8px}
+.nvi{border:2px dashed #b9c4cc;border-radius:10px;min-height:190px;display:grid;place-items:center;cursor:pointer;color:var(--muted);background:#f8fafb center/cover no-repeat;font-size:13px}
+.nvf{display:flex;flex-direction:column;gap:7px}.nvf label{display:flex;flex-direction:column;gap:3px;font-size:12.5px;color:var(--muted)}
+.nvf input,.nvf textarea,.nvf select{font:inherit;font-size:14px;color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:6px 8px}.nv3{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.nvl{list-style:none;margin:12px 0 0;padding:0;display:flex;flex-direction:column;gap:8px}.nvl li{display:flex;gap:10px;align-items:center;border:1px solid var(--line);border-radius:8px;padding:6px}.nvl img{width:54px;height:54px;object-fit:cover;border-radius:6px;cursor:pointer}.nvl li div{flex:1}
+@media(max-width:700px){.nvw{grid-template-columns:1fr}}
 .card h2{margin:0;padding:14px 16px;font:600 15px var(--f-display);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--line)}
 .tw{overflow-x:auto}
 table{width:100%;border-collapse:collapse;font-size:14px}
@@ -104,6 +125,27 @@ button.ok{background:var(--ok);border-color:var(--ok);color:#fff}button.no{color
  </section>
  <section class="card dom" id="domCard" hidden><h2>Domingo · liberar a próxima semana?</h2><p class="note" style="padding:10px 16px 0">O acesso das empresas vale de segunda a sábado. Escolha quem continua na semana que vem (até sábado <b id="domSab"></b>). Quem não for liberado fica sem acesso a partir de segunda.</p><div style="padding:8px 16px"><button class="ok" type="button" id="domTodas">Liberar todas</button></div><div id="domList"></div></section>
  <section class="card ped" id="pedCard" hidden><h2>⏱ Pedidos de mais tempo <span class="sgn" id="pedN"></span></h2><div id="pedList"></div></section>
+ <section class="card" id="intCard" hidden><h2>🤝 Interessados <span class="sgn" id="intN"></span></h2><p class="note" style="padding:10px 16px 0">Alunos que tocaram em “Tenho interesse” numa divulgação ou novidade. Entre em contato e marque como atendido.</p><div class="tw"><table><thead><tr><th>Quando</th><th>Empresa</th><th>Colaborador</th><th>Arte / novidade</th><th></th></tr></thead><tbody id="intList"></tbody></table></div></section>
+ <section class="card" id="dvCard"><h2 style="display:flex;justify-content:space-between;align-items:center;gap:8px">📣 Divulgação e Novidades <span class="sgn" id="dvN" style="flex:1"></span><button type="button" id="dvTog" style="font-size:12px;padding:4px 10px">Mostrar</button></h2>
+  <div id="dvBody" hidden style="padding:12px 16px 16px">
+   <h3 class="dvt">A · Sequência automática</h3>
+   <p class="note">Cada arte aparece uma vez para cada colaborador, na faixa de horas do prazo dele. Faixa sem foto é pulada. Nunca abre durante um desafio com tempo.</p>
+   <div class="dvbar"><span class="dvtg" id="dvOn"><i></i><span id="dvOnT">Divulgação ligada</span></span>
+    <label>Trocar a cada <select id="dvIv"><option value="3">3 h</option><option value="6">6 h</option><option value="12">12 h</option><option value="24">24 h</option></select></label>
+    <label>Na tela por <select id="dvDu"><option value="8">8 s</option><option value="12">12 s</option><option value="20">20 s</option></select></label>
+    <label>Para <select id="dvPara"><option value="todas">Todas as empresas</option><option value="escolher">Escolher empresas…</option></select></label><span class="msg ok" id="dvMsg"></span></div>
+   <div class="dvpl" id="dvParaL" hidden></div>
+   <div class="dvg" id="dvGrid"></div>
+   <p class="note">◀ ▶ mudam a ordem · 👁 prévia · ⏸ pausa só aquela arte · 🗑 tira a arte da faixa.</p>
+   <h3 class="dvt" style="margin-top:18px">B · Novidade avulsa</h3>
+   <p class="note">Produto novo, dica ou aviso. Passa na frente da sequência e aparece na próxima entrada de cada aluno, até a data final.</p>
+   <div class="nvw"><label class="nvi" id="nvImg"><span>＋ Foto da novidade</span><input type="file" accept="image/*" hidden></label>
+    <div class="nvf"><div class="nv3"><label>Tipo<select id="nvK"><option>PRODUTO</option><option>DICA</option><option>AVISO</option></select></label><label>Até<input type="date" id="nvAte"></label></div>
+     <label>Título<input type="text" id="nvT" placeholder="Ex.: SGT Proglaze 2.0 · fita dupla face para pele de vidro"></label>
+     <label>Texto curto (opcional)<textarea id="nvX" rows="2"></textarea></label>
+     <div><button type="button" class="pri" id="nvPub">Publicar agora</button> <span class="msg" id="nvMsg"></span></div></div></div>
+   <ul class="nvl" id="nvList"></ul>
+  </div></section>
  <section class="card" id="sugCard"><h2 style="display:flex;justify-content:space-between;align-items:center;gap:8px">💬 Dúvidas e sugestões dos alunos <span class="sgn" id="sugN" style="flex:1"></span><button type="button" id="sugTog" style="font-size:12px;padding:4px 10px">Mostrar</button></h2><div id="sugBody" hidden><p class="note" style="padding:0 16px">O aluno envia pelo botão “💬 Sugestão” na barra escura do treinamento. Escreva a resposta embaixo da mensagem e clique em Responder: ela aparece para o aluno no mesmo botão.</p><ul class="tl" id="sugList"></ul></div></section>
  <section class="card">
   <h2>Empresas</h2>
@@ -141,7 +183,7 @@ button.ok{background:var(--ok);border-color:var(--ok);color:#fff}button.no{color
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="auth.js"></script>
 <script>
-const ZCFG=new Set(['colab','liberacao','sistema','gestor','chave_app','sugestao','resposta','sug_excluida','zerar']);
+const ZCFG=new Set(['colab','liberacao','sistema','gestor','chave_app','sugestao','resposta','sug_excluida','zerar','interesse','interesse_ok']);
 function zerarFiltro(ev,zs){const Z={};(zs||ev).forEach(e=>{if(e.tipo==='zerar'){const p=(e.detalhe||{}).para,t=Date.parse(e.criado_em);if(!Z[p]||t>Z[p])Z[p]=t;}});
   return ev.filter(e=>ZCFG.has(e.tipo)||!Z[e.user_id]||Date.parse(e.criado_em)>Z[e.user_id]);}
 const TIPOS={jcr200:'Suprema JCR 200',jcr200a:'Suprema JCR 200A',jcr300:'Suprema JCR 300',jcr205:'Suprema JCR 205',pcr200:'Suprema PCR 200',pvz300:'Suprema PVZ 300',pgr100:'Suprema PGR 100',max800:'Suprema MAX 800',gjc2f:'Gold JC-2F',gpc3fvz:'Gold PC3F-VZ',gpc2fpe:'Gold PC-2FPE',gjc4f:'Gold JC-4F',gjc4fs:'Gold JC-4FS',gpc2f:'Gold PC-2F',gpc2fm:'Gold PC-2F MAC',gmax:'Gold MAX'};
@@ -151,7 +193,7 @@ const fmtD=d=>d?new Date(d).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit
 const fmtH=s=>{const m=Math.round(s/60);return m<60?m+' min':Math.floor(m/60)+' h '+String(m%60).padStart(2,'0');};
 async function carregar(){
   const a=await sb.from('trein_alunos').select('*').order('login');ALUNOS=(a.data||[]).filter(x=>x.papel==='aluno');
-  EV=[];for(let i=0;;i+=1000){const r=await sb.from('trein_eventos').select('user_id,tipo,tipologia,detalhe,criado_em').order('criado_em',{ascending:false}).range(i,i+999);if(r.error||!r.data.length)break;EV.push(...r.data);if(r.data.length<1000)break;}
+  EV=[];for(let i=0;;i+=1000){const r=await sb.from('trein_eventos').select('user_id,tipo,tipologia,detalhe,criado_em').not('tipo','in','(div_art,novidade,divulga)').order('criado_em',{ascending:false}).range(i,i+999);if(r.error||!r.data.length)break;EV.push(...r.data);if(r.data.length<1000)break;}
   EV=zerarFiltro(EV);
   render();
 }
@@ -197,7 +239,7 @@ function render(){
   document.getElementById('k3').textContent=(h/3600).toFixed(1).replace('.',',');
   document.getElementById('k4').textContent=t;
   if(sel)detalhe();
-  domUI();pedUI();
+  domUI();pedUI();intUI();if(DCFG)divRender();else divCarregar();
   const esc=v=>String(v||'').replace(/</g,'&lt;'),EXC=new Set(EV.filter(e=>e.tipo==='sug_excluida').map(e=>Date.parse((e.detalhe||{}).ref))),SG=EV.filter(e=>e.tipo==='sugestao'&&!EXC.has(Date.parse(e.criado_em)));
   const RS=EV.filter(e=>e.tipo==='resposta'),pend=SG.filter(e=>!RS.some(r=>(r.detalhe||{}).ref===e.criado_em)).length;
   document.getElementById('sugN').textContent=SG.length?`${SG.length} recebida${SG.length>1?'s':''}${pend?` · ${pend} sem resposta`:''}`:'';
@@ -324,13 +366,71 @@ bNot.onclick=async()=>{if(!NOT_ON&&'Notification' in window&&Notification.permis
 function beep(){try{const c=new (window.AudioContext||window.webkitAudioContext)(),o=c.createOscillator(),g=c.createGain();o.frequency.value=880;g.gain.value=.08;o.connect(g);g.connect(c.destination);o.start();setTimeout(()=>{o.frequency.value=1320;},140);setTimeout(()=>{o.stop();c.close();},320);}catch(e){}}
 function toast(t){let w=document.getElementById('toasts');if(!w){w=document.createElement('div');w.id='toasts';w.style.cssText='position:fixed;right:16px;bottom:16px;z-index:200;display:flex;flex-direction:column;gap:8px;max-width:360px';document.body.appendChild(w);}
   const d=document.createElement('div');d.style.cssText='background:#1b232a;color:#fff;padding:10px 14px;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.25);font:500 14px var(--f-display);cursor:pointer';d.textContent=t;d.onclick=()=>d.remove();w.appendChild(d);setTimeout(()=>d.remove(),15000);}
-async function verAvisos(){if(!NOT_ON)return;const {data}=await sb.from('trein_eventos').select('user_id,tipo,detalhe,criado_em').in('tipo',['colab_sessao','pedido_tempo','sugestao']).gt('criado_em',NOT_T).order('criado_em');
+async function verAvisos(){if(!NOT_ON)return;const {data}=await sb.from('trein_eventos').select('user_id,tipo,detalhe,criado_em').in('tipo',['colab_sessao','pedido_tempo','sugestao','interesse']).gt('criado_em',NOT_T).order('criado_em');
   if(!data||!data.length)return;NOT_T=data[data.length-1].criado_em;
   data.forEach(e=>{const a=ALUNOS.find(x=>x.user_id===e.user_id)||{},emp=a.nome||a.login||'empresa',q=(e.detalhe||{}).quem||'Colaborador';
-    const t=e.tipo==='colab_sessao'?`${q} (${emp}) entrou no treinamento`:e.tipo==='pedido_tempo'?`⏱ ${q} (${emp}) pediu mais tempo`:`💬 Nova sugestão de ${q} (${emp})`;
+    const t=e.tipo==='colab_sessao'?`${q} (${emp}) entrou no treinamento`:e.tipo==='pedido_tempo'?`⏱ ${q} (${emp}) pediu mais tempo`:e.tipo==='interesse'?`🤝 ${q} (${emp}) tem interesse: ${(e.detalhe||{}).t||''}`:`💬 Nova sugestão de ${q} (${emp})`;
     toast(t);try{if('Notification' in window&&Notification.permission==='granted')new Notification('Treinamento FC 3D',{body:t});}catch(_){}});
   beep();carregar();}
 setInterval(verAvisos,30000);
+/* ===== Divulgação e Novidades (Matriz) ===== */
+let DCFG=null,DART={},DNOV={};const DMAX=24,PHONE='5566999867984';
+const desc=v=>String(v||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+async function divCarregar(){const r=await sb.from('trein_eventos').select('tipo,detalhe,criado_em').in('tipo',['divulga','div_art','novidade']).order('criado_em');
+  DCFG=null;DART={};DNOV={};(r.data||[]).forEach(e=>{const d=e.detalhe||{};if(e.tipo==='divulga')DCFG=d;else if(e.tipo==='div_art')DART[d.id]=d;else DNOV[d.id]=Object.assign({},DNOV[d.id]||{},d,{criado:DNOV[d.id]?DNOV[d.id].criado:e.criado_em});});
+  if(!DCFG)DCFG={on:true,iv:6,du:12,para:'todas',seq:[]};while(DCFG.seq.length<DMAX)DCFG.seq.push(null);divRender();}
+let DSV=null;function divSalvar(now){clearTimeout(DSV);const go=async()=>{await ins('divulga',JSON.parse(JSON.stringify(DCFG)));document.getElementById('dvMsg').textContent='✔ Salvo · vale para a próxima entrada dos alunos';setTimeout(()=>{const m=document.getElementById('dvMsg');if(m)m.textContent='';},4000);};if(now)go();else DSV=setTimeout(go,900);}
+async function divComp(file){const url=URL.createObjectURL(file),im=new Image();await new Promise(r=>{im.onload=r;im.src=url;});const k=Math.min(1,1080/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(url);return c.toDataURL('image/jpeg',.8);}
+const divId=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const divCnt=(ref,tipo)=>EV.filter(e=>e.tipo===tipo&&(e.detalhe||{}).ref===ref).length;
+function divPrev(img,t){let o=document.getElementById('dvPv');if(!o){o=document.createElement('div');o.id='dvPv';o.style.cssText='position:fixed;inset:0;z-index:300;background:rgba(10,16,22,.7);display:grid;place-items:center;cursor:pointer';o.onclick=()=>o.remove();document.body.appendChild(o);}
+  o.innerHTML=`<div style="background:#0f1a22;border-radius:12px;padding:10px;max-width:92vw;text-align:center;color:#e9edf0;font:600 14px var(--f-display)"><img src="${img}" style="max-height:78vh;max-width:88vw;display:block;border-radius:8px"><div style="margin-top:8px">${desc(t)} · clique para fechar</div></div>`;}
+function divRender(){const C=DCFG,n=Math.min(DMAX,Math.ceil(72/C.iv)),el=document.getElementById('dvGrid');if(!el)return;
+  document.getElementById('dvOn').classList.toggle('on',!!C.on);document.getElementById('dvOnT').textContent=C.on?'Divulgação ligada':'Divulgação desligada';
+  document.getElementById('dvIv').value=C.iv;document.getElementById('dvDu').value=C.du;
+  const para=C.para==='todas'?'todas':'escolher';document.getElementById('dvPara').value=para;const pl=document.getElementById('dvParaL');pl.hidden=para==='todas';
+  pl.innerHTML=ALUNOS.map(a=>`<label><input type="checkbox" value="${a.user_id}"${Array.isArray(C.para)&&C.para.includes(a.user_id)?' checked':''}> ${desc(a.nome||a.login)}</label>`).join('');
+  pl.querySelectorAll('input').forEach(i=>i.onchange=()=>{C.para=[...pl.querySelectorAll('input:checked')].map(x=>x.value);divSalvar(true);});
+  const usados=C.seq.slice(0,n).filter(x=>x&&DART[x.a]).length;document.getElementById('dvN').textContent=`${usados} de ${n} faixas com arte`;
+  el.innerHTML=C.seq.slice(0,n).map((x,i)=>{const hd=`<div class="dvh"><span>${i*C.iv}h – ${(i+1)*C.iv}h</span><b>${i+1}</b></div>`;const a=x&&DART[x.a];
+    if(!a)return `<div class="dvs">${hd}<label class="dva">＋ Adicionar foto<small>vazia · não aparece</small><input type="file" accept="image/*" data-up="${i}" hidden></label></div>`;
+    return `<div class="dvs${x.on?'':' off'}">${hd}<div class="dvi"><img src="${a.img}" alt=""><span>${x.on?'● ativa':'⏸ pausada'}</span></div><div class="dvf"><input type="text" value="${desc(x.t)}" data-t="${i}" aria-label="Título da arte ${i+1}">
+      <div class="dvc"><button type="button" data-mv="${i}" data-d="-1" title="Antes">◀</button><button type="button" data-pv="${i}" title="Prévia">👁</button><button type="button" data-ps="${i}" title="${x.on?'Pausar':'Ativar'}">${x.on?'⏸':'▶'}</button><button type="button" data-rm="${i}" title="Remover">🗑</button><button type="button" data-mv="${i}" data-d="1" title="Depois">▶</button></div>
+      <span class="dvm">vista ${divCnt(x.a,'div_visto')} · interesse ${divCnt(x.a,'interesse')}</span></div></div>`;}).join('');
+  el.querySelectorAll('[data-up]').forEach(inp=>inp.onchange=async()=>{const f=inp.files[0];if(!f)return;const i=+inp.dataset.up;inp.parentNode.textContent='Enviando…';const id=divId(),img=await divComp(f);
+    const r=await ins('div_art',{id,img});if(r.error)return divCarregar();DART[id]={id,img};C.seq[i]={a:id,t:f.name.replace(/\.[^.]+$/,''),on:true};divSalvar(true);divRender();});
+  el.querySelectorAll('[data-t]').forEach(e=>e.oninput=()=>{C.seq[+e.dataset.t].t=e.value;divSalvar();});
+  el.querySelectorAll('[data-mv]').forEach(e=>e.onclick=()=>{const i=+e.dataset.mv,j=i+ +e.dataset.d;if(j<0||j>=n)return;[C.seq[i],C.seq[j]]=[C.seq[j],C.seq[i]];divSalvar(true);divRender();});
+  el.querySelectorAll('[data-ps]').forEach(e=>e.onclick=()=>{const x=C.seq[+e.dataset.ps];x.on=!x.on;divSalvar(true);divRender();});
+  el.querySelectorAll('[data-rm]').forEach(e=>e.onclick=()=>{if(!confirm('Tirar esta arte da faixa?'))return;C.seq[+e.dataset.rm]=null;divSalvar(true);divRender();});
+  el.querySelectorAll('[data-pv]').forEach(e=>e.onclick=()=>{const x=C.seq[+e.dataset.pv];divPrev(DART[x.a].img,x.t);});
+  /* novidades */
+  const hoje=new Date().toISOString().slice(0,10),NV=Object.values(DNOV).filter(x=>!x.removido).sort((a,b)=>a.criado<b.criado?1:-1);
+  document.getElementById('nvList').innerHTML=NV.length?NV.map(x=>`<li><img src="${x.img}" alt="" data-npv="${x.id}"><div><b>${desc(x.k)} · ${desc(x.t)}</b><br><span class="note">${x.ate>=hoje?'ativa até '+x.ate.split('-').reverse().join('/'):'encerrada em '+x.ate.split('-').reverse().join('/')} · vista ${divCnt(x.id,'div_visto')} · interesse ${divCnt(x.id,'interesse')}</span></div><button type="button" class="no" data-nrm="${x.id}">Excluir</button></li>`).join(''):'<li class="note">Nenhuma novidade publicada.</li>';
+  document.querySelectorAll('[data-nrm]').forEach(b=>b.onclick=async()=>{if(!confirm('Excluir esta novidade? Ela some para os alunos.'))return;b.disabled=true;const x=DNOV[b.dataset.nrm];await ins('novidade',{id:x.id,removido:true});divCarregar();});
+  document.querySelectorAll('[data-npv]').forEach(b=>b.onclick=()=>{const x=DNOV[b.dataset.npv];divPrev(x.img,x.t);});
+  intUI();}
+function intUI(){const OK=new Set(EV.filter(e=>e.tipo==='interesse_ok').map(e=>Date.parse((e.detalhe||{}).ref)+'|'+(e.detalhe||{}).u));
+  const L=EV.filter(e=>e.tipo==='interesse'),pend=L.filter(e=>!OK.has(Date.parse(e.criado_em)+'|'+e.user_id));
+  const card=document.getElementById('intCard');card.hidden=!L.length;document.getElementById('intN').textContent=pend.length?`${pend.length} para atender`:'todos atendidos';
+  document.getElementById('intList').innerHTML=L.map((e,i)=>{const d=e.detalhe||{},a=ALUNOS.find(x=>x.user_id===e.user_id)||{},ok=OK.has(Date.parse(e.criado_em)+'|'+e.user_id);
+    return `<tr><td>${fmtD(e.criado_em)}</td><td>${desc(a.nome||a.login||'empresa')}</td><td>${desc(d.quem||'—')}</td><td>${desc(d.t||'')}</td><td>${ok?'<span style="color:var(--ok);font-weight:600">✔ atendido</span>':`<button type="button" class="ok" data-iok="${i}">Marcar atendido</button>`}</td></tr>`;}).join('');
+  document.querySelectorAll('[data-iok]').forEach(b=>b.onclick=async()=>{const e=L[+b.dataset.iok];b.disabled=true;await ins('interesse_ok',{ref:e.criado_em,u:e.user_id});carregar();});}
+function divBind(){const C=()=>DCFG;
+  document.getElementById('dvOn').onclick=()=>{C().on=!C().on;divSalvar(true);divRender();};
+  document.getElementById('dvIv').onchange=e=>{C().iv=+e.target.value;divSalvar(true);divRender();};
+  document.getElementById('dvDu').onchange=e=>{C().du=+e.target.value;divSalvar(true);};
+  document.getElementById('dvPara').onchange=e=>{C().para=e.target.value==='todas'?'todas':[];divSalvar(true);divRender();};
+  document.getElementById('dvTog').onclick=()=>{const b=document.getElementById('dvBody');b.hidden=!b.hidden;document.getElementById('dvTog').textContent=b.hidden?'Mostrar':'Ocultar';if(!b.hidden&&!DCFG)divCarregar();};
+  let NIMG=null;const ni=document.getElementById('nvImg');
+  ni.querySelector('input').onchange=async e=>{const f=e.target.files[0];if(!f)return;NIMG=await divComp(f);ni.style.backgroundImage=`url(${NIMG})`;ni.querySelector('span').hidden=true;};
+  {const d=new Date(Date.now()+7*864e5);document.getElementById('nvAte').value=d.toISOString().slice(0,10);}
+  document.getElementById('nvPub').onclick=async()=>{const t=document.getElementById('nvT').value.trim(),m=document.getElementById('nvMsg');
+    if(!NIMG||!t){m.textContent='Coloque a foto e o título.';m.className='msg bad';return;}
+    const b=document.getElementById('nvPub');b.disabled=true;await ins('novidade',{id:divId(),img:NIMG,t,x:document.getElementById('nvX').value.trim(),k:document.getElementById('nvK').value,ate:document.getElementById('nvAte').value,para:'todas'});
+    b.disabled=false;m.textContent='✔ Publicada: aparece na próxima entrada de cada aluno.';m.className='msg ok';NIMG=null;ni.style.backgroundImage='';ni.querySelector('span').hidden=false;document.getElementById('nvT').value='';document.getElementById('nvX').value='';divCarregar();};}
+divBind();
+
 gateUI(()=>carregar(),{soMatriz:true});
 </script>
 </body>
