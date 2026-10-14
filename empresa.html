@@ -73,10 +73,30 @@ async function gestorOk(uid){
   return new Promise(res=>{f.onsubmit=async e=>{e.preventDefault();const h=await sha(uid+':'+document.getElementById('gsIn').value.trim());
     if(h===g.ph){try{sessionStorage.setItem('treinFC-gestor',h);}catch(_){}gate.hidden=true;res(true);}else document.getElementById('gsMsg').textContent='Senha do gestor não confere.';};
     setTimeout(()=>document.getElementById('gsIn').focus(),50);});}
+/* Acompanhamento do gestor + limite de 4 aparelhos ao mesmo tempo */
+function gestorTrack(emp){let GS=null;try{GS=sessionStorage.getItem('treinFC-gs');}catch(_){}
+  if(!GS){GS=Math.random().toString(36).slice(2,10);try{sessionStorage.setItem('treinFC-gs',GS);}catch(_){}}
+  const ua=/Mobi|Android|iPhone/i.test(navigator.userAgent)?'celular':'computador';
+  const put=(tipo,d)=>sb.from('trein_eventos').insert({user_id:emp,tipo,tipologia:null,detalhe:Object.assign({s:GS},d||{})}).then(()=>{},()=>{});
+  put('gestor_in',{ua});
+  async function limite(){try{const since=new Date(Date.now()-180e3).toISOString(),since12=new Date(Date.now()-12*3600e3).toISOString();
+    const {data:hb}=await sb.from('trein_eventos').select('detalhe,criado_em').eq('user_id',emp).in('tipo',['gestor_in','gestor_hb']).gt('criado_em',since);
+    const at=new Set((hb||[]).map(e=>(e.detalhe||{}).s).filter(Boolean));if(at.size<=4)return;
+    const {data:ins}=await sb.from('trein_eventos').select('detalhe,criado_em').eq('user_id',emp).eq('tipo','gestor_in').gt('criado_em',since12);
+    const ini={};(ins||[]).forEach(e=>{const k=(e.detalhe||{}).s;if(k&&(!ini[k]||e.criado_em>ini[k]))ini[k]=e.criado_em;});
+    const ord=[...at].sort((x,y)=>(ini[y]||'')>(ini[x]||'')?1:-1);
+    if(ord.indexOf(GS)>=4){clearInterval(T);try{sessionStorage.removeItem('treinFC-gestor');}catch(_){}
+      const o=document.createElement('div');o.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(10,16,22,.75);display:grid;place-items:center;padding:16px';
+      o.innerHTML='<div style="background:#fff;border-radius:14px;max-width:440px;padding:22px;font:400 15px system-ui,sans-serif;text-align:center"><h3 style="margin:0 0 8px;font:700 20px system-ui">Painel aberto em outros aparelhos</h3><p style="margin:0 0 14px;color:#4b5a63">O Painel da Empresa pode ficar aberto em até <b>4 aparelhos ao mesmo tempo</b>. Outro aparelho entrou agora e este foi desconectado.</p><button type="button" onclick="location.reload()" style="border:0;border-radius:9px;padding:10px 16px;background:#1f6f9a;color:#fff;font:700 15px system-ui;cursor:pointer">Entrar de novo</button></div>';
+      document.body.appendChild(o);}}catch(_){}}
+  const T=setInterval(()=>{if(document.visibilityState==='visible')put('gestor_hb',{});limite();},60000);setTimeout(limite,4000);
+  const last={};document.addEventListener('click',e=>{const b=e.target.closest('button,a,summary,[role=tab],select');if(!b)return;const t=(b.textContent||b.getAttribute('aria-label')||'').replace(/\s+/g,' ').trim().slice(0,50);if(!t)return;
+    if(last[t]&&Date.now()-last[t]<30000)return;last[t]=Date.now();put('gestor_acao',{a:t});},true);}
 gateUI(async({session,perfil})=>{
   const q=new URLSearchParams(location.search);let emp=perfil.papel==='admin'?q.get('e'):perfil.user_id;
   if(!emp){document.getElementById('pg').hidden=false;document.getElementById('emp').textContent='Escolha a empresa no Painel da Matriz';return;}
   if(perfil.papel!=='admin'&&!(await gestorOk(emp)))return;
+  if(perfil.papel!=='admin')gestorTrack(emp);
   const [ra,rc,rs]=await Promise.all([sb.from('trein_alunos').select('login,nome').eq('user_id',emp).maybeSingle(),sb.from('trein_eventos').select('detalhe,criado_em').eq('tipo','colab').order('criado_em'),sb.from('trein_eventos').select('detalhe,criado_em').eq('tipo','sistema').order('criado_em')]);
   const EV=[];for(let i=0;;i+=1000){const r=await sb.from('trein_eventos').select('tipo,tipologia,detalhe,criado_em').eq('user_id',emp).order('criado_em').range(i,i+999);if(r.error||!r.data.length)break;EV.push(...r.data);if(r.data.length<1000)break;}
   {const zr=await sb.from('trein_eventos').select('tipo,detalhe,criado_em').eq('tipo','zerar');const zz=(zr.data||[]).filter(e=>(e.detalhe||{}).para===emp);const t=Math.max(0,...zz.map(e=>Date.parse(e.criado_em)));if(t){const keep=EV.filter(e=>ZCFG.has(e.tipo)||Date.parse(e.criado_em)>t);EV.length=0;EV.push(...keep);}}

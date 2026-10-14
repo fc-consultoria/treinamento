@@ -184,7 +184,7 @@ tr.mfin td{background:#eef5fc}
   <p class="ihint">Clique no nome, no login ou em nova senha para editar · Enter salva · Esc desfaz. O login novo vale no próximo acesso do aluno (a senha continua a mesma). Maiúsculas aparecem no painel, mas o aluno pode digitar o login com ou sem maiúsculas.</p>
   <p class="msg bad" id="tbMsg" hidden></p>
   <div class="tw"><table>
-   <thead><tr><th>Empresa</th><th>Login</th><th>Senha</th><th>Situação</th><th>Semana</th><th>Colab.</th><th>Sistema</th><th>Último acesso</th><th>Tempo</th><th>Tipologias vistas</th><th>Cortes</th><th>Perfis</th><th>Desafios</th><th>Estrelas</th><th>Melhor teste</th></tr></thead>
+   <thead><tr><th>Empresa</th><th>Login</th><th>Senha</th><th>Situação</th><th>Semana</th><th>Colab.</th><th>Sistema</th><th>Último acesso</th><th>Gestor</th><th>Tempo</th><th>Tipologias vistas</th><th>Cortes</th><th>Perfis</th><th>Desafios</th><th>Estrelas</th><th>Melhor teste</th></tr></thead>
    <tbody id="tb"></tbody>
   </table></div>
  </section>
@@ -207,6 +207,7 @@ tr.mfin td{background:#eef5fc}
     <h3>Tipologias estudadas</h3><ul class="chips" id="cTip"></ul>
     <h3>Cortes das junções vistos</h3><p class="note" id="cCor"></p>
     <h3>Desafios (monte a esquadria)</h3><p class="note" id="cTes"></p>
+    <h3>👔 Uso do gestor (Painel da Empresa)</h3><p class="note" id="cGes"></p>
    </div>
    <div><h3>Últimas atividades</h3><ul class="tl" id="tl"></ul></div>
   </div>
@@ -216,7 +217,7 @@ tr.mfin td{background:#eef5fc}
 <script src="auth.js"></script>
 <script src="mapa.js"></script>
 <script>
-const ZCFG=new Set(['colab','liberacao','sistema','gestor','chave_app','sugestao','resposta','sug_excluida','zerar','interesse','interesse_ok']);
+const ZCFG=new Set(['gestor_in','gestor_hb','gestor_acao','colab','liberacao','sistema','gestor','chave_app','sugestao','resposta','sug_excluida','zerar','interesse','interesse_ok']);
 function zerarFiltro(ev,zs){const Z={};(zs||ev).forEach(e=>{if(e.tipo==='zerar'){const p=(e.detalhe||{}).para,t=Date.parse(e.criado_em);if(!Z[p]||t>Z[p])Z[p]=t;}});
   return ev.filter(e=>ZCFG.has(e.tipo)||!Z[e.user_id]||Date.parse(e.criado_em)>Z[e.user_id]);}
 const TIPOS={jcr200:'Suprema JCR 200',jcr200a:'Suprema JCR 200A',jcr300:'Suprema JCR 300',jcr205:'Suprema JCR 205',pcr200:'Suprema PCR 200',pvz300:'Suprema PVZ 300',pgr100:'Suprema PGR 100',max800:'Suprema MAX 800',gjc2f:'Gold JC-2F',gpc3fvz:'Gold PC3F-VZ',gpc2fpe:'Gold PC-2FPE',gjc4f:'Gold JC-4F',gjc4fs:'Gold JC-4FS',gpc2f:'Gold PC-2F',gpc2fm:'Gold PC-2F MAC',gmax:'Gold MAX'};
@@ -232,7 +233,7 @@ async function carregar(){
 }
 function resumo(uid){
   const ev=EV.filter(e=>e.user_id===uid),tip=new Set(),cor=new Set(),per=new Set(),tes=[];let seg=0,ult=null;
-  ev.forEach(e=>{if(!ult||e.criado_em>ult)ult=e.criado_em;const d=e.detalhe||{};
+  ev.forEach(e=>{if(/^gestor_/.test(e.tipo))return;if(!ult||e.criado_em>ult)ult=e.criado_em;const d=e.detalhe||{};
     if(e.tipo==='tempo')seg+=d.s||60;if(e.tipologia&&e.tipo!=='login')tip.add(e.tipologia);
     if(e.tipo==='corte')cor.add((d.t||'')+'·'+d.k);if(e.tipo==='perfil')per.add(d.c);if(e.tipo==='teste')tes.push(d);});
   tes.forEach(x=>{if(x.pct==null)x.pct=Math.round(x.tot/((x.tot+x.err)||1)*100);if(x.stars==null)x.stars=x.pct>=90?3:x.pct>=70?2:1;});
@@ -242,6 +243,15 @@ function resumo(uid){
   const rein=ev.filter(e=>e.tipo==='reinicio').length;
   return {ev,tip,cor,per,tes,seg,ult,melhor,estrelas,best,rein};
 }
+function gestorRes(uid){const L=EV.filter(e=>e.user_id===uid&&/^gestor_/.test(e.tipo)),m30=Date.now()-30*864e5;
+  const ins=L.filter(e=>e.tipo==='gestor_in'),hb=L.filter(e=>e.tipo==='gestor_hb'),ac=L.filter(e=>e.tipo==='gestor_acao');
+  const ult=ins.concat(hb).reduce((a,e)=>!a||e.criado_em>a?e.criado_em:a,null),n30=ins.filter(e=>Date.parse(e.criado_em)>m30).length,min=hb.length+ins.length;
+  const agora=new Set(L.filter(e=>Date.now()-Date.parse(e.criado_em)<180e3).map(e=>(e.detalhe||{}).s)).size;
+  const cont={};ac.forEach(e=>{const a=(e.detalhe||{}).a;if(a)cont[a]=(cont[a]||0)+1;});
+  return {ult,n30,min,agora,tot:ins.length,ac:Object.entries(cont).sort((x,y)=>y[1]-x[1]),ins};}
+function gestorCel(uid){const g=gestorRes(uid);if(!g.tot)return '<span style="color:#c47d12;font-weight:600">nunca entrou</span>';
+  const dias=g.ult?Math.floor((Date.now()-Date.parse(g.ult))/864e5):99,cor=dias<=3?'#1f8a4c':dias<=10?'#c47d12':'#a33';
+  return `<span style="color:${cor};font-weight:700">${g.agora?'🟢 agora · '+g.agora+' aparelho'+(g.agora>1?'s':''):fmtD(g.ult)}</span><br><span class="note">${g.n30} acesso${g.n30===1?'':'s'} em 30 dias · ${fmtH(g.min*60)}</span>`;}
 function render(){
   const sem=Date.now()-7*864e5;let h=0,t=0,ativos7=0;
   const tb=document.getElementById('tb');tb.innerHTML='';
@@ -249,7 +259,7 @@ function render(){
     const tr=document.createElement('tr');if(sel===a.user_id)tr.className='sel';
     const esc=v=>String(v||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
     tr.innerHTML=`<td><input class="ied" data-e="nome" value="${esc(a.nome)}" placeholder="sem nome – digite" aria-label="Nome do ${esc(a.login)}" title="Clique para editar o nome; Enter salva"></td><td><input class="ied lg" data-e="login" value="${esc(a.login)}" aria-label="Login do ${esc(a.login)}" title="Clique para editar o login; Enter salva"></td><td><input class="ied lg" data-e="senha" value="${esc(senhaLoc(a.user_id))}" placeholder="nova senha" autocomplete="new-password" aria-label="Nova senha do ${esc(a.login)}" title="Digite a nova senha (mín. 6) e aperte Enter"></td>
-      <td><span class="tag ${a.ativo?'':'off'}">${a.ativo?'ativo':'bloqueado'}</span></td><td>${semTag(a.user_id)}</td><td class="n">${colabs(a.user_id).length}/6</td><td style="white-space:nowrap">${sisBtns(a.user_id)}</td><td class="n">${fmtD(r.ult)}</td><td class="n">${fmtH(r.seg)}</td>
+      <td><span class="tag ${a.ativo?'':'off'}">${a.ativo?'ativo':'bloqueado'}</span></td><td>${semTag(a.user_id)}</td><td class="n">${colabs(a.user_id).length}/6</td><td style="white-space:nowrap">${sisBtns(a.user_id)}</td><td class="n">${fmtD(r.ult)}</td><td>${gestorCel(a.user_id)}</td><td class="n">${fmtH(r.seg)}</td>
       <td><div style="display:flex;gap:8px;align-items:center"><div class="bar" style="flex:1"><i style="width:${Math.round(r.tip.size/NT*100)}%"></i></div><span class="n">${r.tip.size}/${NT}</span></div></td>
       <td class="n">${r.cor.size}</td><td class="n">${r.per.size}</td><td class="n">${r.tes.length}</td><td class="n" style="color:#b8860b">★ ${r.estrelas}/${NT*3}</td>
       <td class="n">${r.melhor?`${r.melhor.pct}% · ${TIPOS[r.melhor.t]||''}`:'—'}</td>`;
@@ -301,6 +311,10 @@ function detalhe(){
   document.getElementById('detCard').hidden=false;document.getElementById('detTit').textContent=(a.nome||a.login)+' · '+a.login;
   document.getElementById('eNome').value=a.nome||'';document.getElementById('bAtivo').textContent=a.ativo?'Bloquear acesso':'Liberar acesso';
   colabUI(a);
+  {const g=gestorRes(a.user_id),el=document.getElementById('cGes');if(el)el.innerHTML=!g.tot?'O gestor ainda não entrou no Painel da Empresa.':
+    `${g.tot} acesso${g.tot===1?'':'s'} no total · ${g.n30} nos últimos 30 dias · tempo aberto ${fmtH(g.min*60)} · último ${fmtD(g.ult)}${g.agora?' · <b style="color:#1f8a4c">🟢 aberto agora em '+g.agora+' aparelho'+(g.agora>1?'s':'')+'</b>':''}<br>`+
+    `Últimas entradas: ${g.ins.slice(0,6).map(e=>fmtD(e.criado_em)+' ('+((e.detalhe||{}).ua||'aparelho')+')').join(' · ')}<br>`+
+    (g.ac.length?`O que mais clicou: ${g.ac.slice(0,8).map(([t,n])=>t.replace(/</g,'')+' ('+n+')').join(' · ')}`:'Ainda não clicou em nada dentro do painel.');}
   document.getElementById('cTip').innerHTML=Object.entries(TIPOS).map(([k,n])=>`<li class="${r.tip.has(k)?'on':''}">${n}</li>`).join('');
   document.getElementById('cCor').textContent=r.cor.size?[...r.cor].map(x=>{const [t,k]=x.split('·');return (TIPOS[t]||t)+' ('+({esq:'lateral esq.',dir:'lateral dir.',sup:'superior',inf:'inferior',trav:'travessa'}[k]||'encontro')+')';}).join(' · '):'Nenhum corte aberto ainda.';
   document.getElementById('cTes').textContent=r.tes.length?Object.values(r.best).map(x=>`${TIPOS[x.t]||x.t}: ${'★'.repeat(x.stars)}${'☆'.repeat(3-x.stars)} ${x.pct}%${x.nivel?(x.nivel==='desm'?' (desmontada)':' (montada)'):''}`).join(' · ')+` — ${r.tes.length} desafio${r.tes.length===1?'':'s'} feito${r.tes.length===1?'':'s'}, ${r.rein} reinício${r.rein===1?'':'s'}`:'Nenhum desafio concluído ainda.';
