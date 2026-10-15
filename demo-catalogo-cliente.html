@@ -59,7 +59,7 @@ tr.oc td{opacity:.45}
 /* página do cliente */
 .cp{--c:#17606b}
 .cph{background:var(--c);color:#fff}.cph .w{display:flex;align-items:center;gap:14px;height:70px}.cph .lg{width:46px;height:46px;border-radius:10px;background:#fff;color:var(--c);display:grid;place-items:center;font:800 22px var(--f-d)}.cph b{font:800 22px var(--f-d);display:block}.cph small{opacity:.85;font-size:12.5px}
-.cph .zap{margin-left:auto;background:#1f9d55;color:#fff;border:0}
+.cph .zap{background:#1f9d55;color:#fff;border:0}
 .chero{background:linear-gradient(160deg,var(--c),#0d2a33);color:#fff;padding:30px 0 34px}.chero h1{margin:0 0 8px;font:800 clamp(30px,4vw,46px)/1.05 var(--f-d)}.chero p{margin:0;color:#e3f0f2;max-width:720px}
 .ctools{position:sticky;top:44px;z-index:5;background:rgba(243,246,247,.97);border-bottom:1px solid var(--ln);padding:10px 0}.ctools .w{display:flex;gap:8px;flex-wrap:wrap}
 .ctools button.t{border:1px solid var(--ln);background:#fff;border-radius:20px;padding:7px 14px;font-weight:600;cursor:pointer}.ctools button.t[aria-pressed=true]{background:var(--c);color:#fff;border-color:var(--c)}
@@ -75,6 +75,12 @@ tr.oc td{opacity:.45}
 .cc .pe{position:absolute;right:10px;top:10px;font-size:11.5px;font-weight:700;border-radius:10px;padding:2px 8px;background:#e6f5ec;color:#1f6b3f}
 .cfoot{background:var(--ink);color:#c7d6dd;padding:24px 0;margin-top:30px;font-size:13.5px}
 .cvbar{background:#fff7d6;border-bottom:1px solid #f0d77a;padding:8px 0;font-size:13.5px;color:#6b5200}.cvbar .w{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+@media print{@page{size:A4;margin:10mm}body{background:#fff;font-size:11px}.demo,.ctools,.cvbar,.zap,.scb+.obs,.save,.noprint{display:none!important}
+.cph,.chero,.cc .pe,.gh i,.cor{-webkit-print-color-adjust:exact;print-color-adjust:exact}.chero{padding:10px 0}.chero h1{font-size:26px}.w{max-width:none;padding:0}
+.cgrid{grid-template-columns:repeat(4,1fr);gap:6px}.cc{break-inside:avoid;padding:6px 8px;border-radius:8px}.cc .im{height:96px}.cc .im img.d3{max-height:62px}.cc .im img.d2{height:18px}.cc b{font-size:15px}.cc span.n{font-size:10.5px}
+.cc .scb{border:0;background:none;padding:0;margin-top:3px;font-size:10.5px;color:#8a4a00}.gh{margin:10px 0 6px;break-after:avoid}.gh h2{font-size:17px}.cfoot{background:#fff;color:#55636c;border-top:1px solid #ccc;padding:8px 0}.cfoot b{color:#17222a!important}
+.pline{break-before:page}.pline:first-of-type{break-before:auto}}
+.ptitle{display:none}@media print{.ptitle{display:block;font:800 22px var(--f-d);margin:14px 0 0;color:var(--c)}}
 @media(max-width:700px){.kv{grid-template-columns:repeat(3,1fr)}table.pf .hm{display:none}}
 </style>
 </head>
@@ -117,7 +123,7 @@ function matriz(){const tot=BASE.reduce((s,l)=>s+l.p.length,0);
   return `<div class="cli"><div class="hd"><div class="lg" style="background:${c.cor}">${esc(c.sigla)}</div><div><b>${esc(c.nome)}</b><div class="note">${esc(c.cidade)} · gestor: <b style="font-size:13px">${esc(c.slug.split('-')[0])}.gestor</b></div></div><span class="tag ok" style="margin-left:auto">publicado</span></div>
   <div class="lk">🔗 fc-consultoria.github.io/catalogo/${esc(c.slug)}</div>
   <div class="kv"><div><b>${L.length}</b>linhas</div><div><b>${n-oc}</b>perfis visíveis</div><div><b>${sc}</b>sob consulta</div></div>
-  <div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn sm pri" data-act="gestor" data-c="${c.id}">✏️ Abrir como gestor</button><button class="btn sm" data-act="ver" data-c="${c.id}">👁 Ver como o cliente vê</button><button class="btn sm" data-act="copiar">📋 Copiar link</button></div>
+  <div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn sm pri" data-act="gestor" data-c="${c.id}">✏️ Abrir como gestor</button><button class="btn sm" data-act="ver" data-c="${c.id}">👁 Ver como o cliente vê</button><button class="btn sm" data-act="copiar">📋 Copiar link</button><button class="btn sm" data-act="print" data-c="${c.id}">🖨 Imprimir catálogo</button></div>
   <div class="note">Linhas: ${L.map(l=>esc(l.n)).join(' · ')} · última edição pelo gestor: hoje</div></div>`;}).join('')}</div></div>
  <div class="card"><h2>Base de catálogos da FC</h2><p class="note" style="margin:0 0 12px">É a base que alimenta todos os clientes. Quando uma linha nova entra aqui, a FC libera para os clientes que quiser.</p>
  <div class="lines">${BASE.map(l=>`<div class="line"><i style="background:${l.id==='sup'?'#2f7fb8':'#c8932f'}"></i><b>${esc(l.n)}</b><span class="note">${l.p.length} perfis · fotos 3D, corte 2D, código, peso</span><span class="tag ok" style="margin-left:auto">ativa</span><button class="btn sm">✏️ Editar base</button></div>`).join('')}
@@ -128,7 +134,7 @@ function matriz(){const tot=BASE.reduce((s,l)=>s+l.p.length,0);
 /* ---------- GESTOR ---------- */
 function gestor(){const c=cli(),L=linhasDo(c);const lin=L.find(l=>l.id===LI)||L[0];LI=lin.id;const t=nz(Q);
  const rows=lin.p.filter(q=>{const e=ed(c.id,q);if(t&&!nz(e.c+' '+q.c+' '+e.n).includes(t))return false;if(FL==='sc')return e.sc;if(FL==='oc')return e.oc;return true;});
- return `<div class="ph" style="background:${c.cor}"><div class="w"><div><small>Painel do gestor · catálogo virtual</small><h1>${esc(c.nome)}</h1></div><div class="acts"><button class="btn or" data-act="ver" data-c="${c.id}">👁 Ver como o cliente vê</button><button class="btn">Sair</button></div></div></div>
+ return `<div class="ph" style="background:${c.cor}"><div class="w"><div><small>Painel do gestor · catálogo virtual</small><h1>${esc(c.nome)}</h1></div><div class="acts"><button class="btn or" data-act="ver" data-c="${c.id}">👁 Ver como o cliente vê</button><button class="btn" data-act="print" data-c="${c.id}">🖨 Imprimir catálogo</button><button class="btn">Sair</button></div></div></div>
  <main><div class="w">
  <div class="card"><h2>Sua marca no catálogo</h2><div class="cfg">
   <label>Nome da empresa<input data-k="nome" value="${esc(c.nome)}"></label><label>Sigla do logo<input data-k="sigla" value="${esc(c.sigla)}" maxlength="3"></label><label>Cor principal<input data-k="cor" type="color" value="${c.cor}"></label><label>WhatsApp de atendimento<input data-k="zap" value="${esc(c.zap)}"></label>
@@ -151,14 +157,14 @@ function gestor(){const c=cli(),L=linhasDo(c);const lin=L.find(l=>l.id===LI)||L[
  </div></main><button class="btn pri save" data-act="salvar">💾 Salvar e publicar</button>`;}
 /* ---------- PÁGINA DO CLIENTE ---------- */
 function cliente(){const c=cli(),L=linhasDo(c);const lin=L.find(l=>l.id===LI)||L[0];LI=lin.id;const t=nz(Q);
- let html='';lin.g.forEach(([g,nm,ds])=>{const P=lin.p.filter(q=>q.g===g&&!ed(c.id,q).oc&&(!t||nz(ed(c.id,q).c+' '+ed(c.id,q).n).includes(t)));if(!P.length)return;
+ let html='';(window.__PRINT?L:[lin]).forEach(lin=>{if(window.__PRINT)html+=`<div class="pline"><div class="ptitle">${esc(lin.n)}</div>`;lin.g.forEach(([g,nm,ds])=>{const P=lin.p.filter(q=>q.g===g&&!ed(c.id,q).oc&&(!t||nz(ed(c.id,q).c+' '+ed(c.id,q).n).includes(t)));if(!P.length)return;
   html+=`<div class="gh"><i></i><div><h2>${esc(nm)}</h2><div class="note">${esc(ds)}</div></div></div><div class="cgrid">${P.map(q=>{const e=ed(c.id,q);return `<article class="cc">${e.sc?'':'<span class="pe">pronta entrega</span>'}
    <div class="im">${q.d3?`<img class="d3" src="${IMG}${q.i}.webp" alt="" loading="lazy"><img class="d2" src="${IMG}c${q.i}.webp" alt="" loading="lazy">`:`<img class="d3" src="${IMG}c${q.i}.webp" alt="" loading="lazy">`}</div>
    <b>${esc(e.c)}</b><span class="n">${esc(e.n)}</span><em>${q.p?'Peso: '+esc(q.p)+' kg/m':''}</em>
    <div class="cores">${CORES.filter(x=>e.cores.includes(x[0])).map(([id,nm,hx])=>`<span class="cor on" title="${nm}" style="background:${hx}"></span>`).join('')}</div>
-   ${e.sc?`<button class="scb" data-sc="${esc(q.c)}">Sob consulta ${e.obs?'ⓘ':''}</button><div class="obs" hidden>${e.obs?esc(e.txt||c.obsPad)+'<br>':'Consulte prazo e disponibilidade:<br>'}<a class="btn sm" style="margin-top:6px;background:#1f9d55;color:#fff;border:0" href="#" onclick="return false">💬 Consultar no WhatsApp</a></div>`:''}</article>`;}).join('')}</div>`;});
+   ${e.sc?`<button class="scb" data-sc="${esc(q.c)}">Sob consulta ${e.obs?'ⓘ':''}</button><div class="obs" hidden>${e.obs?esc(e.txt||c.obsPad)+'<br>':'Consulte prazo e disponibilidade:<br>'}<a class="btn sm" style="margin-top:6px;background:#1f9d55;color:#fff;border:0" href="#" onclick="return false">💬 Consultar no WhatsApp</a></div>`:''}</article>`;}).join('')}</div>`;});if(window.__PRINT)html+='</div>';});
  return `${cvMode?`<div class="cvbar"><div class="w">👁 <b>Visualização:</b> é assim que os clientes da ${esc(c.nome)} veem o catálogo.<button class="btn sm" data-act="voltar" style="margin-left:auto">← Voltar ao painel</button></div></div>`:''}
- <div class="cp" style="--c:${c.cor}"><div class="cph"><div class="w"><div class="lg">${esc(c.sigla)}</div><div><b>${esc(c.nome)}</b><small>Catálogo de perfis de alumínio</small></div><a class="btn zap" href="#" onclick="return false">💬 WhatsApp ${esc(c.zap)}</a></div></div>
+ <div class="cp" style="--c:${c.cor}"><div class="cph"><div class="w"><div class="lg">${esc(c.sigla)}</div><div><b>${esc(c.nome)}</b><small>Catálogo de perfis de alumínio</small></div><button class="btn noprint" data-act="print" style="margin-left:auto;background:rgba(255,255,255,.15);color:#fff;border-color:rgba(255,255,255,.4)">🖨 Imprimir / salvar PDF</button><a class="btn zap" style="margin-left:8px" href="#" onclick="return false">💬 WhatsApp ${esc(c.zap)}</a></div></div>
  <div class="chero"><div class="w"><h1>Catálogo de perfis</h1><p>${esc(c.texto)}</p></div></div>
  <div class="ctools"><div class="w">${L.map(l=>`<button class="t" data-li="${l.id}" aria-pressed="${l.id===LI}">${esc(l.n)}</button>`).join('')}<input type="search" id="cq" placeholder="Buscar pelo código ou nome" value="${esc(Q)}"></div></div>
  <div class="w">${html||'<p class="note" style="padding:20px 0">Nenhum perfil encontrado.</p>'}</div>
@@ -169,6 +175,7 @@ function bind(){const A=document.getElementById('app');
   if(a==='ver'){CID=b.dataset.c||CID;cvMode=V;V='cliente';draw();}
   if(a==='voltar'){V=cvMode;cvMode=false;draw();}
   if(a==='copiar'){b.textContent='✓ Link copiado';}
+  if(a==='print'){if(b.dataset.c){CID=b.dataset.c;}const v0=V;V='cliente';window.__PRINT=1;draw();setTimeout(()=>{window.print();window.__PRINT=0;V=v0;draw();},400);}
   if(a==='novo'){const n=prompt('Nome do cliente:');if(n){const id='c'+Date.now();ST.cli.push({id,nome:n,cidade:'',cor:'#17606b',sigla:n.split(/\s+/).map(x=>x[0]).join('').slice(0,2).toUpperCase(),zap:'',slug:n.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,'-'),linhas:['sup','gold'],texto:'Catálogo de perfis de alumínio.',obsPad:'Perfil sob consulta: confirme prazo e disponibilidade.'});save();draw();}}
   if(a==='allsc'||a==='nosc'){const c=cli();linhasDo(c).forEach(l=>l.p.forEach(q=>{ed(c.id,q).sc=a==='allsc';}));save();draw();}
   if(a==='salvar'){save();b.textContent='✓ Salvo e publicado';setTimeout(()=>b.textContent='💾 Salvar e publicar',1600);}});
