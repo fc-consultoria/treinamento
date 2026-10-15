@@ -201,11 +201,11 @@ tr.mfin td{background:#eef5fc}
   <div class="tw"><table><thead><tr><th>Cliente</th><th>Situação</th><th>Abriu em</th><th>Tempo usado</th><th>O que viu</th><th></th></tr></thead><tbody id="dmTb"></tbody></table></div>
   <div id="dmDet"></div>
  </div></section>
-  <section class="card" id="mapCard" data-tab="map"><h2>📍 FC no Brasil · mapa para os alunos</h2>
+  <section class="card" id="mapCard" data-tab="map"><h2>📍 FC no Brasil · mapa para os alunos e o site</h2>
   <div style="padding:12px 16px 16px">
-   <div class="mpPub" id="mpPub"><div><b id="mpPubT">…</b><span id="mpPubS"></span></div><button type="button" id="mpPubB">…</button></div>
+   <div id="orRes" style="border:2px solid #2fbf71;background:#eaf8f0;border-radius:10px;padding:12px 14px;margin-bottom:10px"></div><div id="lgAp"></div><div class="mpPub" id="mpPub"><div><b id="mpPubT">…</b><span id="mpPubS"></span></div><button type="button" id="mpPubB">…</button></div>
    <div class="mpRes" id="mpRes"></div>
-   <p class="note">Cadastre as cidades onde a FC atende. O aluno vê o mapa pelo botão <b>📍 FC no Brasil</b> na barra escura do orientativo (o botão só aparece quando há pelo menos uma cidade). Só aparecem cidade e quantidade, nunca o nome do cliente.</p>
+   <p class="note"><b>Cidades da consultoria</b> (presencial e on-line): só aparecem no mapa quando você clicar em <b>Mostrar consultoria no mapa</b>. Delas aparecem só a cidade e a quantidade, nunca o nome do cliente. O nome e a logo de uma empresa só aparecem quando ela mesma autoriza, pelo Painel da Empresa, e você publica.</p>
    <form id="mpF" class="mpf"><label>1 · Estado (UF)<select id="mpU"></select></label><label>2 · Cidade <span id="mpCn" style="font-size:11px"></span><input id="mpC" list="mpL" placeholder="Digite ou escolha a cidade" required autocomplete="off"></label>
     <label>Atendimento<select id="mpT"><option value="on">💻 On-line</option><option value="pr">📍 Presencial</option></select></label><label>● Em andamento<input id="mpN" type="number" min="0" value="1"></label><label>✔ Finalizadas<input id="mpFi" type="number" min="0" value="0"></label><button type="submit" class="pri">Adicionar</button><span class="msg ok" id="mpMsg"></span></form>
    <datalist id="mpL"></datalist>
@@ -260,7 +260,7 @@ tr.mfin td{background:#eef5fc}
 <script src="auth.js"></script>
 <script src="mapa.js"></script>
 <script>
-const ZCFG=new Set(['implantacao','promo','contrato','empresa_local','gestor_in','gestor_hb','gestor_acao','colab','liberacao','sistema','gestor','chave_app','sugestao','resposta','sug_excluida','zerar','interesse','interesse_ok']);
+const ZCFG=new Set(['logo_mapa','logo_ok','implantacao','promo','contrato','empresa_local','gestor_in','gestor_hb','gestor_acao','colab','liberacao','sistema','gestor','chave_app','sugestao','resposta','sug_excluida','zerar','interesse','interesse_ok']);
 function zerarFiltro(ev,zs){const Z={};(zs||ev).forEach(e=>{if(e.tipo==='zerar'){const p=(e.detalhe||{}).para,t=Date.parse(e.criado_em);if(!Z[p]||t>Z[p])Z[p]=t;}});
   return ev.filter(e=>ZCFG.has(e.tipo)||!Z[e.user_id]||Date.parse(e.criado_em)>Z[e.user_id]);}
 const TIPOS={jcr200:'Suprema JCR 200',jcr200a:'Suprema JCR 200A',jcr300:'Suprema JCR 300',jcr205:'Suprema JCR 205',pcr200:'Suprema PCR 200',pvz300:'Suprema PVZ 300',pgr100:'Suprema PGR 100',max800:'Suprema MAX 800',gjc2f:'Gold JC-2F',gpc3fvz:'Gold PC3F-VZ',gpc2fpe:'Gold PC-2FPE',gjc4f:'Gold JC-4F',gjc4fs:'Gold JC-4FS',gpc2f:'Gold PC-2F',gpc2fm:'Gold PC-2F MAC',gmax:'Gold MAX'};
@@ -270,9 +270,9 @@ const fmtD=d=>d?new Date(d).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit
 const fmtH=s=>{const m=Math.round(s/60);return m<60?m+' min':Math.floor(m/60)+' h '+String(m%60).padStart(2,'0');};
 async function carregar(){
   const a=await sb.from('trein_alunos').select('*').order('login');ALUNOS=(a.data||[]).filter(x=>x.papel==='aluno');
-  EV=[];for(let i=0;;i+=1000){const r=await sb.from('trein_eventos').select('user_id,tipo,tipologia,detalhe,criado_em').not('tipo','in','(div_art,novidade,divulga)').order('criado_em',{ascending:false}).range(i,i+999);if(r.error||!r.data.length)break;EV.push(...r.data);if(r.data.length<1000)break;}
+  EV=[];for(let i=0;;i+=1000){const r=await sb.from('trein_eventos').select('user_id,tipo,tipologia,detalhe,criado_em').not('tipo','in','(div_art,novidade,divulga,mapa)').order('criado_em',{ascending:false}).range(i,i+999);if(r.error||!r.data.length)break;EV.push(...r.data);if(r.data.length<1000)break;}
   EV=zerarFiltro(EV);
-  render();
+  render();setTimeout(orSync,800);
 }
 function resumo(uid){
   const ev=EV.filter(e=>e.user_id===uid),tip=new Set(),cor=new Set(),per=new Set(),tes=[];let seg=0,ult=null;
@@ -730,11 +730,12 @@ function alertaGrande(o){let w=document.getElementById('bigAl');if(!w){w=documen
   try{if('Notification' in window&&Notification.permission==='granted'){const nt=new Notification(o.titulo,{body:o.texto?String(o.texto).slice(0,160):(o.sub||''),tag:'fc-'+k,requireInteraction:true,renotify:true});nt.onclick=()=>{window.focus();nt.close();fecha();try{o.fn&&o.fn();}catch(_){}};}}catch(_){}}
 {const st=document.createElement('style');st.textContent='@keyframes baIn{from{opacity:0;transform:translateY(-14px)}to{opacity:1;transform:none}}';document.head.appendChild(st);}
 window.alertaGrande=alertaGrande;
-async function verAvisos(){const TPS=NOT_ON?['colab_sessao','pedido_tempo','sugestao','interesse','linha_interesse']:['sugestao'];const {data}=await sb.from('trein_eventos').select('user_id,tipo,detalhe,criado_em').in('tipo',TPS).gt('criado_em',NOT_T).order('criado_em');
+async function verAvisos(){const TPS=NOT_ON?['colab_sessao','pedido_tempo','sugestao','interesse','linha_interesse','logo_mapa']:['sugestao','logo_mapa'];const {data}=await sb.from('trein_eventos').select('user_id,tipo,detalhe,criado_em').in('tipo',TPS).gt('criado_em',NOT_T).order('criado_em');
   if(!data||!data.length)return;NOT_T=data[data.length-1].criado_em;
   data.forEach(e=>{const a=ALUNOS.find(x=>x.user_id===e.user_id)||{},emp=a.nome||a.login||'empresa',q=(e.detalhe||{}).quem||'Colaborador';
     const t=e.tipo==='colab_sessao'?`${q} (${emp}) entrou no orientativo`:e.tipo==='pedido_tempo'?`⏱ ${q} (${emp}) pediu mais tempo`:e.tipo==='interesse'?`🤝 ${q} (${emp}) tem interesse: ${(e.detalhe||{}).t||''}`:e.tipo==='linha_interesse'?`🔔 ${q} (${emp}) quer ser avisado da Linha ${(e.detalhe||{}).n||''}`:`💬 Nova sugestão de ${q} (${emp})`;
     if(e.tipo==='sugestao'){const dd=e.detalhe||{},G=dd.cid==='gestor';alertaGrande({k:'s'+e.criado_em,titulo:G?`👔 O gestor da ${emp} mandou mensagem`:`${q} (${emp}) mandou mensagem`,sub:G?'Painel da Empresa':'Dúvidas e sugestões · orientativo',texto:dd.txt||'',fn:()=>{ptab('live');try{lvChat(e.user_id,dd.cid||'',G?'Gestor':q);}catch(_){}}});return;}
+    if(e.tipo==='logo_mapa'){if(!(e.detalhe||{}).remover){toast(`🖼 ${emp} enviou a logo para o mapa · aprovar na aba FC no Brasil`);try{beep();}catch(_){}}carregar();return;}
     if(!NOT_ON)return;
     toast(t);try{if('Notification' in window&&Notification.permission==='granted')new Notification('Orientativo FC 3D',{body:t});}catch(_){}});
   beep();carregar();}
@@ -751,24 +752,25 @@ const divId=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 const divCnt=(ref,tipo)=>EV.filter(e=>e.tipo===tipo&&(e.detalhe||{}).ref===ref).length;
 function divPrev(img,t){let o=document.getElementById('dvPv');if(!o){o=document.createElement('div');o.id='dvPv';o.style.cssText='position:fixed;inset:0;z-index:300;background:rgba(10,16,22,.7);display:grid;place-items:center;cursor:pointer';o.onclick=()=>o.remove();document.body.appendChild(o);}
   o.innerHTML=`<div style="background:#0f1a22;border-radius:12px;padding:10px;max-width:92vw;text-align:center;color:#e9edf0;font:600 14px var(--f-display)"><img src="${img}" style="max-height:78vh;max-width:88vw;display:block;border-radius:8px"><div style="margin-top:8px">${desc(t)} · clique para fechar</div></div>`;}
+const MAPTH='data:image/svg+xml;utf8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300"><rect width="300" height="300" fill="#0f1a22"/><path d="M120 60l60 10 40 40 10 50-30 60-50 20-40-30-20-60z" fill="#1f7f5f" stroke="#3a5866" stroke-width="3"/><rect x="135" y="120" width="26" height="26" rx="7" fill="#2fbf71" stroke="#fff" stroke-width="4"/><circle cx="190" cy="170" r="13" fill="#fff" stroke="#2fbf71" stroke-width="5"/><text x="150" y="262" fill="#fff" font-family="system-ui" font-weight="800" font-size="26" text-anchor="middle">📍 Mapa FC</text><text x="150" y="288" fill="#9fb3be" font-family="system-ui" font-size="16" text-anchor="middle">atualiza sozinho</text></svg>');
 function divRender(){const C=DCFG,n=Math.min(DMAX,Math.ceil(72/C.iv)),el=document.getElementById('dvGrid');if(!el)return;
   document.getElementById('dvOn').classList.toggle('on',!!C.on);document.getElementById('dvOnT').textContent=C.on?'Divulgação ligada':'Divulgação desligada';
   document.getElementById('dvIv').value=C.iv;document.getElementById('dvDu').value=C.du;
   const para=C.para==='todas'?'todas':'escolher';document.getElementById('dvPara').value=para;const pl=document.getElementById('dvParaL');pl.hidden=para==='todas';
   pl.innerHTML=ALUNOS.map(a=>`<label><input type="checkbox" value="${a.user_id}"${Array.isArray(C.para)&&C.para.includes(a.user_id)?' checked':''}> ${desc(a.nome||a.login)}</label>`).join('');
   pl.querySelectorAll('input').forEach(i=>i.onchange=()=>{C.para=[...pl.querySelectorAll('input:checked')].map(x=>x.value);divSalvar(true);});
-  const usados=C.seq.slice(0,n).filter(x=>x&&DART[x.a]).length;document.getElementById('dvN').textContent=`${usados} de ${n} faixas com arte`;
-  el.innerHTML=C.seq.slice(0,n).map((x,i)=>{const hd=`<div class="dvh"><span>${i*C.iv}h – ${(i+1)*C.iv}h</span><b>${i+1}</b></div>`;const a=x&&DART[x.a];
+  const usados=C.seq.slice(0,n).filter(x=>x&&(DART[x.a]||x.a==='__mapa')).length;document.getElementById('dvN').textContent=`${usados} de ${n} faixas com arte`;
+  el.innerHTML=C.seq.slice(0,n).map((x,i)=>{const hd=`<div class="dvh"><span>${i*C.iv}h – ${(i+1)*C.iv}h</span><b>${i+1}</b></div>`;const a=x&&(x.a==='__mapa'?{img:MAPTH,map:1}:DART[x.a]);
     if(!a)return `<div class="dvs">${hd}<div class="dva" role="button" tabindex="0" data-gp="${i}">＋ Adicionar foto<small>vazia · não aparece</small></div></div>`;
     return `<div class="dvs${x.on?'':' off'}">${hd}<div class="dvi"><img src="${a.img}" alt=""><span>${x.on?'● ativa':'⏸ pausada'}</span></div><div class="dvf"><input type="text" value="${desc(x.t)}" data-t="${i}" aria-label="Título da arte ${i+1}">
       <div class="dvc"><button type="button" data-mv="${i}" data-d="-1" title="Antes">◀</button><button type="button" data-pv="${i}" title="Prévia">👁</button><button type="button" data-ps="${i}" title="${x.on?'Pausar':'Ativar'}">${x.on?'⏸':'▶'}</button><button type="button" data-rm="${i}" title="Remover">🗑</button><button type="button" data-mv="${i}" data-d="1" title="Depois">▶</button></div>
       <span class="dvm">vista ${divCnt(x.a,'div_visto')} · interesse ${divCnt(x.a,'interesse')}</span></div></div>`;}).join('');
-  el.querySelectorAll('[data-gp]').forEach(b=>b.onclick=()=>galEscolher(a=>{C.seq[+b.dataset.gp]={a:a.id,t:a.nome||'',on:true};divSalvar(true);divRender();}));
+  el.querySelectorAll('[data-gp]').forEach(b=>b.onclick=()=>galEscolher(a=>{C.seq[+b.dataset.gp]={a:a.id,t:a.nome||'',on:true};divSalvar(true);divRender();},{mapa:1}));
   el.querySelectorAll('[data-t]').forEach(e=>e.oninput=()=>{C.seq[+e.dataset.t].t=e.value;divSalvar();});
   el.querySelectorAll('[data-mv]').forEach(e=>e.onclick=()=>{const i=+e.dataset.mv,j=i+ +e.dataset.d;if(j<0||j>=n)return;[C.seq[i],C.seq[j]]=[C.seq[j],C.seq[i]];divSalvar(true);divRender();});
   el.querySelectorAll('[data-ps]').forEach(e=>e.onclick=()=>{const x=C.seq[+e.dataset.ps];x.on=!x.on;divSalvar(true);divRender();});
   el.querySelectorAll('[data-rm]').forEach(e=>e.onclick=()=>{if(!confirm('Tirar esta arte da faixa?'))return;C.seq[+e.dataset.rm]=null;divSalvar(true);divRender();});
-  el.querySelectorAll('[data-pv]').forEach(e=>e.onclick=()=>{const x=C.seq[+e.dataset.pv];divPrev(DART[x.a].img,x.t);});
+  el.querySelectorAll('[data-pv]').forEach(e=>e.onclick=()=>{const x=C.seq[+e.dataset.pv];if(x.a==='__mapa'){ptab('map');return;}divPrev(DART[x.a].img,x.t);});
   /* novidades */
   const hoje=new Date().toISOString().slice(0,10),NV=Object.values(DNOV).filter(x=>!x.removido).sort((a,b)=>a.criado<b.criado?1:-1);
   document.getElementById('nvList').innerHTML=NV.length?NV.map(x=>`<li><img src="${x.img}" alt="" data-npv="${x.id}"><div><b>${desc(x.k)} · ${desc(x.t)}</b><br><span class="note">${x.ate>=hoje?'ativa até '+x.ate.split('-').reverse().join('/'):'encerrada em '+x.ate.split('-').reverse().join('/')} · vista ${divCnt(x.id,'div_visto')} · interesse ${divCnt(x.id,'interesse')}</span></div><button type="button" class="no" data-nrm="${x.id}">Excluir</button></li>`).join(''):'<li class="note">Nenhuma novidade publicada.</li>';
@@ -783,11 +785,12 @@ const galUsos=id=>{const u=[];(DCFG&&DCFG.seq||[]).forEach((x,i)=>{if(x&&x.a===i
 async function galNova(f,nome){if(galLista().length>=GMAX){alert('A galeria chegou a '+GMAX+' artes. Apague alguma que não usa mais.');return null;}
   const id=divId(),img=await divComp(f),n=nome||(f.name||'Arte').replace(/\.[^.]+$/,'');const r=await ins('div_art',{id,img,nome:n});if(r&&r.error){alert('Não consegui salvar a arte. Tente de novo.');return null;}
   DART[id]={id,img,nome:n,criado:new Date().toISOString()};return DART[id];}
-function galEscolher(cb){let o=document.getElementById('glOv');if(o)o.remove();o=document.createElement('div');o.id='glOv';o.style.cssText='position:fixed;inset:0;z-index:400;background:rgba(10,16,22,.6);display:grid;place-items:center;padding:16px';
+function galEscolher(cb,op){op=op||{};let o=document.getElementById('glOv');if(o)o.remove();o=document.createElement('div');o.id='glOv';o.style.cssText='position:fixed;inset:0;z-index:400;background:rgba(10,16,22,.6);display:grid;place-items:center;padding:16px';
   const L=galLista();o.innerHTML=`<div style="background:#fff;border-radius:14px;max-width:820px;width:100%;max-height:88vh;overflow:auto;padding:18px;box-shadow:0 20px 50px rgba(0,0,0,.4)"><div style="display:flex;align-items:center;gap:10px;margin-bottom:6px"><h3 style="margin:0">🖼 Escolher arte</h3><button type="button" id="glX" style="margin-left:auto">✕ Fechar</button></div>
-   <div class="glg"><label class="gln">＋ Enviar nova do computador<br><small>fica salva na galeria</small><input type="file" accept="image/*" hidden id="glUp"></label>${L.map(a=>`<div class="glc"><img src="${a.img}" alt="" data-gs="${a.id}" title="Usar esta arte"><small style="padding-top:6px">${desc(a.nome||'Sem nome')}</small></div>`).join('')}</div></div>`;
+   <div class="glg"><label class="gln">＋ Enviar nova do computador<br><small>fica salva na galeria</small><input type="file" accept="image/*" hidden id="glUp"></label>${op.mapa?`<div class="glc"><img src="${MAPTH}" alt="" data-gmap="1" title="Mapa FC no Brasil (atualiza sozinho)"><small style="padding-top:6px"><b>📍 Mapa FC no Brasil</b><br>sempre com os números do dia</small></div>`:''}${L.map(a=>`<div class="glc"><img src="${a.img}" alt="" data-gs="${a.id}" title="Usar esta arte"><small style="padding-top:6px">${desc(a.nome||'Sem nome')}</small></div>`).join('')}</div></div>`;
   document.body.appendChild(o);const fe=()=>o.remove();document.getElementById('glX').onclick=fe;o.addEventListener('click',e=>{if(e.target===o)fe();});
   o.querySelectorAll('[data-gs]').forEach(i=>i.onclick=()=>{fe();cb(DART[i.dataset.gs]);});
+  o.querySelectorAll('[data-gmap]').forEach(i=>i.onclick=()=>{fe();cb({id:'__mapa',nome:'Orientativo FC 3D pelo Brasil'});});
   document.getElementById('glUp').onchange=async e=>{const f=e.target.files[0];if(!f)return;e.target.parentNode.firstChild.textContent='Enviando…';const a=await galNova(f);fe();if(a){cb(a);galUI();}};}
 function galUI(){const el=document.getElementById('glGrid');if(!el)return;const L=galLista();document.getElementById('glN').textContent=`· ${L.length} de ${GMAX}`;
   el.innerHTML=`<label class="gln">＋ Enviar nova arte<input type="file" accept="image/*" hidden id="glUp2"></label>`+L.map(a=>{const u=galUsos(a.id);return `<div class="glc"><img src="${a.img}" alt="" data-gv="${a.id}" title="Ver"><input value="${desc(a.nome||'')}" placeholder="Nome da arte" data-gn="${a.id}"><small>${u.length?'em uso: '+u.join(', '):'guardada'}</small><div class="glb"><button type="button" data-gd="${a.id}" title="Baixar">⬇</button><button type="button" class="no" data-gr="${a.id}" title="Apagar">🗑</button></div></div>`;}).join('');
@@ -877,12 +880,13 @@ document.querySelectorAll('#ptabs button').forEach(b=>b.onclick=()=>ptab(b.datas
 /* ===== Mapa FC no Brasil (Matriz) ===== */
 let MPD=null,MPUB=true;
 const mpNorm=x=>{const n=Math.max(0,+x.n||0),f=x.f!=null?Math.min(n,Math.max(0,+x.f||0)):(x.s==='fin'?n:0);return {c:x.c,u:x.u,t:x.t,n,f,s:f>=n?'fin':'and'};};
-const mpSalvar=()=>ins('mapa',{itens:MPD.map(mpNorm),pub:MPUB});
-async function mpCarregar(){const r=await sb.from('trein_eventos').select('detalhe').eq('tipo','mapa').order('criado_em',{ascending:false}).limit(1);const d=(((r.data||[])[0]||{}).detalhe)||{};MPD=(d.itens||[]).map(mpNorm);MPUB=d.pub!==false;mpRender();}
+let MP_OR=null;
+const mpSalvar=()=>ins('mapa',{itens:MPD.map(mpNorm),pub:MPUB,orient:MP_OR||[]});
+async function mpCarregar(){const r=await sb.from('trein_eventos').select('detalhe').eq('tipo','mapa').order('criado_em',{ascending:false}).limit(1);const d=(((r.data||[])[0]||{}).detalhe)||{};MPD=(d.itens||[]).map(mpNorm);MPUB=d.pub!==false;if(!MP_OR)MP_OR=d.orient||[];mpRender();}
 function mpRender(){if(!MPD||!window.FCM)return;const esc=v=>String(v||'').replace(/</g,'&lt;');
-  {const P=document.getElementById('mpPub');P.classList.toggle('off',!MPUB);document.getElementById('mpPubT').textContent=MPUB?'🟢 Mapa ATIVO · aparece para os alunos e no site':'🛠 Mapa EM ATUALIZAÇÃO · oculto para alunos e site';
-   document.getElementById('mpPubS').textContent=MPUB?'Os alunos veem o botão 📍 FC no Brasil e o site mostra as cidades.':'Organize as cidades com calma. Ninguém vê até você clicar em Ativar.';
-   const B=document.getElementById('mpPubB');B.textContent=MPUB?'🛠 Colocar em atualização':'🟢 Ativar mapa';B.className=MPUB?'':'pri';
+  {const P=document.getElementById('mpPub');P.classList.toggle('off',!MPUB);document.getElementById('mpPubT').textContent=MPUB?'🟢 Consultoria presencial e on-line · VISÍVEL no mapa':'🛠 Consultoria presencial e on-line · OCULTA no mapa';
+   document.getElementById('mpPubS').textContent=MPUB?'As cidades da consultoria (abaixo) aparecem junto com o Orientativo.':'Organize as cidades com calma. Só o Orientativo FC 3D aparece até você clicar em Mostrar.';
+   const B=document.getElementById('mpPubB');B.textContent=MPUB?'🛠 Ocultar consultoria':'🟢 Mostrar consultoria no mapa';B.className=MPUB?'':'pri';
    B.onclick=async()=>{B.disabled=true;MPUB=!MPUB;await mpSalvar();B.disabled=false;mpRender();};
    const fin=MPD.reduce((a,x)=>a+x.f,0),and=MPD.reduce((a,x)=>a+x.n-x.f,0);
    document.getElementById('mpRes').innerHTML=`<div class="fin"><b>✔ ${fin}</b><span>empresas finalizadas · sistema alimentado</span></div><div><b>● ${and}</b><span>empresas em andamento</span></div><div><b>${new Set(MPD.map(x=>x.c+'|'+x.u)).size} · ${new Set(MPD.map(x=>x.u)).size}</b><span>cidades · estados</span></div>`;}
@@ -894,7 +898,30 @@ function mpRender(){if(!MPD||!window.FCM)return;const esc=v=>String(v||'').repla
     if(a+f===0){if(!confirm(`${x.c}/${x.u} vai ficar com 0 empresas. Excluir a linha?`))return;MPD.splice(+b.dataset.q,1);}else{x.n=a+f;x.f=f;}await mpSalvar();mpRender();});
   document.querySelectorAll('[data-mv1]').forEach(b=>b.onclick=async()=>{const x=MPD[+b.dataset.mv1];if(x.f<x.n)x.f++;await mpSalvar();mpRender();});
   document.querySelectorAll('[data-mrm]').forEach(b=>b.onclick=async()=>{if(!confirm('Excluir esta linha do mapa?'))return;MPD.splice(+b.dataset.mrm,1);await mpSalvar();mpRender();});
-  if(!document.getElementById('mapCard').classList.contains('tabOff'))FCM.render(document.getElementById('mpPrev'),MPD);}
+  orUI();if(!document.getElementById('mapCard').classList.contains('tabOff')&&FCM.render2)FCM.render2(document.getElementById('mpPrev'),{orient:MP_OR||[],cons:MPD,showCons:MPUB});}
+/* ===== Camada Orientativo FC 3D (automática) e logos ===== */
+function logoSt(uid){let L=null;EV.forEach(e=>{if(e.tipo==='logo_mapa'&&e.user_id===uid&&(!L||e.criado_em>L.criado_em))L=e;});if(!L)return null;const d=L.detalhe||{};if(d.remover)return {L,st:'removido'};
+  let D=null;EV.forEach(e=>{if(e.tipo==='logo_ok'&&(e.detalhe||{}).para===uid&&(e.detalhe||{}).ref===L.criado_em&&(!D||e.criado_em>D.criado_em))D=e;});return {L,st:D?((D.detalhe||{}).ok?'ok':'nao'):'pendente',D};}
+const orAtivo=uid=>{const im=implDe(uid);if(im)return im.ate>=HOJE();const f=ctrFim(uid);if(f&&f>=HOJE())return true;return libOk(uid);};
+function orSnap(){return ALUNOS.filter(a=>a.ativo&&!livre(a)&&orAtivo(a.user_id)).map(a=>{const loc=localDe(a.user_id),ls=logoSt(a.user_id),ap=ls&&ls.st==='ok'?ls.L.detalhe:null;
+  const o={k:a.user_id.slice(0,8),c:(ap&&ap.c)||loc.cidade||'',u:((ap&&ap.u)||loc.uf||'').toUpperCase(),p:colabs(a.user_id).length};if(ap){o.n=ap.nome||a.nome||'';o.logo=ap.img;}return o;}).sort((x,y)=>x.k<y.k?-1:1);}
+let ORSYNC=false;
+async function orSync(){if(ORSYNC||!ALUNOS.length)return;ORSYNC=true;try{const snap=orSnap();const r=await sb.from('trein_eventos').select('detalhe').eq('tipo','mapa').order('criado_em',{ascending:false}).limit(1);const d=(((r.data||[])[0]||{}).detalhe)||{};
+  MP_OR=snap;if(JSON.stringify(d.orient||[])!==JSON.stringify(snap)){await ins('mapa',{itens:d.itens||[],pub:d.pub!==false,orient:snap});}
+  if(MPD)mpRender();else orUI();}catch(_){}ORSYNC=false;}
+function orUI(){const el=document.getElementById('orRes');if(!el)return;const O=MP_OR||orSnap(),semC=O.filter(x=>!x.u).length;
+  el.innerHTML=`<b style="font-size:16px">🧊 Orientativo FC 3D em atividade · aparece sozinho no mapa</b><br><span style="font-size:13.5px;color:#2b4a3a">${O.length} empresa${O.length===1?'':'s'} com o link ativo · ${O.reduce((a,x)=>a+x.p,0)} pessoas cadastradas · ${O.filter(x=>x.logo).length} com logo. Atualiza conforme você libera acessos, cadastra colaboradores e salva a cidade de cada empresa.${semC?` <b style="color:#b86a00">⚠ ${semC} empresa${semC>1?'s':''} sem cidade: salve em 📍 Salvar cidade (aba Empresas) para aparecer no mapa.</b>`:''}</span>`;
+  /* logos para aprovar */
+  const box=document.getElementById('lgAp');const LS=ALUNOS.map(a=>[a,logoSt(a.user_id)]).filter(x=>x[1]&&x[1].st!=='removido');
+  const pend=LS.filter(x=>x[1].st==='pendente'),pub=LS.filter(x=>x[1].st==='ok');
+  box.innerHTML=(pend.length?`<div style="border:2px solid #e8912d;background:#fff7e8;border-radius:10px;padding:12px 14px;margin-bottom:10px"><b>🖼 Logos para aprovar (${pend.length})</b><div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px">${pend.map(([a,ls],i)=>{const d=ls.L.detalhe||{};return `<div style="background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px;display:flex;gap:10px;align-items:center"><img src="${d.img}" alt="" style="width:64px;height:64px;object-fit:contain;border:1px solid var(--line);border-radius:8px;background:#fff"><div><b>${desc(d.nome||a.nome)}</b><br><span class="note">${desc(d.c||'')}${d.u?' · '+desc(d.u):''} · conta ${desc(a.login)} · ${fmtD(ls.L.criado_em)}</span><br><button type="button" class="ok" data-lgok="${a.user_id}">✔ Publicar</button> <button type="button" class="no" data-lgno="${a.user_id}">Recusar</button></div></div>`;}).join('')}</div></div>`:'')
+   +(pub.length?`<details style="margin-bottom:10px"><summary style="cursor:pointer;font-weight:600">🖼 Logos publicadas no mapa (${pub.length})</summary><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">${pub.map(([a,ls])=>{const d=ls.L.detalhe||{};return `<span style="display:flex;gap:6px;align-items:center;border:1px solid var(--line);border-radius:8px;padding:4px 8px;background:#fff"><img src="${d.img}" alt="" style="width:28px;height:28px;object-fit:contain">${desc(d.nome||a.nome)} <button type="button" class="no" style="font-size:12px;padding:2px 6px" data-lgrm="${a.user_id}">Tirar</button></span>`;}).join('')}</div></details>`:'');
+  const dec=async(uid,ok,motivo)=>{const ls=logoSt(uid);if(!ls)return;await ins('logo_ok',{para:uid,ref:ls.L.criado_em,ok,motivo:motivo||null});
+    const {data:{session}}=await sb.auth.getSession();await sb.from('trein_eventos').insert({user_id:session.user.id,tipo:'resposta',tipologia:null,detalhe:{para:uid,cid:'gestor',quem:'Gestor',ref:null,chat:true,txt:ok?'✔ A logo da sua empresa foi publicada no mapa FC no Brasil. Obrigado pela parceria!':'A logo enviada para o mapa não foi publicada'+(motivo?': '+motivo:'.')+' Se quiser, envie outra pelo Painel da Empresa.'}});
+    await carregar();orSync();};
+  box.querySelectorAll('[data-lgok]').forEach(b=>b.onclick=()=>{b.disabled=true;dec(b.dataset.lgok,true);});
+  box.querySelectorAll('[data-lgno]').forEach(b=>b.onclick=()=>{const m=prompt('Motivo (o gestor recebe esta mensagem):','A imagem ficou com baixa qualidade. Pode enviar a logo em melhor resolução?');if(m===null)return;b.disabled=true;dec(b.dataset.lgno,false,m.trim());});
+  box.querySelectorAll('[data-lgrm]').forEach(b=>b.onclick=()=>{if(!confirm('Tirar esta logo do mapa? A empresa continua contando no mapa, só sem a logo.'))return;b.disabled=true;dec(b.dataset.lgrm,false,'retirada do mapa pela FC');});}
 if(window.FCM){document.getElementById('mpU').innerHTML=Object.keys(FCM.NOME).sort().map(k=>`<option${k==='MT'?' selected':''}>${k}</option>`).join('');
   const fill=()=>{const u=document.getElementById('mpU').value,L=FCM.PORUF[u]||[];document.getElementById('mpL').innerHTML=L.map(n=>`<option value="${n}"></option>`).join('');document.getElementById('mpCn').textContent=`(${L.length} cidades de ${u})`;};
   document.getElementById('mpU').onchange=()=>{document.getElementById('mpC').value='';fill();document.getElementById('mpC').focus();};fill();}

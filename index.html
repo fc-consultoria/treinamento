@@ -178,7 +178,7 @@ function vigiaPrazo(uid,perfil){setInterval(()=>{if(window.ALUNO_CID&&window.COL
     try{const {data}=await sb.from('trein_eventos').select('detalhe').eq('tipo','chave_app').limit(1);
       const kb=Uint8Array.from(atob(data[0].detalhe.k),c=>c.charCodeAt(0));
       const key=await crypto.subtle.importKey('raw',kb,'AES-GCM',false,['decrypt']);window.__CK=key;
-      const buf=new Uint8Array(await (await fetch('app.enc?v=1792021192',{cache:'no-cache'})).arrayBuffer());
+      const buf=new Uint8Array(await (await fetch('app.enc?v=1792022804',{cache:'no-cache'})).arrayBuffer());
       const plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:buf.slice(0,12)},key,buf.slice(12));
       const html=await new Response(new Blob([plain]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
       const root=document.getElementById('appRoot');root.innerHTML=html;
@@ -212,7 +212,7 @@ function vigiaPrazo(uid,perfil){setInterval(()=>{if(window.ALUNO_CID&&window.COL
   });
 })();
 </script>
-<script>(function(){const V='1792021192';async function chk(){try{const t=(await (await fetch('version.txt?'+Date.now(),{cache:'no-store'})).text()).trim();
+<script>(function(){const V='1792022804';async function chk(){try{const t=(await (await fetch('version.txt?'+Date.now(),{cache:'no-store'})).text()).trim();
 if(t&&/^\d+$/.test(t)&&t!==V&&!document.getElementById('updBar')){const b=document.createElement('div');b.id='updBar';
 b.style.cssText='position:fixed;left:50%;top:10px;transform:translateX(-50%);z-index:9999;background:#1f6f9a;color:#fff;padding:10px 12px 10px 16px;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.25);font:600 14px system-ui,sans-serif;display:flex;gap:12px;align-items:center;max-width:calc(100% - 24px)';
 b.innerHTML='<span>🔄 Nova versão do orientativo disponível</span><button type="button" style="border:0;border-radius:7px;padding:7px 14px;font:700 14px system-ui,sans-serif;background:#e0972e;color:#1b232a;cursor:pointer">Atualizar</button>';
@@ -265,7 +265,7 @@ const paraOk=p=>!p||p==='todas'||(Array.isArray(p)&&p.includes(UID));
 function itens(){const L=[],cid=window.ALUNO_CID;
   Object.values(NOV).filter(x=>!x.removido&&x.img&&(x.ate||'9')>=hoje()&&paraOk(x.para)).forEach(x=>L.push({id:x.id,img:x.img,t:x.t,x:x.x,k:x.k,nov:1}));
   if(CFG&&CFG.on&&paraOk(CFG.para)&&window.ALUNO_INI){const iv=CFG.iv||6,h=(Date.now()-window.ALUNO_INI)/3600e3,sl=Math.floor(h/iv);
-    (CFG.seq||[]).forEach((s,i)=>{if(s&&s.on&&ART[s.a])L.push({id:s.a,img:ART[s.a].img,t:s.t,slot:i,atual:i===sl});});}
+    (CFG.seq||[]).forEach((s,i)=>{if(s&&s.on&&s.a==='__mapa'&&window.FCM&&FCM.render2)L.push({id:'__mapa',mapa:1,img:'',t:s.t||'Orientativo FC 3D pelo Brasil',slot:i,atual:i===sl});else if(s&&s.on&&ART[s.a])L.push({id:s.a,img:ART[s.a].img,t:s.t,slot:i,atual:i===sl});});}
   return L.filter(x=>!x.nov||true).map(x=>Object.assign(x,{visto:VISTO.has(cid+'|'+x.id)}));}
 function ocupado(){try{if(typeof S!=='undefined'&&S.mode==='test'&&typeof Q!=='undefined'&&Q.t0&&!Q.fin)return true;
   if(typeof TMR!=='undefined'&&['wv','cm'].some(k=>TMR[k]&&TMR[k].t0&&!TMR[k].fin))return true;}catch(e){}
@@ -285,15 +285,16 @@ function btnUI(L){const b=document.getElementById('dvBtn');if(!b)return;const n=
 function show(x,rever,L){cur=x;OPEN=true;held=false;GAL=(L||itens());if(!GAL.some(y=>y.id===x.id))GAL.unshift(x);
   let o=document.getElementById('dvOv');if(o)o.remove();o=document.createElement('div');o.id='dvOv';o.setAttribute('role','dialog');o.setAttribute('aria-label','Divulgação FC');
   const i=GAL.findIndex(y=>y.id===x.id),du=(CFG&&CFG.du!=null)?+CFG.du:6,auto=!rever&&du>0;
-  o.innerHTML=`<div class="m"><img src="${x.img}" alt="${esc(x.t)}"><div class="sd"><span class="k">${x.nov?'NOVIDADE FC · '+esc(x.k||''):'FC CONSULTORIA · REPRESENTAÇÃO'}</span><h3>${esc(x.t)}</h3>${x.x?`<p>${esc(x.x)}</p>`:''}
+  o.innerHTML=`<div class="m">${x.mapa?'<div id="dvMap" style="width:min(860px,64vw);max-height:90vh;overflow:auto;background:#0f1a22"><p style="color:#9fb3be;padding:30px;text-align:center">Carregando o mapa…</p></div>':`<img src="${x.img}" alt="${esc(x.t)}">`}<div class="sd"><span class="k">${x.nov?'NOVIDADE FC · '+esc(x.k||''):'FC CONSULTORIA · REPRESENTAÇÃO'}</span><h3>${esc(x.t)}</h3>${x.x?`<p>${esc(x.x)}</p>`:''}
    ${auto?`<div class="pb"><i id="dvPb"></i></div><span class="tm" id="dvTm">Fecha sozinha em ${du} s</span><button type="button" id="dvPs">⏸ Pausar para ler</button>`:''}
-   <button type="button" class="wz" id="dvW">💬 Tenho interesse</button><span class="ok" id="dvOk" hidden></span><button type="button" id="dvD">⬇ Baixar imagem</button><button type="button" id="dvP">🖨 Imprimir</button>
+   <button type="button" class="wz" id="dvW">💬 Tenho interesse</button><span class="ok" id="dvOk" hidden></span><button type="button" id="dvD"${x.mapa?' hidden':''}>⬇ Baixar imagem</button><button type="button" id="dvP"${x.mapa?' hidden':''}>🖨 Imprimir</button>
    ${GAL.length>1?`<div class="nv"><button type="button" id="dvA"${i<=0?' disabled':''}>◀</button><span style="align-self:center;font:500 12px ui-monospace,monospace;color:#9fb3be;white-space:nowrap">${i+1} de ${GAL.length}</span><button type="button" id="dvZ"${i>=GAL.length-1?' disabled':''}>▶</button></div>`:''}
    <a href="https://fc-consultoria.github.io/" target="_blank" rel="noopener" style="font:600 14px system-ui,sans-serif;border-radius:8px;padding:9px 11px;border:1px solid #3a5866;background:#16262f;color:#e9edf0;text-decoration:none">🌐 Conheça o site da FC</a><button type="button" class="bk" id="dvB">← Voltar ao orientativo</button></div></div>`;
   document.body.appendChild(o);requestAnimationFrame(()=>o.classList.add('on'));
   const hold=v=>{held=v;const t=document.getElementById('dvTm'),p=document.getElementById('dvPs');if(v){if(t)t.textContent='Pausada · leia com calma e feche quando quiser';if(p)p.textContent='▶ Continuar';}else{t0=Date.now()-(1-(parseFloat((document.getElementById('dvPb')||{style:{}}).style.width)||100)/100)*du*1000;if(p)p.textContent='⏸ Pausar para ler';}};
   {const p=document.getElementById('dvPs');if(p)p.onclick=()=>hold(!held);}
-  o.querySelector('img').addEventListener('click',()=>{if(auto&&!held)hold(true);});
+  {const im=o.querySelector('img,#dvMap');if(im)im.addEventListener('click',()=>{if(auto&&!held)hold(true);});}
+  if(x.mapa){(async()=>{try{const r=await sb.from('trein_eventos').select('detalhe').eq('tipo','mapa').order('criado_em',{ascending:false}).limit(1);const dd=(((r.data||[])[0]||{}).detalhe)||{};const it=dd.pub===false?[]:(dd.itens||[]);const mb=document.getElementById('dvMap');if(mb)FCM.render2(mb,{orient:dd.orient||[],cons:it,showCons:!!it.length});}catch(_){}})();}
   o.addEventListener('click',e=>{if(e.target===o)close();});
   document.getElementById('dvB').onclick=close;
   document.getElementById('dvD').onclick=()=>{const a=document.createElement('a');a.href=x.img;a.download=(x.t||'divulgacao-fc').replace(/[\\/:*?"<>|]/g,'')+'.jpg';document.body.appendChild(a);a.click();a.remove();};
@@ -333,15 +334,15 @@ function abrir(){let o=document.getElementById('catOv');if(o)o.remove();o=docume
   catch(e){b.textContent='Tente de novo';}setTimeout(()=>{b.disabled=false;b.textContent=t;},4000);});}
 window.catInit=function(){const ub=document.getElementById('ubar');if(!ub||document.getElementById('catBtn'))return;const b=document.createElement('button');b.type='button';b.id='catBtn';b.textContent='📘 Catálogos';b.title='Catálogos técnicos Suprema e Gold (fonte do orientativo)';b.onclick=abrir;ub.insertBefore(b,document.getElementById('sugBtn'));};
 })();
-</script><script src="mapa.js?v=1792021192"></script><script>/* ===== Mapa "FC no Brasil" (tela do aluno) ===== */
+</script><script src="mapa.js?v=1792022804"></script><script>/* ===== Mapa "FC no Brasil" (tela do aluno) ===== */
 (function(){
 window.mapaInit=async function(){try{const r=await sb.from('trein_eventos').select('detalhe').eq('tipo','mapa').order('criado_em',{ascending:false}).limit(1);
-  const dd=(((r.data||[])[0]||{}).detalhe)||{};if(dd.pub===false)return;const it=dd.itens||[];const ub=document.getElementById('ubar');if(!it.length||!ub||!window.FCM||document.getElementById('mpBtn'))return;
+  const dd=(((r.data||[])[0]||{}).detalhe)||{};const it=dd.pub===false?[]:(dd.itens||[]),orr=dd.orient||[];window.FC_MAPA=dd;const ub=document.getElementById('ubar');if((!it.length&&!orr.length)||!ub||!window.FCM||document.getElementById('mpBtn'))return;
   const b=document.createElement('button');b.type='button';b.id='mpBtn';b.textContent='📍 FC no Brasil';b.title='Onde a FC Consultoria está atendendo';
   b.onclick=()=>{let o=document.getElementById('mpOv');if(o)o.remove();o=document.createElement('div');o.id='mpOv';o.setAttribute('role','dialog');o.setAttribute('aria-label','FC no Brasil');
     o.style.cssText='position:fixed;inset:0;z-index:9000;background:rgba(10,16,22,.72);overflow:auto;padding:16px;display:flex;align-items:flex-start;justify-content:center';
     o.innerHTML='<div style="width:min(1100px,100%);margin:auto"><div id="mpBox"></div><div style="text-align:center;margin-top:10px"><button type="button" id="mpX" style="font:600 15px system-ui,sans-serif;border-radius:9px;padding:9px 16px;border:0;background:#e9edf0;color:#1b232a;cursor:pointer">← Voltar ao orientativo</button></div></div>';
-    document.body.appendChild(o);FCM.render(document.getElementById('mpBox'),it);document.getElementById('mpX').onclick=()=>o.remove();o.addEventListener('click',e=>{if(e.target===o)o.remove();});};
+    document.body.appendChild(o);if(FCM.render2)FCM.render2(document.getElementById('mpBox'),{orient:orr,cons:it,showCons:!!it.length});else FCM.render(document.getElementById('mpBox'),it);document.getElementById('mpX').onclick=()=>o.remove();o.addEventListener('click',e=>{if(e.target===o)o.remove();});};
   ub.insertBefore(b,document.getElementById('sugBtn'));}catch(e){}};
 })();
 </script></body>
