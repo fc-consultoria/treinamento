@@ -75,11 +75,12 @@ window.FCM.render2=function(el,O){O=O||{};const OR=(O.orient||[]).filter(x=>x),C
  el.querySelectorAll('.uf').forEach(p=>{const n=cnt[p.dataset.u]||0;p.setAttribute('class','uf'+(n>=4?' o3':n>=2?' o2':n?' o1':''));});
  const pos=(x,i,lista)=>{const k=x.c?CIDN[norm(x.c+'/'+x.u)]:null;let [px,py]=k?PR(k[0],k[1]):ufC(x.u);const key=norm((x.c||'?')+'/'+x.u),irm=lista.filter(y=>norm((y.c||'?')+'/'+y.u)===key),j=irm.indexOf(x);if(irm.length>1)px+=(j-(irm.length-1)/2)*18;if(!k){px+=((i*37)%20)-10;py+=((i*53)%20)-10;}return [px,py];};
  let svg='';const ALL=COM.map(x=>Object.assign({},x,{_o:1})).concat(CO);
+ const tc=c=>String(c||'').trim().split(/\s+/).map((w,i)=>{const l=w.toLocaleLowerCase('pt-BR');return i&&/^(de|da|do|dos|das|e)$/.test(l)?l:l.charAt(0).toLocaleUpperCase('pt-BR')+l.slice(1);}).join(' ');
  ALL.forEach((x,i)=>{const [px,py]=pos(x,i,ALL);
-  if(x._o){const tt=`${x.logo&&x.n?x.n+' · ':''}${x.c||NOME[x.u]||x.u}/${x.u} · Acesso Orientativo FC 3D`,tr=`translate(${px.toFixed(1)},${py.toFixed(1)}) scale(1.5)`;
+  if(x._o){const tt=`${tc(x.c)||NOME[x.u]||x.u}/${x.u} · Acesso Orientativo FC 3D`,tr=`translate(${px.toFixed(1)},${py.toFixed(1)}) scale(1.5)`;
    svg+=x.logo?`<g data-tt="${esc(tt)}" transform="${tr}"><circle r="10.5" fill="#2fbf71"${x.voce?' class="pl"':''}/><circle r="9" fill="#fff"/><image href="${x.logo}" x="-9" y="-9" width="18" height="18" clip-path="url(#fcmClp)" preserveAspectRatio="xMidYMid meet"/></g>`
      :`<g data-tt="${esc(tt)}" transform="${tr}"><rect class="pl" x="-6" y="-6" width="12" height="12" rx="4" fill="#2fbf71"/><rect x="-7" y="-7" width="14" height="14" rx="4" fill="#2fbf71" stroke="#fff" stroke-width="2"/><path d="M-3.5-1.5L0-3.5 3.5-1.5V2.5L0 4.5-3.5 2.5ZM0 .5V4.5M-3.5-1.5L0 .5 3.5-1.5" stroke="#fff" stroke-width="1" fill="none"/></g>`;return;}
-  const fin=x.s==='fin',tt=`${x.c}/${x.u} · Consultoria ${x.t==='pr'?'presencial':'on-line'}${fin?' · sistema alimentado':''}`,tr=`translate(${px.toFixed(1)},${py.toFixed(1)}) scale(1.3)`,cl=x.t==='pr'?'#e0762e':'#1fb3c9';
+  const fin=x.s==='fin',tt=`${tc(x.c)}/${x.u} · Consultoria ${x.t==='pr'?'presencial':'on-line'}${fin?' · sistema alimentado':''}`,tr=`translate(${px.toFixed(1)},${py.toFixed(1)}) scale(1.3)`,cl=x.t==='pr'?'#e0762e':'#1fb3c9';
   svg+=x.t==='pr'?`<g data-tt="${esc(tt)}" transform="${tr}"><path d="M0 0C-7-8-8-11-8-14a8 8 0 0 1 16 0c0 3-1 6-8 14z" fill="${cl}" stroke="#fff" stroke-width="1.8"/><circle cy="-14" r="3" fill="#fff"/></g>`:`<g data-tt="${esc(tt)}" transform="${tr}"><circle r="6.5" fill="${cl}" stroke="#fff" stroke-width="2"/></g>`;});
  el.querySelector('.pts').innerHTML=svg;
  let tip=document.getElementById('fcmTip');if(!tip){tip=document.createElement('div');tip.id='fcmTip';document.body.appendChild(tip);}
