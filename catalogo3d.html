@@ -86,7 +86,7 @@ header.top .w{display:flex;align-items:center;gap:14px;height:64px}
 .bk-cv{position:relative;height:min(62vh,520px);border:1px solid var(--ln);border-radius:12px;overflow:hidden;background:#fbfcfd;touch-action:none}
 .bk-svg{width:100%;height:100%;display:block;cursor:grab;user-select:none;-webkit-user-select:none}
 .bk-off .bk-body{display:none}.bk-off .bk-sub{display:none}.bk-btns{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}.bk-aviso{font-size:13px;color:#7a4a08;background:#fff7ec;border:1px solid #f2c98a;border-radius:9px;padding:7px 10px;margin-top:10px}.bk-sel{fill:none;stroke:#d86f00;stroke-width:1px;stroke-dasharray:4 3;vector-effect:non-scaling-stroke;pointer-events:none}.bk-rot{fill:#d86f00;stroke:#fff;stroke-width:2px;vector-effect:non-scaling-stroke;cursor:grab}.bk-sca{fill:#fff;stroke:#d86f00;stroke-width:2px;vector-effect:non-scaling-stroke;cursor:nwse-resize}.bk-p{cursor:move}.bk-p .bk-hit{fill:none;stroke:transparent;stroke-width:14px;vector-effect:non-scaling-stroke;pointer-events:stroke}.bk-p path{stroke:#1b232a;stroke-width:1px;vector-effect:non-scaling-stroke}.bk-p.on path{stroke:#d86f00;stroke-width:2.5px}
-.bk-t{font-family:Barlow,sans-serif;font-weight:700;font-size:var(--fz,3px);fill:#17606b;pointer-events:none}.bk-t.on{fill:#d86f00}
+.bk-ld{fill:none;stroke:#17606b;stroke-width:1.2px;vector-effect:non-scaling-stroke;pointer-events:none}.bk-ld.on{stroke:#d86f00}.bk-t{font-family:Barlow,sans-serif;font-weight:700;font-size:var(--fz,3px);fill:#17606b;pointer-events:none}.bk-t.on{fill:#d86f00}
 .bk-vazio{position:absolute;inset:0;display:grid;place-items:center;text-align:center;color:var(--tm);pointer-events:none;padding:20px;font-size:15px}
 .bk-zoom{position:absolute;right:10px;top:10px;display:flex;flex-direction:column;gap:6px;z-index:2}#banc .bk-zoom button{width:42px;height:42px;padding:0;font-size:19px}
 .bk-esc{position:absolute;left:10px;bottom:8px;font-size:12px;color:var(--tm);background:rgba(255,255,255,.85);border-radius:6px;padding:2px 7px;z-index:2}
@@ -303,6 +303,6 @@ const qs=new URLSearchParams(location.search);{const l=LN.find(x=>x.id===qs.get(
 {const p=qs.get('p');if(p){const k=nz(p),l=LN.find(x=>x.p.some(y=>nz(y.c)===k));if(l){LI=l;desenha();setTimeout(()=>{const el=document.getElementById('p-'+k);if(el){el.scrollIntoView({behavior:'smooth',block:'center'});el.classList.add('hl');}},300);}}}
 </script>
 
-<script>window.BANC_URL="cat3d/banc.json?v=1792046228";</script><script src="cat3d/bancada.js?v=1792046228"></script>
+<script>window.BANC_URL="cat3d/banc.json?v=1792046486";</script><script src="cat3d/bancada.js?v=1792046486"></script>
 </body>
 </html>
