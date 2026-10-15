@@ -29,8 +29,8 @@ function fit(){if(!P.length){vb={x:-120,y:-70,w:240,h:140};setVB();return;}const
 function add(c){c=String(c||'').trim().toUpperCase().replace(/\s+/g,'');if(!B){msg.textContent='Carregando…';return;}
   const k=Object.keys(B).find(x=>x.replace(/\W/g,'')===c.replace(/\W/g,''));if(!k){msg.textContent='Código não encontrado.';return;}
   if(window.BANC_OK&&!BANC_OK(k))return;
-  const d=B[k],n=P.length,p={id:++seq,c:k,x:vb.x+vb.w/2+(n%3)*8-8,y:vb.y+vb.h/2+(n%3)*6-6,a:0,fx:1,fy:1,s:1,col:CORES[n%CORES.length]};
-  P.push(p);sel=p;msg.textContent=d.mm?'':'⚠ '+k+': desenho em tamanho aproximado. Ajuste a escala se precisar.';draw();if(P.length===1)fit();ev('banc_add',k);}
+  const d=B[k],n=P.length;let x0=vb.x+vb.w/2,y0=vb.y+vb.h/2;if(n){const q=bb(P);x0=q[2]+d.w/2+12;y0=(q[1]+q[3])/2;}const p={id:++seq,c:k,x:x0,y:y0,a:0,fx:1,fy:1,s:1,col:CORES[n%CORES.length]};
+  P.push(p);sel=p;msg.textContent=d.mm?'':'⚠ '+k+': desenho em tamanho aproximado. Ajuste a escala se precisar.';draw();fit();ev('banc_add',k);}
 R.querySelector('.bk-add').onsubmit=e=>{e.preventDefault();const i=R.querySelector('.bk-in');add(i.value);i.value='';};
 /* barra */
 function syncBar(){bar.hidden=!sel;if(!sel)return;bar.querySelector('.bk-sc').textContent=sel.c;const ra=bar.querySelector('.bk-ang input');ra.value=Math.round(((sel.a+180)%360+360)%360-180);bar.querySelector('.bk-ang span').textContent=ra.value+'°';
