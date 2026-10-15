@@ -92,7 +92,7 @@ header.top .w{display:flex;align-items:center;gap:14px;height:64px}
 .bk-esc{position:absolute;left:10px;bottom:8px;font-size:12px;color:var(--tm);background:rgba(255,255,255,.85);border-radius:6px;padding:2px 7px;z-index:2}
 .bk-bar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:10px;padding:8px;background:#fff7ec;border:1px solid #f2c98a;border-radius:10px}.bk-bar .bk-sc{font:800 19px var(--f-d);color:#9a5a00;margin-right:6px}.bk-bar label{display:flex;gap:6px;align-items:center;font-size:13px}#banc .bk-del{color:#b4372f}
 .bk-foot{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px;font-size:14px}.bk-foot .note{color:var(--tm);font-size:13px}
-.bk-full{position:fixed!important;inset:0;z-index:65;border-radius:0!important;overflow:auto}.bk-full .bk-cv{height:calc(100vh - 230px)}body.bk-lock{overflow:hidden}
+.bk-full{position:fixed!important;inset:0;z-index:65;border-radius:0!important;overflow:auto;width:100vw;height:100vh;box-sizing:border-box;margin:0!important;display:flex;flex-direction:column}.bk-full .bk-body{flex:1;display:flex;flex-direction:column;min-height:0}.bk-full .bk-cv{flex:1;height:auto;min-height:300px}#banc:fullscreen{background:#fff}.bk-none button,.bk-none label{opacity:.45;pointer-events:none}.bk-none .bk-sc{font:600 14px var(--f-b)!important;color:#7a4a08!important}body.bk-lock{overflow:hidden}
 @media(max-width:600px){.bk-cv{height:58vh}.bk-top b{font-size:22px}}
 footer{background:var(--ink);color:#c7d6dd;padding:34px 0 90px;font-size:14.5px;margin-top:40px}footer .w{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}footer a{color:#fff}footer small{display:block;opacity:.75;margin-top:8px;max-width:680px}
 @media(max-width:860px){.hero .w{grid-template-columns:1fr}}
@@ -303,6 +303,6 @@ const qs=new URLSearchParams(location.search);{const l=LN.find(x=>x.id===qs.get(
 {const p=qs.get('p');if(p){const k=nz(p),l=LN.find(x=>x.p.some(y=>nz(y.c)===k));if(l){LI=l;desenha();setTimeout(()=>{const el=document.getElementById('p-'+k);if(el){el.scrollIntoView({behavior:'smooth',block:'center'});el.classList.add('hl');}},300);}}}
 </script>
 
-<script>window.BANC_URL="cat3d/banc.json?v=1792045505";</script><script src="cat3d/bancada.js?v=1792045505"></script>
+<script>window.BANC_URL="cat3d/banc.json?v=1792046228";</script><script src="cat3d/bancada.js?v=1792046228"></script>
 </body>
 </html>
