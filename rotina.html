@@ -367,6 +367,11 @@ details.dist>*:not(summary){margin-top:6px}
 @media (max-width:480px){.grid3{grid-template-columns:1fr 1fr}}
 .steps{display:grid;gap:2px}
 .step{display:flex;gap:10px;align-items:center;padding:6px 4px;border-radius:6px}
+.step-w{border-bottom:1px solid var(--line);padding-bottom:6px}
+.step-d{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-left:32px}
+.step-d label{display:grid;gap:2px;font-size:11.5px;color:var(--muted);font-weight:600}
+.step-d input.inp{padding:3px 6px;font-size:12.5px;width:auto}
+.step-w.ok .step-d label:nth-child(2){color:var(--green)}
 .step:hover{background:var(--surface2)}
 .step input[type=checkbox]{width:18px;height:18px;accent-color:var(--teal);flex:none}
 .step input.inp{flex:1;padding:5px 8px;border-color:transparent;background:transparent}
@@ -1499,7 +1504,19 @@ function previaDist(){const ta=$('#m-dist'),pv=$('#m-dist-prev');if(!ta||!pv)ret
   pv.innerHTML=`<div class="small" style="font-weight:600;margin:4px 0">${l.length} etapa${l.length>1?'s':''} encontrada${l.length>1?'s':''} — desmarque o que não quiser e ajuste o texto:</div>
    <div class="steps">${l.map((t,i)=>`<div class="step"><input type="checkbox" data-dsel="${i}" checked aria-label="Usar esta etapa"><input class="inp" data-dtx="${i}" value="${esc(t)}"></div>`).join('')}</div>
    <div class="row" style="gap:6px;margin-top:6px"><button class="btn sm pri" data-act="dist-add" type="button">Adicionar às etapas</button><button class="btn sm" data-act="dist-limpar" type="button">Limpar</button></div>`}
-function drawEtapas(){$('#m-etapas').innerHTML=M.etapas.map((e,i)=>`<div class="step ${e.ok?'ok':''}"><input type="checkbox" data-et="${i}" ${e.ok?'checked':''} aria-label="Etapa concluída"><input class="inp" data-etx="${i}" value="${esc(e.t)}" aria-label="Texto da etapa"><button class="btn sm ghost" data-act="rm-etapa" data-i="${i}" aria-label="Remover etapa">×</button></div>`).join('')||'<span class="small muted">Sem etapas.</span>'}
+function drawEtapas(){$('#m-etapas').innerHTML=M.etapas.map((e,i)=>`<div class="step-w ${e.ok?'ok':''}"><div class="step ${e.ok?'ok':''}"><input type="checkbox" data-et="${i}" ${e.ok?'checked':''} aria-label="Etapa concluída"><input class="inp" data-etx="${i}" value="${esc(e.t)}" aria-label="Texto da etapa"><button class="btn sm ghost" data-act="rm-etapa" data-i="${i}" aria-label="Remover etapa">×</button></div>
+  <div class="step-d"><label>Chegou a informação<input type="date" class="inp" data-etc="${i}" value="${esc(e.chegou||'')}"></label>
+   <label>Executado<input type="date" class="inp" data-ete="${i}" value="${esc(e.feito||'')}"></label>
+   ${e.ok?(e.avisadoEm?`<span class="pill t-green" title="Cliente avisado">✓ Avisado ${fmtCurto(e.avisadoEm)}</span><button class="btn sm ghost" data-act="etapa-wa" data-i="${i}" type="button">Reenviar</button>`:`<button class="btn sm pri" data-act="etapa-wa" data-i="${i}" type="button" title="Abre o WhatsApp com a mensagem pronta">📲 Avisar cliente</button>`):''}</div></div>`).join('')||'<span class="small muted">Sem etapas.</span>'}
+/* aviso da etapa ao cliente pelo WhatsApp */
+const limpaEtapa=t=>String(t||'').replace(/^\s*\d{1,2}\s*[.)\-–]\s*/,'').trim();
+function msgEtapaCliente(d,i){const e=d.etapas[i],n=d.etapas.length,prox=d.etapas.find((x,k)=>k>i&&!x.ok);const cli=(d.cliente&&d.cliente!==GERAL)?d.cliente.split('/')[0].trim():'';
+  return `Olá${cli?', '+cli:''}! Etapa ${i+1} de ${n} concluída${e.feito?' em '+fmtCurto(e.feito):''}: ${limpaEtapa(e.t)}.`+
+   (prox?`\n\nPróxima etapa: ${limpaEtapa(prox.t)}.`:(d.etapas.every(x=>x.ok)?`\n\nTodas as etapas foram concluídas. Obrigado pela parceria!`:''))+
+   `\n\nQualquer dúvida, estou à disposição. — FC Consultoria`}
+function abrirWaEtapaDem(d,i){let tel=String(telCliente(d.cliente)||'').replace(/\D/g,'');if(tel.length===10||tel.length===11)tel='55'+tel;
+  if(!tel)toast('Cliente sem telefone cadastrado: escolha o contato no WhatsApp');
+  window.open(`https://wa.me/${tel}?text=${encodeURIComponent(msgEtapaCliente(d,i))}`,'_blank','noopener');d.etapas[i].avisadoEm=today()}
 function drawWip(){const n=S.demandas.filter(d=>d.status==='fazendo'&&d.id!==M.id).length;
   $('#m-wip').innerHTML=M.status==='fazendo'&&n>=LIMITE_ANDAMENTO?`<div class="banner" style="margin-top:6px">Você já tem <b>${n} em andamento</b>. Considere concluir uma antes.</div>`:''}
 function compDaDemanda(d){return S.agenda.find(c=>c.demandaId===d.id&&!c.feito)||null}
@@ -1510,7 +1527,9 @@ async function syncAgendaDemanda(d,data,hora){const lk=compDaDemanda(d);
   await save('agenda',c.id,c)}
 function readDemanda(){M.titulo=$('#m-titulo').value.trim();M.cliente=$('#m-cliente').value.trim();M.tipo=$('#m-tipo').value;M.prazo=$('#m-prazo').value;M.inicio=$('#m-inicio').value;
   M.prioridade=$('#m-prio').value;M.proximoPasso=$('#m-prox').value.trim();M.obs=$('#m-obs').value;
-  document.querySelectorAll('[data-etx]').forEach(i=>M.etapas[+i.dataset.etx].t=i.value)}
+  document.querySelectorAll('[data-etx]').forEach(i=>M.etapas[+i.dataset.etx].t=i.value);
+  document.querySelectorAll('[data-etc]').forEach(i=>{const e=M.etapas[+i.dataset.etc];if(i.value)e.chegou=i.value;else delete e.chegou});
+  document.querySelectorAll('[data-ete]').forEach(i=>{const e=M.etapas[+i.dataset.ete];if(i.value)e.feito=i.value;else delete e.feito})}
 
 function modalComp(c){M=JSON.parse(JSON.stringify(c));const novo=!S.agenda.some(x=>x.id===c.id);
   openModal(`<h3>${novo?'Novo compromisso':'Compromisso'}</h3>
@@ -1772,10 +1791,12 @@ document.addEventListener('click',async e=>{
     case 'copiar-tel':{const t=el.dataset.tel;try{await navigator.clipboard.writeText(t);toast('Telefone copiado')}catch(err){toast('Selecione o número para copiar')}break}
     case 'novo-comp-cli':modalComp(novoComp({cliente:S.cli}));break;
     case 'etapa-ok':{e.stopPropagation();const d=JSON.parse(JSON.stringify(S.demandas.find(x=>x.id===id)));const i=d.etapas.findIndex(x=>!x.ok);if(i<0)break;
-      d.etapas[i].ok=true;d.atualizadoEm=nowIso();if(d.status==='a_fazer')d.status='fazendo';
+      d.etapas[i].ok=true;if(!d.etapas[i].feito)d.etapas[i].feito=today();d.atualizadoEm=nowIso();if(d.status==='a_fazer')d.status='fazendo';
+      if(d.cliente&&d.cliente!==GERAL&&confirm('Etapa executada. Abrir o WhatsApp para avisar '+d.cliente+'?'))abrirWaEtapaDem(d,i);
       if(d.etapas.every(x=>x.ok)){d.status='concluido';d.concluidoEm=nowIso();toast('Demanda concluída')}else toast('Etapa concluída');
       if(d.proximoPasso===d.etapas[i].t)d.proximoPasso='';await save('demandas',id,d);
       if(d.status==='concluido'){const lk=compDaDemanda(d);if(lk)await save('agenda',lk.id,{...lk,feito:true})}break}
+    case 'etapa-wa':{if(!M||!M.etapas)break;readDemanda();abrirWaEtapaDem(M,+el.dataset.i);drawEtapas();toast('Aviso aberto no WhatsApp. Clique em Salvar.');break}
     case 'dist-ler':{const ta=$('#m-dist');if(!ta||!ta.value.trim()){toast('Cole o texto ou o print primeiro');if(ta)ta.focus();break}previaDist();break}
     case 'dist-limpar':{const ta=$('#m-dist');if(ta)ta.value='';M._dist=null;$('#m-dist-prev').innerHTML='';$('#m-dist-st').textContent='';break}
     case 'dist-add':{readDemanda();const sel=[...document.querySelectorAll('[data-dsel]')].filter(c=>c.checked).map(c=>{const t=document.querySelector(`[data-dtx="${c.dataset.dsel}"]`);return t?t.value.trim():''}).filter(Boolean);
@@ -1877,7 +1898,9 @@ document.addEventListener('change',e=>{
   if(e.target.id==='c-viagem'){$('#c-viag').hidden=!e.target.checked}
   if(e.target.id==='f-tipo'){S.ftipo=e.target.value;render()}
   if(e.target.dataset.fin){const n=S.notas.find(x=>x.id===e.target.dataset.fin);if(n){const u={...n,finalizada:e.target.checked};if(u.finalizada)u.finalizadoEm=nowIso();else delete u.finalizadoEm;save('notas',n.id,u).then(()=>toast(e.target.checked?'Marcada como finalizada':'Reaberta'))}}
-  if(e.target.dataset.et!==undefined&&M){readDemanda();M.etapas[+e.target.dataset.et].ok=e.target.checked;drawEtapas()}
+  if(e.target.dataset.et!==undefined&&M){readDemanda();const et=M.etapas[+e.target.dataset.et];et.ok=e.target.checked;
+    if(et.ok){if(!et.feito)et.feito=today();toast('Etapa executada — clique em "Avisar cliente"')}else{delete et.feito;delete et.avisadoEm}drawEtapas()}
+  if(e.target.dataset&&e.target.dataset.ete!==undefined&&M){readDemanda();const et=M.etapas[+e.target.dataset.ete];if(et.feito&&!et.ok){et.ok=true}drawEtapas()}
 });
 let tipEl=null;document.addEventListener('pointerover',e=>{const t=e.target.closest('[data-tip]');if(!t){if(tipEl)tipEl.hidden=true;return}
   if(!tipEl){tipEl=document.createElement('div');tipEl.className='tip';document.body.appendChild(tipEl)}tipEl.textContent=t.dataset.tip;tipEl.className='tip'+(t.closest('#tabs')?' tab':'');tipEl.hidden=false;
