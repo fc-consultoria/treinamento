@@ -5,7 +5,7 @@ const NS='http://www.w3.org/2000/svg',CORES=['#c9d2d8','#b9c9d6','#d5cdbf','#c3d
 const ex=v=>String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
 let B=null,P=[],sel=null,seq=0,vb={x:-120,y:-70,w:240,h:140},ima=true;
 const ev=(e,r)=>{try{if(typeof hit==='function')hit(e,r||'');}catch(_){}};
-R.innerHTML=`<div class="bk-top"><div><b>🧩 Bancada de montagem</b><span class="bk-sub">Adicione os perfis e monte o encaixe em 2D, tudo com o mouse ou o dedo.</span></div><span class="bk-btns"><button type="button" class="bk-fs">⛶ Tela cheia</button><button type="button" class="bk-hide">▴ Ocultar bancada</button></span></div><div class="bk-body">
+R.innerHTML=`<div class="bk-top"><div><b>🧩 Bancada de montagem</b><span class="bk-sub">Adicione os perfis e monte o encaixe em 2D, tudo com o mouse ou o dedo.</span></div><span class="bk-btns"><button type="button" class="bk-fs">⛶ Tela cheia</button><button type="button" class="bk-cat">📚 Ver o catálogo ↓</button><button type="button" class="bk-hide">▴ Ocultar bancada</button></span></div><div class="bk-body">
 <div class="bk-aviso">⚠ <b>Ferramenta demonstrativa:</b> serve para mostrar como os perfis se encaixam e a função de cada um. Não use para medir: confira sempre as medidas no catálogo do fabricante.</div><form class="bk-add"><input class="bk-in" list="bkL" placeholder="Código do perfil (ex.: LG-021)" autocomplete="off" aria-label="Código do perfil"><datalist id="bkL"></datalist><button type="submit">＋ Adicionar</button><span class="bk-msg" role="status"></span></form>
 <div class="bk-cv"><svg class="bk-svg" xmlns="${NS}"><defs><pattern id="bkG5" width="5" height="5" patternUnits="userSpaceOnUse"><path d="M5 0H0V5" fill="none" stroke="#e6ecef" stroke-width=".15"/></pattern><pattern id="bkG" width="50" height="50" patternUnits="userSpaceOnUse"><rect width="50" height="50" fill="url(#bkG5)"/><path d="M50 0H0V50" fill="none" stroke="#cfdbe1" stroke-width=".3"/></pattern></defs><rect class="bk-grid" x="-5000" y="-5000" width="10000" height="10000" fill="url(#bkG)"/><g class="bk-ps"></g><g class="bk-lb"></g><g class="bk-hd"></g></svg>
 <div class="bk-vazio">Digite um código acima e toque em <b>＋ Adicionar</b>.<br>Arraste as peças, gire e encaixe. O 🧲 ímã gruda uma na outra.</div>
@@ -90,6 +90,7 @@ R.querySelector('.bk-png').onclick=()=>{if(!P.length){msg.textContent='Adicione 
   img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(s);};
 {const hb=R.querySelector('.bk-hide'),set=on=>{R.classList.toggle('bk-off',on);hb.textContent=on?'▾ Mostrar bancada de montagem':'▴ Ocultar bancada';R.querySelector('.bk-fs').hidden=on;try{localStorage.setItem('fc_bk_off',on?'1':'0');}catch(_){}if(!on)setTimeout(()=>{setVB();if(P.length)fit();},30);};
  hb.onclick=()=>set(!R.classList.contains('bk-off'));let o=false;try{o=localStorage.getItem('fc_bk_off')==='1';}catch(_){}if(o)set(true);}
+R.querySelector('.bk-cat').onclick=()=>{if(R.classList.contains('bk-full'))R.querySelector('.bk-fs').click();const t=document.querySelector('.tools')||document.getElementById('lst');if(t)setTimeout(()=>window.scrollTo({top:t.getBoundingClientRect().top+scrollY-70,behavior:'smooth'}),80);};
 window.FCBanc={add,fit,get P(){return P;}};
 setVB();
 })();
