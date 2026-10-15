@@ -354,7 +354,7 @@ tbody tr:hover{background:var(--panel-2);}
       <button class="navitem" id="btn-logout"><i data-lucide="log-out"></i> Sair</button>
     </div>
     <div class="sidebar-foot">
-      Painel de implantação — dados salvos em banco de dados real (Supabase), acesso restrito à equipe.<br><b>Versão 15/10e — marca de acompanhamento online</b>
+      Painel de implantação — dados salvos em banco de dados real (Supabase), acesso restrito à equipe.<br><b>Versão 15/10f — novo cliente versão nova</b>
     </div>
   </nav>
   <div class="mobile-topbar">
@@ -2005,6 +2005,11 @@ function renderClientes(){
         <div class="meta" style="margin-top:6px;">${p.alimentados}/${p.total} itens alimentados no total (Componentes, Perfis e orçamentos)</div>
       </div>`;
     }).join('')}
+    <div class="clientcard" data-action="novo-cliente-v2" style="border:2px dashed #0e8a8c; background:#f2fbfa; display:flex; flex-direction:column; justify-content:center; gap:8px; min-height:180px;">
+      <div style="display:flex; align-items:center; gap:8px;"><span style="font-size:22px; line-height:1;">＋</span><h4 style="margin:0;">Novo cliente · versão nova</h4></div>
+      <div><span style="background:#dff2f1; color:#0a6d6f; font-size:11.5px; font-weight:650; border-radius:99px; padding:2px 9px;">📡 Acompanhamento online</span></div>
+      <div class="meta">Já nasce com o link do cliente (andamento publicado às 07:00, de segunda a sexta) e o cronograma das 10 etapas. Situação do dia e envio do link ficam no Painel da Matriz.</div>
+    </div>
   </div>
   `;
 }
@@ -5496,6 +5501,7 @@ function wireEvents(){
         return;
       }
       if(action==='novo-cliente') return openNovoClienteModal();
+      if(action==='novo-cliente-v2') return openNovoClienteModal(true);
       if(action==='novo-item') return openNovoItemModal();
       if(action==='novo-fornecedor') return openNovoFornecedorModal(el.dataset.scope, el.dataset.ref);
       if(action==='novo-orcamento-fornecedor') return openNovoOrcamentoFornecedorModal(el.dataset.fornecedor||STATE.orcFornecedorAtivo||'');
@@ -6455,13 +6461,33 @@ function wireEvents(){
 /* ---------------- Modals ---------------- */
 function closeModal(){ const m=document.querySelector('.modal-backdrop'); if(m) m.remove(); }
 
-function openNovoClienteModal(){
+const CRONOGRAMA_MODELO = [['Acesso ao sistema e 5 linhas iniciais','fc'],['Cores e envio das planilhas de levantamento','fc'],['Acompanhamento do preenchimento com a sua equipe','fc'],['Retorno das planilhas preenchidas','cliente'],['Lançamento dos custos recebidos','fc'],['Cadastro de componentes','fc'],['Liberação das tipologias','fc'],['Simulação de orçamento','fc'],['Margem de venda','fc'],['Finalização e feedback','fc']];
+function diasUteisDesde(inicio, n){ const out=[]; const d=new Date(inicio+'T12:00:00'); while(out.length<n){ const w=d.getDay(); if(w!==0 && w!==6) out.push(d.toISOString().slice(0,10)); d.setDate(d.getDate()+1); } return out; }
+function proximoDiaUtilISO(){ const d=new Date(); d.setDate(d.getDate()+1); while(d.getDay()===0||d.getDay()===6) d.setDate(d.getDate()+1); return d.toISOString().slice(0,10); }
+// Liga o acompanhamento online de um cliente recém-criado: link do portal, cronograma e primeira publicação
+async function ativarVersaoNova(clienteId, primeiroDia){
+  const erros = [];
+  const r1 = await sb.from('impl_portal').insert({cliente_id: clienteId});
+  if(r1.error) erros.push('link do cliente: '+r1.error.message);
+  if(primeiroDia){
+    const datas = diasUteisDesde(primeiroDia, CRONOGRAMA_MODELO.length);
+    const r2 = await sb.from('impl_cronograma').insert(CRONOGRAMA_MODELO.map(([t,r],i)=>({cliente_id:clienteId, ordem:i+1, titulo:t, data:datas[i], responsavel:r})));
+    if(r2.error) erros.push('cronograma: '+r2.error.message);
+  }
+  if(!r1.error){
+    const r3 = await sb.rpc('impl_portal_publicar', {p_cliente: clienteId});
+    if(r3.error) erros.push('primeira publicação: '+r3.error.message);
+    PORTAIS[clienteId] = {cliente_id: clienteId, ativo: true};
+  }
+  return erros;
+}
+function openNovoClienteModal(versaoNova){
   closeModal();
   const wrap = document.createElement('div');
   wrap.className='modal-backdrop';
   wrap.innerHTML = `
   <div class="modal">
-    <div class="modal-head"><h3>Novo cliente</h3><button class="iconbtn" data-close>${icon('x')}</button></div>
+    <div class="modal-head"><h3>${versaoNova ? 'Novo cliente · versão nova' : 'Novo cliente'}</h3><button class="iconbtn" data-close>${icon('x')}</button></div>
     <div class="modal-body">
       <div class="field"><label>Nome do cliente</label><input id="nc-nome" placeholder="Ex: Vidraçaria Modelo"></div>
       <div class="field"><label>Fornecedor base</label>
@@ -6486,6 +6512,11 @@ function openNovoClienteModal(){
         </div>
         <div class="desc" style="margin-top:6px;">Pode deixar em branco e marcar depois em "Contrato & Acesso".</div>
       </div>
+      ${versaoNova ? `<div style="border:1px solid #9fd8d4; background:#f2fbfa; border-radius:10px; padding:12px 14px;">
+        <div style="font-weight:650; margin-bottom:6px;">📡 Acompanhamento online (versão nova)</div>
+        <div class="field" style="margin:0;"><label>Primeiro dia do cronograma (10 etapas, uma por dia útil)</label><input id="nc-crono" type="date" min="2015-01-01" max="2030-12-31" value="${proximoDiaUtilISO()}"></div>
+        <div class="desc" style="margin-top:6px;">Ao cadastrar, o cliente já ganha o link de acompanhamento e a primeira publicação. Datas e nomes das etapas, situação do dia e envio do link ficam no Painel da Matriz → Acompanhamento.</div>
+      </div>` : ''}
     </div>
     <div class="modal-foot">
       <button class="btn" data-close>Cancelar</button>
@@ -6529,6 +6560,12 @@ function openNovoClienteModal(){
     });
     btn.disabled = false;
     if(!row) return;
+    if(versaoNova){
+      btn.disabled = true; btn.textContent = 'Ligando o acompanhamento online…';
+      const erros = await ativarVersaoNova(row.id, wrap.querySelector('#nc-crono').value || null);
+      btn.disabled = false;
+      if(erros.length) alert('Cliente cadastrado, mas parte do acompanhamento online não foi ligada:\n- '+erros.join('\n- ')+'\n\nVocê pode ativar depois no Painel da Matriz → Acompanhamento.');
+    }
     CLIENTS.push({
       ...mapClienteRow(row),
       entrada: null, parcelas: [],
