@@ -153,7 +153,7 @@ tr.mfin td{background:#eef5fc}
   .lvh{font:600 12px var(--f-mono);letter-spacing:.08em;color:var(--muted);margin:12px 0 6px;text-transform:uppercase}
   .lvk{border:1px solid var(--line);border-radius:10px;background:#fff;padding:10px 14px;min-width:150px}.lvk b{font:700 26px var(--f-display);display:block}.lvk span{font-size:12.5px;color:var(--muted)}</style></section>
  <section class="card" id="aceCard" data-tab="ace"><h2 style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">📈 Acessos<span class="note" id="acAt" style="font-weight:500;text-transform:none;letter-spacing:0"></span><span style="margin-left:auto;display:flex;gap:6px"><select id="acP" style="font-size:13px"><option value="1">Hoje</option><option value="7" selected>7 dias</option><option value="30">30 dias</option></select><button type="button" id="acRe" style="font-size:13px">🔄 Atualizar</button></span></h2>
-  <div id="acBox" style="padding:12px 16px 16px"><p class="note">Carregando…</p></div>
+  <div id="acEu" style="margin:12px 16px 0;padding:10px 14px;border-radius:10px;background:#eef6ff;border:1px solid #c8dcf5;font-size:13.5px;display:flex;gap:10px;align-items:center;flex-wrap:wrap"></div><div id="acBox" style="padding:12px 16px 16px"><p class="note">Carregando…</p></div>
   <style>.acg{display:grid;grid-template-columns:1fr 1fr;gap:16px}@media(max-width:1000px){.acg{grid-template-columns:1fr}}
   .acf{display:flex;flex-direction:column;gap:6px}.acf .r{display:grid;grid-template-columns:200px 1fr 70px;gap:10px;align-items:center;font-size:14px}.acf .bar{height:22px;border-radius:6px;background:#eef1f3;overflow:hidden}.acf .bar i{display:block;height:100%;background:linear-gradient(90deg,#1f6f9a,#1fb3c9);border-radius:6px}.acf .r b{text-align:right}
   .acd{display:flex;gap:3px;align-items:flex-end;height:120px;padding:6px 0;border-bottom:1px solid var(--line)}.acd div{flex:1;background:#1fb3c9;border-radius:3px 3px 0 0;min-height:2px;position:relative}.acd div:hover{background:#1f6f9a}
@@ -469,6 +469,11 @@ function lvChatDraw(){const box=document.getElementById('lvL');if(!LVC||!box)ret
   const L=th.L.filter(e=>!(e.detalhe||{}).oculta);
   box.innerHTML=L.length?L.map(e=>{const fc=e.tipo==='resposta',d=e.detalhe||{};return `<div style="align-self:${fc?'flex-end':'flex-start'};max-width:82%;background:${fc?'#d9f2e3':'#fff'};border:1px solid ${fc?'#a8dcbc':'#d6dee4'};border-radius:12px;padding:7px 10px;font:400 14.5px/1.4 system-ui;white-space:pre-wrap">${desc(d.txt||'')}<div style="font-size:11px;color:#7a8790;text-align:right;margin-top:2px">${fc?'Você':(cid==='gestor'?'Gestor':desc(quem))}${!fc&&d.tipo?' · '+desc(d.tipo):''} · ${fmtD(e.criado_em)}</div></div>`;}).join(''):'<p class="note" style="text-align:center;margin:auto">Nenhuma mensagem ainda. Escreva a primeira: ela aparece na tela dele em segundos.</p>';box.scrollTop=box.scrollHeight;}
 /* ===== Acessos (site e link demonstrativo) ===== */
+
+function acEuUI(){const el=document.getElementById('acEu');if(!el)return;let on=false;try{on=localStorage.getItem('fc_eu')==='1';}catch(_){}
+  el.innerHTML=on?`<span>🚫 <b>Seus acessos não entram na contagem</b> neste aparelho (computador ou celular onde você abre este painel).</span><span class="note">No celular sem painel, abra uma vez: <code>https://fc-consultoria.github.io/?eu=1</code></span><button type="button" id="acEuB" style="margin-left:auto;font-size:12.5px">Contar este aparelho</button>`
+   :`<span>⚠ <b>Este aparelho está sendo contado</b> nos acessos.</span><button type="button" id="acEuB" class="pri" style="margin-left:auto;font-size:12.5px">Não contar este aparelho</button>`;
+  document.getElementById('acEuB').onclick=()=>{try{if(on)localStorage.removeItem('fc_eu');else localStorage.setItem('fc_eu','1');}catch(_){}acEuUI();};}
 async function acLoad(){const box=document.getElementById('acBox');if(!box)return;const dias=+document.getElementById('acP').value,since=new Date(Date.now()-(dias===1?(Date.now()-new Date(new Date(Date.now()-4*3600e3).toISOString().slice(0,10)+'T04:00:00Z').getTime()):dias*864e5)).toISOString();
   const r=await sb.from('site_visitas').select('s,pag,ev,o,criado_em').gte('criado_em',since).order('criado_em').limit(20000);
   const pct=(a,b)=>b?Math.round(a/b*100):0,bar=(nm,n,tot,tip)=>`<div class="r" title="${tip||''}"><span>${nm}</span><div class="bar"><i style="width:${pct(n,tot)}%"></i></div><b>${pct(n,tot)}% <small class="note">(${n})</small></b></div>`;
@@ -1049,7 +1054,7 @@ document.getElementById('mpF').onsubmit=async e=>{e.preventDefault();let c=docum
   document.getElementById('mpC').value='';document.getElementById('mpN').value=1;document.getElementById('mpFi').value=0;const m=document.getElementById('mpMsg');m.textContent=MPUB?'✔ Salvo · já aparece para os alunos':'✔ Salvo · mapa em atualização (oculto)';setTimeout(()=>m.textContent='',4000);mpRender();};
 document.querySelector('#ptabs [data-tab=map]').addEventListener('click',()=>{if(MPD)setTimeout(mpRender,50);else mpCarregar();});
 if(PTAB==='map')setTimeout(mpCarregar,800);
-gateUI(()=>carregar(),{soMatriz:true});
+gateUI(()=>{try{localStorage.setItem('fc_eu','1');}catch(_){}carregar();acEuUI();},{soMatriz:true});
 </script>
 <script>/* ===== Demonstrativos (links de 24 h) ===== */
 (function(){

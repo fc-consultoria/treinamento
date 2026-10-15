@@ -3078,7 +3078,7 @@ function demo2Init(){
 if(window.FC_DEMO===2)demo2Init();else if(window.FC_DEMO)demoInit();
 </script>
 <script>window.FC_PAG="demo";</script><script>/* contagem anônima de visitas (sem nome, sem cookie) */
-(function(){try{const SB='https://cpkjphodruyxfouirhpd.supabase.co',KEY='sb_publishable_d0HEeWsaqOeZIQKGftlF-Q_B8BUOWWg';
+(function(){try{{const e=new URLSearchParams(location.search).get('eu');if(e==='1')localStorage.setItem('fc_eu','1');if(e==='0')localStorage.removeItem('fc_eu');}if(localStorage.getItem('fc_eu')==='1')return;const SB='https://cpkjphodruyxfouirhpd.supabase.co',KEY='sb_publishable_d0HEeWsaqOeZIQKGftlF-Q_B8BUOWWg';
  let s=sessionStorage.getItem('fc_s');if(!s){s=Math.random().toString(36).slice(2,12)+Date.now().toString(36);sessionStorage.setItem('fc_s',s);}
  const q=new URLSearchParams(location.search);let o=q.get('o')||sessionStorage.getItem('fc_o');
  if(!o){let h='';try{h=document.referrer?new URL(document.referrer).host:'';}catch(_){}o=!h?'direto':/instagram/i.test(h)?'insta':/facebook|fb\.|messenger/i.test(h)?'facebook':/google/i.test(h)?'google':/whatsapp|wa\.me/i.test(h)?'whats':/bing|yahoo|duckduck/i.test(h)?'busca':'outros';}
