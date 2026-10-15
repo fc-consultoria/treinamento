@@ -216,7 +216,7 @@ tr.mfin td{background:#eef5fc}
     <label>Atendimento<select id="mpT"><option value="on">💻 On-line</option><option value="pr">📍 Presencial</option></select></label><label>● Em andamento<input id="mpN" type="number" min="0" value="1"></label><label>✔ Finalizadas<input id="mpFi" type="number" min="0" value="0"></label><button type="submit" class="pri">Adicionar</button><span class="msg ok" id="mpMsg"></span></form>
    <datalist id="mpL"></datalist>
    <div class="tw"><table><thead><tr><th>Cidade</th><th>UF</th><th>Atendimento</th><th>● Em andamento</th><th>✔ Finalizadas<br><small style="font-weight:400;text-transform:none;letter-spacing:0">sistema alimentado</small></th><th>Total</th><th></th></tr></thead><tbody id="mpTb"></tbody></table></div>
-   <h3 class="dvt" style="margin:16px 0 8px">Como o aluno vê</h3><div id="mpPrev"></div>
+   <div id="vtAdm"></div><h3 class="dvt" style="margin:16px 0 8px">Como o aluno e o site veem</h3><div id="mpPrev"></div>
   </div></section>
  <section class="card" id="sugCard" data-tab="sug"><h2 style="display:flex;justify-content:space-between;align-items:center;gap:8px">💬 Dúvidas e sugestões dos alunos <span class="sgn" id="sugN" style="flex:1"></span><button type="button" id="sugTog" style="font-size:12px;padding:4px 10px">Mostrar</button></h2><div id="sugBody" hidden><p class="note" style="padding:0 16px">O aluno envia pelo botão “💬 Sugestão” na barra escura do orientativo. Escreva a resposta embaixo da mensagem e clique em Responder: ela aparece para o aluno no mesmo botão.</p><ul class="tl" id="sugList"></ul></div></section>
  <section class="card" data-tab="emp">
@@ -264,9 +264,9 @@ tr.mfin td{background:#eef5fc}
 </main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="auth.js"></script>
-<script src="mapa.js?v=1792026169"></script>
+<script src="mapa.js?v=1792026446"></script>
 <script>
-const ZCFG=new Set(['logo_mapa','logo_ok','implantacao','promo','contrato','empresa_local','gestor_in','gestor_hb','gestor_acao','colab','liberacao','sistema','gestor','chave_app','sugestao','resposta','sug_excluida','zerar','interesse','interesse_ok']);
+const ZCFG=new Set(['vit_nome','logo_mapa','logo_ok','implantacao','promo','contrato','empresa_local','gestor_in','gestor_hb','gestor_acao','colab','liberacao','sistema','gestor','chave_app','sugestao','resposta','sug_excluida','zerar','interesse','interesse_ok']);
 function zerarFiltro(ev,zs){const Z={};(zs||ev).forEach(e=>{if(e.tipo==='zerar'){const p=(e.detalhe||{}).para,t=Date.parse(e.criado_em);if(!Z[p]||t>Z[p])Z[p]=t;}});
   return ev.filter(e=>ZCFG.has(e.tipo)||!Z[e.user_id]||Date.parse(e.criado_em)>Z[e.user_id]);}
 const TIPOS={jcr200:'Suprema JCR 200',jcr200a:'Suprema JCR 200A',jcr300:'Suprema JCR 300',jcr205:'Suprema JCR 205',pcr200:'Suprema PCR 200',pvz300:'Suprema PVZ 300',pgr100:'Suprema PGR 100',max800:'Suprema MAX 800',gjc2f:'Gold JC-2F',gpc3fvz:'Gold PC3F-VZ',gpc2fpe:'Gold PC-2FPE',gjc4f:'Gold JC-4F',gjc4fs:'Gold JC-4FS',gpc2f:'Gold PC-2F',gpc2fm:'Gold PC-2F MAC',gmax:'Gold MAX'};
@@ -913,9 +913,9 @@ document.querySelectorAll('#ptabs button').forEach(b=>b.onclick=()=>ptab(b.datas
 /* ===== Mapa FC no Brasil (Matriz) ===== */
 let MPD=null,MPUB=true;
 const mpNorm=x=>{const n=Math.max(0,+x.n||0),f=x.f!=null?Math.min(n,Math.max(0,+x.f||0)):(x.s==='fin'?n:0);return {c:x.c,u:x.u,t:x.t,n,f,s:f>=n?'fin':'and'};};
-let MP_OR=null;
-const mpSalvar=()=>ins('mapa',{itens:MPD.map(mpNorm),pub:MPUB,orient:MP_OR||[]});
-async function mpCarregar(){const r=await sb.from('trein_eventos').select('detalhe').eq('tipo','mapa').order('criado_em',{ascending:false}).limit(1);const d=(((r.data||[])[0]||{}).detalhe)||{};MPD=(d.itens||[]).map(mpNorm);MPUB=d.pub!==false;if(!MP_OR)MP_OR=d.orient||[];mpRender();}
+let MP_OR=null,VIT=null;
+const mpSalvar=()=>ins('mapa',{itens:MPD.map(mpNorm),pub:MPUB,orient:MP_OR||[],vit:VIT||[]});
+async function mpCarregar(){const r=await sb.from('trein_eventos').select('detalhe').eq('tipo','mapa').order('criado_em',{ascending:false}).limit(1);const d=(((r.data||[])[0]||{}).detalhe)||{};MPD=(d.itens||[]).map(mpNorm);MPUB=d.pub!==false;if(!MP_OR)MP_OR=d.orient||[];VIT=d.vit||[];mpRender();}
 function mpRender(){if(!MPD||!window.FCM)return;const esc=v=>String(v||'').replace(/</g,'&lt;');
   {const P=document.getElementById('mpPub');P.classList.toggle('off',!MPUB);document.getElementById('mpPubT').textContent=MPUB?'🟢 Consultoria presencial e on-line · VISÍVEL no mapa':'🛠 Consultoria presencial e on-line · OCULTA no mapa';
    document.getElementById('mpPubS').textContent=MPUB?'As cidades da consultoria (abaixo) aparecem junto com o Orientativo.':'Organize as cidades com calma. Só o Orientativo FC 3D aparece até você clicar em Mostrar.';
@@ -931,16 +931,16 @@ function mpRender(){if(!MPD||!window.FCM)return;const esc=v=>String(v||'').repla
     if(a+f===0){if(!confirm(`${x.c}/${x.u} vai ficar com 0 empresas. Excluir a linha?`))return;MPD.splice(+b.dataset.q,1);}else{x.n=a+f;x.f=f;}await mpSalvar();mpRender();});
   document.querySelectorAll('[data-mv1]').forEach(b=>b.onclick=async()=>{const x=MPD[+b.dataset.mv1];if(x.f<x.n)x.f++;await mpSalvar();mpRender();});
   document.querySelectorAll('[data-mrm]').forEach(b=>b.onclick=async()=>{if(!confirm('Excluir esta linha do mapa?'))return;MPD.splice(+b.dataset.mrm,1);await mpSalvar();mpRender();});
-  orUI();if(!document.getElementById('mapCard').classList.contains('tabOff')&&FCM.render2)FCM.render2(document.getElementById('mpPrev'),{orient:MP_OR||[],cons:MPD,showCons:MPUB,admin:true,semFesta:true});}
+  orUI();if(!document.getElementById('mapCard').classList.contains('tabOff')&&FCM.render2)FCM.render2(document.getElementById('mpPrev'),{orient:MP_OR||[],cons:MPD,showCons:MPUB,vit:VIT||[],admin:true,semFesta:true});vtUI();}
 /* ===== Camada Orientativo FC 3D (automática) e logos ===== */
 function logoSt(uid){let L=null;EV.forEach(e=>{if(e.tipo==='logo_mapa'&&e.user_id===uid&&(!L||e.criado_em>L.criado_em))L=e;});if(!L)return null;const d=L.detalhe||{};if(d.remover)return {L,st:'removido'};
   let D=null;EV.forEach(e=>{if(e.tipo==='logo_ok'&&(e.detalhe||{}).para===uid&&(e.detalhe||{}).ref===L.criado_em&&(!D||e.criado_em>D.criado_em))D=e;});return {L,st:D?((D.detalhe||{}).ok?'ok':'nao'):'pendente',D};}
 const orAtivo=uid=>{const im=implDe(uid);if(im)return im.ate>=HOJE();const f=ctrFim(uid);if(f&&f>=HOJE())return true;return libOk(uid);};
 function orSnap(){return ALUNOS.filter(a=>a.ativo&&!livre(a)&&orAtivo(a.user_id)).map(a=>{const loc=localDe(a.user_id),ls=logoSt(a.user_id),ap=ls&&ls.st==='ok'?ls.L.detalhe:null;
-  const o={k:a.user_id.slice(0,8),c:(ap&&ap.c)||loc.cidade||'',u:((ap&&ap.u)||loc.uf||'').toUpperCase(),p:colabs(a.user_id).length};if(ap){o.n=ap.nome||a.nome||'';o.logo=ap.img;}return o;}).sort((x,y)=>x.k<y.k?-1:1);}
+  const o={k:a.user_id.slice(0,8),c:(ap&&ap.c)||loc.cidade||'',u:((ap&&ap.u)||loc.uf||'').toUpperCase(),p:colabs(a.user_id).length};if(ap){o.logo=ap.img;}return o;}).sort((x,y)=>x.k<y.k?-1:1);}
 let ORSYNC=false;
 async function orSync(){if(ORSYNC||!ALUNOS.length)return;ORSYNC=true;try{const snap=orSnap();const r=await sb.from('trein_eventos').select('detalhe').eq('tipo','mapa').order('criado_em',{ascending:false}).limit(1);const d=(((r.data||[])[0]||{}).detalhe)||{};
-  MP_OR=snap;if(JSON.stringify(d.orient||[])!==JSON.stringify(snap)){await ins('mapa',{itens:d.itens||[],pub:d.pub!==false,orient:snap});}
+  MP_OR=snap;if(JSON.stringify(d.orient||[])!==JSON.stringify(snap)){await ins('mapa',{itens:d.itens||[],pub:d.pub!==false,orient:snap,vit:VIT||d.vit||[]});}
   if(MPD)mpRender();else orUI();}catch(_){}ORSYNC=false;}
 function orUI(){const el=document.getElementById('orRes');if(!el)return;const O=MP_OR||orSnap(),semC=O.filter(x=>!x.u).length;
   el.innerHTML=`<b style="font-size:16px">🧊 Orientativo FC 3D em atividade · aparece sozinho no mapa</b><br><span style="font-size:13.5px;color:#2b4a3a">${O.length} empresa${O.length===1?'':'s'} com o link ativo · ${O.reduce((a,x)=>a+x.p,0)} pessoas cadastradas · ${O.filter(x=>x.logo).length} com logo. Atualiza conforme você libera acessos, cadastra colaboradores e salva a cidade de cada empresa.${semC?` <b style="color:#b86a00">⚠ ${semC} empresa${semC>1?'s':''} sem cidade: salve em 📍 Salvar cidade (aba Empresas) para aparecer no mapa.</b>`:''}</span>`;
@@ -948,13 +948,56 @@ function orUI(){const el=document.getElementById('orRes');if(!el)return;const O=
   const box=document.getElementById('lgAp');const LS=ALUNOS.map(a=>[a,logoSt(a.user_id)]).filter(x=>x[1]&&x[1].st!=='removido');
   const pend=LS.filter(x=>x[1].st==='pendente'),pub=LS.filter(x=>x[1].st==='ok');
   box.innerHTML=(pend.length?`<div style="border:2px solid #e8912d;background:#fff7e8;border-radius:10px;padding:12px 14px;margin-bottom:10px"><b>🖼 Logos para aprovar (${pend.length})</b><div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px">${pend.map(([a,ls],i)=>{const d=ls.L.detalhe||{};return `<div style="background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px;display:flex;gap:10px;align-items:center"><img src="${d.img}" alt="" style="width:64px;height:64px;object-fit:contain;border:1px solid var(--line);border-radius:8px;background:#fff"><div><b>${desc(d.nome||a.nome)}</b><br><span class="note">${desc(d.c||'')}${d.u?' · '+desc(d.u):''} · conta ${desc(a.login)} · ${fmtD(ls.L.criado_em)}</span><br><button type="button" class="ok" data-lgok="${a.user_id}">✔ Publicar</button> <button type="button" class="no" data-lgno="${a.user_id}">Recusar</button></div></div>`;}).join('')}</div></div>`:'')
-   +(pub.length?`<details style="margin-bottom:10px"><summary style="cursor:pointer;font-weight:600">🖼 Logos publicadas no mapa (${pub.length})</summary><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">${pub.map(([a,ls])=>{const d=ls.L.detalhe||{};return `<span style="display:flex;gap:6px;align-items:center;border:1px solid var(--line);border-radius:8px;padding:4px 8px;background:#fff"><img src="${d.img}" alt="" style="width:28px;height:28px;object-fit:contain">${desc(d.nome||a.nome)} <button type="button" class="no" style="font-size:12px;padding:2px 6px" data-lgrm="${a.user_id}">Tirar</button></span>`;}).join('')}</div></details>`:'');
+   +(pub.length?`<details style="margin-bottom:10px"><summary style="cursor:pointer;font-weight:600">🖼 Logos de empresas publicadas na vitrine (${pub.length})</summary><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">${pub.map(([a,ls])=>{const d=ls.L.detalhe||{};return `<span style="display:flex;gap:6px;align-items:center;border:1px solid var(--line);border-radius:8px;padding:4px 8px;background:#fff"><img src="${d.img}" alt="" style="width:28px;height:28px;object-fit:contain">${desc(d.nome||a.nome)} <button type="button" class="no" style="font-size:12px;padding:2px 6px" data-lgrm="${a.user_id}">Tirar</button></span>`;}).join('')}</div></details>`:'');
   const dec=async(uid,ok,motivo)=>{const ls=logoSt(uid);if(!ls)return;await ins('logo_ok',{para:uid,ref:ls.L.criado_em,ok,motivo:motivo||null});
-    const {data:{session}}=await sb.auth.getSession();await sb.from('trein_eventos').insert({user_id:session.user.id,tipo:'resposta',tipologia:null,detalhe:{para:uid,cid:'gestor',quem:'Gestor',ref:null,chat:true,txt:ok?'✔ A logo da sua empresa foi publicada no mapa FC no Brasil. Obrigado pela parceria!':'A logo enviada para o mapa não foi publicada'+(motivo?': '+motivo:'.')+' Se quiser, envie outra pelo Painel da Empresa.'}});
+    const {data:{session}}=await sb.auth.getSession();await sb.from('trein_eventos').insert({user_id:session.user.id,tipo:'resposta',tipologia:null,detalhe:{para:uid,cid:'gestor',quem:'Gestor',ref:null,chat:true,txt:ok?'✔ A logo da sua empresa foi publicada na vitrine de clientes do mapa FC no Brasil (botão Ver clientes). Obrigado pela parceria!':'A logo enviada para o mapa não foi publicada'+(motivo?': '+motivo:'.')+' Se quiser, envie outra pelo Painel da Empresa.'}});
     await carregar();orSync();};
   box.querySelectorAll('[data-lgok]').forEach(b=>b.onclick=()=>{b.disabled=true;dec(b.dataset.lgok,true);});
   box.querySelectorAll('[data-lgno]').forEach(b=>b.onclick=()=>{const m=prompt('Motivo (o gestor recebe esta mensagem):','A imagem ficou com baixa qualidade. Pode enviar a logo em melhor resolução?');if(m===null)return;b.disabled=true;dec(b.dataset.lgno,false,m.trim());});
-  box.querySelectorAll('[data-lgrm]').forEach(b=>b.onclick=()=>{if(!confirm('Tirar esta logo do mapa? A empresa continua contando no mapa, só sem a logo.'))return;b.disabled=true;dec(b.dataset.lgrm,false,'retirada do mapa pela FC');});}
+  box.querySelectorAll('[data-lgrm]').forEach(b=>b.onclick=()=>{if(!confirm('Tirar esta logo da vitrine? A empresa continua no mapa, só sem a logo.'))return;b.disabled=true;dec(b.dataset.lgrm,false,'retirada da vitrine pela FC');});}
+
+/* ===== Vitrine de clientes (logos) ===== */
+let VTED=null,VTIMG='';
+function vtNome(id){let r=null;EV.forEach(e=>{if(e.tipo==='vit_nome'&&(e.detalhe||{}).id===id&&(!r||e.criado_em>r.criado_em))r=e;});return r?((r.detalhe||{}).nome||''):'';}
+const VTT={o:'🧊 Orientativo 3D',on:'💻 Consultoria on-line',pr:'📍 Consultoria presencial'};
+function vtImg(f){return new Promise((ok,no)=>{const r=new FileReader();r.onerror=no;r.onload=()=>{const im=new Image();im.onerror=no;im.onload=()=>{const M=360,k=Math.min(1,M/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(im,0,0,c.width,c.height);ok(c.toDataURL('image/jpeg',.86));};im.src=r.result;};r.readAsDataURL(f);});}
+function vtUI(){const el=document.getElementById('vtAdm');if(!el||!VIT||!window.FCM)return;const esc=v=>String(v||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+  const CL=(MP_OR||[]).filter(x=>x.logo),L=VIT,pubN=CL.length+L.filter(x=>!x.oc).length,pend=ALUNOS.map(a=>logoSt(a.user_id)).filter(x=>x&&x.st==='pendente').length;
+  const ed=VTED?L.find(x=>x.id===VTED):null,open=!!(ed||el.dataset.open);
+  const nomeCli=k=>{const a=ALUNOS.find(a=>a.user_id.slice(0,8)===k);return a?(a.nome||a.login):'';};
+  el.innerHTML=`<div style="border:2px solid #5b7cfa;background:#f1f4ff;border-radius:10px;padding:12px 14px;margin:6px 0 10px">
+   <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center"><div><b style="font-size:16px">🤝 Vitrine de clientes · botão "Ver clientes" no mapa</b><br><span style="font-size:13.5px;color:#41525c">O mapa não mostra nome nem logo. Quem clicar em <b>Ver clientes</b> vê as logos publicadas, com cidade/UF e tipo de atendimento. O botão só aparece quando houver logo publicada. <b>${pubN} publicada${pubN===1?'':'s'}${pend?` · ${pend} aguardando você (acima)`:''}</b></span></div>
+   <button type="button" class="pri" id="vtNovo">${open?'Fechar':'＋ Adicionar logo de cliente'}</button></div>
+   ${open?`<form id="vtF" style="margin-top:12px;background:#fff;border:1px dashed #9fb0ff;border-radius:10px;padding:14px;display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(170px,1fr))">
+    <div style="grid-column:1/-1"><b>${ed?'✏️ Editar logo':'＋ Nova logo de cliente'}</b></div>
+    <div><label class="note">Logo (PNG ou JPG)</label><input type="file" id="vtFi" accept="image/*"><div id="vtPv" style="margin-top:6px">${(VTIMG||(ed&&ed.img))?`<img src="${VTIMG||ed.img}" style="height:56px;max-width:140px;object-fit:contain;border:1px solid var(--line);border-radius:8px;background:#fff">`:''}</div></div>
+    <div><label class="note">Nome do cliente (só você vê)</label><input id="vtN" value="${esc(ed?vtNome(ed.id):'')}" placeholder="Ex.: Vidraçaria Modelo"></div>
+    <div><label class="note">UF</label><select id="vtU">${Object.keys(FCM.NOME).sort().map(k=>`<option${k===((ed&&ed.u)||'MT')?' selected':''}>${k}</option>`).join('')}</select></div>
+    <div><label class="note">Cidade</label><input id="vtC" list="vtCL" value="${esc(ed?ed.c:'')}" placeholder="Digite ou escolha a cidade"><datalist id="vtCL"></datalist></div>
+    <div><label class="note">Atendimento</label><select id="vtT">${['on','pr','o'].map(t=>`<option value="${t}"${ed&&ed.t===t?' selected':''}>${VTT[t]}</option>`).join('')}</select></div>
+    <label style="grid-column:1/-1;background:#fff8e6;border:1px solid #f1d27a;border-radius:8px;padding:10px;font-size:13.5px;display:flex;gap:8px;align-items:flex-start"><input type="checkbox" id="vtA"${ed?' checked':''} style="margin-top:3px"> <span>✅ <b>O cliente autorizou a publicação da logo</b> (ex.: confirmou pelo WhatsApp). Sem marcar, não publica.</span></label>
+    <div style="grid-column:1/-1;display:flex;gap:8px;align-items:center"><button type="submit" class="ok">${ed?'Salvar alterações':'Publicar na vitrine'}</button><span class="note" id="vtM"></span></div></form>`:''}
+   ${(CL.length||L.length)?`<div style="overflow-x:auto;margin-top:12px"><table><tr><th>Logo</th><th>Cliente (só você vê)</th><th>Cidade/UF</th><th>Atendimento</th><th>Origem</th><th>Situação</th><th></th></tr>
+    ${CL.map(x=>`<tr><td><img src="${x.logo}" alt="" style="width:44px;height:44px;object-fit:contain;border:1px solid var(--line);border-radius:50%;background:#fff"></td><td>${esc(nomeCli(x.k))}</td><td>${esc(x.c)}${x.u?'/'+esc(x.u):''}</td><td>${VTT.o}</td><td class="note">Pedido pelo Painel da Empresa</td><td><b style="color:#1d7a45">Publicada</b></td><td class="note">Tirar: em "Logos de empresas" acima</td></tr>`).join('')}
+    ${L.map(x=>`<tr${x.oc?' style="opacity:.55"':''}><td><img src="${x.img}" alt="" style="width:44px;height:44px;object-fit:contain;border:1px solid var(--line);border-radius:50%;background:#fff"></td><td>${esc(vtNome(x.id))}</td><td>${esc(x.c)}${x.u?'/'+esc(x.u):''}</td><td>${VTT[x.t]||''}</td><td class="note">Adicionada pela FC · autorizada ✅</td><td><b style="color:${x.oc?'#5d6f7a':'#1d7a45'}">${x.oc?'Oculta':'Publicada'}</b></td>
+     <td style="white-space:nowrap"><button type="button" data-vted="${x.id}">✏️ Editar</button> <button type="button" data-vtoc="${x.id}">${x.oc?'Mostrar':'Ocultar'}</button> <button type="button" class="no" data-vtrm="${x.id}">Excluir</button></td></tr>`).join('')}</table></div>`:'<p class="note" style="margin:10px 0 0">Nenhuma logo ainda. Adicione aqui ou aprove as que as empresas enviarem.</p>'}</div>`;
+  const salvar=async()=>{await mpSalvar();mpRender();};
+  document.getElementById('vtNovo').onclick=()=>{if(open){VTED=null;VTIMG='';delete el.dataset.open;}else el.dataset.open='1';vtUI();};
+  el.querySelectorAll('[data-vted]').forEach(b=>b.onclick=()=>{VTED=b.dataset.vted;VTIMG='';vtUI();el.scrollIntoView({behavior:'smooth',block:'start'});});
+  el.querySelectorAll('[data-vtoc]').forEach(b=>b.onclick=async()=>{const x=VIT.find(y=>y.id===b.dataset.vtoc);if(!x)return;b.disabled=true;x.oc=!x.oc;if(!x.oc)delete x.oc;await salvar();});
+  el.querySelectorAll('[data-vtrm]').forEach(b=>b.onclick=async()=>{if(!confirm('Excluir esta logo da vitrine?'))return;b.disabled=true;VIT=VIT.filter(y=>y.id!==b.dataset.vtrm);if(VTED===b.dataset.vtrm)VTED=null;await salvar();});
+  const F=document.getElementById('vtF');if(!F)return;
+  const fill=()=>{const u=document.getElementById('vtU').value;document.getElementById('vtCL').innerHTML=(FCM.PORUF[u]||[]).map(n=>`<option value="${n}"></option>`).join('');};fill();document.getElementById('vtU').onchange=fill;
+  document.getElementById('vtFi').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{VTIMG=await vtImg(f);document.getElementById('vtPv').innerHTML=`<img src="${VTIMG}" style="height:56px;max-width:140px;object-fit:contain;border:1px solid var(--line);border-radius:8px;background:#fff">`;}catch(_){alert('Não consegui abrir esta imagem. Tente um PNG ou JPG.');}};
+  F.onsubmit=async e=>{e.preventDefault();const M=document.getElementById('vtM'),img=VTIMG||(ed&&ed.img),u=document.getElementById('vtU').value,nm=v=>v.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();let c=document.getElementById('vtC').value.trim();
+    if(!img){M.textContent='⚠ Escolha a imagem da logo.';return;}if(!c){M.textContent='⚠ Informe a cidade.';return;}if(!document.getElementById('vtA').checked){M.textContent='⚠ Marque que o cliente autorizou a publicação.';return;}
+    const f=(FCM.PORUF[u]||[]).find(n=>nm(n)===nm(c));if(f)c=f;
+    const t=document.getElementById('vtT').value,nome=document.getElementById('vtN').value.trim(),id=ed?ed.id:Date.now().toString(36);
+    const it={id,img,c,u,t};if(ed&&ed.oc)it.oc=true;
+    F.querySelector('button[type=submit]').disabled=true;M.textContent='Salvando…';
+    if(ed)VIT=VIT.map(y=>y.id===id?it:y);else VIT=VIT.concat([it]);
+    if(!ed||nome!==vtNome(id)){await ins('vit_nome',{id,nome,aut:true});EV.push({tipo:'vit_nome',criado_em:new Date().toISOString(),detalhe:{id,nome,aut:true}});}
+    VTED=null;VTIMG='';delete el.dataset.open;await salvar();};}
 if(window.FCM){document.getElementById('mpU').innerHTML=Object.keys(FCM.NOME).sort().map(k=>`<option${k==='MT'?' selected':''}>${k}</option>`).join('');
   const fill=()=>{const u=document.getElementById('mpU').value,L=FCM.PORUF[u]||[];document.getElementById('mpL').innerHTML=L.map(n=>`<option value="${n}"></option>`).join('');document.getElementById('mpCn').textContent=`(${L.length} cidades de ${u})`;};
   document.getElementById('mpU').onchange=()=>{document.getElementById('mpC').value='';fill();document.getElementById('mpC').focus();};fill();}
