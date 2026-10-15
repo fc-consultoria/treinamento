@@ -535,6 +535,8 @@ async function carregarClientes(){
     fetchAllRows('impl_anotacao_anexos', '*', 'created_at'),
     fetchAllRows('impl_notificacoes_percentual', '*', 'enviado_em'),
   ]);
+  const {data: etapasRows, error: eetp} = await fetchAllRows('impl_etapas', '*', 'etapa');
+  if(eetp) console.warn('impl_etapas:', eetp);
   if(eaw) throw eaw;
   if(efs) console.warn('impl_cliente_fornecedores:', efs);
   if(eanx) console.warn('impl_anotacao_anexos:', eanx);
@@ -586,6 +588,7 @@ async function carregarClientes(){
     return {
       ...mapClienteRow(c),
       entrada, parcelas,
+      etapas: (()=>{ const m={}; (etapasRows||[]).filter(r=>r.cliente_id===c.id).forEach(r=>{ m[r.etapa]={status:r.status||'pendente', dataPrevista:r.data_prevista||'', concluidoEm:r.concluido_em||'', obs:r.obs||''}; }); return m; })(),
       alimentadosVidro, alimentadosPerfis, alimentadosComponentes, cotacaoVidro, cotacaoPerfis, cotacaoComponentes, perfisMetro, perfisMetroPdfs, conferencia, orcamentos, orcamentosRegistro, anotacoes,
       emailMarcos: (()=>{ const m={}; (notifRows||[]).filter(r=>r.cliente_id===c.id).forEach(r=>{ (m[r.categoria]=m[r.categoria]||[]).push(r.marco); }); return m; })(),
       fornecedoresSel: (()=>{ const s={componentes:[],vidro:[],perfis:[]}; (fornSelRows||[]).filter(r=>r.cliente_id===c.id).forEach(r=>{ if(s[r.categoria] && !s[r.categoria].includes(r.fornecedor)) s[r.categoria].push(r.fornecedor); }); return s; })()
@@ -2751,6 +2754,7 @@ function renderClienteDetail(){
 
   const tabs = [
     ['visao','Visão geral','layout-dashboard'],
+    ['etapas','Etapas','list-checks'],
     ['cadastro','Contrato & Acesso','file-signature'],
     ['componentes','Componentes','box'],
     ['vidro','Vidro','square'],
@@ -2794,6 +2798,7 @@ function renderClienteDetail(){
   </div>
 
   ${STATE.clienteTab==='visao' ? renderClienteVisao(c,p,pGeral) : ''}
+  ${STATE.clienteTab==='etapas' ? renderClienteEtapas(c) : ''}
   ${STATE.clienteTab==='cadastro' ? renderClienteCadastro(c) : ''}
   ${STATE.clienteTab==='componentes' ? renderClienteComponentes(c) : ''}
   ${STATE.clienteTab==='vidro' ? renderExemploCategoria('Vidro', VIDRO_DB, 'vidro', c, {scope:'exemplo', ref:'vidro'}) : ''}
@@ -2974,6 +2979,126 @@ document.addEventListener('paste', (e)=>{
   const a = c && (c.anotacoes||[])[parseInt(t.dataset.idx,10)];
   if(c && a) anexarPrintsAnotacao(c, a, files);
 });
+
+// ---------- Etapas da implantação de preços (10 etapas, cliente avisado pelo WhatsApp) ----------
+// Ordem aprovada em out/2026: o cadastro de componentes e as tipologias vêm ANTES da simulação e da margem,
+// para não refazer a conferência. "dia" = dia útil do cronograma contado a partir da data de início.
+const ETAPAS_IMPL = [
+  {titulo:'Acesso ao sistema e definição das 05 linhas', quem:'fc', dia:1},
+  {titulo:'Definição das cores dos perfis e dos componentes', quem:'fc', dia:2},
+  {titulo:'Preço de custo dos vidros', quem:'cliente', dia:4, pedido:'preencher a tabela em Excel com o preço de custo dos vidros'},
+  {titulo:'Cotação das listas de componentes', quem:'cliente', dia:4, pedido:'cotar as listas de componentes com o seu principal fornecedor e nos devolver os valores'},
+  {titulo:'Preço de custo dos perfis por cor', quem:'cliente', dia:4, pedido:'enviar o preço de custo dos perfis em cada cor que vão trabalhar'},
+  {titulo:'Ajuste do cadastro de componentes conforme comprado no fornecedor', quem:'fc', dia:6},
+  {titulo:'Ajuste das tipologias liberadas no sistema', quem:'fc', dia:7},
+  {titulo:'Conferência e simulação de orçamento (sistema × orçamento de obra do fornecedor)', quem:'fc', dia:8},
+  {titulo:'Ajuste de margem para o preço de venda', quem:'fc', dia:9},
+  {titulo:'Finalização e feedback do cliente', quem:'fc', dia:10},
+];
+const ETAPA_STATUS = {pendente:'Pendente', andamento:'Em andamento', aguardando:'Aguardando cliente', concluida:'Concluída'};
+function ymdLocal(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function hojeYmd(){ return ymdLocal(new Date()); }
+// n-ésimo dia útil (seg–sex) a partir da data de início (o próprio início conta como dia 1 se for útil)
+function diaUtil(inicioYmd, n){
+  const d = new Date((inicioYmd||hojeYmd())+'T00:00:00');
+  while(d.getDay()===0 || d.getDay()===6) d.setDate(d.getDate()+1);
+  let k = 1;
+  while(k<n){ d.setDate(d.getDate()+1); if(d.getDay()!==0 && d.getDay()!==6) k++; }
+  return ymdLocal(d);
+}
+function etapaInfo(c, i){
+  const def = ETAPAS_IMPL[i-1];
+  const salvo = (c.etapas||{})[i] || {};
+  const status = salvo.status || 'pendente';
+  const dataPrevista = salvo.dataPrevista || diaUtil(c.dataInicio, def.dia);
+  const atrasada = status!=='concluida' && dataPrevista < hojeYmd();
+  return {...def, n:i, status, dataPrevista, concluidoEm:salvo.concluidoEm||'', obs:salvo.obs||'', atrasada};
+}
+function etapasCliente(c){ return ETAPAS_IMPL.map((_,k)=>etapaInfo(c, k+1)); }
+function etapaAtual(c){ return etapasCliente(c).find(e=>e.status!=='concluida') || null; }
+const chaveAvisoEtapa = (i, tipo)=>`etapa|${i}|${tipo}`;
+function mensagemEtapaConcluida(c, e){
+  const total = ETAPAS_IMPL.length;
+  if(e.n>=total) return `Olá, ${c.nome}! Concluímos a implantação de preços no sistema — etapa ${e.n} de ${total}: ${e.titulo}.\n\nObrigado pela parceria! Gostaríamos muito do seu feedback sobre o trabalho. Qualquer ajuste, estou à disposição. — FC Consultoria`;
+  const prox = etapaInfo(c, e.n+1);
+  let proxTxt = `\n\nPróxima etapa (${prox.n} de ${total}): ${prox.titulo} — previsão ${fmtDate(prox.dataPrevista)}.`;
+  // etapas do cliente que estão em sequência (3, 4 e 5) vão juntas no pedido
+  const pedidos = etapasCliente(c).filter(x=>x.n>e.n && x.quem==='cliente' && x.status!=='concluida');
+  if(prox.quem==='cliente' && pedidos.length){
+    proxTxt = `\n\nAgora precisamos da sua ajuda até ${fmtDate(prox.dataPrevista)}:\n${pedidos.map(x=>`• Etapa ${x.n} — ${x.pedido}`).join('\n')}\n\nAs planilhas seguem em anexo.`;
+  }
+  return `Olá, ${c.nome}! Etapa ${e.n} de ${total} concluída: ${e.titulo}.${proxTxt}\n\nQualquer dúvida, estou à disposição. — FC Consultoria`;
+}
+function mensagemEtapaCobranca(c, e){
+  const pend = etapasCliente(c).filter(x=>x.quem==='cliente' && x.status!=='concluida');
+  const lista = pend.length ? pend : [e];
+  return `Olá, ${c.nome}! Passando para lembrar que a implantação está aguardando o seu retorno (previsto para ${fmtDate(e.dataPrevista)}):\n${lista.map(x=>`• Etapa ${x.n} — ${x.pedido||x.titulo}`).join('\n')}\n\nAssim que recebermos, seguimos com as próximas etapas. Qualquer dúvida, estou à disposição. — FC Consultoria`;
+}
+async function salvarEtapa(c, i, campos){
+  c.etapas = c.etapas || {};
+  const atual = etapaInfo(c, i);
+  const novo = {status:atual.status, dataPrevista:((c.etapas[i]||{}).dataPrevista)||'', concluidoEm:atual.concluidoEm, obs:atual.obs, ...campos};
+  c.etapas[i] = novo;
+  const {error} = await sb.from('impl_etapas').upsert({
+    cliente_id:c.id, etapa:i, status:novo.status, data_prevista:novo.dataPrevista||null,
+    concluido_em:novo.concluidoEm||null, obs:novo.obs||'', updated_at:new Date().toISOString()
+  }, {onConflict:'cliente_id,etapa'});
+  if(error) avisarErroSalvar(error); else toastSalvo('Salvo');
+}
+function renderClienteEtapas(c){
+  const lista = etapasCliente(c);
+  const feitas = lista.filter(e=>e.status==='concluida').length;
+  const pct = Math.round(feitas/lista.length*100);
+  const atual = etapaAtual(c);
+  const corStatus = {pendente:'var(--text-3)', andamento:'var(--accent)', aguardando:'var(--warn)', concluida:'var(--ok)'};
+  return `
+  <div class="panel" style="padding:0;">
+    <div class="panel-head">
+      <div><h3>${icon('list-checks')} Etapas da implantação de preços</h3>
+      <div class="desc">${feitas} de ${lista.length} etapas concluídas${atual ? ` · etapa atual: <b>${atual.n} — ${escapeHtml(atual.titulo)}</b>` : ' · implantação finalizada'}. Datas previstas em dias úteis a partir do início (${c.dataInicio ? fmtDate(c.dataInicio) : 'hoje — defina o início em Editar'}); dá para mudar a data de cada etapa.</div></div>
+      <div class="pbar-row" style="width:200px;"><div class="pbar-track" style="height:10px;"><div class="pbar-fill" style="width:${pct}%; height:10px;"></div></div><div class="pct">${pct}%</div></div>
+    </div>
+    ${lista.map(e=>{
+      const avisoOk = AVISOS_WA.get(c.id+'|'+chaveAvisoEtapa(e.n,'concluida'))==='enviado';
+      const cobrouHoje = AVISOS_WA.has(c.id+'|'+chaveAvisoEtapa(e.n,'cobranca|'+hojeYmd()));
+      const podeCobrar = e.quem==='cliente' && e.status!=='concluida' && e.dataPrevista<=hojeYmd();
+      return `
+      <div style="padding:12px 18px; border-top:1px solid var(--border-2); display:flex; gap:14px; align-items:flex-start; flex-wrap:wrap; ${atual&&atual.n===e.n?'background:var(--accent-2);':''}">
+        <div style="width:30px; height:30px; border-radius:50%; flex:none; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:13px; color:#fff; background:${corStatus[e.status]};">${e.status==='concluida'?'✓':e.n}</div>
+        <div style="flex:1; min-width:220px;">
+          <div style="font-weight:650; font-size:13.5px;">${escapeHtml(e.titulo)}</div>
+          <div class="desc" style="display:flex; gap:10px; flex-wrap:wrap; margin-top:2px;">
+            <span class="badge" style="background:${e.quem==='cliente'?'var(--warn-bg)':'var(--accent-2)'}; color:${e.quem==='cliente'?'var(--warn)':'var(--accent-dark)'};">${e.quem==='cliente'?'Cliente':'FC'}</span>
+            ${e.status==='concluida' ? `<span style="color:var(--ok); font-weight:600;">Concluída em ${fmtDate(e.concluidoEm)}</span>` : (e.atrasada ? `<span style="color:var(--danger); font-weight:600;">Atrasada (previsto ${fmtDate(e.dataPrevista)})</span>` : '')}
+            ${avisoOk ? '<span style="color:#15803d;">✓ cliente avisado</span>' : ''}
+            ${cobrouHoje ? '<span style="color:var(--warn);">cobrado hoje</span>' : ''}
+          </div>
+          ${e.pedido ? `<div class="desc" style="margin-top:4px;">Pedido ao cliente: ${escapeHtml(e.pedido)}.</div>` : ''}
+        </div>
+        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+          <label class="desc" style="display:flex; flex-direction:column; gap:2px;">Previsão
+            <input type="date" class="select-inline" value="${e.dataPrevista}" data-action="etapa-data" data-n="${e.n}"></label>
+          <label class="desc" style="display:flex; flex-direction:column; gap:2px;">Situação
+            <select class="select-inline" data-action="etapa-status" data-n="${e.n}">${Object.entries(ETAPA_STATUS).map(([k,t])=>`<option value="${k}" ${e.status===k?'selected':''}>${t}</option>`).join('')}</select></label>
+          ${e.status==='concluida' ? `<button class="btn btn-sm ${avisoOk?'btn-ghost':''}" data-action="etapa-wa" data-n="${e.n}" data-tipo="concluida" title="Abre o WhatsApp com a mensagem pronta">${icon('message-circle')} ${avisoOk?'Reenviar aviso':'Avisar cliente'}</button>` : ''}
+          ${podeCobrar ? `<button class="btn btn-sm" data-action="etapa-wa" data-n="${e.n}" data-tipo="cobranca" style="color:var(--warn);">${icon('alarm-clock')} Cobrar</button>` : ''}
+          <button class="btn btn-sm btn-ghost" data-action="etapa-ver" data-n="${e.n}" title="Ver a mensagem">${icon(STATE.etapaPreview===e.n?'chevron-up':'eye')}</button>
+        </div>
+        ${STATE.etapaPreview===e.n ? `<div style="flex-basis:100%; background:var(--panel-2); border:1px solid var(--border-2); border-radius:8px; padding:10px 12px; font-size:12.5px; white-space:pre-wrap; user-select:text;">${escapeHtml(e.status==='concluida' ? mensagemEtapaConcluida(c,e) : (e.quem==='cliente' ? mensagemEtapaCobranca(c,e) : 'O aviso ao cliente fica disponível quando a etapa for concluída.'))}</div>` : ''}
+      </div>`;
+    }).join('')}
+    <div class="footnote">Ao marcar uma etapa como Concluída, o WhatsApp abre com o aviso pronto (você só confere e envia). Etapas do cliente (3, 4 e 5) vão juntas no pedido e ganham o botão Cobrar a partir da data prevista.</div>
+  </div>`;
+}
+function abrirWaEtapa(c, n, tipo){
+  const e = etapaInfo(c, n);
+  const tel = telefoneWhatsApp(c);
+  if(!tel){ alert('Cadastre o telefone (WhatsApp) do cliente em Contrato & Acesso para enviar.'); return false; }
+  const msg = tipo==='cobranca' ? mensagemEtapaCobranca(c, e) : mensagemEtapaConcluida(c, e);
+  window.open(`https://wa.me/${tel}?text=${encodeURIComponent(msg)}`, '_blank', 'noopener');
+  marcarAvisosWA(c.id, [chaveAvisoEtapa(n, tipo==='cobranca' ? 'cobranca|'+hojeYmd() : 'concluida')], 'enviado');
+  return true;
+}
 
 function renderClienteAnotacoes(c){
   const anotacoes = c.anotacoes || [];
@@ -4964,6 +5089,32 @@ function wireEvents(){
       };
       return;
     }
+    if(action==='etapa-status'){
+      el.onchange = async (e)=>{
+        const c = CLIENTS.find(x=>x.id===STATE.clientId); if(!c) return;
+        const n = Number(el.dataset.n), st = e.target.value;
+        await salvarEtapa(c, n, {status:st, concluidoEm: st==='concluida' ? hojeYmd() : ''});
+        // a próxima etapa do FC entra "em andamento"; as do cliente ficam "aguardando cliente"
+        if(st==='concluida'){
+          etapasCliente(c).filter(x=>x.n>n && x.status==='pendente').some(x=>{
+            if(x.quem==='cliente'){ salvarEtapa(c, x.n, {status:'aguardando'}); return false; }
+            salvarEtapa(c, x.n, {status:'andamento'}); return true;
+          });
+          render();
+          if(confirm('Etapa concluída. Abrir o WhatsApp com o aviso para o cliente?')) abrirWaEtapa(c, n, 'concluida');
+        }
+        render();
+      };
+      return;
+    }
+    if(action==='etapa-data'){
+      el.onchange = async (e)=>{
+        const c = CLIENTS.find(x=>x.id===STATE.clientId); if(!c) return;
+        await salvarEtapa(c, Number(el.dataset.n), {dataPrevista: e.target.value||''});
+        render();
+      };
+      return;
+    }
     if(action==='mudar-fornecedor'){
       el.onchange = (e)=>{
         const c = CLIENTS.find(x=>x.id===STATE.clientId);
@@ -6221,6 +6372,8 @@ function wireEvents(){
       if(action==='voltar-clientes'){ STATE.view='clientes'; render(); return; }
       if(action==='set-linha'){ STATE.bancoLinha = el.dataset.linha; STATE.search=''; render(); return; }
       if(action==='set-cliente-tab'){ STATE.clienteTab = el.dataset.tab; STATE.search=''; STATE.filtro='todos'; render(); return; }
+      if(action==='etapa-ver'){ const n=Number(el.dataset.n); STATE.etapaPreview = STATE.etapaPreview===n ? null : n; render(); return; }
+      if(action==='etapa-wa'){ const c = CLIENTS.find(x=>x.id===STATE.clientId); if(c && abrirWaEtapa(c, Number(el.dataset.n), el.dataset.tipo)) render(); return; }
       if(action==='set-filtro'){ STATE.filtro = el.dataset.filtro; render(); return; }
       if(action==='usar-preco-pdf'){
         const {linha, codigo, fornecedor} = el.dataset;
