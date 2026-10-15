@@ -201,6 +201,10 @@ section[hidden]{display:none}
 .prio{margin-top:8px;display:grid;gap:4px;border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:var(--surface);cursor:default}
 .pri-r{display:flex;align-items:center;gap:8px;font-size:13.5px}
 .pri-item{display:grid;gap:4px;padding:2px 0}
+details.dist{border:1px dashed var(--line);border-radius:8px;padding:6px 10px;margin-top:6px;display:grid;gap:6px}
+details.dist[open]{display:grid}
+details.dist summary{cursor:pointer;font-size:13px;font-weight:600;color:var(--teal)}
+details.dist>*:not(summary){margin-top:6px}
 .pri-tx{flex:1;min-width:0;cursor:pointer}.pri-tx:hover{text-decoration:underline}
 .pri-bt{display:inline-flex;align-items:center;gap:4px;flex:none}
 .pri-bt .btn{padding:3px 8px;font-size:12px}
@@ -1447,12 +1451,54 @@ function modalDemanda(d){M=JSON.parse(JSON.stringify(d));M.etapas=M.etapas||[];c
    <div class="grid2"><input class="inp" type="date" id="m-agdata" value="${esc(agLink.data)}" aria-label="Data na agenda"><input class="inp" type="time" id="m-aghora" value="${esc(agLink.hora)}" aria-label="Hora na agenda"></div></div>
   <div class="fg"><label for="m-prox">Próximo passo (a ação concreta seguinte)</label><input class="inp" id="m-prox" value="${esc(M.proximoPasso)}" placeholder="Ex.: Ligar para confirmar medidas"></div>
   <div class="fg"><label>Etapas</label><div class="steps" id="m-etapas"></div>
-   <div class="row"><input class="inp" id="m-nova-etapa" placeholder="Adicionar etapa" style="flex:1"><button class="btn sm" data-act="add-etapa" type="button">Adicionar</button></div></div>
+   <div class="row"><input class="inp" id="m-nova-etapa" placeholder="Adicionar etapa" style="flex:1"><button class="btn sm" data-act="add-etapa" type="button">Adicionar</button></div>
+   <details class="dist" ${M.etapas&&M.etapas.length?'':'open'}><summary>Distribuir etapas a partir de texto ou print</summary>
+    <textarea class="inp" id="m-dist" rows="4" placeholder="Cole aqui o texto (ex.: a conversa do WhatsApp) ou cole o print com Ctrl+V. Cada etapa numerada, linha ou item vira uma etapa."></textarea>
+    <div class="row" style="gap:6px;flex-wrap:wrap"><button class="btn sm pri" data-act="dist-ler" type="button">Distribuir em etapas</button>
+     <label class="btn sm" style="cursor:pointer"><svg class="ico"><use href="#i-clip"/></svg>Ler print<input type="file" id="m-dist-file" accept="image/*" hidden></label>
+     <span class="small muted" id="m-dist-st"></span></div>
+    <div id="m-dist-prev"></div></details></div>
   <div class="fg"><label for="m-obs">Observações</label><textarea class="inp" id="m-obs" rows="3">${esc(M.obs)}</textarea></div>
   <div class="fg"><label>Prints e arquivos</label><div id="o-anx">${anxHTML(M,true)||'<span class="small muted">Nenhum anexo.</span>'}</div><div id="o-pend"></div>${btnAnexar('o-file')}</div>
   <div class="foot"><div class="row">${novo?'':`<button class="btn danger" data-act="excluir" data-col="demandas" data-id="${M.id}">Excluir</button><button class="btn" data-act="agendar-passo">Agendar próximo passo</button><button class="btn" data-act="duplicar-demanda">Duplicar</button>`}</div>
    <div class="row"><button class="btn" data-act="fechar">Cancelar</button><button class="btn pri" data-act="salvar-demanda">Salvar</button></div></div>`);
   drawEtapas();drawWip()}
+/* ---------- distribuir etapas a partir de texto ou print ---------- */
+const capIni=t=>t?t.charAt(0).toUpperCase()+t.slice(1):t;
+function limparLinhaDist(l){return l.replace(/ /g,' ')
+  .replace(/^\[?\d{1,2}\/\d{1,2}(\/\d{2,4})?,?\s+\d{1,2}:\d{2}(:\d{2})?\]?\s*(-\s*)?([^:]{1,40}:\s+)?/,'') /* [15/10 17:07] Nome: */
+  .replace(/\s+\d{1,2}:\d{2}\s*[✓✔√]*\s*$/,'') /* hora no fim da linha do print */
+  .replace(/\s+/g,' ').trim()}
+const RX_MARCA=/^(?:(?:etapa|passo|fase)\s*(\d{1,2})\b[\s.:)\-–]*|(\d{1,2})\s*(?:ª|º|°|a|o)?\s*(?:etapa|passo|fase)\b[\s.:)\-–]*|(\d{1,2})\s*[.)\-–:]\s+|(\d{1,2})\s+(?=[A-Za-zÀ-ú]))(.*)$/i;
+const RX_ITEM=/^[•\-*▪►✓✔☐□]\s*(.+)$/;
+function distribuirTexto(txt){
+  const linhas=String(txt||'').replace(/\r/g,'').split('\n').map(limparLinhaDist);
+  const temMarca=linhas.filter(l=>RX_MARCA.test(l)).length>=2;
+  const out=[];let cur=null;
+  const fecha=()=>{if(!cur)return;const t=cur.tit,d=cur.det.join('; ');const v=t&&d?t+': '+d:(t||d);if(v&&v.length>=3)out.push(capIni(v));cur=null};
+  linhas.forEach(l=>{if(!l||/^[^A-Za-zÀ-ú0-9]+$/.test(l))return;
+    if(temMarca){const m=l.match(RX_MARCA);
+      if(m){fecha();let tit=(m[5]||'').replace(/^(etapa|passo|fase)\b[\s.:\-–]*/i,'').trim();if(tit&&!/\s/.test(tit))tit='Etapa '+tit.toLowerCase();cur={tit:capIni(tit),det:[]};return}
+      if(cur){cur.det.push(l.replace(RX_ITEM,'$1').replace(/[.;]\s*$/,''));return}
+      return}
+    const it=l.match(RX_ITEM);out.push(capIni((it?it[1]:l).replace(/[;]\s*$/,'').trim()))});
+  fecha();
+  return out.filter(t=>t.length>=3&&!/^(ok|blz|beleza|obrigad[oa]|bom dia|boa tarde|boa noite)\.?!?$/i.test(t));
+}
+let TESS=null;
+function carregarTesseract(){if(TESS)return TESS;TESS=new Promise((res,rej)=>{if(window.Tesseract)return res(window.Tesseract);const sc=document.createElement('script');
+  sc.src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';sc.onload=()=>res(window.Tesseract);sc.onerror=()=>{TESS=null;rej(new Error('ocr'))};document.head.appendChild(sc)});return TESS}
+async function lerPrintEtapas(file){const st=$('#m-dist-st');if(st)st.textContent='Lendo o print… (a primeira vez demora um pouco)';
+  try{const T=await carregarTesseract();const r=await T.recognize(file,'por');const txt=(r&&r.data&&r.data.text)||'';
+    const ta=$('#m-dist');if(ta)ta.value=(ta.value?ta.value+'\n':'')+txt.trim();
+    if(M&&AS){const d=new Date();const f=new File([file],'print_etapas_'+ymd(d)+'_'+pad(d.getHours())+'h'+pad(d.getMinutes())+'.png',{type:file.type||'image/png'});if(!checkFile(f)){M._pend=(M._pend||[]).concat(f);const op=$('#o-pend');if(op)op.innerHTML=pendHTML(M._pend,'opend-rm')}}
+    if(st)st.textContent='Print lido. Confira o texto e as etapas abaixo.';previaDist()}
+  catch(e){console.error(e);if(st)st.textContent='Não consegui ler o print. Tente colar o texto.'}}
+function previaDist(){const ta=$('#m-dist'),pv=$('#m-dist-prev');if(!ta||!pv)return;const l=distribuirTexto(ta.value);M._dist=l;
+  if(!l.length){pv.innerHTML=ta.value.trim()?'<span class="small muted">Não encontrei etapas nesse texto.</span>':'';return}
+  pv.innerHTML=`<div class="small" style="font-weight:600;margin:4px 0">${l.length} etapa${l.length>1?'s':''} encontrada${l.length>1?'s':''} — desmarque o que não quiser e ajuste o texto:</div>
+   <div class="steps">${l.map((t,i)=>`<div class="step"><input type="checkbox" data-dsel="${i}" checked aria-label="Usar esta etapa"><input class="inp" data-dtx="${i}" value="${esc(t)}"></div>`).join('')}</div>
+   <div class="row" style="gap:6px;margin-top:6px"><button class="btn sm pri" data-act="dist-add" type="button">Adicionar às etapas</button><button class="btn sm" data-act="dist-limpar" type="button">Limpar</button></div>`}
 function drawEtapas(){$('#m-etapas').innerHTML=M.etapas.map((e,i)=>`<div class="step ${e.ok?'ok':''}"><input type="checkbox" data-et="${i}" ${e.ok?'checked':''} aria-label="Etapa concluída"><input class="inp" data-etx="${i}" value="${esc(e.t)}" aria-label="Texto da etapa"><button class="btn sm ghost" data-act="rm-etapa" data-i="${i}" aria-label="Remover etapa">×</button></div>`).join('')||'<span class="small muted">Sem etapas.</span>'}
 function drawWip(){const n=S.demandas.filter(d=>d.status==='fazendo'&&d.id!==M.id).length;
   $('#m-wip').innerHTML=M.status==='fazendo'&&n>=LIMITE_ANDAMENTO?`<div class="banner" style="margin-top:6px">Você já tem <b>${n} em andamento</b>. Considere concluir uma antes.</div>`:''}
@@ -1730,6 +1776,12 @@ document.addEventListener('click',async e=>{
       if(d.etapas.every(x=>x.ok)){d.status='concluido';d.concluidoEm=nowIso();toast('Demanda concluída')}else toast('Etapa concluída');
       if(d.proximoPasso===d.etapas[i].t)d.proximoPasso='';await save('demandas',id,d);
       if(d.status==='concluido'){const lk=compDaDemanda(d);if(lk)await save('agenda',lk.id,{...lk,feito:true})}break}
+    case 'dist-ler':{const ta=$('#m-dist');if(!ta||!ta.value.trim()){toast('Cole o texto ou o print primeiro');if(ta)ta.focus();break}previaDist();break}
+    case 'dist-limpar':{const ta=$('#m-dist');if(ta)ta.value='';M._dist=null;$('#m-dist-prev').innerHTML='';$('#m-dist-st').textContent='';break}
+    case 'dist-add':{readDemanda();const sel=[...document.querySelectorAll('[data-dsel]')].filter(c=>c.checked).map(c=>{const t=document.querySelector(`[data-dtx="${c.dataset.dsel}"]`);return t?t.value.trim():''}).filter(Boolean);
+      if(!sel.length){toast('Nenhuma etapa marcada');break}const ja=new Set(M.etapas.map(e=>e.t.toLowerCase()));sel.forEach(t=>{if(!ja.has(t.toLowerCase()))M.etapas.push({t,ok:false})});
+      if(!M.proximoPasso&&M.etapas.length){const p=M.etapas.find(e=>!e.ok);const px=$('#m-prox');if(p&&px&&!px.value)px.value=p.t}
+      drawEtapas();$('#m-dist').value='';$('#m-dist-prev').innerHTML='';$('#m-dist-st').textContent='';toast(sel.length+' etapa'+(sel.length>1?'s':'')+' adicionada'+(sel.length>1?'s':'')+'. Clique em Salvar.');break}
     case 'add-etapa':{const v=$('#m-nova-etapa').value.trim();if(!v)break;readDemanda();M.etapas.push({t:v,ok:false});$('#m-nova-etapa').value='';drawEtapas();break}
     case 'rm-etapa':readDemanda();M.etapas.splice(+el.dataset.i,1);drawEtapas();break;
     case 'salvar-demanda':{readDemanda();if(!M.titulo){$('#m-titulo').focus();toast('Informe o que precisa ser entregue');break}
@@ -1806,6 +1858,7 @@ document.addEventListener('click',async e=>{
   }
 });
 document.addEventListener('change',e=>{
+  if(e.target.id==='m-dist-file'){const f=e.target.files[0];e.target.value='';if(f)lerPrintEtapas(f);return}
   if(e.target.id==='cr-file'||e.target.id==='o-file'){const fs=[...e.target.files],ok=[];e.target.value='';fs.forEach(f=>{const m=checkFile(f);if(m)toast(m);else ok.push(f)});
     if(e.target.id==='cr-file'){S.pend.push(...ok);$('#cr-pend').innerHTML=pendHTML(S.pend,'pend-rm')}else if(M){M._pend=(M._pend||[]).concat(ok);$('#o-pend').innerHTML=pendHTML(M._pend,'opend-rm');if(M._baixa&&ok[0])lerComprovante(ok[0])}return}
   if(e.target.id==='c-ate'||e.target.id==='c-fds'||(e.target.id==='c-data'&&$('#c-ate'))){const a=$('#c-ate').value,d0=$('#c-data').value,inf=$('#c-ate-info');if(inf){if(!a||!d0||a<=d0){inf.textContent=a&&d0&&a<=d0?'A data final precisa ser depois da data inicial.':'Deixe em branco para um dia só.'}else{let n=0;const f=$('#c-fds').checked;for(let d=parseD(d0);ymd(d)<=a;d.setDate(d.getDate()+1))if(f||(d.getDay()%6))n++;inf.innerHTML=`Serão criados <b>${n} compromissos</b>, um por dia.`}}}
@@ -1830,6 +1883,8 @@ let tipEl=null;document.addEventListener('pointerover',e=>{const t=e.target.clos
   if(!tipEl){tipEl=document.createElement('div');tipEl.className='tip';document.body.appendChild(tipEl)}tipEl.textContent=t.dataset.tip;tipEl.className='tip'+(t.closest('#tabs')?' tab':'');tipEl.hidden=false;
   const r=t.getBoundingClientRect();tipEl.style.left=Math.min(window.innerWidth-tipEl.offsetWidth-8,Math.max(8,r.left+r.width/2-tipEl.offsetWidth/2))+'px';tipEl.style.top=(t.closest('#tabs')&&r.top<window.innerHeight/2?r.bottom+6:Math.max(8,r.top-tipEl.offsetHeight-6))+'px'});
 document.addEventListener('scroll',()=>{if(tipEl)tipEl.hidden=true},true);
+document.addEventListener('paste',e=>{if(e.target&&e.target.id==='m-dist'){const im=[...(e.clipboardData&&e.clipboardData.items||[])].filter(i=>i.kind==='file'&&/^image\//.test(i.type)).map(i=>i.getAsFile()).filter(Boolean);
+    if(im.length){e.preventDefault();e.stopImmediatePropagation();im.reduce((pr,f)=>pr.then(()=>lerPrintEtapas(f)),Promise.resolve())}else setTimeout(previaDist,0)}},true);
 document.addEventListener('paste',e=>{if($('#na-pend')&&M&&M._na){const im=[...(e.clipboardData&&e.clipboardData.items||[])].filter(i=>i.kind==='file'&&/^image\//.test(i.type)).map(i=>i.getAsFile()).filter(Boolean);if(im.length){e.preventDefault();const d=new Date();im.forEach((f,i)=>M.na.push(new File([f],'print_'+ymd(d)+'_'+pad(d.getHours())+'h'+pad(d.getMinutes())+(im.length>1?'_'+(i+1):'')+'.png',{type:f.type})));naPend();toast(im.length>1?im.length+' prints colados':'Print colado')}return}
   if(!AS)return;const inModal=!!$('#o-pend'),inCli=!$('#modal').innerHTML&&!!$('#cr-pend');if(!inModal&&!inCli)return;
   const imgs=[...(e.clipboardData&&e.clipboardData.items||[])].filter(i=>i.kind==='file'&&/^image\/(png|jpeg|webp|gif)$/.test(i.type)).map(i=>i.getAsFile()).filter(Boolean);if(!imgs.length)return;e.preventDefault();
