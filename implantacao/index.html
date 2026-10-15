@@ -354,7 +354,7 @@ tbody tr:hover{background:var(--panel-2);}
       <button class="navitem" id="btn-logout"><i data-lucide="log-out"></i> Sair</button>
     </div>
     <div class="sidebar-foot">
-      Painel de implantação — dados salvos em banco de dados real (Supabase), acesso restrito à equipe.<br><b>Versão 15/10d — avisos com códigos alimentados</b>
+      Painel de implantação — dados salvos em banco de dados real (Supabase), acesso restrito à equipe.<br><b>Versão 15/10e — marca de acompanhamento online</b>
     </div>
   </nav>
   <div class="mobile-topbar">
@@ -384,6 +384,7 @@ let PRICE_DB = {};
 let CHECKLIST_TEMPLATE = [];
 
 // Vidro e Perfis (por Kg) — carregados do banco (categorias 'vidro' e 'perfis_kg' em impl_linhas)
+let PORTAIS = {};
 let VIDRO_DB = { _linhaId:null, campoLabel: 'Descrição', codigoEditavel: false, fornecedores: [], _fornecedorIds:{}, itens: [] };
 let PERFIS_DB = { _linhaId:null, campoLabel: 'Cor', codigoEditavel: true, fornecedores: [], _fornecedorIds:{}, itens: [] };
 
@@ -595,6 +596,8 @@ async function carregarClientes(){
     };
   });
 
+  // Acompanhamento online (versão nova): quem já tem link do portal do cliente. Falha aqui não trava o painel.
+  try{ const {data:portais, error:ePor} = await sb.from('impl_portal').select('cliente_id,ativo'); PORTAIS = {}; if(!ePor) (portais||[]).forEach(r=>{ PORTAIS[r.cliente_id] = r; }); }catch(e){ PORTAIS = {}; }
   await Promise.all(CLIENTS.flatMap(c => c.perfisMetroPdfs.map(async o=>{
     if(!o.storagePath) return;
     const {data} = await sb.storage.from(ORCAMENTOS_BUCKET).createSignedUrl(o.storagePath, 3600);
@@ -1988,6 +1991,7 @@ function renderClientes(){
         <div class="clientcard-top">
           <div>
             <h4>${c.nome}</h4>
+            ${PORTAIS[c.id] ? (PORTAIS[c.id].ativo ? '<div style="margin:3px 0 4px;"><span style="background:#dff2f1; color:#0a6d6f; font-size:11.5px; font-weight:650; border-radius:99px; padding:2px 9px;">📡 Acompanhamento online</span></div>' : '<div style="margin:3px 0 4px;"><span style="background:#f1f3f5; color:#6b7280; font-size:11.5px; font-weight:650; border-radius:99px; padding:2px 9px;">Link do cliente desativado</span></div>') : ''}
             <div class="meta">Fornecedor base: <b style="color:var(--text)">${c.fornecedor}</b></div>
           </div>
           <span class="badge ${s.cls}">${icon(s.icon)} ${s.label}</span>
