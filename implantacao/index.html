@@ -323,7 +323,7 @@ tbody tr:hover{background:var(--panel-2);}
     <div class="login-error" id="login-error">E-mail ou senha incorretos. Tente novamente.</div>
     <div class="field">
       <label>E-mail</label>
-      <input type="email" id="login-email" placeholder="seu@email.com" autocomplete="username">
+      <input type="text" id="login-email" placeholder="matriz ou seu@email.com" autocomplete="username">
     </div>
     <div class="field">
       <label>Senha</label>
@@ -6632,7 +6632,9 @@ async function entrarComSessao(){
 }
 
 async function tentarLogin(){
-  const email = document.getElementById('login-email').value.trim();
+  // "matriz" é o mesmo login da Central FC / Treinamento
+  let email = document.getElementById('login-email').value.trim();
+  if(email.toLowerCase()==='matriz') email = 'painel.fc@fcconsultoria.com';
   const senha = document.getElementById('login-senha').value;
   const erro = document.getElementById('login-error');
   if(!email || !senha){ erro.textContent='Informe e-mail e senha.'; erro.classList.add('show'); return; }
