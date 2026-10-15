@@ -258,7 +258,7 @@ tr.mfin td{background:#eef5fc}
 </main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="auth.js"></script>
-<script src="mapa.js"></script>
+<script src="mapa.js?v=1792023330"></script>
 <script>
 const ZCFG=new Set(['logo_mapa','logo_ok','implantacao','promo','contrato','empresa_local','gestor_in','gestor_hb','gestor_acao','colab','liberacao','sistema','gestor','chave_app','sugestao','resposta','sug_excluida','zerar','interesse','interesse_ok']);
 function zerarFiltro(ev,zs){const Z={};(zs||ev).forEach(e=>{if(e.tipo==='zerar'){const p=(e.detalhe||{}).para,t=Date.parse(e.criado_em);if(!Z[p]||t>Z[p])Z[p]=t;}});
@@ -791,7 +791,7 @@ function galEscolher(cb,op){op=op||{};let o=document.getElementById('glOv');if(o
    <div class="glg"><label class="gln">＋ Enviar nova do computador<br><small>fica salva na galeria</small><input type="file" accept="image/*" hidden id="glUp"></label>${op.mapa?`<div class="glc"><img src="${MAPTH}" alt="" data-gmap="1" title="Mapa FC no Brasil (atualiza sozinho)"><small style="padding-top:6px"><b>📍 Mapa FC no Brasil</b><br>sempre com os números do dia</small></div>`:''}${L.map(a=>`<div class="glc"><img src="${a.img}" alt="" data-gs="${a.id}" title="Usar esta arte"><small style="padding-top:6px">${desc(a.nome||'Sem nome')}</small></div>`).join('')}</div></div>`;
   document.body.appendChild(o);const fe=()=>o.remove();document.getElementById('glX').onclick=fe;o.addEventListener('click',e=>{if(e.target===o)fe();});
   o.querySelectorAll('[data-gs]').forEach(i=>i.onclick=()=>{fe();cb(DART[i.dataset.gs]);});
-  o.querySelectorAll('[data-gmap]').forEach(i=>i.onclick=()=>{fe();cb({id:'__mapa',nome:'Orientativo FC 3D pelo Brasil'});});
+  o.querySelectorAll('[data-gmap]').forEach(i=>i.onclick=()=>{fe();cb({id:'__mapa',nome:'FC Consultoria pelo Brasil'});});
   document.getElementById('glUp').onchange=async e=>{const f=e.target.files[0];if(!f)return;e.target.parentNode.firstChild.textContent='Enviando…';const a=await galNova(f);fe();if(a){cb(a);galUI();}};}
 function galUI(){const el=document.getElementById('glGrid');if(!el)return;const L=galLista();document.getElementById('glN').textContent=`· ${L.length} de ${GMAX}`;
   el.innerHTML=`<label class="gln">＋ Enviar nova arte<input type="file" accept="image/*" hidden id="glUp2"></label>`+L.map(a=>{const u=galUsos(a.id);return `<div class="glc"><img src="${a.img}" alt="" data-gv="${a.id}" title="Ver"><input value="${desc(a.nome||'')}" placeholder="Nome da arte" data-gn="${a.id}"><small>${u.length?'em uso: '+u.join(', '):'guardada'}</small><div class="glb"><button type="button" data-gd="${a.id}" title="Baixar">⬇</button><button type="button" class="no" data-gr="${a.id}" title="Apagar">🗑</button></div></div>`;}).join('');
