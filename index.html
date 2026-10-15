@@ -62,7 +62,7 @@
   <p class="gmsg" id="sugMsg" role="status" style="color:#2f9a55!important"></p>
  </form></div>
 <div class="gate" id="imgBox" hidden style="background:rgba(10,15,20,.85);z-index:120" onclick="this.hidden=true"><img id="imgBig" alt="Imagem enviada pela FC" style="max-width:96vw;max-height:92vh;border-radius:8px;background:#fff"></div>
-<div class="ubar" id="ubar" hidden><span id="uname"></span><button type="button" id="quemTag" hidden title="Trocar quem está estudando"></button><button type="button" id="sugBtn" title="Dúvidas e sugestões: fale com a FC">💬 Dúvidas e sugestões</button><a href="guia/" target="_blank" rel="noopener" style="background:#e0972e;border-color:#e0972e;color:#1b1206" title="Passo a passo de como usar o orientativo">❓ Guia do aluno</a><a href="https://fc-consultoria.github.io/" target="_blank" rel="noopener" title="Site da FC Consultoria">🌐 Site da FC</a><a id="upainel" href="painel.html" hidden>Painel da matriz</a><button type="button" class="usair" onclick="sair()" title="Sair do orientativo">⏻ Sair</button></div>
+<div class="ubar" id="ubar" hidden><span id="uname"></span><button type="button" id="quemTag" hidden title="Trocar quem está estudando"></button><button type="button" id="sugBtn" title="Dúvidas e sugestões: fale com a FC">💬 Dúvidas e sugestões</button><a href="guia/" target="_blank" rel="noopener" style="background:#e0972e;border-color:#e0972e;color:#1b1206" title="Passo a passo de como usar o orientativo">❓ Guia do aluno</a><a id="uSite" href="https://fc-consultoria.github.io/?o=app" target="_blank" rel="noopener" title="Site da FC Consultoria">🌐 Site da FC</a><a id="uInsta" href="https://www.instagram.com/fc__consultoria/" target="_blank" rel="noopener" title="Instagram da FC Consultoria">📷 Instagram</a><a id="upainel" href="painel.html" hidden>Painel da matriz</a><button type="button" class="usair" onclick="sair()" title="Sair do orientativo">⏻ Sair</button></div>
 <div id="appLoad" hidden style="padding:40px 20px;text-align:center;font:500 16px system-ui;color:#5d6b76">Carregando o orientativo…</div><div id="appRoot"></div>
 <script>
 function sugInit(){const box=document.getElementById('sugBox'),f=document.getElementById('sugForm'),m=document.getElementById('sugMsg');
@@ -178,7 +178,7 @@ function vigiaPrazo(uid,perfil){setInterval(()=>{if(window.ALUNO_CID&&window.COL
     try{const {data}=await sb.from('trein_eventos').select('detalhe').eq('tipo','chave_app').limit(1);
       const kb=Uint8Array.from(atob(data[0].detalhe.k),c=>c.charCodeAt(0));
       const key=await crypto.subtle.importKey('raw',kb,'AES-GCM',false,['decrypt']);window.__CK=key;
-      const buf=new Uint8Array(await (await fetch('app.enc?v=1792028203',{cache:'no-cache'})).arrayBuffer());
+      const buf=new Uint8Array(await (await fetch('app.enc?v=1792028480',{cache:'no-cache'})).arrayBuffer());
       const plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:buf.slice(0,12)},key,buf.slice(12));
       const html=await new Response(new Blob([plain]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
       const root=document.getElementById('appRoot');root.innerHTML=html;
@@ -200,6 +200,7 @@ function vigiaPrazo(uid,perfil){setInterval(()=>{if(window.ALUNO_CID&&window.COL
     if(perfil.papel!=='admin'&&window.divInit)divInit(uid,perfil);
     if(window.mapaInit)setTimeout(mapaInit,300);
     if(window.dicasInit)setTimeout(dicasInit,500);
+    if(window.appLinksInit)setTimeout(appLinksInit,600);
     document.getElementById('upainel').hidden=perfil.papel!=='admin';document.getElementById('sugPainel').hidden=perfil.papel!=='admin';
     fila.push({user_id:uid,tipo:'login',tipologia:(typeof S!=='undefined'?S.typo:null)||null,detalhe:window.ALUNO_NOME?{quem:window.ALUNO_NOME,cid:window.ALUNO_CID||null}:{}});
     TRK('tipologia',{t:(typeof S!=='undefined'?S.typo:null)||''});
@@ -213,7 +214,7 @@ function vigiaPrazo(uid,perfil){setInterval(()=>{if(window.ALUNO_CID&&window.COL
   });
 })();
 </script>
-<script>(function(){const V='1792028203';async function chk(){try{const t=(await (await fetch('version.txt?'+Date.now(),{cache:'no-store'})).text()).trim();
+<script>(function(){const V='1792028480';async function chk(){try{const t=(await (await fetch('version.txt?'+Date.now(),{cache:'no-store'})).text()).trim();
 if(t&&/^\d+$/.test(t)&&t!==V&&!document.getElementById('updBar')){const b=document.createElement('div');b.id='updBar';
 b.style.cssText='position:fixed;left:50%;top:10px;transform:translateX(-50%);z-index:9999;background:#1f6f9a;color:#fff;padding:10px 12px 10px 16px;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.25);font:600 14px system-ui,sans-serif;display:flex;gap:12px;align-items:center;max-width:calc(100% - 24px)';
 b.innerHTML='<span>🔄 Nova versão do orientativo disponível</span><button type="button" style="border:0;border-radius:7px;padding:7px 14px;font:700 14px system-ui,sans-serif;background:#e0972e;color:#1b232a;cursor:pointer">Atualizar</button>';
@@ -335,7 +336,7 @@ function abrir(){let o=document.getElementById('catOv');if(o)o.remove();o=docume
   catch(e){b.textContent='Tente de novo';}setTimeout(()=>{b.disabled=false;b.textContent=t;},4000);});}
 window.catInit=function(){const ub=document.getElementById('ubar');if(!ub||document.getElementById('catBtn'))return;const b=document.createElement('button');b.type='button';b.id='catBtn';b.textContent='📘 Catálogos';b.title='Catálogos técnicos Suprema e Gold (fonte do orientativo)';b.onclick=abrir;ub.insertBefore(b,document.getElementById('sugBtn'));};
 })();
-</script><script src="mapa.js?v=1792028203"></script><script>/* ===== Mapa "FC no Brasil" (tela do aluno) ===== */
+</script><script src="mapa.js?v=1792028480"></script><script>/* ===== Mapa "FC no Brasil" (tela do aluno) ===== */
 (function(){
 window.mapaInit=async function(){try{const r=await sb.from('trein_eventos').select('detalhe').eq('tipo','mapa').order('criado_em',{ascending:false}).limit(1);
   const dd=(((r.data||[])[0]||{}).detalhe)||{};const it=dd.pub===false?[]:(dd.itens||[]),orr=dd.orient||[];window.FC_MAPA=dd;const ub=document.getElementById('ubar');if((!it.length&&!orr.length)||!ub||!window.FCM||document.getElementById('mpBtn'))return;
@@ -346,7 +347,7 @@ window.mapaInit=async function(){try{const r=await sb.from('trein_eventos').sele
     document.body.appendChild(o);if(FCM.render2)FCM.render2(document.getElementById('mpBox'),{orient:orr,cons:it,showCons:!!it.length,vit:dd.vit||[]});else FCM.render(document.getElementById('mpBox'),it);document.getElementById('mpX').onclick=()=>o.remove();o.addEventListener('click',e=>{if(e.target===o)o.remove();});};
   ub.insertBefore(b,document.getElementById('sugBtn'));}catch(e){}};
 })();
-</script><script src="dicas.js?v=1792028203"></script><script>/* ===== Dicas da FC (tela do aluno) ===== */
+</script><script src="dicas.js?v=1792028480"></script><script>/* ===== Dicas da FC (tela do aluno) ===== */
 (function(){
 const VK='fc_dicas_vistas',vistas=()=>{try{return JSON.parse(localStorage.getItem(VK)||'[]');}catch(_){return [];}},marcar=id=>{try{const v=vistas();if(!v.includes(id)){v.push(id);localStorage.setItem(VK,JSON.stringify(v.slice(-200)));}}catch(_){}};
 let L=[];
@@ -359,6 +360,34 @@ function abrir(){let o=document.getElementById('dcOv');if(o)o.remove();o=documen
 window.dicasInit=async function(){try{if(!window.FCD||document.getElementById('dcBtn'))return;const ub=document.getElementById('ubar');if(!ub)return;
   L=(await FCD.carregar()).filter(d=>FCD.ativa(d,'app'));if(!L.length)return;
   const b=document.createElement('button');b.type='button';b.id='dcBtn';b.title='Dicas de montagem e onde encontrar produtos';b.onclick=abrir;ub.insertBefore(b,document.getElementById('sugBtn'));badge();}catch(e){}};
+})();
+</script><script>/* ===== Atalhos Site e Instagram na barra do aluno ===== */
+(function(){
+const H=(ev)=>{try{if(window.FCD)FCD.hit(ev,'',"app");}catch(_){}};
+let tent=0;
+function dica(){const a=document.getElementById('uSite'),ub=document.getElementById('ubar');if(!a||!ub||document.getElementById('uHint'))return;
+  const ocup=ub.hidden||[...document.querySelectorAll('[id$="Ov"],[role=dialog]')].some(x=>x.offsetParent!==null||getComputedStyle(x).position==='fixed');if(ocup){if(++tent<40)setTimeout(dica,6000);return;}
+  const hj=new Date().toISOString().slice(0,10);try{if(localStorage.getItem('fc_site_hint')===hj)return;localStorage.setItem('fc_site_hint',hj);}catch(_){}
+  const b=document.createElement('div');b.id='uHint';b.setAttribute('role','status');
+  b.innerHTML='<span class="uhA">▲</span><b>Conheça o site da FC</b><span>Serviços, dicas, parceiros e onde atendemos.</span><div class="uhB"><a href="https://fc-consultoria.github.io/?o=app" target="_blank" rel="noopener" id="uhGo">🌐 Abrir o site</a><a href="https://www.instagram.com/fc__consultoria/" target="_blank" rel="noopener" id="uhIg">📷 Instagram</a></div><button type="button" aria-label="Fechar" id="uhX">×</button>';
+  document.body.appendChild(b);
+  const pos=()=>{const r=a.getBoundingClientRect(),w=b.offsetWidth;let x=r.left+r.width/2-w/2;x=Math.max(8,Math.min(x,innerWidth-w-8));b.style.left=x+'px';b.style.top=(r.bottom+window.scrollY+12)+'px';b.querySelector('.uhA').style.left=Math.max(14,Math.min(w-28,r.left+r.width/2-x-7))+'px';};
+  pos();addEventListener('resize',pos);const fx=()=>{b.classList.add('sai');setTimeout(()=>b.remove(),300);removeEventListener('resize',pos);};
+  document.getElementById('uhX').onclick=fx;document.getElementById('uhGo').onclick=()=>{H('app_site');fx();};document.getElementById('uhIg').onclick=()=>{H('app_insta');fx();};setTimeout(fx,15000);}
+window.appLinksInit=function(){const s=document.getElementById('uSite'),i=document.getElementById('uInsta');if(s&&!s.dataset.ok){s.dataset.ok=1;s.addEventListener('click',()=>H('app_site'));}if(i&&!i.dataset.ok){i.dataset.ok=1;i.addEventListener('click',()=>H('app_insta'));}
+  if(!/[?&]teste=/.test(location.search))setTimeout(dica,8000);};
+const st=document.createElement('style');st.textContent=`.ubar a#uSite{background:linear-gradient(135deg,#1fb3c9,#1f6f9a);border-color:#5fd8ea;animation:uPul 2.4s ease-in-out infinite}
+.ubar a#uInsta{background:linear-gradient(135deg,#f9a03f,#e1306c 55%,#833ab4);border-color:#f3a6c4}
+.ubar a#uSite:hover,.ubar a#uInsta:hover{filter:brightness(1.12)}
+@keyframes uPul{0%,100%{box-shadow:0 0 0 0 rgba(31,179,201,.6)}50%{box-shadow:0 0 0 7px rgba(31,179,201,0)}}
+#uHint{position:absolute;z-index:9100;width:260px;background:#fff;color:#0f1e27;border-radius:14px;padding:14px 16px 14px;box-shadow:0 14px 34px rgba(0,0,0,.28);font:400 14px system-ui,sans-serif;display:flex;flex-direction:column;gap:4px;animation:uIn .45s cubic-bezier(.3,1.5,.5,1)}
+#uHint b{font-size:16px}#uHint>span:not(.uhA){color:#4a5b65;font-size:13.5px;padding-right:12px}
+#uHint .uhA{position:absolute;top:-22px;color:#fff;font-size:22px;line-height:1;text-shadow:0 -2px 3px rgba(0,0,0,.15);animation:uSobe 1s ease-in-out infinite}
+#uHint .uhB{display:flex;gap:8px;margin-top:8px}#uHint .uhB a{flex:1;text-align:center;text-decoration:none;font:700 13.5px system-ui;color:#fff;border-radius:9px;padding:9px 6px}#uhGo{background:#1f6f9a}#uhIg{background:linear-gradient(135deg,#f9a03f,#e1306c 55%,#833ab4)}
+#uhX{position:absolute;top:6px;right:8px;background:none;border:0;font-size:22px;color:#7a8a93;cursor:pointer;line-height:1}
+#uHint.sai{opacity:0;transform:translateY(-6px);transition:.3s}
+@keyframes uIn{from{opacity:0;transform:translateY(14px) scale(.9)}to{opacity:1;transform:none}}@keyframes uSobe{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@media (prefers-reduced-motion:reduce){.ubar a#uSite,#uHint,#uHint .uhA{animation:none}}`;document.head.appendChild(st);
 })();
 </script></body>
 </html>
