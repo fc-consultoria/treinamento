@@ -148,11 +148,13 @@ tr.mfin td{background:#eef5fc}
   <div class="lvg" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:12px 16px 16px">
    <div><h3 class="dvt" style="margin:4px 0 8px">👥 Clientes ativos <span class="note" style="text-transform:none;letter-spacing:0;font-weight:500">· logins liberados</span></h3><div id="lvA"></div></div>
    <div><h3 class="dvt" style="margin:4px 0 8px">💳 Em contratação <span class="note" style="text-transform:none;letter-spacing:0;font-weight:500">· links demonstrativos</span></h3><div id="lvD"></div></div></div>
+  <div style="padding:0 16px 16px"><h3 class="dvt" style="margin:4px 0 8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">📋 Resumo de logins <span class="note" style="text-transform:none;letter-spacing:0;font-weight:500">· quem já entrou no orientativo</span></h3><div id="lvRs"></div></div>
   <style>@media(max-width:1000px){.lvg{grid-template-columns:1fr!important}}
   .lvr{display:flex;gap:10px;align-items:center;padding:9px 10px;border:1px solid var(--line);border-radius:10px;background:#fff;margin-bottom:6px}.lvr .nm{flex:1;min-width:0}.lvr .nm b{display:block}.lvr .nm span{font-size:12.5px;color:var(--muted)}
   .lvd{width:10px;height:10px;border-radius:50%;flex:none;background:#c9d3da}.lvd.on{background:#1f8a4c;box-shadow:0 0 0 4px #1f8a4c33}
   .lvt{font-size:11px;padding:1px 6px;border-radius:8px;background:#eef1f3;color:#4b5a63;margin-left:4px;font-weight:600}.lvt.im{background:#fff3d6;color:#8a5a00}.lvt.ct{background:#e2f4ea;color:#1f6b3c}
   .lvh{font:600 12px var(--f-mono);letter-spacing:.08em;color:var(--muted);margin:12px 0 6px;text-transform:uppercase}.lvg{display:grid;grid-template-columns:repeat(auto-fill,minmax(205px,1fr));gap:10px;margin-bottom:6px}.lvc{position:relative;border:1px solid var(--line);border-radius:14px;background:#fff;padding:14px 12px 12px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px;transition:box-shadow .15s}.lvc:hover{box-shadow:0 8px 20px rgba(15,30,39,.1)}.lvc.on{border-color:#7fd1a3;background:linear-gradient(180deg,#effaf3,#fff 45%)}.lvc.pend{border-color:#e8912d;box-shadow:0 0 0 2px #e8912d33}.lvav{width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;font:700 17px system-ui;color:#fff;background:#8c9aa3;position:relative;margin-bottom:4px}.lvc.on .lvav{background:linear-gradient(135deg,#2fbf71,#1a8a50)}.lvav i{position:absolute;right:-1px;bottom:-1px;width:13px;height:13px;border-radius:50%;border:2px solid #fff;background:#c9d3da}.lvc.on .lvav i{background:#2fbf71;animation:lvP 1.8s infinite}@keyframes lvP{0%{box-shadow:0 0 0 0 #2fbf7199}100%{box-shadow:0 0 0 9px #2fbf7100}}.lvc b{font-size:15px;line-height:1.2}.lvc .em{font-size:12.5px;color:var(--muted)}.lvc .st{font-size:12.5px;color:#41525c;min-height:17px}.lvc .ac{display:flex;gap:6px;width:100%;margin-top:6px}.lvc .ac button{flex:1;justify-content:center;font-size:13px;padding:7px 6px}.lvc .fu{width:100%;text-align:left;margin-top:2px}.lvc .lvt{margin:0}.lvc .nb{position:absolute;top:8px;right:8px;background:#e8912d;color:#fff;font:800 11px system-ui;border-radius:10px;padding:1px 7px}
+  .rsf{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 10px}.rsf button{border:1px solid var(--line);background:#fff;border-radius:99px;padding:5px 12px;font-size:13px;cursor:pointer}.rsf button.on{background:#1f5f8b;border-color:#1f5f8b;color:#fff;font-weight:700}.rst{width:100%;border-collapse:collapse;font-size:13.5px;background:#fff;border:1px solid var(--line);border-radius:10px;overflow:hidden}.rst th,.rst td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left}.rst th{font:600 11.5px var(--f-mono);letter-spacing:.06em;color:var(--muted);text-transform:uppercase;background:#f6f9fa}.rst td.n{text-align:right;font-variant-numeric:tabular-nums}.rst tr:last-child td{border-bottom:0}@media(max-width:700px){.rst .hm{display:none}}
   .lvk{border:1px solid var(--line);border-radius:10px;background:#fff;padding:10px 14px;min-width:150px}.lvk b{font:700 26px var(--f-display);display:block}.lvk span{font-size:12.5px;color:var(--muted)}</style></section>
  <section class="card" id="aceCard" data-tab="ace"><h2 style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">📈 Acessos<span class="note" id="acAt" style="font-weight:500;text-transform:none;letter-spacing:0"></span><span style="margin-left:auto;display:flex;gap:6px"><select id="acP" style="font-size:13px"><option value="1">Hoje</option><option value="7" selected>7 dias</option><option value="30">30 dias</option></select><button type="button" id="acRe" style="font-size:13px">🔄 Atualizar</button></span></h2>
   <div id="acEu" style="margin:12px 16px 0;padding:10px 14px;border-radius:10px;background:#eef6ff;border:1px solid #c8dcf5;font-size:13.5px;display:flex;gap:10px;align-items:center;flex-wrap:wrap"></div><div id="acBox" style="padding:12px 16px 16px"><p class="note">Carregando…</p></div>
@@ -425,9 +427,10 @@ async function excluirCliente(a){const nm=a.nome||a.login,cf=ctrFim(a.user_id),a
 let LV={ev:[],sg:[],t:0};
 const lvKind=uid=>{const a=ALUNOS.find(x=>x.user_id===uid);if(!a)return null;if(implDe(uid))return ['im','implantação'];const f=ctrFim(uid);if(f&&f>=HOJE())return ['ct','contrato'];return ['','semana'];};
 async function liveLoad(){const since=new Date(Date.now()-20*3600e3).toISOString(),since30=new Date(Date.now()-30*864e5).toISOString();
-  const [a,b]=await Promise.all([sb.from('trein_eventos').select('user_id,tipo,tipologia,detalhe,criado_em').in('tipo',['colab_sessao','hb','tempo','gestor_in','gestor_hb']).gte('criado_em',since).order('criado_em',{ascending:false}).limit(3000),
-    sb.from('trein_eventos').select('user_id,tipo,detalhe,criado_em').in('tipo',['sugestao','resposta']).gte('criado_em',since30).order('criado_em').limit(3000)]);
-  LV={ev:a.data||[],sg:b.data||[],t:Date.now()};liveUI();}
+  const [a,b,_lg]=await Promise.all([sb.from('trein_eventos').select('user_id,tipo,tipologia,detalhe,criado_em').in('tipo',['colab_sessao','hb','tempo','gestor_in','gestor_hb']).gte('criado_em',since).order('criado_em',{ascending:false}).limit(3000),
+    sb.from('trein_eventos').select('user_id,tipo,detalhe,criado_em').in('tipo',['sugestao','resposta']).gte('criado_em',since30).order('criado_em').limit(3000),
+    sb.from('trein_eventos').select('user_id,tipo,detalhe,criado_em').in('tipo',['colab_sessao','gestor_in']).gte('criado_em',since30).order('criado_em',{ascending:false}).limit(5000)]);
+  LV={ev:a.data||[],sg:b.data||[],lg:(_lg&&_lg.data)||[],t:Date.now()};liveUI();}
 function lvThread(uid,cid,quem){const G=cid==='gestor';
   const mine=LV.sg.filter(e=>e.tipo==='sugestao'&&e.user_id===uid&&((e.detalhe||{}).cid===cid||(!(e.detalhe||{}).cid&&!G&&(e.detalhe||{}).quem===quem)));
   const refs=new Set(mine.map(e=>e.criado_em));
@@ -442,6 +445,25 @@ function lvPessoas(){const P={},now=Date.now();
 const lvDur=ms=>{const m=Math.round(ms/60000);if(m<1)return 'menos de 1 min';const h=Math.floor(m/60);return h?h+'h'+String(m%60).padStart(2,'0'):m+' min';};
 let LVG=true;try{LVG=localStorage.getItem('treinFC-lvg')!=='0';}catch(_){}
 const lvIni=t=>{const w=String(t||'?').replace(/[^\p{L}\p{N} ]/gu,'').trim().split(/\s+/);return ((w[0]||'?')[0]+((w[1]||'')[0]||'')).toUpperCase();};
+
+let RSP=7,RSS='todos';try{RSP=+localStorage.getItem('treinFC-rsp')||7;RSS=localStorage.getItem('treinFC-rss')||'todos';}catch(_){}
+function resumoUI(P){const E=document.getElementById('lvRs');if(!E)return;const now=Date.now(),lim=RSP===1?Date.parse(HOJE()+'T04:00:00Z'):now-RSP*864e5;
+  const ON={};P.forEach(p=>{if(p.on)ON[p.uid+'|'+p.cid]=1;});const R={};
+  (LV.lg||[]).forEach(e=>{const t=Date.parse(e.criado_em);if(t<lim)return;const a=ALUNOS.find(x=>x.user_id===e.user_id);if(!a||livre(a))return;const d=e.detalhe||{},G=e.tipo==='gestor_in',cid=G?'gestor':(d.cid||('n:'+(d.quem||'')));
+    const k=e.user_id+'|'+cid,r=R[k]||(R[k]={uid:e.user_id,cid,quem:G?'👔 Gestor':(d.quem||'Colaborador'),emp:a.nome||a.login||'',ult:0,n:0});r.n++;if(t>r.ult)r.ult=t;if(!G&&d.quem)r.quem=d.quem;});
+  P.forEach(p=>{const k=p.uid+'|'+p.cid;if(p.on&&!R[k]){const a=ALUNOS.find(x=>x.user_id===p.uid)||{};R[k]={uid:p.uid,cid:p.cid,quem:p.cid==='gestor'?'👔 Gestor':(p.quem||'Colaborador'),emp:a.nome||a.login||'',ult:p.ult,n:1};}});
+  const L=Object.values(R).map(r=>(r.on=!!ON[r.uid+'|'+r.cid],r)).sort((x,y)=>(y.on-x.on)||(y.ult-x.ult));
+  const nOn=L.filter(r=>r.on).length,nOff=L.length-nOn,emps=new Set(L.map(r=>r.uid));
+  const sem=ALUNOS.filter(a=>!livre(a)&&!emps.has(a.user_id)).map(a=>a.nome||a.login);
+  const V=RSS==='on'?L.filter(r=>r.on):RSS==='off'?L.filter(r=>!r.on):L;
+  const dt=t=>new Date(t).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}).replace(',',' ·');
+  const PER={1:'Hoje',7:'7 dias',30:'30 dias'};
+  E.innerHTML=`<div class="rsf">${Object.entries(PER).map(([k,v])=>`<button type="button" data-rp="${k}" class="${+k===RSP?'on':''}">${v}</button>`).join('')}<span style="width:12px"></span><button type="button" data-rs="todos" class="${RSS==='todos'?'on':''}">Todos · ${L.length}</button><button type="button" data-rs="on" class="${RSS==='on'?'on':''}">🟢 Online · ${nOn}</button><button type="button" data-rs="off" class="${RSS==='off'?'on':''}">⚪ Offline · ${nOff}</button></div>`
+   +`<p class="note" style="margin:0 0 8px"><b>${L.length}</b> ${L.length===1?'pessoa fez':'pessoas fizeram'} login (${PER[RSP].toLowerCase()}) em <b>${emps.size}</b> ${emps.size===1?'empresa':'empresas'} · <b style="color:#1f8a4c">${nOn} online</b> agora · <b>${nOff} offline</b></p>`
+   +(V.length?`<table class="rst"><thead><tr><th></th><th>Quem</th><th>Empresa</th><th>Último login</th><th class="hm" style="text-align:right">Entradas</th></tr></thead><tbody>${V.map(r=>`<tr><td style="width:18px"><span class="lvd${r.on?' on':''}"></span></td><td><b>${desc(r.quem)}</b></td><td>${desc(r.emp)}</td><td>${r.on?'<b style="color:#1f8a4c">online agora</b>':dt(r.ult)}</td><td class="n hm">${r.n}</td></tr>`).join('')}</tbody></table>`:'<p class="note">Ninguém nesse filtro.</p>')
+   +(sem.length?`<p class="note" style="margin:8px 0 0">⚠ Ainda não entraram (${PER[RSP].toLowerCase()}): ${sem.map(desc).join(', ')}</p>`:'');
+  E.querySelectorAll('[data-rp]').forEach(b=>b.onclick=()=>{RSP=+b.dataset.rp;try{localStorage.setItem('treinFC-rsp',RSP);}catch(_){}resumoUI(P);});
+  E.querySelectorAll('[data-rs]').forEach(b=>b.onclick=()=>{RSS=b.dataset.rs;try{localStorage.setItem('treinFC-rss',RSS);}catch(_){}resumoUI(P);});}
 function liveUI(){const A=document.getElementById('lvA');if(!A)return;{const vb=document.getElementById('lvVw');vb.textContent=LVG?'☰ Ver em lista':'▦ Ver em grade';vb.onclick=()=>{LVG=!LVG;try{localStorage.setItem('treinFC-lvg',LVG?'1':'0');}catch(_){}liveUI();};}const now=Date.now(),hm=t=>new Date(t).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
   const P=lvPessoas(),on=P.filter(p=>p.on),hoje=P.filter(p=>!p.on&&new Date(p.ult-4*3600e3).toISOString().slice(0,10)===HOJE());
   let pendA=0;const PEND={};ALUNOS.forEach(a=>{});LV.sg.filter(e=>e.tipo==='sugestao').forEach(e=>{const d=e.detalhe||{},k=e.user_id+'|'+(d.cid||('n:'+(d.quem||'')));if(!LV.sg.some(r=>r.tipo==='resposta'&&(r.detalhe||{}).ref===e.criado_em)){PEND[k]=(PEND[k]||0)+1;pendA++;}});
@@ -455,6 +477,7 @@ function liveUI(){const A=document.getElementById('lvA');if(!A)return;{const vb=
   const L=[...on,...hoje],R0=LVG?(X=>`<div class="lvg">${X.map(p=>card(p,L.indexOf(p))).join('')}</div>`):(X=>X.map(p=>row(p,L.indexOf(p))).join(''));
   A.innerHTML=`<div class="lvh">🟢 Online agora · ${on.length}</div>${on.length?R0(on):'<p class="note">Ninguém online neste momento.</p>'}<div class="lvh">Entraram hoje · ${hoje.length}</div>${hoje.length?R0(hoje):'<p class="note">Mais ninguém hoje.</p>'}`;
   A.querySelectorAll('[data-lv]').forEach(b=>b.onclick=()=>{const p=L[+b.dataset.lv];lvChat(p.uid,p.cid,p.quem);});
+  resumoUI(P);
   /* em contratação */
   const API=window.DEMO_API,D=document.getElementById('lvD');let dOn=0,dNl=0,dAt=0;
   if(API){const DM=API.DM.filter(d=>{const [st]=API.sit(d);return /^Ativo/.test(st)||API.naoLidas(d.code);}).sort((x,y)=>(API.on(y)-API.on(x))||(API.naoLidas(y.code)-API.naoLidas(x.code))||((y.ultimo||'')>(x.ultimo||'')?1:-1));
