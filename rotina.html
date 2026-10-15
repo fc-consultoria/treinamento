@@ -416,7 +416,7 @@ section[hidden]{display:none}
 <div class="wrap">
   <header class="top">
     <div class="brand"><div class="logo">FC</div><div><h1>Rotina FC</h1><small>Consultoria · Representação · Treinamentos</small></div></div>
-    <div class="row" style="gap:10px;flex-wrap:nowrap"><button class="btn sm" data-act="links" title="Meus links de acesso"><svg class="ico"><use href="#i-link"/></svg><span class="hm">Links</span></button><button class="btn sm" data-act="ajuda" title="Vídeos de como usar"><svg class="ico"><use href="#i-play"/></svg><span class="hm">Como usar</span></button><div class="sync" id="sync"><i></i><span>Conectando…</span></div></div>
+    <div class="row" style="gap:10px;flex-wrap:nowrap"><a class="btn sm" href="painel.html" title="Voltar ao Painel da Matriz" style="background:#0f766e;color:#fff;border-color:#0f766e;text-decoration:none;font-weight:600;white-space:nowrap">← <span class="rvt">Voltar ao </span>Painel</a><button class="btn sm" data-act="links" title="Meus links de acesso"><svg class="ico"><use href="#i-link"/></svg><span class="hm">Links</span></button><button class="btn sm" data-act="ajuda" title="Vídeos de como usar"><svg class="ico"><use href="#i-play"/></svg><span class="hm">Como usar</span></button><div class="sync" id="sync"><i></i><span>Conectando…</span></div></div>
   </header>
 
   <nav class="tabs" role="tablist" id="tabs">
@@ -498,13 +498,12 @@ section[hidden]{display:none}
 .rgate label{display:flex;flex-direction:column;gap:5px;font-weight:600;font-size:14px}.rgate input{font:15px system-ui;padding:9px 10px;border:1px solid #c4ccd2;border-radius:8px}
 .rgate button{background:#0f766e;color:#fff;border:0;border-radius:9px;padding:11px;font:700 15px system-ui;cursor:pointer}.rgate p{margin:0;color:#b42318;font-size:13.5px;min-height:1em}
 .rvolta{position:fixed;left:10px;bottom:calc(76px + env(safe-area-inset-bottom,0px));z-index:900;background:#13262a;color:#fff;text-decoration:none;font:600 12.5px system-ui;border-radius:20px;padding:7px 12px;opacity:.85;box-shadow:0 4px 12px rgba(0,0,0,.2)}
-.rvolta:hover{opacity:1}@media(min-width:900px){.rvolta{bottom:16px}}
+@media(max-width:600px){.rvt{display:none}}
 </style>
 <div class="rgate" id="gate" hidden><form id="gateForm"><small>FC Consultoria · Matriz</small><h1>🗓 Rotina FC</h1>
 <label>Login<input name="login" autocomplete="username" required placeholder="matriz"></label>
 <label>Senha<input name="senha" type="password" autocomplete="current-password" required></label>
 <button type="submit">Entrar</button><p id="gateMsg" role="alert"></p></form></div>
-<a class="rvolta" href="painel.html" title="Voltar ao Painel da Matriz">← Painel</a>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="auth.js"></script>
 <script>
