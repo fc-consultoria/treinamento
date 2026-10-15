@@ -200,6 +200,14 @@ section[hidden]{display:none}
 .lnk{border:0;background:none;padding:0;color:var(--fg);text-decoration:underline;cursor:pointer;font:inherit}
 .prio{margin-top:8px;display:grid;gap:4px;border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:var(--surface);cursor:default}
 .pri-r{display:flex;align-items:center;gap:8px;font-size:13.5px}
+.pri-item{display:grid;gap:4px;padding:2px 0}
+.pri-tx{flex:1;min-width:0;cursor:pointer}.pri-tx:hover{text-decoration:underline}
+.pri-bt{display:inline-flex;align-items:center;gap:4px;flex:none}
+.pri-bt .btn{padding:3px 8px;font-size:12px}
+.pri-obs{margin-left:54px;font-size:12.5px;color:var(--muted);background:var(--surface2);border-left:3px solid var(--teal);border-radius:6px;padding:5px 8px;white-space:normal}
+.pri-anx{margin-left:54px}
+.pri-c .pri-item.ok .pri-tx{color:var(--green);font-weight:600}
+@media (max-width:600px){.pri-bt .btn{padding:3px 6px}.pri-obs,.pri-anx{margin-left:28px}}
 .pri-r input[type=checkbox]{width:18px;height:18px;accent-color:var(--green);flex:none}
 .pri-n{width:20px;height:20px;border-radius:50%;background:var(--teal-soft);color:var(--teal);font-size:11px;font-weight:700;display:grid;place-items:center;flex:none}
 .pri-r .pr-in{flex:1;padding:5px 8px;font-size:13.5px}
@@ -540,7 +548,18 @@ section[hidden]{display:none}
       onSnapshot:(cb,err)=>{const s={col,cb,err};subs.push(s);if(C[col])cb(snapCol(col));return()=>subs.splice(subs.indexOf(s),1)}}),
     doc:p=>{const [c,i]=p.split('/');return ref(c,i)}};
   let iniciou=false;
-  window.claude={use:async n=>{if(n!=='db')throw new Error('indisponível no painel');await gateReady;
+  /* anexos: bucket privado rotina-anexos (só a matriz); links assinados com cache de 50 min */
+  const BK='rotina-anexos',URLS={};
+  async function blobUrl(id){const c=URLS[id];if(c&&c.exp>Date.now())return c.u;
+    const {data,error}=await sb.storage.from(BK).createSignedUrl(id,3600);if(error)throw error;URLS[id]={u:data.signedUrl,exp:Date.now()+50*60*1000};return data.signedUrl;}
+  window.FC_BLOB=blobUrl;
+  async function hidratar(){document.querySelectorAll('img[data-blob]:not([data-ok])').forEach(async im=>{im.setAttribute('data-ok','1');try{im.src=await blobUrl(im.dataset.blob)}catch(e){im.removeAttribute('data-ok')}})}
+  new MutationObserver(()=>hidratar()).observe(document.documentElement,{childList:true,subtree:true});
+  const ASSETS={upload:async(blob,o)=>{const id=new Date().toISOString().slice(0,10)+'/'+(crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2));
+      if(blob.size>20*1048576){const e=new Error('grande');e.code='too_large';throw e}
+      const {error}=await sb.storage.from(BK).upload(id,blob,{contentType:(o&&o.type)||blob.type||'application/octet-stream',upsert:false});if(error)throw error;return{id}},
+    delete:async id=>{await sb.storage.from(BK).remove([id]);delete URLS[id]}};
+  window.claude={use:async n=>{if(n==='assets'){await gateReady;return ASSETS}if(n!=='db')throw new Error('indisponível no painel');await gateReady;
     if(!iniciou){iniciou=true;setTimeout(()=>poll(true),0);setInterval(()=>poll(),10000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)poll()});}
     return DB;}};
 })();
@@ -620,13 +639,13 @@ async function uploadAnexo(f){const e=ext(f.name);let r,enc='raw';
   return{id:r.id,nome:f.name,ext:e,tam:f.size,enc,em:new Date().toISOString()}}
 async function uploadVarios(files){const out=[];for(const f of files){toast('Enviando '+f.name+'…');try{out.push(await uploadAnexo(f))}catch(err){toast(errAnx(err,f.name))}}return out}
 async function delAnexos(l){if(!AS||!l)return;for(const a of l){try{await AS.delete(a.id)}catch(e){}}}
-async function baixarAnexo(a){let blob;try{const r=await fetch('/_blob/'+a.id);if(!r.ok)throw 0;
+async function baixarAnexo(a){let blob;try{const r=await fetch(window.FC_BLOB?await window.FC_BLOB(a.id):'/_blob/'+a.id);if(!r.ok)throw 0;
     if(a.enc==='b64'){const bin=atob((await r.text()).trim()),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);blob=new Blob([u])}else blob=await r.blob()}
   catch(e){toast('Arquivo não encontrado');return}
   if(DL){try{await DL.save({filename:a.nome,data:blob})}catch(e){if(e&&e.code!=='declined')toast('Não foi possível baixar')}return}
   const u=URL.createObjectURL(blob),l=document.createElement('a');l.href=u;l.download=a.nome;document.body.appendChild(l);l.click();l.remove();setTimeout(()=>URL.revokeObjectURL(u),5000)}
 function anxHTML(n,edit){const l=n.anexos||[];if(!l.length)return'';
-  return `<div class="anx">${l.map((a,i)=>`<span class="ax" data-act="anx-abrir" data-id="${esc(n.id)}" data-i="${i}" role="button" tabindex="0" data-tip="${esc(a.nome+' · '+fmtTam(a.tam)+(edit?'':isImg(a.ext)?' · tocar para ver':' · tocar para baixar'))}">${isImg(a.ext)?`<img src="/_blob/${esc(a.id)}" alt="" loading="lazy">`:`<b class="x-${esc(a.ext)}">${esc(a.ext.toUpperCase())}</b>`}<span class="nm">${esc(a.nome)}</span>${edit?`<button class="rm" data-act="anx-rm" data-i="${i}" aria-label="Remover anexo">×</button>`:''}</span>`).join('')}</div>`}
+  return `<div class="anx">${l.map((a,i)=>`<span class="ax" data-act="anx-abrir" data-id="${esc(n.id)}" data-i="${i}" role="button" tabindex="0" data-tip="${esc(a.nome+' · '+fmtTam(a.tam)+(edit?'':isImg(a.ext)?' · tocar para ver':' · tocar para baixar'))}">${isImg(a.ext)?`<img data-blob="${esc(a.id)}" alt="" loading="lazy">`:`<b class="x-${esc(a.ext)}">${esc(a.ext.toUpperCase())}</b>`}<span class="nm">${esc(a.nome)}</span>${edit?`<button class="rm" data-act="anx-rm" data-i="${i}" aria-label="Remover anexo">×</button>`:''}</span>`).join('')}</div>`}
 const pendHTML=(l,act)=>l&&l.length?`<div class="anx">${l.map((f,i)=>`<span class="ax up"><b class="x-${esc(ext(f.name))}">${esc(ext(f.name).toUpperCase())}</b><span class="nm">${esc(f.name)}</span><span class="small muted">${fmtTam(f.size)}</span><button class="rm" data-act="${act}" data-i="${i}" aria-label="Remover">×</button></span>`).join('')}<span class="small muted">Anexa ao salvar</span></div>`:'';
 const btnAnexar=id=>AS?`<span class="row" style="gap:8px"><label class="btn sm" style="width:max-content;cursor:pointer"><svg class="ico"><use href="#i-clip"/></svg>Anexar arquivo<input type="file" id="${id}" multiple hidden accept="${ACC}"></label><span class="small muted">ou Ctrl+V para colar print</span></span>`:'';
 const clipPill=n=>(n.anexos||[]).length?`<span class="pill t-muted"><svg class="ico" style="width:12px;height:12px"><use href="#i-clip"/></svg>${n.anexos.length}</span>`:'';
@@ -751,9 +770,26 @@ function carriedHTML(d,compact){const c=carried(d);if(!c.length)return'';
     ${compact?(x.motivo?`<span class="small muted">Motivo: ${esc(x.motivo)}</span>`:''):`<input class="inp pr-in" data-cmot="${dia}|${i}" value="${esc(x.motivo||'')}" placeholder="Por que não foi realizada? (observação)">`}</div>
     ${compact||x.ok?'':`<button class="btn sm ghost" data-act="pri-desc" data-k="${dia}|${i}" title="Tirar da lista sem concluir">Descartar</button>`}</div>`).join('')}</div>`}
 async function savePri(d,itens){await save('prioridades',d,{data:d,itens})}
+/* linha da prioridade no card "Prioridades de hoje": comentário, anexos, editar e excluir */
+function priLinha(d,x,i){const k=d+'|'+i,an=x.anexos||[],conf=S.priDelK===k;
+  return `<div class="pri-item ${x.ok?'ok':''}"><div class="pri-r ${x.ok?'ok':''}"><input type="checkbox" data-pri="${i}" ${x.ok?'checked':''} aria-label="Prioridade ${i+1} feita"><span class="pri-n">${i+1}</span>
+   <span class="pri-tx" data-act="pri-edit" data-k="${k}" role="button" tabindex="0" title="Editar, comentar ou anexar">${esc(x.t)}</span>
+   <span class="pri-bt">${an.length?`<span class="pill t-muted" title="${an.length} anexo(s)"><svg class="ico" style="width:12px;height:12px"><use href="#i-clip"/></svg>${an.length}</span>`:''}
+    <button class="btn sm ghost" data-act="pri-edit" data-k="${k}" title="Editar, comentar ou anexar arquivo/print">✎ Editar</button>
+    <button class="btn sm ghost ${conf?'danger':''}" data-act="pri-del" data-k="${k}" title="Excluir prioridade" style="${conf?'':'color:var(--red)'}">${conf?'Confirmar exclusão':'🗑'}</button></span></div>
+   ${x.obs?`<div class="pri-obs">💬 ${esc(x.obs).replace(/\n/g,'<br>')}</div>`:''}
+   ${an.length?`<div class="anx pri-anx">${an.map((a,j)=>`<span class="ax" data-act="pri-anx" data-k="${k}|${j}" role="button" tabindex="0" title="${esc(a.nome)}">${isImg(a.ext)?`<img data-blob="${esc(a.id)}" alt="" loading="lazy">`:`<b class="x-${esc(a.ext)}">${esc(a.ext.toUpperCase())}</b>`}<span class="nm">${esc(a.nome)}</span></span>`).join('')}</div>`:''}</div>`}
+function modalPri(d,i){const x=priDia(d)[i];M={id:'pri-'+d+'-'+i,_pri:{d,i},t:x.t,obs:x.obs||'',anexos:(x.anexos||[]).slice(),ok:!!x.ok};
+  openModal(`<h3>Prioridade ${i+1}</h3><p class="small muted" style="margin:0">${fmtDia(d)}</p>
+  <div class="fg"><label for="p-t">Prioridade</label><input class="inp" id="p-t" value="${esc(M.t)}" list="dl-pri-m"></div>
+  <div class="fg"><label for="p-obs">Comentário</label><textarea class="inp" id="p-obs" rows="4" placeholder="Andamento, combinados com o cliente, o que falta…">${esc(M.obs)}</textarea></div>
+  <div class="fg"><label>Arquivos e prints</label><div id="o-anx">${anxHTML(M,true)||'<span class="small muted">Nenhum anexo.</span>'}</div><div id="o-pend"></div>${btnAnexar('o-file')||'<span class="small muted">Anexos indisponíveis agora.</span>'}</div>
+  <div class="foot"><div class="row"><button class="btn danger" data-act="pri-del-m">Excluir</button></div>
+   <div class="row"><button class="btn" data-act="fechar">Cancelar</button><button class="btn pri" data-act="pri-salvar">Salvar</button></div></div>`);setTimeout(()=>{const o=$('#p-obs');if(o)o.focus()},50)}
+async function excluirPri(d,i){const it=priDia(d).map(x=>({...x})),rm=it.splice(i,1)[0];it.push({t:'',ok:false});await savePri(d,it);await delAnexos(rm&&rm.anexos);toast('Prioridade excluída')}
 function priHTML(compact){const d=vd(),it=priDia(d),n=it.filter(x=>x.t).length,f=it.filter(x=>x.t&&x.ok).length;
   if(compact){const ch=carriedHTML(d,true);if(!n&&!ch)return'';return `<div class="card pri-c"><div class="ch-h" style="margin-bottom:6px"><h3>Prioridades ${vd()===today()?'de hoje':'de '+fmtCurto(vd())}</h3>${n?`<span class="pill ${f===n?'t-green':'t-muted'}">${f}/${n} feitas</span>`:''}</div>
-    ${it.map((x,i)=>x.t?`<label class="pri-r ${x.ok?'ok':''}"><input type="checkbox" data-pri="${i}" ${x.ok?'checked':''}><span class="pri-n">${i+1}</span><span>${esc(x.t)}</span></label>`:'').join('')}${ch}</div>`}
+    ${it.map((x,i)=>x.t?priLinha(d,x,i):'').join('')}${ch}</div>`}
   return `<div class="prio">${carriedHTML(d,false)}<div class="small" style="font-weight:600;display:flex;justify-content:space-between"><span>5 prioridades do dia</span>${n?`<span class="muted">${f}/${n} feitas</span>`:''}</div>
    ${it.map((x,i)=>`<div class="pri-r ${x.ok&&x.t?'ok':''}"><input type="checkbox" data-pri="${i}" ${x.ok?'checked':''} aria-label="Prioridade ${i+1} feita"><span class="pri-n">${i+1}</span><input class="inp pr-in" data-prt="${i}" list="dl-pri" value="${esc(x.t)}" placeholder="Prioridade ${i+1}"></div>`).join('')}
    <datalist id="dl-pri">${[...S.demandas.filter(x=>x.status!=='concluido').map(x=>x.titulo+(x.cliente?' · '+x.cliente:'')),...S.agenda.filter(c=>c.data===d&&!c.feito).map(c=>c.titulo+(c.cliente?' · '+c.cliente:''))].map(v=>`<option value="${esc(v)}">`).join('')}</datalist></div>`}
@@ -1620,8 +1656,19 @@ document.addEventListener('click',async e=>{
     case 'opend-rm':if(M&&M._pend){M._pend.splice(+el.dataset.i,1);$('#o-pend').innerHTML=pendHTML(M._pend,'opend-rm')}break;
     case 'anx-rm':{if(!M||!M.anexos)break;const i=+el.dataset.i;M._rm=(M._rm||[]).concat(M.anexos.splice(i,1));$('#o-anx').innerHTML=anxHTML(M,true)||'<span class="small muted">Nenhum anexo.</span>';break}
     case 'anx-abrir':{const inM=!!el.closest('.sheet'),n=inM&&M&&M.id===id?M:S.notas.find(x=>x.id===id),a=n&&(n.anexos||[])[+el.dataset.i];if(!a)break;
-      if(isImg(a.ext)&&!inM){M={_anx:a};openModal(`<h3 style="word-break:break-word">${esc(a.nome)}</h3><div class="imgv"><img src="/_blob/${esc(a.id)}" alt="${esc(a.nome)}"></div><div class="foot"><button class="btn" data-act="fechar">Fechar</button><button class="btn pri" data-act="anx-baixar">Baixar</button></div>`)}else baixarAnexo(a);break}
+      if(isImg(a.ext)&&!inM){M={_anx:a};openModal(`<h3 style="word-break:break-word">${esc(a.nome)}</h3><div class="imgv"><img data-blob="${esc(a.id)}" alt="${esc(a.nome)}"></div><div class="foot"><button class="btn" data-act="fechar">Fechar</button><button class="btn pri" data-act="anx-baixar">Baixar</button></div>`)}else baixarAnexo(a);break}
     case 'anx-baixar':if(M&&M._anx)baixarAnexo(M._anx);break;
+    case 'pri-edit':{const[d,i]=el.dataset.k.split('|');S.priDelK=null;modalPri(d,+i);break}
+    case 'pri-del':{const k=el.dataset.k;if(S.priDelK!==k){S.priDelK=k;render();setTimeout(()=>{if(S.priDelK===k){S.priDelK=null;render()}},4000);break}
+      S.priDelK=null;const[d,i]=k.split('|');await excluirPri(d,+i);break}
+    case 'pri-del-m':{if(!M||!M._pri)break;if(pendingDel!==el){pendingDel=el;el.textContent='Confirmar exclusão';break}const {d,i}=M._pri;closeModal();await excluirPri(d,i);break}
+    case 'pri-anx':{const[d,i,j]=el.dataset.k.split('|'),a=(priDia(d)[+i].anexos||[])[+j];if(!a)break;
+      if(isImg(a.ext)){M={_anx:a};openModal(`<h3 style="word-break:break-word">${esc(a.nome)}</h3><div class="imgv"><img data-blob="${esc(a.id)}" alt="${esc(a.nome)}"></div><div class="foot"><button class="btn" data-act="fechar">Fechar</button><button class="btn pri" data-act="anx-baixar">Baixar</button></div>`)}else baixarAnexo(a);break}
+    case 'pri-salvar':{if(!M||!M._pri)break;const t=$('#p-t').value.trim();if(!t){$('#p-t').focus();toast('Escreva a prioridade');break}
+      const {d,i}=M._pri,pend=M._pend||[],rm=M._rm||[];el.disabled=true;let anexos=M.anexos||[];
+      if(pend.length&&AS)anexos=[...anexos,...await uploadVarios(pend)];
+      const patch={t,obs:$('#p-obs').value.trim()||undefined,anexos:anexos.length?anexos:undefined};
+      await updPri(d,i,patch);await delAnexos(rm);closeModal();toast('Prioridade salva');break}
     case 'nova-demanda-cli':{const d=novaDemanda(MODELOS.length-1);d.cliente=S.cli;modalDemanda(d);break}
     case 'ir-stat':{const k=el.dataset.k;if(k==='agenda'){S.afil='aconcluir';setTab('agenda');break}
       S.fesp=k;S.fstat='ativas';S.busca='';S.ftipo='';const fb=$('#f-busca');if(fb)fb.value='';const ft=$('#f-tipo');if(ft)ft.value='';setTab('demandas');break}
