@@ -178,7 +178,7 @@ function vigiaPrazo(uid,perfil){setInterval(()=>{if(window.ALUNO_CID&&window.COL
     try{const {data}=await sb.from('trein_eventos').select('detalhe').eq('tipo','chave_app').limit(1);
       const kb=Uint8Array.from(atob(data[0].detalhe.k),c=>c.charCodeAt(0));
       const key=await crypto.subtle.importKey('raw',kb,'AES-GCM',false,['decrypt']);window.__CK=key;
-      const buf=new Uint8Array(await (await fetch('app.enc?v=1792026392',{cache:'no-cache'})).arrayBuffer());
+      const buf=new Uint8Array(await (await fetch('app.enc?v=1792028203',{cache:'no-cache'})).arrayBuffer());
       const plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:buf.slice(0,12)},key,buf.slice(12));
       const html=await new Response(new Blob([plain]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
       const root=document.getElementById('appRoot');root.innerHTML=html;
@@ -199,6 +199,7 @@ function vigiaPrazo(uid,perfil){setInterval(()=>{if(window.ALUNO_CID&&window.COL
     sugInit();if(window.catInit)catInit();
     if(perfil.papel!=='admin'&&window.divInit)divInit(uid,perfil);
     if(window.mapaInit)setTimeout(mapaInit,300);
+    if(window.dicasInit)setTimeout(dicasInit,500);
     document.getElementById('upainel').hidden=perfil.papel!=='admin';document.getElementById('sugPainel').hidden=perfil.papel!=='admin';
     fila.push({user_id:uid,tipo:'login',tipologia:(typeof S!=='undefined'?S.typo:null)||null,detalhe:window.ALUNO_NOME?{quem:window.ALUNO_NOME,cid:window.ALUNO_CID||null}:{}});
     TRK('tipologia',{t:(typeof S!=='undefined'?S.typo:null)||''});
@@ -212,7 +213,7 @@ function vigiaPrazo(uid,perfil){setInterval(()=>{if(window.ALUNO_CID&&window.COL
   });
 })();
 </script>
-<script>(function(){const V='1792026392';async function chk(){try{const t=(await (await fetch('version.txt?'+Date.now(),{cache:'no-store'})).text()).trim();
+<script>(function(){const V='1792028203';async function chk(){try{const t=(await (await fetch('version.txt?'+Date.now(),{cache:'no-store'})).text()).trim();
 if(t&&/^\d+$/.test(t)&&t!==V&&!document.getElementById('updBar')){const b=document.createElement('div');b.id='updBar';
 b.style.cssText='position:fixed;left:50%;top:10px;transform:translateX(-50%);z-index:9999;background:#1f6f9a;color:#fff;padding:10px 12px 10px 16px;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.25);font:600 14px system-ui,sans-serif;display:flex;gap:12px;align-items:center;max-width:calc(100% - 24px)';
 b.innerHTML='<span>🔄 Nova versão do orientativo disponível</span><button type="button" style="border:0;border-radius:7px;padding:7px 14px;font:700 14px system-ui,sans-serif;background:#e0972e;color:#1b232a;cursor:pointer">Atualizar</button>';
@@ -334,7 +335,7 @@ function abrir(){let o=document.getElementById('catOv');if(o)o.remove();o=docume
   catch(e){b.textContent='Tente de novo';}setTimeout(()=>{b.disabled=false;b.textContent=t;},4000);});}
 window.catInit=function(){const ub=document.getElementById('ubar');if(!ub||document.getElementById('catBtn'))return;const b=document.createElement('button');b.type='button';b.id='catBtn';b.textContent='📘 Catálogos';b.title='Catálogos técnicos Suprema e Gold (fonte do orientativo)';b.onclick=abrir;ub.insertBefore(b,document.getElementById('sugBtn'));};
 })();
-</script><script src="mapa.js?v=1792027185"></script><script>/* ===== Mapa "FC no Brasil" (tela do aluno) ===== */
+</script><script src="mapa.js?v=1792028203"></script><script>/* ===== Mapa "FC no Brasil" (tela do aluno) ===== */
 (function(){
 window.mapaInit=async function(){try{const r=await sb.from('trein_eventos').select('detalhe').eq('tipo','mapa').order('criado_em',{ascending:false}).limit(1);
   const dd=(((r.data||[])[0]||{}).detalhe)||{};const it=dd.pub===false?[]:(dd.itens||[]),orr=dd.orient||[];window.FC_MAPA=dd;const ub=document.getElementById('ubar');if((!it.length&&!orr.length)||!ub||!window.FCM||document.getElementById('mpBtn'))return;
@@ -344,6 +345,20 @@ window.mapaInit=async function(){try{const r=await sb.from('trein_eventos').sele
     o.innerHTML='<div style="width:min(1100px,100%);margin:auto"><div id="mpBox"></div><div style="text-align:center;margin-top:10px"><button type="button" id="mpX" style="font:600 15px system-ui,sans-serif;border-radius:9px;padding:9px 16px;border:0;background:#e9edf0;color:#1b232a;cursor:pointer">← Voltar ao orientativo</button></div></div>';
     document.body.appendChild(o);if(FCM.render2)FCM.render2(document.getElementById('mpBox'),{orient:orr,cons:it,showCons:!!it.length,vit:dd.vit||[]});else FCM.render(document.getElementById('mpBox'),it);document.getElementById('mpX').onclick=()=>o.remove();o.addEventListener('click',e=>{if(e.target===o)o.remove();});};
   ub.insertBefore(b,document.getElementById('sugBtn'));}catch(e){}};
+})();
+</script><script src="dicas.js?v=1792028203"></script><script>/* ===== Dicas da FC (tela do aluno) ===== */
+(function(){
+const VK='fc_dicas_vistas',vistas=()=>{try{return JSON.parse(localStorage.getItem(VK)||'[]');}catch(_){return [];}},marcar=id=>{try{const v=vistas();if(!v.includes(id)){v.push(id);localStorage.setItem(VK,JSON.stringify(v.slice(-200)));}}catch(_){}};
+let L=[];
+function badge(){const b=document.getElementById('dcBtn');if(!b)return;const n=L.filter(d=>!vistas().includes(d.id)).length;b.innerHTML='💡 Dicas'+(n?` <span style="background:#e0372e;color:#fff;font:800 11px system-ui;border-radius:10px;padding:1px 7px;margin-left:2px">${n} nova${n>1?'s':''}</span>`:'');}
+function abrir(){let o=document.getElementById('dcOv');if(o)o.remove();o=document.createElement('div');o.id='dcOv';o.setAttribute('role','dialog');o.setAttribute('aria-label','Dicas da FC');
+  o.style.cssText='position:fixed;inset:0;z-index:9000;background:rgba(10,16,22,.72);overflow:auto;padding:16px;display:flex;align-items:flex-start;justify-content:center';
+  o.innerHTML='<div style="width:min(1000px,100%);margin:auto;background:#f4f6f8;border-radius:16px;padding:20px;font-family:system-ui,sans-serif;color:#0f1e27"><div style="display:flex;align-items:center;gap:10px;margin-bottom:4px"><b style="font-size:22px">💡 Dicas da FC</b><button type="button" id="dcX" style="margin-left:auto;font:600 14px system-ui;border-radius:9px;padding:8px 14px;border:0;background:#e3e8ec;color:#1b232a;cursor:pointer">← Voltar ao orientativo</button></div><p style="margin:0 0 16px;color:#5d6f7a;font-size:14px">Dicas de montagem, onde encontrar produtos e novidades do setor.</p><div id="dcG"></div></div>';
+  document.body.appendChild(o);const vs=vistas();FCD.cards(document.getElementById('dcG'),L,{pag:'app',novo:d=>!vs.includes(d.id),onOpen:d=>{marcar(d.id);badge();}});
+  document.getElementById('dcX').onclick=()=>o.remove();o.addEventListener('click',e=>{if(e.target===o)o.remove();});}
+window.dicasInit=async function(){try{if(!window.FCD||document.getElementById('dcBtn'))return;const ub=document.getElementById('ubar');if(!ub)return;
+  L=(await FCD.carregar()).filter(d=>FCD.ativa(d,'app'));if(!L.length)return;
+  const b=document.createElement('button');b.type='button';b.id='dcBtn';b.title='Dicas de montagem e onde encontrar produtos';b.onclick=abrir;ub.insertBefore(b,document.getElementById('sugBtn'));badge();}catch(e){}};
 })();
 </script></body>
 </html>
