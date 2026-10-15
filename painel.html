@@ -258,7 +258,7 @@ tr.mfin td{background:#eef5fc}
 </main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="auth.js"></script>
-<script src="mapa.js?v=1792023676"></script>
+<script src="mapa.js?v=1792024400"></script>
 <script>
 const ZCFG=new Set(['logo_mapa','logo_ok','implantacao','promo','contrato','empresa_local','gestor_in','gestor_hb','gestor_acao','colab','liberacao','sistema','gestor','chave_app','sugestao','resposta','sug_excluida','zerar','interesse','interesse_ok']);
 function zerarFiltro(ev,zs){const Z={};(zs||ev).forEach(e=>{if(e.tipo==='zerar'){const p=(e.detalhe||{}).para,t=Date.parse(e.criado_em);if(!Z[p]||t>Z[p])Z[p]=t;}});
@@ -900,7 +900,7 @@ function mpRender(){if(!MPD||!window.FCM)return;const esc=v=>String(v||'').repla
     if(a+f===0){if(!confirm(`${x.c}/${x.u} vai ficar com 0 empresas. Excluir a linha?`))return;MPD.splice(+b.dataset.q,1);}else{x.n=a+f;x.f=f;}await mpSalvar();mpRender();});
   document.querySelectorAll('[data-mv1]').forEach(b=>b.onclick=async()=>{const x=MPD[+b.dataset.mv1];if(x.f<x.n)x.f++;await mpSalvar();mpRender();});
   document.querySelectorAll('[data-mrm]').forEach(b=>b.onclick=async()=>{if(!confirm('Excluir esta linha do mapa?'))return;MPD.splice(+b.dataset.mrm,1);await mpSalvar();mpRender();});
-  orUI();if(!document.getElementById('mapCard').classList.contains('tabOff')&&FCM.render2)FCM.render2(document.getElementById('mpPrev'),{orient:MP_OR||[],cons:MPD,showCons:MPUB});}
+  orUI();if(!document.getElementById('mapCard').classList.contains('tabOff')&&FCM.render2)FCM.render2(document.getElementById('mpPrev'),{orient:MP_OR||[],cons:MPD,showCons:MPUB,admin:true,semFesta:true});}
 /* ===== Camada Orientativo FC 3D (automática) e logos ===== */
 function logoSt(uid){let L=null;EV.forEach(e=>{if(e.tipo==='logo_mapa'&&e.user_id===uid&&(!L||e.criado_em>L.criado_em))L=e;});if(!L)return null;const d=L.detalhe||{};if(d.remover)return {L,st:'removido'};
   let D=null;EV.forEach(e=>{if(e.tipo==='logo_ok'&&(e.detalhe||{}).para===uid&&(e.detalhe||{}).ref===L.criado_em&&(!D||e.criado_em>D.criado_em))D=e;});return {L,st:D?((D.detalhe||{}).ok?'ok':'nao'):'pendente',D};}
