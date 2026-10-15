@@ -282,7 +282,7 @@ tr.mfin td{background:#eef5fc}
 <script src="auth.js"></script>
 <script src="mapa.js?v=1792037768"></script><script src="dicas.js?v=1792028270"></script>
 <script>
-const ZCFG=new Set(['vit_nome','logo_mapa','logo_ok','implantacao','promo','contrato','empresa_local','gestor_in','gestor_hb','gestor_acao','colab','liberacao','sistema','gestor','chave_app','sugestao','resposta','sug_excluida','zerar','interesse','interesse_ok']);
+const ZCFG=new Set(['vit_nome','logo_mapa','logo_ok','implantacao','promo','contrato','empresa_local','gestor_in','gestor_hb','gestor_acao','colab','liberacao','sistema','gestor','chave_app','sugestao','resposta','sug_excluida','zerar','interesse','interesse_ok','cat3d','chave_cat3d','chave_cat3d_demo']);
 function zerarFiltro(ev,zs){const Z={};(zs||ev).forEach(e=>{if(e.tipo==='zerar'){const p=(e.detalhe||{}).para,t=Date.parse(e.criado_em);if(!Z[p]||t>Z[p])Z[p]=t;}});
   return ev.filter(e=>ZCFG.has(e.tipo)||!Z[e.user_id]||Date.parse(e.criado_em)>Z[e.user_id]);}
 const TIPOS={jcr200:'Suprema JCR 200',jcr200a:'Suprema JCR 200A',jcr300:'Suprema JCR 300',jcr205:'Suprema JCR 205',pcr200:'Suprema PCR 200',pvz300:'Suprema PVZ 300',pgr100:'Suprema PGR 100',max800:'Suprema MAX 800',gjc2f:'Gold JC-2F',gpc3fvz:'Gold PC3F-VZ',gpc2fpe:'Gold PC-2FPE',gjc4f:'Gold JC-4F',gjc4fs:'Gold JC-4FS',gpc2f:'Gold PC-2F',gpc2fm:'Gold PC-2F MAC',gmax:'Gold MAX'};
@@ -741,7 +741,14 @@ function pedUI(){const P=[];ALUNOS.forEach(a=>colabs(a.user_id).forEach(x=>{if(x
   document.getElementById('pedList').innerHTML=P.map(([a,x],i)=>`<div class="rowl"><span><b>${esc(x.nome)}</b> · ${esc(a.nome||a.login)} <span class="note">pediu em ${fmtD(x.ped)} · ${stTxt(x)}</span></span><span class="bt"><button type="button" class="ok" data-i="${i}" data-n="24">+24 h</button><button type="button" class="ok" data-i="${i}" data-n="48">+48 h</button><button type="button" class="ok" data-i="${i}" data-n="72">+72 h</button></span></div>`).join('');
   document.querySelectorAll('#pedList button').forEach(b=>b.onclick=()=>{b.disabled=true;const [a,x]=P[+b.dataset.i];prorrogar(a.user_id,x,+b.dataset.n);});}
 const sisOf=uid=>{const r=EV.find(e=>e.tipo==='sistema'&&(e.detalhe||{}).para===uid);return r?r.detalhe:{wv:false,cem:false,dia:false};};
-const sisBtns=uid=>{const z=sisOf(uid);return ['wv','cem','dia'].map(k=>`<button type="button" class="stg ${z[k]?'on':''}" data-sis="${k}" data-u="${uid}" title="Clique para ${z[k]?'tirar':'liberar'}"><i></i>${k==='wv'?'WVetro':k==='cem'?'CEM':'Diagrama'}</button>`).join('');};
+const sisBtns=uid=>{const z=sisOf(uid);return ['wv','cem','dia'].map(k=>`<button type="button" class="stg ${z[k]?'on':''}" data-sis="${k}" data-u="${uid}" title="Clique para ${z[k]?'tirar':'liberar'}"><i></i>${k==='wv'?'WVetro':k==='cem'?'CEM':'Diagrama'}</button>`).join('')+catBtn(uid);};
+const catOf=uid=>{const r=EV.find(e=>e.tipo==='cat3d'&&(e.detalhe||{}).para===uid);return r?r.detalhe:null;};
+const hoje3=()=>new Date(Date.now()-4*3600e3).toISOString().slice(0,10);
+const catBtn=uid=>{const z=catOf(uid),h=hoje3(),at=z&&!z.off&&z.ate>=h?z.ate:null,cf=ctrFim(uid),ct=cf&&cf>=h;
+  return `<button type="button" class="stg ${at||ct?'on':''}" data-cat="${uid}" title="${at?'Catálogo 3D liberado até '+brD(at)+'. Clique para somar +30 dias':ct?'Incluído no contrato até '+brD(cf)+'. Clique para liberar avulso +30 dias':'Clique para liberar o Catálogo 3D por 30 dias'}"><i></i>📦 Cat. 3D${at?' até '+brD(at).slice(0,5):ct?' · contrato':''}</button>${at?`<button type="button" class="stg" data-catoff="${uid}" title="Tirar o Catálogo 3D avulso">×</button>`:''}`;};
+document.addEventListener('click',async e=>{const b=e.target.closest('[data-cat],[data-catoff]');if(!b)return;e.stopPropagation();b.disabled=true;
+  if(b.dataset.catoff){const u=b.dataset.catoff;await ins('cat3d',{para:u,ate:hoje3(),off:true});carregar();return;}
+  const u=b.dataset.cat,z=catOf(u),h=hoje3(),base=z&&!z.off&&z.ate>=h?z.ate:h;await ins('cat3d',{para:u,ate:addDias(base,30)});carregar();},true);
 document.addEventListener('click',async e=>{const b=e.target.closest('[data-sis]');if(!b)return;e.stopPropagation();b.disabled=true;const u=b.dataset.u,z=Object.assign({wv:false,cem:false,dia:false},sisOf(u));z[b.dataset.sis]=!z[b.dataset.sis];
   await ins('sistema',{para:u,wv:!!z.wv,cem:!!z.cem,dia:!!z.dia});carregar();},true);
 const senhaLoc=id=>{try{return (JSON.parse(localStorage.getItem('treinFC-senhas')||'{}'))[id]||'';}catch(e){return '';}};
