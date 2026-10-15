@@ -52,9 +52,10 @@
  </div></div>
 <style>.cbtn{display:flex;justify-content:space-between;align-items:center;gap:10px;text-align:left;background:#f4f7f9!important;color:#1b232a!important;border:1px solid #c9d3da!important}
 .cbtn small{font:500 12px 'IBM Plex Mono',monospace;color:#5d6b76}.cbtn.exp{background:#fbeceb!important}.cbtn.exp small{color:#b4372f}
-.cped{background:#e0972e!important;color:#1b1206!important}</style>
+.cped{background:#e0972e!important;color:#1b1206!important}.fcst.on{background:#e6f5ec!important;color:#1f6b3f!important}.ubar #sugBtn.fcon::after{content:"";display:inline-block;width:9px;height:9px;border-radius:50%;background:#2fbf63;margin-left:7px;box-shadow:0 0 0 3px rgba(47,191,99,.25)}</style>
 <div class="gate" id="sugBox" hidden><form class="gcard" id="sugForm" style="width:min(520px,100%);max-height:92vh;overflow:auto">
   <div class="eb">Orientativo FC 3D</div><h1>Dúvidas e sugestões</h1>
+  <div class="fcst" style="font:400 14px/1.4 Barlow,sans-serif;padding:9px 11px;border-radius:8px;background:#f1f4f6;color:#41525c"></div>
   <div id="sugResp" style="display:flex;flex-direction:column;gap:8px;font-size:14px"></div>
   <label>Tipo<select name="tipo" id="sugTipo"><option>Dúvida</option><option>Sugestão de melhoria</option><option>Algo não funcionou</option><option>Elogio</option></select></label>
   <label>Sua mensagem<textarea name="txt" id="sugTxt" required minlength="3" maxlength="1000" rows="4" style="font:inherit;padding:10px;border:1px solid #c9d3da;border-radius:8px"></textarea></label>
@@ -196,7 +197,7 @@ function vigiaPrazo(uid,perfil){setInterval(()=>{if(window.ALUNO_CID&&window.COL
     try{localStorage.setItem('fcTreinUrl',location.href.split('#')[0]);}catch(e){}
     document.getElementById('ubar').hidden=false;
     document.getElementById('uname').textContent=(perfil.nome||perfil.login)+(perfil.papel==='admin'?' · matriz':'');
-    sugInit();if(window.catInit)catInit();
+    sugInit();if(perfil.papel==='admin')fcPing();else fcStatusUI();if(window.catInit)catInit();
     if(perfil.papel!=='admin'&&window.divInit)divInit(uid,perfil);
     if(window.mapaInit)setTimeout(mapaInit,300);
     if(window.dicasInit)setTimeout(dicasInit,500);

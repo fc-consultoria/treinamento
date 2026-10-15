@@ -29,3 +29,12 @@ function gateUI(onOk,{soMatriz=false}={}){
   check();
 }
 async function sair(){await sb.auth.signOut();location.reload();}
+
+/* Suporte online/offline */
+const FC_HOR='seg a sex, 8h às 11h e 13h às 17h';
+async function fcOnline(){try{const {data,error}=await sb.rpc('fc_online');return !error&&!!data;}catch(e){return false;}}
+function fcStatusUI(){const upd=async()=>{const on=await fcOnline();document.querySelectorAll('.fcst').forEach(el=>{el.classList.toggle('on',on);el.classList.toggle('off',!on);
+  el.innerHTML=on?'🟢 <b>Suporte FC online agora</b> · pode mandar a sua dúvida':'⚪ <b>Suporte offline</b> · atendimento '+FC_HOR+'. Deixe a sua mensagem: respondemos no próximo horário.';});
+  const b=document.getElementById('sugBtn');if(b)b.classList.toggle('fcon',on);};
+  upd();setInterval(()=>{if(document.visibilityState==='visible')upd();},60000);}
+function fcPing(){const p=()=>{if(document.visibilityState==='visible')sb.from('fc_status').update({visto:new Date().toISOString()}).eq('id',1).then(()=>{});};p();setInterval(p,60000);document.addEventListener('visibilitychange',p);}
