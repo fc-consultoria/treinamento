@@ -3077,3 +3077,18 @@ function demo2Init(){
 
 if(window.FC_DEMO===2)demo2Init();else if(window.FC_DEMO)demoInit();
 </script>
+<script>window.FC_PAG="demo";</script><script>/* contagem anônima de visitas (sem nome, sem cookie) */
+(function(){try{const SB='https://cpkjphodruyxfouirhpd.supabase.co',KEY='sb_publishable_d0HEeWsaqOeZIQKGftlF-Q_B8BUOWWg';
+ let s=sessionStorage.getItem('fc_s');if(!s){s=Math.random().toString(36).slice(2,12)+Date.now().toString(36);sessionStorage.setItem('fc_s',s);}
+ const q=new URLSearchParams(location.search);let o=q.get('o')||sessionStorage.getItem('fc_o');
+ if(!o){let h='';try{h=document.referrer?new URL(document.referrer).host:'';}catch(_){}o=!h?'direto':/instagram/i.test(h)?'insta':/facebook|fb\.|messenger/i.test(h)?'facebook':/google/i.test(h)?'google':/whatsapp|wa\.me/i.test(h)?'whats':/bing|yahoo|duckduck/i.test(h)?'busca':'outros';}
+ o=String(o).toLowerCase().replace(/[^a-z0-9_-]/g,'').slice(0,20)||'direto';sessionStorage.setItem('fc_o',o);
+ let ref='';try{ref=document.referrer?new URL(document.referrer).host:'';}catch(_){}
+ const PAG=window.FC_PAG||'site',feitos={};
+ const hit=(ev,uma)=>{if(uma){if(feitos[ev])return;feitos[ev]=1;}try{fetch(SB+'/rest/v1/rpc/site_hit',{method:'POST',keepalive:true,headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify({p_s:s,p_pag:PAG,p_ev:ev,p_o:o,p_ref:ref})}).catch(()=>{});}catch(_){}};
+ hit('view');window.FC_HIT=hit;
+ document.addEventListener('click',e=>{const a=e.target.closest&&e.target.closest('a');if(!a)return;const h=a.href||'';
+  if(/wa\.me|whatsapp/i.test(h))hit('whats');else if(/demo\.html/i.test(h))hit('demo_click',1);else if(/\/treinamento\//i.test(h))hit('orient',1);else if(/instagram\.com/i.test(h))hit('insta_click',1);},true);
+ if(PAG==='demo'){const uso=()=>{hit('demo_uso',1);};document.addEventListener('pointerdown',e=>{if(e.target.closest&&e.target.closest('canvas,#evl,.stage,select,.tb button,[data-t]'))uso();},true);}
+}catch(_){}})();
+</script>
