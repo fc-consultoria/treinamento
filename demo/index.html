@@ -2992,7 +2992,7 @@ function demo2Init(){
   const escH=v=>String(v||'').replace(/&/g,'&amp;').replace(/</g,'&lt;');
   function chatDraw(){const l=document.querySelector('#d2ChP .l');if(!l)return;
     const intro=`<div class="m fc">Olá${NOME?', '+escH(NOME):''}! 👋 Ficou alguma dúvida ou quer negociar para a sua empresa? Escreva aqui que o <b>Fernando</b> responde por aqui mesmo.<small>FC Consultoria</small></div>`;
-    l.innerHTML=intro+CH.itens.map(x=>`<div class="m ${x.q==='fc'?'fc':'eu'}">${escH(x.tx)}<small>${x.q==='fc'?'Fernando · FC':'Você'} · ${hora(x.em)}</small></div>`).join('');l.scrollTop=l.scrollHeight;}
+    l.innerHTML=(CH.itens.some(x=>x.q==='fc')?'':intro)+CH.itens.map(x=>`<div class="m ${x.q==='fc'?'fc':'eu'}">${escH(x.tx)}<small>${x.q==='fc'?'Fernando · FC':'Você'} · ${hora(x.em)}</small></div>`).join('');l.scrollTop=l.scrollHeight;}
   function marcarVisto(){const mx=CH.itens.reduce((m,x)=>x.q==='fc'&&x.id>m?x.id:m,0);if(mx>CH.seen){CH.seen=mx;try{localStorage.setItem('fcd2-ch-'+code,String(mx));}catch(_){}}badge();}
   function badge(){const n=CH.itens.filter(x=>x.q==='fc'&&x.id>CH.seen).length,b=document.getElementById('d2ChB');if(!b)return;b.classList.toggle('nv',!!n);const i=document.getElementById('d2ChN');if(i)i.textContent=n||'';}
   function chatAbrir(ctx){if(document.getElementById('d2ChP')){chatDraw();return;}CH.open=true;const b=document.getElementById('d2ChB');if(b)b.style.display='none';
