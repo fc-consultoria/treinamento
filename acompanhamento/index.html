@@ -280,7 +280,7 @@ function etapasHtml(et){
     const cls=e.feita?'feita':(i===atual?'atual':'');
     const andamento=e.status==='andamento'||e.status==='aguardando'||i===atual;
     const st=e.feita?'<span class="st ok">✓ Concluída</span>':(andamento?((e.responsavel==='cliente'||e.status==='aguardando')?'<span class="st and">Aguardando sua equipe</span>':'<span class="st and">Em andamento</span>'):'<span class="st prev">Prevista</span>');
-    return `<li class="et ${cls}"><span class="nb">${e.feita?'✓':i+1}</span><div><div class="ti">${esc(e.titulo)} ${e.responsavel==='cliente'?'<span class="tag cli">Sua equipe</span>':''}</div>${e.data?`<div class="dd">${esc(dcurta(e.data))}</div>`:''}${acoesEtapa(e,i)}</div>${st}</li>`;}).join('')}</ol></section>`;
+    return `<li class="et ${cls}" data-en="${i+1}"><span class="nb">${e.feita?'✓':i+1}</span><div><div class="ti">${esc(e.titulo)} ${e.responsavel==='cliente'?'<span class="tag cli">Sua equipe</span>':''}</div>${e.data?`<div class="dd">${esc(dcurta(e.data))}</div>`:''}${acoesEtapa(e,i)}</div>${st}</li>`;}).join('')}</ol></section>`;
 }
 const normCod=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[\s\-\.\/_]+/g,'');
 
@@ -450,26 +450,38 @@ function iniciarDemo(){
     galeria(sb,chave,ENVIO.nome||'');
   }catch(e){console.error(e);estado('Não foi possível carregar','Verifique sua internet e recarregue a página.');}
 })();
-// Galeria do processo de implantação: fica fechada; abre a grade de miniaturas; toque abre a foto em tela cheia
+// Galeria do processo de implantação: fica fechada; abre a grade por etapa; toque abre a foto em tela cheia.
+// Cada etapa da lista também ganha o link "📷 N fotos".
 async function galeria(sb,chave,nome){try{
   const r=await sb.rpc('impl_portal_galeria',{p_chave:chave,p_nome:nome});if(r.error||!Array.isArray(r.data)||!r.data.length)return;
-  const G=r.data,sec=$('#galSec'),gr=$('#galGrade'),FULL={},esc=t=>String(t||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-  const dia=iso=>new Date(iso).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'});
+  const esc=t=>String(t||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const nEt=g=>{const m=/^(\d+)\s*·/.exec(g.etapa||'');return m?+m[1]:0;};
+  const nomeEt=n=>n&&ETAPAS_IMPL[n-1]?n+' · '+ETAPAS_IMPL[n-1].titulo:'Geral';
+  const G=r.data.map(g=>Object.assign(g,{n:nEt(g)}));G.forEach(g=>g.rot=g.n?nomeEt(g.n):(g.etapa&&g.etapa!=='Geral'?g.etapa:'Geral'));
+  const sec=$('#galSec'),gr=$('#galGrade'),FULL={},dia=iso=>new Date(iso).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'});
   $('#galCnt').textContent=G.length+' foto'+(G.length>1?'s':'')+' · última em '+dia(G[0].em);sec.hidden=false;
-  const et=[...new Set(G.map(g=>g.etapa||'Outros'))];
-  gr.innerHTML=et.map(e=>`<div style="font:600 13px var(--mono,monospace);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:12px 0 8px">${esc(e)}</div><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px">`+
-    G.map((g,i)=>[g,i]).filter(([g])=>(g.etapa||'Outros')===e).map(([g,i])=>`<button type="button" data-gi="${i}" style="all:unset;cursor:pointer;display:block;border-radius:9px;overflow:hidden;border:1px solid var(--line);background:#f4f7f8" title="${esc(g.legenda)}"><img src="${g.mini}" alt="${esc(g.legenda)}" loading="lazy" style="display:block;width:100%;aspect-ratio:4/3;object-fit:cover"><span style="display:block;font-size:11.5px;color:var(--muted);padding:4px 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${dia(g.em)}${g.legenda?' · '+esc(g.legenda):''}</span></button>`).join('')+'</div>').join('');
+  const grupos=[...new Set(G.map(g=>g.rot))].sort((a,b)=>{const na=parseInt(a)||99,nb=parseInt(b)||99;return na-nb;});
+  const thumb=g=>`<button type="button" data-gid="${g.id}" data-gr="${esc(g.rot)}" style="all:unset;cursor:pointer;display:block;border-radius:9px;overflow:hidden;border:1px solid var(--line);background:#f4f7f8" title="${esc(g.legenda)}"><img src="${g.mini}" alt="${esc(g.legenda)}" loading="lazy" style="display:block;width:100%;aspect-ratio:4/3;object-fit:cover"><span style="display:block;font-size:11.5px;color:var(--muted);padding:4px 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${dia(g.em)}${g.legenda?' · '+esc(g.legenda):''}</span></button>`;
+  gr.innerHTML=grupos.map(e=>`<div style="font:600 12.5px var(--mono,monospace);letter-spacing:.04em;color:var(--muted);margin:14px 0 8px">${esc(e.toUpperCase())}</div><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px">${G.filter(g=>g.rot===e).map(thumb).join('')}</div>`).join('');
   $('#galTog').onclick=()=>{gr.hidden=!gr.hidden;$('#galSeta').textContent=gr.hidden?'▼ Ver fotos':'▲ Fechar';};
-  let cur=0;const fu=$('#galFull'),img=$('#galImg');
-  const abrir=async i=>{cur=(i+G.length)%G.length;const g=G[cur];fu.hidden=false;document.body.style.overflow='hidden';img.src=FULL[g.id]||g.mini;
-    $('#galLeg').textContent=(g.etapa?g.etapa+' · ':'')+dia(g.em)+(g.legenda?' · '+g.legenda:'')+'  ('+(cur+1)+' de '+G.length+')';
-    if(!FULL[g.id]){const f=await sb.rpc('impl_portal_galeria_foto',{p_chave:chave,p_nome:nome,p_id:g.id});if(!f.error&&f.data){FULL[g.id]=f.data;if(G[cur].id===g.id)img.src=f.data;}}};
+  let L=G,cur=0;const fu=$('#galFull'),img=$('#galImg');
+  const abrir=async i=>{cur=(i+L.length)%L.length;const g=L[cur];fu.hidden=false;document.body.style.overflow='hidden';img.src=FULL[g.id]||g.mini;
+    $('#galLeg').textContent=g.rot+' · '+dia(g.em)+(g.legenda?' · '+g.legenda:'')+'  ('+(cur+1)+' de '+L.length+')';
+    $('#galAnt').style.visibility=$('#galProx').style.visibility=L.length>1?'visible':'hidden';
+    if(!FULL[g.id]){const f=await sb.rpc('impl_portal_galeria_foto',{p_chave:chave,p_nome:nome,p_id:g.id});if(!f.error&&f.data){FULL[g.id]=f.data;if(L[cur]&&L[cur].id===g.id)img.src=f.data;}}};
+  const abrirLista=(lista,id)=>{L=lista;abrir(Math.max(0,lista.findIndex(g=>g.id===id)));};
   const fechar=()=>{fu.hidden=true;document.body.style.overflow='';};
-  gr.addEventListener('click',e=>{const b=e.target.closest('[data-gi]');if(b)abrir(+b.dataset.gi);});
+  gr.addEventListener('click',e=>{const b=e.target.closest('[data-gid]');if(b)abrirLista(G.filter(g=>g.rot===b.dataset.gr),b.dataset.gid);});
   $('#galX').onclick=fechar;$('#galAnt').onclick=()=>abrir(cur-1);$('#galProx').onclick=()=>abrir(cur+1);
   fu.addEventListener('click',e=>{if(e.target===fu)fechar();});
   document.addEventListener('keydown',e=>{if(fu.hidden)return;if(e.key==='Escape')fechar();else if(e.key==='ArrowLeft')abrir(cur-1);else if(e.key==='ArrowRight')abrir(cur+1);});
   let x0=null;fu.addEventListener('touchstart',e=>{x0=e.touches[0].clientX;},{passive:true});fu.addEventListener('touchend',e=>{if(x0===null)return;const dx=e.changedTouches[0].clientX-x0;if(Math.abs(dx)>50)abrir(cur+(dx<0?1:-1));x0=null;});
+  // link "📷 N fotos" em cada etapa (refeito quando a página redesenha)
+  const marcar=()=>document.querySelectorAll('li.et[data-en]').forEach(li=>{const n=+li.dataset.en,F=G.filter(g=>g.n===n),ti=li.querySelector('.ti');if(!F.length||!ti||ti.querySelector('.galEt'))return;
+    const b=document.createElement('button');b.type='button';b.className='galEt';b.textContent='📷 '+F.length+' foto'+(F.length>1?'s':'');
+    b.style.cssText='margin-left:6px;border:1px solid var(--line);background:#fff;color:#0d5c8f;font:600 12.5px var(--body,system-ui);padding:2px 9px;border-radius:99px;cursor:pointer;vertical-align:1px';
+    b.onclick=ev=>{ev.stopPropagation();abrirLista(F,F[0].id);};ti.appendChild(b);});
+  marcar();new MutationObserver(marcar).observe($('#app'),{childList:true,subtree:true});
 }catch(e){console.warn('galeria',e);}}
 // Tela de entrada: a pessoa digita o nome cadastrado pela FC e entra (o link continua sendo a chave de segurança)
 function telaEntrar(sb,chave,chaveNome){

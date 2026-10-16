@@ -175,22 +175,22 @@
   }
 
   // ===== Galeria do processo de implantação (fotos/prints só deste cliente) =====
-  const ETAPAS_GAL=['Perfis','Componentes','Vidros','Tipologias','Configuração do sistema','Outros'];
+  const ETAPAS_GAL=['Geral (sem etapa)',...['Acesso ao sistema e definição das 05 linhas','Definição das cores dos perfis e dos componentes','Preço de custo dos vidros','Cotação das listas de componentes','Preço de custo dos perfis por cor','Ajuste do cadastro de componentes conforme comprado no fornecedor','Ajuste das tipologias liberadas no sistema','Conferência e simulação de orçamento','Ajuste de margem para o preço de venda','Finalização e feedback'].map((t,i)=>(i+1)+' · '+t)];
   function galHtml(c){
     if(S.semGal)return `${rot('📸 Galeria do processo')}<p class="note" style="color:var(--bad)">Galeria ainda não ligada no banco de dados: rode o arquivo portal_galeria.sql no Supabase e clique em Atualizar.</p>`;
     const L=(S.gal||{})[c.id]||[];
     return `${rot('📸 Galeria do processo · '+L.length+' foto'+(L.length===1?'':'s')+' · só este cliente vê')}
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
       <select id="gEt-${c.id}" style="${inp}">${ETAPAS_GAL.map(e=>`<option>${e}</option>`).join('')}</select>
-      <input id="gLeg-${c.id}" placeholder="Legenda (opcional). Ex.: Perfis Suprema cadastrados" style="${inp};flex:1;min-width:220px">
+      <input id="gLeg-${c.id}" placeholder="Legenda (opcional). Ex.: Print do fornecedor enviando a tabela em 14/10" style="${inp};flex:1;min-width:220px">
       <label style="font:600 13.5px var(--f-body);padding:8px 14px;border-radius:8px;cursor:pointer;background:var(--accent);color:#fff">📷 Adicionar fotos<input type="file" accept="image/*" multiple hidden data-gal="${c.id}"></label></div>
-    <p class="note" style="margin:6px 0 0">⚠️ Antes de enviar, confira se o print não mostra <b>senha</b>, <b>preço de fornecedor</b> ou dados de outro cliente. As fotos são reduzidas automaticamente.</p>
+    <p class="note" style="margin:6px 0 0">⚠️ Antes de enviar, confira se o print não mostra <b>senha</b>, <b>preço de fornecedor</b> ou dados de outro cliente. Print de conversa: recorte só a parte que importa. As fotos são reduzidas automaticamente e aparecem na etapa escolhida.</p>
     ${L.length?`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;margin-top:10px">${L.map(g=>`<div style="position:relative;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#f4f7f8" title="${esc((g.etapa||'')+' · '+(g.legenda||''))}"><img src="${g.mini}" alt="" style="display:block;width:100%;aspect-ratio:4/3;object-fit:cover"><span style="display:block;font-size:11px;padding:3px 5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(g.etapa||'')}${g.legenda?' · '+esc(g.legenda):''}</span>${S.pend==='g|'+g.id?`<button type="button" data-ac="gDel" data-gid="${g.id}" style="position:absolute;inset:0;border:0;background:rgba(160,30,30,.85);color:#fff;font:700 12px var(--f-body);cursor:pointer">Toque de novo para apagar</button>`:`<button type="button" data-ac="gDel" data-gid="${g.id}" title="Apagar" style="position:absolute;top:4px;right:4px;border:0;border-radius:50%;width:24px;height:24px;background:rgba(0,0,0,.6);color:#fff;cursor:pointer">✕</button>`}</div>`).join('')}</div>`:'<p class="note" style="margin:8px 0 0">Nenhuma foto ainda. Para o cliente, a galeria só aparece depois da primeira foto.</p>'}`;
   }
   function reduzir(file,max,q){return new Promise((ok,no)=>{const u=URL.createObjectURL(file),im=new Image();im.onload=()=>{const k=Math.min(1,max/Math.max(im.width,im.height)),cv=document.createElement('canvas');cv.width=Math.round(im.width*k);cv.height=Math.round(im.height*k);const cx=cv.getContext('2d');cx.fillStyle='#fff';cx.fillRect(0,0,cv.width,cv.height);cx.drawImage(im,0,0,cv.width,cv.height);URL.revokeObjectURL(u);ok(cv.toDataURL('image/jpeg',q));};im.onerror=()=>{URL.revokeObjectURL(u);no(new Error('Imagem inválida: '+file.name));};im.src=u;});}
   document.addEventListener('change',async ev=>{
     const inp0=ev.target;if(!inp0.dataset||!inp0.dataset.gal)return;const id=inp0.dataset.gal,fs=[...(inp0.files||[])];if(!fs.length)return;
-    const etapa=$('gEt-'+id).value,legenda=$('gLeg-'+id).value.trim()||null;
+    const etapa=$('gEt-'+id).value.startsWith('Geral')?'Geral':$('gEt-'+id).value,legenda=$('gLeg-'+id).value.trim()||null;
     try{for(let i=0;i<fs.length;i++){toast(`Enviando foto ${i+1} de ${fs.length}…`);
         const [foto,mini]=await Promise.all([reduzir(fs[i],1800,.82),reduzir(fs[i],360,.7)]);
         const {error}=await sb.from('impl_portal_galeria').insert({cliente_id:id,etapa,legenda,foto,mini});if(error)throw error;}
