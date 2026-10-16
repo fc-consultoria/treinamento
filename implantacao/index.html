@@ -6506,11 +6506,11 @@ function openNovoClienteModal(versaoNova){
         <div class="desc" style="margin-top:6px;">"Cliente ativo" é para quem já usou nosso serviço antes e está retomando agora — os avisos automáticos de progresso passam a falar em "revisão" em vez de "implantação".</div>
       </div>
       <div>
-        <label style="display:block; font-size:12px; font-weight:650; color:var(--text-2); margin-bottom:6px;">Linhas de Componentes contratadas</label>
+        <label style="display:block; font-size:12px; font-weight:650; color:var(--text-2); margin-bottom:6px;">${versaoNova ? 'Linhas sendo alimentadas' : 'Linhas de Componentes contratadas'}</label>
         <div class="chiprow" id="nc-linhas-row">
           ${Object.keys(PRICE_DB).sort().map(nome=>`<button type="button" class="chip" data-linha="${nome}">${nome}</button>`).join('')}
         </div>
-        <div class="desc" style="margin-top:6px;">Pode deixar em branco e marcar depois em "Contrato & Acesso".</div>
+        <div class="desc" style="margin-top:6px;">${versaoNova ? 'São as linhas do Banco de Preços que entram na contagem e aparecem para o cliente no acompanhamento. Pode marcar depois em "Contrato & Acesso".' : 'Pode deixar em branco e marcar depois em "Contrato & Acesso".'}</div>
       </div>
       ${versaoNova ? `<div style="border:1px solid #9fd8d4; background:#f2fbfa; border-radius:10px; padding:12px 14px;">
         <div style="font-weight:650; margin-bottom:6px;">📡 Acompanhamento online (versão nova)</div>
