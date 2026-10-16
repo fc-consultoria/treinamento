@@ -1226,7 +1226,10 @@ function mkLeg(f){const st=f.startsWith('status');if(st){const lk=f==='status-4-
   const i=MKT.fd.findIndex(x=>x[0]===f);return (MKT.lg[i]||['',''])[1];}
 function mkAviso(t){const e=document.createElement('div');e.textContent=t;e.style.cssText='position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#1b232a;color:#fff;padding:10px 16px;border-radius:12px;font:600 14px system-ui;z-index:99999;max-width:92vw;text-align:center';document.body.appendChild(e);setTimeout(()=>e.remove(),6000);}
 async function mkPostar(f,b){const st=f.startsWith('status'),leg=mkLeg(f);let copiou=false;try{await navigator.clipboard.writeText(leg);copiou=true;}catch(_){}
+  const cel=matchMedia('(pointer:coarse)').matches;
   try{const bl=await fetch('mkt/'+f+'.jpg').then(r=>r.blob()),file=new File([bl],f+'.jpg',{type:'image/jpeg'});
+    if(st&&!cel){const a=document.createElement('a');a.href=URL.createObjectURL(bl);a.download=f+'.jpg';document.body.appendChild(a);a.click();a.remove();
+      mkAviso('Status do WhatsApp se posta pelo celular: abra este painel no celular, vá em Marketing e toque em 📤 Postar → WhatsApp → Meu status. (Imagem baixada'+(copiou?' e legenda copiada':'')+' aqui, se preferir mandar para o celular.)');return;}
     if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],text:leg});
       mkSet(f,new Date().toLocaleDateString('pt-BR'));mkUI();mkAviso((copiou?'Legenda copiada. ':'')+'Se o app não trouxe o texto, é só colar na legenda.');return;}
     const a=document.createElement('a');a.href=URL.createObjectURL(bl);a.download=f+'.jpg';document.body.appendChild(a);a.click();a.remove();
