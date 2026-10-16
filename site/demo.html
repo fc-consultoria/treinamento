@@ -2891,7 +2891,7 @@ function demo2Init(){
     setTypo('jcr200');
   }).catch(()=>fim('Sem conexão','Verifique a internet e abra o link de novo.'));
   function montarBarra(){
-    const bar=document.createElement('div');bar.className='d2bar';bar.innerHTML=`<span><b>Demonstrativo${NOME?' · '+NOME.replace(/</g,'&lt;'):''}</b> · 2 tipologias da Suprema e 2 da Gold. Gire, abra as folhas, desmonte e veja os cortes.</span><span class="tm" id="d2tm"></span><button type="button" id="d2Cat" style="margin-left:auto;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.5);color:#fff;font:600 14px var(--f-display);padding:8px 12px;border-radius:8px;cursor:pointer">📄 Catálogos 🔒</button><button type="button" id="d2Op" style="background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.5);color:#fff;font:600 14px var(--f-display);padding:8px 12px;border-radius:8px;cursor:pointer">⭐ Dar opinião</button><a href="#" id="d2Q" style="margin-left:0">${PROMO?'🔥 Oferta: contratar agora':'💳 Contratar agora'}</a>`;
+    const bar=document.createElement('div');bar.className='d2bar';bar.innerHTML=`<span><b>Demonstrativo${NOME?' · '+NOME.replace(/</g,'&lt;'):''}</b> · 2 tipologias da Suprema e 2 da Gold. Gire, abra as folhas, desmonte e veja os cortes. Teste também Monte a esquadria, Orientação em Sistema e Diagrama (3 vezes cada).</span><span class="tm" id="d2tm"></span><button type="button" id="d2Cat" style="margin-left:auto;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.5);color:#fff;font:600 14px var(--f-display);padding:8px 12px;border-radius:8px;cursor:pointer">📄 Catálogos 🔒</button><button type="button" id="d2Op" style="background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.5);color:#fff;font:600 14px var(--f-display);padding:8px 12px;border-radius:8px;cursor:pointer">⭐ Dar opinião</button><a href="#" id="d2Q" style="margin-left:0">${PROMO?'🔥 Oferta: contratar agora':'💳 Contratar agora'}</a>`;
     const wr=document.querySelector('.wrap');wr.insertBefore(bar,wr.firstChild);document.getElementById('d2Q').onclick=e=>{e.preventDefault();contratar('Faixa do demonstrativo');};document.getElementById('d2Op').onclick=()=>opiniao(false);document.getElementById('d2Cat').onclick=catalogos;tick();setInterval(tick,30000);
     if(!PREV)setInterval(()=>{if(document.visibilityState==='visible')send('tempo',{s:60,t:S.typo});},60000);
     chatInit();
@@ -3118,12 +3118,20 @@ function demo2Init(){
   const TUT={'m-test':['Monte a esquadria','tut_monte.mp4','O colaborador monta a esquadria peça por peça, em 3 níveis, com tempo, estrelas e recorde.'],
     'm-prat':['Orientação em Sistema','tut_sistema.mp4','Lançamento do pedido no WVetro e no CEM, conferido item a item, como na empresa.'],
     'm-dia':['Diagrama de dimensões','tut_diagrama.mp4','Pressão de vento e tamanho máximo de cada mão de amigo, com a estrutura reagindo em 3D.']};
-  const vid=id=>{const [t,f,x]=TUT[id];TRK('tutorial',{m:t});let o=document.getElementById('d2Vid');if(o)o.remove();o=document.createElement('div');o.id='d2Vid';
-    o.innerHTML=`<div><h3>▶ Como funciona: ${t}</h3><video src="${f}" controls autoplay muted playsinline></video><p style="margin:10px 0 0;color:#b9c8d0">${x} Disponível no <b>Orientativo FC 3D completo</b>.</p><div class="r"><button type="button" id="d2X">← Voltar ao demonstrativo</button><a href="#" id="d2W">💳 Contratar agora</a></div></div>`;
+  const vid=(id,acabou)=>{const [t,f,x]=TUT[id];TRK('tutorial',{m:t});let o=document.getElementById('d2Vid');if(o)o.remove();o=document.createElement('div');o.id='d2Vid';
+    o.innerHTML=`<div><h3>${acabou?'✔ Você usou os '+LIM+' testes de '+t+' deste demonstrativo':'▶ Como funciona: '+t}</h3><video src="${f}" controls autoplay muted playsinline></video><p style="margin:10px 0 0;color:#b9c8d0">${x} Disponível no <b>Orientativo FC 3D completo</b>.</p><div class="r"><button type="button" id="d2X">← Voltar ao demonstrativo</button><a href="#" id="d2W">💳 Contratar agora</a></div></div>`;
     document.body.appendChild(o);const v=o.querySelector('video');v.onended=()=>document.getElementById('d2W').classList.add('big');
     document.getElementById('d2X').onclick=()=>o.remove();o.addEventListener('click',e=>{if(e.target===o)o.remove();});
     document.getElementById('d2W').addEventListener('click',ev=>{ev.preventDefault();o.remove();contratar('Tutorial: '+t);});};
-  Object.keys(TUT).forEach(id=>{const b=document.getElementById(id);if(!b)return;b.hidden=false;b.classList.add('dlk');b.title='Ver como funciona';const n=b.cloneNode(true);b.replaceWith(n);n.addEventListener('click',e=>{e.stopImmediatePropagation();vid(id);});});
+  /* ferramentas liberadas com limite de testes por link (neste aparelho) */
+  const LIM=3,uk=id=>'fc_demo_uso_'+code+'_'+id,usos=id=>{try{return +localStorage.getItem(uk(id))||0;}catch(_){return 0;}};
+  const ativo=id=>id==='m-test'?S.mode==='test':id==='m-dia'?!!S.diaOn:!!(S.wvOn||S.cemOn);
+  const rot=id=>{const b=document.getElementById(id);if(!b)return;const r=PREV?LIM:Math.max(0,LIM-usos(id));b.classList.toggle('dlk',r<=0&&!ativo(id));b.title=r>0?`Liberado no demonstrativo: ${r} de ${LIM} testes`:'Ver como funciona';let s=b.querySelector('.d2u');if(!s){s=document.createElement('span');s.className='d2u';b.appendChild(s);}s.textContent=r>0?r+'/'+LIM:'';};
+  {const k=document.createElement('style');k.textContent='.modes button .d2u:not(:empty){margin-left:6px;font:700 11px var(--f-mono);background:#e0972e;color:#1b1206;border-radius:10px;padding:1px 6px;vertical-align:1px}';document.head.appendChild(k);}
+  Object.keys(TUT).forEach(id=>{const b=document.getElementById(id);if(b){b.hidden=false;rot(id);}});
+  {const md=document.querySelector('.modes');if(md)md.addEventListener('click',e=>{setTimeout(()=>Object.keys(TUT).forEach(rot),60);const b=e.target.closest('#m-test,#m-prat,#m-dia');if(!b||PREV)return;const id=b.id;if(ativo(id))return;
+    if(usos(id)>=LIM){e.stopImmediatePropagation();e.preventDefault();vid(id,true);return;}
+    const n=usos(id)+1;try{localStorage.setItem(uk(id),n);}catch(_){}TRK('ferramenta',{m:TUT[id][0],n});rot(id);},true);}
   ['c-swap','c-us'].forEach(id=>{const e=document.getElementById(id);if(e)e.classList.add('dhide');});
   const gb=document.querySelector('.guiabtn');if(gb)gb.classList.add('dhide');
   {const c=document.getElementById('in-cor');if(c)c.addEventListener('change',()=>TRK('cor',{t:S.typo,c:c.value}));}
