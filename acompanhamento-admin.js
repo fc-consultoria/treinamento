@@ -17,7 +17,7 @@
   async function carregar(){
     try{
       const [c,p,f]=await Promise.all([
-        sb.from('impl_clientes').select('id,nome,status').order('nome'),
+        sb.from('impl_clientes').select('id,nome,status,telefone').order('nome'),
         sb.from('impl_portal').select('*'),
         sb.from('impl_portal_fotos').select('cliente_id,publicado_em,origem').order('publicado_em',{ascending:false}).limit(500)]);
       for(const r of [c,p,f]) if(r.error) throw r.error;
@@ -67,6 +67,7 @@
     ${rot('Link do cliente')}
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><input readonly value="${esc(url)}" style="${inp};flex:1;min-width:260px;font-family:var(--f-mono);font-size:12.5px" onclick="this.select()">
       ${btn('copiar','Copiar link','data-url="'+esc(url)+'"')}<a href="${esc(url)}" target="_blank" rel="noopener" style="font:600 13.5px var(--f-body);color:var(--accent)">Ver como o cliente vê ↗</a><a href="${esc(url)}&previa=1" target="_blank" rel="noopener" style="font:600 13.5px var(--f-body);color:#b86e00">Prévia da próxima publicação ↗</a></div>
+    ${textoLinkHtml(c,url)}
     ${pessoasHtml(c,url)}
     ${rot('Publicação do andamento')}
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
@@ -99,6 +100,26 @@
     'O acesso é pessoal, por isso não repasse o link. Se outra pessoa da equipe precisar acompanhar, é só nos avisar que fazemos o cadastro (até 4 pessoas).','',
     'Dúvidas: (66) 9 9986-7984, de segunda a sexta, das 08:00 às 11:00 e das 13:00 às 17:00 (horário de Sinop/MT, 1 hora a menos que Brasília).','',
     'FC Consultoria'].join('\n');
+  // Texto padrão do link (geral, para o grupo/contato principal do cliente) — monta sozinho com nome e link
+  const msgLinkGeral=(c,url)=>{const temP=((S.usuarios||{})[c.id]||[]).length>0;return [
+    `Olá, equipe ${c.nome}! Tudo bem?`,'',
+    'A partir de agora vocês acompanham a implantação de preços no sistema por este link:',url,'',
+    '*Como entrar*','1. Abra o link no celular ou no computador.',
+    temP?'2. Digite o seu nome, do jeito que foi cadastrado, e toque em *Entrar*. Nas próximas vezes o navegador já lembra.':'2. A página abre direto, sem senha.','',
+    '*O que vocês encontram lá*','• O percentual concluído de cada linha contratada. Quando uma linha chega a 100%, a próxima aparece.','• As etapas da implantação e o que estamos aguardando da equipe de vocês.','• O botão para enviar as planilhas que pedirmos (Excel, PDF ou print).','• Em "Ver os itens alimentados", os códigos já cadastrados no sistema.','',
+    '*Quando é atualizado*','De segunda a sexta, às 09:00 (horário de Brasília), que são 08:00 aqui em Sinop/MT.','',
+    'Guardem este link e não repassem para fora da empresa.','',
+    'Dúvidas: (66) 9 9986-7984, de segunda a sexta, das 08:00 às 11:00 e das 13:00 às 17:00 (horário de Sinop/MT, 1 hora a menos que Brasília).','',
+    'FC Consultoria'].join('\n');};
+  function textoLinkHtml(c,url){
+    const msg=msgLinkGeral(c,url),d=soDig(c.telefone),fone=d.length>=10?(d.length<=11?'55'+d:d):'';
+    return rot('Texto pronto para enviar com o link')+
+    `<p class="note" style="margin:0 0 6px">Monta sozinho com o nome e o link do cliente. Os asteriscos (*) viram negrito no WhatsApp.</p>
+    <textarea readonly rows="8" onclick="this.select()" style="${inp};width:100%;box-sizing:border-box;font-size:13px;line-height:1.45;resize:vertical">${esc(msg)}</textarea>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:6px">
+      ${btn('copiarMsgLink','Copiar texto com o link','data-id="'+c.id+'"','pri')}
+      <a href="https://wa.me/${fone}?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener" style="font:600 13.5px var(--f-body);color:#1f8a4c">${fone?'Enviar pelo WhatsApp do cliente ↗':'Enviar pelo WhatsApp (escolher contato) ↗'}</a></div>`;
+  }
   function pessoasHtml(c,url){
     if(S.semUsuarios) return rot('Pessoas com acesso ao link')+`<p class="note" style="color:var(--bad);margin:0">Cadastro de pessoas ainda não ligado no banco de dados: rode o arquivo portal_acessos.sql no Supabase.</p>`;
     const us=(S.usuarios||{})[c.id]||[],ult=nm=>(S.acessosLista||[]).find(a=>a.cliente_id===c.id&&a.usuario_nome===nm);
@@ -197,6 +218,7 @@
         toast('Pessoa cadastrada · envie o link pelo WhatsApp');return carregar();}
       if(a==='uRemover'){const uid=el.dataset.uid;if(S.pend!=='u|'+uid){S.pend='u|'+uid;render();return;}
         const {error}=await sb.from('impl_portal_usuarios').delete().eq('id',uid);if(error)throw error;S.pend=null;toast('Removida · essa pessoa não entra mais no link');return carregar();}
+      if(a==='copiarMsgLink'){const c=S.cli.find(x=>x.id===el.dataset.id),p=c&&S.por[c.id];if(!p)return;await navigator.clipboard.writeText(msgLinkGeral(c,URL_PORTAL+p.chave)).then(()=>toast('Texto com o link copiado'),()=>toast('Selecione o texto e copie',true));return;}
       if(a==='copiarMsgDemo'){await navigator.clipboard.writeText(MSG_DEMO).then(()=>toast('Mensagem copiada'),()=>toast('Não consegui copiar',true));return;}
       if(a==='abrir'){S.aberto=S.aberto===id?null:id;S.pend=null;render();return;}
       if(a==='copiar'){await navigator.clipboard.writeText(el.dataset.url).then(()=>toast('Link copiado'),()=>toast('Selecione o link e copie',true));return;}
