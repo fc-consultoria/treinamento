@@ -74,6 +74,18 @@ details summary{cursor:pointer;color:var(--teal-d);font-weight:500;margin-top:8p
 .btn:hover{background:var(--teal-d)}
 .muted{color:var(--muted)}
 .foot{margin-top:22px;text-align:center;font-size:12.5px;color:var(--muted)}
+.entrar{max-width:420px;margin:24px auto 0;text-align:center}
+.entrar input{width:100%;font:500 17px var(--body);padding:12px 14px;border:1px solid var(--line);border-radius:10px;margin:14px 0 10px;text-align:center}
+.entrar button{width:100%;font:600 16px var(--body);padding:12px;border:0;border-radius:10px;background:var(--teal);color:#fff;cursor:pointer}
+.entrar .err{color:#b42318;font-size:14px;margin-top:10px}
+.ola{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:14px;margin:0 0 12px}
+.ola button{all:unset;cursor:pointer;color:var(--teal-d);font-weight:500;font-size:13px}
+.seqinfo{display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:var(--teal-soft);border-radius:10px;padding:10px 12px;font-size:13.5px;margin:0 0 12px}
+.seqinfo .p{display:inline-flex;align-items:center;gap:6px;font-weight:500}
+.seqinfo .p i{font-style:normal;background:var(--teal);color:#fff;border-radius:99px;width:20px;height:20px;display:inline-grid;place-items:center;font-size:12px}
+.prox{border-top:1px solid var(--line);padding:14px 0 2px;color:var(--muted);font-size:14px;display:flex;gap:10px;align-items:center}
+.prox .cad{font-size:18px}
+.lh .and{background:var(--teal-soft);color:var(--teal-d);font-weight:600;font-size:12.5px;border-radius:99px;padding:2px 9px}
 .sit{display:flex;gap:14px;align-items:flex-start;border-left:4px solid var(--amber);background:var(--amber-soft);border-radius:0;padding:14px 16px;margin-top:16px}
 .sit .ic{font-size:22px;line-height:1}
 .sit b{font-family:var(--display);font-size:16px;color:#5c3800}
@@ -292,20 +304,30 @@ function render(r){
     const novos=ant?cods.filter(c=>!antCods.has(normCod(c))):[];
     const resto=cods.filter(c=>!novos.includes(c));
     return `<div class="linha">
-      <div class="lh"><b>${esc(l.nome)}</b>${d>0?`<span class="plus">${avanco({a:Number((A[l.nome]||{}).alimentados||0),t:Number((A[l.nome]||{}).total||t)},{a,t},d)} nesta atualização</span>`:''}${t&&a>=t?'<span class="ok">Concluída</span>':''}
+      <div class="lh"><b>${esc(l.nome)}</b>${d>0?`<span class="plus">${avanco({a:Number((A[l.nome]||{}).alimentados||0),t:Number((A[l.nome]||{}).total||t)},{a,t},d)} nesta atualização</span>`:''}${t&&a>=t?'<span class="ok">✓ Concluída</span>':'<span class="and">Em alimentação</span>'}
         <span class="q"><strong>${pct}%</strong> concluído</span></div>
       <div class="bar" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100" aria-label="${esc(l.nome)}"><i style="width:${pct}%"></i></div>
-      ${novos.length?`<div class="cods"><div class="t">Códigos alimentados nesta atualização (${novos.length})</div><div class="chips">${novos.map(c=>`<span class="chip novo">${esc(c)}</span>`).join('')}</div></div>`:''}
-      ${resto.length?`<details><summary>${novos.length?'Ver os demais códigos já alimentados':'Ver códigos já alimentados'} (${resto.length})</summary><div class="cods"><div class="chips">${resto.map(c=>`<span class="chip">${esc(c)}</span>`).join('')}</div></div></details>`:''}
+      ${cods.length?`<details><summary>👁 Ver os itens alimentados (${cods.length})${novos.length?` · ${novos.length} nesta atualização`:''}</summary>
+        ${novos.length?`<div class="cods"><div class="t">Alimentados nesta atualização</div><div class="chips">${novos.map(c=>`<span class="chip novo">${esc(c)}</span>`).join('')}</div></div>`:''}
+        ${resto.length?`<div class="cods">${novos.length?'<div class="t">Já alimentados antes</div>':''}<div class="chips">${resto.map(c=>`<span class="chip">${esc(c)}</span>`).join('')}</div></div>`:''}</details>`:''}
     </div>`;
   };
 
+  // Linhas em sequência: aparecem as concluídas e as que estão em alimentação; a próxima entra quando a atual chega a 100%
+  const feitaL=l=>Number(l.total||0)>0&&Number(l.alimentados||0)>=Number(l.total||0);
+  let vis=L.filter(l=>feitaL(l)||Number(l.alimentados||0)>0);
+  if(!vis.some(l=>!feitaL(l))){const prox=L.find(l=>!feitaL(l)&&!vis.includes(l));if(prox)vis.push(prox);}
+  vis=L.filter(l=>vis.includes(l));
+  const faltam=L.length-vis.length;
+  const seqInfo=L.length>1?`<div class="seqinfo"><span class="p"><i>1</i>Uma linha contratada é alimentada por vez</span><span>→</span><span class="p"><i>2</i>Ao chegar a 100%, fica como concluída</span><span>→</span><span class="p"><i>3</i>A próxima linha aparece aqui</span></div>`:'';
+  const proxHtml=faltam>0?`<div class="prox"><span class="cad">🔒</span><span><b style="color:var(--fg)">${faltam} ${faltam>1?'próximas linhas contratadas':'próxima linha contratada'}</b> · ${faltam>1?'aparecem':'aparece'} aqui assim que a linha em alimentação chegar a 100%.</span></div>`:'';
   const etAll=etapasDaFoto(atual.dados), etAt=etAll.find(e=>!e.feita);
   $('#topo').innerHTML=`<div class="topo"><span><span class="num">${pctGeral}%</span> <span class="muted">da alimentação concluída</span></span>
     ${etAll.length?`<span class="sep"></span><span>${etAt?`<span class="muted">Etapa ${etAll.indexOf(etAt)+1} de ${etAll.length}:</span> <b>${esc(etAt.titulo)}</b>`:'<b>Implantação concluída ✓</b>'}</span>`:''}
     <a class="ver" href="#andamento">Ver andamento completo ↓</a></div>`;
   document.getElementById('siteSec').hidden=false;
   $('#app').innerHTML=`
+    ${ENVIO.nome?`<div class="ola">👋 Olá, <b>${esc(ENVIO.nome)}</b><button type="button" id="trocarPessoa">Não é você? Trocar</button></div>`:''}
     <h2 class="andtit" id="andamento">Andamento da sua implantação</h2>
     <div class="kpis">
       <div class="kpi hi"><div class="l">Alimentação concluída</div><div class="v">${pctGeral}%</div></div>
@@ -315,7 +337,7 @@ function render(r){
     ${situacaoHtml(atual.dados.situacao)}
     ${etapasHtml(etapasDaFoto(atual.dados))}
     ${ritmo.length>1?`<section class="sec"><h2>Ritmo das últimas atualizações</h2><div class="ritmo">${ritmo.map((x,i)=>`<div class="dia ${i===0?'ult':''}"><div class="d">${esc(dt(x.em))}</div><div class="n">${x.txt}</div></div>`).join('')}</div></section>`:''}
-    <section class="sec card"><h2>Andamento por linha</h2>${baseHtml(atual.dados.fornecedores)}${L.map(linhaHtml).join('')}</section>
+    <section class="sec card"><h2>Andamento por linha <span class="muted" style="font-family:var(--body);font-size:13px;font-weight:500;margin-left:auto">${L.filter(feitaL).length} de ${L.length} ${L.length>1?'linhas concluídas':'linha concluída'}</span></h2>${seqInfo}${baseHtml(atual.dados.fornecedores)}${vis.map(linhaHtml).join('')}${proxHtml}</section>
     <div class="foot">FC Consultoria e Representação · Atendimento de segunda a sexta, das 08:00 às 11:00 e das 13:00 às 17:00</div>`;
 }
 
@@ -328,19 +350,58 @@ function render(r){
       ? window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{persistSession:true,storageKey:'trein-fc-auth'}})
       : window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{persistSession:false}});
     if(previa){const {data:{session}}=await sb.auth.getSession();if(!session){estado('Prévia só para a FC','Entre no Painel da Matriz neste navegador e abra a prévia de novo.');return;}}
-    const {data,error}=await sb.rpc(previa?'impl_portal_previa':'impl_portal_ver',{p_chave:chave});
-    if(error) throw error;
+    let ehFC=previa;try{ehFC=ehFC||!!localStorage.getItem('trein-fc-auth');}catch(_){}
+    let data;
+    if(previa){const r=await sb.rpc('impl_portal_previa',{p_chave:chave});if(r.error)throw r.error;data=r.data;}
+    else{
+      // Entrada pelo nome cadastrado pela FC (até 4 pessoas por cliente). A FC logada entra direto e não conta como acesso.
+      const sbFC=ehFC?window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{persistSession:true,storageKey:'trein-fc-auth'}}):null;
+      const chaveNome='fc-portal-nome-'+chave.slice(0,12);
+      let nome='';try{nome=localStorage.getItem(chaveNome)||'';}catch(_){}
+      const ent=await sb.rpc('impl_portal_entrar',{p_chave:chave,p_nome:nome,p_registrar:!ehFC});
+      if(ent.error)throw ent.error;
+      if(!ent.data){estado('Link desativado','Este link não está mais ativo. Peça um novo link para a FC Consultoria.');return;}
+      let nomeOk=ent.data.ok?(ent.data.nome||''):null;
+      if(nomeOk===null&&sbFC){const r=await sbFC.rpc('impl_portal_ver',{p_chave:chave,p_nome:''});if(!r.error&&r.data&&!r.data.precisa_nome){nomeOk='';data=r.data;}}
+      if(nomeOk===null){
+        try{localStorage.removeItem(chaveNome);}catch(_){}
+        nomeOk=await telaEntrar(sb,chave,chaveNome);
+      }
+      ENVIO.nome=nomeOk||'';
+      if(!data){const r=await sb.rpc('impl_portal_ver',{p_chave:chave,p_nome:nomeOk||''});if(r.error)throw r.error;data=r.data;}
+      if(data&&data.precisa_nome){try{localStorage.removeItem(chaveNome);}catch(_){}location.reload();return;}
+      document.addEventListener('click',ev=>{if(ev.target.id==='trocarPessoa'){try{localStorage.removeItem(chaveNome);}catch(_){}location.reload();}});
+    }
     if(previa) document.body.insertAdjacentHTML('afterbegin','<div style="background:#b86e00;color:#fff;text-align:center;font:600 14px var(--body);padding:8px 12px">PRÉVIA da próxima publicação · o cliente ainda não vê isto</div>');
     barraFC(previa);
     // Avisa a FC que o cliente abriu o link (não conta a prévia nem quando é a própria FC abrindo)
-    let ehFC=previa;try{ehFC=ehFC||!!localStorage.getItem('trein-fc-auth');}catch(_){}
-    if(!ehFC) sb.rpc('impl_portal_registrar_acesso',{p_chave:chave}).then(()=>{},()=>{});
     if(!data){estado('Link desativado','Este link não está mais ativo. Peça um novo link para a FC Consultoria.');return;}
     ENVIO.chave=chave;ENVIO.previa=previa;ENVIO.sb=sb;ENVIO.recebidos=data.recebidos||[];ENVIO.ultimo=data;
     render(data);
     setTimeout(buscarNovidades,1200);
   }catch(e){console.error(e);estado('Não foi possível carregar','Verifique sua internet e recarregue a página.');}
 })();
+// Tela de entrada: a pessoa digita o nome cadastrado pela FC e entra (o link continua sendo a chave de segurança)
+function telaEntrar(sb,chave,chaveNome){
+  return new Promise(res=>{
+    $('#cliente').textContent='FC Consultoria';
+    $('#app').innerHTML=`<form class="card entrar" id="fEntrar" autocomplete="on"><h2>Bem-vindo(a)</h2>
+      <p class="muted" style="margin:6px 0 0">Para ver o andamento da implantação, digite o seu nome como foi cadastrado pela FC Consultoria.</p>
+      <input id="nomeEntrar" name="name" autocomplete="name" placeholder="Seu nome" required minlength="2" aria-label="Seu nome">
+      <button type="submit">Entrar</button><div class="err" id="errEntrar" role="alert"></div></form>
+      <div class="foot">Não consegue entrar? Fale com a FC Consultoria pelo WhatsApp (66) 9 9986-7984.</div>`;
+    setTimeout(()=>{const i=$('#nomeEntrar');i&&i.focus();},50);
+    $('#fEntrar').addEventListener('submit',async ev=>{
+      ev.preventDefault();const b=ev.target.querySelector('button'),n=$('#nomeEntrar').value.trim();if(n.length<2)return;
+      b.disabled=true;b.textContent='Entrando…';$('#errEntrar').textContent='';
+      try{const r=await sb.rpc('impl_portal_entrar',{p_chave:chave,p_nome:n,p_registrar:true});if(r.error)throw r.error;
+        if(r.data&&r.data.ok){try{localStorage.setItem(chaveNome,r.data.nome||n);}catch(_){}$('#app').innerHTML='<div class="card estado"><p class="muted">Carregando…</p></div>';res(r.data.nome||n);return;}
+        $('#errEntrar').textContent='Nome não encontrado. Digite o nome que você passou para a FC Consultoria.';}
+      catch(e){console.error(e);$('#errEntrar').textContent='Não foi possível entrar agora. Verifique a internet e tente de novo.';}
+      b.disabled=false;b.textContent='Entrar';
+    });
+  });
+}
 // Folders e dicas enviados pela FC: abrem na tela ao entrar e são conferidos a cada minuto
 const FOLDER={fila:[],aberto:null,vistos:new Set()};
 async function buscarNovidades(){

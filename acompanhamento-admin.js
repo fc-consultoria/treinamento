@@ -26,8 +26,9 @@
       try{const [an,vi]=await Promise.all([sb.from('impl_portal_anuncios').select('id,cliente_id,titulo,ativo,criado_em').order('criado_em',{ascending:false}).limit(20),sb.from('impl_portal_anuncio_vistos').select('anuncio_id,cliente_id,visto_em')]);
         if(!an.error)S.anuncios=an.data||[];if(!vi.error)S.vistos=vi.data||[];S.semFolder=!!an.error;}catch(_){S.semFolder=true;}
       if(!S.artes){try{const ar=await sb.from('trein_eventos').select('detalhe').eq('tipo','div_art');S.artes=(ar.data||[]).map(x=>x.detalhe).filter(d=>d&&d.img);}catch(_){S.artes=[];}}
-      try{const desde=new Date(Date.now()-7*864e5).toISOString();const ac=await sb.from('impl_portal_acessos').select('cliente_id,em').gte('em',desde).order('em',{ascending:false}).limit(500);
-        S.acessos={};if(!ac.error){(ac.data||[]).forEach(x=>(S.acessos[x.cliente_id]=S.acessos[x.cliente_id]||[]).push(x.em));if(!S.ultAcesso)S.ultAcesso=(ac.data&&ac.data[0])?ac.data[0].em:new Date().toISOString();}}catch(_){}
+      S.usuarios={};S.semUsuarios=false;try{const us=await sb.from('impl_portal_usuarios').select('id,cliente_id,nome,telefone,criado_em').order('criado_em');if(us.error)S.semUsuarios=true;else(us.data||[]).forEach(u=>(S.usuarios[u.cliente_id]=S.usuarios[u.cliente_id]||[]).push(u));}catch(_){S.semUsuarios=true;}
+      try{const desde=new Date(Date.now()-7*864e5).toISOString();const ac=await sb.from('impl_portal_acessos').select('cliente_id,em,usuario_nome').gte('em',desde).order('em',{ascending:false}).limit(500);
+        S.acessos={};if(!ac.error){(ac.data||[]).forEach(x=>{(S.acessos[x.cliente_id]=S.acessos[x.cliente_id]||[]).push(x.em);(S.acessosLista=S.acessosLista||[]).push(x);});if(!S.ultAcesso)S.ultAcesso=(ac.data&&ac.data[0])?ac.data[0].em:new Date().toISOString();}}catch(_){}
       S.erro='';S.carregado=true;
     }catch(e){console.error(e);S.erro=(e&&e.message)||String(e);S.carregado=true;}
     render();
@@ -40,9 +41,9 @@
   // Aviso quando um cliente abre o link de acompanhamento (confere a cada minuto)
   async function vigiarAcessos(){
     if(!S.carregado||!S.ultAcesso)return;
-    try{const {data,error}=await sb.from('impl_portal_acessos').select('cliente_id,em').gt('em',S.ultAcesso).order('em');if(error||!data||!data.length)return;
+    try{const {data,error}=await sb.from('impl_portal_acessos').select('cliente_id,em,usuario_nome').gt('em',S.ultAcesso).order('em');if(error||!data||!data.length)return;
       S.ultAcesso=data[data.length-1].em;
-      data.forEach(x=>{(S.acessos[x.cliente_id]=S.acessos[x.cliente_id]||[]).unshift(x.em);const nome=(S.cli.find(c=>c.id===x.cliente_id)||{}).nome||'Um cliente';const t='👀 '+nome+' abriu o link de acompanhamento';
+      data.forEach(x=>{(S.acessos[x.cliente_id]=S.acessos[x.cliente_id]||[]).unshift(x.em);(S.acessosLista=S.acessosLista||[]).unshift(x);const cli=(S.cli.find(c=>c.id===x.cliente_id)||{}).nome||'Um cliente';const nome=x.usuario_nome?x.usuario_nome+' ('+cli+')':cli;const t='👀 '+nome+' abriu o link de acompanhamento';
         try{(window.toast||toast)(t);}catch(_){}try{window.beep&&beep();}catch(_){}
         try{if('Notification' in window&&Notification.permission==='granted')new Notification('Acompanhamento FC',{body:nome+' abriu o link de acompanhamento agora.',tag:'acesso-'+x.cliente_id});}catch(_){}});
       render();}catch(_){}
@@ -64,6 +65,7 @@
     ${rot('Link do cliente')}
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><input readonly value="${esc(url)}" style="${inp};flex:1;min-width:260px;font-family:var(--f-mono);font-size:12.5px" onclick="this.select()">
       ${btn('copiar','Copiar link','data-url="'+esc(url)+'"')}<a href="${esc(url)}" target="_blank" rel="noopener" style="font:600 13.5px var(--f-body);color:var(--accent)">Ver como o cliente vê ↗</a><a href="${esc(url)}&previa=1" target="_blank" rel="noopener" style="font:600 13.5px var(--f-body);color:#b86e00">Prévia da próxima publicação ↗</a></div>
+    ${pessoasHtml(c,url)}
     ${rot('Publicação do andamento')}
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
       ${btn('modo','Automático · 07:00 seg a sex','data-id="'+c.id+'" data-v="auto"',p.modo==='auto'?'pri':'')}
@@ -82,6 +84,25 @@
     <div style="display:flex;gap:8px;flex-wrap:wrap">
       ${btn('chave',pend('chave')?'Confirmar: o link antigo para de funcionar':'🔑 Gerar nova chave','data-id="'+c.id+'"',pend('chave')?'bad':'')}
       ${p.ativo?btn('ativo',pend('ativo')?'Confirmar desativação':'Desativar link','data-id="'+c.id+'" data-v="0"','bad'):btn('ativo','Reativar link','data-id="'+c.id+'" data-v="1"','pri')}</div>`;
+  }
+
+  const soDig=t=>String(t||'').replace(/\D/g,'');
+  const foneBR=t=>{const d=soDig(t);return d.length===11?`(${d.slice(0,2)}) ${d.slice(2,3)} ${d.slice(3,7)}-${d.slice(7)}`:d.length===10?`(${d.slice(0,2)}) ${d.slice(2,6)}-${d.slice(6)}`:(t||'');};
+  const msgLinkPessoa=(c,u,url)=>`Olá, ${u.nome.split(' ')[0]}! Este é o seu acesso para acompanhar a implantação de preços da ${c.nome}:\n\n${url}\n\nPara entrar, digite o seu nome: *${u.nome}*\n\nO andamento é atualizado de segunda a sexta, às 07:00. Guarde este link. — FC Consultoria`;
+  function pessoasHtml(c,url){
+    if(S.semUsuarios) return rot('Pessoas com acesso ao link')+`<p class="note" style="color:var(--bad);margin:0">Cadastro de pessoas ainda não ligado no banco de dados: rode o arquivo portal_acessos.sql no Supabase.</p>`;
+    const us=(S.usuarios||{})[c.id]||[],ult=nm=>(S.acessosLista||[]).find(a=>a.cliente_id===c.id&&a.usuario_nome===nm);
+    return rot(`Pessoas com acesso ao link (${us.length} de 4)`)+
+    `<p class="note" style="margin:0 0 8px">${us.length?'Só quem está aqui entra no link, digitando o próprio nome. Você recebe o aviso com o nome de quem entrou.':'Ninguém cadastrado: qualquer pessoa com o link entra sem digitar o nome. Cadastre até 4 pessoas para liberar só para elas.'}</p>
+    ${us.map(u=>{const a=ult(u.nome);return `<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:7px 0;border-top:1px solid var(--line)">
+      <b style="font:600 14.5px var(--f-body)">${esc(u.nome)}</b><span class="note">${esc(foneBR(u.telefone))||'sem telefone'}</span>
+      <span class="note" style="color:${a?'var(--ok)':'var(--muted)'}">${a?'👀 entrou '+esc(quando(a.em)):'ainda não entrou (7 dias)'}</span>
+      <span style="margin-left:auto;display:flex;gap:6px">${soDig(u.telefone).length>=10?`<a href="https://wa.me/55${soDig(u.telefone)}?text=${encodeURIComponent(msgLinkPessoa(c,u,url))}" target="_blank" rel="noopener" style="font:600 13.5px var(--f-body);color:#1f8a4c;padding:7px 4px">Enviar link pelo WhatsApp ↗</a>`:''}
+      ${btn('uRemover',S.pend==='u|'+u.id?'Confirmar remoção':'Remover','data-uid="'+u.id+'"','bad')}</span></div>`;}).join('')}
+    ${us.length<4?`<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px">
+      <input id="uNome-${c.id}" placeholder="Nome e sobrenome (é o que a pessoa vai digitar)" style="${inp};flex:1;min-width:220px">
+      <input id="uFone-${c.id}" placeholder="WhatsApp com DDD" inputmode="tel" style="${inp};width:170px">
+      ${btn('uAdd','＋ Cadastrar pessoa','data-id="'+c.id+'"','pri')}</div>`:'<p class="note" style="margin:8px 0 0">Limite de 4 pessoas atingido. Remova uma para cadastrar outra.</p>'}`;
   }
 
   function render(){
@@ -155,6 +176,13 @@
         el.disabled=true;const {error}=await sb.from('impl_portal_anuncios').insert({cliente_id:para,titulo:tit||null,texto:txt||null,link:lk||null,imagem:img});if(error)throw error;
         F.arte=null;F.img=null;toast('Enviado! Abre na tela do cliente em até 1 minuto (ou quando ele abrir o link).');return carregar();}
       if(a==='fDesativar'){const {error}=await sb.from('impl_portal_anuncios').update({ativo:false}).eq('id',el.dataset.aid);if(error)throw error;toast('Tirado do ar');return carregar();}
+      if(a==='uAdd'){const nome=$('uNome-'+id).value.trim().replace(/\s+/g,' '),fone=soDig($('uFone-'+id).value);
+        if(nome.length<2){toast('Escreva o nome da pessoa',true);return;}
+        if(fone&&fone.length<10){toast('Telefone com DDD, ex.: 66 9 9999-9999',true);return;}
+        el.disabled=true;const {error}=await sb.from('impl_portal_usuarios').insert({cliente_id:id,nome,telefone:fone||null});if(error)throw error;
+        toast('Pessoa cadastrada · envie o link pelo WhatsApp');return carregar();}
+      if(a==='uRemover'){const uid=el.dataset.uid;if(S.pend!=='u|'+uid){S.pend='u|'+uid;render();return;}
+        const {error}=await sb.from('impl_portal_usuarios').delete().eq('id',uid);if(error)throw error;S.pend=null;toast('Removida · essa pessoa não entra mais no link');return carregar();}
       if(a==='abrir'){S.aberto=S.aberto===id?null:id;S.pend=null;render();return;}
       if(a==='copiar'){await navigator.clipboard.writeText(el.dataset.url).then(()=>toast('Link copiado'),()=>toast('Selecione o link e copie',true));return;}
       if(a==='ativar'){el.disabled=true;const {error}=await sb.from('impl_portal').insert({cliente_id:id});if(error)throw error;await publicar(id);toast('Acompanhamento ativado e primeira foto publicada');S.aberto=id;return carregar();}
