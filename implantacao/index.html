@@ -354,7 +354,7 @@ tbody tr:hover{background:var(--panel-2);}
       <button class="navitem" id="btn-logout"><i data-lucide="log-out"></i> Sair</button>
     </div>
     <div class="sidebar-foot">
-      Painel de implantação — dados salvos em banco de dados real (Supabase), acesso restrito à equipe.<br><b>Versão 15/10h — classificar códigos de A a Z</b>
+      Painel de implantação — dados salvos em banco de dados real (Supabase), acesso restrito à equipe.<br><b>Versão 15/10i — banco próprio do cliente: Vidro e Perfis por kg</b>
     </div>
   </nav>
   <div class="mobile-topbar">
@@ -456,6 +456,7 @@ function mapClienteRow(c){
     tipo_cliente: c.tipo_cliente || 'novo',
     linhas_componentes: c.linhas_componentes || [],
     aviso_passo: c.aviso_passo!=null ? Number(c.aviso_passo) : null,
+    perfisBase: c.perfis_base==='kg' ? 'kg' : 'metro',
   };
 }
 
@@ -597,6 +598,12 @@ async function carregarClientes(){
   });
 
   // Acompanhamento online (versão nova): quem já tem link do portal do cliente. Falha aqui não trava o painel.
+  try{
+    const [ri, ra] = await Promise.all([fetchAllRows('impl_cliente_itens', '*', 'criado_em'), fetchAllRows('impl_cliente_arquivos', '*', 'criado_em', false)]);
+    CLIENTS.forEach(c=>{ c.itensProprios = {vidro:[], perfis_kg:[]}; c.arquivosProprios = []; });
+    if(!ri.error) (ri.data||[]).forEach(r=>{ const c = CLIENTS.find(x=>x.id===r.cliente_id); if(c && c.itensProprios[r.categoria]) c.itensProprios[r.categoria].push(mapItemProprio(r)); });
+    if(!ra.error) (ra.data||[]).forEach(r=>{ const c = CLIENTS.find(x=>x.id===r.cliente_id); if(c) c.arquivosProprios.push(r); });
+  }catch(e){ console.warn('banco próprio do cliente:', e); }
   try{ const {data:portais, error:ePor} = await sb.from('impl_portal').select('cliente_id,ativo'); PORTAIS = {}; if(!ePor) (portais||[]).forEach(r=>{ PORTAIS[r.cliente_id] = r; }); }catch(e){ PORTAIS = {}; }
   await Promise.all(CLIENTS.flatMap(c => c.perfisMetroPdfs.map(async o=>{
     if(!o.storagePath) return;
@@ -780,6 +787,7 @@ const chaveAvisoCod = (catKey, cod)=>`cod|${catKey}|${normalizeCodigo(cod).toUpp
 function codigosAlimentadosLinha(c, catKey){
   let cods = [];
   if(catKey==='perfis_metro') cods = (c.perfisMetro||[]).filter(it=>it.alimentado).map(it=>it.codigo);
+  else if(catKey==='perfis_kg' || (catKey==='vidro' && itensProprios(c,'vidro').length)) cods = itensProprios(c, catKey).filter(it=>it.alimentado).map(it=>it.descricao);
   else {
     const db = getCategoriaDB(catKey);
     const mapa = catKey==='vidro' ? c.alimentadosVidro : catKey==='perfis' ? c.alimentadosPerfis : (c.alimentadosComponentes && c.alimentadosComponentes[catKey]);
@@ -837,8 +845,7 @@ function avisosWhatsAppPendentes(){
   CLIENTS.forEach(c=>{
     // 1) Marcos de progresso por quantidade de itens, por linha — só pra quem está com "Sim" no acompanhamento
     if(c.notificar_prazo){
-      const cats = [{key:'vidro', nome:'Vidro'}, (c.perfisModo==='metro' ? {key:'perfis_metro', nome:'Perfis (metro linear)'} : {key:'perfis', nome:'Perfis'})]
-        .concat(componentesLinhasContratadas(c).map(n=>({key:n, nome:n})));
+      const cats = linhasDeProgressoCliente(c).map(x=>({key:x.key, nome:x.nome}));
       cats.forEach(cat=>{
         const p = categoriaProgress(c, cat.key);
         if(!p.total) return;
@@ -954,8 +961,9 @@ function progressoImplantacaoTotal(client){
   (client.orcamentos||[]).forEach(o=>{
     (o.itens||[]).forEach(it=>{ orcTotal++; if(it.alimentado) orcAlimentados++; });
   });
-  const total = comp.total + metro.length + orcTotal;
-  const alimentados = comp.alimentados + metroAlimentados + orcAlimentados;
+  const proprios = itensProprios(client,'vidro').concat(itensProprios(client,'perfis_kg'));
+  const total = comp.total + metro.length + orcTotal + proprios.length;
+  const alimentados = comp.alimentados + metroAlimentados + orcAlimentados + proprios.filter(it=>it.alimentado).length;
   return {
     total, alimentados, pendentes: total-alimentados,
     pct: total ? Math.round(alimentados/total*100) : 0,
@@ -966,7 +974,16 @@ function progressoImplantacaoTotal(client){
   };
 }
 
+// ---------- Banco próprio do cliente (Vidro e Perfis por kg), importado por Excel ----------
+function mapItemProprio(r){ return {_id:r.id, chave:r.chave, codigo:r.codigo||'', descricao:r.descricao||'', custo:r.custo!=null?Number(r.custo):null, venda:r.venda!=null?Number(r.venda):null, alimentado:!!r.alimentado, arquivo:r.arquivo||''}; }
+function itensProprios(c, cat){ return (c && c.itensProprios && c.itensProprios[cat]) || []; }
+function usaVidroProprio(c){ return itensProprios(c,'vidro').length>0 || !(VIDRO_DB.itens||[]).length; }
 function categoriaProgress(client, key){
+  if(key==='perfis_kg' || (key==='vidro' && itensProprios(client,'vidro').length)){
+    const itens = itensProprios(client, key);
+    const alimentados = itens.filter(it=>it.alimentado).length;
+    return { total: itens.length, alimentados, pct: itens.length ? Math.round(alimentados/itens.length*100) : 0 };
+  }
   if(key==='perfis_metro'){
     const itens = client.perfisMetro || [];
     const alimentados = itens.filter(it=>it.alimentado).length;
@@ -2810,7 +2827,7 @@ function renderClienteDetail(){
   ${STATE.clienteTab==='etapas' ? renderClienteEtapas(c) : ''}
   ${STATE.clienteTab==='cadastro' ? renderClienteCadastro(c) : ''}
   ${STATE.clienteTab==='componentes' ? renderClienteComponentes(c) : ''}
-  ${STATE.clienteTab==='vidro' ? renderExemploCategoria('Vidro', VIDRO_DB, 'vidro', c, {scope:'exemplo', ref:'vidro'}) : ''}
+  ${STATE.clienteTab==='vidro' ? (usaVidroProprio(c) ? renderBancoProprio(c, 'vidro') : renderBancoProprio(c, 'vidro') + renderExemploCategoria('Vidro', VIDRO_DB, 'vidro', c, {scope:'exemplo', ref:'vidro'})) : ''}
   ${STATE.clienteTab==='perfis' ? renderPerfisTab(c) : ''}
   ${STATE.clienteTab==='orcamentos' ? renderClienteOrcamentosTab(c) : ''}
   ${STATE.clienteTab==='relatorios' ? renderClienteRelatorios(c,p) : ''}
@@ -2821,8 +2838,11 @@ function renderClienteDetail(){
 
 // ---------- Painel "Progresso por linha e avisos ao cliente" (Visão geral) ----------
 function linhasDeProgressoCliente(c){
+  const perfis = [];
+  if(c.perfisBase!=='kg' || (c.perfisMetro||[]).length) perfis.push({key:'perfis_metro', nome:'Perfis (metro linear)', icone:'ruler'});
+  if(c.perfisBase==='kg' || itensProprios(c,'perfis_kg').length) perfis.push({key:'perfis_kg', nome:'Perfis (kg por cor)', icone:'palette'});
   return componentesLinhasContratadas(c).map(n=>({key:n, nome:n, icone:'box'}))
-    .concat([{key:'vidro', nome:'Vidro', icone:'square'}, {key:'perfis_metro', nome:'Perfis (metro linear)', icone:'ruler'}]);
+    .concat([{key:'vidro', nome:'Vidro', icone:'square'}], perfis);
 }
 function situacaoLinhaAviso(c, cat){
   const p = categoriaProgress(c, cat.key);
@@ -3767,7 +3787,135 @@ function renderExemploCategoria(nome, db, key, cliente, fornecedorScope, mostrar
 }
 
 function renderPerfisTab(c){
-  return renderPerfisMetroLinear(c, 'precos');
+  const kg = c.perfisBase==='kg';
+  return `
+  <div class="panel" style="padding:14px 18px; display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+    <b style="font-size:13.5px;">Base de perfis de ${escapeHtml(c.nome)}:</b>
+    <div class="chiprow">
+      <button class="chip ${!kg?'active':''}" data-action="perfis-base" data-valor="metro">Metro linear</button>
+      <button class="chip ${kg?'active':''}" data-action="perfis-base" data-valor="kg">Por kg (preço por cor)</button>
+    </div>
+    <span class="desc">${kg ? 'Cada cor com preço por kg é um item a alimentar.' : 'Cada perfil (código e cor) com preço por metro é um item a alimentar.'}</span>
+  </div>
+  ${kg ? renderBancoProprio(c, 'perfis_kg') : renderPerfisMetroLinear(c, 'precos')}`;
+}
+const BANCO_PROPRIO_INFO = {
+  vidro: {titulo:'Vidro', sing:'vidro', plural:'vidros', colDesc:'Vidro', temCodigo:true, temVenda:true, unid:'m²',
+    ajuda:'Importe a planilha de vidros do cliente (Excel). Entram só as linhas com preço; reimportar atualiza o preço e acrescenta os novos, sem duplicar.'},
+  perfis_kg: {titulo:'Perfis por kg', sing:'cor', plural:'cores', colDesc:'Cor', temCodigo:false, temVenda:false, unid:'kg',
+    ajuda:'Importe a planilha de preço por kg de cada cor (Excel). Entram só as cores com preço; reimportar atualiza o preço e acrescenta as novas, sem duplicar.'}
+};
+function renderBancoProprio(c, cat){
+  const info = BANCO_PROPRIO_INFO[cat];
+  const itens = itensProprios(c, cat);
+  const st = STATE.bancoProprio = STATE.bancoProprio || {};
+  const f = st[cat] = st[cat] || {busca:'', status:'todos', ordem:'az'};
+  const termo = (f.busca||'').trim();
+  let vis = itens.map((it,idx)=>({it,idx})).filter(({it})=>{
+    if(f.status==='pendentes' && it.alimentado) return false;
+    if(f.status==='alimentados' && !it.alimentado) return false;
+    return !termo || bateBuscaItem(it.codigo, it.descricao, termo);
+  });
+  if(f.ordem!=='importado'){
+    const cmp=(a,b)=> String(a.it.descricao).localeCompare(String(b.it.descricao),'pt-BR',{numeric:true, sensitivity:'base'});
+    vis.sort((a,b)=> f.ordem==='za' ? cmp(b,a) : cmp(a,b));
+  }
+  const alim = itens.filter(it=>it.alimentado).length;
+  const arqs = (c.arquivosProprios||[]).filter(a=>a.categoria===cat);
+  const moeda = v => v==null || isNaN(v) ? '—' : fmtMoney(v);
+  return `
+  <div class="panel">
+    <div class="panel-head">
+      <div><h3>${icon(cat==='vidro'?'square':'palette')} ${info.titulo} — banco de ${escapeHtml(c.nome)}</h3>
+      <div class="desc">${info.ajuda} Este banco é só deste cliente.</div></div>
+      <label class="btn btn-primary" style="cursor:pointer;">${icon('file-spreadsheet')} Importar planilha Excel<input type="file" accept=".xlsx,.xls,.csv" data-action="bp-arquivo" data-cat="${cat}" style="display:none;"></label>
+    </div>
+    ${arqs.length ? `<div style="padding:10px 18px; border-bottom:1px solid var(--border-2); display:flex; flex-wrap:wrap; gap:8px; align-items:center;"><span class="desc">Planilhas importadas:</span>${arqs.slice(0,6).map(a=>`<button class="btn btn-sm btn-ghost" ${a.storage_path?`data-action="abrir-pdf-assinado" data-path="${escapeHtml(a.storage_path)}"`:'disabled'} title="Abrir o arquivo">${icon('paperclip')} ${escapeHtml(a.nome)} · ${a.itens||0} ${info.plural} · ${new Date(a.criado_em).toLocaleDateString('pt-BR')}</button>`).join('')}</div>` : ''}
+    ${itens.length ? `
+    <div style="padding:12px 18px; display:flex; gap:10px; flex-wrap:wrap; align-items:center; border-bottom:1px solid var(--border-2);">
+      <div class="searchbox" style="min-width:260px; flex:1 1 260px; max-width:480px;">${icon('search')}<input placeholder="Pesquisar ${info.sing}" value="${escapeHtml(f.busca)}" data-action="bp-busca" data-cat="${cat}"></div>
+      <select class="select-inline" data-action="bp-status" data-cat="${cat}">
+        <option value="todos" ${f.status==='todos'?'selected':''}>Todos</option>
+        <option value="pendentes" ${f.status==='pendentes'?'selected':''}>Só pendentes</option>
+        <option value="alimentados" ${f.status==='alimentados'?'selected':''}>Só alimentados</option>
+      </select>
+      <select class="select-inline" data-action="bp-ordem" data-cat="${cat}">
+        <option value="az" ${f.ordem==='az'?'selected':''}>Classificar de A a Z</option>
+        <option value="za" ${f.ordem==='za'?'selected':''}>Classificar de Z a A</option>
+        <option value="importado" ${f.ordem==='importado'?'selected':''}>Ordem: como importado</option>
+      </select>
+      <span class="desc"><b>${alim}</b> de ${itens.length} ${info.plural} alimentados${vis.length!==itens.length?` · mostrando ${vis.length}`:''}</span>
+      ${vis.length ? `<button class="btn btn-sm" data-action="bp-marcar-todos" data-cat="${cat}" data-valor="${vis.every(({it})=>it.alimentado)?'0':'1'}">${vis.every(({it})=>it.alimentado)?'Desmarcar':'Marcar'} ${vis.length} como alimentado${vis.length>1?'s':''}</button>` : ''}
+    </div>
+    <div style="overflow-x:auto;"><table class="table">
+      <thead><tr><th style="width:90px;">Alimentado</th>${info.temCodigo?'<th style="width:120px;">Código</th>':''}<th>${info.colDesc}</th><th class="tright">Custo (R$/${info.unid})</th>${info.temVenda?`<th class="tright">Venda (R$/${info.unid})</th>`:''}<th style="width:50px;"></th></tr></thead>
+      <tbody>${vis.map(({it,idx})=>`<tr>
+        <td class="tcenter"><input type="checkbox" class="chk" ${it.alimentado?'checked':''} data-action="bp-alimentado" data-cat="${cat}" data-idx="${idx}"></td>
+        ${info.temCodigo?`<td class="mono">${escapeHtml(it.codigo)}</td>`:''}
+        <td>${escapeHtml(it.descricao)}</td>
+        <td class="tright mono">${moeda(it.custo)}</td>
+        ${info.temVenda?`<td class="tright mono">${moeda(it.venda)}</td>`:''}
+        <td class="tright"><button class="iconbtn" data-action="bp-excluir" data-cat="${cat}" data-idx="${idx}" title="Excluir">${icon('trash-2')}</button></td>
+      </tr>`).join('')}</tbody></table></div>`
+    : emptyState('file-spreadsheet', 'Nenhum '+info.sing+' importado ainda', 'Clique em "Importar planilha Excel" e escolha a planilha preenchida pelo cliente.')}
+  </div>`;
+}
+// Lê a planilha (vidros ou preço por kg por cor) e devolve os itens com preço
+function lerPlanilhaBancoProprio(rows, cat){
+  const norm = s => normalizeText(String(s||'')).trim();
+  let hi = -1, colDesc=-1, colCod=-1, colCusto=-1, colVenda=-1;
+  for(let i=0; i<Math.min(rows.length, 15); i++){
+    const r = (rows[i]||[]).map(norm);
+    const d = r.findIndex(x=> cat==='vidro' ? (x==='vidro' || x.startsWith('descri')) : (x==='cor' || x.startsWith('cor ')));
+    const cu = r.findIndex(x=> /paga|custo|compra/.test(x));
+    if(d>=0 && cu>=0){ hi=i; colDesc=d; colCusto=cu; colCod=r.findIndex(x=>/^c[o]d/.test(x)); colVenda=r.findIndex(x=>/venda/.test(x)); break; }
+  }
+  if(hi<0) return {erro: cat==='vidro' ? 'Não encontrei as colunas "Vidro" e "Valor que Você Paga" na planilha.' : 'Não encontrei as colunas "Cor" e "Quanto Você Paga no KG" na planilha.'};
+  const num = v => { if(typeof v==='number') return v; let s=String(v||'').replace(/[R$\s]/g,''); if(!s) return null; if(s.includes(',')) s=s.replace(/\./g,'').replace(',','.'); const n=parseFloat(s); return isNaN(n)?null:n; };
+  const itens = [], vistos = new Set(); let semPreco = 0;
+  for(let i=hi+1; i<rows.length; i++){
+    const r = rows[i]||[]; const desc = String(r[colDesc]||'').trim(); if(!desc) continue;
+    const custo = num(r[colCusto]), venda = colVenda>=0 ? num(r[colVenda]) : null;
+    if(!(custo>0) && !(venda>0)){ semPreco++; continue; }
+    const chave = normalizeCodigo(desc); if(!chave || vistos.has(chave)) continue; vistos.add(chave);
+    itens.push({chave, codigo: colCod>=0 ? String(r[colCod]||'').trim() : null, descricao: desc, custo: custo>0?custo:null, venda: venda>0?venda:null});
+  }
+  return {itens, semPreco};
+}
+async function importarPlanilhaBancoProprio(c, cat, file){
+  const info = BANCO_PROPRIO_INFO[cat];
+  let lida;
+  try{
+    const wb = XLSX.read(await file.arrayBuffer(), {type:'array'});
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    lida = lerPlanilhaBancoProprio(XLSX.utils.sheet_to_json(ws, {header:1, defval:''}), cat);
+  }catch(e){ alert('Não consegui ler a planilha: '+(e&&e.message||e)); return; }
+  if(lida.erro){ alert(lida.erro); return; }
+  if(!lida.itens.length){ alert('A planilha não tem nenhum '+info.sing+' com preço preenchido'+(lida.semPreco?` (${lida.semPreco} linha(s) sem preço)`:'')+'.'); return; }
+  const atuais = new Map(itensProprios(c,cat).map(it=>[it.chave,it]));
+  const novos = lida.itens.filter(it=>!atuais.has(it.chave)).length;
+  const atualizados = lida.itens.length - novos;
+  const msg = `${file.name}\n\n${lida.itens.length} ${info.plural} com preço:\n• ${novos} novo(s)\n• ${atualizados} já existente(s) — preço atualizado, "alimentado" não muda`+(lida.semPreco?`\n\n${lida.semPreco} linha(s) sem preço ficaram de fora.`:'')+`\n\nImportar para o banco de ${c.nome}?`;
+  if(!confirm(msg)) return;
+  let storage_path = null;
+  try{
+    const nomeSeguro = file.name.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^\w.\-]+/g,'_');
+    const path = `clientes/${c.id}/${cat}/${Date.now()}-${nomeSeguro}`;
+    const up = await sb.storage.from(ORCAMENTOS_BUCKET).upload(path, file, {upsert:false});
+    if(!up.error) storage_path = path; else console.warn('anexo da planilha:', up.error);
+  }catch(e){ console.warn('anexo da planilha:', e); }
+  const agora = new Date().toISOString();
+  const payload = lida.itens.map(it=>({cliente_id:c.id, categoria:cat, chave:it.chave, codigo:it.codigo, descricao:it.descricao, custo:it.custo, venda:it.venda, arquivo:file.name, atualizado_em:agora}));
+  for(let i=0; i<payload.length; i+=200){
+    const {error} = await sb.from('impl_cliente_itens').upsert(payload.slice(i,i+200), {onConflict:'cliente_id,categoria,chave'});
+    if(error){ avisarErroSalvar(error); return; }
+  }
+  const reg = await sb.from('impl_cliente_arquivos').insert({cliente_id:c.id, categoria:cat, nome:file.name, storage_path, itens:lida.itens.length}).select().single();
+  const {data, error} = await sb.from('impl_cliente_itens').select('*').eq('cliente_id', c.id).eq('categoria', cat).order('criado_em');
+  if(!error){ c.itensProprios = c.itensProprios || {vidro:[], perfis_kg:[]}; c.itensProprios[cat] = (data||[]).map(mapItemProprio); }
+  if(!reg.error && reg.data){ c.arquivosProprios = c.arquivosProprios || []; c.arquivosProprios.unshift(reg.data); }
+  toastSalvo(lida.itens.length+' '+info.plural+' importados');
+  render();
 }
 
 // Aba "Orçamentos": orçamentos feitos exclusivamente para este cliente (Perfis e Componentes).
@@ -4494,7 +4642,13 @@ async function zerarImplantacao(c, keys){
   let zerados = 0;
   for(const key of keys){
     const esperado = categoriaProgress(c, key).alimentados;
-    if(key==='perfis_metro'){
+    if(key==='perfis_kg' || (key==='vidro' && itensProprios(c,'vidro').length)){
+      const {data, error} = await sb.from('impl_cliente_itens').update({alimentado:false}).eq('cliente_id', c.id).eq('categoria', key).eq('alimentado', true).select('id');
+      if(error){ erros.push(error); continue; }
+      zerados += (data||[]).length;
+      if(esperado>0 && !(data||[]).length){ erros.push({message:'o banco não aceitou a alteração (verifique se entrou com o login do painel)'}); continue; }
+      itensProprios(c, key).forEach(it=>{ it.alimentado = false; });
+    } else if(key==='perfis_metro'){
       const {data, error} = await sb.from('impl_perfis_metro').update({alimentado:false}).eq('cliente_id', c.id).eq('alimentado', true).select('id');
       if(error){ erros.push(error); continue; }
       zerados += (data||[]).length;
@@ -5253,6 +5407,27 @@ function wireEvents(){
           const n = document.getElementById('metro-busca-input');
           if(n){ n.focus(); const L = n.value.length; try{ n.setSelectionRange(L,L); }catch(_e){} }
         }, 250);
+      };
+      return;
+    }
+    if(action==='bp-arquivo'){
+      el.onchange = async (e)=>{ const c = CLIENTS.find(x=>x.id===STATE.clientId); const f = e.target.files && e.target.files[0]; e.target.value=''; if(c && f) await importarPlanilhaBancoProprio(c, el.dataset.cat, f); };
+      return;
+    }
+    if(action==='bp-busca'){
+      el.oninput = (e)=>{ const f = STATE.bancoProprio[el.dataset.cat]; f.busca = e.target.value; clearTimeout(window.__bpT); window.__bpT = setTimeout(()=>{ render(); const n=document.querySelector('[data-action="bp-busca"][data-cat="'+el.dataset.cat+'"]'); if(n){ n.focus(); n.setSelectionRange(n.value.length,n.value.length); } }, 250); };
+      return;
+    }
+    if(action==='bp-status' || action==='bp-ordem'){
+      el.onchange = (e)=>{ STATE.bancoProprio[el.dataset.cat][action==='bp-status'?'status':'ordem'] = e.target.value; render(); };
+      return;
+    }
+    if(action==='bp-alimentado'){
+      el.onchange = async (e)=>{
+        const c = CLIENTS.find(x=>x.id===STATE.clientId); const it = itensProprios(c, el.dataset.cat)[+el.dataset.idx]; if(!it) return;
+        it.alimentado = e.target.checked; render();
+        const {error} = await sb.from('impl_cliente_itens').update({alimentado: it.alimentado, atualizado_em: new Date().toISOString()}).eq('id', it._id);
+        if(error){ it.alimentado = !it.alimentado; avisarErroSalvar(error); render(); } else toastSalvo('Salvo');
       };
       return;
     }
@@ -6186,6 +6361,29 @@ function wireEvents(){
           try{ document.execCommand('copy'); toastSalvo(r.todos.length+' código(s) copiados'); }catch(e){}
           ta.remove();
         });
+        return;
+      }
+      if(action==='perfis-base'){
+        const c = CLIENTS.find(x=>x.id===STATE.clientId); if(!c) return;
+        const v = el.dataset.valor==='kg' ? 'kg' : 'metro'; if(c.perfisBase===v) return;
+        c.perfisBase = v; render(); salvarCliente(c.id, {perfis_base: v});
+        return;
+      }
+      if(action==='bp-marcar-todos'){
+        const c = CLIENTS.find(x=>x.id===STATE.clientId); if(!c) return;
+        const cat = el.dataset.cat, f = STATE.bancoProprio[cat], marcar = el.dataset.valor==='1', termo=(f.busca||'').trim();
+        const alvo = itensProprios(c, cat).filter(it=>(f.status!=='pendentes'||!it.alimentado)&&(f.status!=='alimentados'||it.alimentado)&&(!termo||bateBuscaItem(it.codigo, it.descricao, termo))).filter(it=>it.alimentado!==marcar);
+        if(!alvo.length) return;
+        if(alvo.length>20 && !confirm((marcar?'Marcar ':'Desmarcar ')+alvo.length+' itens como alimentados?')) return;
+        alvo.forEach(it=>it.alimentado=marcar); render();
+        (async()=>{ const ids = alvo.map(it=>it._id); for(let i=0;i<ids.length;i+=100){ const {error} = await sb.from('impl_cliente_itens').update({alimentado:marcar, atualizado_em:new Date().toISOString()}).in('id', ids.slice(i,i+100)); if(error){ avisarErroSalvar(error); return; } } toastSalvo('Salvo'); })();
+        return;
+      }
+      if(action==='bp-excluir'){
+        const c = CLIENTS.find(x=>x.id===STATE.clientId); if(!c) return;
+        const lista = itensProprios(c, el.dataset.cat), it = lista[+el.dataset.idx]; if(!it) return;
+        if(!confirm('Excluir "'+it.descricao+'" do banco de '+c.nome+'?')) return;
+        (async()=>{ const {error} = await sb.from('impl_cliente_itens').delete().eq('id', it._id); if(error){ avisarErroSalvar(error); return; } c.itensProprios[el.dataset.cat] = lista.filter(x=>x!==it); toastSalvo('Excluído'); render(); })();
         return;
       }
       if(action==='aviso-linha-ver'){ STATE.avisoPreview = STATE.avisoPreview===el.dataset.key ? null : el.dataset.key; render(); return; }
