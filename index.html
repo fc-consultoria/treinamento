@@ -199,6 +199,7 @@ function vigiaPrazo(uid,perfil){setInterval(()=>{if(window.ALUNO_CID&&window.COL
     document.getElementById('uname').textContent=(perfil.nome||perfil.login)+(perfil.papel==='admin'?' · matriz':'');
     sugInit();if(perfil.papel==='admin')fcPing();else fcStatusUI();if(window.catInit)catInit();
     if(perfil.papel!=='admin'&&window.divInit)divInit(uid,perfil);
+    if(perfil.papel!=='admin'&&window.concInit)concInit(uid);
     if(window.mapaInit)setTimeout(mapaInit,300);
     if(window.dicasInit)setTimeout(dicasInit,500);
     if(window.appLinksInit)setTimeout(appLinksInit,600);
@@ -361,6 +362,55 @@ function abrir(){let o=document.getElementById('dcOv');if(o)o.remove();o=documen
 window.dicasInit=async function(){try{if(!window.FCD||document.getElementById('dcBtn'))return;const ub=document.getElementById('ubar');if(!ub)return;
   L=(await FCD.carregar()).filter(d=>FCD.ativa(d,'app'));if(!L.length)return;
   const b=document.createElement('button');b.type='button';b.id='dcBtn';b.title='Dicas de montagem e onde encontrar produtos';b.onclick=abrir;ub.insertBefore(b,document.getElementById('sugBtn'));badge();}catch(e){}};
+})();
+</script><script>/* ===== Conclusões do orientativo: parabéns a quem conclui e aviso discreto a quem usou menos de 20% =====
+   Concluir = mesma régua do relatório do gestor: todas as tipologias vistas + desafio Monte a esquadria + desafios de sistema liberados.
+   O aviso não mostra nome de aluno nem de empresa; no máximo 1 por semana para cada aluno. */
+(function(){
+const TIP=['jcr200','jcr200a','jcr300','jcr205','pcr200','pvz300','pgr100','max800','gjc2f','gpc3fvz','gpc2fpe','gjc4f','gjc4fs','gpc2f','gpc2fm','gmax'];
+const ZC=new Set(['colab','liberacao','sistema','gestor','chave_app','sugestao','resposta','sug_excluida','zerar']);
+let UID=null,SZ={wv:true,cem:true},LOAD=0,EV=[],CONC=[],ABERTO=false;
+async function carregar(){
+  const ev=[];for(let i=0;i<30000;i+=1000){const r=await sb.from('trein_eventos').select('id,tipo,tipologia,criado_em,cid:detalhe->>cid,quem:detalhe->>quem,ref:detalhe->>ref').eq('user_id',UID).order('criado_em').range(i,i+999);if(r.error)throw r.error;if(!r.data.length)break;ev.push(...r.data);if(r.data.length<1000)break;}
+  const z=await sb.from('trein_eventos').select('detalhe,criado_em').eq('tipo','zerar');const t=Math.max(0,...(z.data||[]).filter(e=>(e.detalhe||{}).para===UID).map(e=>Date.parse(e.criado_em)));
+  EV=t?ev.filter(e=>ZC.has(e.tipo)||e.tipo==='conclusao'||e.tipo==='conc_visto'||Date.parse(e.criado_em)>t):ev;
+  const s=await sb.from('trein_eventos').select('detalhe').eq('tipo','sistema').order('criado_em');const sr=(s.data||[]).filter(r=>(r.detalhe||{}).para===UID).pop();if(sr)SZ=sr.detalhe;
+  const c=await sb.rpc('trein_conclusoes');CONC=Array.isArray(c.data)?c.data:[];
+  LOAD=Date.now();}
+function progresso(cid,nome){const n=String(nome||'').trim().toLowerCase();
+  const M=EV.filter(e=>e.cid===cid||(!e.cid&&n&&String(e.quem||'').trim().toLowerCase()===n));
+  const tip=new Set(M.filter(e=>e.tipologia&&TIP.includes(e.tipologia)&&e.tipo!=='login').map(e=>e.tipologia));
+  const mont=M.some(e=>e.tipo==='teste'),wv=M.some(e=>e.tipo==='wvetro'),cm=M.some(e=>e.tipo==='cem');
+  const tot=TIP.length+1+(SZ.wv?1:0)+(SZ.cem?1:0),ok=tip.size+(mont?1:0)+(SZ.wv&&wv?1:0)+(SZ.cem&&cm?1:0);
+  return Math.min(100,Math.round(ok/tot*100));}
+function ocupado(){try{if(typeof S!=='undefined'&&S.mode==='test'&&typeof Q!=='undefined'&&Q.t0&&!Q.fin)return true;
+  if(typeof TMR!=='undefined'&&['wv','cm'].some(k=>TMR[k]&&TMR[k].t0&&!TMR[k].fin))return true;}catch(e){}
+  if(document.getElementById('dvOv'))return true;{const qb=document.getElementById('quemBox');if(qb&&!qb.hidden)return true;}return false;}
+function confete(){if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;const c=document.createElement('canvas');c.style.cssText='position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:10001';document.body.appendChild(c);
+  const x=c.getContext('2d'),W=c.width=innerWidth,H=c.height=innerHeight,co=['#1fb3c9','#f59e0b','#1f8a4c','#ffffff','#f97316'];
+  const P=Array.from({length:120},()=>({x:Math.random()*W,y:-20-Math.random()*H*.5,vx:(Math.random()-.5)*3,vy:2+Math.random()*3,r:4+Math.random()*5,a:Math.random()*6,va:(Math.random()-.5)*.3,c:co[Math.random()*co.length|0]}));
+  const t0=performance.now();(function f(t){x.clearRect(0,0,W,H);P.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.a+=p.va;x.save();x.translate(p.x,p.y);x.rotate(p.a);x.fillStyle=p.c;x.fillRect(-p.r/2,-p.r/4,p.r,p.r/2);x.restore();});if(t-t0<3500)requestAnimationFrame(f);else c.remove();})(t0);}
+function cartao(ic,tit,txt,bt){ABERTO=true;const o=document.createElement('div');o.id='concBox';o.setAttribute('role','status');
+  o.style.cssText='position:fixed;left:16px;bottom:16px;z-index:10000;width:min(360px,calc(100vw - 32px));background:#0f1e27;color:#e9edf0;border:1px solid #2b4654;border-radius:14px;padding:14px 16px;box-shadow:0 14px 40px rgba(0,0,0,.4);font:400 14px/1.45 system-ui,sans-serif;display:flex;gap:12px';
+  o.innerHTML=`<span style="font-size:28px;line-height:1">${ic}</span><div style="flex:1"><b style="display:block;font-size:15.5px;color:#fff;margin-bottom:3px"></b><span style="color:#c9d6dd"></span><div style="margin-top:10px;display:flex;gap:8px"><button type="button" style="font:600 13.5px system-ui;border:0;border-radius:8px;padding:8px 12px;background:#1fb3c9;color:#06222a;cursor:pointer"></button></div></div>`;
+  o.querySelector('b').textContent=tit;o.querySelector('span:not(:first-child)').textContent=txt;const b=o.querySelector('button');b.textContent=bt;
+  const fe=()=>{o.remove();ABERTO=false;};b.onclick=fe;document.body.appendChild(o);setTimeout(()=>{if(document.body.contains(o))fe();},20000);}
+const reg=(tipo,det)=>sb.from('trein_eventos').insert({user_id:UID,tipo,tipologia:null,detalhe:det}).select('id').single();
+async function check(){const cid=window.ALUNO_CID,nome=window.ALUNO_NOME;if(!UID||!cid||ABERTO||document.visibilityState!=='visible')return;
+  if(Date.now()-LOAD>20*60e3){try{await carregar();}catch(e){return;}}
+  if(ocupado())return;
+  const p=progresso(cid,nome);
+  if(p>=100){if(EV.some(e=>e.tipo==='conclusao'&&e.cid===cid))return;
+    const r=await reg('conclusao',{cid,quem:nome||null});if(r.error)return;EV.push({id:r.data.id,tipo:'conclusao',cid,criado_em:new Date().toISOString()});
+    confete();cartao('🎓',`Parabéns${nome?', '+String(nome).split(' ')[0]:''}!`,'Você concluiu o Orientativo FC 3D completo: todas as tipologias e os desafios. Continue praticando quando quiser.','Obrigado!');return;}
+  if(p>=20)return;
+  const meus=EV.filter(e=>e.tipo==='conc_visto'&&e.cid===cid),ult=Math.max(0,...meus.map(e=>Date.parse(e.criado_em)));
+  if(Date.now()-ult<7*864e5)return;
+  const vistos=new Set(meus.map(e=>String(e.ref))),proprios=new Set(EV.filter(e=>e.tipo==='conclusao').map(e=>String(e.id)));
+  const c=CONC.find(x=>!vistos.has(String(x.id))&&!proprios.has(String(x.id)));if(!c)return;
+  EV.push({tipo:'conc_visto',cid,ref:String(c.id),criado_em:new Date().toISOString()});reg('conc_visto',{ref:String(c.id),cid,quem:nome||null}).then(()=>{},()=>{});
+  cartao('🎓','Mais um aluno concluiu o Orientativo FC 3D completo!',`Você já fez ${p}% do orientativo. Que tal continuar de onde parou? Cada tipologia e desafio leva poucos minutos.`,'Continuar');}
+window.concInit=async function(uid){UID=uid;try{await carregar();}catch(e){}setTimeout(check,9000);setInterval(check,90000);};
 })();
 </script><script>/* ===== Atalhos Site e Instagram na barra do aluno ===== */
 (function(){
