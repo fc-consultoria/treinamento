@@ -139,6 +139,25 @@ function baseHtml(f){
   const partes=[item('Componentes ·',f.componentes),item('Perfis ·',f.perfis)].filter(Boolean);
   return partes.length?`<div class="bases"><span class="muted">Base de preços usada:</span>${partes.join('')}</div>`:'';
 }
+// Mesmas 10 etapas da aba "Etapas" do Painel de Implantação (títulos, responsável e dia útil previsto)
+const ETAPAS_IMPL=[
+  {titulo:'Acesso ao sistema e definição das 05 linhas',quem:'fc',dia:1},
+  {titulo:'Definição das cores dos perfis e dos componentes',quem:'fc',dia:2},
+  {titulo:'Preço de custo dos vidros',quem:'cliente',dia:4},
+  {titulo:'Cotação das listas de componentes',quem:'cliente',dia:4},
+  {titulo:'Preço de custo dos perfis por cor',quem:'cliente',dia:4},
+  {titulo:'Ajuste do cadastro de componentes conforme comprado no fornecedor',quem:'fc',dia:6},
+  {titulo:'Ajuste das tipologias liberadas no sistema',quem:'fc',dia:7},
+  {titulo:'Conferência e simulação de orçamento',quem:'fc',dia:8},
+  {titulo:'Ajuste de margem para o preço de venda',quem:'fc',dia:9},
+  {titulo:'Finalização e feedback',quem:'fc',dia:10}];
+function ymd(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function diaUtil(ini,n){const d=new Date((ini||ymd(new Date()))+'T00:00:00');while(d.getDay()===0||d.getDay()===6)d.setDate(d.getDate()+1);let k=1;while(k<n){d.setDate(d.getDate()+1);if(d.getDay()!==0&&d.getDay()!==6)k++;}return ymd(d);}
+function etapasDaFoto(dados){
+  if(dados.etapas_impl){const ei=dados.etapas_impl,m={};(ei.salvas||[]).forEach(s=>m[s.n]=s);
+    return ETAPAS_IMPL.map((e,i)=>{const s=m[i+1]||{};return {titulo:e.titulo,responsavel:e.quem,data:s.data_prevista||diaUtil(ei.inicio,e.dia),feita:s.status==='concluida',status:s.status||'pendente'};});}
+  return dados.etapas||[];
+}
 function etapasHtml(et){
   if(!et||!et.length) return '';
   const atual=et.findIndex(e=>!e.feita);
@@ -146,7 +165,8 @@ function etapasHtml(et){
   const feitas=et.filter(e=>e.feita).length;
   return `<section class="sec card"><h2>Etapas da implantação <span class="muted" style="font-family:var(--body);font-size:13px;font-weight:500;margin-left:auto">${feitas} de ${et.length} concluídas</span></h2><ol class="etapas">${et.map((e,i)=>{
     const cls=e.feita?'feita':(i===atual?'atual':'');
-    const st=e.feita?'<span class="st ok">✓ Concluída</span>':(i===atual?(e.responsavel==='cliente'?'<span class="st and">Aguardando sua equipe</span>':'<span class="st and">Em andamento</span>'):'<span class="st prev">Prevista</span>');
+    const andamento=e.status==='andamento'||e.status==='aguardando'||i===atual;
+    const st=e.feita?'<span class="st ok">✓ Concluída</span>':(andamento?((e.responsavel==='cliente'||e.status==='aguardando')?'<span class="st and">Aguardando sua equipe</span>':'<span class="st and">Em andamento</span>'):'<span class="st prev">Prevista</span>');
     return `<li class="et ${cls}"><span class="nb">${e.feita?'✓':i+1}</span><div><div class="ti">${esc(e.titulo)} ${e.responsavel==='cliente'?'<span class="tag cli">Sua equipe</span>':''}</div>${e.data?`<div class="dd">${esc(dcurta(e.data))}</div>`:''}</div>${st}</li>`;}).join('')}</ol></section>`;
 }
 const normCod=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[\s\-\.\/_]+/g,'');
@@ -202,7 +222,7 @@ function render(r){
       <div class="kpi"><div class="l">Total contratado</div><div class="v">${n(total)}</div></div>
     </div>
     ${situacaoHtml(atual.dados.situacao)}
-    ${etapasHtml(atual.dados.etapas)}
+    ${etapasHtml(etapasDaFoto(atual.dados))}
     ${ritmo.length>1?`<section class="sec"><h2>Ritmo das últimas atualizações</h2><div class="ritmo">${ritmo.map((x,i)=>`<div class="dia ${i===0?'ult':''}"><div class="d">${esc(dt(x.em))}</div><div class="n">+${n(x.d)}</div></div>`).join('')}</div></section>`:''}
     <section class="sec card"><h2>Andamento por linha</h2>${baseHtml(atual.dados.fornecedores)}${L.map(linhaHtml).join('')}</section>
     <section class="sec card site">

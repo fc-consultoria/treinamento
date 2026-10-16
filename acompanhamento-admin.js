@@ -4,27 +4,23 @@
 (function(){
   const URL_PORTAL='https://fc-consultoria.github.io/treinamento/acompanhamento/?k=';
   const SITS=[['','Nenhuma (não mostrar)'],['fornecedor','📦 Aguardando retorno do fornecedor'],['cliente','🤝 Aguardando retorno da equipe do cliente'],['sistema','🖥️ Aguardando o suporte do sistema'],['externo','🚗 Equipe em atendimento externo (sem alimentação hoje)'],['conferencia','🔎 Conferência dos itens alimentados'],['livre','ℹ️ Recado livre (só o texto abaixo)']];
-  const MODELO=[['Acesso ao sistema e 5 linhas iniciais','fc'],['Cores e envio das planilhas de levantamento','fc'],['Acompanhamento do preenchimento com a sua equipe','fc'],['Retorno das planilhas preenchidas','cliente'],['Lançamento dos custos recebidos','fc'],['Cadastro de componentes','fc'],['Liberação das tipologias','fc'],['Simulação de orçamento','fc'],['Margem de venda','fc'],['Finalização e feedback','fc']];
-  const S={cli:[],por:{},fotos:{},crono:{},aberto:null,pend:null,carregado:false,erro:''};
+  const S={cli:[],por:{},fotos:{},aberto:null,pend:null,carregado:false,erro:''};
   const $=id=>document.getElementById(id);
   const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const quando=iso=>{if(!iso)return '';const d=new Date(iso);return d.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit'}).replace('.','')+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});};
   const novaChave=()=>(crypto.randomUUID?crypto.randomUUID()+crypto.randomUUID():String(Math.random())+Date.now()).replace(/[^a-f0-9]/gi,'').slice(0,32);
   function toast(t,ruim){const e=document.createElement('div');e.textContent=t;e.style.cssText=`position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:${ruim?'var(--bad)':'#1b232a'};color:#fff;padding:9px 16px;border-radius:99px;font:600 14px var(--f-body);z-index:9999`;document.body.appendChild(e);setTimeout(()=>e.remove(),2600);}
   function erro(e){console.error(e);toast('Não salvou: '+((e&&e.message)||e),true);}
-  function diasUteis(inicio,n){const out=[];const d=new Date(inicio+'T12:00:00');while(out.length<n){const w=d.getDay();if(w!==0&&w!==6)out.push(d.toISOString().slice(0,10));d.setDate(d.getDate()+1);}return out;}
 
   async function carregar(){
     try{
-      const [c,p,f,k]=await Promise.all([
+      const [c,p,f]=await Promise.all([
         sb.from('impl_clientes').select('id,nome,status').order('nome'),
         sb.from('impl_portal').select('*'),
-        sb.from('impl_portal_fotos').select('cliente_id,publicado_em,origem').order('publicado_em',{ascending:false}).limit(500),
-        sb.from('impl_cronograma').select('*').order('ordem')]);
-      for(const r of [c,p,f,k]) if(r.error) throw r.error;
+        sb.from('impl_portal_fotos').select('cliente_id,publicado_em,origem').order('publicado_em',{ascending:false}).limit(500)]);
+      for(const r of [c,p,f]) if(r.error) throw r.error;
       S.cli=c.data||[];S.por={};(p.data||[]).forEach(x=>S.por[x.cliente_id]=x);
       S.fotos={};(f.data||[]).forEach(x=>{if(!S.fotos[x.cliente_id])S.fotos[x.cliente_id]=x;});
-      S.crono={};(k.data||[]).forEach(x=>(S.crono[x.cliente_id]=S.crono[x.cliente_id]||[]).push(x));
       S.erro='';S.carregado=true;
     }catch(e){console.error(e);S.erro=(e&&e.message)||String(e);S.carregado=true;}
     render();
@@ -39,7 +35,7 @@
   function corpo(c){
     const p=S.por[c.id];
     if(!p) return `<p class="note" style="margin:6px 0 10px">Sem acompanhamento online. O cliente continua como hoje, recebendo o andamento só pelo WhatsApp.</p>${btn('ativar','📡 Ativar acompanhamento online','data-id="'+c.id+'"','pri')}`;
-    const url=URL_PORTAL+p.chave, cr=S.crono[c.id]||[];
+    const url=URL_PORTAL+p.chave;
     const pend=(k)=>S.pend===k+'|'+c.id;
     return `
     ${p.ativo?'':`<div style="background:var(--bad-soft);color:var(--bad);padding:8px 12px;border-radius:8px;margin:6px 0">Link desativado: o cliente não consegue abrir. Os dados continuam guardados.</div>`}
@@ -58,18 +54,8 @@
       <input id="acDet-${c.id}" value="${esc(p.situacao_detalhe||'')}" placeholder="Complemento (opcional). Ex.: tabela da Udinesse solicitada em 14/10" style="${inp};flex:1;min-width:240px">
       ${btn('sit','Salvar','data-id="'+c.id+'"')}${btn('sit','Salvar e publicar','data-id="'+c.id+'" data-pub="1"','pri')}</div>
     ${p.situacao_em?`<p class="note" style="margin:6px 0 0">Informada em ${esc(quando(p.situacao_em))}. Fica até você trocar ou escolher "Nenhuma".</p>`:''}
-    ${rot('Cronograma de etapas')}
-    ${cr.length?`<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font:500 14px var(--f-body)"><thead><tr style="color:var(--muted);font-size:12px;text-align:left"><th style="padding:4px">Nº</th><th style="padding:4px">Data</th><th style="padding:4px">Etapa</th><th style="padding:4px">Responsável</th><th style="padding:4px">Feita</th><th></th></tr></thead><tbody>
-      ${cr.map((e,i)=>`<tr style="border-top:1px solid var(--line)"><td style="padding:5px 4px;width:34px">${i+1}</td>
-        <td style="padding:5px 4px;width:150px"><input type="date" value="${e.data||''}" data-ce="data" data-eid="${e.id}" style="${inp};width:140px"></td>
-        <td style="padding:5px 4px"><input value="${esc(e.titulo)}" data-ce="titulo" data-eid="${e.id}" style="${inp};width:100%;min-width:220px"></td>
-        <td style="padding:5px 4px;width:130px"><select data-ce="responsavel" data-eid="${e.id}" style="${inp}"><option value="fc" ${e.responsavel==='fc'?'selected':''}>FC</option><option value="cliente" ${e.responsavel==='cliente'?'selected':''}>Cliente</option></select></td>
-        <td style="padding:5px 4px;width:50px;text-align:center"><input type="checkbox" data-ce="feita" data-eid="${e.id}" ${e.feita?'checked':''} style="width:18px;height:18px"></td>
-        <td style="padding:5px 4px;width:40px">${btn('etDel','×','data-eid="'+e.id+'" title="Remover etapa"',pend('etDel'+e.id)?'bad':'')}</td></tr>`).join('')}
-      </tbody></table></div>
-      <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;align-items:center">${btn('etAdd','＋ Adicionar etapa','data-id="'+c.id+'"')}<span class="note">As mudanças aparecem para o cliente na próxima publicação (ou em "Publicar andamento agora").</span></div>`
-      :`<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><label class="note">Primeiro dia:</label><input type="date" id="acIni-${c.id}" style="${inp}">${btn('crono','Criar cronograma das 10 etapas','data-id="'+c.id+'"','pri')}</div>
-       <p class="note" style="margin:6px 0 0">Uma etapa por dia útil (pula sábado e domingo), seguindo o seu modelo. Depois você ajusta datas e nomes à vontade.</p>`}
+    ${rot('Etapas da implantação')}
+    <p class="note" style="margin:0">As etapas que o cliente vê vêm da aba <b>Etapas</b> do Painel de Implantação (datas a partir da data de início, status, aviso e cobrança no WhatsApp). <a href="implantacao/" target="_blank" rel="noopener" style="color:var(--accent);font-weight:600">Abrir o Painel de Implantação ↗</a></p>
     ${rot('Segurança do link')}
     <div style="display:flex;gap:8px;flex-wrap:wrap">
       ${btn('chave',pend('chave')?'Confirmar: o link antigo para de funcionar':'🔑 Gerar nova chave','data-id="'+c.id+'"',pend('chave')?'bad':'')}
@@ -109,29 +95,10 @@
         const {error}=await sb.from('impl_portal').update(campos).eq('cliente_id',id);if(error)throw error;
         if(el.dataset.pub){await publicar(id);toast('Situação salva e publicada');}else toast('Situação salva · entra na próxima publicação');
         return carregar();}
-      if(a==='crono'){const ini=$('acIni-'+id).value;if(!ini){toast('Escolha o primeiro dia',true);return;}
-        const datas=diasUteis(ini,MODELO.length);
-        const {error}=await sb.from('impl_cronograma').insert(MODELO.map(([t,r],i)=>({cliente_id:id,ordem:i+1,titulo:t,data:datas[i],responsavel:r})));if(error)throw error;
-        toast('Cronograma criado');return carregar();}
-      if(a==='etAdd'){const cr=S.crono[id]||[];const ult=cr[cr.length-1];const prox=ult&&ult.data?diasUteis(new Date(new Date(ult.data+'T12:00:00').getTime()+864e5).toISOString().slice(0,10),1)[0]:null;
-        const {error}=await sb.from('impl_cronograma').insert({cliente_id:id,ordem:(ult?ult.ordem:0)+1,titulo:'Nova etapa',data:prox,responsavel:'fc'});if(error)throw error;return carregar();}
-      if(a==='etDel'){const k='etDel'+el.dataset.eid+'|'+S.aberto;if(S.pend!==k){S.pend=k;render();toast('Clique no × de novo para remover');return;}
-        const {error}=await sb.from('impl_cronograma').delete().eq('id',el.dataset.eid);if(error)throw error;S.pend=null;return carregar();}
       if(a==='chave'){if(S.pend!=='chave|'+id){S.pend='chave|'+id;render();return;}
         const {error}=await sb.from('impl_portal').update({chave:novaChave()}).eq('cliente_id',id);if(error)throw error;S.pend=null;toast('Nova chave gerada · envie o link novo ao cliente');return carregar();}
       if(a==='ativo'){const v=el.dataset.v==='1';if(!v&&S.pend!=='ativo|'+id){S.pend='ativo|'+id;render();return;}
         const {error}=await sb.from('impl_portal').update({ativo:v}).eq('cliente_id',id);if(error)throw error;S.pend=null;toast(v?'Link reativado':'Link desativado');return carregar();}
     }catch(e){erro(e);el.disabled=false;}
-  });
-  document.addEventListener('change',async ev=>{
-    const el=ev.target.closest('#acompBody [data-ce]');if(!el)return;
-    const campo=el.dataset.ce,eid=el.dataset.eid;
-    let v=campo==='feita'?el.checked:el.value;
-    if(campo==='titulo'&&!String(v).trim()){toast('A etapa precisa de um nome',true);return carregar();}
-    const upd={[campo]:campo==='data'?(v||null):v};if(campo==='feita')upd.feita_em=v?new Date().toISOString():null;
-    const {error}=await sb.from('impl_cronograma').update(upd).eq('id',eid);
-    if(error)return erro(error);
-    Object.values(S.crono).forEach(l=>l.forEach(e=>{if(String(e.id)===String(eid))Object.assign(e,upd);}));
-    toast('Salvo');
   });
 })();

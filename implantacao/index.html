@@ -354,7 +354,7 @@ tbody tr:hover{background:var(--panel-2);}
       <button class="navitem" id="btn-logout"><i data-lucide="log-out"></i> Sair</button>
     </div>
     <div class="sidebar-foot">
-      Painel de implantação — dados salvos em banco de dados real (Supabase), acesso restrito à equipe.<br><b>Versão 15/10i — banco próprio do cliente: Vidro e Perfis por kg</b>
+      Painel de implantação — dados salvos em banco de dados real (Supabase), acesso restrito à equipe.<br><b>Versão 15/10j — etapas únicas na aba Etapas</b>
     </div>
   </nav>
   <div class="mobile-topbar">
@@ -6675,19 +6675,13 @@ function wireEvents(){
 /* ---------------- Modals ---------------- */
 function closeModal(){ const m=document.querySelector('.modal-backdrop'); if(m) m.remove(); }
 
-const CRONOGRAMA_MODELO = [['Acesso ao sistema e 5 linhas iniciais','fc'],['Cores e envio das planilhas de levantamento','fc'],['Acompanhamento do preenchimento com a sua equipe','fc'],['Retorno das planilhas preenchidas','cliente'],['Lançamento dos custos recebidos','fc'],['Cadastro de componentes','fc'],['Liberação das tipologias','fc'],['Simulação de orçamento','fc'],['Margem de venda','fc'],['Finalização e feedback','fc']];
-function diasUteisDesde(inicio, n){ const out=[]; const d=new Date(inicio+'T12:00:00'); while(out.length<n){ const w=d.getDay(); if(w!==0 && w!==6) out.push(d.toISOString().slice(0,10)); d.setDate(d.getDate()+1); } return out; }
 function proximoDiaUtilISO(){ const d=new Date(); d.setDate(d.getDate()+1); while(d.getDay()===0||d.getDay()===6) d.setDate(d.getDate()+1); return d.toISOString().slice(0,10); }
-// Liga o acompanhamento online de um cliente recém-criado: link do portal, cronograma e primeira publicação
-async function ativarVersaoNova(clienteId, primeiroDia){
+// Liga o acompanhamento online de um cliente recém-criado: link do portal e primeira publicação.
+// As etapas que o cliente vê vêm da aba "Etapas" (datas a partir da Data de início).
+async function ativarVersaoNova(clienteId){
   const erros = [];
   const r1 = await sb.from('impl_portal').insert({cliente_id: clienteId});
   if(r1.error) erros.push('link do cliente: '+r1.error.message);
-  if(primeiroDia){
-    const datas = diasUteisDesde(primeiroDia, CRONOGRAMA_MODELO.length);
-    const r2 = await sb.from('impl_cronograma').insert(CRONOGRAMA_MODELO.map(([t,r],i)=>({cliente_id:clienteId, ordem:i+1, titulo:t, data:datas[i], responsavel:r})));
-    if(r2.error) erros.push('cronograma: '+r2.error.message);
-  }
   if(!r1.error){
     const r3 = await sb.rpc('impl_portal_publicar', {p_cliente: clienteId});
     if(r3.error) erros.push('primeira publicação: '+r3.error.message);
@@ -6712,7 +6706,7 @@ function openNovoClienteModal(versaoNova){
         <div class="desc" style="margin-top:4px;">O cliente vê no acompanhamento qual base de preços está sendo usada (só o nome do fornecedor, nunca preço ou desconto).</div>
       </div>` : ''}
       <div class="field-row">
-        <div class="field"><label>Data de início</label><input id="nc-inicio" type="date" min="2015-01-01" max="2030-12-31"></div>
+        <div class="field"><label>Data de início${versaoNova ? ' (dia 1 das etapas)' : ''}</label><input id="nc-inicio" type="date" min="2015-01-01" max="2030-12-31" value="${versaoNova ? proximoDiaUtilISO() : ''}"></div>
         <div class="field"><label>Data de finalização</label><input id="nc-fim" type="date" min="2015-01-01" max="2030-12-31"></div>
       </div>
       <div>
@@ -6732,8 +6726,7 @@ function openNovoClienteModal(versaoNova){
       </div>
       ${versaoNova ? `<div style="border:1px solid #9fd8d4; background:#f2fbfa; border-radius:10px; padding:12px 14px;">
         <div style="font-weight:650; margin-bottom:6px;">📡 Acompanhamento online (versão nova)</div>
-        <div class="field" style="margin:0;"><label>Primeiro dia do cronograma (10 etapas, uma por dia útil)</label><input id="nc-crono" type="date" min="2015-01-01" max="2030-12-31" value="${proximoDiaUtilISO()}"></div>
-        <div class="desc" style="margin-top:6px;">Ao cadastrar, o cliente já ganha o link de acompanhamento e a primeira publicação. Datas e nomes das etapas, situação do dia e envio do link ficam no Painel da Matriz → Acompanhamento.</div>
+        <div class="desc">Ao cadastrar, o cliente já ganha o link de acompanhamento e a primeira publicação. As 10 etapas seguem a <b>Data de início</b> acima e são controladas na aba <b>Etapas</b> do cliente. Situação do dia e envio do link ficam no Painel da Matriz → Acompanhamento.</div>
       </div>` : ''}
     </div>
     <div class="modal-foot">
@@ -6788,7 +6781,7 @@ function openNovoClienteModal(versaoNova){
     }
     if(versaoNova){
       btn.disabled = true; btn.textContent = 'Ligando o acompanhamento online…';
-      const erros = await ativarVersaoNova(row.id, wrap.querySelector('#nc-crono').value || null);
+      const erros = await ativarVersaoNova(row.id);
       btn.disabled = false;
       if(erros.length) alert('Cliente cadastrado, mas parte do acompanhamento online não foi ligada:\n- '+erros.join('\n- ')+'\n\nVocê pode ativar depois no Painel da Matriz → Acompanhamento.');
     }
