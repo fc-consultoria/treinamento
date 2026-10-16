@@ -121,7 +121,7 @@ button.ok{background:var(--ok);border-color:var(--ok);color:#fff}button.no{color
 .mpRes{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px}.mpRes div{flex:1;min-width:150px;border:1px solid #d5dde2;border-radius:10px;padding:10px 12px;background:#fff}.mpRes b{display:block;font-size:26px;line-height:1.1}.mpRes span{font-size:12.5px;color:#4b5a63}.mpRes .fin{border:2px solid #1f6fb2;background:#eef5fc}.mpRes .fin b{color:#1f6fb2}
 tr.mfin td{background:#eef5fc}
 .mpq{display:inline-flex;align-items:center;gap:6px}.mpq button{width:30px;height:30px;padding:0;font-size:17px;line-height:1}.mpq b{min-width:22px;text-align:center;font-size:17px}
-</style>
+td.qd{cursor:help}td.qd:hover{background:#eef6f8;box-shadow:inset 0 -2px 0 #1f6f9a}</style>
 </head>
 <body>
 <div class="gate" id="gate" hidden>
@@ -363,6 +363,22 @@ function resumo(uid){
   const rein=ev.filter(e=>e.tipo==='reinicio').length;
   return {ev,tip,cor,per,tes,seg,ult,melhor,estrelas,best,rein};
 }
+// Quem fez cada número da tabela (passar o mouse): separa os eventos por colaborador
+function porQuem(uid){const N={};colabs(uid,true).forEach(x=>N[x.id]=x.nome);const P={};
+  EV.forEach(e=>{if(e.user_id!==uid||/^gestor_/.test(e.tipo))return;const d=e.detalhe||{};const q=(d.quem||N[d.cid]||'').trim()||'Sem nome';
+    const p=P[q]||(P[q]={seg:0,tip:new Set(),cor:new Set(),per:new Set(),tes:[]});
+    if(e.tipo==='tempo')p.seg+=d.s||60;if(e.tipologia&&e.tipo!=='login')p.tip.add(e.tipologia);
+    if(e.tipo==='corte')p.cor.add((d.t||'')+'·'+d.k);if(e.tipo==='perfil')p.per.add(d.c);if(e.tipo==='teste')p.tes.push(d);});
+  Object.values(P).forEach(p=>{p.tes.forEach(x=>{if(x.pct==null)x.pct=Math.round(x.tot/((x.tot+x.err)||1)*100);if(x.stars==null)x.stars=x.pct>=90?3:x.pct>=70?2:1;});
+    const b={};p.tes.forEach(x=>{const o=b[x.t];if(!o||x.stars>o.stars||(x.stars===o.stars&&x.pct>o.pct))b[x.t]=x;});p.best=b;p.est=Object.values(b).reduce((a,x)=>a+x.stars,0);});
+  return P;}
+function dicaQuem(P,k){const L=Object.entries(P).map(([n,p])=>{let v,o;
+    if(k==='seg'){o=p.seg;v=fmtH(p.seg);}else if(k==='tip'){o=p.tip.size;v=p.tip.size+' tipologia'+(p.tip.size===1?'':'s')+(p.tip.size?': '+[...p.tip].map(t=>TIPOS[t]||t).join(', '):'');}
+    else if(k==='cor'){o=p.cor.size;v=p.cor.size+' corte'+(p.cor.size===1?'':'s');}else if(k==='per'){o=p.per.size;v=p.per.size+' perfi'+(p.per.size===1?'l':'s');}
+    else if(k==='tes'){o=p.tes.length;v=p.tes.length+' desafio'+(p.tes.length===1?'':'s');}
+    else{o=p.est;v='★ '+p.est+(p.est?' · '+Object.values(p.best).map(x=>(TIPOS[x.t]||x.t)+' '+'★'.repeat(x.stars)+' '+x.pct+'%').join(' · '):'');}
+    return [o,n+': '+v];}).filter(x=>x[0]>0).sort((a,b)=>b[0]-a[0]).map(x=>'• '+x[1]);
+  return L.length?'Quem fez:\n'+L.join('\n'):'Ninguém fez ainda.';}
 function gestorRes(uid){const L=EV.filter(e=>e.user_id===uid&&/^gestor_/.test(e.tipo)),m30=Date.now()-30*864e5;
   const ins=L.filter(e=>e.tipo==='gestor_in'),hb=L.filter(e=>e.tipo==='gestor_hb'),ac=L.filter(e=>e.tipo==='gestor_acao');
   const ult=ins.concat(hb).reduce((a,e)=>!a||e.criado_em>a?e.criado_em:a,null),n30=ins.filter(e=>Date.parse(e.criado_em)>m30).length,min=hb.length+ins.length;
@@ -602,11 +618,11 @@ function render(){
   ALUNOS.forEach(a=>{const r=resumo(a.user_id);h+=r.seg;t+=r.tes.length;if(r.ult&&new Date(r.ult)>sem)ativos7++;
     if(implDe(a.user_id)||(livre(a)&&!VERLIV&&sel!==a.user_id))return;
     const tr=document.createElement('tr');if(sel===a.user_id)tr.className='sel';
-    const esc=v=>String(v||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+    const esc=v=>String(v||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');const PQ=porQuem(a.user_id);
     tr.innerHTML=`<td><input class="ied" data-e="nome" value="${esc(a.nome)}" placeholder="sem nome – digite" aria-label="Nome do ${esc(a.login)}" title="Clique para editar o nome; Enter salva"></td><td><input class="ied lg" data-e="login" value="${esc(a.login)}" aria-label="Login do ${esc(a.login)}" title="Clique para editar o login; Enter salva"></td><td><input class="ied lg" data-e="senha" value="${esc(senhaLoc(a.user_id))}" placeholder="nova senha" autocomplete="new-password" aria-label="Nova senha do ${esc(a.login)}" title="Digite a nova senha (mín. 6) e aperte Enter"></td>
-      <td><span class="tag ${a.ativo?'':'off'}">${a.ativo?'ativo':'bloqueado'}</span></td><td>${semTag(a.user_id)}</td><td class="n">${colabs(a.user_id).length}/${limCol(a.user_id)}</td><td style="white-space:nowrap">${sisBtns(a.user_id)}</td><td>${ctrCel(a.user_id)}</td><td class="n">${fmtD(r.ult)}</td><td>${gestorCel(a.user_id)}</td><td class="n">${fmtH(r.seg)}</td>
-      <td><div style="display:flex;gap:8px;align-items:center"><div class="bar" style="flex:1"><i style="width:${Math.round(r.tip.size/NT*100)}%"></i></div><span class="n">${r.tip.size}/${NT}</span></div></td>
-      <td class="n">${r.cor.size}</td><td class="n">${r.per.size}</td><td class="n">${r.tes.length}</td><td class="n" style="color:#b8860b">★ ${r.estrelas}/${NT*3}</td>
+      <td><span class="tag ${a.ativo?'':'off'}">${a.ativo?'ativo':'bloqueado'}</span></td><td>${semTag(a.user_id)}</td><td class="n">${colabs(a.user_id).length}/${limCol(a.user_id)}</td><td style="white-space:nowrap">${sisBtns(a.user_id)}</td><td>${ctrCel(a.user_id)}</td><td class="n">${fmtD(r.ult)}</td><td>${gestorCel(a.user_id)}</td><td class="n qd" title="${esc(dicaQuem(PQ,'seg'))}">${fmtH(r.seg)}</td>
+      <td class="qd" title="${esc(dicaQuem(PQ,'tip'))}"><div style="display:flex;gap:8px;align-items:center"><div class="bar" style="flex:1"><i style="width:${Math.round(r.tip.size/NT*100)}%"></i></div><span class="n">${r.tip.size}/${NT}</span></div></td>
+      <td class="n qd" title="${esc(dicaQuem(PQ,'cor'))}">${r.cor.size}</td><td class="n qd" title="${esc(dicaQuem(PQ,'per'))}">${r.per.size}</td><td class="n qd" title="${esc(dicaQuem(PQ,'tes'))}">${r.tes.length}</td><td class="n qd" style="color:#b8860b" title="${esc(dicaQuem(PQ,'est'))}">★ ${r.estrelas}/${NT*3}</td>
       <td class="n">${r.melhor?`${r.melhor.pct}% · ${TIPOS[r.melhor.t]||''}`:'—'}</td>`;
     tr.addEventListener('click',e=>{if(e.target.closest('.ied'))return;sel=a.user_id;render();detalhe();});
     tr.querySelectorAll('.ied').forEach(inp=>{const k=inp.dataset.e,orig=inp.value;
