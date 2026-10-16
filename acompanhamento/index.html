@@ -158,7 +158,7 @@ details summary{cursor:pointer;color:var(--teal-d);font-weight:500;margin-top:8p
 .festa .fx{font-size:40px;line-height:1}.festa h2{font-size:24px;margin:8px 0 4px}.festa p{margin:0;color:#d5f1f0;font-size:15px}
 .estado{max-width:520px;margin:60px auto;text-align:center}
 .estado h2{font-size:20px;margin-bottom:8px}
-</style>
+#galFull[hidden],#galSec[hidden],#galGrade[hidden]{display:none!important}</style>
 </head>
 <body>
 <header class="top"><div class="top-in">
@@ -189,7 +189,19 @@ details summary{cursor:pointer;color:var(--teal-d);font-weight:500;margin-top:8p
     <p class="muted demo-nota">Quer conhecer algum desses? Acesse o site ou fale com a FC.</p>
   </section>
   <div id="app"></div>
+  <section class="card" id="galSec" hidden style="margin-top:14px;padding:0">
+    <button type="button" id="galTog" style="all:unset;box-sizing:border-box;width:100%;cursor:pointer;display:flex;gap:10px;align-items:center;padding:16px 18px">
+      <span style="font-size:22px">📸</span><span style="flex:1"><b style="font-size:17px">Galeria do processo de implantação</b><span class="muted" id="galCnt" style="display:block;font-size:13.5px"></span></span><span id="galSeta" class="muted">▼ Ver fotos</span></button>
+    <div id="galGrade" hidden style="padding:0 18px 18px"></div>
+  </section>
 </main>
+<div id="galFull" hidden style="position:fixed;inset:0;z-index:9999;background:rgba(5,10,14,.94);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px">
+  <button type="button" id="galX" aria-label="Fechar" style="position:absolute;top:10px;right:12px;background:rgba(255,255,255,.15);color:#fff;border:0;border-radius:50%;width:44px;height:44px;font-size:22px;cursor:pointer">✕</button>
+  <button type="button" id="galAnt" aria-label="Anterior" style="position:absolute;left:8px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.15);color:#fff;border:0;border-radius:50%;width:46px;height:46px;font-size:24px;cursor:pointer">‹</button>
+  <button type="button" id="galProx" aria-label="Próxima" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.15);color:#fff;border:0;border-radius:50%;width:46px;height:46px;font-size:24px;cursor:pointer">›</button>
+  <img id="galImg" alt="" style="max-width:100%;max-height:calc(100vh - 90px);object-fit:contain;border-radius:6px;background:#111">
+  <div id="galLeg" style="color:#e8eef0;font:500 14.5px/1.4 system-ui,sans-serif;text-align:center;margin-top:10px;max-width:900px"></div>
+</div>
 <div id="folder" hidden></div>
 
 <script>
@@ -435,8 +447,30 @@ function iniciarDemo(){
     ENVIO.chave=chave;ENVIO.previa=previa;ENVIO.sb=sb;ENVIO.ehFC=ehFC;ENVIO.recebidos=data.recebidos||[];ENVIO.ultimo=data;
     render(data);
     setTimeout(buscarNovidades,1200);
+    galeria(sb,chave,ENVIO.nome||'');
   }catch(e){console.error(e);estado('Não foi possível carregar','Verifique sua internet e recarregue a página.');}
 })();
+// Galeria do processo de implantação: fica fechada; abre a grade de miniaturas; toque abre a foto em tela cheia
+async function galeria(sb,chave,nome){try{
+  const r=await sb.rpc('impl_portal_galeria',{p_chave:chave,p_nome:nome});if(r.error||!Array.isArray(r.data)||!r.data.length)return;
+  const G=r.data,sec=$('#galSec'),gr=$('#galGrade'),FULL={},esc=t=>String(t||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const dia=iso=>new Date(iso).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'});
+  $('#galCnt').textContent=G.length+' foto'+(G.length>1?'s':'')+' · última em '+dia(G[0].em);sec.hidden=false;
+  const et=[...new Set(G.map(g=>g.etapa||'Outros'))];
+  gr.innerHTML=et.map(e=>`<div style="font:600 13px var(--mono,monospace);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:12px 0 8px">${esc(e)}</div><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px">`+
+    G.map((g,i)=>[g,i]).filter(([g])=>(g.etapa||'Outros')===e).map(([g,i])=>`<button type="button" data-gi="${i}" style="all:unset;cursor:pointer;display:block;border-radius:9px;overflow:hidden;border:1px solid var(--line);background:#f4f7f8" title="${esc(g.legenda)}"><img src="${g.mini}" alt="${esc(g.legenda)}" loading="lazy" style="display:block;width:100%;aspect-ratio:4/3;object-fit:cover"><span style="display:block;font-size:11.5px;color:var(--muted);padding:4px 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${dia(g.em)}${g.legenda?' · '+esc(g.legenda):''}</span></button>`).join('')+'</div>').join('');
+  $('#galTog').onclick=()=>{gr.hidden=!gr.hidden;$('#galSeta').textContent=gr.hidden?'▼ Ver fotos':'▲ Fechar';};
+  let cur=0;const fu=$('#galFull'),img=$('#galImg');
+  const abrir=async i=>{cur=(i+G.length)%G.length;const g=G[cur];fu.hidden=false;document.body.style.overflow='hidden';img.src=FULL[g.id]||g.mini;
+    $('#galLeg').textContent=(g.etapa?g.etapa+' · ':'')+dia(g.em)+(g.legenda?' · '+g.legenda:'')+'  ('+(cur+1)+' de '+G.length+')';
+    if(!FULL[g.id]){const f=await sb.rpc('impl_portal_galeria_foto',{p_chave:chave,p_nome:nome,p_id:g.id});if(!f.error&&f.data){FULL[g.id]=f.data;if(G[cur].id===g.id)img.src=f.data;}}};
+  const fechar=()=>{fu.hidden=true;document.body.style.overflow='';};
+  gr.addEventListener('click',e=>{const b=e.target.closest('[data-gi]');if(b)abrir(+b.dataset.gi);});
+  $('#galX').onclick=fechar;$('#galAnt').onclick=()=>abrir(cur-1);$('#galProx').onclick=()=>abrir(cur+1);
+  fu.addEventListener('click',e=>{if(e.target===fu)fechar();});
+  document.addEventListener('keydown',e=>{if(fu.hidden)return;if(e.key==='Escape')fechar();else if(e.key==='ArrowLeft')abrir(cur-1);else if(e.key==='ArrowRight')abrir(cur+1);});
+  let x0=null;fu.addEventListener('touchstart',e=>{x0=e.touches[0].clientX;},{passive:true});fu.addEventListener('touchend',e=>{if(x0===null)return;const dx=e.changedTouches[0].clientX-x0;if(Math.abs(dx)>50)abrir(cur+(dx<0?1:-1));x0=null;});
+}catch(e){console.warn('galeria',e);}}
 // Tela de entrada: a pessoa digita o nome cadastrado pela FC e entra (o link continua sendo a chave de segurança)
 function telaEntrar(sb,chave,chaveNome){
   return new Promise(res=>{

@@ -31,6 +31,7 @@
       S.usuarios={};S.semUsuarios=false;try{const us=await sb.from('impl_portal_usuarios').select('id,cliente_id,nome,telefone,criado_em').order('criado_em');if(us.error)S.semUsuarios=true;else(us.data||[]).forEach(u=>(S.usuarios[u.cliente_id]=S.usuarios[u.cliente_id]||[]).push(u));}catch(_){S.semUsuarios=true;}
       try{const desde=new Date(Date.now()-7*864e5).toISOString();const ac=await sb.from('impl_portal_acessos').select('cliente_id,em,usuario_nome').gte('em',desde).order('em',{ascending:false}).limit(500);
         S.acessos={};if(!ac.error){(ac.data||[]).forEach(x=>{(S.acessos[x.cliente_id]=S.acessos[x.cliente_id]||[]).push(x.em);(S.acessosLista=S.acessosLista||[]).push(x);});if(!S.ultAcesso)S.ultAcesso=(ac.data&&ac.data[0])?ac.data[0].em:new Date().toISOString();}}catch(_){}
+      S.gal={};S.semGal=false;try{const g=await sb.from('impl_portal_galeria').select('id,cliente_id,etapa,legenda,mini,criado_em').order('criado_em',{ascending:false});if(g.error)S.semGal=true;else(g.data||[]).forEach(x=>(S.gal[x.cliente_id]=S.gal[x.cliente_id]||[]).push(x));}catch(_){S.semGal=true;}
       await carregarPresenca();
       S.erro='';S.carregado=true;
     }catch(e){console.error(e);S.erro=(e&&e.message)||String(e);S.carregado=true;}
@@ -81,6 +82,7 @@
       ${btn('copiar','Copiar link','data-url="'+esc(url)+'"')}<a href="${esc(url)}" target="_blank" rel="noopener" style="font:600 13.5px var(--f-body);color:var(--accent)">Ver como o cliente vê ↗</a><a href="${esc(url)}&previa=1" target="_blank" rel="noopener" style="font:600 13.5px var(--f-body);color:#b86e00">Prévia da próxima publicação ↗</a></div>
     ${textoLinkHtml(c,url)}
     ${pessoasHtml(c,url)}
+    ${galHtml(c)}
     ${rot('Publicação do andamento')}
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
       ${btn('modo','Automático · 09:00 seg a sex','data-id="'+c.id+'" data-v="auto"',p.modo==='auto'?'pri':'')}
@@ -172,6 +174,30 @@
         ${ab?`<div style="padding:0 14px 14px;border-top:1px solid var(--line)">${corpo(c)}</div>`:''}</div>`;}).join('')}</div>`;
   }
 
+  // ===== Galeria do processo de implantação (fotos/prints só deste cliente) =====
+  const ETAPAS_GAL=['Perfis','Componentes','Vidros','Tipologias','Configuração do sistema','Outros'];
+  function galHtml(c){
+    if(S.semGal)return `${rot('📸 Galeria do processo')}<p class="note" style="color:var(--bad)">Galeria ainda não ligada no banco de dados: rode o arquivo portal_galeria.sql no Supabase e clique em Atualizar.</p>`;
+    const L=(S.gal||{})[c.id]||[];
+    return `${rot('📸 Galeria do processo · '+L.length+' foto'+(L.length===1?'':'s')+' · só este cliente vê')}
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <select id="gEt-${c.id}" style="${inp}">${ETAPAS_GAL.map(e=>`<option>${e}</option>`).join('')}</select>
+      <input id="gLeg-${c.id}" placeholder="Legenda (opcional). Ex.: Perfis Suprema cadastrados" style="${inp};flex:1;min-width:220px">
+      <label style="font:600 13.5px var(--f-body);padding:8px 14px;border-radius:8px;cursor:pointer;background:var(--accent);color:#fff">📷 Adicionar fotos<input type="file" accept="image/*" multiple hidden data-gal="${c.id}"></label></div>
+    <p class="note" style="margin:6px 0 0">⚠️ Antes de enviar, confira se o print não mostra <b>senha</b>, <b>preço de fornecedor</b> ou dados de outro cliente. As fotos são reduzidas automaticamente.</p>
+    ${L.length?`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;margin-top:10px">${L.map(g=>`<div style="position:relative;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#f4f7f8" title="${esc((g.etapa||'')+' · '+(g.legenda||''))}"><img src="${g.mini}" alt="" style="display:block;width:100%;aspect-ratio:4/3;object-fit:cover"><span style="display:block;font-size:11px;padding:3px 5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(g.etapa||'')}${g.legenda?' · '+esc(g.legenda):''}</span>${S.pend==='g|'+g.id?`<button type="button" data-ac="gDel" data-gid="${g.id}" style="position:absolute;inset:0;border:0;background:rgba(160,30,30,.85);color:#fff;font:700 12px var(--f-body);cursor:pointer">Toque de novo para apagar</button>`:`<button type="button" data-ac="gDel" data-gid="${g.id}" title="Apagar" style="position:absolute;top:4px;right:4px;border:0;border-radius:50%;width:24px;height:24px;background:rgba(0,0,0,.6);color:#fff;cursor:pointer">✕</button>`}</div>`).join('')}</div>`:'<p class="note" style="margin:8px 0 0">Nenhuma foto ainda. Para o cliente, a galeria só aparece depois da primeira foto.</p>'}`;
+  }
+  function reduzir(file,max,q){return new Promise((ok,no)=>{const u=URL.createObjectURL(file),im=new Image();im.onload=()=>{const k=Math.min(1,max/Math.max(im.width,im.height)),cv=document.createElement('canvas');cv.width=Math.round(im.width*k);cv.height=Math.round(im.height*k);const cx=cv.getContext('2d');cx.fillStyle='#fff';cx.fillRect(0,0,cv.width,cv.height);cx.drawImage(im,0,0,cv.width,cv.height);URL.revokeObjectURL(u);ok(cv.toDataURL('image/jpeg',q));};im.onerror=()=>{URL.revokeObjectURL(u);no(new Error('Imagem inválida: '+file.name));};im.src=u;});}
+  document.addEventListener('change',async ev=>{
+    const inp0=ev.target;if(!inp0.dataset||!inp0.dataset.gal)return;const id=inp0.dataset.gal,fs=[...(inp0.files||[])];if(!fs.length)return;
+    const etapa=$('gEt-'+id).value,legenda=$('gLeg-'+id).value.trim()||null;
+    try{for(let i=0;i<fs.length;i++){toast(`Enviando foto ${i+1} de ${fs.length}…`);
+        const [foto,mini]=await Promise.all([reduzir(fs[i],1800,.82),reduzir(fs[i],360,.7)]);
+        const {error}=await sb.from('impl_portal_galeria').insert({cliente_id:id,etapa,legenda,foto,mini});if(error)throw error;}
+      toast(fs.length>1?fs.length+' fotos adicionadas à galeria':'Foto adicionada à galeria');S.aberto=id;await carregar();
+    }catch(e){erro(e);}finally{inp0.value='';}
+  });
+
   // ===== Folders e dicas que abrem na tela do cliente =====
   const F={arte:null,img:null,aberto:false};
   function folderHtml(){
@@ -215,6 +241,7 @@
     const a=el.dataset.ac,id=el.dataset.id;
     try{
       if(a==='fAbrir'){F.aberto=!F.aberto;render();return;}
+      if(a==='gDel'){const gid=el.dataset.gid;if(S.pend!=='g|'+gid){S.pend='g|'+gid;render();return;}const {error}=await sb.from('impl_portal_galeria').delete().eq('id',gid);if(error)throw error;S.pend=null;toast('Foto apagada da galeria');return carregar();}
       if(a==='fArte'){F.arte=F.arte===el.dataset.id?null:el.dataset.id;F.img=null;render();return;}
       if(a==='fSemImg'){F.arte=null;F.img=null;render();return;}
       if(a==='fEnviar'){
