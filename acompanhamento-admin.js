@@ -73,7 +73,7 @@
       ${btn('modo','Automático · 09:00 seg a sex','data-id="'+c.id+'" data-v="auto"',p.modo==='auto'?'pri':'')}
       ${btn('modo','Manual','data-id="'+c.id+'" data-v="manual"',p.modo==='manual'?'pri':'')}
       <span style="flex:1"></span>${btn('publicar','📤 Publicar andamento agora','data-id="'+c.id+'"')}</div>
-    <p class="note" style="margin:6px 0 0">${p.modo==='auto'?'A foto do andamento é publicada às 09:00 (Brasília), de segunda a sexta, com tudo o que foi feito até ali.':'Só publica quando você clicar em "Publicar andamento agora".'} O cliente não vê o andamento em tempo real.</p>
+    <p class="note" style="margin:6px 0 0">${p.modo==='auto'?'A foto do andamento é publicada às 09:00 de Brasília (08:00 em Sinop/MT), de segunda a sexta, com tudo o que foi feito até ali.':'Só publica quando você clicar em "Publicar andamento agora".'} O cliente não vê o andamento em tempo real.</p>
     ${rot('Situação do dia (aparece em destaque para o cliente)')}
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
       <select id="acSit-${c.id}" style="${inp}">${SITS.map(([v,t])=>`<option value="${v}" ${(p.situacao||'')===v?'selected':''}>${esc(t)}</option>`).join('')}</select>
@@ -95,9 +95,9 @@
     `A partir de agora você acompanha a implantação de preços da ${c.nome} por este link:`,url,'',
     '*Como entrar*','1. Abra o link no celular ou no computador.',`2. Digite o seu nome: *${u.nome}*`,'3. Toque em *Entrar*. Nas próximas vezes o navegador já lembra o seu nome.','',
     '*O que você encontra lá*','• O percentual concluído de cada linha contratada. Quando uma linha chega a 100%, a próxima aparece.','• As etapas da implantação e o que estamos aguardando da sua equipe.','• O botão para enviar as planilhas que pedirmos (Excel, PDF ou print).','• Em "Ver os itens alimentados", os códigos já cadastrados no sistema.','',
-    '*Quando é atualizado*','De segunda a sexta, às 09:00 (horário de Brasília).','',
+    '*Quando é atualizado*','De segunda a sexta, às 09:00 (horário de Brasília), que são 08:00 aqui em Sinop/MT.','',
     'O acesso é pessoal, por isso não repasse o link. Se outra pessoa da equipe precisar acompanhar, é só nos avisar que fazemos o cadastro (até 4 pessoas).','',
-    'Dúvidas: (66) 9 9986-7984, de segunda a sexta, das 08:00 às 11:00 e das 13:00 às 17:00.','',
+    'Dúvidas: (66) 9 9986-7984, de segunda a sexta, das 08:00 às 11:00 e das 13:00 às 17:00 (horário de Sinop/MT, 1 hora a menos que Brasília).','',
     'FC Consultoria'].join('\n');
   function pessoasHtml(c,url){
     if(S.semUsuarios) return rot('Pessoas com acesso ao link')+`<p class="note" style="color:var(--bad);margin:0">Cadastro de pessoas ainda não ligado no banco de dados: rode o arquivo portal_acessos.sql no Supabase.</p>`;

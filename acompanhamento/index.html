@@ -283,10 +283,10 @@ function render(r){
   const fotos=r.fotos||[];
   $('#cliente').textContent=r.cliente||'';
   document.title='Acompanhamento — '+(r.cliente||'FC Consultoria');
-  if(!fotos.length){estado('Tudo pronto por aqui','O primeiro andamento da sua implantação aparece aqui a partir da próxima atualização, às 09:00 (horário de Brasília), de segunda a sexta.');$('#cliente').textContent=r.cliente||'';return;}
+  if(!fotos.length){estado('Tudo pronto por aqui','O primeiro andamento da sua implantação aparece aqui a partir da próxima atualização, às 09:00 de Brasília (08:00 em Sinop/MT), de segunda a sexta.');$('#cliente').textContent=r.cliente||'';return;}
   const atual=fotos[0], ant=fotos[1]||null;
   const L=(atual.dados.linhas||[]), A=linhasPorNome(ant);
-  $('#upd').textContent=(atual.previa?'Prévia gerada em ':'Atualizado em ')+dt(atual.em)+' às '+hora(atual.em)+' · atualizações de segunda a sexta, às 09:00';
+  $('#upd').textContent=(atual.previa?'Prévia gerada em ':'Atualizado em ')+dt(atual.em)+' às '+hora(atual.em)+' · atualizações de segunda a sexta, às 09:00 de Brasília (08:00 em Sinop/MT)';
 
   const total=L.reduce((s,l)=>s+Number(l.total||0),0);
   const alim=L.reduce((s,l)=>s+Number(l.alimentados||0),0);
@@ -352,7 +352,7 @@ function render(r){
     ${etapasHtml(etapasDaFoto(atual.dados))}
     ${ritmo.length>1?`<section class="sec"><h2>Ritmo das últimas atualizações</h2><div class="ritmo">${ritmo.map((x,i)=>`<div class="dia ${i===0?'ult':''}"><div class="d">${esc(dt(x.em))}</div><div class="n">${x.txt}</div></div>`).join('')}</div></section>`:''}
     <section class="sec card"><h2>Andamento por linha <span class="muted" style="font-family:var(--body);font-size:13px;font-weight:500;margin-left:auto">${L.filter(feitaL).length} de ${L.length} ${L.length>1?'linhas concluídas':'linha concluída'}</span></h2>${seqInfo}${baseHtml(atual.dados.fornecedores)}${vis.map(linhaHtml).join('')}${proxHtml}</section>
-    <div class="foot">FC Consultoria e Representação · Atendimento de segunda a sexta, das 08:00 às 11:00 e das 13:00 às 17:00</div>`;
+    <div class="foot">FC Consultoria e Representação · Atendimento de segunda a sexta, das 08:00 às 11:00 e das 13:00 às 17:00 (horário de Sinop/MT, 1 hora a menos que Brasília)</div>`;
 }
 
 function confete(){if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;const c=document.createElement('canvas');c.style.cssText='position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:200';document.body.appendChild(c);
