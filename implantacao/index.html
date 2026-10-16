@@ -354,7 +354,7 @@ tbody tr:hover{background:var(--panel-2);}
       <button class="navitem" id="btn-logout"><i data-lucide="log-out"></i> Sair</button>
     </div>
     <div class="sidebar-foot">
-      Painel de implantação — dados salvos em banco de dados real (Supabase), acesso restrito à equipe.<br><b>Versão 15/10g — fornecedor base de componentes e perfis</b>
+      Painel de implantação — dados salvos em banco de dados real (Supabase), acesso restrito à equipe.<br><b>Versão 15/10h — classificar códigos de A a Z</b>
     </div>
   </nav>
   <div class="mobile-topbar">
@@ -3869,6 +3869,13 @@ function renderPerfisMetroLinear(c, vista){
     if(mb.status==='alimentados' && !it.alimentado) return false;
     return bateBuscaItem(it.codigo, it.descricao, mb.termo);
   });
+  // Ordem da tabela (só a exibição; não muda nada no banco). Fica lembrada neste navegador.
+  const ordemMetro = STATE.metroOrdem || (()=>{ try{ return localStorage.getItem('impl-metro-ordem')||'importado'; }catch(e){ return 'importado'; } })();
+  STATE.metroOrdem = ordemMetro;
+  if(ordemMetro!=='importado'){
+    const cmp = (a,b)=> String(a.it.codigo||'').localeCompare(String(b.it.codigo||''),'pt-BR',{numeric:true, sensitivity:'base'}) || String(a.it.descricao||'').localeCompare(String(b.it.descricao||''),'pt-BR',{numeric:true, sensitivity:'base'});
+    visiveis.sort((a,b)=> ordemMetro==='za' ? cmp(b,a) : cmp(a,b));
+  }
   const filtrando = !!termoBusca || mb.status!=='todos';
   return `
   ${ehPrecos ? `
@@ -3919,6 +3926,11 @@ function renderPerfisMetroLinear(c, vista){
         <option value="todos" ${mb.status==='todos'?'selected':''}>Todos</option>
         <option value="pendentes" ${mb.status==='pendentes'?'selected':''}>Só pendentes</option>
         <option value="alimentados" ${mb.status==='alimentados'?'selected':''}>Só alimentados</option>
+      </select>
+      <select class="select-inline" data-action="ordem-metro" title="Ordem dos códigos na tabela">
+        <option value="importado" ${ordemMetro==='importado'?'selected':''}>Ordem: como importado</option>
+        <option value="az" ${ordemMetro==='az'?'selected':''}>Classificar de A a Z</option>
+        <option value="za" ${ordemMetro==='za'?'selected':''}>Classificar de Z a A</option>
       </select>
       <span class="desc">${filtrando ? '<b>'+visiveis.length+'</b> de '+itens.length+' item(ns)' : itens.length+' item(ns)'}</span>
       ${filtrando ? `<button class="btn btn-sm" data-action="limpar-busca-metro">Limpar filtro</button>` : ''}
@@ -5242,6 +5254,10 @@ function wireEvents(){
           if(n){ n.focus(); const L = n.value.length; try{ n.setSelectionRange(L,L); }catch(_e){} }
         }, 250);
       };
+      return;
+    }
+    if(action==='ordem-metro'){
+      el.onchange = (e)=>{ STATE.metroOrdem = e.target.value; try{ localStorage.setItem('impl-metro-ordem', e.target.value); }catch(_){} render(); };
       return;
     }
     if(action==='filtrar-metro-status'){
