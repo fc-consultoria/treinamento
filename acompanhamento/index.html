@@ -325,6 +325,7 @@ function render(r){
     const {data,error}=await sb.rpc(previa?'impl_portal_previa':'impl_portal_ver',{p_chave:chave});
     if(error) throw error;
     if(previa) document.body.insertAdjacentHTML('afterbegin','<div style="background:#b86e00;color:#fff;text-align:center;font:600 14px var(--body);padding:8px 12px">PRÉVIA da próxima publicação · o cliente ainda não vê isto</div>');
+    barraFC(previa);
     if(!data){estado('Link desativado','Este link não está mais ativo. Peça um novo link para a FC Consultoria.');return;}
     ENVIO.chave=chave;ENVIO.previa=previa;ENVIO.sb=sb;ENVIO.recebidos=data.recebidos||[];ENVIO.ultimo=data;
     render(data);
@@ -358,6 +359,15 @@ document.addEventListener('click',ev=>{
   setTimeout(mostrarFolder,400);
 });
 setInterval(buscarNovidades,60000);
+// Barra só para a FC: aparece quando este navegador está logado no Painel da Matriz (o cliente não vê)
+function barraFC(previa){
+  let logado=previa;
+  try{logado=logado||!!localStorage.getItem('trein-fc-auth');}catch(_){}
+  if(!logado||document.getElementById('barraFC'))return;
+  document.body.insertAdjacentHTML('beforeend',`<div id="barraFC" style="position:fixed;right:16px;bottom:16px;z-index:70;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">
+    <a href="../painel.html" style="background:#16252b;color:#fff;text-decoration:none;font:600 14px var(--body);padding:10px 16px;border-radius:99px;box-shadow:0 6px 18px rgba(0,0,0,.25)">◀ Painel da Matriz</a>
+    <a href="../implantacao/" style="background:#b86e00;color:#fff;text-decoration:none;font:600 14px var(--body);padding:10px 16px;border-radius:99px;box-shadow:0 6px 18px rgba(0,0,0,.25)">📋 Painel de Implantação</a></div>`);
+}
 function aviso(t,ruim){document.querySelectorAll('.aviso').forEach(x=>x.remove());const d=document.createElement('div');d.className='aviso'+(ruim?' ruim':'');d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),4200);}
 document.addEventListener('change',async ev=>{
   const inp=ev.target.closest('input[data-enviar]');if(!inp)return;
