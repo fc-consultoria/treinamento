@@ -359,7 +359,7 @@ function render(r){
       const chaveNome='fc-portal-nome-'+chave.slice(0,12);
       let nome='';try{nome=localStorage.getItem(chaveNome)||'';}catch(_){}
       const ent=await sb.rpc('impl_portal_entrar',{p_chave:chave,p_nome:nome,p_registrar:!ehFC});
-      if(ent.error)throw ent.error;
+      if(ent.error){const r=await sb.rpc('impl_portal_ver',{p_chave:chave});if(r.error)throw r.error;ent.data=r.data?{ok:true,nome:''}:null;data=r.data;}
       if(!ent.data){estado('Link desativado','Este link não está mais ativo. Peça um novo link para a FC Consultoria.');return;}
       let nomeOk=ent.data.ok?(ent.data.nome||''):null;
       if(nomeOk===null&&sbFC){const r=await sbFC.rpc('impl_portal_ver',{p_chave:chave,p_nome:''});if(!r.error&&r.data&&!r.data.precisa_nome){nomeOk='';data=r.data;}}
