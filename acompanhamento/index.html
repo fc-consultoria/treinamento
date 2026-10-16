@@ -432,7 +432,7 @@ function iniciarDemo(){
     barraFC(previa);
     // Avisa a FC que o cliente abriu o link (não conta a prévia nem quando é a própria FC abrindo)
     if(!data){estado('Link desativado','Este link não está mais ativo. Peça um novo link para a FC Consultoria.');return;}
-    ENVIO.chave=chave;ENVIO.previa=previa;ENVIO.sb=sb;ENVIO.recebidos=data.recebidos||[];ENVIO.ultimo=data;
+    ENVIO.chave=chave;ENVIO.previa=previa;ENVIO.sb=sb;ENVIO.ehFC=ehFC;ENVIO.recebidos=data.recebidos||[];ENVIO.ultimo=data;
     render(data);
     setTimeout(buscarNovidades,1200);
   }catch(e){console.error(e);estado('Não foi possível carregar','Verifique sua internet e recarregue a página.');}
@@ -485,6 +485,14 @@ document.addEventListener('click',ev=>{
   setTimeout(mostrarFolder,400);
 });
 setInterval(buscarNovidades,60000);
+// Presença: avisa o Painel da Matriz que esta pessoa está com o link aberto agora (a cada 45 s, só com a aba visível)
+function pingPresenca(){
+  if(!ENVIO.sb||ENVIO.previa||ENVIO.ehFC||!ENVIO.chave||document.hidden) return;
+  ENVIO.sb.rpc('impl_portal_presenca',{p_chave:ENVIO.chave,p_nome:ENVIO.nome||''}).then(()=>{},()=>{});
+}
+setInterval(pingPresenca,45000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)pingPresenca();});
+setTimeout(pingPresenca,1500);
 // Barra só para a FC: aparece quando este navegador está logado no Painel da Matriz (o cliente não vê)
 function barraFC(previa){
   let logado=previa;

@@ -31,11 +31,23 @@
       S.usuarios={};S.semUsuarios=false;try{const us=await sb.from('impl_portal_usuarios').select('id,cliente_id,nome,telefone,criado_em').order('criado_em');if(us.error)S.semUsuarios=true;else(us.data||[]).forEach(u=>(S.usuarios[u.cliente_id]=S.usuarios[u.cliente_id]||[]).push(u));}catch(_){S.semUsuarios=true;}
       try{const desde=new Date(Date.now()-7*864e5).toISOString();const ac=await sb.from('impl_portal_acessos').select('cliente_id,em,usuario_nome').gte('em',desde).order('em',{ascending:false}).limit(500);
         S.acessos={};if(!ac.error){(ac.data||[]).forEach(x=>{(S.acessos[x.cliente_id]=S.acessos[x.cliente_id]||[]).push(x.em);(S.acessosLista=S.acessosLista||[]).push(x);});if(!S.ultAcesso)S.ultAcesso=(ac.data&&ac.data[0])?ac.data[0].em:new Date().toISOString();}}catch(_){}
+      await carregarPresenca();
       S.erro='';S.carregado=true;
     }catch(e){console.error(e);S.erro=(e&&e.message)||String(e);S.carregado=true;}
     render();
   }
   window.acompLoad=carregar;
+  // Quem está com o link aberto agora (a página do cliente avisa a cada 45 s)
+  const ONLINE_MS=120000;
+  async function carregarPresenca(){
+    try{const {data,error}=await sb.from('impl_portal_presenca').select('cliente_id,nome,entrou_em,visto_em').gte('visto_em',new Date(Date.now()-ONLINE_MS).toISOString());
+      if(error){S.semPresenca=true;return false;}
+      S.semPresenca=false;const antes=JSON.stringify(S.online||{});S.online={};(data||[]).forEach(x=>(S.online[x.cliente_id]=S.online[x.cliente_id]||[]).push(x));
+      return antes!==JSON.stringify(S.online);}catch(_){S.semPresenca=true;return false;}
+  }
+  const quemOnline=id=>((S.online||{})[id]||[]);
+  const nomesOnline=id=>quemOnline(id).map(x=>x.nome||'sem nome').join(', ');
+  setInterval(async()=>{if(!S.carregado||document.hidden)return;if(await carregarPresenca())render();},30000);
   const hojeIso=()=>{const d=new Date();d.setHours(0,0,0,0);return d.toISOString();};
   const acessosHoje=id=>((S.acessos||{})[id]||[]).filter(e=>e>=hojeIso()).length;
   window.ACOMP_INFO=()=>{const n=Object.values(S.por).filter(x=>x.ativo).length,r=Object.values(S.novos||{}).reduce((a,b)=>a+b,0),h=Object.keys(S.acessos||{}).reduce((a,k)=>a+acessosHoje(k),0);
@@ -127,6 +139,7 @@
     `<p class="note" style="margin:0 0 8px">${us.length?'Só quem está aqui entra no link, digitando o próprio nome. Você recebe o aviso com o nome de quem entrou.':'Ninguém cadastrado: qualquer pessoa com o link entra sem digitar o nome. Cadastre até 4 pessoas para liberar só para elas.'}</p>
     ${us.map(u=>{const a=ult(u.nome);return `<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:7px 0;border-top:1px solid var(--line)">
       <b style="font:600 14.5px var(--f-body)">${esc(u.nome)}</b><span class="note">${esc(foneBR(u.telefone))||'sem telefone'}</span>
+      ${quemOnline(c.id).some(o=>o.nome===u.nome)?'<span style="background:var(--ok-soft);color:var(--ok);font:600 12px var(--f-body);padding:2px 8px;border-radius:99px">● online agora</span>':''}
       <span class="note" style="color:${a?'var(--ok)':'var(--muted)'}">${a?'👀 entrou '+esc(quando(a.em)):'ainda não entrou (7 dias)'}</span>
       <span style="margin-left:auto;display:flex;gap:6px">${soDig(u.telefone).length>=10?`<a href="https://wa.me/55${soDig(u.telefone)}?text=${encodeURIComponent(msgLinkPessoa(c,u,url))}" target="_blank" rel="noopener" style="font:600 13.5px var(--f-body);color:#1f8a4c;padding:7px 4px">Enviar link pelo WhatsApp ↗</a>`:''}
       ${btn('uRemover',S.pend==='u|'+u.id?'Confirmar remoção':'Remover','data-uid="'+u.id+'"','bad')}</span></div>`;}).join('')}
@@ -147,7 +160,8 @@
       ${btn('copiar','Copiar link','data-url="'+URL_DEMO+'"')}${btn('copiarMsgDemo','Copiar mensagem')}
       <a href="https://wa.me/?text=${encodeURIComponent(MSG_DEMO)}" target="_blank" rel="noopener" style="font:600 13.5px var(--f-body);color:#1f8a4c">Enviar pelo WhatsApp ↗</a></div>`+folderHtml()+`<p class="note" style="padding:10px 16px 0">Ative o acompanhamento cliente por cliente. Quem não estiver ativado continua como antes, só com o WhatsApp.</p>
     <div style="padding:6px 16px 16px">${ordem.map(c=>{const p=S.por[c.id],f=S.fotos[c.id],ab=S.aberto===c.id;
-      const badge=!p?'<span style="color:var(--muted);font-size:13px">Sem portal</span>':p.ativo?'<span style="background:var(--ok-soft);color:var(--ok);font:600 12.5px var(--f-body);padding:2px 9px;border-radius:99px">● Online</span>':'<span style="background:var(--bad-soft);color:var(--bad);font:600 12.5px var(--f-body);padding:2px 9px;border-radius:99px">Desativado</span>';
+      const on=quemOnline(c.id);
+      const badge=!p?'<span style="color:var(--muted);font-size:13px">Sem portal</span>':p.ativo?'<span style="background:#eef1f4;color:var(--muted);font:600 12.5px var(--f-body);padding:2px 9px;border-radius:99px" title="O link está ligado. Online só aparece quando alguém do cliente está com ele aberto.">🔗 Link ativo</span>'+(on.length?`<span style="background:var(--ok-soft);color:var(--ok);font:600 12.5px var(--f-body);padding:2px 9px;border-radius:99px" title="Com o link aberto agora">● Online agora: ${esc(nomesOnline(c.id))}</span>`:''):'<span style="background:var(--bad-soft);color:var(--bad);font:600 12.5px var(--f-body);padding:2px 9px;border-radius:99px">Desativado</span>';
       return `<div style="border:1px solid ${ab?'var(--accent)':'var(--line)'};border-radius:12px;margin-top:10px;background:#fff">
         <button type="button" data-ac="abrir" data-id="${c.id}" style="all:unset;box-sizing:border-box;width:100%;cursor:pointer;display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:12px 14px">
           <b style="font:600 16px var(--f-display)">${esc(c.nome)}</b>${badge}
