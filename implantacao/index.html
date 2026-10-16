@@ -354,7 +354,7 @@ tbody tr:hover{background:var(--panel-2);}
       <button class="navitem" id="btn-logout"><i data-lucide="log-out"></i> Sair</button>
     </div>
     <div class="sidebar-foot">
-      Painel de implantação — dados salvos em banco de dados real (Supabase), acesso restrito à equipe.<br><b>Versão 15/10n — cliente com link acompanha só pelo link</b>
+      Painel de implantação — dados salvos em banco de dados real (Supabase), acesso restrito à equipe.<br><b>Versão 15/10o — pessoas com acesso e mensagem do link prontas</b>
     </div>
   </nav>
   <div class="mobile-topbar">
@@ -607,6 +607,7 @@ async function carregarClientes(){
     if(!ra.error) (ra.data||[]).forEach(r=>{ const c = CLIENTS.find(x=>x.id===r.cliente_id); if(c) c.arquivosProprios.push(r); });
   }catch(e){ console.warn('banco próprio do cliente:', e); }
   try{ const {data:portais, error:ePor} = await sb.from('impl_portal').select('cliente_id,ativo,chave,modo'); PORTAIS = {}; if(!ePor) (portais||[]).forEach(r=>{ PORTAIS[r.cliente_id] = r; }); }catch(e){ PORTAIS = {}; }
+  try{ const {data:pess, error:ePes} = await sb.from('impl_portal_usuarios').select('id,cliente_id,nome,telefone').order('criado_em'); PESSOAS_PORTAL = {}; if(!ePes) (pess||[]).forEach(u=>{ (PESSOAS_PORTAL[u.cliente_id] = PESSOAS_PORTAL[u.cliente_id] || []).push(u); }); }catch(e){ PESSOAS_PORTAL = {}; }
   await Promise.all(CLIENTS.flatMap(c => c.perfisMetroPdfs.map(async o=>{
     if(!o.storagePath) return;
     const {data} = await sb.storage.from(ORCAMENTOS_BUCKET).createSignedUrl(o.storagePath, 3600);
@@ -2866,6 +2867,23 @@ function textoAvisoLinha(c, cat, modo, marco){
   };
 }
 function urlPortalCliente(c){ const p = PORTAIS[c.id]; return p ? 'https://fc-consultoria.github.io/treinamento/acompanhamento/?k='+p.chave : ''; }
+// Mensagem padrão de envio do link para cada pessoa cadastrada (mesmo texto do Painel da Matriz)
+var PESSOAS_PORTAL = {};
+function mensagemLinkPessoa(c, u){
+  return [
+    `Olá, ${String(u.nome).split(' ')[0]}! Tudo bem?`,'',
+    `A partir de agora você acompanha a implantação de preços da ${c.nome} por este link:`, urlPortalCliente(c),'',
+    '*Como entrar*','1. Abra o link no celular ou no computador.',`2. Digite o seu nome: *${u.nome}*`,'3. Toque em *Entrar*. Nas próximas vezes o navegador já lembra o seu nome.','',
+    '*O que você encontra lá*','• O percentual concluído de cada linha contratada. Quando uma linha chega a 100%, a próxima aparece.','• As etapas da implantação e o que estamos aguardando da sua equipe.','• O botão para enviar as planilhas que pedirmos (Excel, PDF ou print).','• Em "Ver os itens alimentados", os códigos já cadastrados no sistema.','',
+    '*Quando é atualizado*','De segunda a sexta, às 07:00 (horário de Brasília).','',
+    'O acesso é pessoal, por isso não repasse o link. Se outra pessoa da equipe precisar acompanhar, é só nos avisar que fazemos o cadastro (até 4 pessoas).','',
+    'Dúvidas: (66) 9 9986-7984, de segunda a sexta, das 08:00 às 11:00 e das 13:00 às 17:00.','',
+    'FC Consultoria'].join('\n');
+}
+const soDigitos = t => String(t||'').replace(/\D/g,'');
+function copiarTexto(t, ok){
+  (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(()=>toastSalvo(ok), ()=>{ const ta=document.createElement('textarea'); ta.value=t; document.body.appendChild(ta); ta.select(); try{ document.execCommand('copy'); toastSalvo(ok); }catch(_){} ta.remove(); });
+}
 function mensagemLinkPortal(c){
   return `Olá, ${c.nome}! Para acompanhar o andamento da implantação de preços no sistema, acesse o link abaixo. Ele é atualizado de segunda a sexta, às 07:00, e mostra as etapas, o percentual de cada linha e o que precisamos da sua equipe:\n\n${urlPortalCliente(c)}\n\nGuarde este link. Qualquer dúvida, estou à disposição. — FC Consultoria`;
 }
@@ -2945,7 +2963,7 @@ function renderPainelAvisosLinhas(c){
 // Link de acompanhamento do cliente (versão nova) — só leitura aqui; controles no Painel da Matriz → Acompanhamento
 function renderLinkClientePortal(c){
   const p = PORTAIS[c.id];
-  if(!p) return `<div class="panel" style="padding:12px 18px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;"><span class="desc">📡 ${escapeHtml(c.nome)} ainda não tem acompanhamento online (versão antiga).</span><a class="btn btn-sm" href="../painel.html" target="_blank" rel="noopener">Ativar no Painel da Matriz ↗</a></div>`;
+  if(!p) return `<div class="panel" style="padding:12px 18px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;"><span class="desc">📡 ${escapeHtml(c.nome)} ainda não tem acompanhamento online (versão antiga).</span><button class="btn btn-sm btn-primary" data-action="ativar-versao-nova">⬆ Atualizar para a versão nova</button><span class="desc" style="flex-basis:100%;">Cria o link de acompanhamento e a primeira publicação. A partir daí o andamento vai pelo link (não mais pelos avisos de progresso no WhatsApp) e você cadastra até 4 pessoas do cliente.</span></div>`;
   const url = 'https://fc-consultoria.github.io/treinamento/acompanhamento/?k='+p.chave;
   return `<div class="panel" style="padding:14px 18px; display:flex; gap:10px; align-items:center; flex-wrap:wrap; border-color:#9fd8d4; background:#f2fbfa;">
     <b style="font-size:13.5px;">📡 Link do cliente</b>
@@ -2954,6 +2972,21 @@ function renderLinkClientePortal(c){
     <button class="btn btn-sm" data-action="copiar-link-portal" data-url="${escapeHtml(url)}">${icon('copy')} Copiar link</button>
     <a class="btn btn-sm" href="${escapeHtml(url)}" target="_blank" rel="noopener">${icon('external-link')} Ver como o cliente vê</a>
     <span class="desc" style="flex-basis:100%;">${p.modo==='manual'?'Publicação manual':'Atualiza às 07:00, de segunda a sexta'}. Publicar agora, situação do dia e desativar ficam no Painel da Matriz → 📡 Acompanhamento.</span>
+    ${pessoasLinkHtml(c)}
+  </div>`;
+}
+function pessoasLinkHtml(c){
+  const us = PESSOAS_PORTAL[c.id] || [];
+  const fone = t => { const d = soDigitos(t); return d.length===11 ? `(${d.slice(0,2)}) ${d.slice(2,3)} ${d.slice(3,7)}-${d.slice(7)}` : d.length===10 ? `(${d.slice(0,2)}) ${d.slice(2,6)}-${d.slice(6)}` : (t||''); };
+  return `<div style="flex-basis:100%; border-top:1px solid #cfe9e6; padding-top:10px; margin-top:2px;">
+    <b style="font-size:13px;">👥 Pessoas com acesso (${us.length} de 4)</b>
+    ${us.length ? '' : '<div class="desc" style="margin-top:4px;">Ninguém cadastrado: o link abre sem pedir nome. Cadastre até 4 pessoas no Painel da Matriz → 📡 Acompanhamento (ou já no cadastro de um cliente novo).</div>'}
+    ${us.map(u=>`<div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; padding:6px 0;">
+      <span style="font-weight:600; font-size:13.5px;">${escapeHtml(u.nome)}</span><span class="desc">${escapeHtml(fone(u.telefone)) || 'sem telefone'}</span>
+      <span style="margin-left:auto; display:flex; gap:6px;">
+        ${soDigitos(u.telefone).length>=10 ? `<button class="btn btn-sm btn-primary" data-action="link-pessoa-wa" data-uid="${u.id}">${icon('send')} Enviar link pelo WhatsApp</button>` : ''}
+        <button class="btn btn-sm" data-action="link-pessoa-copiar" data-uid="${u.id}">${icon('copy')} Copiar mensagem</button>
+      </span></div>`).join('')}
   </div>`;
 }
 // Arquivos que o cliente enviou pelo link (etapas 3, 4 e 5)
@@ -6497,6 +6530,20 @@ function wireEvents(){
         marcarAvisosWA(c.id, ['portal|link'], 'enviado'); render();
         return;
       }
+      if(action==='ativar-versao-nova'){
+        const c = CLIENTS.find(x=>x.id===STATE.clientId); if(!c) return;
+        el.disabled = true; el.textContent = 'Atualizando…';
+        ativarVersaoNova(c.id).then(erros=>{ if(erros.length) alert('Não foi possível atualizar:\n- '+erros.join('\n- ')); else toastSalvo('Cliente na versão nova · cadastre as pessoas com acesso'); render(); });
+        return;
+      }
+      if(action==='link-pessoa-wa' || action==='link-pessoa-copiar'){
+        const c = CLIENTS.find(x=>x.id===STATE.clientId); if(!c) return;
+        const u = (PESSOAS_PORTAL[c.id]||[]).find(x=>x.id===el.dataset.uid); if(!u) return;
+        if(action==='link-pessoa-copiar'){ copiarTexto(mensagemLinkPessoa(c,u), 'Mensagem copiada'); return; }
+        window.open(`https://wa.me/55${soDigitos(u.telefone)}?text=${encodeURIComponent(mensagemLinkPessoa(c,u))}`, '_blank', 'noopener');
+        marcarAvisosWA(c.id, ['portal|link'], 'enviado'); render();
+        return;
+      }
       if(action==='copiar-link-portal'){
         const u = el.dataset.url;
         (navigator.clipboard ? navigator.clipboard.writeText(u) : Promise.reject()).then(()=>toastSalvo('Link copiado'), ()=>{ const ta=document.createElement('textarea'); ta.value=u; document.body.appendChild(ta); ta.select(); try{ document.execCommand('copy'); toastSalvo('Link copiado'); }catch(_){} ta.remove(); });
@@ -6796,12 +6843,20 @@ function proximoDiaUtilISO(){ const d=new Date(); d.setDate(d.getDate()+1); whil
 // As etapas que o cliente vê vêm da aba "Etapas" (datas a partir da Data de início).
 async function ativarVersaoNova(clienteId){
   const erros = [];
-  const r1 = await sb.from('impl_portal').insert({cliente_id: clienteId});
+  const r1 = await sb.from('impl_portal').insert({cliente_id: clienteId}).select('cliente_id,ativo,chave,modo').single();
   if(r1.error) erros.push('link do cliente: '+r1.error.message);
   if(!r1.error){
+    PORTAIS[clienteId] = r1.data;
     const r3 = await sb.rpc('impl_portal_publicar', {p_cliente: clienteId});
     if(r3.error) erros.push('primeira publicação: '+r3.error.message);
-    PORTAIS[clienteId] = {cliente_id: clienteId, ativo: true};
+  }
+  return erros;
+}
+async function cadastrarPessoasPortal(clienteId, pessoas){
+  const erros = [];
+  for(const u of pessoas){
+    const {data, error} = await sb.from('impl_portal_usuarios').insert({cliente_id: clienteId, nome: u.nome, telefone: u.telefone || null}).select('id,cliente_id,nome,telefone').single();
+    if(error) erros.push(u.nome+': '+error.message); else (PESSOAS_PORTAL[clienteId] = PESSOAS_PORTAL[clienteId] || []).push(data);
   }
   return erros;
 }
@@ -6843,6 +6898,10 @@ function openNovoClienteModal(versaoNova){
       ${versaoNova ? `<div style="border:1px solid #9fd8d4; background:#f2fbfa; border-radius:10px; padding:12px 14px;">
         <div style="font-weight:650; margin-bottom:6px;">📡 Acompanhamento online (versão nova)</div>
         <div class="desc">Ao cadastrar, o cliente já ganha o link de acompanhamento e a primeira publicação. As 10 etapas seguem a <b>Data de início</b> acima e são controladas na aba <b>Etapas</b> do cliente. Situação do dia e envio do link ficam no Painel da Matriz → Acompanhamento.</div>
+      
+        <div style="font-weight:650; margin:12px 0 4px;">👥 Pessoas com acesso ao link (até 4, opcional)</div>
+        <div class="desc" style="margin-bottom:6px;">Cada pessoa entra digitando o próprio nome. Depois de cadastrar, o envio do link com a mensagem de orientação fica pronto em Visão geral → Link do cliente.</div>
+        ${[1,2,3,4].map(n=>`<div style="display:flex; gap:8px; margin-top:6px; flex-wrap:wrap;"><input class="nc-pnome" placeholder="Nome e sobrenome ${n}" style="flex:1; min-width:180px;"><input class="nc-pfone" placeholder="WhatsApp com DDD" inputmode="tel" style="width:170px;"></div>`).join('')}
       </div>` : ''}
     </div>
     <div class="modal-foot">
@@ -6898,6 +6957,8 @@ function openNovoClienteModal(versaoNova){
     if(versaoNova){
       btn.disabled = true; btn.textContent = 'Ligando o acompanhamento online…';
       const erros = await ativarVersaoNova(row.id);
+      const pessoas = [...wrap.querySelectorAll('.nc-pnome')].map((inp,ix)=>({nome: inp.value.trim().replace(/\s+/g,' '), telefone: soDigitos(wrap.querySelectorAll('.nc-pfone')[ix].value)})).filter(u=>u.nome.length>=2);
+      if(!erros.length && pessoas.length) erros.push(...await cadastrarPessoasPortal(row.id, pessoas));
       btn.disabled = false;
       if(erros.length) alert('Cliente cadastrado, mas parte do acompanhamento online não foi ligada:\n- '+erros.join('\n- ')+'\n\nVocê pode ativar depois no Painel da Matriz → Acompanhamento.');
     }
