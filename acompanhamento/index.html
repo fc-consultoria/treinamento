@@ -270,13 +270,19 @@ function render(r){
   const alim=L.reduce((s,l)=>s+Number(l.alimentados||0),0);
   const deltaLinha=l=>ant?Math.max(0,Number(l.alimentados||0)-Number((A[l.nome]||{}).alimentados||0)):0;
   const deltaTotal=L.reduce((s,l)=>s+deltaLinha(l),0);
+  // Para o cliente mostramos percentual (não quantidade de itens)
+  const pctDe=(a,t)=>t?Math.min(100,Math.round(a/t*100)):0;
+  const somaFoto=f=>{const ls=(f&&f.dados&&f.dados.linhas)||[];return {a:ls.reduce((s,l)=>s+Number(l.alimentados||0),0),t:ls.reduce((s,l)=>s+Number(l.total||0),0)};};
+  const avanco=(antes,depois,itens)=>{const d=pctDe(depois.a,depois.t)-pctDe(antes.a,antes.t);return d>0?'+'+d+'%':(itens>0?'+<1%':'+0%');};
+  const pctGeral=pctDe(alim,total);
+  const avancoGeral=ant?avanco(somaFoto(ant),{a:alim,t:total},deltaTotal):(pctGeral+'%');
 
   // ritmo: diferença entre fotos consecutivas (mais recente primeiro), até 5
   const ritmo=[];
   for(let i=0;i<fotos.length-1&&ritmo.length<5;i++){
     const a=fotos[i],b=linhasPorNome(fotos[i+1]);
     const d=(a.dados.linhas||[]).reduce((s,l)=>s+Math.max(0,Number(l.alimentados||0)-Number((b[l.nome]||{}).alimentados||0)),0);
-    ritmo.push({em:a.em,d});
+    ritmo.push({em:a.em,d,txt:avanco(somaFoto(fotos[i+1]),somaFoto(a),d)});
   }
 
   const linhaHtml=l=>{
@@ -286,8 +292,8 @@ function render(r){
     const novos=ant?cods.filter(c=>!antCods.has(normCod(c))):[];
     const resto=cods.filter(c=>!novos.includes(c));
     return `<div class="linha">
-      <div class="lh"><b>${esc(l.nome)}</b>${d>0?`<span class="plus">+${n(d)} nesta atualização</span>`:''}${t&&a>=t?'<span class="ok">Concluída</span>':''}
-        <span class="q"><strong>${n(a)}</strong> de ${n(t)} itens</span></div>
+      <div class="lh"><b>${esc(l.nome)}</b>${d>0?`<span class="plus">${avanco({a:Number((A[l.nome]||{}).alimentados||0),t:Number((A[l.nome]||{}).total||t)},{a,t},d)} nesta atualização</span>`:''}${t&&a>=t?'<span class="ok">Concluída</span>':''}
+        <span class="q"><strong>${pct}%</strong> concluído</span></div>
       <div class="bar" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100" aria-label="${esc(l.nome)}"><i style="width:${pct}%"></i></div>
       ${novos.length?`<div class="cods"><div class="t">Códigos alimentados nesta atualização (${novos.length})</div><div class="chips">${novos.map(c=>`<span class="chip novo">${esc(c)}</span>`).join('')}</div></div>`:''}
       ${resto.length?`<details><summary>${novos.length?'Ver os demais códigos já alimentados':'Ver códigos já alimentados'} (${resto.length})</summary><div class="cods"><div class="chips">${resto.map(c=>`<span class="chip">${esc(c)}</span>`).join('')}</div></div></details>`:''}
@@ -295,20 +301,20 @@ function render(r){
   };
 
   const etAll=etapasDaFoto(atual.dados), etAt=etAll.find(e=>!e.feita);
-  $('#topo').innerHTML=`<div class="topo"><span><span class="num">${n(alim)}</span> <span class="muted">de ${n(total)} itens alimentados</span></span>
+  $('#topo').innerHTML=`<div class="topo"><span><span class="num">${pctGeral}%</span> <span class="muted">da alimentação concluída</span></span>
     ${etAll.length?`<span class="sep"></span><span>${etAt?`<span class="muted">Etapa ${etAll.indexOf(etAt)+1} de ${etAll.length}:</span> <b>${esc(etAt.titulo)}</b>`:'<b>Implantação concluída ✓</b>'}</span>`:''}
     <a class="ver" href="#andamento">Ver andamento completo ↓</a></div>`;
   document.getElementById('siteSec').hidden=false;
   $('#app').innerHTML=`
     <h2 class="andtit" id="andamento">Andamento da sua implantação</h2>
     <div class="kpis">
-      <div class="kpi hi"><div class="l">Nesta atualização</div><div class="v">${ant?'+'+n(deltaTotal):n(alim)} <small>itens</small></div></div>
-      <div class="kpi"><div class="l">Itens alimentados</div><div class="v">${n(alim)}</div></div>
-      <div class="kpi"><div class="l">Total contratado</div><div class="v">${n(total)}</div></div>
+      <div class="kpi hi"><div class="l">Alimentação concluída</div><div class="v">${pctGeral}%</div></div>
+      <div class="kpi"><div class="l">Avanço nesta atualização</div><div class="v">${ant?avancoGeral:'—'}</div></div>
+      <div class="kpi"><div class="l">Etapas concluídas</div><div class="v">${etAll.filter(e=>e.feita).length} <small>de ${etAll.length||10}</small></div></div>
     </div>
     ${situacaoHtml(atual.dados.situacao)}
     ${etapasHtml(etapasDaFoto(atual.dados))}
-    ${ritmo.length>1?`<section class="sec"><h2>Ritmo das últimas atualizações</h2><div class="ritmo">${ritmo.map((x,i)=>`<div class="dia ${i===0?'ult':''}"><div class="d">${esc(dt(x.em))}</div><div class="n">+${n(x.d)}</div></div>`).join('')}</div></section>`:''}
+    ${ritmo.length>1?`<section class="sec"><h2>Ritmo das últimas atualizações</h2><div class="ritmo">${ritmo.map((x,i)=>`<div class="dia ${i===0?'ult':''}"><div class="d">${esc(dt(x.em))}</div><div class="n">${x.txt}</div></div>`).join('')}</div></section>`:''}
     <section class="sec card"><h2>Andamento por linha</h2>${baseHtml(atual.dados.fornecedores)}${L.map(linhaHtml).join('')}</section>
     <div class="foot">FC Consultoria e Representação · Atendimento de segunda a sexta, das 08:00 às 11:00 e das 13:00 às 17:00</div>`;
 }
