@@ -2036,6 +2036,19 @@ async function carregarAcessosEspelho(){
     MEU_ACESSO = ACESSOS.find(a=>user && a.email.toLowerCase()===String(user.email||'').toLowerCase()) || null;
   }catch(e){ console.warn('espelho: acessos', e); ACESSOS=[]; MEU_ACESSO=null; }
 }
+// Presença da equipe: avisa o Painel da Matriz (quadro Ao vivo) onde a pessoa está, a cada 45 s com a aba visível
+const NOMES_VIEW = {clientes:'Clientes', banco:'Banco de Preços', consulta:'Consultar preço', 'orcamentos-fornecedor':'Orçamentos de Fornecedores', 'orcamentos-aluminio':'Alumínio (Fornecedores)', reajustes:'Reajustes de preço', espelho:'Espelho da equipe'};
+function ondeEstouImplantacao(){
+  if(STATE.view==='cliente'){ const c = CLIENTS.find(x=>x.id===STATE.clientId); const ABAS={visao:'Visão geral',etapas:'Etapas',cadastro:'Contrato & Acesso',componentes:'Componentes',vidro:'Vidro',perfis:'Perfis',orcamentos:'Orçamentos',relatorios:'Relatórios',anotacoes:'Anotações'}; return (c?c.nome:'Cliente')+(STATE.clienteTab?' · '+(ABAS[STATE.clienteTab]||STATE.clienteTab):''); }
+  return NOMES_VIEW[STATE.view] || STATE.view;
+}
+function pingPresencaEquipe(){
+  if(!STATE.loggedIn || document.hidden) return;
+  sb.rpc('fc_presenca_ping', {p_app:'implantacao', p_nome:(MEU_ACESSO&&MEU_ACESSO.nome)||null, p_onde:ondeEstouImplantacao()}).then(()=>{},()=>{});
+}
+setInterval(pingPresencaEquipe, 45000);
+document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) pingPresencaEquipe(); });
+
 function podeVerEspelho(){ return !!(MEU_ACESSO && (MEU_ACESSO.admin || MEU_ACESSO.ver_espelho)); }
 function ehAdminEspelho(){ return !!(MEU_ACESSO && MEU_ACESSO.admin); }
 function nomePessoaEspelho(email){
@@ -7479,6 +7492,7 @@ async function entrarComSessao(){
     await carregarTudo();
     await carregarAcessosEspelho();
     STATE.loggedIn = true;
+    setTimeout(pingPresencaEquipe, 1500);
     const {data:{user}} = await sb.auth.getUser();
     const userEl = document.getElementById('sidebar-user');
     if(userEl && user) userEl.textContent = user.email;
