@@ -22,6 +22,10 @@
       S.cli=c.data||[];S.por={};(p.data||[]).forEach(x=>S.por[x.cliente_id]=x);
       S.fotos={};(f.data||[]).forEach(x=>{if(!S.fotos[x.cliente_id])S.fotos[x.cliente_id]=x;});
       S.novos={};try{const rr=await sb.from('impl_portal_recebidos').select('cliente_id').eq('visto',false);if(!rr.error)(rr.data||[]).forEach(x=>S.novos[x.cliente_id]=(S.novos[x.cliente_id]||0)+1);}catch(_){}
+      S.anuncios=[];S.vistos=[];S.artes=S.artes||null;
+      try{const [an,vi]=await Promise.all([sb.from('impl_portal_anuncios').select('id,cliente_id,titulo,ativo,criado_em').order('criado_em',{ascending:false}).limit(20),sb.from('impl_portal_anuncio_vistos').select('anuncio_id,cliente_id,visto_em')]);
+        if(!an.error)S.anuncios=an.data||[];if(!vi.error)S.vistos=vi.data||[];S.semFolder=!!an.error;}catch(_){S.semFolder=true;}
+      if(!S.artes){try{const ar=await sb.from('trein_eventos').select('detalhe').eq('tipo','div_art');S.artes=(ar.data||[]).map(x=>x.detalhe).filter(d=>d&&d.img);}catch(_){S.artes=[];}}
       S.erro='';S.carregado=true;
     }catch(e){console.error(e);S.erro=(e&&e.message)||String(e);S.carregado=true;}
     render();
@@ -68,7 +72,7 @@
     if(!S.carregado){B.innerHTML='<p class="note" style="padding:14px 16px">Carregando…</p>';return;}
     if(S.erro){const falta=/impl_portal|impl_cronograma|does not exist|schema cache/i.test(S.erro);B.innerHTML=falta?`<p class="note" style="padding:14px 16px;color:var(--bad)">O acompanhamento online ainda não foi ligado no banco de dados. Rode o arquivo portal_etapa1.sql no Supabase e clique em Atualizar.</p>`:`<p class="note" style="padding:14px 16px;color:var(--bad)">Não consegui carregar o acompanhamento: ${esc(S.erro)}. Confira se você entrou com o login da matriz.</p>`;return;}
     const ordem=[...S.cli].sort((a,b)=>(S.por[b.id]?1:0)-(S.por[a.id]?1:0)||(a.status==='em_andamento'?0:1)-(b.status==='em_andamento'?0:1)||a.nome.localeCompare(b.nome,'pt-BR'));
-    B.innerHTML=`<p class="note" style="padding:10px 16px 0">Ative o acompanhamento cliente por cliente. Quem não estiver ativado continua como antes, só com o WhatsApp.</p>
+    B.innerHTML=folderHtml()+`<p class="note" style="padding:10px 16px 0">Ative o acompanhamento cliente por cliente. Quem não estiver ativado continua como antes, só com o WhatsApp.</p>
     <div style="padding:6px 16px 16px">${ordem.map(c=>{const p=S.por[c.id],f=S.fotos[c.id],ab=S.aberto===c.id;
       const badge=!p?'<span style="color:var(--muted);font-size:13px">Sem portal</span>':p.ativo?'<span style="background:var(--ok-soft);color:var(--ok);font:600 12.5px var(--f-body);padding:2px 9px;border-radius:99px">● Online</span>':'<span style="background:var(--bad-soft);color:var(--bad);font:600 12.5px var(--f-body);padding:2px 9px;border-radius:99px">Desativado</span>';
       return `<div style="border:1px solid ${ab?'var(--accent)':'var(--line)'};border-radius:12px;margin-top:10px;background:#fff">
@@ -80,12 +84,59 @@
         ${ab?`<div style="padding:0 14px 14px;border-top:1px solid var(--line)">${corpo(c)}</div>`:''}</div>`;}).join('')}</div>`;
   }
 
+  // ===== Folders e dicas que abrem na tela do cliente =====
+  const F={arte:null,img:null,aberto:false};
+  function folderHtml(){
+    if(S.semFolder) return `<div style="padding:12px 16px"><p class="note" style="color:var(--bad)">Envio de folders ainda não ligado no banco de dados: rode o arquivo portal_anuncios.sql no Supabase.</p></div>`;
+    const comPortal=S.cli.filter(c=>S.por[c.id]&&S.por[c.id].ativo);
+    const nomeCli=id=>(S.cli.find(c=>c.id===id)||{}).nome||'—';
+    const lista=S.anuncios.map(a=>{const alvo=a.cliente_id?[a.cliente_id]:comPortal.map(c=>c.id);const vs=S.vistos.filter(v=>v.anuncio_id===a.id);
+      return `<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:8px 0;border-top:1px solid var(--line)">
+        <b style="font:600 14px var(--f-body)">${esc(a.titulo||'(sem título)')}</b><span class="note">${a.cliente_id?esc(nomeCli(a.cliente_id)):'Todos os clientes com link'} · ${esc(quando(a.criado_em))}</span>
+        <span style="font:600 12.5px var(--f-body);color:${vs.length?'var(--ok)':'var(--muted)'}" title="${esc(vs.map(v=>nomeCli(v.cliente_id)+' — '+quando(v.visto_em)).join('\n'))}">👁 visto por ${vs.length} de ${alvo.length}</span>
+        ${vs.length?`<span class="note">${esc(vs.slice(0,3).map(v=>nomeCli(v.cliente_id)+' ('+quando(v.visto_em)+')').join(', '))}${vs.length>3?'…':''}</span>`:''}
+        <span style="margin-left:auto">${a.ativo?btn('fDesativar','Tirar do ar','data-aid="'+a.id+'"','bad'):'<span class="note">fora do ar</span>'}</span></div>`;}).join('');
+    return `<div style="margin:12px 16px 0;border:1px solid var(--line);border-radius:12px;background:#fff">
+      <button type="button" data-ac="fAbrir" style="all:unset;box-sizing:border-box;width:100%;cursor:pointer;display:flex;gap:10px;align-items:center;padding:12px 14px">
+        <b style="font:600 16px var(--f-display)">📣 Enviar folder ou dica para a tela do cliente</b><span class="note">Cliente online vê em até 1 minuto; off-line vê ao abrir o link.</span><span style="margin-left:auto;color:var(--muted)">${F.aberto?'▲':'▼'}</span></button>
+      ${F.aberto?`<div style="padding:0 14px 14px;border-top:1px solid var(--line)">
+        ${rot('Arte (da sua aba Divulgação) ou outra imagem')}
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          ${(S.artes||[]).map(a=>`<button type="button" data-ac="fArte" data-id="${esc(a.id)}" style="all:unset;cursor:pointer;border:3px solid ${F.arte===a.id?'var(--accent)':'transparent'};border-radius:10px;line-height:0"><img src="${a.img}" alt="" style="width:92px;height:92px;object-fit:cover;border-radius:7px"></button>`).join('')}
+          <label style="font:600 13.5px var(--f-body);padding:7px 12px;border:1px solid var(--line);border-radius:8px;cursor:pointer">${F.img?'✓ Imagem escolhida':'＋ Outra imagem'}<input type="file" accept="image/png,image/jpeg,image/webp" id="fImg" hidden></label>
+          ${F.arte||F.img?btn('fSemImg','Sem imagem',''):''}
+        </div>
+        ${rot('Para quem')}
+        <select id="fPara" style="${inp}"><option value="">Todos os clientes com link (${comPortal.length})</option>${comPortal.map(c=>`<option value="${c.id}">${esc(c.nome)}</option>`).join('')}</select>
+        ${rot('Título e texto')}
+        <div style="display:grid;gap:8px"><input id="fTit" placeholder="Ex.: FC agora é representante direta da Engefitas" style="${inp}"><textarea id="fTxt" rows="3" placeholder="Texto curto (opcional)" style="${inp};resize:vertical"></textarea><input id="fLink" placeholder="Link do botão Saiba mais (opcional) — https://..." style="${inp}"></div>
+        <div style="display:flex;gap:8px;margin-top:10px">${btn('fEnviar','📣 Enviar para a tela do cliente','','pri')}</div>
+      </div>`:''}
+      ${S.anuncios.length?`<div style="padding:4px 14px 10px">${rot('Últimos enviados')}${lista}</div>`:''}
+    </div>`;
+  }
+  document.addEventListener('change',ev=>{
+    if(ev.target.id!=='fImg')return;const f=ev.target.files&&ev.target.files[0];if(!f)return;
+    if(f.size>1.5*1024*1024){toast('Imagem acima de 1,5 MB. Use uma menor.',true);ev.target.value='';return;}
+    const r=new FileReader();r.onload=()=>{F.img=String(r.result);F.arte=null;render();};r.readAsDataURL(f);
+  });
   async function publicar(id){const {error}=await sb.rpc('impl_portal_publicar',{p_cliente:id});if(error)throw error;}
 
   document.addEventListener('click',async ev=>{
     const el=ev.target.closest('#acompBody [data-ac]');if(!el)return;
     const a=el.dataset.ac,id=el.dataset.id;
     try{
+      if(a==='fAbrir'){F.aberto=!F.aberto;render();return;}
+      if(a==='fArte'){F.arte=F.arte===el.dataset.id?null:el.dataset.id;F.img=null;render();return;}
+      if(a==='fSemImg'){F.arte=null;F.img=null;render();return;}
+      if(a==='fEnviar'){
+        const tit=$('fTit').value.trim(),txt=$('fTxt').value.trim(),lk=$('fLink').value.trim(),para=$('fPara').value||null;
+        const img=F.img||((S.artes||[]).find(x=>x.id===F.arte)||{}).img||null;
+        if(!tit&&!img){toast('Escolha uma arte ou escreva um título',true);return;}
+        if(lk&&!/^https?:\/\//i.test(lk)){toast('O link precisa começar com https://',true);return;}
+        el.disabled=true;const {error}=await sb.from('impl_portal_anuncios').insert({cliente_id:para,titulo:tit||null,texto:txt||null,link:lk||null,imagem:img});if(error)throw error;
+        F.arte=null;F.img=null;toast('Enviado! Abre na tela do cliente em até 1 minuto (ou quando ele abrir o link).');return carregar();}
+      if(a==='fDesativar'){const {error}=await sb.from('impl_portal_anuncios').update({ativo:false}).eq('id',el.dataset.aid);if(error)throw error;toast('Tirado do ar');return carregar();}
       if(a==='abrir'){S.aberto=S.aberto===id?null:id;S.pend=null;render();return;}
       if(a==='copiar'){await navigator.clipboard.writeText(el.dataset.url).then(()=>toast('Link copiado'),()=>toast('Selecione o link e copie',true));return;}
       if(a==='ativar'){el.disabled=true;const {error}=await sb.from('impl_portal').insert({cliente_id:id});if(error)throw error;await publicar(id);toast('Acompanhamento ativado e primeira foto publicada');S.aberto=id;return carregar();}

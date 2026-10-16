@@ -100,6 +100,23 @@ details summary{cursor:pointer;color:var(--teal-d);font-weight:500;margin-top:8p
 .rec{margin-top:6px;font-size:12.5px;color:var(--teal-d);display:grid;gap:2px}
 .aviso{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:#16252b;color:#fff;padding:10px 16px;border-radius:99px;font-size:14px;z-index:50;max-width:92vw;text-align:center}
 .aviso.ruim{background:#b42318}
+.topo{display:flex;gap:10px 18px;align-items:center;flex-wrap:wrap;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 16px}
+.topo .num{font-family:var(--display);font-weight:600;font-size:20px;color:var(--teal-d)}
+.topo .sep{width:1px;align-self:stretch;background:var(--line)}
+.topo a.ver{margin-left:auto;color:var(--teal-d);font-weight:600;text-decoration:none;font-size:14px}
+.sitebox{margin-top:14px;padding:0;overflow:hidden}
+.sitebar{display:flex;gap:8px 14px;align-items:center;flex-wrap:wrap;padding:10px 14px;border-bottom:1px solid var(--line);font-size:13.5px}
+.sitebar .btn2{margin-left:auto}
+#siteFrame{display:block;width:100%;height:min(78vh,780px);border:0;background:#f4f7f8}
+.andtit{font-size:20px;margin:26px 0 10px;scroll-margin-top:12px}
+#folder{position:fixed;inset:0;background:rgba(10,20,24,.6);z-index:80;display:flex;align-items:center;justify-content:center;padding:16px}
+#folder[hidden]{display:none}
+.fbox{background:#fff;border-radius:16px;max-width:560px;width:100%;max-height:92vh;overflow:auto;box-shadow:0 20px 50px rgba(0,0,0,.35)}
+.fbox img{display:block;width:100%;height:auto;max-height:70vh;object-fit:contain;background:#f4f7f8}
+.fbox .fc{padding:14px 18px 18px}
+.fbox h3{font-family:var(--display);font-size:18px;margin:0 0 6px}
+.fbox p{margin:0 0 12px;color:var(--muted);font-size:14.5px;white-space:pre-wrap}
+.fbox .fa{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
 .estado{max-width:520px;margin:60px auto;text-align:center}
 .estado h2{font-size:20px;margin-bottom:8px}
 </style>
@@ -114,7 +131,15 @@ details summary{cursor:pointer;color:var(--teal-d);font-weight:500;margin-top:8p
   </div>
 </div></header>
 
-<main class="wrap" id="app"></main>
+<main class="wrap">
+  <div id="topo"></div>
+  <section class="card sitebox" id="siteSec" hidden>
+    <div class="sitebar"><b>🌐 Site da FC Consultoria</b><span class="muted">Navegue à vontade: catálogo de perfis 3D, representadas e contato.</span><a class="btn2" href="https://fc-consultoria.github.io/" target="_blank" rel="noopener">Abrir em nova aba ↗</a></div>
+    <iframe id="siteFrame" title="Site da FC Consultoria" loading="lazy"></iframe>
+  </section>
+  <div id="app"></div>
+</main>
+<div id="folder" hidden></div>
 
 <script>
 const SUPABASE_URL='https://cpkjphodruyxfouirhpd.supabase.co';
@@ -240,7 +265,13 @@ function render(r){
     </div>`;
   };
 
+  const etAll=etapasDaFoto(atual.dados), etAt=etAll.find(e=>!e.feita);
+  $('#topo').innerHTML=`<div class="topo"><span><span class="num">${n(alim)}</span> <span class="muted">de ${n(total)} itens alimentados</span></span>
+    ${etAll.length?`<span class="sep"></span><span>${etAt?`<span class="muted">Etapa ${etAll.indexOf(etAt)+1} de ${etAll.length}:</span> <b>${esc(etAt.titulo)}</b>`:'<b>Implantação concluída ✓</b>'}</span>`:''}
+    <a class="ver" href="#andamento">Ver andamento completo ↓</a></div>`;
+  const sf=document.getElementById('siteSec');if(sf.hidden){sf.hidden=false;document.getElementById('siteFrame').src=SITE_FC;}
   $('#app').innerHTML=`
+    <h2 class="andtit" id="andamento">Andamento da sua implantação</h2>
     <div class="kpis">
       <div class="kpi hi"><div class="l">Nesta atualização</div><div class="v">${ant?'+'+n(deltaTotal):n(alim)} <small>itens</small></div></div>
       <div class="kpi"><div class="l">Itens alimentados</div><div class="v">${n(alim)}</div></div>
@@ -250,12 +281,6 @@ function render(r){
     ${etapasHtml(etapasDaFoto(atual.dados))}
     ${ritmo.length>1?`<section class="sec"><h2>Ritmo das últimas atualizações</h2><div class="ritmo">${ritmo.map((x,i)=>`<div class="dia ${i===0?'ult':''}"><div class="d">${esc(dt(x.em))}</div><div class="n">+${n(x.d)}</div></div>`).join('')}</div></section>`:''}
     <section class="sec card"><h2>Andamento por linha</h2>${baseHtml(atual.dados.fornecedores)}${L.map(linhaHtml).join('')}</section>
-    <section class="sec card site">
-      <div class="frame"><iframe src="${SITE_FC}" title="Prévia do site da FC Consultoria" loading="lazy" tabindex="-1"></iframe><a href="${SITE_FC}" target="_blank" rel="noopener" aria-label="Abrir o site da FC Consultoria"></a></div>
-      <div><h2 style="margin-bottom:6px">Conheça a FC Consultoria</h2>
-        <p class="muted" style="margin:0 0 14px">Catálogo de perfis em 3D, representadas e novidades para o seu dia a dia.</p>
-        <a class="btn" href="${SITE_FC}" target="_blank" rel="noopener">Abrir o site da FC</a></div>
-    </section>
     <div class="foot">FC Consultoria e Representação · Atendimento de segunda a sexta, das 08:00 às 11:00 e das 13:00 às 17:00</div>`;
 }
 
@@ -274,8 +299,36 @@ function render(r){
     if(!data){estado('Link desativado','Este link não está mais ativo. Peça um novo link para a FC Consultoria.');return;}
     ENVIO.chave=chave;ENVIO.previa=previa;ENVIO.sb=sb;ENVIO.recebidos=data.recebidos||[];ENVIO.ultimo=data;
     render(data);
+    setTimeout(buscarNovidades,1200);
   }catch(e){console.error(e);estado('Não foi possível carregar','Verifique sua internet e recarregue a página.');}
 })();
+// Folders e dicas enviados pela FC: abrem na tela ao entrar e são conferidos a cada minuto
+const FOLDER={fila:[],aberto:null,vistos:new Set()};
+async function buscarNovidades(){
+  if(!ENVIO.sb||ENVIO.previa||!ENVIO.chave) return;
+  try{const {data,error}=await ENVIO.sb.rpc('impl_portal_novidades',{p_chave:ENVIO.chave});if(error)return;
+    (data||[]).forEach(a=>{if(!FOLDER.vistos.has(a.id)&&!FOLDER.fila.some(x=>x.id===a.id)&&(!FOLDER.aberto||FOLDER.aberto.id!==a.id))FOLDER.fila.push(a);});
+    mostrarFolder();}catch(_){}
+}
+function linkSeguro(u){try{const x=new URL(u);return /^https?:$/.test(x.protocol)?x.href:'';}catch(_){return '';}}
+function imagemSegura(u){u=String(u||'');return /^data:image\/(png|jpe?g|webp|gif);base64,/i.test(u)||/^https:\/\//i.test(u)?u:'';}
+function mostrarFolder(){
+  if(FOLDER.aberto||!FOLDER.fila.length) return;
+  const a=FOLDER.aberto=FOLDER.fila.shift(), el=document.getElementById('folder'), img=imagemSegura(a.imagem), lk=linkSeguro(a.link);
+  el.innerHTML=`<div class="fbox" role="dialog" aria-modal="true" aria-label="${esc(a.titulo||'Novidade da FC')}">${img?`<img src="${img}" alt="${esc(a.titulo||'Folder da FC Consultoria')}">`:''}
+    <div class="fc">${a.titulo?`<h3>${esc(a.titulo)}</h3>`:''}${a.texto?`<p>${esc(a.texto)}</p>`:''}
+    <div class="fa">${lk?`<a class="btn2 pri" href="${esc(lk)}" target="_blank" rel="noopener" data-fecha="1">Saiba mais</a>`:''}<button class="btn2" data-fecha="1">Fechar</button></div></div></div>`;
+  el.hidden=false;
+}
+document.addEventListener('click',ev=>{
+  const b=ev.target.closest('#folder [data-fecha]');const fora=ev.target.id==='folder';
+  if(!b&&!fora)return;
+  const a=FOLDER.aberto;if(!a)return;
+  FOLDER.vistos.add(a.id);FOLDER.aberto=null;document.getElementById('folder').hidden=true;
+  if(ENVIO.sb)ENVIO.sb.rpc('impl_portal_marcar_visto',{p_chave:ENVIO.chave,p_anuncio:a.id}).then(()=>{},()=>{});
+  setTimeout(mostrarFolder,400);
+});
+setInterval(buscarNovidades,60000);
 function aviso(t,ruim){document.querySelectorAll('.aviso').forEach(x=>x.remove());const d=document.createElement('div');d.className='aviso'+(ruim?' ruim':'');d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),4200);}
 document.addEventListener('change',async ev=>{
   const inp=ev.target.closest('input[data-enviar]');if(!inp)return;
