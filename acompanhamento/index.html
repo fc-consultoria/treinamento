@@ -364,11 +364,11 @@ function demoDados(dia){
     const linhas=LIN.map(([nome,total,pre])=>{const a=Math.min(total,tot);tot-=a;return {nome,total,alimentados:a,codigos:Array.from({length:a},(_,i)=>pre+String(101+i))};});
     const salvas=ETAPAS_IMPL.map((e,i)=>({n:i+1,data_prevista:diaUtil(inicio,fim[i]),status:d>=fim[i]?'concluida':(d>=ini_[i]?(e.quem==='cliente'?'aguardando':'andamento'):'pendente')}));
     const s=sits[d];
-    return {em:dataDia(d),dados:{linhas,etapas_impl:{inicio,salvas},fornecedores:{componentes:['Distribuidora Exemplo'],perfis:['Extrusora Exemplo']},situacao:s?{tipo:s[0],detalhe:s[1],em:dataDia(d)}:null}};
+    return {em:dataDia(d),dados:{linhas,etapas_impl:{inicio,salvas},fornecedores:{componentes:['Fornecedor A'],perfis:['Fornecedor B']},situacao:s?{tipo:s[0],detalhe:s[1],em:dataDia(d)}:null}};
   };
   const fotos=[];for(let d=dia;d>=Math.max(1,dia-7);d--)fotos.push(foto(d));
   const recebidos=[];if(dia>=6)recebidos.push({etapa:3,nome:'precos-vidros-preenchida.xlsx',em:dataDia(5)});if(dia>=7)recebidos.push({etapa:4,nome:'cotacao-componentes.pdf',em:dataDia(6)});if(dia>=8)recebidos.push({etapa:5,nome:'precos-perfis-por-cor.xlsx',em:dataDia(7)});
-  return {cliente:'Vidraçaria Modelo (exemplo)',fotos,recebidos};
+  return {cliente:'Empresa Demonstração (fictícia)',fotos,recebidos};
 }
 function demoIr(d){
   DEMO.dia=Math.max(1,Math.min(DEMO.max,d));const r=demoDados(DEMO.dia);ENVIO.recebidos=r.recebidos;render(r);
