@@ -456,6 +456,8 @@ function mapClienteRow(c){
     canal_cobranca: c.canal_cobranca || 'ambos',
     tipo_cliente: c.tipo_cliente || 'novo',
     linhas_componentes: c.linhas_componentes || [],
+    linhas_status: c.linhas_status || {},
+    linhas_fora_contrato: c.linhas_fora_contrato || [],
     aviso_passo: c.aviso_passo!=null ? Number(c.aviso_passo) : null,
     perfisBase: c.perfis_base==='kg' ? 'kg' : 'metro',
   };
@@ -3669,6 +3671,17 @@ function renderClienteCadastro(c){
           ${Object.keys(PRICE_DB).sort().map(nome=>`<button class="chip ${(c.linhas_componentes||[]).includes(nome)?'active':''}" data-action="toggle-linha-componente" data-linha="${nome}">${nome}</button>`).join('')}
         </div>
         <div class="desc" style="margin-top:6px;">Marque as linhas que ${c.nome} contratou (ex: Chroma, Ecoline). Só essas aparecem na aba "Componentes" desse cliente, entram na % geral de Componentes e nos avisos automáticos de progresso — cada linha avisa separadamente, dizendo qual delas bateu o marco.</div>
+        ${(c.linhas_componentes||[]).length?`<div style="margin-top:14px;">
+          <label style="display:block; font-size:12px; font-weight:650; color:var(--text-2); margin-bottom:6px;">Situação de cada linha (o cliente vê no portal)</label>
+          ${(c.linhas_componentes||[]).map(l=>{const st=(c.linhas_status||{})[l]||'';const op=[['','Automática','#6b7a83'],['aguardando','⚪ Aguardando','#6b7a83'],['alimentando','🟢 Em alimentação','#1f7a45'],['concluida','✅ Concluída','#0a6d6f']];
+            return `<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:4px 0"><b style="min-width:120px;font-size:13.5px">${l}</b>${op.map(([v,t])=>`<button class="chip ${st===v?'active':''}" data-action="set-linha-status" data-linha="${l}" data-valor="${v}">${t}</button>`).join('')}</div>`;}).join('')}
+          <div class="desc" style="margin-top:6px;">Quando você começar a alimentar uma linha, marque 🟢 Em alimentação; ao terminar, ✅ Concluída. "Automática" segue a % alimentada. Os perfis por metro entram na linha pelo início do código (LG = Gold, SU = Suprema); os demais aparecem como "Outros perfis". O cliente vê na próxima publicação do andamento.</div>
+        </div>`:''}
+        <div style="margin-top:14px;">
+          <label style="display:block; font-size:12px; font-weight:650; color:var(--text-2); margin-bottom:6px;">Linhas liberadas no sistema, fora do contrato</label>
+          <input type="text" value="${(c.linhas_fora_contrato||[]).join(', ')}" placeholder="Ex.: Chroma, Ecoline (separe por vírgula)" data-action="edit-linhas-fora" style="width:100%;padding:8px 10px;border:1px solid var(--border,#d6dee4);border-radius:8px;font:inherit">
+          <div class="desc" style="margin-top:6px;">Aparecem para o cliente num aviso: liberadas no sistema, mas não fazem parte desta alimentação.</div>
+        </div>
       </div>
       ${renderFornecedoresAlimentacao(c)}
       <div class="field-row">
@@ -5894,6 +5907,14 @@ function wireEvents(){
       };
       return;
     }
+    if(action==='edit-linhas-fora'){
+      el.onchange = (e)=>{
+        const c = CLIENTS.find(x=>x.id===STATE.clientId);
+        c.linhas_fora_contrato = e.target.value.split(/[,;\n]/).map(x=>x.trim()).filter(Boolean);
+        salvarCliente(c.id, {linhas_fora_contrato: c.linhas_fora_contrato});
+      };
+      return;
+    }
     if(action==='edit-cliente-campo'){
       el.onchange = (e)=>{
         const c = CLIENTS.find(x=>x.id===STATE.clientId);
@@ -7133,6 +7154,14 @@ function wireEvents(){
       if(action==='ir-contrato-fornecedores'){
         STATE.clienteTab = 'cadastro'; render();
         setTimeout(()=>{ const e=document.getElementById('fornecedores-alimentacao'); if(e) e.scrollIntoView({behavior:'smooth', block:'center'}); }, 50);
+        return;
+      }
+      if(action==='set-linha-status'){
+        const c = CLIENTS.find(x=>x.id===STATE.clientId);
+        const st = Object.assign({}, c.linhas_status||{});
+        if(el.dataset.valor) st[el.dataset.linha] = el.dataset.valor; else delete st[el.dataset.linha];
+        c.linhas_status = st; render();
+        salvarCliente(c.id, {linhas_status: st});
         return;
       }
       if(action==='toggle-linha-componente'){

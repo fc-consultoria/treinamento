@@ -158,7 +158,17 @@ details summary{cursor:pointer;color:var(--teal-d);font-weight:500;margin-top:8p
 .festa .fx{font-size:40px;line-height:1}.festa h2{font-size:24px;margin:8px 0 4px}.festa p{margin:0;color:#d5f1f0;font-size:15px}
 .estado{max-width:520px;margin:60px auto;text-align:center}
 .estado h2{font-size:20px;margin-bottom:8px}
-#galFull[hidden],#galSec[hidden],#galGrade[hidden]{display:none!important}</style>
+#galFull[hidden],#galSec[hidden],#galGrade[hidden]{display:none!important}.gl{border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-top:10px}
+.gl.agu{background:#f6f8f9}.gl.agu .lh b{color:var(--muted)}
+.st{font-weight:600;font-size:12.5px;border-radius:99px;padding:2px 10px;white-space:nowrap}
+.st.con{background:#0a6d6f;color:#fff}.st.ali{background:#dcf3e4;color:#1f7a45}.st.agu{background:#e7ecef;color:var(--muted)}
+.sub{margin-top:10px}.sub .sh{display:flex;gap:8px;align-items:baseline;font-size:14px}.sub .sh b{font-weight:600}.sub .sh span{margin-left:auto;color:var(--muted);font-size:13px;white-space:nowrap}
+.sub .bar{height:8px;margin-top:5px}
+.legst{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:13px;color:var(--muted);margin:0 0 6px}
+.kgt{width:100%;border-collapse:collapse;font-size:14px;margin-top:6px}.kgt td{padding:7px 4px;border-top:1px solid var(--line)}.kgt td.v{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+.vchip{display:inline-flex;gap:5px;align-items:center;font-size:13px;border:1px solid var(--line);border-radius:99px;padding:3px 10px;margin:0 6px 6px 0;background:#fff}.vchip.ok{border-color:#9fd4b4;background:#eefaf2;color:#1f7a45}
+.fora{background:#f6f8f9;border:1px dashed var(--line);border-radius:10px;padding:10px 12px;font-size:14px;margin-top:12px}
+</style>
 </head>
 <body>
 <header class="top"><div class="top-in">
@@ -342,6 +352,31 @@ function render(r){
   vis=L.filter(l=>vis.includes(l));
   const faltam=L.length-vis.length;
   const seqInfo=L.length>1?`<div class="seqinfo"><span class="p"><i>1</i>Uma linha contratada é alimentada por vez</span><span>→</span><span class="p"><i>2</i>Ao chegar a 100%, fica como concluída</span><span>→</span><span class="p"><i>3</i>A próxima linha aparece aqui</span></div>`:'';
+  // Nova visão por linha contratada (perfis e componentes separados, situação de cada linha, kg por cor, vidros e linhas fora do contrato)
+  const G=atual.dados.grupos, GA=ant&&ant.dados&&ant.dados.grupos;
+  const gruposHtml=()=>{if(!G)return '';
+    const antSub=(nome,k)=>{const l=GA&&(GA.linhas||[]).find(x=>x.nome===nome);return new Set(((l&&l[k]&&l[k].codigos)||[]).map(normCod));};
+    const subHtml=(nome,k,rot,x)=>{if(!x||!Number(x.total))return '';const t=+x.total,a=+x.alimentados||0,pct=Math.round(a/t*100);
+      const cods=(x.codigos||[]).slice().sort((p,q)=>String(p).localeCompare(String(q),'pt-BR',{numeric:true})),an=antSub(nome,k),novos=GA?cods.filter(c=>!an.has(normCod(c))):[];
+      return `<div class="sub"><div class="sh"><b>${rot}</b><span><strong>${pct}%</strong> · ${a} de ${t}</span></div><div class="bar"><i style="width:${pct}%"></i></div>
+        ${cods.length?`<details><summary>👁 Ver ${rot.toLowerCase()} alimentados (${cods.length})${novos.length?` · ${novos.length} nesta atualização`:''}</summary><div class="cods"><div class="chips">${cods.map(c=>`<span class="chip ${novos.includes(c)?'novo':''}">${esc(c)}</span>`).join('')}</div></div></details>`:''}</div>`;};
+    const stDe=l=>{const t=(+((l.perfis||{}).total)||0)+(+((l.componentes||{}).total)||0),a=(+((l.perfis||{}).alimentados)||0)+(+((l.componentes||{}).alimentados)||0);
+      return l.status||(t&&a>=t?'concluida':a>0?'alimentando':'aguardando');};
+    const ST={concluida:['con','✓ Concluída'],alimentando:['ali','● Em alimentação'],aguardando:['agu','○ Aguardando liberação']};
+    const LS=G.linhas||[];
+    const cards=LS.map(l=>{const st=stDe(l),[c,r]=ST[st]||ST.aguardando;const t=(+((l.perfis||{}).total)||0)+(+((l.componentes||{}).total)||0),a=(+((l.perfis||{}).alimentados)||0)+(+((l.componentes||{}).alimentados)||0),pct=t?Math.round(a/t*100):0;
+      return `<div class="gl ${c}"><div class="lh"><b>${esc(l.nome)}</b><span class="st ${c}">${r}</span>${t?`<span class="q"><strong>${pct}%</strong> concluído</span>`:''}</div>
+        ${st==='aguardando'&&!a?`<div class="muted" style="font-size:13.5px;margin-top:6px">Entra em alimentação na sequência combinada.</div>`:subHtml(l.nome,'perfis','Perfis',l.perfis)+subHtml(l.nome,'componentes','Componentes',l.componentes)}</div>`;}).join('');
+    const op=G.outros_perfis&&+G.outros_perfis.total?`<div class="gl"><div class="lh"><b>Outros perfis</b><span class="muted" style="font-size:13px">perfis avulsos, fora das linhas acima</span></div>${subHtml('__outros','perfis','Perfis',G.outros_perfis)}</div>`:'';
+    const brl=v=>'R$ '+Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+    const kg=(G.kg||[]).length?`<div class="gl"><div class="lh"><b>Perfis por kg · custo por cor</b><span class="q">${G.kg.filter(x=>x.ok).length} de ${G.kg.length} cores lançadas</span></div>
+      <table class="kgt">${G.kg.map(x=>`<tr><td>${esc(x.cor)}</td><td class="v">${x.ok&&x.custo!=null?brl(x.custo)+' /kg':'<span class="muted" style="font-weight:400">aguardando</span>'}</td></tr>`).join('')}</table></div>`:'';
+    const vd=(G.vidros||[]).length?`<div class="gl"><div class="lh"><b>Vidro</b><span class="q">${G.vidros.filter(x=>x.ok).length} de ${G.vidros.length} alimentados</span></div><div style="margin-top:8px">${G.vidros.map(x=>`<span class="vchip ${x.ok?'ok':''}">${x.ok?'✓':'○'} ${esc(x.nome)}</span>`).join('')}</div></div>`:'';
+    const fora=(G.fora||[]).length?`<div class="fora"><b>Linhas liberadas no sistema, fora do contrato:</b> ${G.fora.map(esc).join(', ')}.<br><span class="muted" style="font-size:13px">Elas aparecem no seu sistema, mas não fazem parte desta alimentação.</span></div>`:'';
+    const conc=LS.filter(l=>stDe(l)==='concluida').length;
+    return `<section class="sec card"><h2>Andamento por linha contratada <span class="muted" style="font-family:var(--body);font-size:13px;font-weight:500;margin-left:auto">${conc} de ${LS.length} ${LS.length===1?'linha concluída':'linhas concluídas'}</span></h2>
+      <div class="legst"><span class="st con">✓ Concluída</span><span class="st ali">● Em alimentação</span><span class="st agu">○ Aguardando liberação</span></div>
+      ${baseHtml(atual.dados.fornecedores)}${cards}${op}${kg}${vd}${fora}</section>`;};
   const proxHtml=faltam>0?`<div class="prox"><span class="cad">🔒</span><span><b style="color:var(--fg)">${faltam} ${faltam>1?'próximas linhas contratadas':'próxima linha contratada'}</b> · ${faltam>1?'aparecem':'aparece'} aqui assim que a linha em alimentação chegar a 100%.</span></div>`:'';
   const etAll0=etapasDaFoto(atual.dados),concluida=etAll0.length>0&&etAll0.every(e=>e.feita);
   if(concluida){const k='fc-portal-festa-'+(ENVIO.chave||'demo').slice(0,12);let ja=false;try{ja=!ENVIO.demo&&localStorage.getItem(k)==='1';}catch(_){}
@@ -363,7 +398,7 @@ function render(r){
     ${situacaoHtml(atual.dados.situacao)}
     ${etapasHtml(etapasDaFoto(atual.dados))}
     ${ritmo.length>1?`<section class="sec"><h2>Ritmo das últimas atualizações</h2><div class="ritmo">${ritmo.map((x,i)=>`<div class="dia ${i===0?'ult':''}"><div class="d">${esc(dt(x.em))}</div><div class="n">${x.txt}</div></div>`).join('')}</div></section>`:''}
-    <section class="sec card"><h2>Andamento por linha <span class="muted" style="font-family:var(--body);font-size:13px;font-weight:500;margin-left:auto">${L.filter(feitaL).length} de ${L.length} ${L.length>1?'linhas concluídas':'linha concluída'}</span></h2>${seqInfo}${baseHtml(atual.dados.fornecedores)}${vis.map(linhaHtml).join('')}${proxHtml}</section>
+    ${G?gruposHtml():`<section class="sec card"><h2>Andamento por linha <span class="muted" style="font-family:var(--body);font-size:13px;font-weight:500;margin-left:auto">${L.filter(feitaL).length} de ${L.length} ${L.length>1?'linhas concluídas':'linha concluída'}</span></h2>${seqInfo}${baseHtml(atual.dados.fornecedores)}${vis.map(linhaHtml).join('')}${proxHtml}</section>`}
     <div class="foot">FC Consultoria e Representação · Atendimento de segunda a sexta, das 08:00 às 11:00 e das 13:00 às 17:00 (horário de Sinop/MT, 1 hora a menos que Brasília)</div>`;
 }
 
