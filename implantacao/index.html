@@ -1155,6 +1155,7 @@ function orcamentoStatusBadge(orc){
     'sem-leitor': ['badge-muted', 'alert-circle', 'Leitor de PDF indispon\u00edvel'],
     'erro': ['badge-danger', 'alert-triangle', 'Erro ao ler PDF'],
   };
+  if(ehNomePlanilha(orc.nome)) return '<span class="badge badge-ok">'+icon('file-spreadsheet')+'Planilha Excel</span>';
   const [cls, ic, label] = map[orc.status] || map['sem-leitor'];
   return '<span class="badge '+cls+'">'+icon(ic)+label+'</span>';
 }
@@ -1694,6 +1695,70 @@ async function subirOrcamentoAluminioPDF(fornecedor, orc, file, dataOrcamento, c
     const {error: updErr} = await sb.from('impl_orcamentos_aluminio').update({status_pdf: orc.status, texto_extraido: orc.texto||''}).eq('id', orc._id);
     if(updErr) avisarErroSalvar(updErr);
   }
+}
+
+function ehNomePlanilha(nome){ return /\.(xlsx|xls|csv)$/i.test(nome||''); }
+function numeroPlanilha(v){
+  if(v==null) return null;
+  let t = String(v).replace(/R\$|\s/g,'');
+  if(t==='') return null;
+  if(t.includes(',')) t = t.replace(/\./g,'').replace(',','.');
+  const n = parseFloat(t);
+  return isNaN(n) ? null : n;
+}
+// Lê as linhas de uma planilha (Excel/CSV) de orçamento de alumínio e devolve as sugestões no mesmo
+// formato da detecção do PDF. Retorna null se não achar a linha de cabeçalho.
+function lerItensPlanilhaAluminio(rows){
+  let h = -1, col = null;
+  for(let i=0;i<Math.min(rows.length,40);i++){
+    const n = rows[i].map(c=>normalizeText(c).trim());
+    const c = {cod:-1, sis:-1, desc:-1, comp:-1, barra:-1, metro:-1};
+    n.forEach((t,j)=>{
+      if(!t) return;
+      if(/sistema/.test(t) && /cod/.test(t)){ if(c.sis<0) c.sis=j; }
+      else if(/^cod/.test(t)){ if(c.cod<0) c.cod=j; }
+      else if(/descri|produto|perfil|^nome/.test(t)){ if(c.desc<0) c.desc=j; }
+      else if(/tamanho|comprimento/.test(t)){ if(c.comp<0) c.comp=j; }
+      else if(/metro|linear|\/m\)/.test(t) && /valor|preco|r\$/.test(t)){ if(c.metro<0) c.metro=j; }
+      else if(/valor|preco|unit/.test(t) && !/total/.test(t)){ if(c.barra<0) c.barra=j; }
+    });
+    if(c.cod>=0 && (c.barra>=0 || c.metro>=0)){ h=i; col=c; break; }
+  }
+  if(h<0) return null;
+  const pega = (r,j)=> j>=0 ? String(r[j]==null?'':r[j]).trim() : '';
+  const out = [];
+  rows.slice(h+1).forEach(r=>{
+    const codigo = pega(r,col.cod);
+    const descricao = pega(r,col.desc);
+    if(!codigo) return;
+    const comp = numeroPlanilha(pega(r,col.comp));
+    const comprimento = comp && comp>0 ? comp : 6;
+    let preco = numeroPlanilha(pega(r,col.barra));
+    if(!(preco>0)){
+      const metro = numeroPlanilha(pega(r,col.metro));
+      preco = metro>0 ? Math.round(metro*comprimento*100)/100 : null;
+    }
+    if(!(preco>0)) return;
+    out.push({codigo, codigoSistema: pega(r,col.sis), descricao, preco, quantidadePacote: comprimento, incluir:true});
+  });
+  return out;
+}
+async function subirOrcamentoAluminioPlanilha(fornecedor, orc, file, dataOrcamento, clienteId, descontoPct){
+  const nomeLimpo = file.name.replace(/[^a-zA-Z0-9._-]+/g,'_');
+  const slug = fornecedor.replace(/[^a-zA-Z0-9._-]+/g,'_');
+  const path = 'aluminio/' + slug + '/' + Date.now() + '_' + nomeLimpo;
+  const ext = (file.name.split('.').pop()||'').toLowerCase();
+  const tipo = file.type || (ext==='csv' ? 'text/csv' : ext==='xls' ? 'application/vnd.ms-excel' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+  const {error: upErr} = await sb.storage.from(ORCAMENTOS_BUCKET).upload(path, file, {contentType: tipo});
+  if(upErr){ avisarErroSalvar(upErr); }
+  else {
+    orc.storagePath = path;
+    const {data: sig} = await sb.storage.from(ORCAMENTOS_BUCKET).createSignedUrl(path, 3600);
+    if(sig) orc.url = sig.signedUrl;
+  }
+  const {data: row, error: insErr} = await sb.from('impl_orcamentos_aluminio').insert({fornecedor, nome_arquivo: file.name, storage_path: orc.storagePath || ('manual/'+Date.now()), data_orcamento: dataOrcamento||null, status_pdf:'sem-texto', cliente_id: clienteId||null, desconto_pct: descontoPct||null}).select().single();
+  if(insErr){ avisarErroSalvar(insErr); return; }
+  orc._id = row.id;
 }
 
 async function excluirOrcamentoAluminio(o){
@@ -2606,11 +2671,11 @@ function renderOrcamentoAluminioCard(o){
   <div class="panel">
     <div class="panel-head">
       <div>
-        <h3>${icon('file-text')} ${escapeHtml(o.nome)}</h3>
+        <h3>${icon(ehNomePlanilha(o.nome)?'file-spreadsheet':'file-text')} ${escapeHtml(o.nome)}</h3>
         <div class="desc">${o.dataOrcamento?fmtDate(o.dataOrcamento)+' · ':''}${orcamentoStatusBadge(o)}${o.descontoPct?` · <span class="badge badge-muted">Desconto ${o.descontoPct}%</span>`:''}${ajusteFornecedor(o.fornecedor, 'perfis')?` · <span class="badge badge-warn">Reajuste ${fmtAjuste(ajusteFornecedor(o.fornecedor, 'perfis'))}</span>`:''}</div>
       </div>
       <div style="display:flex; gap:8px; align-items:center;">
-        ${o.storagePath ? `<button class="btn btn-sm" data-action="abrir-pdf-assinado" data-path="${escapeHtml(o.storagePath)}">${icon('external-link')} Abrir PDF</button>` : ''}
+        ${o.storagePath && !/^manual\//.test(o.storagePath) ? `<button class="btn btn-sm" data-action="abrir-pdf-assinado" data-path="${escapeHtml(o.storagePath)}">${icon(ehNomePlanilha(o.nome)?'download':'external-link')} ${ehNomePlanilha(o.nome)?'Baixar planilha':'Abrir PDF'}</button>` : ''}
         ${o.status==='ok' ? `<button class="btn btn-sm" data-action="detectar-itens-aluminio" data-idx="${idx}">${icon('scan-search')} Detectar itens automaticamente</button>` : ''}
         ${duplicadosOrcAluminio(o)>0 ? `<button class="btn btn-sm btn-danger-ghost" data-action="remover-duplicados-orc-aluminio" data-idx="${idx}">${icon('trash-2')} Remover ${duplicadosOrcAluminio(o)} duplicado(s)</button>` : ''}
         <button class="btn btn-sm" data-action="novo-item-orc-aluminio" data-idx="${idx}">${icon('plus')} Novo item</button>
@@ -2633,7 +2698,7 @@ function renderOrcamentoAluminioCard(o){
     </div>
     ${o.mostrarSugestoes && o.sugestoes && o.sugestoes.length ? `
     <div class="orc-sugestoes">
-      <div class="desc" style="margin-bottom:8px;"><b>${icon('sparkles')} ${o.sugestoes.length} item(ns) detectado(s) automaticamente no PDF.</b> Confira, ajuste código/valor se precisar e desmarque o que não quiser importar antes de salvar. A descrição já vem sugerida a partir da linha do PDF — muitas vezes o código do seu sistema de cálculo de esquadria só aparece dentro dela, então confira e preencha o campo "Cód. sistema" manualmente. O comprimento da barra já vem sugerido em 6m (padrão) — ajuste se a barra desse fornecedor for outro tamanho.${o.descontoPct?' O valor por metro linear abaixo já sai com o desconto de '+o.descontoPct+'% aplicado.':''}</div>
+      <div class="desc" style="margin-bottom:8px;"><b>${icon('sparkles')} ${o.sugestoes.length} item(ns) ${ehNomePlanilha(o.nome)?'lido(s) da planilha Excel':'detectado(s) automaticamente no PDF'}.</b> Confira, ajuste código/valor se precisar e desmarque o que não quiser importar antes de salvar. A descrição já vem sugerida a partir da linha do ${ehNomePlanilha(o.nome)?'arquivo':'PDF'} — muitas vezes o código do seu sistema de cálculo de esquadria só aparece dentro dela, então confira e preencha o campo "Cód. sistema" manualmente. O comprimento da barra já vem sugerido em 6m (padrão) — ajuste se a barra desse fornecedor for outro tamanho.${o.descontoPct?' O valor por metro linear abaixo já sai com o desconto de '+o.descontoPct+'% aplicado.':''}</div>
       <div style="overflow-x:auto;">
       <table>
         <thead><tr>
@@ -2720,8 +2785,8 @@ function openNovoOrcamentoAluminioModal(fornecedorPreset){
         </select>
       </div>
       <div class="field"><label>Desconto negociado com esse fornecedor (%, opcional)</label><input id="oa-desconto" placeholder="Ex: 10"></div>
-      <div class="field"><label>Arquivo PDF (opcional)</label><input id="oa-arquivo" type="file" accept=".pdf"></div>
-      <div class="desc">Sem PDF pra anexar? Deixe o arquivo em branco, clique em "Anexar" e lance os itens manualmente com "Novo item" — útil pros fornecedores que você acessa direto pelo sistema deles. Se marcar um cliente, esse orçamento fica ligado só a ele; deixando "Geral", fica disponível pra usar com qualquer cliente. O desconto, se informado, já é aplicado automaticamente no cálculo do valor por metro linear.</div>
+      <div class="field"><label>Arquivo PDF ou Excel (opcional)</label><input id="oa-arquivo" type="file" accept=".pdf,.xlsx,.xls,.csv,application/pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv"></div>
+      <div class="desc"><b>Excel (.xlsx, .xls ou .csv):</b> os itens são lidos direto da planilha e aparecem pra você conferir antes de salvar. A planilha precisa ter uma linha de cabeçalho com <b>Código</b> e <b>Valor da barra</b> (ou Valor por metro linear); <b>Descrição</b>, <b>Código sistema</b> e <b>Tamanho/Comprimento da barra</b> são opcionais (sem comprimento, usa 6 m).<br><br>Sem arquivo pra anexar? Deixe o arquivo em branco, clique em "Anexar" e lance os itens manualmente com "Novo item" — útil pros fornecedores que você acessa direto pelo sistema deles. Se marcar um cliente, esse orçamento fica ligado só a ele; deixando "Geral", fica disponível pra usar com qualquer cliente. O desconto, se informado, já é aplicado automaticamente no cálculo do valor por metro linear.</div>
     </div>
     <div class="modal-foot">
       <button class="btn" data-close>Cancelar</button>
@@ -2754,6 +2819,24 @@ function openNovoOrcamentoAluminioModal(fornecedorPreset){
       STATE.orcAluminioSearch = '';
       closeModal();
       render();
+      return;
+    }
+    if(ehNomePlanilha(file.name)){
+      lerLinhasPlanilha(file, async (rows)=>{
+        const sugestoes = lerItensPlanilhaAluminio(rows);
+        if(!sugestoes){ alert('Não encontrei o cabeçalho na planilha. Ela precisa ter uma linha com as colunas "Código" e "Valor da barra" (ou "Valor metro linear").'); btn.disabled=false; return; }
+        if(sugestoes.length===0){ alert('Achei o cabeçalho, mas nenhuma linha com código e valor preenchidos.'); btn.disabled=false; return; }
+        const orcX = { fornecedor, nome:file.name, storagePath:null, dataOrcamento: dataOrc||'', status:'sem-texto', texto:'', paginasTexto:[], url:null, itens:[], sugestoes, mostrarSugestoes:true, clienteId, descontoPct: descontoPct||0 };
+        ORC_ALUMINIO.push(orcX);
+        STATE.orcAluminioAtivo = fornecedor;
+        STATE.orcAluminioSearch = '';
+        closeModal();
+        render();
+        await subirOrcamentoAluminioPlanilha(fornecedor, orcX, file, dataOrc, clienteId, descontoPct);
+        render();
+      });
+      // Se a leitura falhar, lerLinhasPlanilha já avisa; libera o botão pra tentar de novo.
+      setTimeout(()=>{ if(document.body.contains(btn)) btn.disabled=false; }, 4000);
       return;
     }
     const orc = { fornecedor, nome:file.name, storagePath:null, dataOrcamento: dataOrc||'', status:'lendo', texto:'', paginasTexto:[], url:null, itens:[], sugestoes:null, mostrarSugestoes:false, clienteId, descontoPct: descontoPct||0 };
