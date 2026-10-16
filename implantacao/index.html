@@ -354,7 +354,7 @@ tbody tr:hover{background:var(--panel-2);}
       <button class="navitem" id="btn-logout"><i data-lucide="log-out"></i> Sair</button>
     </div>
     <div class="sidebar-foot">
-      Painel de implantação — dados salvos em banco de dados real (Supabase), acesso restrito à equipe.<br><b>Versão 15/10m — planilhas recebidas do cliente</b>
+      Painel de implantação — dados salvos em banco de dados real (Supabase), acesso restrito à equipe.<br><b>Versão 15/10n — cliente com link acompanha só pelo link</b>
     </div>
   </nav>
   <div class="mobile-topbar">
@@ -846,7 +846,7 @@ function avisosWhatsAppPendentes(){
   const lista = [];
   CLIENTS.forEach(c=>{
     // 1) Marcos de progresso por quantidade de itens, por linha — só pra quem está com "Sim" no acompanhamento
-    if(c.notificar_prazo){
+    if(c.notificar_prazo && !(PORTAIS[c.id] && PORTAIS[c.id].ativo)){
       const cats = linhasDeProgressoCliente(c).map(x=>({key:x.key, nome:x.nome}));
       cats.forEach(cat=>{
         const p = categoriaProgress(c, cat.key);
@@ -2865,7 +2865,36 @@ function textoAvisoLinha(c, cat, modo, marco){
     msg: mensagemWaProgresso(c, cat.nome, p.alimentados, p.total, cat.key)
   };
 }
+function urlPortalCliente(c){ const p = PORTAIS[c.id]; return p ? 'https://fc-consultoria.github.io/treinamento/acompanhamento/?k='+p.chave : ''; }
+function mensagemLinkPortal(c){
+  return `Olá, ${c.nome}! Para acompanhar o andamento da implantação de preços no sistema, acesse o link abaixo. Ele é atualizado de segunda a sexta, às 07:00, e mostra as etapas, o percentual de cada linha e o que precisamos da sua equipe:\n\n${urlPortalCliente(c)}\n\nGuarde este link. Qualquer dúvida, estou à disposição. — FC Consultoria`;
+}
+function renderPainelAvisosLinhasPortal(c){
+  const linhas = linhasDeProgressoCliente(c);
+  const enviado = AVISOS_WA.get(c.id+'|portal|link')==='enviado';
+  return `
+  <div class="panel" style="padding:0;">
+    <div class="panel-head">
+      <div><h3>${icon('bell-ring')} Progresso por linha</h3>
+      <div class="desc">${escapeHtml(c.nome)} acompanha o andamento pelo <b>link de acompanhamento</b> (em percentual). Por isso não há avisos de progresso pelo WhatsApp: envie o link uma vez e o cliente entra quando quiser.</div></div>
+      <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+        ${enviado ? '<span class="desc" style="color:#15803d;">✓ link enviado</span>' : ''}
+        <button class="btn btn-sm ${enviado?'':'btn-primary'}" data-action="enviar-link-portal">${icon('message-circle')} ${enviado?'Reenviar o link pelo WhatsApp':'Enviar o link pelo WhatsApp'}</button>
+        <button class="btn btn-sm btn-ghost" data-action="zerar-implantacao-cliente" style="color:var(--danger);">${icon('rotate-ccw')} Zerar tudo do cliente</button>
+      </div>
+    </div>
+    ${linhas.map(cat=>{ const p = categoriaProgress(c, cat.key); return `
+      <div style="padding:12px 18px; border-top:1px solid var(--border-2); display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+        <div style="min-width:170px; font-weight:650; font-size:13.5px;">${icon(cat.icone,'style="width:14px;height:14px;vertical-align:-2px; margin-right:6px; color:var(--text-3)"')}${escapeHtml(cat.nome)}</div>
+        <div class="pbar-row" style="flex:1; min-width:180px;"><div class="pbar-track" style="height:10px;"><div class="pbar-fill" style="width:${p.pct}%; height:10px;"></div></div><div class="pct" style="font-size:13px;">${p.pct}%</div></div>
+        <div class="desc" style="min-width:110px; text-align:right;">${p.total ? p.alimentados+' de '+p.total+' itens' : 'sem itens ainda'}</div>
+        ${p.total && (p.alimentados>0) ? `<button class="btn btn-sm btn-ghost" data-action="zerar-implantacao-linha" data-key="${escapeHtml(cat.key)}" style="color:var(--danger);">${icon('rotate-ccw')} Zerar linha</button>` : ''}
+      </div>`; }).join('')}
+    <div class="footnote">Para você a contagem aparece em itens; o cliente vê só o percentual no link.</div>
+  </div>`;
+}
 function renderPainelAvisosLinhas(c){
+  if(PORTAIS[c.id] && PORTAIS[c.id].ativo) return renderPainelAvisosLinhasPortal(c);
   const linhas = linhasDeProgressoCliente(c);
   const rotulo = (v,pend,atingido)=> v ? '<span style="color:#15803d; font-weight:600;">✓</span>' : (atingido ? '<span style="color:#b45309; font-weight:600;">pendente</span>' : '<span style="color:var(--text-3);">—</span>');
   return `
@@ -6458,6 +6487,14 @@ function wireEvents(){
           await importarPlanilhaBancoProprio(c, cat, f);
           if(itensProprios(c, cat).length!==antes || (c.arquivosProprios||[]).some(a=>a.nome===f.name)) marcarRecebido(c, id, {visto:true, importado_em:new Date().toISOString()});
         })();
+        return;
+      }
+      if(action==='enviar-link-portal'){
+        const c = CLIENTS.find(x=>x.id===STATE.clientId); if(!c) return;
+        const tel = telefoneWhatsApp(c);
+        if(!tel){ alert('Cadastre o telefone (WhatsApp) do cliente em Contrato & Acesso para enviar.'); return; }
+        window.open(`https://wa.me/${tel}?text=${encodeURIComponent(mensagemLinkPortal(c))}`, '_blank', 'noopener');
+        marcarAvisosWA(c.id, ['portal|link'], 'enviado'); render();
         return;
       }
       if(action==='copiar-link-portal'){

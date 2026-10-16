@@ -26,12 +26,29 @@
       try{const [an,vi]=await Promise.all([sb.from('impl_portal_anuncios').select('id,cliente_id,titulo,ativo,criado_em').order('criado_em',{ascending:false}).limit(20),sb.from('impl_portal_anuncio_vistos').select('anuncio_id,cliente_id,visto_em')]);
         if(!an.error)S.anuncios=an.data||[];if(!vi.error)S.vistos=vi.data||[];S.semFolder=!!an.error;}catch(_){S.semFolder=true;}
       if(!S.artes){try{const ar=await sb.from('trein_eventos').select('detalhe').eq('tipo','div_art');S.artes=(ar.data||[]).map(x=>x.detalhe).filter(d=>d&&d.img);}catch(_){S.artes=[];}}
+      try{const desde=new Date(Date.now()-7*864e5).toISOString();const ac=await sb.from('impl_portal_acessos').select('cliente_id,em').gte('em',desde).order('em',{ascending:false}).limit(500);
+        S.acessos={};if(!ac.error){(ac.data||[]).forEach(x=>(S.acessos[x.cliente_id]=S.acessos[x.cliente_id]||[]).push(x.em));if(!S.ultAcesso)S.ultAcesso=(ac.data&&ac.data[0])?ac.data[0].em:new Date().toISOString();}}catch(_){}
       S.erro='';S.carregado=true;
     }catch(e){console.error(e);S.erro=(e&&e.message)||String(e);S.carregado=true;}
     render();
   }
   window.acompLoad=carregar;
-  window.ACOMP_INFO=()=>{const n=Object.values(S.por).filter(x=>x.ativo).length,r=Object.values(S.novos||{}).reduce((a,b)=>a+b,0);return S.carregado?(r?`📥 ${r} arquivo${r>1?'s':''} recebido${r>1?'s':''} de cliente`:(n+' cliente'+(n===1?'':'s')+' online')):'';};
+  const hojeIso=()=>{const d=new Date();d.setHours(0,0,0,0);return d.toISOString();};
+  const acessosHoje=id=>((S.acessos||{})[id]||[]).filter(e=>e>=hojeIso()).length;
+  window.ACOMP_INFO=()=>{const n=Object.values(S.por).filter(x=>x.ativo).length,r=Object.values(S.novos||{}).reduce((a,b)=>a+b,0),h=Object.keys(S.acessos||{}).reduce((a,k)=>a+acessosHoje(k),0);
+    if(!S.carregado)return '';if(r)return `📥 ${r} arquivo${r>1?'s':''} recebido${r>1?'s':''} de cliente`;if(h)return `👀 ${h} acesso${h>1?'s':''} de cliente ao link hoje`;return n+' cliente'+(n===1?'':'s')+' com link';};
+  // Aviso quando um cliente abre o link de acompanhamento (confere a cada minuto)
+  async function vigiarAcessos(){
+    if(!S.carregado||!S.ultAcesso)return;
+    try{const {data,error}=await sb.from('impl_portal_acessos').select('cliente_id,em').gt('em',S.ultAcesso).order('em');if(error||!data||!data.length)return;
+      S.ultAcesso=data[data.length-1].em;
+      data.forEach(x=>{(S.acessos[x.cliente_id]=S.acessos[x.cliente_id]||[]).unshift(x.em);const nome=(S.cli.find(c=>c.id===x.cliente_id)||{}).nome||'Um cliente';const t='👀 '+nome+' abriu o link de acompanhamento';
+        try{(window.toast||toast)(t);}catch(_){}try{window.beep&&beep();}catch(_){}
+        try{if('Notification' in window&&Notification.permission==='granted')new Notification('Acompanhamento FC',{body:nome+' abriu o link de acompanhamento agora.',tag:'acesso-'+x.cliente_id});}catch(_){}});
+      render();}catch(_){}
+  }
+  setInterval(vigiarAcessos,60000);
+  setTimeout(()=>{if(!S.carregado)carregar();},4000);
 
   const btn=(acao,txt,extra,estilo)=>`<button type="button" data-ac="${acao}" ${extra||''} style="font:600 13.5px var(--f-body);padding:7px 12px;border-radius:8px;cursor:pointer;border:1px solid ${estilo==='pri'?'var(--accent)':estilo==='bad'?'var(--bad)':'var(--line)'};background:${estilo==='pri'?'var(--accent)':'#fff'};color:${estilo==='pri'?'#fff':estilo==='bad'?'var(--bad)':'var(--fg)'}">${txt}</button>`;
   const rot=t=>`<div style="font:600 12px var(--f-body);text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:14px 0 6px">${t}</div>`;
@@ -79,6 +96,7 @@
         <button type="button" data-ac="abrir" data-id="${c.id}" style="all:unset;box-sizing:border-box;width:100%;cursor:pointer;display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:12px 14px">
           <b style="font:600 16px var(--f-display)">${esc(c.nome)}</b>${badge}
           ${p&&p.situacao?'<span style="background:#fdf0d9;color:#8a5a12;font:600 12px var(--f-body);padding:2px 8px;border-radius:99px">situação informada</span>':''}
+          ${((S.acessos||{})[c.id]||[]).length?`<span style="background:#e2f4ea;color:#1f8a4c;font:600 12px var(--f-body);padding:2px 8px;border-radius:99px" title="Acessos ao link nos últimos 7 dias: ${S.acessos[c.id].length}">👀 abriu o link ${esc(quando(S.acessos[c.id][0]))}${acessosHoje(c.id)>1?' · '+acessosHoje(c.id)+'x hoje':''}</span>`:''}
           ${(S.novos||{})[c.id]?`<span style="background:#fdf0d9;color:#8a5a12;font:600 12px var(--f-body);padding:2px 8px;border-radius:99px" title="Abra o cliente no Painel de Implantação → Visão geral → Recebido do cliente">📥 ${S.novos[c.id]} arquivo(s) recebido(s)</span>`:''}
           <span style="margin-left:auto;color:var(--muted);font-size:13px">${f?'Última publicação: '+esc(quando(f.publicado_em))+(f.origem==='auto'?' (automática)':' (manual)'):(p?'Ainda sem publicação':'')}</span><span style="color:var(--muted)">${ab?'▲':'▼'}</span></button>
         ${ab?`<div style="padding:0 14px 14px;border-top:1px solid var(--line)">${corpo(c)}</div>`:''}</div>`;}).join('')}</div>`;

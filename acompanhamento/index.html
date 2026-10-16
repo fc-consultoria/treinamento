@@ -332,6 +332,9 @@ function render(r){
     if(error) throw error;
     if(previa) document.body.insertAdjacentHTML('afterbegin','<div style="background:#b86e00;color:#fff;text-align:center;font:600 14px var(--body);padding:8px 12px">PRÉVIA da próxima publicação · o cliente ainda não vê isto</div>');
     barraFC(previa);
+    // Avisa a FC que o cliente abriu o link (não conta a prévia nem quando é a própria FC abrindo)
+    let ehFC=previa;try{ehFC=ehFC||!!localStorage.getItem('trein-fc-auth');}catch(_){}
+    if(!ehFC) sb.rpc('impl_portal_registrar_acesso',{p_chave:chave}).then(()=>{},()=>{});
     if(!data){estado('Link desativado','Este link não está mais ativo. Peça um novo link para a FC Consultoria.');return;}
     ENVIO.chave=chave;ENVIO.previa=previa;ENVIO.sb=sb;ENVIO.recebidos=data.recebidos||[];ENVIO.ultimo=data;
     render(data);
