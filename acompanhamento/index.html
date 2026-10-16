@@ -104,10 +104,27 @@ details summary{cursor:pointer;color:var(--teal-d);font-weight:500;margin-top:8p
 .topo .num{font-family:var(--display);font-weight:600;font-size:20px;color:var(--teal-d)}
 .topo .sep{width:1px;align-self:stretch;background:var(--line)}
 .topo a.ver{margin-left:auto;color:var(--teal-d);font-weight:600;text-decoration:none;font-size:14px}
-.sitebox{margin-top:14px;padding:0;overflow:hidden}
-.sitebar{display:flex;gap:8px 14px;align-items:center;flex-wrap:wrap;padding:10px 14px;border-bottom:1px solid var(--line);font-size:13.5px}
-.sitebar .btn2{margin-left:auto}
-#siteFrame{display:block;width:100%;height:min(78vh,780px);border:0;background:#f4f7f8}
+.inicio{margin-top:14px}
+.inicio h2{font-size:17px;margin-bottom:12px}
+.acessos{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+@media (max-width:620px){.acessos{grid-template-columns:1fr}}
+.acesso{display:flex;gap:12px;align-items:center;text-decoration:none;color:var(--fg);border:1px solid var(--line);border-radius:12px;padding:14px;transition:border-color .15s}
+.acesso:hover{border-color:var(--teal)}
+.acesso .ic{font-size:26px;line-height:1}
+.acesso b{display:block;font-family:var(--display);font-size:15.5px}
+.acesso .d{display:block;font-size:13px;color:var(--muted)}
+.acesso .ir{margin-left:auto;font-weight:600;font-size:13.5px;color:var(--teal-d);white-space:nowrap}
+.acesso.pri{background:var(--teal);border-color:var(--teal);color:#fff}
+.acesso.pri .d{color:#d5f1f0}.acesso.pri .ir{color:#fff}
+.demo-tit{margin:16px 0 8px;font-weight:600;font-size:14px;display:flex;gap:8px;align-items:center}
+.tag-demo{font-size:11px;font-weight:600;background:#eef2f3;color:var(--muted);border-radius:99px;padding:2px 8px;text-transform:uppercase;letter-spacing:.04em}
+.demos{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+@media (max-width:620px){.demos{grid-template-columns:1fr}}
+.demo{border:1px dashed var(--line);border-radius:12px;padding:12px;background:#f8fafb;display:grid;gap:3px;cursor:default}
+.demo .ic{font-size:20px}
+.demo b{font-family:var(--display);font-size:14.5px}
+.demo .d{font-size:12.5px;color:var(--muted)}
+.demo-nota{font-size:12.5px;margin:10px 0 0}
 .andtit{font-size:20px;margin:26px 0 10px;scroll-margin-top:12px}
 #folder{position:fixed;inset:0;background:rgba(10,20,24,.6);z-index:80;display:flex;align-items:center;justify-content:center;padding:16px}
 #folder[hidden]{display:none}
@@ -133,9 +150,21 @@ details summary{cursor:pointer;color:var(--teal-d);font-weight:500;margin-top:8p
 
 <main class="wrap">
   <div id="topo"></div>
-  <section class="card sitebox" id="siteSec" hidden>
-    <div class="sitebar"><b>🌐 Site da FC Consultoria</b><span class="muted">Navegue à vontade: catálogo de perfis 3D, representadas e contato.</span><a class="btn2" href="https://fc-consultoria.github.io/" target="_blank" rel="noopener">Abrir em nova aba ↗</a></div>
-    <iframe id="siteFrame" title="Site da FC Consultoria" loading="lazy"></iframe>
+  <section class="card inicio" id="siteSec" hidden>
+    <h2>Conheça a FC Consultoria</h2>
+    <div class="acessos">
+      <a class="acesso pri" href="https://fc-consultoria.github.io/" target="_blank" rel="noopener">
+        <span class="ic">🌐</span><span><b>Site da FC Consultoria</b><span class="d">Catálogo de perfis em 3D, representadas, onde atendemos e contato.</span></span><span class="ir">Acessar ↗</span></a>
+      <a class="acesso ig" href="https://www.instagram.com/fc__consultoria/" target="_blank" rel="noopener">
+        <span class="ic">📷</span><span><b>Instagram @fc__consultoria</b><span class="d">Novidades, dicas de esquadria e lançamentos.</span></span><span class="ir">Seguir ↗</span></a>
+    </div>
+    <div class="demo-tit">Também na FC <span class="tag-demo">demonstrativo</span></div>
+    <div class="demos">
+      <div class="demo"><span class="ic">🧊</span><b>Orientativo FC 3D</b><span class="d">Janelas e portas em 3D para treinar a equipe: perfis, componentes e montagem.</span></div>
+      <div class="demo"><span class="ic">📦</span><b>Catálogo de perfis 3D</b><span class="d">Perfis das linhas Suprema e Gold para girar e conferir em 3D.</span></div>
+      <div class="demo"><span class="ic">🏷</span><b>Representadas</b><span class="d">Fitas, guarnições e conexões de fábricas que a FC representa no MT.</span></div>
+    </div>
+    <p class="muted demo-nota">Quer conhecer algum desses? Acesse o site ou fale com a FC.</p>
   </section>
   <div id="app"></div>
 </main>
@@ -269,7 +298,7 @@ function render(r){
   $('#topo').innerHTML=`<div class="topo"><span><span class="num">${n(alim)}</span> <span class="muted">de ${n(total)} itens alimentados</span></span>
     ${etAll.length?`<span class="sep"></span><span>${etAt?`<span class="muted">Etapa ${etAll.indexOf(etAt)+1} de ${etAll.length}:</span> <b>${esc(etAt.titulo)}</b>`:'<b>Implantação concluída ✓</b>'}</span>`:''}
     <a class="ver" href="#andamento">Ver andamento completo ↓</a></div>`;
-  const sf=document.getElementById('siteSec');if(sf.hidden){sf.hidden=false;document.getElementById('siteFrame').src=SITE_FC;}
+  document.getElementById('siteSec').hidden=false;
   $('#app').innerHTML=`
     <h2 class="andtit" id="andamento">Andamento da sua implantação</h2>
     <div class="kpis">
