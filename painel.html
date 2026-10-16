@@ -634,7 +634,7 @@ function gvSync(a){const box=document.getElementById('gvBox');
 
 /* ===== Pontos de interesse (aluno normal) ===== */
 let INTC='';
-function intUI(uid){const E=document.getElementById('cInt');if(!E)return;
+function pontosUI(uid){const E=document.getElementById('cInt');if(!E)return;
   const ev=EV.filter(e=>e.user_id===uid&&!/^gestor_/.test(e.tipo));
   const pk=e=>{const d=e.detalhe||{};return d.cid||(d.quem?'q:'+d.quem:'');};const pessoas={};ev.forEach(e=>{const d=e.detalhe||{},k=pk(e);if(k&&d.quem)pessoas[k]=d.quem;});
   if(INTC&&!pessoas[INTC])INTC='';
@@ -664,12 +664,12 @@ function intUI(uid){const E=document.getElementById('cInt');if(!E)return;
    +(L.length?`<div class="intg"><div class="intb"><h4>⏱ Tempo por tipologia · ${fmtM(totMin)}</h4>${bars(TT.map(([k,v])=>[TIPOS[k]||k,v]),fmtM)}</div><div class="intb"><h4>🗂 Abas mais abertas</h4>${bars(MO,v=>v+'×')}</div>
      <div class="intb"><h4>🧩 Perfis mais tocados</h4>${chips(PF)}</div><div class="intb"><h4>✂ Cortes mais vistos</h4>${chips(CO)}</div>
      <div class="intb"><h4>🔩 Componentes vistos</h4>${chips(CP)}</div><div class="intb"><h4>🔁 Trocas de perfil</h4>${chips(TR)}</div></div>`:'');
-  E.querySelectorAll('[data-ic]').forEach(b=>b.onclick=()=>{INTC=b.dataset.ic;intUI(uid);});}
+  E.querySelectorAll('[data-ic]').forEach(b=>b.onclick=()=>{INTC=b.dataset.ic;pontosUI(uid);});}
 function detalhe(){
   const a=ALUNOS.find(x=>x.user_id===sel);if(!a)return;const r=resumo(a.user_id);
   document.getElementById('detCard').hidden=false;document.getElementById('detTit').textContent=(a.nome||a.login)+' · '+a.login;
   document.getElementById('eNome').value=a.nome||'';document.getElementById('bAtivo').textContent=a.ativo?'Bloquear acesso':'Liberar acesso';
-  colabUI(a);ctrUI(a);gvSync(a);try{intUI(a.user_id);}catch(e){console.warn(e);}
+  colabUI(a);ctrUI(a);gvSync(a);try{pontosUI(a.user_id);}catch(e){console.warn(e);}
   {const lc=localDe(a.user_id);document.getElementById('eCid').value=lc.cidade||'';document.getElementById('eUf').value=lc.uf||'';
    document.getElementById('bLocal').onclick=async()=>{const b=document.getElementById('bLocal');b.disabled=true;await ins('empresa_local',{para:a.user_id,cidade:document.getElementById('eCid').value.trim(),uf:document.getElementById('eUf').value});b.disabled=false;b.textContent='✔ Salvo';setTimeout(()=>b.textContent='📍 Salvar cidade',2500);carregar();};}
   {const g=gestorRes(a.user_id),el=document.getElementById('cGes');if(el)el.innerHTML=!g.tot?'O gestor ainda não entrou no Painel da Empresa.':
