@@ -1228,7 +1228,7 @@ document.querySelectorAll('[data-cvv]').forEach(b=>b.onclick=()=>cvvUI(b.dataset
 
 
 /* ===== Orçamentos pela conversa (site) ===== */
-let CV=[],CVX=new Set(),CVO=null;const CVPAG={engefitas:'Engefitas',nopla:'Nopla Metais',site:'Site da FC'};
+let CV=[],CVX=new Set(),CVO=null;const CVPAG={engefitas:'Engefitas',nopla:'Nopla Metais',site:'Site da FC',implantacao:'Implantação de preços (site)'};
 const cvLS={g(k,d){try{return localStorage.getItem(k)||d;}catch(_){return d;}},s(k,v){try{localStorage.setItem(k,v);}catch(_){}}};
 function cvThreads(){const T={};CV.forEach(e=>{const d=e.detalhe||{};if(!d.s)return;const t=T[d.s]=T[d.s]||{s:d.s,m:[],nome:'',fone:'',cidade:'',pag:''};t.m.push({de:d.de,txt:d.txt||'',t:e.criado_em});if(d.de==='cli'){if(d.nome)t.nome=d.nome;if(d.fone)t.fone=d.fone;if(d.cidade)t.cidade=d.cidade;if(d.pag)t.pag=d.pag;}});
   return Object.values(T).filter(t=>!CVX.has(t.s)).map(t=>{t.m.sort((a,b)=>a.t<b.t?-1:1);t.ult=t.m[t.m.length-1];let n=0;for(let i=t.m.length-1;i>=0&&t.m[i].de==='cli';i--)n++;t.pend=n;return t;}).sort((a,b)=>(b.pend>0)-(a.pend>0)||(a.ult.t<b.ult.t?1:-1));}
