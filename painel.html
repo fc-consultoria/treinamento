@@ -188,7 +188,7 @@ tr.mfin td{background:#eef5fc}
     <label style="font-size:12.5px;flex:1;min-width:160px">Cliente / empresa<br><input id="fnE" list="fnEl" style="width:100%"></label><datalist id="fnEl"></datalist>
     <label style="font-size:12.5px;flex:1;min-width:160px">Descrição<br><input id="fnDs" placeholder="Ex.: Catálogo 3D avulso · 1 usuário" style="width:100%"></label>
     <label style="font-size:12.5px">Valor (R$)<br><input id="fnV" style="width:90px" placeholder="10,00"></label>
-    <label style="font-size:12.5px">Forma<br><select id="fnF"><option>PIX</option><option>Dinheiro</option><option>Transferência</option><option>Cartão</option></select></label>
+    <label style="font-size:12.5px">Forma<br><select id="fnF"><option>PIX</option><option>Transferência</option><option>Cartão</option></select></label>
     <button type="button" class="pri" id="fnAdd">💾 Lançar</button></div><p class="msg" id="fnMsg"></p></details>
   <h3 class="dvt" style="margin-top:16px">👥 Por cliente</h3><div id="fnC"></div>
   <p class="note" style="margin-top:10px">Os pagamentos de contrato entram aqui sozinhos quando você registra em Empresas → Contrato mensal. Marque a NF quando emitir, com o número, para não esquecer nenhuma.</p>
@@ -780,7 +780,7 @@ function ctrUI(a){const box=document.getElementById('ctrBox');if(!box)return;con
     <label style="font-size:12.5px">Valor (R$)<br><input id="cVl" value="70,00" style="width:90px"></label>
     ${promoAtiva()?'<label style="font-size:12.5px;display:flex;gap:6px;align-items:center"><input type="checkbox" id="cPromo" checked> 🔥 conta como vaga da oferta</label>':''}
     <label style="font-size:12.5px">Início do período<br><input type="date" id="cIni" value="${ini0}"></label>
-    <label style="font-size:12.5px">Forma<br><select id="cFm"><option>PIX</option><option>Dinheiro</option><option>Transferência</option><option>Cartão</option></select></label>
+    <label style="font-size:12.5px">Forma<br><select id="cFm"><option>PIX</option><option>Transferência</option><option>Cartão</option></select></label>
     <label style="font-size:12.5px;flex:1;min-width:160px">Observação<br><input id="cObs" placeholder="Ex.: comprovante recebido no WhatsApp" style="width:100%"></label></div>
    <div class="edit"><button type="button" class="pri" id="cPagar">💾 Registrar pagamento · +30 dias</button><button type="button" id="cBonus">🎁 Bônus +30 dias (sem cobrança)</button></div>
    ${L.length?`<table style="margin-top:8px"><thead><tr><th>Pagamento</th><th>Período</th><th>Valor</th><th>Tipo</th><th>Obs.</th><th></th></tr></thead><tbody>${L.map((e,i)=>{const d=e.detalhe;return `<tr><td>${brD(d.pago_em)}</td><td>${brD(d.ini)} → ${brD(d.fim)}</td><td class="n">${d.tipo==='bonus'?'—':brl(d.valor)}</td><td>${d.tipo==='bonus'?'🎁 bônus':'💳 '+(d.forma||'PIX')}${d.promo?' · 🔥 oferta':''}</td><td>${desc(d.obs||'')}</td><td><button type="button" class="no" data-cx="${i}" style="font-size:12px;padding:3px 8px">Cancelar</button></td></tr>`;}).join('')}</tbody></table>`:''}
