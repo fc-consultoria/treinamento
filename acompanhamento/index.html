@@ -146,6 +146,14 @@ details summary{cursor:pointer;color:var(--teal-d);font-weight:500;margin-top:8p
 .fbox h3{font-family:var(--display);font-size:18px;margin:0 0 6px}
 .fbox p{margin:0 0 12px;color:var(--muted);font-size:14.5px;white-space:pre-wrap}
 .fbox .fa{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.demobar{position:sticky;top:0;z-index:60;background:#b86e00;color:#fff}
+.demobar .in{max-width:880px;margin:0 auto;padding:9px 16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:13.5px}
+.demobar b{font-family:var(--display);font-size:14.5px}
+.demobar .ctl{display:flex;gap:6px;align-items:center;margin-left:auto;flex-wrap:wrap}
+.demobar button{font:600 13.5px var(--body);border:1px solid rgba(255,255,255,.6);background:rgba(255,255,255,.12);color:#fff;border-radius:8px;padding:5px 11px;cursor:pointer}
+.demobar button:hover{background:rgba(255,255,255,.25)}
+.demobar input[type=range]{width:150px;accent-color:#fff}
+.demobar .dmdia{font-weight:600;min-width:130px;text-align:center}
 .estado{max-width:520px;margin:60px auto;text-align:center}
 .estado h2{font-size:20px;margin-bottom:8px}
 </style>
@@ -246,7 +254,7 @@ function acoesEtapa(e,i){
   const enviando=ENVIO.enviando===n;
   return `${recHtml}<div class="acoes">
     ${mod?`<a class="btn2" href="${mod.arq}" download>⬇ ${mod.txt}</a>`:''}
-    ${ENVIO.previa?'<span class="muted" style="font-size:12.5px">Envio desativado na prévia</span>':`<label class="btn2 pri" ${enviando?'aria-disabled="true"':''}>${enviando?'Enviando…':(rec.length?'⬆ Enviar outro arquivo':(n===4?'⬆ Enviar cotação (Excel, PDF ou print)':'⬆ Enviar planilha preenchida'))}<input type="file" accept=".xlsx,.xls,.csv,.pdf,.png,.jpg,.jpeg,.webp" data-enviar="${n}" ${enviando?'disabled':''} hidden></label>`}
+    ${ENVIO.previa||ENVIO.demo?`<span class="muted" style="font-size:12.5px">Envio desativado na ${ENVIO.demo?'demonstração':'prévia'}</span>`:`<label class="btn2 pri" ${enviando?'aria-disabled="true"':''}>${enviando?'Enviando…':(rec.length?'⬆ Enviar outro arquivo':(n===4?'⬆ Enviar cotação (Excel, PDF ou print)':'⬆ Enviar planilha preenchida'))}<input type="file" accept=".xlsx,.xls,.csv,.pdf,.png,.jpg,.jpeg,.webp" data-enviar="${n}" ${enviando?'disabled':''} hidden></label>`}
   </div>`;
 }
 function etapasHtml(et){
@@ -341,8 +349,46 @@ function render(r){
     <div class="foot">FC Consultoria e Representação · Atendimento de segunda a sexta, das 08:00 às 11:00 e das 13:00 às 17:00</div>`;
 }
 
+// ===== Demonstração para cliente novo: vidraçaria fictícia, sem banco de dados =====
+const DEMO={dia:7,max:15,timer:null};
+function demoDados(dia){
+  const hoje=new Date();let ini=new Date(hoje);let k=0;while(k<DEMO.max-1){ini.setDate(ini.getDate()-1);if(ini.getDay()!==0&&ini.getDay()!==6)k++;}
+  const inicio=ymd(ini);
+  const dataDia=d=>{const s=diaUtil(inicio,d);return s+'T11:00:00Z';};
+  const ritmo=[0,0,8,12,12,0,14,12,0,14,14,12,10,8,10];
+  const LIN=[['Componentes · Linha Suprema',48,'SU-'],['Componentes · Linha Gold',36,'GO-'],['Vidros',18,'VD-'],['Perfis por cor',24,'PF-']];
+  const fim=[1,2,6,7,8,11,12,13,14,15],ini_=[1,2,3,4,4,6,7,8,9,15];
+  const sits={4:['cliente','Planilha de preço dos vidros solicitada no grupo da obra.'],6:['fornecedor','Tabela da linha Gold solicitada ao fornecedor.'],9:['conferencia','']};
+  const foto=d=>{
+    let tot=ritmo.slice(0,d).reduce((a,b)=>a+b,0);
+    const linhas=LIN.map(([nome,total,pre])=>{const a=Math.min(total,tot);tot-=a;return {nome,total,alimentados:a,codigos:Array.from({length:a},(_,i)=>pre+String(101+i))};});
+    const salvas=ETAPAS_IMPL.map((e,i)=>({n:i+1,data_prevista:diaUtil(inicio,fim[i]),status:d>=fim[i]?'concluida':(d>=ini_[i]?(e.quem==='cliente'?'aguardando':'andamento'):'pendente')}));
+    const s=sits[d];
+    return {em:dataDia(d),dados:{linhas,etapas_impl:{inicio,salvas},fornecedores:{componentes:['Distribuidora Exemplo'],perfis:['Extrusora Exemplo']},situacao:s?{tipo:s[0],detalhe:s[1],em:dataDia(d)}:null}};
+  };
+  const fotos=[];for(let d=dia;d>=Math.max(1,dia-7);d--)fotos.push(foto(d));
+  const recebidos=[];if(dia>=6)recebidos.push({etapa:3,nome:'precos-vidros-preenchida.xlsx',em:dataDia(5)});if(dia>=7)recebidos.push({etapa:4,nome:'cotacao-componentes.pdf',em:dataDia(6)});if(dia>=8)recebidos.push({etapa:5,nome:'precos-perfis-por-cor.xlsx',em:dataDia(7)});
+  return {cliente:'Vidraçaria Modelo (exemplo)',fotos,recebidos};
+}
+function demoIr(d){
+  DEMO.dia=Math.max(1,Math.min(DEMO.max,d));const r=demoDados(DEMO.dia);ENVIO.recebidos=r.recebidos;render(r);
+  const f=r.fotos[0];$('#dmDia').textContent=`Dia ${DEMO.dia} de ${DEMO.max} · ${dt(f.em)}`;$('#dmR').value=DEMO.dia;
+}
+function iniciarDemo(){
+  ENVIO.demo=true;
+  document.body.insertAdjacentHTML('afterbegin',`<div class="demobar"><div class="in"><span>🎬 <b>Demonstração</b> · cliente fictício. Avance os dias e veja como o acompanhamento evolui.</span>
+    <span class="ctl"><button type="button" id="dmAnt" aria-label="Dia anterior">◀</button><span class="dmdia" id="dmDia"></span><button type="button" id="dmProx" aria-label="Próximo dia">▶</button>
+    <input type="range" id="dmR" min="1" max="${DEMO.max}" value="${DEMO.dia}" aria-label="Dia da implantação"><button type="button" id="dmPlay">▶ Reproduzir</button></span></div></div>`);
+  const parar=()=>{clearInterval(DEMO.timer);DEMO.timer=null;$('#dmPlay').textContent='▶ Reproduzir';};
+  $('#dmAnt').onclick=()=>{parar();demoIr(DEMO.dia-1);};$('#dmProx').onclick=()=>{parar();demoIr(DEMO.dia+1);};
+  $('#dmR').oninput=e=>{parar();demoIr(+e.target.value);};
+  $('#dmPlay').onclick=()=>{if(DEMO.timer){parar();return;}if(DEMO.dia>=DEMO.max)demoIr(1);$('#dmPlay').textContent='⏸ Pausar';DEMO.timer=setInterval(()=>{if(DEMO.dia>=DEMO.max){parar();return;}demoIr(DEMO.dia+1);},2200);};
+  demoIr(DEMO.dia);
+}
+
 (async()=>{
   const qs=new URLSearchParams(location.search), chave=qs.get('k')||'', previa=qs.get('previa')==='1';
+  if(qs.get('demo')==='1'){iniciarDemo();return;}
   if(chave.length<24){estado('Link incompleto','Confira se o link foi copiado inteiro ou peça um novo link para a FC Consultoria.');return;}
   try{
     // Prévia: usa o login do Painel da Matriz (mesmo endereço) para mostrar a próxima publicação sem gravar nada

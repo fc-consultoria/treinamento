@@ -3,6 +3,8 @@
    a "situação do dia" e o cronograma de etapas. O cliente vê só quantidades, códigos, situação e etapas. */
 (function(){
   const URL_PORTAL='https://fc-consultoria.github.io/treinamento/acompanhamento/?k=';
+  const URL_DEMO='https://fc-consultoria.github.io/treinamento/acompanhamento/?demo=1';
+  const MSG_DEMO=['Olá! Tudo bem?','','Preparei uma demonstração de como você acompanha a implantação de preços com a FC Consultoria. É um cliente fictício: avance os dias na barra laranja (ou toque em Reproduzir) e veja as linhas sendo alimentadas, as etapas sendo concluídas e os avisos do dia.','',URL_DEMO,'','Quando a sua implantação começar, você recebe um link igual a este, só seu, atualizado de segunda a sexta às 07:00.','','FC Consultoria'].join('\n');
   const SITS=[['','Nenhuma (não mostrar)'],['fornecedor','📦 Aguardando retorno do fornecedor'],['cliente','🤝 Aguardando retorno da equipe do cliente'],['sistema','🖥️ Aguardando o suporte do sistema'],['externo','🚗 Equipe em atendimento externo (sem alimentação hoje)'],['conferencia','🔎 Conferência dos itens alimentados'],['livre','ℹ️ Recado livre (só o texto abaixo)']];
   const S={cli:[],por:{},fotos:{},aberto:null,pend:null,carregado:false,erro:''};
   const $=id=>document.getElementById(id);
@@ -118,7 +120,11 @@
     if(!S.carregado){B.innerHTML='<p class="note" style="padding:14px 16px">Carregando…</p>';return;}
     if(S.erro){const falta=/impl_portal|impl_cronograma|does not exist|schema cache/i.test(S.erro);B.innerHTML=falta?`<p class="note" style="padding:14px 16px;color:var(--bad)">O acompanhamento online ainda não foi ligado no banco de dados. Rode o arquivo portal_etapa1.sql no Supabase e clique em Atualizar.</p>`:`<p class="note" style="padding:14px 16px;color:var(--bad)">Não consegui carregar o acompanhamento: ${esc(S.erro)}. Confira se você entrou com o login da matriz.</p>`;return;}
     const ordem=[...S.cli].sort((a,b)=>(S.por[b.id]?1:0)-(S.por[a.id]?1:0)||(a.status==='em_andamento'?0:1)-(b.status==='em_andamento'?0:1)||a.nome.localeCompare(b.nome,'pt-BR'));
-    B.innerHTML=folderHtml()+`<p class="note" style="padding:10px 16px 0">Ative o acompanhamento cliente por cliente. Quem não estiver ativado continua como antes, só com o WhatsApp.</p>
+    B.innerHTML=`<div style="margin:12px 16px 0;border:1px solid #f2c38a;border-radius:12px;background:#fff8ee;padding:12px 14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <span style="font-size:22px">🎬</span><div style="flex:1;min-width:240px"><b style="font:600 16px var(--f-display)">Demonstração para cliente novo</b><div class="note">Vidraçaria fictícia com 15 dias de implantação: o cliente avança os dias e vê como o acompanhamento funciona. Não usa dados de nenhum cliente.</div></div>
+      <a href="${URL_DEMO}" target="_blank" rel="noopener" style="font:600 13.5px var(--f-body);color:var(--accent)">Abrir demonstração ↗</a>
+      ${btn('copiar','Copiar link','data-url="'+URL_DEMO+'"')}${btn('copiarMsgDemo','Copiar mensagem')}
+      <a href="https://wa.me/?text=${encodeURIComponent(MSG_DEMO)}" target="_blank" rel="noopener" style="font:600 13.5px var(--f-body);color:#1f8a4c">Enviar pelo WhatsApp ↗</a></div>`+folderHtml()+`<p class="note" style="padding:10px 16px 0">Ative o acompanhamento cliente por cliente. Quem não estiver ativado continua como antes, só com o WhatsApp.</p>
     <div style="padding:6px 16px 16px">${ordem.map(c=>{const p=S.por[c.id],f=S.fotos[c.id],ab=S.aberto===c.id;
       const badge=!p?'<span style="color:var(--muted);font-size:13px">Sem portal</span>':p.ativo?'<span style="background:var(--ok-soft);color:var(--ok);font:600 12.5px var(--f-body);padding:2px 9px;border-radius:99px">● Online</span>':'<span style="background:var(--bad-soft);color:var(--bad);font:600 12.5px var(--f-body);padding:2px 9px;border-radius:99px">Desativado</span>';
       return `<div style="border:1px solid ${ab?'var(--accent)':'var(--line)'};border-radius:12px;margin-top:10px;background:#fff">
@@ -191,6 +197,7 @@
         toast('Pessoa cadastrada · envie o link pelo WhatsApp');return carregar();}
       if(a==='uRemover'){const uid=el.dataset.uid;if(S.pend!=='u|'+uid){S.pend='u|'+uid;render();return;}
         const {error}=await sb.from('impl_portal_usuarios').delete().eq('id',uid);if(error)throw error;S.pend=null;toast('Removida · essa pessoa não entra mais no link');return carregar();}
+      if(a==='copiarMsgDemo'){await navigator.clipboard.writeText(MSG_DEMO).then(()=>toast('Mensagem copiada'),()=>toast('Não consegui copiar',true));return;}
       if(a==='abrir'){S.aberto=S.aberto===id?null:id;S.pend=null;render();return;}
       if(a==='copiar'){await navigator.clipboard.writeText(el.dataset.url).then(()=>toast('Link copiado'),()=>toast('Selecione o link e copie',true));return;}
       if(a==='ativar'){el.disabled=true;const {error}=await sb.from('impl_portal').insert({cliente_id:id});if(error)throw error;await publicar(id);toast('Acompanhamento ativado e primeira foto publicada');S.aberto=id;return carregar();}
