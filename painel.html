@@ -318,6 +318,9 @@ tr.mfin td{background:#eef5fc}
     <h3>Mensagens para o WhatsApp <span class="note">geradas com os dados acima · copie e envie</span></h3>
     <div class="wam"><div><b>Para os colaboradores</b><textarea id="wmA" rows="14"></textarea><div class="edit"><button type="button" data-w="wmA">📋 Copiar</button><button type="button" data-z="wmA">Abrir no WhatsApp</button></div></div>
     <div><b>Para o gestor</b><textarea id="wmG" rows="14"></textarea><div class="edit"><button type="button" data-w="wmG">📋 Copiar</button><button type="button" data-z="wmG">Abrir no WhatsApp</button></div></div></div>
+    <h3>📲 Acompanhamento para o dono <span class="note">quem já acessou o Orientativo · escolha uma das duas e envie ao dono ou administrador</span></h3>
+    <div class="wam"><div><b>Opção 1 · Resumo leve</b> <span class="note">só os números</span><textarea id="wmD1" rows="11"></textarea><div class="edit"><button type="button" data-w="wmD1">📋 Copiar</button><button type="button" data-z="wmD1">Abrir no WhatsApp</button></div></div>
+    <div><b>Opção 2 · Com nomes</b> <span class="note">quem acessou e quem ainda não</span><textarea id="wmD2" rows="11"></textarea><div class="edit"><button type="button" data-w="wmD2">📋 Copiar</button><button type="button" data-z="wmD2">Abrir no WhatsApp</button></div></div></div>
     <div class="edit"><button type="button" class="pri" id="bRel">📄 Relatório para o cliente</button><button type="button" id="bLib"></button></div>
     <h3>🎯 Pontos de interesse</h3><div id="cInt"></div>
     <h3>Tipologias estudadas</h3><ul class="chips" id="cTip"></ul>
@@ -695,11 +698,17 @@ function pontosUI(uid){const E=document.getElementById('cInt');if(!E)return;
      <div class="intb"><h4>🧩 Perfis mais tocados</h4>${chips(PF)}</div><div class="intb"><h4>✂ Cortes mais vistos</h4>${chips(CO)}</div>
      <div class="intb"><h4>🔩 Componentes vistos</h4>${chips(CP)}</div><div class="intb"><h4>🔁 Trocas de perfil</h4>${chips(TR)}</div></div>`:'');
   E.querySelectorAll('[data-ic]').forEach(b=>b.onclick=()=>{INTC=b.dataset.ic;pontosUI(uid);});}
+function donoMsg(a){const t1=document.getElementById('wmD1'),t2=document.getElementById('wmD2');if(!t1)return;
+  const L=colabs(a.user_id),cr=EV.filter(e=>e.tipo==='colab'&&(e.detalhe||{}).para===a.user_id).map(e=>e.criado_em).sort()[0],ct=ctrList(a.user_id).map(e=>e.detalhe&&e.detalhe.ini).filter(Boolean).sort()[0];
+  const lib=cr?cr.slice(0,10):ct||'',dt=lib?lib.split('-').reverse().join('/'):'[data]',foi=L.filter(x=>x.ini||x.seg>0),nao=L.filter(x=>!(x.ini||x.seg>0)),nm=x=>(x.nome||'').trim();
+  const cab='Olá! Tudo bem? Aqui é o Fernando, da FC Consultoria.\n\n';
+  t1.value=cab+`Passando para dar um retorno do Orientativo FC 3D, liberado para a equipe da ${a.nome||a.login} em ${dt}.\n\n`+(L.length?`Até hoje, ${foi.length} de ${L.length} colaborador${L.length===1?'':'es'} já ${foi.length===1?'fez':'fizeram'} o primeiro acesso.${foi.length?' 👍':''}\n\n`:'Ainda não há colaboradores cadastrados.\n\n')+(nao.length?'Se quiser, posso fazer uma chamada rápida de 10 minutos com quem ainda não entrou, para mostrar como começar. É só me dizer o melhor horário.':'Obrigado pela parceria! Qualquer dúvida da equipe, estou à disposição.');
+  t2.value=cab+`Segue o acompanhamento do Orientativo FC 3D, liberado em ${dt}:\n\n✅ Já acessaram: ${foi.map(nm).join(', ')||'ninguém ainda'}\n⏳ Ainda não acessaram: ${nao.map(nm).join(', ')||'todos já acessaram 👏'}\n\n`+(nao.length?'Às vezes é só falta de tempo ou dúvida no primeiro acesso. Se quiser, eu mesmo chamo quem ainda não entrou, ou fazemos uma chamada rápida com a equipe.\n\n':'')+'Qualquer coisa, estou à disposição!';}
 function detalhe(){
   const a=ALUNOS.find(x=>x.user_id===sel);if(!a)return;const r=resumo(a.user_id);
   document.getElementById('detCard').hidden=false;document.getElementById('detTit').textContent=(a.nome||a.login)+' · '+a.login;
   document.getElementById('eNome').value=a.nome||'';document.getElementById('bAtivo').textContent=a.ativo?'Bloquear acesso':'Liberar acesso';
-  colabUI(a);ctrUI(a);gvSync(a);try{pontosUI(a.user_id);}catch(e){console.warn(e);}
+  colabUI(a);ctrUI(a);gvSync(a);try{pontosUI(a.user_id);}catch(e){console.warn(e);}try{donoMsg(a);}catch(e){console.warn(e);}
   {const lc=localDe(a.user_id);document.getElementById('eCid').value=lc.cidade||'';document.getElementById('eUf').value=lc.uf||'';
    document.getElementById('bLocal').onclick=async()=>{const b=document.getElementById('bLocal');b.disabled=true;await ins('empresa_local',{para:a.user_id,cidade:document.getElementById('eCid').value.trim(),uf:document.getElementById('eUf').value});b.disabled=false;b.textContent='✔ Salvo';setTimeout(()=>b.textContent='📍 Salvar cidade',2500);carregar();};}
   {const g=gestorRes(a.user_id),el=document.getElementById('cGes');if(el)el.innerHTML=!g.tot?'O gestor ainda não entrou no Painel da Empresa.':
