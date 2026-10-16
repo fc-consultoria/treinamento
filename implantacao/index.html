@@ -2058,12 +2058,12 @@ async function carregarPresencaPortal(){
     if(error) return;
     const novo = {};
     (data||[]).forEach(r=>(novo[r.cliente_id]=novo[r.cliente_id]||[]).push(r));
-    // Aviso na tela quando alguém acabou de entrar (só para a Matriz)
-    if(ehAdminEspelho() && Object.keys(PRESENCA_PORTAL).length + Object.keys(novo).length){
+    // Aviso quando alguém acabou de entrar (para toda a equipe): mensagem na tela, som e notificação do navegador
+    if(Object.keys(novo).length){
       Object.entries(novo).forEach(([cid, lista])=>lista.forEach(r=>{
         if(!(PRESENCA_PORTAL[cid]||[]).some(x=>x.nome===r.nome) && PRESENCA_PORTAL.__ok){
           const c = CLIENTS.find(x=>x.id===cid);
-          toastSalvo('👀 '+(r.nome||'Alguém')+' ('+(c?c.nome:'cliente')+') abriu o link de acompanhamento');
+          avisarClienteEntrou((r.nome||'Alguém')+' ('+(c?c.nome:'cliente')+')');
         }
       }));
     }
@@ -2072,6 +2072,13 @@ async function carregarPresencaPortal(){
     atualizarSelosPresenca();
   }catch(_){}
 }
+function avisarClienteEntrou(quem){
+  toastSalvo('👀 '+quem+' abriu o link de acompanhamento');
+  try{ const ctx = new (window.AudioContext||window.webkitAudioContext)(); [0,0.18].forEach(t=>{ const o=ctx.createOscillator(), g=ctx.createGain(); o.frequency.value=880; g.gain.setValueAtTime(0.15, ctx.currentTime+t); g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+t+0.15); o.connect(g); g.connect(ctx.destination); o.start(ctx.currentTime+t); o.stop(ctx.currentTime+t+0.16); }); }catch(_){}
+  try{ if('Notification' in window && Notification.permission==='granted') new Notification('Cliente acompanhando agora', {body: quem+' abriu o link de acompanhamento.', tag:'acomp-'+quem}); }catch(_){}
+}
+// Pede permissão de notificação no primeiro clique (o navegador só deixa pedir depois de um clique)
+document.addEventListener('click', function pedirNotif(){ document.removeEventListener('click', pedirNotif); try{ if(STATE.loggedIn && 'Notification' in window && Notification.permission==='default') Notification.requestPermission(); }catch(_){} });
 function seloPresencaHtml(cid){
   const lista = (PRESENCA_PORTAL[cid]||[]);
   if(!lista.length) return '';
