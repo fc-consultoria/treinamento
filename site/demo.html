@@ -2895,7 +2895,47 @@ function demo2Init(){
     const wr=document.querySelector('.wrap');wr.insertBefore(bar,wr.firstChild);document.getElementById('d2Q').onclick=e=>{e.preventDefault();contratar('Faixa do demonstrativo');};document.getElementById('d2Op').onclick=()=>opiniao(false);document.getElementById('d2Cat').onclick=catalogos;tick();setInterval(tick,30000);
     if(!PREV)setInterval(()=>{if(document.visibilityState==='visible')send('tempo',{s:60,t:S.typo});},60000);
     chatInit();
+    try{espelho();}catch(e){console.warn(e);}
   }
+  /* ===== Espelho: o instrutor da FC acompanha o demonstrativo (só visualização) ===== */
+  function espelho(){const ESP=(new URLSearchParams(location.search).get('espelho')||'').trim();
+    if(PREV&&!ESP)return;const room=PREV?ESP:code;if(!room)return;
+    const go=()=>{if(!window.supabase){const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js';s.onload=go;document.head.appendChild(s);return;}
+      const cli=window.supabase.createClient('https://cpkjphodruyxfouirhpd.supabase.co',KEY,{auth:{persistSession:false,autoRefreshToken:false,storageKey:'fc-esp'}});
+      const ch=cli.channel('espelho-'+room,{config:{broadcast:{self:false},presence:{key:PREV?'fc':'cli-'+DEV}}});
+      const r3=v=>Math.round(v*1000)/1000;
+      const snap=()=>({t:S.typo,m:S.mode,wv:!!S.wvOn,cem:!!S.cemOn,dia:!!S.diaOn,o:Object.assign({},S.open),d:typeof DESM!=='undefined'?!!DESM:false,
+        c:[r3(camera.position.x),r3(camera.position.y),r3(camera.position.z)],g:[r3(controls.target.x),r3(controls.target.y),r3(controls.target.z)],cor:S.cor,w:S.w,h:S.h,y:Math.round(scrollY)});
+      if(!PREV){/* cliente: transmite só enquanto o instrutor estiver olhando */
+        let fc=false,last='',tm=null;const bd=document.createElement('button');bd.type='button';bd.id='d2Esp';
+        bd.style.cssText='position:fixed;left:12px;bottom:12px;z-index:9500;display:none;align-items:center;gap:8px;background:#0f1a22;color:#fff;border:2px solid #1fb3c9;border-radius:999px;padding:9px 14px;font:600 13.5px system-ui,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.3);cursor:pointer;max-width:calc(100vw - 24px)';
+        bd.innerHTML='<span style="width:9px;height:9px;border-radius:50%;background:#2ecc71;box-shadow:0 0 0 3px rgba(46,204,113,.3)"></span><span>👁 Instrutor FC acompanhando · <u>Precisa de ajuda? Toque aqui</u></span>';
+        bd.onclick=()=>{try{chatAbrir('Pedido de ajuda (instrutor acompanhando)');}catch(_){}};document.body.appendChild(bd);
+        const tick=()=>{if(!fc||document.visibilityState!=='visible')return;const s=JSON.stringify(snap());if(s===last)return;last=s;ch.send({type:'broadcast',event:'st',payload:JSON.parse(s)});};
+        ch.on('presence',{event:'sync'},()=>{const P=ch.presenceState();fc=!!P.fc;bd.style.display=fc?'inline-flex':'none';if(fc){last='';if(!tm)tm=setInterval(tick,600);tick();}else if(tm){clearInterval(tm);tm=null;}})
+          .on('broadcast',{event:'pede'},()=>{last='';tick();})
+          .subscribe(st=>{if(st==='SUBSCRIBED')ch.track({c:1});});
+      }else{/* instrutor: recebe e repete a tela, sem comandos */
+        const tb=()=>{const p=document.getElementById('d2Prev');if(p)p.remove();};tb();setTimeout(tb,800);
+        const bl=document.createElement('div');bl.style.cssText='position:fixed;inset:0;z-index:9400;cursor:not-allowed';document.body.appendChild(bl);
+        const ban=document.createElement('div');ban.style.cssText='position:fixed;left:50%;top:10px;transform:translateX(-50%);z-index:9600;background:#0f1a22;color:#fff;border-radius:999px;padding:8px 16px;font:600 13.5px system-ui,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.35);display:flex;gap:8px;align-items:center';
+        ban.innerHTML='<span id="espDot" style="width:9px;height:9px;border-radius:50%;background:#e8912d"></span><span id="espTx">👁 Espelho · aguardando o cliente…</span>';document.body.appendChild(ban);
+        const tx=t=>{document.getElementById('espTx').textContent=t;};let lastT=0;
+        const modo=s=>s.dia?'dia':s.cem?'cem':s.wv?'wv':s.m;
+        const apply=s=>{lastT=Date.now();document.getElementById('espDot').style.background='#2ecc71';tx('👁 Espelho ao vivo · somente visualização');
+          try{if(s.t&&s.t!==S.typo&&TYPOS[s.t])setTypo(s.t);
+            if(modo(s)!==modo({m:S.mode,wv:S.wvOn,cem:S.cemOn,dia:S.diaOn}))setMode(modo(s));
+            if(typeof DESM!=='undefined'&&!!s.d!==!!DESM){const b=document.getElementById('v-desm');if(b)b.click();}
+            if(s.o){S.open=Object.assign({},s.o);if(typeof stopAll==='function')stopAll();placeSashes();Object.keys(S.open).forEach(k=>{try{syncSlider(k);}catch(_){}});}
+            camTarget=null;camera.position.set(...s.c);controls.target.set(...s.g);controls.update();
+            if(typeof s.y==='number')window.scrollTo({top:s.y,behavior:'smooth'});}catch(e){console.warn('espelho',e);}};
+        setInterval(()=>{if(lastT&&Date.now()-lastT>20000){document.getElementById('espDot').style.background='#e8912d';tx('👁 Espelho · cliente parado ou saiu');}},5000);
+        ch.on('broadcast',{event:'st'},({payload})=>apply(payload))
+          .subscribe(st=>{if(st==='SUBSCRIBED'){ch.track({fc:1});setTimeout(()=>ch.send({type:'broadcast',event:'pede',payload:{}}),800);}});
+        window.ESPELHO_APPLY=apply;
+      }
+      window.ESPELHO_SNAP=snap;};
+    go();}
   function previa(){NOME='Cliente exemplo';FIM=Date.now()+24*3600e3;gate.remove();
     let tk=null;try{tk=JSON.parse(localStorage.getItem('trein-fc-auth')).access_token;}catch(_){}
     fetch('https://cpkjphodruyxfouirhpd.supabase.co/rest/v1/trein_eventos?select=detalhe&tipo=eq.promo&order=criado_em.desc&limit=1',{headers:{apikey:KEY,Authorization:'Bearer '+tk}}).then(r=>r.json()).then(j=>{const p=Array.isArray(j)&&j[0]&&j[0].detalhe;if(p&&p.on)PROMO={de:p.de,por:p.por,texto:p.texto,restam:p.vagas};}).catch(()=>{}).finally(()=>{
