@@ -283,10 +283,10 @@ function render(r){
   const fotos=r.fotos||[];
   $('#cliente').textContent=r.cliente||'';
   document.title='Acompanhamento — '+(r.cliente||'FC Consultoria');
-  if(!fotos.length){estado('Tudo pronto por aqui','O primeiro andamento da sua implantação aparece aqui a partir da próxima atualização, às 07:00 (horário de Brasília), de segunda a sexta.');$('#cliente').textContent=r.cliente||'';return;}
+  if(!fotos.length){estado('Tudo pronto por aqui','O primeiro andamento da sua implantação aparece aqui a partir da próxima atualização, às 09:00 (horário de Brasília), de segunda a sexta.');$('#cliente').textContent=r.cliente||'';return;}
   const atual=fotos[0], ant=fotos[1]||null;
   const L=(atual.dados.linhas||[]), A=linhasPorNome(ant);
-  $('#upd').textContent=(atual.previa?'Prévia gerada em ':'Atualizado em ')+dt(atual.em)+' às '+hora(atual.em)+' · atualizações de segunda a sexta, às 07:00';
+  $('#upd').textContent=(atual.previa?'Prévia gerada em ':'Atualizado em ')+dt(atual.em)+' às '+hora(atual.em)+' · atualizações de segunda a sexta, às 09:00';
 
   const total=L.reduce((s,l)=>s+Number(l.total||0),0);
   const alim=L.reduce((s,l)=>s+Number(l.alimentados||0),0);

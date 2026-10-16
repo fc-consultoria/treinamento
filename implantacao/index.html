@@ -2253,7 +2253,7 @@ function renderClientes(){
     <div class="clientcard" data-action="novo-cliente-v2" style="border:2px dashed #0e8a8c; background:#f2fbfa; display:flex; flex-direction:column; justify-content:center; gap:8px; min-height:180px;">
       <div style="display:flex; align-items:center; gap:8px;"><span style="font-size:22px; line-height:1;">＋</span><h4 style="margin:0;">Novo cliente · versão nova</h4></div>
       <div><span style="background:#dff2f1; color:#0a6d6f; font-size:11.5px; font-weight:650; border-radius:99px; padding:2px 9px;">📡 Acompanhamento online</span></div>
-      <div class="meta">Já nasce com o link do cliente (andamento publicado às 07:00, de segunda a sexta) e o cronograma das 10 etapas. Situação do dia e envio do link ficam no Painel da Matriz.</div>
+      <div class="meta">Já nasce com o link do cliente (andamento publicado às 09:00, de segunda a sexta) e o cronograma das 10 etapas. Situação do dia e envio do link ficam no Painel da Matriz.</div>
     </div>
   </div>
   `;
@@ -3118,7 +3118,7 @@ function mensagemLinkPessoa(c, u){
     `A partir de agora você acompanha a implantação de preços da ${c.nome} por este link:`, urlPortalCliente(c),'',
     '*Como entrar*','1. Abra o link no celular ou no computador.',`2. Digite o seu nome: *${u.nome}*`,'3. Toque em *Entrar*. Nas próximas vezes o navegador já lembra o seu nome.','',
     '*O que você encontra lá*','• O percentual concluído de cada linha contratada. Quando uma linha chega a 100%, a próxima aparece.','• As etapas da implantação e o que estamos aguardando da sua equipe.','• O botão para enviar as planilhas que pedirmos (Excel, PDF ou print).','• Em "Ver os itens alimentados", os códigos já cadastrados no sistema.','',
-    '*Quando é atualizado*','De segunda a sexta, às 07:00 (horário de Brasília).','',
+    '*Quando é atualizado*','De segunda a sexta, às 09:00 (horário de Brasília).','',
     'O acesso é pessoal, por isso não repasse o link. Se outra pessoa da equipe precisar acompanhar, é só nos avisar que fazemos o cadastro (até 4 pessoas).','',
     'Dúvidas: (66) 9 9986-7984, de segunda a sexta, das 08:00 às 11:00 e das 13:00 às 17:00.','',
     'FC Consultoria'].join('\n');
@@ -3135,7 +3135,7 @@ function mensagemLinkPortal(c){
     '*Como entrar*','1. Abra o link no celular ou no computador.',
     temPessoas ? '2. Digite o seu nome, do jeito que foi cadastrado, e toque em *Entrar*. Nas próximas vezes o navegador já lembra.' : '2. A página abre direto, sem senha.','',
     '*O que vocês encontram lá*','• O percentual concluído de cada linha contratada. Quando uma linha chega a 100%, a próxima aparece.','• As etapas da implantação e o que estamos aguardando da equipe de vocês.','• O botão para enviar as planilhas que pedirmos (Excel, PDF ou print).','• Em "Ver os itens alimentados", os códigos já cadastrados no sistema.','',
-    '*Quando é atualizado*','De segunda a sexta, às 07:00 (horário de Brasília).','',
+    '*Quando é atualizado*','De segunda a sexta, às 09:00 (horário de Brasília).','',
     'Guardem este link e não repassem para fora da empresa.','',
     'Dúvidas: (66) 9 9986-7984, de segunda a sexta, das 08:00 às 11:00 e das 13:00 às 17:00.','',
     'FC Consultoria'].join('\n');
@@ -3224,7 +3224,7 @@ function renderLinkClientePortal(c){
     <input readonly value="${escapeHtml(url)}" onclick="this.select()" style="flex:1; min-width:260px; font-family:var(--mono,monospace); font-size:12px; padding:7px 9px; border:1px solid var(--border); border-radius:8px; background:#fff;">
     <button class="btn btn-sm" data-action="copiar-link-portal" data-url="${escapeHtml(url)}">${icon('copy')} Copiar link</button>
     <a class="btn btn-sm" href="${escapeHtml(url)}" target="_blank" rel="noopener">${icon('external-link')} Ver como o cliente vê</a>
-    <span class="desc" style="flex-basis:100%;">${p.modo==='manual'?'Publicação manual':'Atualiza às 07:00, de segunda a sexta'}. Publicar agora, situação do dia e desativar ficam no Painel da Matriz → 📡 Acompanhamento do cliente.</span>
+    <span class="desc" style="flex-basis:100%;">${p.modo==='manual'?'Publicação manual':'Atualiza às 09:00, de segunda a sexta'}. Publicar agora, situação do dia e desativar ficam no Painel da Matriz → 📡 Acompanhamento do cliente.</span>
     <div style="flex-basis:100%; border-top:1px solid #cfe9e6; padding-top:10px; margin-top:2px;">
       <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:6px;">
         <b style="font-size:13px;">💬 Texto pronto para enviar com o link</b>

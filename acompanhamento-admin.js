@@ -1,10 +1,10 @@
 /* ===== Painel da Matriz · Acompanhamento online dos clientes de implantação =====
-   Liga/desliga o portal de cada cliente (link com chave), escolhe a publicação (07:00 seg–sex ou manual),
+   Liga/desliga o portal de cada cliente (link com chave), escolhe a publicação (09:00 seg–sex ou manual),
    a "situação do dia" e o cronograma de etapas. O cliente vê só quantidades, códigos, situação e etapas. */
 (function(){
   const URL_PORTAL='https://fc-consultoria.github.io/treinamento/acompanhamento/?k=';
   const URL_DEMO='https://fc-consultoria.github.io/treinamento/acompanhamento/?demo=1';
-  const MSG_DEMO=['Olá! Tudo bem?','','Preparei uma demonstração de como você acompanha a implantação de preços com a FC Consultoria. É um cliente fictício: avance os dias na barra laranja (ou toque em Reproduzir) e veja as linhas sendo alimentadas, as etapas sendo concluídas e os avisos do dia.','',URL_DEMO,'','Quando a sua implantação começar, você recebe um link igual a este, só seu, atualizado de segunda a sexta às 07:00.','','FC Consultoria'].join('\n');
+  const MSG_DEMO=['Olá! Tudo bem?','','Preparei uma demonstração de como você acompanha a implantação de preços com a FC Consultoria. É um cliente fictício: avance os dias na barra laranja (ou toque em Reproduzir) e veja as linhas sendo alimentadas, as etapas sendo concluídas e os avisos do dia.','',URL_DEMO,'','Quando a sua implantação começar, você recebe um link igual a este, só seu, atualizado de segunda a sexta às 09:00.','','FC Consultoria'].join('\n');
   const SITS=[['','Nenhuma (não mostrar)'],['fornecedor','📦 Aguardando retorno do fornecedor'],['cliente','🤝 Aguardando retorno da equipe do cliente'],['sistema','🖥️ Aguardando o suporte do sistema'],['externo','🚗 Equipe em atendimento externo (sem alimentação hoje)'],['conferencia','🔎 Conferência dos itens alimentados'],['livre','ℹ️ Recado livre (só o texto abaixo)']];
   const S={cli:[],por:{},fotos:{},aberto:null,pend:null,carregado:false,erro:''};
   const $=id=>document.getElementById(id);
@@ -70,10 +70,10 @@
     ${pessoasHtml(c,url)}
     ${rot('Publicação do andamento')}
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-      ${btn('modo','Automático · 07:00 seg a sex','data-id="'+c.id+'" data-v="auto"',p.modo==='auto'?'pri':'')}
+      ${btn('modo','Automático · 09:00 seg a sex','data-id="'+c.id+'" data-v="auto"',p.modo==='auto'?'pri':'')}
       ${btn('modo','Manual','data-id="'+c.id+'" data-v="manual"',p.modo==='manual'?'pri':'')}
       <span style="flex:1"></span>${btn('publicar','📤 Publicar andamento agora','data-id="'+c.id+'"')}</div>
-    <p class="note" style="margin:6px 0 0">${p.modo==='auto'?'A foto do andamento é publicada às 07:00 (Brasília), de segunda a sexta, com tudo o que foi feito até ali.':'Só publica quando você clicar em "Publicar andamento agora".'} O cliente não vê o andamento em tempo real.</p>
+    <p class="note" style="margin:6px 0 0">${p.modo==='auto'?'A foto do andamento é publicada às 09:00 (Brasília), de segunda a sexta, com tudo o que foi feito até ali.':'Só publica quando você clicar em "Publicar andamento agora".'} O cliente não vê o andamento em tempo real.</p>
     ${rot('Situação do dia (aparece em destaque para o cliente)')}
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
       <select id="acSit-${c.id}" style="${inp}">${SITS.map(([v,t])=>`<option value="${v}" ${(p.situacao||'')===v?'selected':''}>${esc(t)}</option>`).join('')}</select>
@@ -95,7 +95,7 @@
     `A partir de agora você acompanha a implantação de preços da ${c.nome} por este link:`,url,'',
     '*Como entrar*','1. Abra o link no celular ou no computador.',`2. Digite o seu nome: *${u.nome}*`,'3. Toque em *Entrar*. Nas próximas vezes o navegador já lembra o seu nome.','',
     '*O que você encontra lá*','• O percentual concluído de cada linha contratada. Quando uma linha chega a 100%, a próxima aparece.','• As etapas da implantação e o que estamos aguardando da sua equipe.','• O botão para enviar as planilhas que pedirmos (Excel, PDF ou print).','• Em "Ver os itens alimentados", os códigos já cadastrados no sistema.','',
-    '*Quando é atualizado*','De segunda a sexta, às 07:00 (horário de Brasília).','',
+    '*Quando é atualizado*','De segunda a sexta, às 09:00 (horário de Brasília).','',
     'O acesso é pessoal, por isso não repasse o link. Se outra pessoa da equipe precisar acompanhar, é só nos avisar que fazemos o cadastro (até 4 pessoas).','',
     'Dúvidas: (66) 9 9986-7984, de segunda a sexta, das 08:00 às 11:00 e das 13:00 às 17:00.','',
     'FC Consultoria'].join('\n');
