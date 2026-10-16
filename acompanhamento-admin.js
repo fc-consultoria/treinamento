@@ -147,7 +147,7 @@
       <button type="button" data-ac="fAbrir" style="all:unset;box-sizing:border-box;width:100%;cursor:pointer;display:flex;gap:10px;align-items:center;padding:12px 14px">
         <b style="font:600 16px var(--f-display)">📣 Enviar folder ou dica para a tela do cliente</b><span class="note">Cliente online vê em até 1 minuto; off-line vê ao abrir o link.</span><span style="margin-left:auto;color:var(--muted)">${F.aberto?'▲':'▼'}</span></button>
       ${F.aberto?`<div style="padding:0 14px 14px;border-top:1px solid var(--line)">
-        ${rot('Arte (da sua aba Divulgação) ou outra imagem')}
+        ${rot('Arte (da aba Avisos aos alunos) ou outra imagem')}
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
           ${(S.artes||[]).map(a=>`<button type="button" data-ac="fArte" data-id="${esc(a.id)}" style="all:unset;cursor:pointer;border:3px solid ${F.arte===a.id?'var(--accent)':'transparent'};border-radius:10px;line-height:0"><img src="${a.img}" alt="" style="width:92px;height:92px;object-fit:cover;border-radius:7px"></button>`).join('')}
           <label style="font:600 13.5px var(--f-body);padding:7px 12px;border:1px solid var(--line);border-radius:8px;cursor:pointer">${F.img?'✓ Imagem escolhida':'＋ Outra imagem'}<input type="file" accept="image/png,image/jpeg,image/webp" id="fImg" hidden></label>

@@ -2971,7 +2971,7 @@ function renderLinkClientePortal(c){
     <input readonly value="${escapeHtml(url)}" onclick="this.select()" style="flex:1; min-width:260px; font-family:var(--mono,monospace); font-size:12px; padding:7px 9px; border:1px solid var(--border); border-radius:8px; background:#fff;">
     <button class="btn btn-sm" data-action="copiar-link-portal" data-url="${escapeHtml(url)}">${icon('copy')} Copiar link</button>
     <a class="btn btn-sm" href="${escapeHtml(url)}" target="_blank" rel="noopener">${icon('external-link')} Ver como o cliente vê</a>
-    <span class="desc" style="flex-basis:100%;">${p.modo==='manual'?'Publicação manual':'Atualiza às 07:00, de segunda a sexta'}. Publicar agora, situação do dia e desativar ficam no Painel da Matriz → 📡 Acompanhamento.</span>
+    <span class="desc" style="flex-basis:100%;">${p.modo==='manual'?'Publicação manual':'Atualiza às 07:00, de segunda a sexta'}. Publicar agora, situação do dia e desativar ficam no Painel da Matriz → 📡 Acompanhamento do cliente.</span>
     ${pessoasLinkHtml(c)}
   </div>`;
 }
@@ -2980,7 +2980,7 @@ function pessoasLinkHtml(c){
   const fone = t => { const d = soDigitos(t); return d.length===11 ? `(${d.slice(0,2)}) ${d.slice(2,3)} ${d.slice(3,7)}-${d.slice(7)}` : d.length===10 ? `(${d.slice(0,2)}) ${d.slice(2,6)}-${d.slice(6)}` : (t||''); };
   return `<div style="flex-basis:100%; border-top:1px solid #cfe9e6; padding-top:10px; margin-top:2px;">
     <b style="font-size:13px;">👥 Pessoas com acesso (${us.length} de 4)</b>
-    ${us.length ? '' : '<div class="desc" style="margin-top:4px;">Ninguém cadastrado: o link abre sem pedir nome. Cadastre até 4 pessoas no Painel da Matriz → 📡 Acompanhamento (ou já no cadastro de um cliente novo).</div>'}
+    ${us.length ? '' : '<div class="desc" style="margin-top:4px;">Ninguém cadastrado: o link abre sem pedir nome. Cadastre até 4 pessoas no Painel da Matriz → 📡 Acompanhamento do cliente (ou já no cadastro de um cliente novo).</div>'}
     ${us.map(u=>`<div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; padding:6px 0;">
       <span style="font-weight:600; font-size:13.5px;">${escapeHtml(u.nome)}</span><span class="desc">${escapeHtml(fone(u.telefone)) || 'sem telefone'}</span>
       <span style="margin-left:auto; display:flex; gap:6px;">
