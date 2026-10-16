@@ -88,7 +88,15 @@
 
   const soDig=t=>String(t||'').replace(/\D/g,'');
   const foneBR=t=>{const d=soDig(t);return d.length===11?`(${d.slice(0,2)}) ${d.slice(2,3)} ${d.slice(3,7)}-${d.slice(7)}`:d.length===10?`(${d.slice(0,2)}) ${d.slice(2,6)}-${d.slice(6)}`:(t||'');};
-  const msgLinkPessoa=(c,u,url)=>`Olá, ${u.nome.split(' ')[0]}! Este é o seu acesso para acompanhar a implantação de preços da ${c.nome}:\n\n${url}\n\nPara entrar, digite o seu nome: *${u.nome}*\n\nO andamento é atualizado de segunda a sexta, às 07:00. Guarde este link. — FC Consultoria`;
+  const msgLinkPessoa=(c,u,url)=>[
+    `Olá, ${u.nome.split(' ')[0]}! Tudo bem?`,'',
+    `A partir de agora você acompanha a implantação de preços da ${c.nome} por este link:`,url,'',
+    '*Como entrar*','1. Abra o link no celular ou no computador.',`2. Digite o seu nome: *${u.nome}*`,'3. Toque em *Entrar*. Nas próximas vezes o navegador já lembra o seu nome.','',
+    '*O que você encontra lá*','• O percentual concluído de cada linha contratada. Quando uma linha chega a 100%, a próxima aparece.','• As etapas da implantação e o que estamos aguardando da sua equipe.','• O botão para enviar as planilhas que pedirmos (Excel, PDF ou print).','• Em "Ver os itens alimentados", os códigos já cadastrados no sistema.','',
+    '*Quando é atualizado*','De segunda a sexta, às 07:00 (horário de Brasília).','',
+    'O acesso é pessoal, por isso não repasse o link. Se outra pessoa da equipe precisar acompanhar, é só nos avisar que fazemos o cadastro (até 4 pessoas).','',
+    'Dúvidas: (66) 9 9986-7984, de segunda a sexta, das 08:00 às 11:00 e das 13:00 às 17:00.','',
+    'FC Consultoria'].join('\n');
   function pessoasHtml(c,url){
     if(S.semUsuarios) return rot('Pessoas com acesso ao link')+`<p class="note" style="color:var(--bad);margin:0">Cadastro de pessoas ainda não ligado no banco de dados: rode o arquivo portal_acessos.sql no Supabase.</p>`;
     const us=(S.usuarios||{})[c.id]||[],ult=nm=>(S.acessosLista||[]).find(a=>a.cliente_id===c.id&&a.usuario_nome===nm);
