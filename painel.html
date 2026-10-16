@@ -459,10 +459,11 @@ function implUI(){const tb=document.getElementById('implTb');if(!tb)return;const
     else if(k==='cv'){if(!confirm('Converter '+(a.nome||m.empresa)+' em empresa com contrato?\n\nO mesmo login continua, com o histórico da equipe. Na próxima tela, registre o pagamento em “Contrato mensal”.'))return;await ins('implantacao',{para:a.user_id,convertido:true});await carregar();sel=a.user_id;ptab('emp');render();detalhe();setTimeout(()=>{const c=document.getElementById('ctrBox');if(c)c.scrollIntoView({behavior:'smooth',block:'center'});},300);}
     else{sel=a.user_id;ptab('emp');render();detalhe();if(k==='gv')setTimeout(()=>{const g=document.getElementById('gvBox');if(g&&g.hidden)document.getElementById('gvTog').click();},200);else document.getElementById('detCard').scrollIntoView({behavior:'smooth'});}});}
 async function excluirCliente(a){const nm=a.nome||a.login,cf=ctrFim(a.user_id),ativo=cf&&cf>=HOJE();
-  const v=prompt(`Excluir o cliente ${nm} e liberar a vaga?\n\n• O login, a senha e a equipe deixam de funcionar na hora.\n• Some do painel (contratos, colaboradores, histórico e implantação).\n• O acesso volta como vaga livre (alunoNN) para usar com outro cliente.${ativo?'\n\n⚠ ATENÇÃO: esta empresa tem contrato pago ativo até '+brD(cf)+'.':''}\n\nPara confirmar, digite o login: ${a.login}`);
+  const v=prompt(`Excluir o cliente ${nm} e liberar a vaga?\n\n• O login, a senha e a equipe deixam de funcionar na hora.\n• Some do painel (contratos, colaboradores, histórico e implantação).\n• O acesso volta como vaga livre (alunoNN) para usar com outro cliente.\n• Quem tentar entrar com o login antigo é levado ao site da FC.${ativo?'\n\n⚠ ATENÇÃO: esta empresa tem contrato pago ativo até '+brD(cf)+'.':''}\n\nPara confirmar, digite o login: ${a.login}`);
   if(v===null)return;if(v.trim().toLowerCase()!==a.login.toLowerCase()){alert('O login digitado não confere. Nada foi excluído.');return;}
   const u=a.user_id;let n=4,lg;do{lg='aluno'+String(n++).padStart(2,'0');}while(ALUNOS.some(x=>x.login.toLowerCase()===lg&&x.user_id!==u));
   try{let r=await sb.rpc('trein_set_login',{alvo:u,novo:lg});if(r.error)throw r.error;
+    try{await sb.from('trein_login_encerrado').upsert({login:String(a.login).toLowerCase()});}catch(_){}
     r=await sb.rpc('trein_set_senha',{alvo:u,nova:senhaNova()+senhaNova()});if(r.error)throw r.error;senhaSave(u,'');
     r=await sb.from('trein_alunos').update({nome:null,ativo:true}).eq('user_id',u);if(r.error)throw r.error;
     for(const x of colabs(u))await ins('colab',{para:u,id:x.id,removido:true});

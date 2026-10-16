@@ -24,7 +24,9 @@ function gateUI(onOk,{soMatriz=false}={}){
     e.preventDefault();msg.textContent='';btn.disabled=true;btn.textContent='Entrando…';
     const {error}=await sb.auth.signInWithPassword({email:loginToEmail(form.login.value),password:form.senha.value});
     btn.disabled=false;btn.textContent='Entrar';
-    if(error){msg.textContent='Login ou senha não conferem.';return;}
+    if(error){let enc=false;try{const r=await sb.rpc('trein_login_encerrado',{p_login:form.login.value});enc=!r.error&&r.data===true;}catch(_){}
+      if(enc){msg.textContent='Este acesso ao Orientativo FC 3D foi encerrado. Abrindo o site da FC Consultoria…';setTimeout(()=>{location.href='https://fc-consultoria.github.io/?o=encerrado';},3500);return;}
+      msg.textContent='Login ou senha não conferem.';return;}
     check();
   });
   check();
