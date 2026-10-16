@@ -117,9 +117,9 @@ function escolherColab(uid,perfil){return new Promise(res=>{
     const {error}=await sb.from('trein_eventos').insert({user_id:uid,tipo:'pedido_tempo',tipologia:null,detalhe:{cid:x.id,quem:x.nome}});
     await draw();M.style.color='#2f9a55';M.textContent=error?'Não foi possível enviar: '+error.message:'Pedido de mais tempo enviado para a FC Consultoria. Assim que liberar, é só entrar de novo.';}
   async function draw(){box.hidden=false;M.textContent='';L.innerHTML='<p>Carregando…</p>';const st=await estadoEmpresa(uid);
-    if(!st.liberado&&st.impl){T.textContent='A implantação terminou';X.innerHTML='O acesso exclusivo da implantação da precificação terminou'+(st.ate?' em <b>'+st.ate.split('-').reverse().join('/')+'</b>':'')+'. Obrigado por usar o Orientativo FC 3D!<br><br><b>Quer continuar com o Orientativo para a sua equipe?</b> Contrate a licença do link: <b>R$ 150,00 a cada 30 dias</b>, com até 6 colaboradores, o Painel do Gestor e os catálogos técnicos. O pagamento é pelo PIX <b>CNPJ 52.985.682/0001-32</b> e a liberação é no mesmo dia, com o mesmo login e o histórico da equipe.';
+    if(!st.liberado&&st.impl){T.textContent='A implantação terminou';X.innerHTML='O acesso exclusivo da implantação da precificação terminou'+(st.ate?' em <b>'+st.ate.split('-').reverse().join('/')+'</b>':'')+'. Obrigado por usar o Orientativo FC 3D!<br><br><b>Quer continuar com o Orientativo para a sua equipe?</b> Contrate a licença do link: <b>planos a partir de R$ 50,00 por mês</b> (1 acesso R$ 50 · até 3 pessoas R$ 70 · até 6 pessoas R$ 100), o Painel do Gestor e os catálogos técnicos. O pagamento é pelo PIX <b>CNPJ 52.985.682/0001-32</b> e a liberação é no mesmo dia, com o mesmo login e o histórico da equipe.';
       L.innerHTML='<a href="https://wa.me/5566999867984?text='+encodeURIComponent('Olá Fernando, a implantação terminou e quero contratar a licença do Orientativo FC 3D ('+(perfil.nome||perfil.login)+').')+'" target="_blank" rel="noopener" style="display:inline-block;background:#e8912d;color:#fff;text-decoration:none;font:700 15px Barlow,sans-serif;padding:11px 16px;border-radius:9px">💳 Quero contratar a licença</a>';return;}
-    if(!st.liberado&&st.ctr&&st.ctr<HOJE()){T.textContent='O acesso da empresa venceu';X.innerHTML='O contrato venceu em <b>'+st.ctr.split('-').reverse().join('/')+'</b>. Para renovar por mais 30 dias, faça o PIX de <b>R$ 150,00</b> para a chave PIX <b>CNPJ 52.985.682/0001-32</b> (FC Consultoria) e envie o comprovante para a FC. A liberação é no mesmo dia.';
+    if(!st.liberado&&st.ctr&&st.ctr<HOJE()){T.textContent='O acesso da empresa venceu';X.innerHTML='O contrato venceu em <b>'+st.ctr.split('-').reverse().join('/')+'</b>. Para renovar por mais 30 dias, faça o PIX do valor do seu plano (<b>1 acesso R$ 50 · até 3 pessoas R$ 70 · até 6 pessoas R$ 100</b>) para a chave PIX <b>CNPJ 52.985.682/0001-32</b> (FC Consultoria) e envie o comprovante para a FC. A liberação é no mesmo dia.';
       L.innerHTML='<a href="https://wa.me/5566999867984?text='+encodeURIComponent('Olá Fernando, quero renovar o acesso do Orientativo FC 3D ('+(perfil.nome||perfil.login)+').')+'" target="_blank" rel="noopener" style="display:inline-block;background:#1f9d55;color:#fff;text-decoration:none;font:700 15px Barlow,sans-serif;padding:11px 16px;border-radius:9px">💬 Renovar pelo WhatsApp</a>';return;}
     if(!st.liberado){T.textContent=DOW()===0?'Hoje é domingo':'Acesso da semana encerrado';
       X.textContent=DOW()===0?'O orientativo funciona de segunda a sábado. Volte amanhã.':'O acesso desta empresa não foi liberado para esta semana. Fale com a FC Consultoria: WhatsApp (66) 9 9986-7984.';L.innerHTML='';return;}
@@ -179,7 +179,7 @@ function vigiaPrazo(uid,perfil){setInterval(()=>{if(window.ALUNO_CID&&window.COL
     try{const {data}=await sb.from('trein_eventos').select('detalhe').eq('tipo','chave_app').limit(1);
       const kb=Uint8Array.from(atob(data[0].detalhe.k),c=>c.charCodeAt(0));
       const key=await crypto.subtle.importKey('raw',kb,'AES-GCM',false,['decrypt']);window.__CK=key;
-      const buf=new Uint8Array(await (await fetch('app.enc?v=1792078531',{cache:'no-cache'})).arrayBuffer());
+      const buf=new Uint8Array(await (await fetch('app.enc?v=1792166130',{cache:'no-cache'})).arrayBuffer());
       const plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:buf.slice(0,12)},key,buf.slice(12));
       const html=await new Response(new Blob([plain]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
       const root=document.getElementById('appRoot');root.innerHTML=html;
@@ -216,7 +216,7 @@ function vigiaPrazo(uid,perfil){setInterval(()=>{if(window.ALUNO_CID&&window.COL
   });
 })();
 </script>
-<script>(function(){const V='1792078531';async function chk(){try{const t=(await (await fetch('version.txt?'+Date.now(),{cache:'no-store'})).text()).trim();
+<script>(function(){const V='1792166130';async function chk(){try{const t=(await (await fetch('version.txt?'+Date.now(),{cache:'no-store'})).text()).trim();
 if(t&&/^\d+$/.test(t)&&t!==V&&!document.getElementById('updBar')){const b=document.createElement('div');b.id='updBar';
 b.style.cssText='position:fixed;left:50%;top:10px;transform:translateX(-50%);z-index:9999;background:#1f6f9a;color:#fff;padding:10px 12px 10px 16px;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.25);font:600 14px system-ui,sans-serif;display:flex;gap:12px;align-items:center;max-width:calc(100% - 24px)';
 b.innerHTML='<span>🔄 Nova versão do orientativo disponível</span><button type="button" style="border:0;border-radius:7px;padding:7px 14px;font:700 14px system-ui,sans-serif;background:#e0972e;color:#1b232a;cursor:pointer">Atualizar</button>';
@@ -338,7 +338,7 @@ function abrir(){let o=document.getElementById('catOv');if(o)o.remove();o=docume
   catch(e){b.textContent='Tente de novo';}setTimeout(()=>{b.disabled=false;b.textContent=t;},4000);});}
 window.catInit=function(){const ub=document.getElementById('ubar');if(!ub||document.getElementById('catBtn'))return;const b=document.createElement('button');b.type='button';b.id='catBtn';b.textContent='📘 Catálogos';b.title='Catálogos técnicos Suprema e Gold (fonte do orientativo)';b.onclick=abrir;ub.insertBefore(b,document.getElementById('sugBtn'));};
 })();
-</script><script src="mapa.js?v=1792078531"></script><script>/* ===== Mapa "FC no Brasil" (tela do aluno) ===== */
+</script><script src="mapa.js?v=1792166130"></script><script>/* ===== Mapa "FC no Brasil" (tela do aluno) ===== */
 (function(){
 window.mapaInit=async function(){try{const r=await sb.from('trein_eventos').select('detalhe').eq('tipo','mapa').order('criado_em',{ascending:false}).limit(1);
   const dd=(((r.data||[])[0]||{}).detalhe)||{};const it=dd.pub===false?[]:(dd.itens||[]),orr=dd.orient||[];window.FC_MAPA=dd;const ub=document.getElementById('ubar');if((!it.length&&!orr.length)||!ub||!window.FCM||document.getElementById('mpBtn'))return;
@@ -349,7 +349,7 @@ window.mapaInit=async function(){try{const r=await sb.from('trein_eventos').sele
     document.body.appendChild(o);if(FCM.render2)FCM.render2(document.getElementById('mpBox'),{orient:orr,cons:it,showCons:!!it.length,vit:dd.vit||[]});else FCM.render(document.getElementById('mpBox'),it);document.getElementById('mpX').onclick=()=>o.remove();o.addEventListener('click',e=>{if(e.target===o)o.remove();});};
   ub.insertBefore(b,document.getElementById('sugBtn'));}catch(e){}};
 })();
-</script><script src="dicas.js?v=1792078531"></script><script>/* ===== Dicas da FC (tela do aluno) ===== */
+</script><script src="dicas.js?v=1792166130"></script><script>/* ===== Dicas da FC (tela do aluno) ===== */
 (function(){
 const VK='fc_dicas_vistas',vistas=()=>{try{return JSON.parse(localStorage.getItem(VK)||'[]');}catch(_){return [];}},marcar=id=>{try{const v=vistas();if(!v.includes(id)){v.push(id);localStorage.setItem(VK,JSON.stringify(v.slice(-200)));}}catch(_){}};
 let L=[];
