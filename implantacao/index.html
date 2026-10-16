@@ -348,6 +348,7 @@ tbody tr:hover{background:var(--panel-2);}
       <button class="navitem" data-nav="orcamentos-fornecedor"><i data-lucide="inbox"></i> Orçamentos de Fornecedores</button>
       <button class="navitem" data-nav="orcamentos-aluminio"><i data-lucide="layers"></i> Alumínio (Fornecedores)</button>
       <button class="navitem" data-nav="reajustes"><i data-lucide="percent"></i> Reajustes de preço</button>
+      <button class="navitem" data-nav="espelho" id="nav-espelho" style="display:none;"><i data-lucide="monitor-play"></i> Espelho da equipe</button>
     </div>
     <div class="navgroup" style="margin-top:auto;">
       <div id="sidebar-user" style="font-size:11.5px; color:var(--text-3); padding:0 10px 8px;"></div>
@@ -2021,6 +2022,160 @@ function importarTabelaMetro(file, cliente){
   });
 }
 
+/* ---------------- Espelho da equipe ----------------
+   O próprio banco grava em impl_atividade cada item marcado/desmarcado como alimentado (trigger).
+   O login admin (Matriz) vê sempre; os demais só veem se o admin liberar (impl_acesso.ver_espelho). */
+const ESPELHO = { itens:[], carregando:false, carregado:false, pessoa:'', cliente:'', periodo:'hoje', ultimoId:0, timer:null };
+let MEU_ACESSO = null, ACESSOS = [];
+async function carregarAcessosEspelho(){
+  try{
+    const {data:{user}} = await sb.auth.getUser();
+    const {data, error} = await sb.from('impl_acesso').select('email,nome,admin,ver_espelho').order('nome');
+    if(error) throw error;
+    ACESSOS = data||[];
+    MEU_ACESSO = ACESSOS.find(a=>user && a.email.toLowerCase()===String(user.email||'').toLowerCase()) || null;
+  }catch(e){ console.warn('espelho: acessos', e); ACESSOS=[]; MEU_ACESSO=null; }
+}
+function podeVerEspelho(){ return !!(MEU_ACESSO && (MEU_ACESSO.admin || MEU_ACESSO.ver_espelho)); }
+function ehAdminEspelho(){ return !!(MEU_ACESSO && MEU_ACESSO.admin); }
+function nomePessoaEspelho(email){
+  const e = String(email||'').toLowerCase();
+  const a = ACESSOS.find(x=>x.email.toLowerCase()===e);
+  if(a && a.nome) return a.nome;
+  if(e.startsWith('painel.fc@')) return 'Painel FC (Matriz)';
+  return e ? e.split('@')[0] : '—';
+}
+function inicioPeriodoEspelho(){
+  const d = new Date(); d.setHours(0,0,0,0);
+  if(ESPELHO.periodo==='7d') d.setDate(d.getDate()-6);
+  if(ESPELHO.periodo==='30d') d.setDate(d.getDate()-29);
+  return d.toISOString();
+}
+async function carregarEspelho(silencioso){
+  if(!podeVerEspelho()) return;
+  if(!silencioso){ ESPELHO.carregando = true; }
+  let q = sb.from('impl_atividade').select('*').gte('criado_em', inicioPeriodoEspelho()).order('criado_em', {ascending:false}).limit(1000);
+  if(ESPELHO.pessoa) q = q.eq('email', ESPELHO.pessoa);
+  if(ESPELHO.cliente) q = q.eq('cliente_id', ESPELHO.cliente);
+  const {data, error} = await q;
+  ESPELHO.carregando = false;
+  if(error){ console.warn('espelho', error); if(!silencioso) toastSalvo('Não consegui carregar o espelho', true); return; }
+  const itens = data||[];
+  const novoUltimo = itens.length ? itens[0].id : 0;
+  const mudou = !ESPELHO.carregado || novoUltimo!==ESPELHO.ultimoId || itens.length!==ESPELHO.itens.length;
+  ESPELHO.itens = itens; ESPELHO.ultimoId = novoUltimo; ESPELHO.carregado = true;
+  if(STATE.view==='espelho' && (mudou || !silencioso)) render();
+}
+function iniciarAutoEspelho(){
+  if(ESPELHO.timer) return;
+  ESPELHO.timer = setInterval(()=>{
+    if(STATE.view!=='espelho'){ clearInterval(ESPELHO.timer); ESPELHO.timer=null; return; }
+    if(document.hidden) return;
+    // não atualiza a tela enquanto a pessoa estiver mexendo num filtro
+    const foco = document.activeElement;
+    if(foco && foco.closest && foco.closest('[data-espelho]') && /SELECT|INPUT/.test(foco.tagName)) return;
+    carregarEspelho(true);
+  }, 15000);
+}
+function renderEspelho(){
+  if(!ESPELHO.carregado && !ESPELHO.carregando){ carregarEspelho(); }
+  iniciarAutoEspelho();
+  const itens = ESPELHO.itens;
+  const fmtHora = d=> new Date(d).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  const fmtDia = d=> new Date(d).toLocaleDateString('pt-BR',{weekday:'long', day:'2-digit', month:'2-digit'});
+  const nomeCli = id=> { const c = CLIENTS.find(x=>x.id===id); return c ? c.nome : '—'; };
+  // resumo por pessoa
+  const porPessoa = {};
+  itens.forEach(it=>{ const k=it.email||''; const r = porPessoa[k] = porPessoa[k] || {marcou:0, desmarcou:0, ultima:it.criado_em}; if(it.acao==='desmarcou') r.desmarcou++; else r.marcou++; });
+  const agora = Date.now();
+  const resumo = Object.entries(porPessoa).map(([email,r])=>{
+    const min = Math.round((agora-new Date(r.ultima).getTime())/60000);
+    const ativo = min<=10;
+    return `<div class="statcard" style="min-width:200px;">
+      <div class="lbl"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${ativo?'#16a34a':'#cbd5e1'};margin-right:6px;"></span>${escapeHtml(nomePessoaEspelho(email))}</div>
+      <div class="num">${r.marcou}</div>
+      <div class="sub">marcado(s)${r.desmarcou?` · ${r.desmarcou} desmarcado(s)`:''} · última ação ${min<1?'agora':min<60?'há '+min+' min':'às '+fmtHora(r.ultima)}</div>
+    </div>`;
+  }).join('');
+  // lista agrupada por dia
+  let diaAtual = '', linhas = '';
+  itens.forEach(it=>{
+    const dia = new Date(it.criado_em).toDateString();
+    if(dia!==diaAtual){ diaAtual = dia; linhas += `<tr><td colspan="6" style="padding:12px 10px 6px; font-weight:700; font-size:12px; text-transform:capitalize; color:var(--text-2); background:var(--bg-2, #f8fafc);">${escapeHtml(fmtDia(it.criado_em))}</td></tr>`; }
+    const desm = it.acao==='desmarcou';
+    linhas += `<tr style="border-top:1px solid var(--border);">
+      <td style="padding:7px 10px; white-space:nowrap;" class="mono">${fmtHora(it.criado_em)}</td>
+      <td style="padding:7px 10px; white-space:nowrap; font-weight:600;">${escapeHtml(nomePessoaEspelho(it.email))}</td>
+      <td style="padding:7px 10px;">${escapeHtml(nomeCli(it.cliente_id))}<div style="font-size:11px; color:var(--text-3);">${escapeHtml(it.origem||'')}</div></td>
+      <td style="padding:7px 10px; white-space:nowrap;" class="mono"><b>${escapeHtml(it.codigo||'')}</b></td>
+      <td style="padding:7px 10px;">${escapeHtml(it.descricao||'')}</td>
+      <td style="padding:7px 10px; white-space:nowrap;"><span class="badge ${desm?'badge-danger':'badge-ok'}">${icon(desm?'x':'check')}${desm?'Desmarcou':'Marcou alimentado'}</span></td>
+    </tr>`;
+  });
+  const pessoas = Array.from(new Set(ACESSOS.map(a=>a.email).concat(itens.map(i=>i.email)).filter(Boolean)));
+  const clientesComAtividade = CLIENTS.slice().sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
+  const outros = ACESSOS.filter(a=>!a.admin);
+  return `
+  <div class="pagehead">
+    <div>
+      <h1>Espelho da equipe</h1>
+      <p>Cada item marcado ou desmarcado como alimentado aparece aqui, com quem fez, o cliente e o horário. Atualiza sozinho a cada 15 segundos.</p>
+    </div>
+    <button class="btn" data-espelho data-esp-acao="atualizar">${icon('refresh-cw')} Atualizar agora</button>
+  </div>
+  ${ehAdminEspelho() ? `
+  <div class="panel">
+    <div class="panel-head"><div><h3>${icon('shield')} Quem pode ver o espelho</h3><div class="desc">Só o login da Matriz controla isso. Liberando, a pessoa passa a ver este espelho completo (inclusive o que você faz).</div></div></div>
+    ${outros.length ? outros.map(a=>`
+      <div style="display:flex; align-items:center; gap:12px; padding:8px 0; border-top:1px solid var(--border);">
+        <div style="flex:1;"><b>${escapeHtml(a.nome||a.email)}</b> <span class="desc">${escapeHtml(a.email)}</span></div>
+        <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+          <input type="checkbox" data-espelho data-esp-acao="liberar" data-email="${escapeHtml(a.email)}" ${a.ver_espelho?'checked':''}>
+          ${a.ver_espelho?'<b style="color:#15803d;">Liberado</b>':'Não liberado'}
+        </label>
+      </div>`).join('') : '<div class="desc">Nenhum outro login cadastrado.</div>'}
+  </div>` : ''}
+  <div class="panel" style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
+    <select class="select-inline" data-espelho data-esp-acao="periodo">
+      <option value="hoje" ${ESPELHO.periodo==='hoje'?'selected':''}>Hoje</option>
+      <option value="7d" ${ESPELHO.periodo==='7d'?'selected':''}>Últimos 7 dias</option>
+      <option value="30d" ${ESPELHO.periodo==='30d'?'selected':''}>Últimos 30 dias</option>
+    </select>
+    <select class="select-inline" data-espelho data-esp-acao="pessoa">
+      <option value="">Todas as pessoas</option>
+      ${pessoas.map(e=>`<option value="${escapeHtml(e)}" ${ESPELHO.pessoa===e?'selected':''}>${escapeHtml(nomePessoaEspelho(e))}</option>`).join('')}
+    </select>
+    <select class="select-inline" data-espelho data-esp-acao="cliente">
+      <option value="">Todos os clientes</option>
+      ${clientesComAtividade.map(c=>`<option value="${c.id}" ${ESPELHO.cliente===c.id?'selected':''}>${escapeHtml(c.nome)}</option>`).join('')}
+    </select>
+    <span class="desc">${ESPELHO.carregando?'Carregando…':itens.length+' ação(ões)'}${itens.length>=1000?' (mostrando as 1000 mais recentes)':''}</span>
+  </div>
+  ${resumo ? `<div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:16px;">${resumo}</div>` : ''}
+  <div class="panel" style="padding:0; overflow:hidden;">
+    ${itens.length ? `<div style="overflow-x:auto;"><table style="width:100%; border-collapse:collapse; font-size:13px;">
+      <thead><tr style="text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--text-3);">
+        <th style="padding:8px 10px;">Hora</th><th style="padding:8px 10px;">Quem</th><th style="padding:8px 10px;">Cliente</th><th style="padding:8px 10px;">Código</th><th style="padding:8px 10px;">Descrição</th><th style="padding:8px 10px;">Ação</th>
+      </tr></thead><tbody>${linhas}</tbody></table></div>`
+    : `<div style="padding:24px;">${emptyState('monitor-play', ESPELHO.carregando?'Carregando…':'Nenhuma ação nesse período', 'Assim que alguém marcar ou desmarcar um item como alimentado, ele aparece aqui.')}</div>`}
+  </div>`;
+}
+function wireEspelho(){
+  document.querySelectorAll('[data-espelho]').forEach(el=>{
+    const acao = el.dataset.espAcao;
+    if(acao==='atualizar') el.onclick = ()=>carregarEspelho();
+    if(acao==='periodo' || acao==='pessoa' || acao==='cliente') el.onchange = (e)=>{ ESPELHO[acao] = e.target.value; ESPELHO.carregado=false; ESPELHO.itens=[]; render(); };
+    if(acao==='liberar') el.onchange = async (e)=>{
+      const email = el.dataset.email, liberar = e.target.checked;
+      const {data, error} = await sb.from('impl_acesso').update({ver_espelho: liberar}).eq('email', email).select('email');
+      if(error || !data || !data.length){ e.target.checked = !liberar; avisarErroSalvar(error||'sem permissão'); return; }
+      const a = ACESSOS.find(x=>x.email===email); if(a) a.ver_espelho = liberar;
+      toastSalvo(liberar ? 'Espelho liberado' : 'Espelho bloqueado');
+      render();
+    };
+  });
+}
+
 function render(){
   document.getElementById('login-screen').style.display = STATE.loggedIn ? 'none' : 'flex';
   document.getElementById('app').style.display = STATE.loggedIn ? 'flex' : 'none';
@@ -2037,8 +2192,13 @@ function render(){
   else if(STATE.view==='orcamentos-aluminio') root.innerHTML = renderOrcamentosAluminio();
   else if(STATE.view==='reajustes') root.innerHTML = renderReajustes();
   else if(STATE.view==='cliente') root.innerHTML = renderClienteDetail();
+  else if(STATE.view==='espelho') root.innerHTML = renderEspelho();
+  const navEsp = document.getElementById('nav-espelho');
+  if(navEsp) navEsp.style.display = podeVerEspelho() ? '' : 'none';
+  if(STATE.view==='espelho' && !podeVerEspelho()){ STATE.view='clientes'; return render(); }
   if(window.lucide) lucide.createIcons();
   wireEvents();
+  if(STATE.view==='espelho') wireEspelho();
   hidratarAnexosAnotacoes();
 }
 
@@ -7291,6 +7451,7 @@ async function entrarComSessao(){
       return;
     }
     await carregarTudo();
+    await carregarAcessosEspelho();
     STATE.loggedIn = true;
     const {data:{user}} = await sb.auth.getUser();
     const userEl = document.getElementById('sidebar-user');
