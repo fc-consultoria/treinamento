@@ -3673,7 +3673,7 @@ function renderClienteCadastro(c){
         <div class="desc" style="margin-top:6px;">Marque as linhas que ${c.nome} contratou (ex: Chroma, Ecoline). Só essas aparecem na aba "Componentes" desse cliente, entram na % geral de Componentes e nos avisos automáticos de progresso — cada linha avisa separadamente, dizendo qual delas bateu o marco.</div>
         ${(c.linhas_componentes||[]).length?`<div style="margin-top:14px;">
           <label style="display:block; font-size:12px; font-weight:650; color:var(--text-2); margin-bottom:6px;">Situação de cada linha (o cliente vê no portal)</label>
-          ${(c.linhas_componentes||[]).map(l=>{const st=(c.linhas_status||{})[l]||'';const op=[['','Automática','#6b7a83'],['aguardando','⚪ Aguardando','#6b7a83'],['alimentando','🟢 Em alimentação','#1f7a45'],['concluida','✅ Concluída','#0a6d6f']];
+          ${[...(c.linhas_componentes||[]),'Vidro'].map(l=>{const st=(c.linhas_status||{})[l]||'';const op=[['','Automática','#6b7a83'],['aguardando','⚪ Aguardando','#6b7a83'],['alimentando','🟢 Em alimentação','#1f7a45'],['concluida','✅ Concluída','#0a6d6f']];
             return `<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:4px 0"><b style="min-width:120px;font-size:13.5px">${l}</b>${op.map(([v,t])=>`<button class="chip ${st===v?'active':''}" data-action="set-linha-status" data-linha="${l}" data-valor="${v}">${t}</button>`).join('')}</div>`;}).join('')}
           <div class="desc" style="margin-top:6px;">Quando você começar a alimentar uma linha, marque 🟢 Em alimentação; ao terminar, ✅ Concluída. "Automática" segue a % alimentada. Os perfis por metro entram na linha pelo início do código (LG = Gold, SU = Suprema); os demais aparecem como "Outros perfis". A situação aparece para o cliente na hora; os números (% e itens) seguem a publicação do andamento.</div>
         </div>`:''}
@@ -3837,7 +3837,7 @@ async function salvarFornecedorCliente(clienteId, cat, nome, marcar){
   const {error} = marcar
     ? await q.upsert({cliente_id:clienteId, categoria:cat, fornecedor:nome}, {onConflict:'cliente_id,categoria,fornecedor'})
     : await q.delete().eq('cliente_id', clienteId).eq('categoria', cat).eq('fornecedor', nome);
-  if(error) avisarErroSalvar(error); else toastSalvo('Salvo');
+  if(error) avisarErroSalvar(error); else { toastSalvo('Salvo'); sb.rpc('impl_portal_atualizar_linhas',{p_cliente:clienteId}).then(()=>{},()=>{}); }
 }
 function marcarFornecedorCliente(c, cat, nome, marcar){
   c.fornecedoresSel = c.fornecedoresSel || {componentes:[],vidro:[],perfis:[]};
@@ -4277,9 +4277,9 @@ function renderBancoProprio(c, cat){
     <div class="panel-head">
       <div><h3>${icon(cat==='vidro'?'square':'palette')} ${info.titulo} — banco de ${escapeHtml(c.nome)}</h3>
       <div class="desc">${info.ajuda} Este banco é só deste cliente.</div></div>
-      <label class="btn btn-primary" style="cursor:pointer;">${icon('file-spreadsheet')} Importar planilha Excel<input type="file" accept=".xlsx,.xls,.csv" data-action="bp-arquivo" data-cat="${cat}" style="display:none;"></label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;"><label class="btn" style="cursor:pointer;" title="Print, foto ou PDF da tabela de preços do cliente (fica guardado, não importa itens)">${icon('paperclip')} Anexar print ou PDF<input type="file" accept="image/*,.pdf" multiple data-action="bp-anexo" data-cat="${cat}" style="display:none;"></label><label class="btn btn-primary" style="cursor:pointer;">${icon('file-spreadsheet')} Importar planilha Excel<input type="file" accept=".xlsx,.xls,.csv" data-action="bp-arquivo" data-cat="${cat}" style="display:none;"></label></div>
     </div>
-    ${arqs.length ? `<div style="padding:10px 18px; border-bottom:1px solid var(--border-2); display:flex; flex-wrap:wrap; gap:8px; align-items:center;"><span class="desc">Planilhas importadas:</span>${arqs.slice(0,6).map(a=>`<button class="btn btn-sm btn-ghost" ${a.storage_path?`data-action="abrir-pdf-assinado" data-path="${escapeHtml(a.storage_path)}"`:'disabled'} title="Abrir o arquivo">${icon('paperclip')} ${escapeHtml(a.nome)} · ${a.itens||0} ${info.plural} · ${new Date(a.criado_em).toLocaleDateString('pt-BR')}</button>`).join('')}</div>` : ''}
+    ${arqs.length ? `<div style="padding:10px 18px; border-bottom:1px solid var(--border-2); display:flex; flex-wrap:wrap; gap:8px; align-items:center;"><span class="desc">Tabelas de preço do cliente:</span>${arqs.slice(0,12).map(a=>`<button class="btn btn-sm btn-ghost" ${a.storage_path?`data-action="abrir-pdf-assinado" data-path="${escapeHtml(a.storage_path)}"`:'disabled'} title="Abrir o arquivo">${icon('paperclip')} ${escapeHtml(a.nome)} · ${a.itens||0} ${info.plural} · ${new Date(a.criado_em).toLocaleDateString('pt-BR')}</button>`).join('')}</div>` : ''}
     ${itens.length ? `
     <div style="padding:12px 18px; display:flex; gap:10px; flex-wrap:wrap; align-items:center; border-bottom:1px solid var(--border-2);">
       <div class="searchbox" style="min-width:260px; flex:1 1 260px; max-width:480px;">${icon('search')}<input placeholder="Pesquisar ${info.sing}" value="${escapeHtml(f.busca)}" data-action="bp-busca" data-cat="${cat}"></div>
@@ -4364,6 +4364,21 @@ async function importarPlanilhaBancoProprio(c, cat, file){
   if(!error){ c.itensProprios = c.itensProprios || {vidro:[], perfis_kg:[]}; c.itensProprios[cat] = (data||[]).map(mapItemProprio); }
   if(!reg.error && reg.data){ c.arquivosProprios = c.arquivosProprios || []; c.arquivosProprios.unshift(reg.data); }
   toastSalvo(lida.itens.length+' '+info.plural+' importados');
+  render();
+}
+
+// Anexa print/foto/PDF da tabela de preços do cliente (sem importar itens): fica na lista de tabelas do cliente
+async function anexarTabelaCliente(c, cat, files){
+  for(const file of files){
+    const nomeSeguro = file.name.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^\w.\-]+/g,'_');
+    const path = `clientes/${c.id}/${cat}/${Date.now()}-${nomeSeguro}`;
+    const up = await sb.storage.from(ORCAMENTOS_BUCKET).upload(path, file, {upsert:false, contentType:file.type||undefined});
+    if(up.error){ avisarErroSalvar(up.error); return; }
+    const reg = await sb.from('impl_cliente_arquivos').insert({cliente_id:c.id, categoria:cat, nome:file.name, storage_path:path, itens:0}).select().single();
+    if(reg.error){ avisarErroSalvar(reg.error); return; }
+    c.arquivosProprios = c.arquivosProprios || []; c.arquivosProprios.unshift(reg.data);
+  }
+  toastSalvo(files.length>1 ? files.length+' arquivos anexados' : 'Arquivo anexado');
   render();
 }
 
@@ -5857,6 +5872,10 @@ function wireEvents(){
           if(n){ n.focus(); const L = n.value.length; try{ n.setSelectionRange(L,L); }catch(_e){} }
         }, 250);
       };
+      return;
+    }
+    if(action==='bp-anexo'){
+      el.onchange = async (e)=>{ const c = CLIENTS.find(x=>x.id===STATE.clientId); const fs=[...(e.target.files||[])]; e.target.value=''; if(c && fs.length) await anexarTabelaCliente(c, el.dataset.cat, fs); };
       return;
     }
     if(action==='bp-arquivo'){
