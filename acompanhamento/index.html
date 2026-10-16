@@ -46,6 +46,9 @@ h1,h2,h3{font-family:var(--display);margin:0;letter-spacing:-.01em}
 .dia .d{font-size:12px;color:var(--muted)}
 .dia .n{font-family:var(--display);font-weight:600;font-size:18px;color:var(--teal-d)}
 .dia.ult{border-color:var(--teal);background:var(--teal-soft)}
+.bases{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:13.5px;margin:-2px 0 12px}
+.base{background:var(--teal-soft);border-radius:8px;padding:3px 10px}
+.base b{color:var(--teal-d);font-weight:600}
 .linha{padding:14px 0;border-top:1px solid var(--line)}
 .linha:first-child{border-top:0;padding-top:2px}
 .lh{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
@@ -130,6 +133,12 @@ function situacaoHtml(s){
   if(!corpo) return '';
   return `<section class="sit" role="status"><span class="ic" aria-hidden="true">${ic}</span><div><b>${esc(tit)}</b><p>${esc(corpo)}</p>${s.em?`<div class="em">Informado em ${esc(dt(s.em))} às ${esc(hora(s.em))}</div>`:''}</div></section>`;
 }
+function baseHtml(f){
+  if(!f) return '';
+  const item=(rot,lista)=>(lista&&lista.length)?`<span class="base"><span class="muted">${rot}</span> <b>${esc(lista.join(', '))}</b></span>`:'';
+  const partes=[item('Componentes ·',f.componentes),item('Perfis ·',f.perfis)].filter(Boolean);
+  return partes.length?`<div class="bases"><span class="muted">Base de preços usada:</span>${partes.join('')}</div>`:'';
+}
 function etapasHtml(et){
   if(!et||!et.length) return '';
   const atual=et.findIndex(e=>!e.feita);
@@ -195,7 +204,7 @@ function render(r){
     ${situacaoHtml(atual.dados.situacao)}
     ${etapasHtml(atual.dados.etapas)}
     ${ritmo.length>1?`<section class="sec"><h2>Ritmo das últimas atualizações</h2><div class="ritmo">${ritmo.map((x,i)=>`<div class="dia ${i===0?'ult':''}"><div class="d">${esc(dt(x.em))}</div><div class="n">+${n(x.d)}</div></div>`).join('')}</div></section>`:''}
-    <section class="sec card"><h2>Andamento por linha</h2>${L.map(linhaHtml).join('')}</section>
+    <section class="sec card"><h2>Andamento por linha</h2>${baseHtml(atual.dados.fornecedores)}${L.map(linhaHtml).join('')}</section>
     <section class="sec card site">
       <div class="frame"><iframe src="${SITE_FC}" title="Prévia do site da FC Consultoria" loading="lazy" tabindex="-1"></iframe><a href="${SITE_FC}" target="_blank" rel="noopener" aria-label="Abrir o site da FC Consultoria"></a></div>
       <div><h2 style="margin-bottom:6px">Conheça a FC Consultoria</h2>

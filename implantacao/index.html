@@ -354,7 +354,7 @@ tbody tr:hover{background:var(--panel-2);}
       <button class="navitem" id="btn-logout"><i data-lucide="log-out"></i> Sair</button>
     </div>
     <div class="sidebar-foot">
-      Painel de implantação — dados salvos em banco de dados real (Supabase), acesso restrito à equipe.<br><b>Versão 15/10f — novo cliente versão nova</b>
+      Painel de implantação — dados salvos em banco de dados real (Supabase), acesso restrito à equipe.<br><b>Versão 15/10g — fornecedor base de componentes e perfis</b>
     </div>
   </nav>
   <div class="mobile-topbar">
@@ -1992,7 +1992,7 @@ function renderClientes(){
           <div>
             <h4>${c.nome}</h4>
             ${PORTAIS[c.id] ? (PORTAIS[c.id].ativo ? '<div style="margin:3px 0 4px;"><span style="background:#dff2f1; color:#0a6d6f; font-size:11.5px; font-weight:650; border-radius:99px; padding:2px 9px;">📡 Acompanhamento online</span></div>' : '<div style="margin:3px 0 4px;"><span style="background:#f1f3f5; color:#6b7280; font-size:11.5px; font-weight:650; border-radius:99px; padding:2px 9px;">Link do cliente desativado</span></div>') : ''}
-            <div class="meta">Fornecedor base: <b style="color:var(--text)">${c.fornecedor}</b></div>
+            <div class="meta">Fornecedor base: <b style="color:var(--text)">${c.fornecedor}</b>${PORTAIS[c.id] && (c.fornecedoresSel&&c.fornecedoresSel.perfis||[]).length ? ` · Perfis: <b style="color:var(--text)">${escapeHtml(c.fornecedoresSel.perfis.join(', '))}</b>` : ''}</div>
           </div>
           <span class="badge ${s.cls}">${icon(s.icon)} ${s.label}</span>
         </div>
@@ -6490,9 +6490,13 @@ function openNovoClienteModal(versaoNova){
     <div class="modal-head"><h3>${versaoNova ? 'Novo cliente · versão nova' : 'Novo cliente'}</h3><button class="iconbtn" data-close>${icon('x')}</button></div>
     <div class="modal-body">
       <div class="field"><label>Nome do cliente</label><input id="nc-nome" placeholder="Ex: Vidraçaria Modelo"></div>
-      <div class="field"><label>Fornecedor base</label>
+      <div class="field"><label>${versaoNova ? 'Fornecedor base · Componentes' : 'Fornecedor base'}</label>
         <select id="nc-fornecedor">${getAllFornecedores().map(f=>`<option value="${f}">${f}</option>`).join('')}</select>
       </div>
+      ${versaoNova ? `<div class="field"><label>Fornecedor base · Perfis</label>
+        <select id="nc-forn-perfis"><option value="">Definir depois</option>${fornecedoresDisponiveisCategoria('perfis').map(f=>`<option value="${escapeHtml(f)}">${escapeHtml(f)}</option>`).join('')}</select>
+        <div class="desc" style="margin-top:4px;">O cliente vê no acompanhamento qual base de preços está sendo usada (só o nome do fornecedor, nunca preço ou desconto).</div>
+      </div>` : ''}
       <div class="field-row">
         <div class="field"><label>Data de início</label><input id="nc-inicio" type="date" min="2015-01-01" max="2030-12-31"></div>
         <div class="field"><label>Data de finalização</label><input id="nc-fim" type="date" min="2015-01-01" max="2030-12-31"></div>
@@ -6560,6 +6564,14 @@ function openNovoClienteModal(versaoNova){
     });
     btn.disabled = false;
     if(!row) return;
+    const fornSelNovo = {componentes:[], vidro:[], perfis:[]};
+    if(versaoNova){
+      const fComp = wrap.querySelector('#nc-fornecedor').value, fPerf = wrap.querySelector('#nc-forn-perfis').value;
+      const linhasForn = [];
+      if(fComp){ linhasForn.push({cliente_id:row.id, categoria:'componentes', fornecedor:fComp}); fornSelNovo.componentes.push(fComp); }
+      if(fPerf){ linhasForn.push({cliente_id:row.id, categoria:'perfis', fornecedor:fPerf}); fornSelNovo.perfis.push(fPerf); }
+      if(linhasForn.length){ const {error:eF} = await sb.from('impl_cliente_fornecedores').upsert(linhasForn, {onConflict:'cliente_id,categoria,fornecedor'}); if(eF) console.warn('fornecedores do cliente:', eF); }
+    }
     if(versaoNova){
       btn.disabled = true; btn.textContent = 'Ligando o acompanhamento online…';
       const erros = await ativarVersaoNova(row.id, wrap.querySelector('#nc-crono').value || null);
@@ -6572,7 +6584,8 @@ function openNovoClienteModal(versaoNova){
       alimentadosComponentes: {},
       alimentadosVidro: {}, alimentadosPerfis: {},
       cotacaoComponentes: {}, cotacaoVidro: {}, cotacaoPerfis: {},
-      perfisMetro:[], perfisMetroPdfs:[], conferencia:{}, orcamentos:[], orcamentosRegistro:[]
+      perfisMetro:[], perfisMetroPdfs:[], conferencia:{}, orcamentos:[], orcamentosRegistro:[],
+      fornecedoresSel: fornSelNovo
     });
     closeModal();
     render();
