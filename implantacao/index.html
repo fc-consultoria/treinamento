@@ -354,7 +354,7 @@ tbody tr:hover{background:var(--panel-2);}
       <button class="navitem" id="btn-logout"><i data-lucide="log-out"></i> Sair</button>
     </div>
     <div class="sidebar-foot">
-      Painel de implantação — dados salvos em banco de dados real (Supabase), acesso restrito à equipe.<br><b>Versão 15/10l — link do cliente na Visão geral</b>
+      Painel de implantação — dados salvos em banco de dados real (Supabase), acesso restrito à equipe.<br><b>Versão 15/10m — planilhas recebidas do cliente</b>
     </div>
   </nav>
   <div class="mobile-topbar">
@@ -600,7 +600,9 @@ async function carregarClientes(){
   // Acompanhamento online (versão nova): quem já tem link do portal do cliente. Falha aqui não trava o painel.
   try{
     const [ri, ra] = await Promise.all([fetchAllRows('impl_cliente_itens', '*', 'criado_em'), fetchAllRows('impl_cliente_arquivos', '*', 'criado_em', false)]);
-    CLIENTS.forEach(c=>{ c.itensProprios = {vidro:[], perfis_kg:[]}; c.arquivosProprios = []; });
+    CLIENTS.forEach(c=>{ c.itensProprios = {vidro:[], perfis_kg:[]}; c.arquivosProprios = []; c.recebidosPortal = []; });
+    try{ const rr = await sb.from('impl_portal_recebidos').select('id,cliente_id,etapa,nome,tipo,tamanho,recebido_em,visto,importado_em').order('recebido_em',{ascending:false}).limit(500);
+      if(!rr.error) (rr.data||[]).forEach(r=>{ const c = CLIENTS.find(x=>x.id===r.cliente_id); if(c) c.recebidosPortal.push(r); }); }catch(_){}
     if(!ri.error) (ri.data||[]).forEach(r=>{ const c = CLIENTS.find(x=>x.id===r.cliente_id); if(c && c.itensProprios[r.categoria]) c.itensProprios[r.categoria].push(mapItemProprio(r)); });
     if(!ra.error) (ra.data||[]).forEach(r=>{ const c = CLIENTS.find(x=>x.id===r.cliente_id); if(c) c.arquivosProprios.push(r); });
   }catch(e){ console.warn('banco próprio do cliente:', e); }
@@ -2925,11 +2927,47 @@ function renderLinkClientePortal(c){
     <span class="desc" style="flex-basis:100%;">${p.modo==='manual'?'Publicação manual':'Atualiza às 07:00, de segunda a sexta'}. Publicar agora, situação do dia e desativar ficam no Painel da Matriz → 📡 Acompanhamento.</span>
   </div>`;
 }
+// Arquivos que o cliente enviou pelo link (etapas 3, 4 e 5)
+const ETAPA_IMPORTA = {3:'vidro', 5:'perfis_kg'};
+function renderRecebidosPortal(c){
+  const lista = c.recebidosPortal || [];
+  if(!lista.length) return '';
+  const novos = lista.filter(r=>!r.visto).length;
+  const nomeEtapa = n => (typeof ETAPAS_IMPL!=='undefined' && ETAPAS_IMPL[n-1]) ? ETAPAS_IMPL[n-1].titulo : 'Etapa '+n;
+  return `<div class="panel" style="padding:0;">
+    <div class="panel-head"><div><h3>📥 Recebido do cliente ${novos?`<span class="badge" style="background:#fdf0d9;color:#8a5a12;">${novos} novo(s)</span>`:''}</h3>
+    <div class="desc">Arquivos que ${escapeHtml(c.nome)} enviou pelo link de acompanhamento. Confira e, se estiver certo, importe e conclua a etapa na aba Etapas.</div></div></div>
+    ${lista.slice(0,15).map(r=>{
+      const cat = ETAPA_IMPORTA[r.etapa], planilha = ['xlsx','xls','csv'].includes(r.tipo);
+      return `<div style="padding:10px 18px; border-top:1px solid var(--border-2); display:flex; gap:10px; align-items:center; flex-wrap:wrap; ${r.visto?'':'background:#fffbeb;'}">
+        <div style="flex:1; min-width:240px;"><b style="font-size:13.5px;">${escapeHtml(r.nome)}</b>
+          <div class="desc">Etapa ${r.etapa} — ${escapeHtml(nomeEtapa(r.etapa))} · ${new Date(r.recebido_em).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}${r.tamanho?` · ${Math.max(1,Math.round(r.tamanho/1024))} KB`:''}${r.importado_em?' · <span style="color:var(--ok);font-weight:600;">importado</span>':''}</div></div>
+        <button class="btn btn-sm" data-action="recebido-baixar" data-id="${r.id}">${icon('download')} Baixar</button>
+        ${cat && planilha ? `<button class="btn btn-sm btn-primary" data-action="recebido-importar" data-id="${r.id}">${icon('file-spreadsheet')} Importar para ${cat==='vidro'?'Vidro':'Perfis por kg'}</button>` : ''}
+        ${r.visto ? '' : `<button class="btn btn-sm btn-ghost" data-action="recebido-visto" data-id="${r.id}">Marcar como visto</button>`}
+      </div>`;}).join('')}
+  </div>`;
+}
+async function baixarRecebido(id){
+  const {data, error} = await sb.rpc('impl_portal_baixar', {p_id:id});
+  if(error || !data){ avisarErroSalvar(error||{message:'arquivo não encontrado'}); return null; }
+  const bin = atob(data.base64), bytes = new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++) bytes[i] = bin.charCodeAt(i);
+  const tipos = {xlsx:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', xls:'application/vnd.ms-excel', csv:'text/csv', pdf:'application/pdf', png:'image/png', jpg:'image/jpeg', jpeg:'image/jpeg', webp:'image/webp'};
+  return new File([bytes], data.nome, {type: tipos[data.tipo]||'application/octet-stream'});
+}
+async function marcarRecebido(c, id, campos){
+  const {error} = await sb.from('impl_portal_recebidos').update(campos).eq('id', id);
+  if(error){ avisarErroSalvar(error); return; }
+  const r = (c.recebidosPortal||[]).find(x=>x.id===id); if(r) Object.assign(r, campos);
+  render();
+}
 function renderClienteVisao(c,p,pGeral){
   const circumference = 2*Math.PI*46;
   const dash = circumference*(p.pct/100);
   return `
   ${renderLinkClientePortal(c)}
+  ${renderRecebidosPortal(c)}
   ${renderPainelAvisosLinhas(c)}
   <div class="panel" style="padding:22px;">
     <div class="panel-head" style="padding:0 0 14px;">
@@ -6403,6 +6441,23 @@ function wireEvents(){
         const lista = itensProprios(c, el.dataset.cat), it = lista[+el.dataset.idx]; if(!it) return;
         if(!confirm('Excluir "'+it.descricao+'" do banco de '+c.nome+'?')) return;
         (async()=>{ const {error} = await sb.from('impl_cliente_itens').delete().eq('id', it._id); if(error){ avisarErroSalvar(error); return; } c.itensProprios[el.dataset.cat] = lista.filter(x=>x!==it); toastSalvo('Excluído'); render(); })();
+        return;
+      }
+      if(action==='recebido-baixar' || action==='recebido-importar' || action==='recebido-visto'){
+        const c = CLIENTS.find(x=>x.id===STATE.clientId); if(!c) return;
+        const id = el.dataset.id, r = (c.recebidosPortal||[]).find(x=>x.id===id); if(!r) return;
+        if(action==='recebido-visto'){ marcarRecebido(c, id, {visto:true}); return; }
+        (async()=>{
+          el.disabled = true;
+          const f = await baixarRecebido(id);
+          el.disabled = false;
+          if(!f) return;
+          if(action==='recebido-baixar'){ const u = URL.createObjectURL(f); const a = document.createElement('a'); a.href=u; a.download=f.name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(u), 5000); if(!r.visto) marcarRecebido(c, id, {visto:true}); return; }
+          const cat = ETAPA_IMPORTA[r.etapa];
+          const antes = itensProprios(c, cat).length;
+          await importarPlanilhaBancoProprio(c, cat, f);
+          if(itensProprios(c, cat).length!==antes || (c.arquivosProprios||[]).some(a=>a.nome===f.name)) marcarRecebido(c, id, {visto:true, importado_em:new Date().toISOString()});
+        })();
         return;
       }
       if(action==='copiar-link-portal'){

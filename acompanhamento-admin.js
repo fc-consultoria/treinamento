@@ -21,12 +21,13 @@
       for(const r of [c,p,f]) if(r.error) throw r.error;
       S.cli=c.data||[];S.por={};(p.data||[]).forEach(x=>S.por[x.cliente_id]=x);
       S.fotos={};(f.data||[]).forEach(x=>{if(!S.fotos[x.cliente_id])S.fotos[x.cliente_id]=x;});
+      S.novos={};try{const rr=await sb.from('impl_portal_recebidos').select('cliente_id').eq('visto',false);if(!rr.error)(rr.data||[]).forEach(x=>S.novos[x.cliente_id]=(S.novos[x.cliente_id]||0)+1);}catch(_){}
       S.erro='';S.carregado=true;
     }catch(e){console.error(e);S.erro=(e&&e.message)||String(e);S.carregado=true;}
     render();
   }
   window.acompLoad=carregar;
-  window.ACOMP_INFO=()=>{const n=Object.values(S.por).filter(x=>x.ativo).length;return S.carregado?(n+' cliente'+(n===1?'':'s')+' online'):'';};
+  window.ACOMP_INFO=()=>{const n=Object.values(S.por).filter(x=>x.ativo).length,r=Object.values(S.novos||{}).reduce((a,b)=>a+b,0);return S.carregado?(r?`📥 ${r} arquivo${r>1?'s':''} recebido${r>1?'s':''} de cliente`:(n+' cliente'+(n===1?'':'s')+' online')):'';};
 
   const btn=(acao,txt,extra,estilo)=>`<button type="button" data-ac="${acao}" ${extra||''} style="font:600 13.5px var(--f-body);padding:7px 12px;border-radius:8px;cursor:pointer;border:1px solid ${estilo==='pri'?'var(--accent)':estilo==='bad'?'var(--bad)':'var(--line)'};background:${estilo==='pri'?'var(--accent)':'#fff'};color:${estilo==='pri'?'#fff':estilo==='bad'?'var(--bad)':'var(--fg)'}">${txt}</button>`;
   const rot=t=>`<div style="font:600 12px var(--f-body);text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:14px 0 6px">${t}</div>`;
@@ -74,6 +75,7 @@
         <button type="button" data-ac="abrir" data-id="${c.id}" style="all:unset;box-sizing:border-box;width:100%;cursor:pointer;display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:12px 14px">
           <b style="font:600 16px var(--f-display)">${esc(c.nome)}</b>${badge}
           ${p&&p.situacao?'<span style="background:#fdf0d9;color:#8a5a12;font:600 12px var(--f-body);padding:2px 8px;border-radius:99px">situação informada</span>':''}
+          ${(S.novos||{})[c.id]?`<span style="background:#fdf0d9;color:#8a5a12;font:600 12px var(--f-body);padding:2px 8px;border-radius:99px" title="Abra o cliente no Painel de Implantação → Visão geral → Recebido do cliente">📥 ${S.novos[c.id]} arquivo(s) recebido(s)</span>`:''}
           <span style="margin-left:auto;color:var(--muted);font-size:13px">${f?'Última publicação: '+esc(quando(f.publicado_em))+(f.origem==='auto'?' (automática)':' (manual)'):(p?'Ainda sem publicação':'')}</span><span style="color:var(--muted)">${ab?'▲':'▼'}</span></button>
         ${ab?`<div style="padding:0 14px 14px;border-top:1px solid var(--line)">${corpo(c)}</div>`:''}</div>`;}).join('')}</div>`;
   }

@@ -92,6 +92,14 @@ details summary{cursor:pointer;color:var(--teal-d);font-weight:500;margin-top:8p
 .tag.cli{background:#e8eefc;color:#2a4a9a}
 .st{font-size:12.5px;font-weight:600;white-space:nowrap}
 .st.ok{color:var(--teal-d)}.st.and{color:var(--amber)}.st.prev{color:var(--muted);font-weight:500}
+.acoes{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.btn2{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:#fff;color:var(--fg);border-radius:9px;padding:7px 12px;font-size:13px;font-weight:600;text-decoration:none;cursor:pointer}
+.btn2:hover{border-color:var(--teal)}
+.btn2.pri{background:var(--teal);border-color:var(--teal);color:#fff}
+.btn2[aria-disabled="true"]{opacity:.6;cursor:wait}
+.rec{margin-top:6px;font-size:12.5px;color:var(--teal-d);display:grid;gap:2px}
+.aviso{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:#16252b;color:#fff;padding:10px 16px;border-radius:99px;font-size:14px;z-index:50;max-width:92vw;text-align:center}
+.aviso.ruim{background:#b42318}
 .estado{max-width:520px;margin:60px auto;text-align:center}
 .estado h2{font-size:20px;margin-bottom:8px}
 </style>
@@ -112,6 +120,10 @@ details summary{cursor:pointer;color:var(--teal-d);font-weight:500;margin-top:8p
 const SUPABASE_URL='https://cpkjphodruyxfouirhpd.supabase.co';
 const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNwa2pwaG9kcnV5eGZvdWlyaHBkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3Mzg3NTQsImV4cCI6MjEwMjMxNDc1NH0.5OAmhWSe_4STLaCo-NfAwxGDRCGe3ICk-j5IEAMStKQ';
 const SITE_FC='https://fc-consultoria.github.io/';
+// Envio de arquivos pelo cliente nas etapas que dependem dele (3, 4 e 5)
+const ENVIO={chave:'',previa:false,sb:null,recebidos:[],enviando:null};
+const MODELOS={3:{arq:'modelos/planilha-preco-vidros.xlsx',txt:'Baixar planilha de vidros'},5:{arq:'modelos/planilha-preco-perfis-kg-por-cor.xlsx',txt:'Baixar planilha de preço por cor'}};
+const ACEITOS=['xlsx','xls','csv','pdf','png','jpg','jpeg','webp'];
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const n=v=>Number(v||0).toLocaleString('pt-BR');
@@ -158,6 +170,19 @@ function etapasDaFoto(dados){
     return ETAPAS_IMPL.map((e,i)=>{const s=m[i+1]||{};return {titulo:e.titulo,responsavel:e.quem,data:s.data_prevista||diaUtil(ei.inicio,e.dia),feita:s.status==='concluida',status:s.status||'pendente'};});}
   return dados.etapas||[];
 }
+function acoesEtapa(e,i){
+  const n=i+1;
+  if(e.responsavel!=='cliente'||![3,4,5].includes(n)) return '';
+  const rec=ENVIO.recebidos.filter(r=>r.etapa===n);
+  const recHtml=rec.length?`<div class="rec">${rec.slice(0,3).map(r=>`<div>✓ Recebido: <b>${esc(r.nome)}</b> · ${esc(dt(r.em))} às ${esc(hora(r.em))} <span class="muted">· em conferência pela FC</span></div>`).join('')}</div>`:'';
+  if(e.feita) return recHtml;
+  const mod=MODELOS[n];
+  const enviando=ENVIO.enviando===n;
+  return `${recHtml}<div class="acoes">
+    ${mod?`<a class="btn2" href="${mod.arq}" download>⬇ ${mod.txt}</a>`:''}
+    ${ENVIO.previa?'<span class="muted" style="font-size:12.5px">Envio desativado na prévia</span>':`<label class="btn2 pri" ${enviando?'aria-disabled="true"':''}>${enviando?'Enviando…':(rec.length?'⬆ Enviar outro arquivo':(n===4?'⬆ Enviar cotação (Excel, PDF ou print)':'⬆ Enviar planilha preenchida'))}<input type="file" accept=".xlsx,.xls,.csv,.pdf,.png,.jpg,.jpeg,.webp" data-enviar="${n}" ${enviando?'disabled':''} hidden></label>`}
+  </div>`;
+}
 function etapasHtml(et){
   if(!et||!et.length) return '';
   const atual=et.findIndex(e=>!e.feita);
@@ -167,7 +192,7 @@ function etapasHtml(et){
     const cls=e.feita?'feita':(i===atual?'atual':'');
     const andamento=e.status==='andamento'||e.status==='aguardando'||i===atual;
     const st=e.feita?'<span class="st ok">✓ Concluída</span>':(andamento?((e.responsavel==='cliente'||e.status==='aguardando')?'<span class="st and">Aguardando sua equipe</span>':'<span class="st and">Em andamento</span>'):'<span class="st prev">Prevista</span>');
-    return `<li class="et ${cls}"><span class="nb">${e.feita?'✓':i+1}</span><div><div class="ti">${esc(e.titulo)} ${e.responsavel==='cliente'?'<span class="tag cli">Sua equipe</span>':''}</div>${e.data?`<div class="dd">${esc(dcurta(e.data))}</div>`:''}</div>${st}</li>`;}).join('')}</ol></section>`;
+    return `<li class="et ${cls}"><span class="nb">${e.feita?'✓':i+1}</span><div><div class="ti">${esc(e.titulo)} ${e.responsavel==='cliente'?'<span class="tag cli">Sua equipe</span>':''}</div>${e.data?`<div class="dd">${esc(dcurta(e.data))}</div>`:''}${acoesEtapa(e,i)}</div>${st}</li>`;}).join('')}</ol></section>`;
 }
 const normCod=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[\s\-\.\/_]+/g,'');
 
@@ -247,9 +272,27 @@ function render(r){
     if(error) throw error;
     if(previa) document.body.insertAdjacentHTML('afterbegin','<div style="background:#b86e00;color:#fff;text-align:center;font:600 14px var(--body);padding:8px 12px">PRÉVIA da próxima publicação · o cliente ainda não vê isto</div>');
     if(!data){estado('Link desativado','Este link não está mais ativo. Peça um novo link para a FC Consultoria.');return;}
+    ENVIO.chave=chave;ENVIO.previa=previa;ENVIO.sb=sb;ENVIO.recebidos=data.recebidos||[];ENVIO.ultimo=data;
     render(data);
   }catch(e){console.error(e);estado('Não foi possível carregar','Verifique sua internet e recarregue a página.');}
 })();
+function aviso(t,ruim){document.querySelectorAll('.aviso').forEach(x=>x.remove());const d=document.createElement('div');d.className='aviso'+(ruim?' ruim':'');d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),4200);}
+document.addEventListener('change',async ev=>{
+  const inp=ev.target.closest('input[data-enviar]');if(!inp)return;
+  const f=inp.files&&inp.files[0];inp.value='';if(!f)return;
+  const n=Number(inp.dataset.enviar),ext=(f.name.split('.').pop()||'').toLowerCase();
+  if(!ACEITOS.includes(ext)){aviso('Envie Excel, PDF ou imagem (print).',true);return;}
+  if(f.size>5*1024*1024){aviso('Arquivo maior que 5 MB. Reduza ou envie pelo WhatsApp.',true);return;}
+  ENVIO.enviando=n;render(ENVIO.ultimo);
+  try{
+    const b64=await new Promise((ok,erro)=>{const r=new FileReader();r.onload=()=>ok(String(r.result).split(',')[1]||'');r.onerror=erro;r.readAsDataURL(f);});
+    const {error}=await ENVIO.sb.rpc('impl_portal_enviar',{p_chave:ENVIO.chave,p_etapa:n,p_nome:f.name,p_base64:b64});
+    if(error)throw error;
+    ENVIO.recebidos.unshift({etapa:n,nome:f.name,em:new Date().toISOString()});
+    aviso('Arquivo recebido! A FC vai conferir e seguir com a implantação.');
+  }catch(e){console.error(e);aviso('Não foi possível enviar: '+((e&&e.message)||'tente de novo'),true);}
+  ENVIO.enviando=null;render(ENVIO.ultimo);
+});
 </script>
 </body>
 </html>
