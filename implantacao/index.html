@@ -354,7 +354,7 @@ tbody tr:hover{background:var(--panel-2);}
       <button class="navitem" id="btn-logout"><i data-lucide="log-out"></i> Sair</button>
     </div>
     <div class="sidebar-foot">
-      Painel de implantação — dados salvos em banco de dados real (Supabase), acesso restrito à equipe.<br><b>Versão 15/10j — etapas únicas na aba Etapas</b>
+      Painel de implantação — dados salvos em banco de dados real (Supabase), acesso restrito à equipe.<br><b>Versão 15/10k — clique em Código para classificar</b>
     </div>
   </nav>
   <div class="mobile-topbar">
@@ -4018,7 +4018,7 @@ function renderPerfisMetroLinear(c, vista){
     return bateBuscaItem(it.codigo, it.descricao, mb.termo);
   });
   // Ordem da tabela (só a exibição; não muda nada no banco). Fica lembrada neste navegador.
-  const ordemMetro = STATE.metroOrdem || (()=>{ try{ return localStorage.getItem('impl-metro-ordem')||'importado'; }catch(e){ return 'importado'; } })();
+  const ordemMetro = STATE.metroOrdem || (()=>{ try{ return localStorage.getItem('impl-metro-ordem')||'az'; }catch(e){ return 'importado'; } })();
   STATE.metroOrdem = ordemMetro;
   if(ordemMetro!=='importado'){
     const cmp = (a,b)=> String(a.it.codigo||'').localeCompare(String(b.it.codigo||''),'pt-BR',{numeric:true, sensitivity:'base'}) || String(a.it.descricao||'').localeCompare(String(b.it.descricao||''),'pt-BR',{numeric:true, sensitivity:'base'});
@@ -4086,7 +4086,7 @@ function renderPerfisMetroLinear(c, vista){
     ${itens.length===0 ? (ehPrecos ? emptyState('table','Nenhum preço importado ainda','Clique em "Importar do banco" acima, escolha o orçamento do fornecedor no banco de alumínio e marque os perfis que este cliente vai usar.') : emptyState('table','Nenhum item ainda','Clique em "Novo item" ou anexe o PDF do orçamento acima pra detectar os itens automaticamente.')) : visiveis.length===0 ? emptyState('search','Nada encontrado','Nenhum item bate com a pesquisa. Ajuste o termo ou limpe o filtro.') : `
     <div style="overflow-x:auto;">
     <table>
-      <thead><tr><th style="width:40px;"><input type="checkbox" data-action="toggle-selecao-metro-todos" ${visiveis.length>0 && visiveis.every(({it})=>it._selecionado)?'checked':''}></th><th style="width:80px;">Alimentado <input type="checkbox" class="chk" title="Marcar todos os itens exibidos como alimentados" data-action="marcar-todos-metro-alimentado" ${visiveis.length>0 && visiveis.filter(({it})=>Number(it.preco)>0||it.alimentado).every(({it})=>it.alimentado) && visiveis.some(({it})=>Number(it.preco)>0||it.alimentado)?'checked':''}></th><th>Código</th><th>Descrição</th><th class="tright">Preço tabela (R$/m)</th>${temReajuste?'<th class="tright">Reajuste</th>':''}${temLiquido?'<th class="tright">Preço líquido (R$/m)</th>':''}<th></th></tr></thead>
+      <thead><tr><th style="width:40px;"><input type="checkbox" data-action="toggle-selecao-metro-todos" ${visiveis.length>0 && visiveis.every(({it})=>it._selecionado)?'checked':''}></th><th style="width:80px;">Alimentado <input type="checkbox" class="chk" title="Marcar todos os itens exibidos como alimentados" data-action="marcar-todos-metro-alimentado" ${visiveis.length>0 && visiveis.filter(({it})=>Number(it.preco)>0||it.alimentado).every(({it})=>it.alimentado) && visiveis.some(({it})=>Number(it.preco)>0||it.alimentado)?'checked':''}></th><th><button type="button" data-action="ordem-metro-th" title="Clique para classificar" style="all:unset; cursor:pointer; font:inherit; text-transform:inherit; letter-spacing:inherit; color:inherit; display:inline-flex; gap:4px; align-items:center;">Código ${ordemMetro==='az'?'▲ A–Z':ordemMetro==='za'?'▼ Z–A':'⇅'}</button></th><th>Descrição</th><th class="tright">Preço tabela (R$/m)</th>${temReajuste?'<th class="tright">Reajuste</th>':''}${temLiquido?'<th class="tright">Preço líquido (R$/m)</th>':''}<th></th></tr></thead>
       <tbody>
       ${visiveis.map(({it,idx})=>`
         <tr>
@@ -5429,6 +5429,10 @@ function wireEvents(){
         const {error} = await sb.from('impl_cliente_itens').update({alimentado: it.alimentado, atualizado_em: new Date().toISOString()}).eq('id', it._id);
         if(error){ it.alimentado = !it.alimentado; avisarErroSalvar(error); render(); } else toastSalvo('Salvo');
       };
+      return;
+    }
+    if(action==='ordem-metro-th'){
+      el.onclick = ()=>{ const prox = {az:'za', za:'importado', importado:'az'}[STATE.metroOrdem||'az']; STATE.metroOrdem = prox; try{ localStorage.setItem('impl-metro-ordem', prox); }catch(_){} render(); };
       return;
     }
     if(action==='ordem-metro'){
