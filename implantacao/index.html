@@ -2049,6 +2049,41 @@ function pingPresencaEquipe(){
 setInterval(pingPresencaEquipe, 45000);
 document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) pingPresencaEquipe(); });
 
+// Cliente com o link de acompanhamento aberto agora (a página do cliente avisa a cada 45 s)
+let PRESENCA_PORTAL = {};
+async function carregarPresencaPortal(){
+  if(!STATE.loggedIn || document.hidden) return;
+  try{
+    const {data, error} = await sb.from('impl_portal_presenca').select('cliente_id,nome,entrou_em,visto_em').gte('visto_em', new Date(Date.now()-120000).toISOString());
+    if(error) return;
+    const novo = {};
+    (data||[]).forEach(r=>(novo[r.cliente_id]=novo[r.cliente_id]||[]).push(r));
+    // Aviso na tela quando alguém acabou de entrar (só para a Matriz)
+    if(ehAdminEspelho() && Object.keys(PRESENCA_PORTAL).length + Object.keys(novo).length){
+      Object.entries(novo).forEach(([cid, lista])=>lista.forEach(r=>{
+        if(!(PRESENCA_PORTAL[cid]||[]).some(x=>x.nome===r.nome) && PRESENCA_PORTAL.__ok){
+          const c = CLIENTS.find(x=>x.id===cid);
+          toastSalvo('👀 '+(r.nome||'Alguém')+' ('+(c?c.nome:'cliente')+') abriu o link de acompanhamento');
+        }
+      }));
+    }
+    novo.__ok = true;
+    PRESENCA_PORTAL = novo;
+    atualizarSelosPresenca();
+  }catch(_){}
+}
+function seloPresencaHtml(cid){
+  const lista = (PRESENCA_PORTAL[cid]||[]);
+  if(!lista.length) return '';
+  const nomes = lista.map(r=>r.nome||'sem nome').join(', ');
+  return '<span title="Com o link de acompanhamento aberto agora" style="display:inline-block; margin-left:6px; background:#dcfce7; color:#15803d; font-size:11.5px; font-weight:700; border-radius:99px; padding:2px 9px;">● Online agora: '+escapeHtml(nomes)+'</span>';
+}
+function atualizarSelosPresenca(){
+  document.querySelectorAll('[data-presenca]').forEach(el=>{ el.innerHTML = seloPresencaHtml(el.dataset.presenca); });
+}
+setInterval(carregarPresencaPortal, 30000);
+document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) carregarPresencaPortal(); });
+
 function podeVerEspelho(){ return !!(MEU_ACESSO && (MEU_ACESSO.admin || MEU_ACESSO.ver_espelho)); }
 function ehAdminEspelho(){ return !!(MEU_ACESSO && MEU_ACESSO.admin); }
 function nomePessoaEspelho(email){
@@ -2212,6 +2247,7 @@ function render(){
   if(window.lucide) lucide.createIcons();
   wireEvents();
   if(STATE.view==='espelho') wireEspelho();
+  atualizarSelosPresenca();
   hidratarAnexosAnotacoes();
 }
 
@@ -2249,7 +2285,7 @@ function renderClientes(){
         <div class="clientcard-top">
           <div>
             <h4>${c.nome}</h4>
-            ${PORTAIS[c.id] ? (PORTAIS[c.id].ativo ? '<div style="margin:3px 0 4px;"><span style="background:#dff2f1; color:#0a6d6f; font-size:11.5px; font-weight:650; border-radius:99px; padding:2px 9px;">📡 Acompanhamento online</span></div>' : '<div style="margin:3px 0 4px;"><span style="background:#f1f3f5; color:#6b7280; font-size:11.5px; font-weight:650; border-radius:99px; padding:2px 9px;">Link do cliente desativado</span></div>') : ''}
+            ${PORTAIS[c.id] ? (PORTAIS[c.id].ativo ? '<div style="margin:3px 0 4px;"><span style="background:#dff2f1; color:#0a6d6f; font-size:11.5px; font-weight:650; border-radius:99px; padding:2px 9px;">📡 Link de acompanhamento ativo</span><span data-presenca="'+c.id+'"></span></div>' : '<div style="margin:3px 0 4px;"><span style="background:#f1f3f5; color:#6b7280; font-size:11.5px; font-weight:650; border-radius:99px; padding:2px 9px;">Link do cliente desativado</span></div>') : ''}
             <div class="meta">Fornecedor base: <b style="color:var(--text)">${c.fornecedor}</b>${PORTAIS[c.id] && (c.fornecedoresSel&&c.fornecedoresSel.perfis||[]).length ? ` · Perfis: <b style="color:var(--text)">${escapeHtml(c.fornecedoresSel.perfis.join(', '))}</b>` : ''}</div>
           </div>
           <span class="badge ${s.cls}">${icon(s.icon)} ${s.label}</span>
@@ -3058,6 +3094,7 @@ function renderClienteDetail(){
         <h2>${c.nome}</h2>
         <span class="badge ${s.cls}">${icon(s.icon)} ${s.label}</span>
         ${semaforoBadge(c,pGeral)}
+        <span data-presenca="${c.id}"></span>
       </div>
       <div style="display:flex; gap:8px;">
         <button class="btn btn-sm" data-action="editar-cliente">${icon('pencil')} Editar</button>
@@ -7493,6 +7530,7 @@ async function entrarComSessao(){
     await carregarAcessosEspelho();
     STATE.loggedIn = true;
     setTimeout(pingPresencaEquipe, 1500);
+    setTimeout(carregarPresencaPortal, 1000);
     const {data:{user}} = await sb.auth.getUser();
     const userEl = document.getElementById('sidebar-user');
     if(userEl && user) userEl.textContent = user.email;
