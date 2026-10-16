@@ -705,7 +705,7 @@ function donoMsg(a){const t1=document.getElementById('wmD1');if(!t1)return;
 function detalhe(){
   const a=ALUNOS.find(x=>x.user_id===sel);if(!a)return;const r=resumo(a.user_id);
   document.getElementById('detCard').hidden=false;document.getElementById('detTit').textContent=(a.nome||a.login)+' · '+a.login;
-  document.getElementById('eNome').value=a.nome||'';document.getElementById('bAtivo').textContent=a.ativo?'Bloquear acesso':'Liberar acesso';
+  document.getElementById('eNome').value=a.nome||'';{const b=document.getElementById('bAtivo');b.textContent=a.ativo?'🚫 Cancelar acesso':'✅ Liberar acesso';b.style.cssText=a.ativo?'color:#b23a32;border-color:#e3b5b1':'color:#1f8a4c;border-color:#9fd4b4';b.title=a.ativo?'O login para de funcionar e quem tentar entrar é levado ao site da FC':'Volta a liberar o login desta empresa';}
   colabUI(a);ctrUI(a);gvSync(a);try{pontosUI(a.user_id);}catch(e){console.warn(e);}try{donoMsg(a);}catch(e){console.warn(e);}
   {const lc=localDe(a.user_id);document.getElementById('eCid').value=lc.cidade||'';document.getElementById('eUf').value=lc.uf||'';
    document.getElementById('bLocal').onclick=async()=>{const b=document.getElementById('bLocal');b.disabled=true;await ins('empresa_local',{para:a.user_id,cidade:document.getElementById('eCid').value.trim(),uf:document.getElementById('eUf').value});b.disabled=false;b.textContent='✔ Salvo';setTimeout(()=>b.textContent='📍 Salvar cidade',2500);carregar();};}
@@ -877,7 +877,7 @@ const senhaSave=(id,v)=>{try{const o=JSON.parse(localStorage.getItem('treinFC-se
 const alert0=t=>{const m=document.getElementById('tbMsg');if(m){m.textContent='Não salvou: '+t;m.hidden=false;setTimeout(()=>m.hidden=true,5000);}};
 const msg=(t,ok)=>{const m=document.getElementById('eMsg');m.textContent=t;m.className='msg '+(ok?'ok':'bad');};
 document.getElementById('bNome').addEventListener('click',async()=>{const {error}=await sb.from('trein_alunos').update({nome:document.getElementById('eNome').value.trim()||null}).eq('user_id',sel);msg(error?'Não salvou: '+error.message:'Nome salvo.',!error);if(!error)carregar();});
-document.getElementById('bAtivo').addEventListener('click',async()=>{const a=ALUNOS.find(x=>x.user_id===sel);const {error}=await sb.from('trein_alunos').update({ativo:!a.ativo}).eq('user_id',sel);msg(error?'Não salvou: '+error.message:(a.ativo?'Acesso bloqueado.':'Acesso liberado.'),!error);if(!error)carregar();});
+document.getElementById('bAtivo').addEventListener('click',async()=>{const a=ALUNOS.find(x=>x.user_id===sel);if(a.ativo&&!confirm('Cancelar o acesso de '+(a.nome||a.login)+'?\n\nO login e os colaboradores param de entrar. Quem abrir o link é levado ao site da FC. O histórico fica guardado e dá para liberar de novo depois.'))return;const {error}=await sb.from('trein_alunos').update({ativo:!a.ativo}).eq('user_id',sel);msg(error?'Não salvou: '+error.message:(a.ativo?'Acesso cancelado. Quem tentar entrar vai para o site da FC.':'Acesso liberado.'),!error);if(!error)carregar();});
 document.getElementById('bSenha').addEventListener('click',async()=>{const inp=document.getElementById('eSenha'),v=inp.value.trim(),b=document.getElementById('bSenha');
   if(v.length<6){msg('A senha precisa ter pelo menos 6 caracteres (você digitou '+v.length+').',false);return;}
   b.disabled=true;b.textContent='Salvando…';const {error}=await sb.rpc('trein_set_senha',{alvo:sel,nova:v});b.disabled=false;b.textContent='💾 Salvar senha';

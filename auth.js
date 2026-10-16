@@ -15,6 +15,7 @@ function gateUI(onOk,{soMatriz=false}={}){
   async function check(){
     const r=await perfilAtual();
     if(!r){gate.hidden=false;return;}
+    if(r.perfil&&!r.perfil.ativo&&r.perfil.papel!=='admin'){await sb.auth.signOut();gate.hidden=false;msg.textContent='Este acesso ao Orientativo FC 3D foi encerrado. Abrindo o site da FC Consultoria…';setTimeout(()=>{location.href='https://fc-consultoria.github.io/?o=encerrado';},3500);return;}
     if(!r.perfil||!r.perfil.ativo){await sb.auth.signOut();gate.hidden=false;msg.textContent='Este acesso não está liberado. Fale com a FC Consultoria.';return;}
     if(soMatriz&&r.perfil.papel!=='admin'){gate.hidden=false;msg.textContent='Esta área é só da matriz.';await sb.auth.signOut();return;}
     gate.hidden=true;onOk(r);
