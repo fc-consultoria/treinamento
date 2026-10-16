@@ -154,6 +154,8 @@ details summary{cursor:pointer;color:var(--teal-d);font-weight:500;margin-top:8p
 .demobar button:hover{background:rgba(255,255,255,.25)}
 .demobar input[type=range]{width:150px;accent-color:#fff}
 .demobar .dmdia{font-weight:600;min-width:130px;text-align:center}
+.festa{background:linear-gradient(135deg,#0e8a8c,#0a6d6f);color:#fff;border-radius:16px;padding:22px 20px;text-align:center;margin-top:16px}
+.festa .fx{font-size:40px;line-height:1}.festa h2{font-size:24px;margin:8px 0 4px}.festa p{margin:0;color:#d5f1f0;font-size:15px}
 .estado{max-width:520px;margin:60px auto;text-align:center}
 .estado h2{font-size:20px;margin-bottom:8px}
 </style>
@@ -329,6 +331,9 @@ function render(r){
   const faltam=L.length-vis.length;
   const seqInfo=L.length>1?`<div class="seqinfo"><span class="p"><i>1</i>Uma linha contratada é alimentada por vez</span><span>→</span><span class="p"><i>2</i>Ao chegar a 100%, fica como concluída</span><span>→</span><span class="p"><i>3</i>A próxima linha aparece aqui</span></div>`:'';
   const proxHtml=faltam>0?`<div class="prox"><span class="cad">🔒</span><span><b style="color:var(--fg)">${faltam} ${faltam>1?'próximas linhas contratadas':'próxima linha contratada'}</b> · ${faltam>1?'aparecem':'aparece'} aqui assim que a linha em alimentação chegar a 100%.</span></div>`:'';
+  const etAll0=etapasDaFoto(atual.dados),concluida=etAll0.length>0&&etAll0.every(e=>e.feita);
+  if(concluida){const k='fc-portal-festa-'+(ENVIO.chave||'demo').slice(0,12);let ja=false;try{ja=!ENVIO.demo&&localStorage.getItem(k)==='1';}catch(_){}
+    if(!ja&&!render._festa){render._festa=true;setTimeout(confete,500);try{if(!ENVIO.demo)localStorage.setItem(k,'1');}catch(_){}}}
   const etAll=etapasDaFoto(atual.dados), etAt=etAll.find(e=>!e.feita);
   $('#topo').innerHTML=`<div class="topo"><span><span class="num">${pctGeral}%</span> <span class="muted">da alimentação concluída</span></span>
     ${etAll.length?`<span class="sep"></span><span>${etAt?`<span class="muted">Etapa ${etAll.indexOf(etAt)+1} de ${etAll.length}:</span> <b>${esc(etAt.titulo)}</b>`:'<b>Implantação concluída ✓</b>'}</span>`:''}
@@ -342,6 +347,7 @@ function render(r){
       <div class="kpi"><div class="l">Avanço nesta atualização</div><div class="v">${ant?avancoGeral:'—'}</div></div>
       <div class="kpi"><div class="l">Etapas concluídas</div><div class="v">${etAll.filter(e=>e.feita).length} <small>de ${etAll.length||10}</small></div></div>
     </div>
+    ${concluida?`<section class="festa" role="status"><div class="fx">🎉</div><h2>Implantação concluída!</h2><p>Todas as linhas contratadas foram alimentadas, conferidas e com margem ajustada. Obrigado pela parceria. Qualquer dúvida no uso do sistema, fale com a FC.</p></section>`:''}
     ${situacaoHtml(atual.dados.situacao)}
     ${etapasHtml(etapasDaFoto(atual.dados))}
     ${ritmo.length>1?`<section class="sec"><h2>Ritmo das últimas atualizações</h2><div class="ritmo">${ritmo.map((x,i)=>`<div class="dia ${i===0?'ult':''}"><div class="d">${esc(dt(x.em))}</div><div class="n">${x.txt}</div></div>`).join('')}</div></section>`:''}
@@ -349,6 +355,10 @@ function render(r){
     <div class="foot">FC Consultoria e Representação · Atendimento de segunda a sexta, das 08:00 às 11:00 e das 13:00 às 17:00</div>`;
 }
 
+function confete(){if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;const c=document.createElement('canvas');c.style.cssText='position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:200';document.body.appendChild(c);
+ const x=c.getContext('2d'),W=c.width=innerWidth,H=c.height=innerHeight,cores=['#f59e0b','#0e8a8c','#1fb3c9','#f97316','#1f9d55','#ffffff'];
+ const P=Array.from({length:140},()=>({x:Math.random()*W,y:-20-Math.random()*H*.5,vx:(Math.random()-.5)*3,vy:2+Math.random()*3,r:4+Math.random()*5,a:Math.random()*6,va:(Math.random()-.5)*.3,c:cores[Math.random()*cores.length|0]}));
+ const t0=performance.now();(function f(t){x.clearRect(0,0,W,H);P.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.a+=p.va;x.save();x.translate(p.x,p.y);x.rotate(p.a);x.fillStyle=p.c;x.fillRect(-p.r/2,-p.r/4,p.r,p.r/2);x.restore();});if(t-t0<3500)requestAnimationFrame(f);else c.remove();})(t0);}
 // ===== Demonstração para cliente novo: vidraçaria fictícia, sem banco de dados =====
 const DEMO={dia:7,max:15,timer:null};
 function demoDados(dia){
@@ -371,7 +381,7 @@ function demoDados(dia){
   return {cliente:'Empresa Demonstração (fictícia)',fotos,recebidos};
 }
 function demoIr(d){
-  DEMO.dia=Math.max(1,Math.min(DEMO.max,d));const r=demoDados(DEMO.dia);ENVIO.recebidos=r.recebidos;render(r);
+  DEMO.dia=Math.max(1,Math.min(DEMO.max,d));if(DEMO.dia<DEMO.max)render._festa=false;const r=demoDados(DEMO.dia);ENVIO.recebidos=r.recebidos;render(r);
   const f=r.fotos[0];$('#dmDia').textContent=`Dia ${DEMO.dia} de ${DEMO.max} · ${dt(f.em)}`;$('#dmR').value=DEMO.dia;
 }
 function iniciarDemo(){
