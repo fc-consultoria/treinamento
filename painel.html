@@ -1209,7 +1209,7 @@ const MKT={st:[['status-1-catalogo','1 · Catálogo de esquadria'],['status-2-qu
 function mkCopy(t,b){const ok=()=>{const o=b.textContent;b.textContent='✓ Copiado';setTimeout(()=>b.textContent=o,1400);};if(navigator.clipboard)navigator.clipboard.writeText(t).then(ok,()=>{prompt('Copie:',t);});else prompt('Copie:',t);}
 function mkGet(){try{return JSON.parse(localStorage.getItem('treinFC-mkt')||'{}');}catch(_){return {};}}
 function mkSet(k,v){const o=mkGet();o[k]=v;try{localStorage.setItem('treinFC-mkt',JSON.stringify(o));}catch(_){}}
-function mkUI(){const P=mkGet();const card=([f,n])=>`<div class="mkc"><img src="mkt/t-${f}.jpg" alt="${desc(n)}" data-mkz="${f}" loading="lazy"><b>${desc(n)}</b><div class="r"><a href="mkt/${f}.jpg" download="${f}.jpg">⬇ Baixar</a><a href="mkt/${f}.jpg" target="_blank" rel="noopener">↗ Abrir</a></div><label class="ck"><input type="checkbox" data-mkp="${f}" ${P[f]?'checked':''}> ${P[f]?'postado em '+P[f]:'marcar como postado'}</label></div>`;
+function mkUI(){const P=mkGet();const card=([f,n])=>`<div class="mkc"><img src="mkt/t-${f}.jpg" alt="${desc(n)}" data-mkz="${f}" loading="lazy"><b>${desc(n)}</b><div class="r"><a href="mkt/${f}.jpg" download="${f}.jpg">⬇ Baixar</a><a href="mkt/${f}.jpg" target="_blank" rel="noopener">↗ Abrir</a><button type="button" data-mkpost="${f}" style="background:#1f9d55;color:#fff;border-color:#1f9d55;font-weight:700">📤 Postar</button></div><label class="ck"><input type="checkbox" data-mkp="${f}" ${P[f]?'checked':''}> ${P[f]?'postado em '+P[f]:'marcar como postado'}</label></div>`;
   document.getElementById('mkSt').innerHTML=MKT.st.map(card).join('');document.getElementById('mkFd').innerHTML=MKT.fd.map(card).join('');
   document.getElementById('mkLk').innerHTML=MKT.lk.map(([n,o,u],i)=>`<div class="mklk"><b>${n}</b><code>${desc(u)}</code><button type="button" data-mkl="${i}">📋 Copiar</button></div>`).join('');
   document.getElementById('mkLg').innerHTML=MKT.lg.map(([n,t],i)=>`<div class="mkt"><b>${desc(n)}</b><pre>${desc(t)}</pre><div class="r"><button type="button" data-mkg="${i}">📋 Copiar legenda</button></div></div>`).join('');
@@ -1219,7 +1219,20 @@ function mkUI(){const P=mkGet();const card=([f,n])=>`<div class="mkc"><img src="
   C.querySelectorAll('[data-mkg]').forEach(b=>b.onclick=()=>mkCopy(MKT.lg[+b.dataset.mkg][1],b));
   C.querySelectorAll('[data-mkm]').forEach(b=>b.onclick=()=>mkCopy(MKT.ms[+b.dataset.mkm][1],b));
   C.querySelectorAll('[data-mkp]').forEach(c=>c.onchange=()=>{mkSet(c.dataset.mkp,c.checked?new Date().toLocaleDateString('pt-BR'):'');mkUI();});
-  C.querySelectorAll('[data-mkz]').forEach(i=>i.onclick=()=>window.open('mkt/'+i.dataset.mkz+'.jpg','_blank'));}
+  C.querySelectorAll('[data-mkz]').forEach(i=>i.onclick=()=>window.open('mkt/'+i.dataset.mkz+'.jpg','_blank'));
+  C.querySelectorAll('[data-mkpost]').forEach(b=>b.onclick=()=>mkPostar(b.dataset.mkpost,b));}
+// Postar: copia a legenda e abre o compartilhar do aparelho com a imagem (WhatsApp, Instagram...). Sem compartilhar: baixa a imagem e abre o site.
+function mkLeg(f){const st=f.startsWith('status');if(st){const lk=f==='status-4-janela-3d'?MKT.lk[3][2]:MKT.lk[0][2];const T={'status-1-catalogo':'Catálogo de esquadria Suprema e Gold em 3D, grátis e sem cadastro','status-2-qual-perfil':'Qual perfil é esse? Digite o código e veja em 3D','status-3-bancada':'Monte o encaixe dos perfis direto no celular','status-4-janela-3d':'Abra a janela em 3D: gire, abra as folhas e desmonte','status-5-usinagem':'Veja o perfil já usinado, com a medida de cada furo'};return (T[f]||'Catálogo de esquadria em 3D')+' 👉 '+lk;}
+  const i=MKT.fd.findIndex(x=>x[0]===f);return (MKT.lg[i]||['',''])[1];}
+function mkAviso(t){const e=document.createElement('div');e.textContent=t;e.style.cssText='position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#1b232a;color:#fff;padding:10px 16px;border-radius:12px;font:600 14px system-ui;z-index:99999;max-width:92vw;text-align:center';document.body.appendChild(e);setTimeout(()=>e.remove(),6000);}
+async function mkPostar(f,b){const st=f.startsWith('status'),leg=mkLeg(f);let copiou=false;try{await navigator.clipboard.writeText(leg);copiou=true;}catch(_){}
+  try{const bl=await fetch('mkt/'+f+'.jpg').then(r=>r.blob()),file=new File([bl],f+'.jpg',{type:'image/jpeg'});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],text:leg});
+      mkSet(f,new Date().toLocaleDateString('pt-BR'));mkUI();mkAviso((copiou?'Legenda copiada. ':'')+'Se o app não trouxe o texto, é só colar na legenda.');return;}
+    const a=document.createElement('a');a.href=URL.createObjectURL(bl);a.download=f+'.jpg';document.body.appendChild(a);a.click();a.remove();
+    window.open(st?'https://web.whatsapp.com/':'https://www.instagram.com/','_blank','noopener');
+    mkAviso('Imagem baixada'+(copiou?' e legenda copiada':'')+'. '+(st?'No WhatsApp Web: Status → ＋ → escolha a imagem → cole a legenda.':'No Instagram: ＋ Criar → escolha a imagem → cole a legenda.'));
+  }catch(e){if(e&&e.name==='AbortError')return;mkAviso('Não consegui abrir o compartilhar: '+((e&&e.message)||e));}}
 async function mkLoad(){const E=document.getElementById('mkRes');if(!E)return;const d=+document.getElementById('mkP').value;
   const since=d===1?new Date(new Date(Date.now()-4*3600e3).toISOString().slice(0,10)+'T04:00:00Z').toISOString():new Date(Date.now()-d*864e5).toISOString();
   const r=await sb.from('site_visitas').select('s,pag,o,criado_em').gte('criado_em',since).limit(20000);
