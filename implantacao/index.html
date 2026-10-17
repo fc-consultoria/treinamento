@@ -357,7 +357,7 @@ tbody tr:hover{background:var(--panel-2);}
       <button class="navitem" id="btn-logout"><i data-lucide="log-out"></i> Sair</button>
     </div>
     <div class="sidebar-foot">
-      Painel de implantação — dados salvos em banco de dados real (Supabase), acesso restrito à equipe.<br><b>Versão 17/10i — fotos Alumiconte</b>
+      Painel de implantação — dados salvos em banco de dados real (Supabase), acesso restrito à equipe.<br><b>Versão 17/10j — cadastro do WVetro do cliente</b>
     </div>
   </nav>
   <div class="mobile-topbar">
@@ -607,6 +607,7 @@ async function carregarClientes(){
   // Revisão de implantação (componentes): código sistema e itens enviados para revisão
   carregarFotos();
   CLIENTS.forEach(cl=>{ cl.fixoChecklist = {}; checklistRows.filter(r=>r.cliente_id===cl.id && r.fornecedor_fixo).forEach(r=>{ cl.fixoChecklist[(r.linha||'')+'|'+r.codigo] = r.fornecedor_fixo; }); });
+  CLIENTS.forEach(cl=>{ cl.wvLinhas = {}; cl._wvCache = {}; checklistRows.filter(r=>r.cliente_id===cl.id && r.base_codigo && r.linha).forEach(r=>{ (cl.wvLinhas[r.linha] = cl.wvLinhas[r.linha]||[]).push({codigo:r.codigo, base:r.base_codigo, desc:r.desc_sistema||''}); }); });
   CLIENTS.forEach(cl=>{ cl.revisaoChecklist = {}; checklistRows.filter(r=>r.cliente_id===cl.id && (r.em_revisao || r.codigo_sistema)).forEach(r=>{ cl.revisaoChecklist[(r.linha||'')+'|'+r.codigo] = {sis:r.codigo_sistema||'', rev:!!r.em_revisao, obs:r.revisao_obs||'', em:r.revisao_em||null}; }); });
 
   // Acompanhamento online (versão nova): quem já tem link do portal do cliente. Falha aqui não trava o painel.
@@ -944,6 +945,23 @@ function linkWhatsAppBoletoAtrasado(c){
   return `https://wa.me/${tel}?text=${encodeURIComponent(mensagemWhatsAppBoletoAtrasado(c))}`;
 }
 
+// Cliente com cadastro do WVetro importado numa linha: o checklist dessa linha usa os códigos do WVetro dele
+// (inclusive cada cor), puxando preço do item base do Banco de Preços. Sem importação: checklist padrão (todos os itens da linha).
+function usaWvetroLinha(c, linha){ return !!(c && c.wvLinhas && (c.wvLinhas[linha]||[]).length); }
+function dbCliente(c, linha){
+  const base = PRICE_DB[linha];
+  if(!base || !usaWvetroLinha(c, linha)) return base;
+  c._wvCache = c._wvCache || {};
+  const ck = c._wvCache[linha];
+  if(ck && ck.src===base && ck.n===c.wvLinhas[linha].length) return ck.db;
+  const porCod = new Map(base.itens.map(it=>[normalizeCodigo(it.codigo), it]));
+  const itens = c.wvLinhas[linha].map(r=>{ const b = porCod.get(normalizeCodigo(r.base));
+    return b ? Object.assign({}, b, {codigo:r.codigo, descricao:r.desc||b.descricao, _base:b.codigo, _descBanco:b.descricao}) : {codigo:r.codigo, descricao:r.desc, precos:{}, _base:r.base, _descBanco:''}; })
+    .sort((a,b)=>String(a.codigo).localeCompare(String(b.codigo)));
+  const db = Object.assign({}, base, {itens, _wvetro:true});
+  c._wvCache[linha] = {src:base, n:c.wvLinhas[linha].length, db};
+  return db;
+}
 function componentesLinhasContratadas(client){
   return (client.linhas_componentes||[]).filter(l=>PRICE_DB[l]);
 }
@@ -951,7 +969,7 @@ function componentesProgressoGeral(client){
   const linhas = componentesLinhasContratadas(client);
   let total=0, alimentados=0, semPreco=0;
   linhas.forEach(nome=>{
-    const db = PRICE_DB[nome];
+    const db = dbCliente(client, nome);
     if(!db) return;
     const mapa = (client.alimentadosComponentes && client.alimentadosComponentes[nome]) || {};
     db.itens.forEach(it=>{
@@ -1005,7 +1023,7 @@ function categoriaProgress(client, key){
     const alimentados = itens.filter(it=>it.alimentado).length;
     return { total: itens.length, alimentados, pct: itens.length ? Math.round(alimentados/itens.length*100) : 0 };
   }
-  const db = getCategoriaDB(key);
+  const db = (key==='vidro'||key==='perfis') ? getCategoriaDB(key) : dbCliente(client, key);
   if(!db) return { total:0, alimentados:0, pct:0 };
   const mapa = key==='vidro' ? client.alimentadosVidro : key==='perfis' ? client.alimentadosPerfis : (client.alimentadosComponentes && client.alimentadosComponentes[key]);
   const total = db.itens.length;
@@ -1041,7 +1059,7 @@ function sincronizarAlimentadoComponentesPorCodigo(client, codigoRef, alimentado
   const alvo = normalizeCodigo(codigoRef);
   if(!alvo) return;
   componentesLinhasContratadas(client).forEach(linha=>{
-    const db = PRICE_DB[linha];
+    const db = dbCliente(client, linha);
     if(!db) return;
     const item = db.itens.find(it=>normalizeCodigo(it.codigo)===alvo);
     if(!item) return;
@@ -1072,7 +1090,7 @@ function sincronizarAlimentadoTodosClientes(){
       if(item.alimentado) sincronizarAlimentadoComponentesPorCodigo(c, item.codigo, true);
     });
     componentesLinhasContratadas(c).forEach(linha=>{
-      const db = PRICE_DB[linha];
+      const db = dbCliente(c, linha);
       if(!db) return;
       const mapa = (c.alimentadosComponentes && c.alimentadosComponentes[linha]) || {};
       db.itens.forEach(it=>{
@@ -4292,7 +4310,7 @@ function renderChecklistEquipe(cliente, todas, titulo, bloqueadas){
       <thead><tr>${thMarcarTodosAlimentados(rows, r=>r.key)}<th style="width:58px;">Foto</th>${todas.some(r=>r.key!==todas[0].key)?'<th>Linha</th>':''}<th>Código</th>${thCodSis}<th>Descrição</th><th class="tright">Preço para alimentação</th><th>Status</th>${thRevisao}</tr></thead>
       <tbody>${rows.map(r=>`<tr${emRevComp(cliente, r.key, r.it.codigo)?' style="background:#fff7e6;"':''}>
         <td class="tcenter"><input type="checkbox" class="chk" ${r.fed?'checked':''} ${(!r.fed && !r.temPreco)?'disabled title="Sem preço liberado: não pode ser marcado"':''} data-action="toggle-alimentado-categoria" data-key="${escapeHtml(r.key)}" data-codigo="${escapeHtml(r.it.codigo)}"></td>
-        ${fotoCelula(r.it.codigo)}
+        ${fotoCelula(r.it._base||r.it.codigo)}
         ${todas.some(x=>x.key!==todas[0].key)?`<td><span class="badge badge-muted">${escapeHtml(r.key)}</span></td>`:''}
         <td class="mono">${escapeHtml(r.it.codigo)}</td>
         ${inpCodSisComp(cliente, r.key, r.it.codigo)}
@@ -4310,7 +4328,7 @@ async function salvarOrdemFornecedores(c, cat){
   if(error) avisarErroSalvar(error); else toastSalvo('Ordem salva');
 }
 function coberturaFornecedor(c, cat, f){
-  const dbs = cat==='vidro' ? [VIDRO_DB] : componentesLinhasContratadas(c).map(l=>PRICE_DB[l]);
+  const dbs = cat==='vidro' ? [VIDRO_DB] : componentesLinhasContratadas(c).map(l=>dbCliente(c, l));
   let tot = 0, com = 0;
   dbs.forEach(db=>{ if(!db) return; const nome = (db.fornecedores||[]).find(x=>chaveFornAjuste(x)===chaveFornAjuste(f)); (db.itens||[]).forEach(it=>{ tot++; if(nome && precoFornecedor(it, nome, cat)>0) com++; }); });
   return {tot, com};
@@ -4407,7 +4425,7 @@ function itensEmRevisao(c){
   (c.perfisMetro||[]).forEach((it,idx)=>{ if(it.emRevisao) L.push({tipo:'perfis', idx, linha:'Perfis', codigo:it.codigo, descricao:it.descricao, sis:it.codigoSistema||'', sug:codSisSugeridoMetro(it), obs:it.revisaoObs||'', em:it.revisaoEm}); });
   Object.entries(c.revisaoChecklist||{}).forEach(([k,r])=>{
     if(!r.rev) return; const i = k.indexOf('|'), linha = k.slice(0,i), codigo = k.slice(i+1);
-    const db = linha==='vidro' ? VIDRO_DB : PRICE_DB[linha]; const it = db && (db.itens||[]).find(x=>x.codigo===codigo);
+    const db = linha==='vidro' ? VIDRO_DB : dbCliente(c, linha); const it = db && (db.itens||[]).find(x=>x.codigo===codigo);
     L.push({tipo:'comp', linha, codigo, descricao: it ? it.descricao : '', sis:r.sis||'', sug:'', obs:r.obs||'', em:r.em});
   });
   return L;
@@ -4442,6 +4460,135 @@ function renderRevisaoImplantacao(c){
     : `<div class="panel">${emptyState('check-circle','Nenhum item em revisão','Quando a equipe não encontrar um código no sistema, ela marca o item (coluna 🔎 Revisão em Componentes, ou selecionando em Perfis) e ele aparece aqui.')}</div>`}`;
 }
 
+
+// ===== Cadastro do WVetro do cliente =====
+// O WVetro cadastra todos os acessórios como "GERAL". Importando a exportação do cliente, o painel separa os códigos
+// pelas linhas contratadas usando o Banco de Preços e monta o checklist com os códigos exatos do WVetro dele.
+// Nada novo é gravado além das linhas do checklist (impl_checklist.base_codigo / desc_sistema); preço vem sempre do banco.
+const WV_SUFCOR = /[_\-\s](PRT|PTO|PT|PRA|PRATA|BCO|BRC|BR|BC|BRANCO|PRETO|FOS|FS|FOSCO|CZA|CINZA|BZ|BRONZE|NAT|NATURAL|CR|CROMADO|DOU|DOURADO|INC|GRF)$/i;
+const WV_COR = new Set('PRETO PRETA BRANCO BRANCA BRONZE FOSCO FOSCA CROMO CROMADO DOURADO PRATA NATURAL CINZA BCO PTO PRT PARA COM SEM DOS DAS'.split(' '));
+function wvToks(s){ return new Set(normalizeText(s||'').toUpperCase().split(/[^A-Z0-9]+/).filter(t=>t.length>=3 && !WV_COR.has(t))); }
+function wvComSem(s){ const t = normalizeText(s||'').toUpperCase().replace(/C\//g,'COM ').replace(/S\//g,'SEM '); const r = new Set(); let m; const re=/\b(COM|SEM)\s+(CHAVE|BAGUETE|ROLAMENTO|MIOLO|REGULAGEM|BARREIRA|TRAVA|PARAFUSO)/g; while((m=re.exec(t))) r.add(m[1]+' '+m[2]); return r; }
+function wvDescParecida(a, b){
+  const A = wvComSem(a), B = wvComSem(b);
+  for(const x of A){ const [cs,o] = x.split(' '); if(B.has((cs==='COM'?'SEM':'COM')+' '+o)) return false; }
+  const ta = wvToks(a), tb = wvToks(b); if(!ta.size || !tb.size) return true;
+  let i = 0; ta.forEach(t=>{ if(tb.has(t)) i++; }); return i/Math.min(ta.size, tb.size) >= 0.34;
+}
+function lerExportWvetro(aoa){
+  let h = -1, ci = -1, cd = -1, cu = -1, cf = -1;
+  for(let i=0;i<Math.min(aoa.length,15);i++){ const r = (aoa[i]||[]).map(x=>normalizeText(String(x||'')).toUpperCase().trim());
+    const a = r.indexOf('CODIGO'), b = r.findIndex(x=>x.startsWith('DESCRI')); if(a>=0 && b>=0){ h=i; ci=a; cd=b; cu=r.indexOf('UN'); cf=r.findIndex(x=>x.includes('FABRICANTE')); break; } }
+  if(h<0) return null;
+  const out = [], vistos = new Set();
+  aoa.slice(h+1).forEach(r=>{ const cod = String((r||[])[ci]||'').trim(); if(!cod || vistos.has(cod.toUpperCase())) return; vistos.add(cod.toUpperCase());
+    out.push({codigo:cod, descricao:String(r[cd]||'').trim(), un: cu>=0?String(r[cu]||''):'', fab: cf>=0?String(r[cf]||''):''}); });
+  return out;
+}
+function analisarWvetro(c, lista){
+  const linhas = (c.linhas_componentes||[]).filter(l=>PRICE_DB[l]);
+  const idx = new Map();
+  linhas.forEach(l=>PRICE_DB[l].itens.forEach(it=>{ const k = normalizeCodigo(it.codigo); if(!k) return; const arr = idx.get(k)||[]; if(!arr.some(x=>x.linha===l)) arr.push({linha:l, it}); idx.set(k, arr); }));
+  const outras = new Map();
+  Object.keys(PRICE_DB).filter(l=>!linhas.includes(l)).forEach(l=>PRICE_DB[l].itens.forEach(it=>{ const k = normalizeCodigo(it.codigo); if(k){ const s2 = outras.get(k)||new Set(); s2.add(l); outras.set(k, s2); } }));
+  const dentro = [], fora = [], achados = new Set();
+  lista.forEach(w=>{
+    const k = normalizeCodigo(w.codigo); let hits = idx.get(k), tipo = 'código igual';
+    if(!hits){ const m = String(w.codigo).trim().match(WV_SUFCOR); if(m){ const b = normalizeCodigo(String(w.codigo).trim().slice(0, m.index)); if(idx.get(b)){ hits = idx.get(b); tipo = 'variação de cor ('+m[1].toUpperCase()+')'; } } }
+    if(!hits){ const o = outras.get(k); fora.push({...w, outra: o ? [...o].join(', ') : ''}); return; }
+    hits.forEach(h=>{ achados.add(h.linha+'|'+normalizeCodigo(h.it.codigo));
+      dentro.push({linha:h.linha, codigo:w.codigo, desc:w.descricao, base:h.it.codigo, descBanco:h.it.descricao||'', tipo, conferir: !wvDescParecida(w.descricao, h.it.descricao) }); });
+  });
+  const faltando = []; linhas.forEach(l=>PRICE_DB[l].itens.forEach(it=>{ if(!achados.has(l+'|'+normalizeCodigo(it.codigo))) faltando.push({linha:l, codigo:it.codigo, descricao:it.descricao||''}); }));
+  return {linhas, dentro, fora, faltando, total: lista.length};
+}
+async function importarWvetro(c, file){
+  if(!ehAdminEspelho()) return;
+  let lista;
+  try{ const wb = XLSX.read(await file.arrayBuffer(), {type:'array'}); lista = lerExportWvetro(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1, defval:''})); }
+  catch(e){ alert('Não consegui ler a planilha: '+(e&&e.message||e)); return; }
+  if(!lista || !lista.length){ alert('Não achei as colunas "Código" e "Descrição". Use a exportação de Acessórios do WVetro (ExportWWAcessorios).'); return; }
+  const a = analisarWvetro(c, lista);
+  if(!a.linhas.length){ alert('Marque primeiro as linhas contratadas deste cliente.'); return; }
+  const porLinha = a.linhas.map(l=>`• ${l}: ${a.dentro.filter(x=>x.linha===l).length} código(s)`).join('\n');
+  const conf = a.dentro.filter(x=>x.conferir).length;
+  if(!confirm(`${file.name}\n\n${a.total} códigos no WVetro do cliente.\n\nVão para o checklist (por linha):\n${porLinha}\n\n${conf} com descrição diferente → entram em Revisão.\n${a.fora.length} fora das linhas contratadas e ${a.faltando.length} itens do banco sem código no WVetro (ficam só no relatório).\n\nA equipe só vê depois que você liberar cada linha. Confirmar?`)) return;
+  const base = r=>({cliente_id:c.id, codigo:r.codigo, linha:r.linha, base_codigo:r.base, desc_sistema:r.desc||null, codigo_sistema:r.codigo});
+  const normais = a.dentro.filter(r=>!r.conferir).map(base);
+  const agora = new Date().toISOString();
+  const revis = a.dentro.filter(r=>r.conferir).map(r=>Object.assign(base(r), {em_revisao:true, revisao_em:agora, revisao_obs:'WVetro: "'+(r.desc||'')+'" · Banco ('+r.base+'): "'+(r.descBanco||'')+'"'}));
+  for(const lote of [normais, revis]) for(let i=0;i<lote.length;i+=300){
+    const {error} = await sb.from('impl_checklist').upsert(lote.slice(i,i+300), {onConflict:'cliente_id,codigo,linha', defaultToNull:false});
+    if(error){ avisarErroSalvar(error); return; }
+  }
+  // remove do checklist os códigos de importação anterior que não vieram agora (só os ainda não alimentados)
+  const novos = new Set(a.dentro.map(r=>r.linha+'|'+r.codigo));
+  for(const l of Object.keys(c.wvLinhas||{})){
+    const mapa = (c.alimentadosComponentes||{})[l]||{};
+    const velhos = (c.wvLinhas[l]||[]).filter(r=>!novos.has(l+'|'+r.codigo) && !mapa[r.codigo]).map(r=>r.codigo);
+    for(let i=0;i<velhos.length;i+=100){ const {error} = await sb.from('impl_checklist').delete().eq('cliente_id', c.id).eq('linha', l).in('codigo', velhos.slice(i,i+100)); if(error){ avisarErroSalvar(error); return; } }
+  }
+  c.wvLinhas = {}; c._wvCache = {};
+  a.dentro.forEach(r=>{ (c.wvLinhas[r.linha] = c.wvLinhas[r.linha]||[]).push({codigo:r.codigo, base:r.base, desc:r.desc});
+    setRevComp(c, r.linha, r.codigo, r.conferir ? {sis:r.codigo, rev:true, obs:'WVetro: "'+(r.desc||'')+'" · Banco ('+r.base+'): "'+(r.descBanco||'')+'"', em:agora} : {sis:r.codigo}); });
+  c._wvRel = {arquivo:file.name, em:agora, ...a};
+  toastSalvo('Cadastro do WVetro importado'); render();
+  if(confirm('Importado. Baixar agora a planilha por linha (com preço para alimentar, conferir, fora das linhas e faltando no WVetro)?')) baixarRelatorioWvetro(c);
+}
+function baixarRelatorioWvetro(c){
+  const linhas = componentesLinhasContratadas(c).filter(l=>usaWvetroLinha(c, l));
+  if(!linhas.length){ alert('Este cliente ainda não tem cadastro do WVetro importado.'); return; }
+  const wb = XLSX.utils.book_new();
+  const fmt = v=> v==null ? '' : Math.round(v*100)/100;
+  const resumo = [['Cliente', c.nome], ['Gerado em', new Date().toLocaleString('pt-BR')], [], ['Linha','Códigos do WVetro','Alimentados','Com preço','Em revisão','Diferença > 30%']];
+  const conferir = [['Linha','Código WVetro','Descrição WVetro','Código no banco','Descrição no banco']];
+  linhas.forEach(l=>{
+    const db = dbCliente(c, l), mapa = (c.alimentadosComponentes||{})[l]||{};
+    const rows = [['Código WVetro','Descrição WVetro','Código no banco','Descrição no banco','Preço p/ alimentar','Fornecedor','Posição','Dif. entre fornecedores','Em revisão','Alimentado']];
+    let comP = 0, rev = 0, dif = 0, ali = 0;
+    db.itens.forEach(it=>{
+      const p = precoAlimentacao(c, l, db, it), r = revComp(c, l, it.codigo), emRev = !!(r && r.rev);
+      if(p.esc) comP++; if(emRev){ rev++; conferir.push([l, it.codigo, it.descricao||'', it._base||'', it._descBanco||'']); } if(p.alerta) dif++; if(mapa[it.codigo]) ali++;
+      rows.push([it.codigo, it.descricao||'', it._base||'', it._descBanco||'', p.esc?fmt(p.esc.v):'', p.esc?p.esc.f:'', p.esc?p.esc.pos+'º':'', p.alerta?p.alerta.pct+'%':'', emRev?'sim':'', mapa[it.codigo]?'sim':'']);
+    });
+    resumo.push([l, db.itens.length, ali, comP, rev, dif]);
+    const ws = XLSX.utils.aoa_to_sheet(rows); ws['!cols'] = [{wch:18},{wch:48},{wch:16},{wch:44},{wch:12},{wch:14},{wch:8},{wch:12},{wch:10},{wch:10}]; ws['!autofilter'] = {ref:'A1:J'+rows.length};
+    XLSX.utils.book_append_sheet(wb, ws, l.slice(0,31));
+  });
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(resumo), 'Resumo');
+  wb.SheetNames.unshift(wb.SheetNames.pop());
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(conferir), 'Conferir');
+  const rel = c._wvRel;
+  if(rel){
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([['Código WVetro','Descrição WVetro','UN','Fabricante (WVetro)','Está em outra linha do banco']].concat(rel.fora.map(x=>[x.codigo,x.descricao,x.un,x.fab,x.outra]))), 'Fora das linhas');
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([['Linha','Código no banco','Descrição no banco']].concat(rel.faltando.map(x=>[x.linha,x.codigo,x.descricao]))), 'Banco sem código WVetro');
+  }
+  XLSX.writeFile(wb, (c.nome||'cliente').replace(/[^\w]+/g,'_')+'_WVetro_por_linha.xlsx');
+}
+async function removerWvetro(c){
+  if(!ehAdminEspelho()) return;
+  if(!confirm('Voltar ao checklist padrão em '+c.nome+'?\n\nApaga os códigos do WVetro importados do checklist deste cliente (inclusive o que já foi marcado como alimentado nesses códigos).')) return;
+  const {error} = await sb.from('impl_checklist').delete().eq('cliente_id', c.id).not('base_codigo','is',null);
+  if(error){ avisarErroSalvar(error); return; }
+  Object.entries(c.wvLinhas||{}).forEach(([l,rows])=>rows.forEach(r=>{ if(c.alimentadosComponentes && c.alimentadosComponentes[l]) delete c.alimentadosComponentes[l][r.codigo]; if(c.revisaoChecklist) delete c.revisaoChecklist[l+'|'+r.codigo]; }));
+  c.wvLinhas = {}; c._wvCache = {}; c._wvRel = null; toastSalvo('Checklist padrão'); render();
+}
+function renderWvetroBox(c, contratadas){
+  if(!ehAdminEspelho() || STATE.verComoEquipe) return '';
+  const tem = contratadas.filter(l=>usaWvetroLinha(c, l));
+  const chips = contratadas.map(l=>usaWvetroLinha(c,l)
+    ? `<span class="badge badge-ok" title="Checklist com os códigos do WVetro do cliente">${escapeHtml(l)}: ${c.wvLinhas[l].length} códigos WVetro${linhaLiberada(c,l)?' · 🔓 liberada':' · 🔒 só você vê'}</span>`
+    : `<span class="badge" title="Checklist padrão: todos os itens da linha no Banco de Preços">${escapeHtml(l)}: checklist padrão</span>`).join(' ');
+  return `<div class="panel" style="border-left:4px solid #2563eb;">
+    <div class="panel-head"><div><h3>📥 Cadastro do WVetro do cliente</h3><div class="desc">Importe a exportação de Acessórios do WVetro (ExportWWAcessorios). O painel separa os códigos pelas linhas contratadas, reconhece as cores (_PRT, _BCO…), preenche o Código sistema e manda para Revisão o que tiver descrição diferente. O preço continua vindo do Banco de Preços. Linha importada só aparece para a equipe depois de liberada.</div></div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+        <label class="btn btn-sm btn-primary" style="cursor:pointer;">${icon('upload')} ${tem.length?'Reimportar':'Importar'} cadastro do WVetro<input type="file" accept=".xlsx,.xls,.csv" data-action="wv-importar" hidden></label>
+        ${tem.length?`<button class="btn btn-sm" data-action="wv-baixar">${icon('download')} Baixar planilha por linha</button><button class="btn btn-sm" data-action="wv-remover" style="color:#b42318;">Voltar ao checklist padrão</button>`:''}
+      </div></div>
+    <div style="padding:0 18px 14px; display:flex; gap:6px; flex-wrap:wrap;">${chips}${c._wvRel?`<span class="note" style="margin-left:6px;">Última importação: ${escapeHtml(c._wvRel.arquivo)} · ${c._wvRel.fora.length} fora das linhas · ${c._wvRel.faltando.length} do banco sem código no WVetro</span>`:''}</div>
+  </div>`;
+}
+
 function renderClienteComponentes(c){
   const contratadas = componentesLinhasContratadas(c);
   if(contratadas.length===0){
@@ -4458,6 +4605,7 @@ function renderClienteComponentes(c){
   const verTodasLinhas = linhaAtiva==='todas';
   const db = verTodasLinhas ? null : PRICE_DB[linhaAtiva];
   return `
+  ${renderWvetroBox(c, contratadas)}
   <div class="panel">
     <div class="panel-head">
       <div><h3>${icon('box')} Linhas contratadas</h3><div class="desc">Cada linha tem seu próprio checklist e seu próprio aviso automático de progresso. Escolha "Todas" pra ver e buscar os itens de todas as linhas contratadas juntos — útil na conferência, quando você busca por códigos aleatórios sem saber de qual linha eles são.</div></div>
@@ -4493,7 +4641,7 @@ function resolverSelecaoFornecedoresChecklist(filtroKey, fornecedoresDisponiveis
 function renderChecklistComponentesTodas(cliente, contratadas){
   // "Todas": a visão simplificada da equipe só entra quando todas as linhas contratadas estiverem liberadas
   if(vistaEquipe() && contratadas.length && contratadas.every(l=>linhaLiberada(cliente, l))){
-    const todas = []; contratadas.forEach(l=>{ const db = PRICE_DB[l]; if(db) db.itens.forEach(it=>todas.push({it, key:l, db})); });
+    const todas = []; contratadas.forEach(l=>{ const db = dbCliente(cliente, l); if(db) db.itens.forEach(it=>todas.push({it, key:l, db})); });
     return renderChecklistEquipe(cliente, todas, 'Checklist de alimentação — todas as linhas', []);
   }
   const fornecedorAtual = fornecedorSelecionadoPorPrefixo(cliente, 'componentes', cliente.fornecedor) ? cliente.fornecedor : null;
@@ -4513,8 +4661,8 @@ function renderChecklistComponentesTodas(cliente, contratadas){
   let totalItens = 0, totalAlimentados = 0, totalCotacao = 0;
   const todasLinhasRows = [];
   contratadas.forEach(linha=>{
-    const db = PRICE_DB[linha];
-    if(!db) return;
+    const db = dbCliente(cliente, linha);
+    if(!db || (vistaEquipe() && usaWvetroLinha(cliente, linha) && !linhaLiberada(cliente, linha))) return;
     const mapa = (cliente.alimentadosComponentes && cliente.alimentadosComponentes[linha]) || {};
     const mapaCotacao = (cliente.cotacaoComponentes && cliente.cotacaoComponentes[linha]) || {};
     db.itens.forEach(it=>{
@@ -4595,7 +4743,7 @@ function renderChecklistComponentesTodas(cliente, contratadas){
         <tr${emRevComp(cliente, r.linha, r.it.codigo)?' style="background:#fff7e6;"':''}>
           <td class="tcenter"><input type="checkbox" class="chk" ${r.fed?'checked':''} ${(!r.fed && !r.temPreco)?'disabled title="Sem preço — não pode ser marcado como alimentado"':''} data-action="toggle-alimentado-categoria" data-key="${r.linha}" data-codigo="${r.it.codigo}"></td>
           <td><span class="badge badge-muted">${r.linha}</span></td>
-          ${fotoCelula(r.it.codigo)}
+          ${fotoCelula(r.it._base||r.it.codigo)}
           <td class="mono">${r.it.codigo}</td>
           ${inpCodSisComp(cliente, r.linha, r.it.codigo)}
           <td>${escapeHtml(r.it.descricao||'—')}</td>
@@ -4671,6 +4819,7 @@ function btnMarcarTodosAlimentados(rowsVisiveis, getKey){
 function renderChecklistCategoria(nome, db, key, cliente){
   // Linha liberada pela matriz: a equipe vê só o preço para alimentação. Não liberada: tela completa, como antes.
   if(vistaEquipe() && linhaLiberada(cliente, key)) return renderChecklistEquipe(cliente, db.itens.map(it=>({it, key, db})), 'Checklist de alimentação — '+nome, []);
+  if(vistaEquipe() && usaWvetroLinha(cliente, key)) return `<div class="panel">${emptyState('lock','Linha em preparação pela matriz','O checklist de '+escapeHtml(nome)+' está sendo montado com os códigos do WVetro do cliente. Aparece aqui assim que a matriz liberar.')}</div>`;
   const p = categoriaProgress(cliente, key);
   const mapa = key==='vidro' ? cliente.alimentadosVidro : key==='perfis' ? cliente.alimentadosPerfis : (cliente.alimentadosComponentes && cliente.alimentadosComponentes[key]);
   const mapaCotacao = key==='vidro' ? cliente.cotacaoVidro : key==='perfis' ? cliente.cotacaoPerfis : (cliente.cotacaoComponentes && cliente.cotacaoComponentes[key]);
@@ -4754,8 +4903,8 @@ function renderChecklistCategoria(nome, db, key, cliente){
       ${rows.map(r=>`
         <tr${emRevComp(cliente, key, r.it.codigo)?' style="background:#fff7e6;"':''}>
           <td class="tcenter"><input type="checkbox" class="chk" ${r.fed?'checked':''} ${(!r.fed && !r.temPreco)?'disabled title="Sem preço — não pode ser marcado como alimentado"':''} data-action="toggle-alimentado-categoria" data-key="${key}" data-codigo="${r.it.codigo}"></td>
-          ${fotoCelula(r.it.codigo)}
-          <td class="mono">${r.it.codigo}</td>
+          ${fotoCelula(r.it._base||r.it.codigo)}
+          <td class="mono">${r.it.codigo}${r.it._base && normalizeCodigo(r.it._base)!==normalizeCodigo(r.it.codigo)?`<div style="font-size:11px; color:var(--text-3);" title="Preço puxado deste código do Banco de Preços">↳ ${escapeHtml(r.it._base)}</div>`:''}</td>
           ${inpCodSisComp(cliente, key, r.it.codigo)}
           <td>${escapeHtml(r.it.descricao||'—')}</td>
           ${modoGrade
@@ -4777,7 +4926,8 @@ function renderChecklistCategoria(nome, db, key, cliente){
 
 function renderExemploCategoria(nome, db, key, cliente, fornecedorScope, mostrarChecklist){
   if(mostrarChecklist==null) mostrarChecklist = true;
-  if(mostrarChecklist && vistaEquipe() && linhaLiberada(cliente, key)) return renderChecklistCategoria(nome, db, key, cliente);
+  if(mostrarChecklist && vistaEquipe() && linhaLiberada(cliente, key)) return renderChecklistCategoria(nome, (key==='vidro'||key==='perfis')?db:dbCliente(cliente,key), key, cliente);
+  if(vistaEquipe() && key!=='vidro' && key!=='perfis' && usaWvetroLinha(cliente, key)) return renderChecklistCategoria(nome, dbCliente(cliente,key), key, cliente);
   const fornecedores = filtrarFornecedoresCliente(cliente, catDeKey(key), db.fornecedores);
   const imp = STATE.lastImport && STATE.lastImport[key];
   const campoLabel = db.campoLabel || 'Descrição';
@@ -4785,7 +4935,7 @@ function renderExemploCategoria(nome, db, key, cliente, fornecedorScope, mostrar
   const campoFornecedor = key==='vidro' ? 'fornecedorVidro' : key==='perfis' ? 'fornecedorPerfisKg' : null;
   const fornecedorAtual = campoFornecedor ? cliente[campoFornecedor] : cliente.fornecedor;
   return `
-  ${mostrarChecklist ? renderChecklistCategoria(nome, db, key, cliente) : (fornecedores.length===0 ? avisoSemFornecedor(cliente, nome) : '')}
+  ${mostrarChecklist ? renderChecklistCategoria(nome, (key==='vidro'||key==='perfis')?db:dbCliente(cliente,key), key, cliente) : (fornecedores.length===0 ? avisoSemFornecedor(cliente, nome) : '')}
 
   ${fornecedorAtual ? `<div class="desc" style="margin-bottom:10px;">Fornecedor de ${nome.toLowerCase()} cadastrado para ${cliente.nome}: <b>${fornecedorAtual}</b>${fornecedores.includes(fornecedorAtual) ? ` <button class="iconbtn" style="padding:1px; vertical-align:-2px;" data-action="renomear-fornecedor" ${scopeAttrs} data-fornecedor="${fornecedorAtual}" title="Editar nome do fornecedor">${icon('pencil','style="width:12px;height:12px"')}</button>` : ''}</div>` : ''}
 
@@ -5186,7 +5336,7 @@ function renderPerfisMetroLinear(c, vista){
         <tr${it.emRevisao?' style="background:#fff7e6;"':''}>
           <td class="tcenter"><input type="checkbox" class="chk" ${it._selecionado?'checked':''} data-action="toggle-selecao-metro-item" data-idx="${idx}"></td>
           <td class="tcenter"><input type="checkbox" class="chk" ${it.alimentado?'checked':''} ${(!it.alimentado && !(Number(it.preco)>0))?'disabled title="Sem preço — não pode ser marcado como alimentado"':''} data-action="toggle-metro-item-alimentado" data-idx="${idx}"></td>
-          ${fotoCelula(it.codigo)}
+          ${fotoCelula(it._base||it.codigo)}
           <td class="mono"><input class="editable-price" style="text-align:left; width:130px;" value="${it.codigo}" data-action="edit-metro-item" data-campo="codigo" data-idx="${idx}"></td>
           <td><input class="editable-price" style="text-align:left; width:120px;" value="${escapeHtml(it.codigoSistema||'')}" placeholder="${escapeHtml(codSisSugeridoMetro(it)||'—')}" data-action="edit-codsis-metro" data-idx="${idx}"></td>
           <td><textarea class="editable-price" style="text-align:left; width:100%; white-space:pre-wrap; word-break:break-word; resize:vertical; min-height:38px; line-height:1.4;" rows="2" data-action="edit-metro-item" data-campo="descricao" data-idx="${idx}">${escapeHtml(it.descricao||'')}</textarea></td>
@@ -5362,7 +5512,7 @@ function renderListaCotacaoPrint(c, cotacaoList){
 function renderClienteRelatorios(c,p){
   const linhasContratadas = componentesLinhasContratadas(c);
   const todosItens = linhasContratadas.flatMap(nome=>{
-    const db = PRICE_DB[nome];
+    const db = dbCliente(c, nome);
     const mapa = (c.alimentadosComponentes && c.alimentadosComponentes[nome]) || {};
     const mapaCotacao = (c.cotacaoComponentes && c.cotacaoComponentes[nome]) || {};
     return db.itens.map(it=>({linha: nome, codigo: it.codigo, descricao: it.descricao, preco: precoFornecedor(it, c.fornecedor, 'componentes'), fed: !!mapa[it.codigo], cotacao: !!mapaCotacao[it.codigo]}));
@@ -6461,7 +6611,8 @@ function wireEvents(){
       el.onchange = (e)=>{
         const {key, codigo, fornecedor} = el.dataset;
         const db = getCategoriaDB(key);
-        const item = db.itens.find(i=>i.codigo===codigo);
+        let item = db.itens.find(i=>i.codigo===codigo);
+        if(!item){ const cc = CLIENTS.find(x=>x.id===STATE.clientId); const vd = cc && dbCliente(cc, key); const v = vd && vd.itens.find(i=>i.codigo===codigo); if(v) item = db.itens.find(i=>i.codigo===v._base); }
         if(item){
           const novoPreco = parseFloat(e.target.value.replace(',','.'))||0;
           item.precos[fornecedor] = novoPreco;
@@ -6574,6 +6725,10 @@ function wireEvents(){
     if(action==='bp-linha'){
       el.onchange = async (e)=>{ const c = CLIENTS.find(x=>x.id===STATE.clientId); const it = itensProprios(c, el.dataset.cat)[+el.dataset.idx]; if(!it) return; const v = e.target.value||null;
         const {error} = await sb.from('impl_cliente_itens').update({linha:v}).eq('id', it._id); if(error){ avisarErroSalvar(error); return; } it.linha = v||''; toastSalvo('Linha salva'); };
+      return;
+    }
+    if(action==='wv-importar'){
+      el.onchange = async (e)=>{ const c = CLIENTS.find(x=>x.id===STATE.clientId); const f = e.target.files && e.target.files[0]; e.target.value=''; if(c && f) await importarWvetro(c, f); };
       return;
     }
     if(action==='bp-arquivo'){
@@ -7423,6 +7578,8 @@ function wireEvents(){
         const c = CLIENTS.find(x=>x.id===STATE.clientId); if(!c) return;
         liberarLinhaPrecos(c, el.dataset.key, el.dataset.v==='1'); return;
       }
+      if(action==='wv-baixar'){ const c = CLIENTS.find(x=>x.id===STATE.clientId); if(c) baixarRelatorioWvetro(c); return; }
+      if(action==='wv-remover'){ const c = CLIENTS.find(x=>x.id===STATE.clientId); if(c) removerWvetro(c); return; }
       if(action==='ver-como-equipe'){ STATE.verComoEquipe = !STATE.verComoEquipe; render(); return; }
       if(action==='forn-ordem'){
         if(!ehAdminEspelho()) return;
