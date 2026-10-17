@@ -30,6 +30,9 @@
       .fcchat-ico{width:38px;height:38px;border-radius:50%;border:1px solid #dde1e6;background:#fff;cursor:pointer;font-size:17px;flex-shrink:0}
       .fcchat-send{border:0;color:#fff;background:linear-gradient(135deg,var(--g1,var(--accent,#3452eb)),var(--g2,var(--accent,#3452eb)))}
       .fcchat-prev{padding:6px 10px;border-top:1px solid #e6e9ee;display:none;align-items:center;gap:8px;background:#fafbfc;font-size:12px}
+      .fcchat-e{border:0;background:none;font-size:26px;width:44px;height:44px;border-radius:10px;cursor:pointer;transition:transform .12s ease, background .12s;position:relative}
+      .fcchat-e:hover,.fcchat-e:focus-visible{transform:scale(1.9);background:#fff;box-shadow:0 6px 18px rgba(0,0,0,.18);z-index:2}
+      .fcchat-emojis{padding:12px !important;max-height:190px !important}
       .fcchat-zoom{position:fixed;inset:0;z-index:10000;background:rgba(10,14,20,.85);display:grid;place-items:center;cursor:zoom-out}
       .fcchat-zoom img{max-width:94vw;max-height:92vh;border-radius:10px}`;
     document.head.appendChild(st);
@@ -49,10 +52,8 @@
     box.querySelector('[data-enviar]').onclick = enviar;
     const EMO='😊 😀 😁 😂 🤣 😅 😉 😍 🥰 😘 😎 🤩 🤔 😐 😕 😢 😭 😡 🙏 👍 👎 👏 🙌 💪 👋 🤝 👀 ✅ ❌ ⚠️ ❓ ❗ 💡 🔥 ⭐ 🎉 🎯 🚀 ⏰ 📌 📎 📷 📝 📊 💰 🏠 🪟 🚪 🔧 🛠️ 📦 ☕ ❤️ 💙 💚 💜 🧡 💛'.split(' ');
     const emoBox = box.querySelector('.fcchat-emojis');
-    emoBox.innerHTML = EMO.map(e=>`<button type="button" data-e="${e}" style="border:0;background:none;font-size:21px;width:36px;height:36px;border-radius:8px;cursor:pointer">${e}</button>`).join('');
+    emoBox.innerHTML = EMO.map(e=>`<button type="button" data-e="${e}" class="fcchat-e">${e}</button>`).join('');
     emoBox.addEventListener('click', e=>{ const b=e.target.closest('[data-e]'); if(!b) return; const a=txt.selectionStart??txt.value.length, z=txt.selectionEnd??txt.value.length; txt.value = txt.value.slice(0,a)+b.dataset.e+txt.value.slice(z); const p=a+b.dataset.e.length; txt.focus(); txt.setSelectionRange(p,p); });
-    emoBox.addEventListener('mouseover', e=>{ const b=e.target.closest('[data-e]'); if(b) b.style.background='#f0f2f5'; });
-    emoBox.addEventListener('mouseout', e=>{ const b=e.target.closest('[data-e]'); if(b) b.style.background='none'; });
     box.querySelector('[data-emoji]').onclick = ()=>{ emoBox.style.display = emoBox.style.display==='none' ? 'flex' : 'none'; };
     txt.addEventListener('keydown', e=>{ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); enviar(); } });
     txt.addEventListener('input', ()=>{ txt.style.height='auto'; txt.style.height=Math.min(110,txt.scrollHeight)+'px'; });
