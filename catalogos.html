@@ -169,6 +169,7 @@ function editor(){const c=CUR,L=linhasDo(c);if(!L.length){cc().innerHTML='<p sty
   <label style="grid-column:1/-1">Texto do topo do catálogo<textarea data-k="texto" rows="2">${esc(c.texto||'')}</textarea></label>
   <label style="grid-column:1/-1">Observação padrão do “Sob consulta”<textarea data-k="obs_pad" rows="2">${esc(c.obs_pad||'')}</textarea></label>
   <label style="grid-column:1/-1">Cores que já vêm marcadas nos perfis<span class="cores">${CORES.map(([id,nm,hx])=>`<span class="cor ${pc.includes(id)?'on':''}" title="${nm}" style="background:${hx}" data-pc="${id}"></span>`).join('')}</span></label></div></div>
+ ${vitCard(c)}
  <div class="card"><h2>Perfis do catálogo</h2>
   <div class="tools">${L.map(l=>`<button class="btn sm ${l.id===LI?'pri':''}" data-li="${l.id}">${esc(l.n)}</button>`).join('')}<input type="search" id="gq" placeholder="Buscar código ou nome" value="${esc(Q)}">
   <select id="gf" style="border:1px solid #c9d3d8;border-radius:8px;padding:6px"><option value="todos">Todos</option><option value="sc" ${FL==='sc'?'selected':''}>Só sob consulta</option><option value="oc" ${FL==='oc'?'selected':''}>Só ocultos</option></select>
@@ -183,6 +184,43 @@ function editor(){const c=CUR,L=linhasDo(c);if(!L.length){cc().innerHTML='<p sty
    <td><label class="sw"><input type="checkbox" data-e="obs" data-q="${k}" ${e.obs?'checked':''} ${e.sc!==false?'':'disabled'}><span></span></label>${e.obs&&e.sc!==false?`<input type="text" data-e="txt" data-q="${k}" value="${esc(e.txt||'')}" placeholder="usa a observação padrão" style="font-size:12.5px">`:''}</td>
    <td><label class="sw"><input type="checkbox" data-e="vis" data-q="${k}" ${e.oc?'':'checked'}><span></span></label></td></tr>`;}).join('')}
   </tbody></table></div><p class="note">${rows.length} perfis listados</p></div></div></main>`;}
+/* ---------- VITRINE LATERAL (destaques e ofertas do cliente) ---------- */
+const vitDe=c=>Object.assign({on:false,seg:6,it:[]},c.vitrine||{});
+function vitCard(c){const V=vitDe(c),L=linhasDo(c),all=L.flatMap(l=>l.p),nm=q=>{const e=itemOf(c,q);return (e.c||q.c)+' · '+(e.n||q.n);};
+ const row=(x,k)=>{const q=x.k==='p'?all.find(q=>q.c===x.c):null;const img=q?IMG+(q.d3?q.i:'c'+q.i)+'.webp':x.img;
+  return `<div class="vrow" style="display:flex;gap:10px;align-items:center;border:1px solid #d9e2e7;border-radius:10px;padding:8px;margin-bottom:6px;background:#fff">
+   <div style="width:64px;height:48px;border-radius:7px;background:#eef2f4 ${img?`url('${esc(img)}') center/${x.k==='o'?'cover':'contain'} no-repeat`:''};flex:none;display:grid;place-items:center;font-size:20px">${img?'':'🏷'}</div>
+   <div style="flex:1;display:grid;gap:4px;min-width:0"><span class="note" style="font-size:11.5px">${x.k==='p'?'Perfil em destaque · '+esc(q?nm(q):x.c):'Oferta / folder'}</span>
+    <input data-vi="${k}" data-vf="t" value="${esc(x.t||'')}" placeholder="${x.k==='p'?'Título (em branco usa o código)':'Título da oferta'}" style="border:1px solid #c9d3d8;border-radius:7px;padding:5px 8px">
+    <input data-vi="${k}" data-vf="x" value="${esc(x.x||'')}" placeholder="${x.k==='p'?'Texto (em branco usa o nome)':'Ex.: 10% à vista até sexta'}" style="border:1px solid #c9d3d8;border-radius:7px;padding:5px 8px"></div>
+   <div style="display:flex;flex-direction:column;gap:3px"><button class="btn sm" data-va="up" data-vi="${k}" title="Subir">▲</button><button class="btn sm" data-va="del" data-vi="${k}" title="Tirar" style="color:#b4372f">✕</button></div></div>`;};
+ return `<div class="card" id="vitC"><h2>📣 Vitrine lateral do catálogo</h2>
+  <p class="note" style="margin:0 0 10px">Seus perfis em destaque e suas ofertas giram no canto do catálogo (no computador). No celular aparece o botão <b>📣 Destaques</b>. Clicou no perfil, abre em 3D; clicou na oferta, abre o seu WhatsApp.</p>
+  <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:10px"><label style="display:flex;gap:8px;align-items:center;font-weight:700"><span class="sw" style="display:inline-block"><input type="checkbox" data-vo="on" ${V.on?'checked':''}><span></span></span> ${V.on?'🟢 No ar':'Desligada'}</label>
+   <label style="display:flex;gap:6px;align-items:center">⏱ Trocar a cada <select data-vo="seg" style="border:1px solid #c9d3d8;border-radius:8px;padding:5px">${[4,5,6,8,10].map(n=>`<option value="${n}" ${+V.seg===n?'selected':''}>${n} s${n===6?' (sugerido)':''}</option>`).join('')}</select></label>
+   ${ADM?`<label style="display:flex;gap:6px;align-items:center;margin-left:auto" title="Só a FC vê esta opção"><input type="checkbox" data-vo="cred" ${V.semcred?'':'checked'}> “tecnologia FC” discreto no rodapé</label>`:''}</div>
+  ${V.it.length?V.it.map(row).join(''):'<p class="note">Nenhum item ainda. Adicione abaixo.</p>'}
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;padding-top:10px;border-top:1px dashed #d9e2e7">
+   <input list="vitDL" id="vitCod" placeholder="Código do perfil" style="border:1px solid #c9d3d8;border-radius:8px;padding:6px 8px;min-width:200px"><datalist id="vitDL">${all.filter(q=>!itemOf(c,q).oc).map(q=>`<option value="${esc(q.c)}">${esc(nm(q))}</option>`).join('')}</datalist>
+   <button class="btn sm pri" data-va="addp">＋ Perfil em destaque</button>
+   <span style="flex-basis:100%;height:0"></span>
+   <input id="vitOt" placeholder="Título da oferta" style="border:1px solid #c9d3d8;border-radius:8px;padding:6px 8px;min-width:200px"><label class="btn sm" style="cursor:pointer">🖼 Foto ou folder<input type="file" id="vitOf" accept="image/*" hidden></label><span class="note" id="vitOn"></span>
+   <button class="btn sm pri" data-va="addo">＋ Oferta</button></div></div>`;}
+async function vitSalva(V){await salvaCli({vitrine:V});}
+async function vitFoto(f){const im=await new Promise((ok,er)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=er;i.src=URL.createObjectURL(f);});
+ const k=Math.min(1,900/Math.max(im.width,im.height)),cv=document.createElement('canvas');cv.width=Math.round(im.width*k);cv.height=Math.round(im.height*k);cv.getContext('2d').drawImage(im,0,0,cv.width,cv.height);
+ const b=await new Promise(ok=>cv.toBlob(ok,'image/jpeg',.85));const path='cat-vitrine/'+CUR.id+'/'+Date.now()+'.jpg';
+ const r=await sb.storage.from('fc-anexos').upload(path,b,{contentType:'image/jpeg',upsert:false});if(r.error)throw r.error;return sb.storage.from('fc-anexos').getPublicUrl(path).data.publicUrl;}
+function vitBind(){const A=document.getElementById('vitC');if(!A)return;const V=vitDe(CUR);
+ A.querySelectorAll('[data-vo]').forEach(i=>i.onchange=async()=>{const k=i.dataset.vo;if(k==='on')V.on=i.checked;else if(k==='seg')V.seg=+i.value;else if(k==='cred')V.semcred=!i.checked;await vitSalva(V);draw();});
+ A.querySelectorAll('input[data-vi]').forEach(i=>i.onchange=async()=>{V.it[+i.dataset.vi][i.dataset.vf]=i.value.trim();await vitSalva(V);});
+ A.querySelectorAll('button[data-va]').forEach(b=>b.onclick=async()=>{const a=b.dataset.va,k=+b.dataset.vi;
+  if(a==='del'){V.it.splice(k,1);}else if(a==='up'){if(k<1)return;[V.it[k-1],V.it[k]]=[V.it[k],V.it[k-1]];}
+  else if(a==='addp'){const v=$('#vitCod').value.trim(),all=linhasDo(CUR).flatMap(l=>l.p);const q=all.find(q=>q.c===v)||all.find(q=>nz(itemOf(CUR,q).c||q.c)===nz(v));if(!q){st('Código não encontrado nas suas linhas');return;}V.it.push({k:'p',c:q.c});}
+  else if(a==='addo'){const t=$('#vitOt').value.trim(),f=$('#vitOf').files[0];if(!t&&!f){st('Escreva o título ou escolha a foto');return;}b.disabled=true;b.textContent='Enviando…';
+   let img='';try{if(f)img=await vitFoto(f);}catch(x){st('Erro na foto: '+(x.message||x));b.disabled=false;b.textContent='＋ Oferta';return;}V.it.push({k:'o',t,img});}
+  if(!V.on&&V.it.length)V.on=true;await vitSalva(V);draw();});
+ const of=$('#vitOf');if(of)of.onchange=()=>{$('#vitOn').textContent=of.files[0]?'📎 '+of.files[0].name:'';};}
 async function salvaItem(base,patch){const c=CUR,q=BASE.flatMap(l=>l.p).find(x=>x.c===base),e=itemOf(c,q);const row=Object.assign({cliente_id:c.id,base,c:e.c||null,n:e.n||null,cores:e.cores,sc:e.sc!==false,obs:!!e.obs,txt:e.txt||null,oc:!!e.oc},patch,{atualizado:new Date().toISOString()});
  const r=await sb.from('cat_itens').upsert(row);if(r.error){st('Erro ao salvar: '+r.error.message);return false;}(IT[c.id]=IT[c.id]||{})[base]=row;st('✓ Salvo');return true;}
 async function salvaCli(patch){const r=await sb.from('cat_clientes').update(patch).eq('id',CUR.id);if(r.error){st('Erro: '+r.error.message);return;}Object.assign(CUR,patch);st('✓ Salvo');}
@@ -207,6 +245,7 @@ function bind(){const A=cc();
  A.querySelectorAll('[data-e]').forEach(i=>i.onchange=async()=>{const base=i.dataset.q,k=i.dataset.e,q=q0(base);let p={};
   if(k==='c')p.c=i.value.trim()===base?null:i.value.trim();else if(k==='n')p.n=i.value.trim()===q.n?null:i.value.trim();else if(k==='txt')p.txt=i.value.trim();else if(k==='vis')p.oc=!i.checked;else p[k]=i.checked;
   const ok=await salvaItem(base,p);if(ok&&!['c','n','txt'].includes(k))draw();});
+ vitBind();
  A.querySelectorAll('[data-cor]').forEach(s=>s.onclick=async()=>{const base=s.dataset.q,e=itemOf(CUR,q0(base)),cs=(e.cores||CUR.cores||['branco','preto','natural']).slice(),k=s.dataset.cor,n=cs.includes(k)?cs.filter(x=>x!==k):cs.concat(k);if(await salvaItem(base,{cores:n}))s.classList.toggle('on');});}
 gateUI(async({session,perfil})=>{UID=session.user.id;ADM=perfil.papel==='admin';await carregar();
  if(ADM){VIEW='lista';const ed=new URLSearchParams(location.search).get('editar');const cx=ed&&CL.find(x=>x.id===ed);if(cx){CUR=cx;VIEW='ed';LI='sup';Q='';FL='todos';}}else{CUR=CL.find(x=>x.gestor_uid===UID);if(!CUR){cc().innerHTML='<div style="padding:40px;text-align:center">Este login não tem catálogo de cliente. Fale com a FC Consultoria: WhatsApp (66) 9 9986-7984.<br><br><button class="btn" onclick="sair()">Sair</button></div>';return;}VIEW='ed';}
