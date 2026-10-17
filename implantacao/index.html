@@ -309,7 +309,7 @@ tbody tr:hover{background:var(--panel-2);}
   input.editable-price{border:none !important; background:transparent !important; -webkit-appearance:none;}
   input.editable-price::placeholder{color:transparent !important;}
 }
-.modo-alim [data-action="set-cliente-tab"],.modo-alim [data-action="zerar-implantacao-linha"],.modo-alim [data-action="bp-excluir"],.modo-alim [data-action="set-componente-linha"][data-linha="todas"]{display:none!important}</style>
+.modo-alim [data-action="set-cliente-tab"],.modo-alim [data-action="ajuste-cod-abrir"],.modo-alim .panel:has([data-action="mudar-desconto-perfis-metro"]),.modo-alim .panel:has([data-action="metro-import-abrir"]),.modo-alim .panel:has(> * > [data-action="perfis-base"]),.modo-alim [data-action="zerar-implantacao-linha"],.modo-alim [data-action="bp-excluir"],.modo-alim [data-action="set-componente-linha"][data-linha="todas"]{display:none!important}</style>
 </head>
 <body>
 <div id="login-screen" class="login-screen">
@@ -2106,13 +2106,13 @@ function renderClienteAlimentador(c){
   const p = progressoTarefa(c,t);
   const cc = Object.assign({}, c, {linhas_componentes:[t.linha]});
   const corpo = t.topico==='componentes' ? (STATE.componenteLinhaAtiva = t.linha, renderClienteComponentes(cc)) : t.topico==='vidro' ? renderBancoProprio(c,'vidro') : (c.perfisBase==='kg' ? renderBancoProprio(c,'perfis_kg') : renderPerfisTab(c));
-  return `${bannerSimular()}<div class="modo-alim"><button class="backlink" data-action="voltar-fila">${icon('arrow-left')} Minha fila</button>
+  return `${bannerSimular()}<div class="modo-alim"><button class="btn" style="margin-bottom:12px" data-action="voltar-fila">${icon('arrow-left')} Voltar à tela inicial (Minha fila)</button>
   <div class="clienthead"><div class="clienthead-top"><div><h2>${escapeHtml(c.nome)}</h2><span class="badge">${escapeHtml(t.topico==='vidro'?'Vidro':t.linha+' · '+TOPICOS[t.topico])}</span></div>
     <div style="display:flex;gap:8px">${t.status==='terminada'?'<span class="badge">✔ Enviado para conferência</span>':`<button class="btn btn-primary" data-action="tarefa-status" data-id="${t.id}" data-st="terminada">${icon('check-circle')} Terminei esta parte</button>`}</div></div>
     <div class="metarow"><div class="metaitem">Sistema · login<b>${escapeHtml(c.sistema_login||'—')}</b></div><div class="metaitem">Senha<b>${escapeHtml(c.sistema_senha||'—')}</b></div><div class="metaitem">Licença<b>${escapeHtml(c.sistema_licenca||'—')}</b></div>
       <div class="metaitem">Progresso<div class="pbar-row" style="margin-top:4px;width:160px"><div class="pbar-track"><div class="pbar-fill" style="width:${p.pct}%"></div></div><div class="pct">${p.pct}%</div></div></div></div>
     ${t.obs?`<div class="desc" style="margin-top:8px">💬 Observação da FC: <b>${escapeHtml(t.obs)}</b></div>`:''}</div>
-  ${corpo}</div>`;
+  ${corpo}<div style="margin:18px 0 8px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-action="voltar-fila">${icon('arrow-left')} Voltar à tela inicial (Minha fila)</button>${t.status==='terminada'?'':`<button class="btn btn-primary" data-action="tarefa-status" data-id="${t.id}" data-st="terminada">${icon('check-circle')} Terminei esta parte</button>`}</div></div>`;
 }
 
 // Presença da equipe: avisa o Painel da Matriz (quadro Ao vivo) onde a pessoa está, a cada 45 s com a aba visível
