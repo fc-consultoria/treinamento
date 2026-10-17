@@ -134,6 +134,11 @@
     const {data:{session}} = await sb.auth.getSession();
     if(!session){ setTimeout(iniciar, 4000); return; }
     S.eu = String(session.user.email||'').toLowerCase();
+    // A matriz conversa só pelo Painel da Matriz (não abre a conversa no Painel de Implantação, para não avisar em dobro)
+    if(/\/implantacao\//.test(location.pathname)){
+      if(typeof MEU_ACESSO==='undefined' || !MEU_ACESSO || MEU_ACESSO.admin===undefined){ setTimeout(iniciar, 2000); return; }
+      if(MEU_ACESSO.admin) return;
+    }
     S.nome = (typeof MEU_ACESSO!=='undefined' && MEU_ACESSO && MEU_ACESSO.nome) || S.eu.split('@')[0];
     if(typeof MEU_ACESSO==='undefined' || !MEU_ACESSO){ try{ const r=await sb.from('impl_acesso').select('nome').eq('email', S.eu).maybeSingle(); if(r.data && r.data.nome) S.nome=r.data.nome; }catch(_){ } }
     montar(); await carregar();
