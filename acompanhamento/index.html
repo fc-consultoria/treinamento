@@ -504,7 +504,7 @@ function iniciarDemo(){
     // Avisa a FC que o cliente abriu o link (não conta a prévia nem quando é a própria FC abrindo)
     if(!data){estado('Link desativado','Este link não está mais ativo. Peça um novo link para a FC Consultoria.');return;}
     ENVIO.chave=chave;ENVIO.previa=previa;ENVIO.sb=sb;ENVIO.ehFC=ehFC;ENVIO.recebidos=data.recebidos||[];ENVIO.ultimo=data;
-    render(data);
+    render(data);ATU.sb=sb;ATU.chave=chave;ATU.nome=ENVIO.nome||'';ATU.previa=previa;ATU.marca=ATU.fp(data);
     setTimeout(buscarNovidades,1200);
     galeria(sb,chave,ENVIO.nome||'');
     suporte(sb,chave,ENVIO.nome||'');
@@ -601,6 +601,18 @@ function telaEntrar(sb,chave,chaveNome){
     });
   });
 }
+
+// Andamento novo publicado pela FC com o cliente já na tela: confere a cada 2 minutos e ao voltar para a aba
+const ATU={fp:d=>{try{return JSON.stringify(((d&&d.fotos)||[])[0]||null)}catch(_){return ''}},marca:null,aviso:false};
+async function conferirAtualizacao(){
+  if(!ATU.sb||ATU.previa||ATU.aviso||document.hidden||ATU.marca===null)return;
+  try{const r=await ATU.sb.rpc('impl_portal_ver',{p_chave:ATU.chave,p_nome:ATU.nome});if(r.error||!r.data||r.data.precisa_nome)return;
+    if(ATU.fp(r.data)!==ATU.marca){ATU.aviso=true;
+      document.body.insertAdjacentHTML('beforeend','<div id="avisoAtu" role="status" style="position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:90;display:flex;gap:12px;align-items:center;background:#13232e;color:#fff;border-radius:99px;padding:8px 8px 8px 18px;font:600 15px var(--body,system-ui);box-shadow:0 10px 28px rgba(0,0,0,.25);max-width:calc(100vw - 32px)"><span>A FC publicou uma atualização do andamento.</span><button type="button" id="avisoAtuB" style="border:0;border-radius:99px;background:#f2a51e;color:#2a1b00;font:700 15px var(--body,system-ui);padding:9px 16px;cursor:pointer;white-space:nowrap">Ver agora</button></div>');
+      document.getElementById('avisoAtuB').onclick=()=>location.reload();}}catch(_){}
+}
+setInterval(conferirAtualizacao,120000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)conferirAtualizacao();});
 // Folders e dicas enviados pela FC: abrem na tela ao entrar e são conferidos a cada minuto
 const FOLDER={fila:[],aberto:null,vistos:new Set()};
 async function buscarNovidades(){
