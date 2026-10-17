@@ -2179,8 +2179,82 @@ function arquivosLiberadosCliente(c){
 }
 // Banco de Preços: uma entrada no menu, quatro abas (as telas antigas continuam iguais por dentro)
 function abasBanco(){
-  const A=[['banco','Componentes','box'],['orcamentos-aluminio','Perfis · metro linear','layers'],['orcamentos-fornecedor','Orçamentos recebidos','inbox'],['consulta','Buscar preço','search']];
+  const A=[['banco','Componentes','box'],['orcamentos-aluminio','Perfis · metro linear','layers'],['orcamentos-fornecedor','Base FC','star'],['consulta','Buscar preço','search']];
   return `<div class="tabbar" style="margin:-4px 0 16px">${A.map(([v,t,ic])=>`<button class="tabbtn ${STATE.view===v?'active':''}" data-action="banco-aba" data-v="${v}">${icon(ic)} ${t}</button>`).join('')}</div>`;
+}
+// ===== Base FC: planilhas do WVetro e do CEM, alimentadas conforme a demanda (base para clientes que não exigem a tabela do fornecedor) =====
+const BASEFC = {wvetro:{itens:[],arqs:[],carregado:false,carregando:false}, cem:{itens:[],arqs:[],carregado:false,carregando:false}};
+const SIS_NOME = {wvetro:'WVetro', cem:'CEM'};
+const CAT_BASE = [['componentes','Componentes'],['perfis','Perfis'],['vidro','Vidro'],['outros','Outros']];
+function subAbasBaseFC(){ const a = STATE.baseSis||'wvetro';
+  return `<div class="pagehead"><div><h1>Base FC</h1><p>Tabelas do WVetro e do CEM baixadas dos sistemas e alimentadas conforme a demanda. Ficam prontas para virar a base de preços dos clientes que não exigem a tabela do fornecedor.</p></div></div>
+  <div class="chiprow" style="margin-bottom:14px">${[['wvetro','Base WVetro'],['cem','Base CEM'],['orc','Orçamentos recebidos']].map(([k,t])=>`<button class="chip ${a===k?'active':''}" data-action="base-sis" data-v="${k}">${t}</button>`).join('')}</div>`; }
+async function carregarBaseFC(sis){
+  const B = BASEFC[sis]; if(B.carregando) return; B.carregando = true;
+  try{ let all=[], from=0; for(;;){ const {data,error} = await sb.from('impl_base_fc_itens').select('*').eq('sistema',sis).order('codigo').range(from, from+999); if(error) throw error; all = all.concat(data||[]); if(!data || data.length<1000) break; from+=1000; }
+    const a = await sb.from('impl_base_fc_arquivos').select('*').eq('sistema',sis).order('criado_em',{ascending:false});
+    B.itens = all; B.arqs = a.data||[]; B.carregado = true; }catch(e){ console.warn('base fc', e); B.erro = (e&&e.message)||String(e); }
+  B.carregando = false; if(STATE.view==='orcamentos-fornecedor') render();
+}
+function renderBaseFC(sis){
+  const B = BASEFC[sis]; if(!B.carregado){ carregarBaseFC(sis); return emptyState('loader','Carregando a Base '+SIS_NOME[sis]+'…', B.erro||''); }
+  const fl = STATE.baseFiltro = STATE.baseFiltro || {busca:'', cat:'', st:'todos'};
+  const q = normalizeText(fl.busca||'');
+  const V = B.itens.filter(it=>(!fl.cat||it.categoria===fl.cat) && (fl.st==='todos'||(fl.st==='pend'?!it.alimentado:it.alimentado)) && (!q || normalizeText((it.codigo||'')+' '+(it.descricao||'')+' '+(it.linha||'')+' '+(it.cor||'')).includes(q)));
+  const M = V.slice(0,300), comPreco = B.itens.filter(it=>Number(it.custo)>0).length, alim = B.itens.filter(it=>it.alimentado).length;
+  const catSel = STATE.baseCatImport||'componentes';
+  return `<div class="panel" style="padding:16px 18px">
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><div><h3 style="margin:0">Base ${SIS_NOME[sis]}</h3><div class="desc">${B.itens.length} itens · ${comPreco} com preço · ${alim} alimentados</div></div>
+      <span style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;align-items:center"><select class="select-inline" data-action="base-cat-import">${CAT_BASE.map(([k,t])=>`<option value="${k}" ${catSel===k?'selected':''}>Importar como: ${t}</option>`).join('')}</select>
+      <label class="btn btn-primary" style="cursor:pointer">${icon('file-spreadsheet')} Importar planilha do ${SIS_NOME[sis]}<input type="file" accept=".xlsx,.xls,.csv" data-action="base-import" style="display:none"></label>
+      <label class="btn" style="cursor:pointer">${icon('paperclip')} Anexar PDF ou print<input type="file" multiple accept=".pdf,image/*" data-action="base-anexo" style="display:none"></label></span></div>
+    <div class="desc" style="margin-top:8px">A planilha precisa ter pelo menos uma coluna de <b>Código</b> ou <b>Descrição</b>. Se tiver, também lê <b>Preço/Custo</b>, <b>Venda</b>, <b>Unidade</b>, <b>Cor</b> e <b>Linha/Grupo</b>. Reimportar atualiza o que já existe e acrescenta o novo, sem duplicar.</div>
+    ${B.arqs.length?`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;align-items:center"><span class="desc">Arquivos:</span>${B.arqs.slice(0,15).map(a=>a.storage_path?`<button class="btn btn-sm btn-ghost" data-action="abrir-pdf-assinado" data-path="${escapeHtml(a.storage_path)}">${icon('file')} ${escapeHtml(a.nome)}${a.itens?` · ${a.itens} itens`:''}</button>`:`<span class="chip">${escapeHtml(a.nome)}</span>`).join('')}</div>`:''}</div>
+  ${B.itens.length?`<div class="panel"><div style="padding:12px 18px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;border-bottom:1px solid var(--border-2)">
+      <div class="searchbox" style="min-width:240px;flex:1 1 240px;max-width:420px">${icon('search')}<input placeholder="Buscar código, descrição, linha ou cor" value="${escapeHtml(fl.busca)}" data-action="base-busca"></div>
+      <select class="select-inline" data-action="base-fcat"><option value="">Todas as categorias</option>${CAT_BASE.map(([k,t])=>`<option value="${k}" ${fl.cat===k?'selected':''}>${t}</option>`).join('')}</select>
+      <select class="select-inline" data-action="base-fst"><option value="todos" ${fl.st==='todos'?'selected':''}>Todos</option><option value="pend" ${fl.st==='pend'?'selected':''}>Só pendentes</option><option value="ok" ${fl.st==='ok'?'selected':''}>Só alimentados</option></select>
+      <span class="desc">${V.length} itens${V.length>M.length?` · mostrando ${M.length}`:''}</span>
+      ${M.length?`<button class="btn btn-sm" data-action="base-marcar" data-valor="${M.every(it=>it.alimentado)?'0':'1'}">${M.every(it=>it.alimentado)?'Desmarcar':'Marcar'} ${M.length} como alimentado${M.length>1?'s':''}</button>`:''}</div>
+    <div style="overflow-x:auto"><table class="table"><thead><tr><th style="width:80px">Alimentado</th><th>Categoria</th><th>Linha</th><th>Código</th><th>Descrição</th><th>Cor</th><th>Un.</th><th class="tright">Custo (R$)</th></tr></thead>
+    <tbody>${M.map(it=>`<tr><td class="tcenter"><input type="checkbox" class="chk" data-action="base-alim" data-id="${it.id}" ${it.alimentado?'checked':''}></td><td class="desc">${escapeHtml((CAT_BASE.find(c=>c[0]===it.categoria)||['',it.categoria||''])[1])}</td><td>${escapeHtml(it.linha||'')}</td><td class="mono">${escapeHtml(it.codigo||'')}</td><td>${escapeHtml(it.descricao||'')}</td><td>${escapeHtml(it.cor||'')}</td><td>${escapeHtml(it.unidade||'')}</td>
+      <td class="tright"><input class="editable-price" style="width:90px;text-align:right" value="${it.custo!=null?String(Number(it.custo).toFixed(2)).replace('.',','):''}" placeholder="—" data-action="base-custo" data-id="${it.id}"></td></tr>`).join('')}</tbody></table></div></div>`
+  : `<div class="panel">${emptyState('file-spreadsheet','Nenhum item na Base '+SIS_NOME[sis]+' ainda','Exporte a tabela de preços do '+SIS_NOME[sis]+' em Excel e clique em "Importar planilha".')}</div>`}`;
+}
+function lerPlanilhaBaseFC(rows){
+  const norm = x => normalizeText(String(x||'')).trim();
+  let hi=-1, C={};
+  for(let i=0;i<Math.min(rows.length,25);i++){ const r=(rows[i]||[]).map(norm);
+    const cod=r.findIndex(x=>/^c[oó]d|^referen|^ref$/.test(x)), des=r.findIndex(x=>/descri|produto|^nome|^item$/.test(x));
+    if(cod>=0||des>=0){ hi=i; C={cod, des, custo:r.findIndex(x=>/custo|pre[cç]o|valor|compra/.test(x)&&!/venda/.test(x)), venda:r.findIndex(x=>/venda/.test(x)), un:r.findIndex(x=>/^un|unid/.test(x)), cor:r.findIndex(x=>/^cor\b|^cor$|acabamento/.test(x)), linha:r.findIndex(x=>/linha|grupo|fam[ií]lia|categoria|s[eé]rie/.test(x))}; break; } }
+  if(hi<0) return {erro:'Não encontrei uma coluna de "Código" ou "Descrição" nas primeiras linhas da planilha.'};
+  const num = v => { if(typeof v==='number') return v; let t=String(v||'').replace(/[R$\s]/g,''); if(!t) return null; if(t.includes(',')) t=t.replace(/\./g,'').replace(',','.'); const n=parseFloat(t); return isNaN(n)?null:n; };
+  const col = (r,k) => C[k]>=0 ? String(r[C[k]]??'').trim() : '';
+  const itens=[], vistos=new Set();
+  for(let i=hi+1;i<rows.length;i++){ const r=rows[i]||[]; const codigo=col(r,'cod'), descricao=col(r,'des'); if(!codigo && !descricao) continue;
+    const cor=col(r,'cor'); const chave = normalizeCodigo(codigo||descricao)+'|'+normalizeCodigo(cor); if(vistos.has(chave)) continue; vistos.add(chave);
+    const custo = C.custo>=0 ? num(r[C.custo]) : null, venda = C.venda>=0 ? num(r[C.venda]) : null;
+    itens.push({chave, codigo:codigo||null, descricao:descricao||null, cor:cor||null, unidade:col(r,'un')||null, linha:col(r,'linha')||null, custo: custo>0?custo:null, venda: venda>0?venda:null}); }
+  return {itens};
+}
+async function importarBaseFC(sis, file){
+  let lida; try{ const wb = XLSX.read(await file.arrayBuffer(), {type:'array'}); lida = lerPlanilhaBaseFC(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1, defval:''})); }catch(e){ alert('Não consegui ler a planilha: '+(e&&e.message||e)); return; }
+  if(lida.erro){ alert(lida.erro); return; }
+  const cat = STATE.baseCatImport||'componentes', B = BASEFC[sis], atuais = new Set(B.itens.map(x=>x.chave));
+  const novos = lida.itens.filter(it=>!atuais.has(it.chave)).length;
+  if(!confirm(`${file.name}\n\n${lida.itens.length} itens lidos (categoria: ${(CAT_BASE.find(c=>c[0]===cat)||[])[1]})\n• ${novos} novo(s)\n• ${lida.itens.length-novos} já existente(s) — dados atualizados, "alimentado" não muda\n\nImportar para a Base ${SIS_NOME[sis]}?`)) return;
+  let storage_path=null; try{ const nm=file.name.normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^\w.\-]+/g,'_'); const p=`base-fc/${sis}/${Date.now()}-${nm}`; const up=await sb.storage.from(ORCAMENTOS_BUCKET).upload(p, file, {upsert:false}); if(!up.error) storage_path=p; }catch(_){}
+  const agora = new Date().toISOString();
+  const payload = lida.itens.map(it=>Object.assign({sistema:sis, categoria:cat, arquivo:file.name, atualizado_em:agora}, it));
+  for(let i=0;i<payload.length;i+=300){ const {error} = await sb.from('impl_base_fc_itens').upsert(payload.slice(i,i+300), {onConflict:'sistema,chave'}); if(error){ avisarErroSalvar(error); return; } }
+  await sb.from('impl_base_fc_arquivos').insert({sistema:sis, nome:file.name, storage_path, itens:lida.itens.length});
+  B.carregado=false; toastSalvo(lida.itens.length+' itens importados'); carregarBaseFC(sis);
+}
+async function anexarBaseFC(sis, files){
+  for(const file of files){ const nm=(file.name||'print.png').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^\w.\-]+/g,'_'); const p=`base-fc/${sis}/${Date.now()}-${nm}`;
+    const up=await sb.storage.from(ORCAMENTOS_BUCKET).upload(p, file, {upsert:false, contentType:file.type||undefined}); if(up.error) return avisarErroSalvar(up.error);
+    const r=await sb.from('impl_base_fc_arquivos').insert({sistema:sis, nome:file.name||'print.png', storage_path:p, itens:0}).select().single(); if(r.error) return avisarErroSalvar(r.error); BASEFC[sis].arqs.unshift(r.data); }
+  toastSalvo('Arquivo anexado'); render();
 }
 function renderFila(){
   const admin = !ehAlimentador();
@@ -2424,7 +2498,7 @@ function render(){
   else if(STATE.view==='fornecedores') root.innerHTML = renderFornecedores();
   else if(STATE.view==='banco') root.innerHTML = abasBanco() + renderBanco();
   else if(STATE.view==='consulta') root.innerHTML = abasBanco() + renderConsulta();
-  else if(STATE.view==='orcamentos-fornecedor') root.innerHTML = abasBanco() + renderOrcamentosFornecedor();
+  else if(STATE.view==='orcamentos-fornecedor') root.innerHTML = abasBanco() + subAbasBaseFC() + ((STATE.baseSis||'wvetro')==='orc' ? renderOrcamentosFornecedor() : renderBaseFC(STATE.baseSis||'wvetro'));
   else if(STATE.view==='orcamentos-aluminio') root.innerHTML = abasBanco() + renderOrcamentosAluminio();
   else if(STATE.view==='reajustes') root.innerHTML = renderReajustes();
   else if(STATE.view==='cliente') root.innerHTML = renderClienteDetail();
@@ -6124,6 +6198,13 @@ function wireEvents(){
         const r=await sb.from(tb).update({disponivel:v}).eq('id',el.dataset.id); if(r.error){ e.target.checked=!v; return avisarErroSalvar(r.error); }
         const L = el.dataset.tipo==='arq'?FORN_ARQ.find(x=>x.id===el.dataset.id):(el.dataset.tipo==='orc'?ORC_FORNECEDOR:ORC_ALUMINIO).find(x=>x._id===el.dataset.id); if(L) L.disponivel=v;
         toastSalvo(v?'Liberado para a equipe':'Só você vê'); render(); }; return; }
+    if(action==='base-import'){ el.onchange=(e)=>{ const f0=e.target.files&&e.target.files[0]; e.target.value=''; if(f0) importarBaseFC(STATE.baseSis||'wvetro', f0); }; return; }
+    if(action==='base-anexo'){ el.onchange=(e)=>{ const fs=[...(e.target.files||[])]; e.target.value=''; if(fs.length) anexarBaseFC(STATE.baseSis||'wvetro', fs); }; return; }
+    if(action==='base-cat-import'){ el.onchange=(e)=>{ STATE.baseCatImport=e.target.value; }; return; }
+    if(action==='base-fcat' || action==='base-fst'){ el.onchange=(e)=>{ STATE.baseFiltro[action==='base-fcat'?'cat':'st']=e.target.value; render(); }; return; }
+    if(action==='base-busca'){ el.oninput=(e)=>{ STATE.baseFiltro.busca=e.target.value; clearTimeout(window.__bbT); window.__bbT=setTimeout(()=>{ render(); const n=document.querySelector('[data-action="base-busca"]'); if(n){ n.focus(); n.setSelectionRange(n.value.length,n.value.length); } },250); }; return; }
+    if(action==='base-alim'){ el.onchange=async(e)=>{ const v=e.target.checked; const {error}=await sb.from('impl_base_fc_itens').update({alimentado:v}).eq('id',el.dataset.id); if(error){ e.target.checked=!v; return avisarErroSalvar(error); } const it=BASEFC[STATE.baseSis||'wvetro'].itens.find(x=>x.id===el.dataset.id); if(it) it.alimentado=v; }; return; }
+    if(action==='base-custo'){ el.onchange=async(e)=>{ let t=String(e.target.value||'').replace(/[R$\s]/g,''); if(t.includes(',')) t=t.replace(/\./g,'').replace(',','.'); const n=t===''?null:parseFloat(t); if(n!==null && isNaN(n)) return; const {error}=await sb.from('impl_base_fc_itens').update({custo:n, atualizado_em:new Date().toISOString()}).eq('id',el.dataset.id); if(error) return avisarErroSalvar(error); const it=BASEFC[STATE.baseSis||'wvetro'].itens.find(x=>x.id===el.dataset.id); if(it) it.custo=n; toastSalvo('Preço salvo'); }; return; }
     if(action==='atribuir-tarefa'){
       el.onchange = (e)=>{ const c = CLIENTS.find(x=>x.id===STATE.clientId); if(c) atribuirTarefa(c, el.dataset.linha, el.dataset.topico, e.target.value||null); };
       return;
@@ -7340,6 +7421,11 @@ function wireEvents(){
         const r = tem ? await sb.from('impl_fornecedor_linhas').delete().eq('fornecedor_id',f.id).eq('linha',l) : await sb.from('impl_fornecedor_linhas').insert({fornecedor_id:f.id, linha:l});
         if(r.error) return avisarErroSalvar(r.error); FORN_LINHAS = tem ? FORN_LINHAS.filter(x=>!(x.fornecedor_id===f.id&&x.linha===l)) : FORN_LINHAS.concat([{fornecedor_id:f.id, linha:l}]); toastSalvo('Salvo'); render(); })(); return; }
       if(action==='banco-aba'){ STATE.view=el.dataset.v; STATE.search=''; render(); window.scrollTo(0,0); return; }
+      if(action==='base-sis'){ STATE.baseSis=el.dataset.v; STATE.baseFiltro=null; render(); return; }
+      if(action==='base-marcar'){ (async()=>{ const sis=STATE.baseSis||'wvetro', B=BASEFC[sis], v=el.dataset.valor==='1', fl=STATE.baseFiltro||{}, q=normalizeText(fl.busca||'');
+          const ids = B.itens.filter(it=>(!fl.cat||it.categoria===fl.cat) && (fl.st==='todos'||!fl.st||(fl.st==='pend'?!it.alimentado:it.alimentado)) && (!q || normalizeText((it.codigo||'')+' '+(it.descricao||'')+' '+(it.linha||'')+' '+(it.cor||'')).includes(q))).slice(0,300).map(it=>it.id);
+          for(let i=0;i<ids.length;i+=200){ const {error}=await sb.from('impl_base_fc_itens').update({alimentado:v}).in('id', ids.slice(i,i+200)); if(error) return avisarErroSalvar(error); }
+          B.itens.forEach(it=>{ if(ids.includes(it.id)) it.alimentado=v; }); toastSalvo(ids.length+' itens atualizados'); render(); })(); return; }
       if(action==='ir-fila'){ STATE.view='fila'; render(); return; }
       if(action==='abrir-tarefa'){ const t = TAREFAS.find(x=>x.id===el.dataset.id); if(!t) return; STATE.voltarPara = STATE.view==='clientes'?'clientes':'fila'; STATE.modoTarefa=true; STATE.clientId=t.cliente_id; STATE.tarefaAtiva=t.id; STATE.view='cliente';
         STATE.clienteTab = t.topico==='componentes'?'componentes':t.topico==='vidro'?'vidro':'perfis'; if(t.topico==='componentes') STATE.componenteLinhaAtiva=t.linha; STATE.search=''; render(); window.scrollTo(0,0); return; }
