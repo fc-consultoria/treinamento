@@ -346,10 +346,7 @@ tbody tr:hover{background:var(--panel-2);}
       <button class="navitem" data-nav="clientes"><i data-lucide="users"></i> Clientes</button>
       <div class="navlabel" data-adm style="margin-top:14px">Preços</div>
       <button class="navitem" data-nav="fornecedores"><i data-lucide="truck"></i> Fornecedores</button>
-      <button class="navitem" data-nav="banco"><i data-lucide="database"></i> Banco de Preços · Componentes</button>
-      <button class="navitem" data-nav="orcamentos-aluminio"><i data-lucide="layers"></i> Banco de Preços · Perfis</button>
-      <button class="navitem" data-nav="orcamentos-fornecedor"><i data-lucide="inbox"></i> Orçamentos recebidos</button>
-      <button class="navitem" data-nav="consulta"><i data-lucide="search"></i> Buscar preço</button>
+      <button class="navitem" data-nav="banco"><i data-lucide="database"></i> Banco de Preços</button>
       <button class="navitem" data-nav="reajustes"><i data-lucide="percent"></i> Reajustes de preço</button>
       <div class="navlabel" data-adm style="margin-top:14px">Equipe</div>
       <button class="navitem" data-nav="espelho" id="nav-espelho" style="display:none;"><i data-lucide="monitor-play"></i> Espelho da equipe</button>
@@ -2180,6 +2177,11 @@ function arquivosLiberadosCliente(c){
   const fs = [...new Set(nomes.map(fornDeNome).filter(Boolean))];
   return fs.map(f=>({f, A: arquivosForn(f).filter(a=>a.disponivel && a.path)})).filter(x=>x.A.length);
 }
+// Banco de Preços: uma entrada no menu, quatro abas (as telas antigas continuam iguais por dentro)
+function abasBanco(){
+  const A=[['banco','Componentes','box'],['orcamentos-aluminio','Perfis · metro linear','layers'],['orcamentos-fornecedor','Orçamentos recebidos','inbox'],['consulta','Buscar preço','search']];
+  return `<div class="tabbar" style="margin:-4px 0 16px">${A.map(([v,t,ic])=>`<button class="tabbtn ${STATE.view===v?'active':''}" data-action="banco-aba" data-v="${v}">${icon(ic)} ${t}</button>`).join('')}</div>`;
+}
 function renderFila(){
   const admin = !ehAlimentador();
   const minhas = TAREFAS.filter(t=>admin || t.email.toLowerCase()===meuEmail());
@@ -2412,17 +2414,18 @@ function render(){
     return;
   }
   const root = document.getElementById('view-root');
-  document.querySelectorAll('.navitem').forEach(b=>b.classList.toggle('active', b.dataset.nav===STATE.view));
+  const GRUPO_BANCO=['banco','consulta','orcamentos-fornecedor','orcamentos-aluminio'];
+  document.querySelectorAll('.navitem').forEach(b=>b.classList.toggle('active', b.dataset.nav===STATE.view || (b.dataset.nav==='banco' && GRUPO_BANCO.includes(STATE.view))));
   if(ehAlimentador() && !['fila','cliente'].includes(STATE.view)) STATE.view='fila';
   document.querySelectorAll('.navitem[data-nav]').forEach(b=>{ if(b.dataset.nav!=='fila') b.style.display = ehAlimentador() ? 'none' : ''; }); document.querySelectorAll('.navlabel[data-adm]').forEach(x=>x.style.display = ehAlimentador() ? 'none' : '');
   if(STATE.view==='fila') root.innerHTML = renderFila();
   else if(STATE.view==='cliente' && (ehAlimentador() || (STATE.modoTarefa && STATE.tarefaAtiva))){ const c = CLIENTS.find(x=>x.id===STATE.clientId); root.innerHTML = c ? renderClienteAlimentador(c) : renderFila(); }
   else if(STATE.view==='clientes') root.innerHTML = renderClientes();
   else if(STATE.view==='fornecedores') root.innerHTML = renderFornecedores();
-  else if(STATE.view==='banco') root.innerHTML = renderBanco();
-  else if(STATE.view==='consulta') root.innerHTML = renderConsulta();
-  else if(STATE.view==='orcamentos-fornecedor') root.innerHTML = renderOrcamentosFornecedor();
-  else if(STATE.view==='orcamentos-aluminio') root.innerHTML = renderOrcamentosAluminio();
+  else if(STATE.view==='banco') root.innerHTML = abasBanco() + renderBanco();
+  else if(STATE.view==='consulta') root.innerHTML = abasBanco() + renderConsulta();
+  else if(STATE.view==='orcamentos-fornecedor') root.innerHTML = abasBanco() + renderOrcamentosFornecedor();
+  else if(STATE.view==='orcamentos-aluminio') root.innerHTML = abasBanco() + renderOrcamentosAluminio();
   else if(STATE.view==='reajustes') root.innerHTML = renderReajustes();
   else if(STATE.view==='cliente') root.innerHTML = renderClienteDetail();
   else if(STATE.view==='espelho') root.innerHTML = renderEspelho();
@@ -2658,7 +2661,7 @@ function renderConsulta(){
   return `
   <div class="pagehead">
     <div>
-      <h1>Consultar preço</h1>
+      <h1>Buscar preço</h1>
       <p>Busca rápida por código ou descrição no Banco de Preços (Componentes e Perfis por Kg), nos itens cadastrados em Orçamentos de Fornecedores (PDF) e nas tabelas de metro linear importadas por cliente, sem precisar abrir um cliente.</p>
     </div>
   </div>
@@ -2753,7 +2756,7 @@ function renderOrcamentosFornecedor(){
   return `
   <div class="pagehead">
     <div>
-      <h1>Orçamentos de Fornecedores</h1>
+      <h1>Orçamentos recebidos</h1>
       <p>Guarde aqui os PDFs de orçamento que cada fornecedor te manda, organizados por fornecedor, com os itens cotados (código, preço e preço por unidade quando o item vem em pacote). Separado do Banco de Preços, que você alimenta manualmente.</p>
     </div>
     <button class="btn btn-primary" data-action="novo-orcamento-fornecedor">${icon('plus')} Anexar orçamento</button>
@@ -2965,7 +2968,7 @@ function renderOrcamentosAluminio(){
   return `
   <div class="pagehead">
     <div>
-      <h1>Alumínio (Fornecedores)</h1>
+      <h1>Perfis · metro linear</h1>
       <p>Guarde aqui os PDFs de orçamento de barra de alumínio de cada fornecedor, organizados por fornecedor, com código, descrição, valor da barra e valor por metro linear calculado sozinho. Separado do banco de Orçamentos de Fornecedores de componentes.</p>
     </div>
     <button class="btn btn-primary" data-action="novo-orcamento-aluminio">${icon('plus')} Anexar orçamento</button>
@@ -7336,6 +7339,7 @@ function wireEvents(){
       if(action==='forn-linha'){ (async()=>{ const f=FORN_CAD.find(x=>x.id===STATE.fornSel); const l=el.dataset.linha; const tem=FORN_LINHAS.some(x=>x.fornecedor_id===f.id&&x.linha===l);
         const r = tem ? await sb.from('impl_fornecedor_linhas').delete().eq('fornecedor_id',f.id).eq('linha',l) : await sb.from('impl_fornecedor_linhas').insert({fornecedor_id:f.id, linha:l});
         if(r.error) return avisarErroSalvar(r.error); FORN_LINHAS = tem ? FORN_LINHAS.filter(x=>!(x.fornecedor_id===f.id&&x.linha===l)) : FORN_LINHAS.concat([{fornecedor_id:f.id, linha:l}]); toastSalvo('Salvo'); render(); })(); return; }
+      if(action==='banco-aba'){ STATE.view=el.dataset.v; STATE.search=''; render(); window.scrollTo(0,0); return; }
       if(action==='ir-fila'){ STATE.view='fila'; render(); return; }
       if(action==='abrir-tarefa'){ const t = TAREFAS.find(x=>x.id===el.dataset.id); if(!t) return; STATE.voltarPara = STATE.view==='clientes'?'clientes':'fila'; STATE.modoTarefa=true; STATE.clientId=t.cliente_id; STATE.tarefaAtiva=t.id; STATE.view='cliente';
         STATE.clienteTab = t.topico==='componentes'?'componentes':t.topico==='vidro'?'vidro':'perfis'; if(t.topico==='componentes') STATE.componenteLinhaAtiva=t.linha; STATE.search=''; render(); window.scrollTo(0,0); return; }
