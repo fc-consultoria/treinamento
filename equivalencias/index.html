@@ -88,7 +88,7 @@ function voltaUrl(adm){if(adm)return '/treinamento/painel.html';let u='';try{u=l
  const k=new URLSearchParams(location.search).get('k');if(k)u='/treinamento/consultorias.html?k='+encodeURIComponent(k);return u||'/treinamento/';}
 function voltaBtn(adm){if(window.top!==window)return;let b=document.getElementById('bVolta');if(!b){b=document.createElement('a');b.id='bVolta';const h=document.querySelector('header.top .w');if(!h)return;h.appendChild(b);}
  b.href=voltaUrl(adm);b.textContent=adm?'← Painel matriz':'← Painel inicial';b.title=adm?'Voltar para o painel matriz da FC':'Voltar para o painel inicial da empresa';}
-function img(f,c){return 'img/'+f+'/'+encodeURIComponent(c)+'.webp';}
+function img(f,c){return 'img/'+f+'/'+encodeURIComponent(c)+'.webp?v=2';}
 function achar(q){const n=norm(q);if(!n)return null;
  for(const r of D.perfis){if(norm(r.c)===n)return {r};for(const e of r.eq){if(norm(e.c)===n||norm(e.cc)===n)return {r,e};}}
  for(const f of FS())for(const s of (D.semPar[f]||[]))if(norm(s.c)===n||norm(s.cc)===n)return {sp:s,f};
