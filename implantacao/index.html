@@ -981,7 +981,7 @@ function progressoImplantacaoTotal(client){
 }
 
 // ---------- Banco próprio do cliente (Vidro e Perfis por kg), importado por Excel ----------
-function mapItemProprio(r){ return {_id:r.id, chave:r.chave, codigo:r.codigo||'', descricao:r.descricao||'', custo:r.custo!=null?Number(r.custo):null, venda:r.venda!=null?Number(r.venda):null, alimentado:!!r.alimentado, arquivo:r.arquivo||''}; }
+function mapItemProprio(r){ return {_id:r.id, chave:r.chave, codigo:r.codigo||'', descricao:r.descricao||'', custo:r.custo!=null?Number(r.custo):null, venda:r.venda!=null?Number(r.venda):null, alimentado:!!r.alimentado, arquivo:r.arquivo||'', linha:r.linha||''}; }
 function itensProprios(c, cat){ return (c && c.itensProprios && c.itensProprios[cat]) || []; }
 function usaVidroProprio(c){ return itensProprios(c,'vidro').length>0 || !(VIDRO_DB.itens||[]).length; }
 function categoriaProgress(client, key){
@@ -4252,7 +4252,7 @@ const BANCO_PROPRIO_INFO = {
   vidro: {titulo:'Vidro', sing:'vidro', plural:'vidros', colDesc:'Vidro', temCodigo:true, temVenda:true, unid:'m²',
     ajuda:'Importe a planilha de vidros do cliente (Excel). Entram só as linhas com preço; reimportar atualiza o preço e acrescenta os novos, sem duplicar.'},
   perfis_kg: {titulo:'Perfis por kg', sing:'cor', plural:'cores', colDesc:'Cor', temCodigo:false, temVenda:false, unid:'kg',
-    ajuda:'Importe a planilha de preço por kg de cada cor (Excel). Entram só as cores com preço; reimportar atualiza o preço e acrescenta as novas, sem duplicar.'}
+    ajuda:'Importe a planilha de preço por kg de cada cor (Excel). Se o preço muda conforme a linha, coloque também uma coluna "Linha" (ex.: Suprema-Gold); sem ela, o preço vale para todas as linhas. Dá para trocar a linha de cada cor na tabela abaixo.'}
 };
 function renderBancoProprio(c, cat){
   const info = BANCO_PROPRIO_INFO[cat];
@@ -4297,10 +4297,11 @@ function renderBancoProprio(c, cat){
       ${vis.length ? `<button class="btn btn-sm" data-action="bp-marcar-todos" data-cat="${cat}" data-valor="${vis.every(({it})=>it.alimentado)?'0':'1'}">${vis.every(({it})=>it.alimentado)?'Desmarcar':'Marcar'} ${vis.length} como alimentado${vis.length>1?'s':''}</button>` : ''}
     </div>
     <div style="overflow-x:auto;"><table class="table">
-      <thead><tr><th style="width:90px;">Alimentado</th>${info.temCodigo?'<th style="width:120px;">Código</th>':''}<th>${info.colDesc}</th><th class="tright">Custo (R$/${info.unid})</th>${info.temVenda?`<th class="tright">Venda (R$/${info.unid})</th>`:''}<th style="width:50px;"></th></tr></thead>
+      <thead><tr><th style="width:90px;">Alimentado</th>${info.temCodigo?'<th style="width:120px;">Código</th>':''}${cat==='perfis_kg'?'<th style="width:190px;">Linha</th>':''}<th>${info.colDesc}</th><th class="tright">Custo (R$/${info.unid})</th>${info.temVenda?`<th class="tright">Venda (R$/${info.unid})</th>`:''}<th style="width:50px;"></th></tr></thead>
       <tbody>${vis.map(({it,idx})=>`<tr>
         <td class="tcenter"><input type="checkbox" class="chk" ${it.alimentado?'checked':''} data-action="bp-alimentado" data-cat="${cat}" data-idx="${idx}"></td>
         ${info.temCodigo?`<td class="mono">${escapeHtml(it.codigo)}</td>`:''}
+        ${cat==='perfis_kg'?`<td><select class="select-inline" data-action="bp-linha" data-cat="${cat}" data-idx="${idx}" style="max-width:180px"><option value="" ${!it.linha?'selected':''}>Todas as linhas</option>${[...new Set([...(c.linhas_componentes||[]),...(it.linha?[it.linha]:[])])].map(l=>`<option ${it.linha===l?'selected':''}>${escapeHtml(l)}</option>`).join('')}</select></td>`:''}
         <td>${escapeHtml(it.descricao)}</td>
         <td class="tright mono">${moeda(it.custo)}</td>
         ${info.temVenda?`<td class="tright mono">${moeda(it.venda)}</td>`:''}
@@ -4312,12 +4313,12 @@ function renderBancoProprio(c, cat){
 // Lê a planilha (vidros ou preço por kg por cor) e devolve os itens com preço
 function lerPlanilhaBancoProprio(rows, cat){
   const norm = s => normalizeText(String(s||'')).trim();
-  let hi = -1, colDesc=-1, colCod=-1, colCusto=-1, colVenda=-1;
+  let hi = -1, colDesc=-1, colCod=-1, colCusto=-1, colVenda=-1, colLinha=-1;
   for(let i=0; i<Math.min(rows.length, 15); i++){
     const r = (rows[i]||[]).map(norm);
     const d = r.findIndex(x=> cat==='vidro' ? (x==='vidro' || x.startsWith('descri')) : (x==='cor' || x.startsWith('cor ')));
     const cu = r.findIndex(x=> /paga|custo|compra/.test(x));
-    if(d>=0 && cu>=0){ hi=i; colDesc=d; colCusto=cu; colCod=r.findIndex(x=>/^c[o]d/.test(x)); colVenda=r.findIndex(x=>/venda/.test(x)); break; }
+    if(d>=0 && cu>=0){ hi=i; colDesc=d; colCusto=cu; colCod=r.findIndex(x=>/^c[o]d/.test(x)); colVenda=r.findIndex(x=>/venda/.test(x)); colLinha=cat==='perfis_kg'?r.findIndex(x=>x==='linha'||x.startsWith('linha ')):-1; break; }
   }
   if(hi<0) return {erro: cat==='vidro' ? 'Não encontrei as colunas "Vidro" e "Valor que Você Paga" na planilha.' : 'Não encontrei as colunas "Cor" e "Quanto Você Paga no KG" na planilha.'};
   const num = v => { if(typeof v==='number') return v; let s=String(v||'').replace(/[R$\s]/g,''); if(!s) return null; if(s.includes(',')) s=s.replace(/\./g,'').replace(',','.'); const n=parseFloat(s); return isNaN(n)?null:n; };
@@ -4326,8 +4327,9 @@ function lerPlanilhaBancoProprio(rows, cat){
     const r = rows[i]||[]; const desc = String(r[colDesc]||'').trim(); if(!desc) continue;
     const custo = num(r[colCusto]), venda = colVenda>=0 ? num(r[colVenda]) : null;
     if(!(custo>0) && !(venda>0)){ semPreco++; continue; }
-    const chave = normalizeCodigo(desc); if(!chave || vistos.has(chave)) continue; vistos.add(chave);
-    itens.push({chave, codigo: colCod>=0 ? String(r[colCod]||'').trim() : null, descricao: desc, custo: custo>0?custo:null, venda: venda>0?venda:null});
+    const linha = colLinha>=0 ? String(r[colLinha]||'').trim() : '';
+    const chave = normalizeCodigo((linha?linha+' ':'')+desc); if(!chave || vistos.has(chave)) continue; vistos.add(chave);
+    itens.push({chave, codigo: colCod>=0 ? String(r[colCod]||'').trim() : null, descricao: desc, custo: custo>0?custo:null, venda: venda>0?venda:null, linha: linha||null});
   }
   return {itens, semPreco};
 }
@@ -4354,7 +4356,7 @@ async function importarPlanilhaBancoProprio(c, cat, file){
     if(!up.error) storage_path = path; else console.warn('anexo da planilha:', up.error);
   }catch(e){ console.warn('anexo da planilha:', e); }
   const agora = new Date().toISOString();
-  const payload = lida.itens.map(it=>({cliente_id:c.id, categoria:cat, chave:it.chave, codigo:it.codigo, descricao:it.descricao, custo:it.custo, venda:it.venda, arquivo:file.name, atualizado_em:agora}));
+  const payload = lida.itens.map(it=>({cliente_id:c.id, categoria:cat, chave:it.chave, codigo:it.codigo, descricao:it.descricao, custo:it.custo, venda:it.venda, arquivo:file.name, atualizado_em:agora, ...(cat==='perfis_kg'&&it.linha?{linha:it.linha}:{})}));
   for(let i=0; i<payload.length; i+=200){
     const {error} = await sb.from('impl_cliente_itens').upsert(payload.slice(i,i+200), {onConflict:'cliente_id,categoria,chave'});
     if(error){ avisarErroSalvar(error); return; }
@@ -5876,6 +5878,11 @@ function wireEvents(){
     }
     if(action==='bp-anexo'){
       el.onchange = async (e)=>{ const c = CLIENTS.find(x=>x.id===STATE.clientId); const fs=[...(e.target.files||[])]; e.target.value=''; if(c && fs.length) await anexarTabelaCliente(c, el.dataset.cat, fs); };
+      return;
+    }
+    if(action==='bp-linha'){
+      el.onchange = async (e)=>{ const c = CLIENTS.find(x=>x.id===STATE.clientId); const it = itensProprios(c, el.dataset.cat)[+el.dataset.idx]; if(!it) return; const v = e.target.value||null;
+        const {error} = await sb.from('impl_cliente_itens').update({linha:v}).eq('id', it._id); if(error){ avisarErroSalvar(error); return; } it.linha = v||''; toastSalvo('Linha salva'); };
       return;
     }
     if(action==='bp-arquivo'){
