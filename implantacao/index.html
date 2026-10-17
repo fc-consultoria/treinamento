@@ -344,6 +344,7 @@ tbody tr:hover{background:var(--panel-2);}
       <div class="navlabel">Geral</div>
       <button class="navitem" data-nav="fila" id="nav-fila"><i data-lucide="list-todo"></i> Fila de alimentação</button>
       <button class="navitem" data-nav="clientes"><i data-lucide="users"></i> Clientes</button>
+      <button class="navitem" data-nav="fornecedores"><i data-lucide="truck"></i> Fornecedores</button>
       <button class="navitem" data-nav="banco"><i data-lucide="database"></i> Banco de Preços</button>
       <button class="navitem" data-nav="consulta"><i data-lucide="search"></i> Consultar preço</button>
       <button class="navitem" data-nav="orcamentos-fornecedor"><i data-lucide="inbox"></i> Orçamentos de Fornecedores</button>
@@ -632,7 +633,7 @@ async function carregarOrcamentosFornecedor(){
   ]);
   if(e1) throw e1; if(e2) throw e2;
   ORC_FORNECEDOR = (orcRows||[]).map(r=>({
-    _id: r.id, fornecedor: r.fornecedor, nome: r.nome_arquivo, storagePath: r.storage_path,
+    _id: r.id, fornecedor: r.fornecedor, nome: r.nome_arquivo, storagePath: r.storage_path, disponivel: !!r.disponivel,
     dataOrcamento: r.data_orcamento||'', status: r.status_pdf, texto: r.texto_extraido||'', paginasTexto:[], url:null, sugestoes:null, mostrarSugestoes:false,
     itens: (itensRows||[]).filter(it=>it.orcamento_id===r.id).map(it=>({
       _id: it.id,
@@ -656,7 +657,7 @@ async function carregarOrcamentosAluminio(){
   ]);
   if(e1) throw e1; if(e2) throw e2;
   ORC_ALUMINIO = (orcRows||[]).map(r=>({
-    _id: r.id, fornecedor: r.fornecedor, nome: r.nome_arquivo, storagePath: r.storage_path,
+    _id: r.id, fornecedor: r.fornecedor, nome: r.nome_arquivo, storagePath: r.storage_path, disponivel: !!r.disponivel,
     dataOrcamento: r.data_orcamento||'', status: r.status_pdf, texto: r.texto_extraido||'', paginasTexto:[], url:null, sugestoes:null, mostrarSugestoes:false,
     clienteId: r.cliente_id || null, descontoPct: r.desconto_pct!=null ? Number(r.desconto_pct) : 0, ajustePct: r.ajuste_pct!=null ? Number(r.ajuste_pct) : 0,
     itens: (itensRows||[]).filter(it=>it.orcamento_id===r.id).map(it=>({
@@ -686,6 +687,7 @@ async function carregarTudo(){
   await carregarClientes();
   await carregarOrcamentosFornecedor();
   await carregarOrcamentosAluminio();
+  await carregarFornecedoresCad();
   sincronizarAlimentadoTodosClientes();
 }
 
@@ -2088,6 +2090,94 @@ function cardTarefa(t, admin){ const c = CLIENTS.find(x=>x.id===t.cliente_id); i
         <button class="btn btn-sm btn-primary" data-action="abrir-tarefa" data-id="${t.id}">${icon('play')} Abrir para alimentar</button>
         ${admin && t.status==='terminada' ? `<button class="btn btn-sm" data-action="tarefa-status" data-id="${t.id}" data-st="concluida">${icon('check')} Conferi, concluir</button><button class="btn btn-sm" data-action="tarefa-devolver" data-id="${t.id}">${icon('corner-up-left')} Devolver com observação</button>` : ''}
       </div></div>`; }
+// ===== Fornecedores: cadastro único (com os nomes antigos em "aliases"), linhas atendidas, preços, arquivos e reajuste =====
+let FORN_CAD = [], FORN_LINHAS = [], FORN_ARQ = [];
+async function carregarFornecedoresCad(){
+  try{ const [a,b,c] = await Promise.all([sb.from('impl_fornecedores_cad').select('*').order('nome'), sb.from('impl_fornecedor_linhas').select('*'), sb.from('impl_fornecedor_arquivos').select('*').order('criado_em',{ascending:false})]);
+    FORN_CAD = a.data||[]; FORN_LINHAS = b.data||[]; FORN_ARQ = c.data||[]; }catch(e){ console.warn('fornecedores', e); }
+}
+const fornBate = (f, nome) => (f.aliases||[]).concat([f.nome]).some(a=>chaveFornAjuste(a)===chaveFornAjuste(nome));
+const fornDeNome = nome => FORN_CAD.find(f=>fornBate(f, nome)) || null;
+const linhasForn = f => FORN_LINHAS.filter(x=>x.fornecedor_id===f.id).map(x=>x.linha);
+function precosCompForn(f, linha){ const db = PRICE_DB[linha]; if(!db) return []; const nome = (db.fornecedores||[]).find(n=>fornBate(f,n)); if(!nome) return [];
+  return (db.itens||[]).filter(it=>Number((it.precos||{})[nome])>0).map(it=>({codigo:it.codigo, descricao:it.descricao, preco:Number(it.precos[nome])})); }
+function perfisForn(f){ const L=[]; ORC_ALUMINIO.filter(o=>fornBate(f,o.fornecedor)).forEach(o=>(o.itens||[]).forEach(it=>{ if(!(it.valorBarra>0) || /^totais$/i.test(it.codigo)) return; L.push({codigo:it.codigo, descricao:it.descricao, metro: it.valorBarra/(it.comprimentoBarra||6), orc:o}); })); return L; }
+function arquivosForn(f){
+  const A = FORN_ARQ.filter(a=>a.fornecedor_id===f.id).map(a=>({tipo:'arq', id:a.id, nome:a.nome, path:a.storage_path, disponivel:a.disponivel, itens:null}));
+  ORC_FORNECEDOR.filter(o=>fornBate(f,o.fornecedor)).forEach(o=>A.push({tipo:'orc', id:o._id, nome:o.nome, path:o.storagePath, disponivel:o.disponivel, itens:(o.itens||[]).length, rot:'Orçamento de componentes'}));
+  ORC_ALUMINIO.filter(o=>fornBate(f,o.fornecedor)).forEach(o=>A.push({tipo:'alu', id:o._id, nome:o.nome, path:o.storagePath, disponivel:o.disponivel, itens:(o.itens||[]).length, rot:'Orçamento de perfis'+(o.clienteId?' · '+((CLIENTS.find(c=>c.id===o.clienteId)||{}).nome||''):'')}));
+  return A;
+}
+function renderFornecedores(){
+  if(!FORN_CAD.length) return `<div class="pagehead"><div><h1>Fornecedores</h1></div></div>`+emptyState('truck','Carregando fornecedores…','Se não aparecer, atualize a página.');
+  const f = FORN_CAD.find(x=>x.id===STATE.fornSel);
+  if(!f){
+    return `<div class="pagehead"><div><h1>Fornecedores</h1><p>Um cadastro por fornecedor. As linhas já vêm marcadas onde existe preço.</p></div><button class="btn btn-primary" data-action="forn-novo">${icon('plus')} Novo fornecedor</button></div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px">${FORN_CAD.map(x=>{ const ls = linhasForn(x), np = ls.reduce((a,l)=>a+precosCompForn(x,l).length,0), pf = perfisForn(x).length, na = arquivosForn(x).length;
+      return `<div class="panel" style="margin:0;padding:14px 16px;cursor:pointer;display:grid;gap:8px" data-action="forn-abrir" data-id="${x.id}"><b style="font-size:15px">${escapeHtml(x.nome)}</b>
+        ${(x.aliases||[]).filter(a=>chaveFornAjuste(a)!==chaveFornAjuste(x.nome)).length?`<span class="desc">também: ${escapeHtml(x.aliases.filter(a=>chaveFornAjuste(a)!==chaveFornAjuste(x.nome)).join(', '))}</span>`:''}
+        <div class="chiprow">${ls.length?ls.map(l=>`<span class="chip active">${escapeHtml(l)}</span>`).join(''):'<span class="desc">sem linha de componentes</span>'}</div>
+        <div class="desc">${np} preços de componentes · ${pf} de perfis${na?` · ${na} arquivo${na>1?'s':''}`:''}</div></div>`; }).join('')}</div>`;
+  }
+  const tab = STATE.fornTab||'linhas', ls = linhasForn(f), busca = normalizeText(STATE.fornBusca||'');
+  const bate = it => !busca || normalizeText(it.codigo+' '+(it.descricao||'')).includes(busca);
+  const tabs = [['linhas','Linhas'],['precos','Preços'],['arquivos','Arquivos'],['reajuste','Reajuste']];
+  let corpo = '';
+  if(tab==='linhas'){
+    const todas = Object.keys(PRICE_DB).sort();
+    corpo = `<div class="panel" style="padding:16px 18px"><h3 style="margin:0 0 4px">Linhas que ${escapeHtml(f.nome)} atende</h3><div class="desc" style="margin-bottom:10px">Verde-claro = já tem preço nessa linha. Toque para marcar ou desmarcar.</div>
+      <div class="chiprow">${todas.map(l=>{ const n = precosCompForn(f,l).length, on = ls.includes(l); return `<button class="chip ${on?'active':''}" data-action="forn-linha" data-linha="${escapeHtml(l)}" style="${!on&&n?'border-color:#15803d;color:#15803d':''}">${on?'✓ ':''}${escapeHtml(l)}${n?` · ${n}`:''}</button>`; }).join('')}</div>
+      <div style="margin-top:14px"><label class="desc">Outros nomes deste fornecedor (como aparecem em planilhas e orçamentos, separados por vírgula)</label>
+      <input type="text" data-action="forn-aliases" value="${escapeHtml((f.aliases||[]).join(', '))}" style="width:100%;padding:8px 10px;border:1px solid var(--border,#d6dee4);border-radius:8px;font:inherit;margin-top:4px"></div></div>`;
+  }
+  if(tab==='precos'){
+    const blocos = ls.map(l=>{ const P = precosCompForn(f,l).filter(bate); const V = P.slice(0,200);
+      return `<div class="panel" style="padding:14px 18px"><div style="display:flex;gap:8px;align-items:baseline"><b>${escapeHtml(l)}</b><span class="desc">${P.length} preço${P.length===1?'':'s'}${P.length>V.length?` · mostrando ${V.length}`:''}</span></div>
+        ${V.length?`<div style="overflow-x:auto"><table class="table"><thead><tr><th>Código</th><th>Descrição</th><th class="tright">Preço</th></tr></thead><tbody>${V.map(it=>`<tr><td class="mono">${escapeHtml(it.codigo)}</td><td>${escapeHtml(it.descricao||'')}</td><td class="tright mono">${fmtMoney(it.preco)}</td></tr>`).join('')}</tbody></table></div>`:'<div class="desc">Nenhum preço nesta linha.</div>'}</div>`; }).join('');
+    const PF = perfisForn(f).filter(bate), VF = PF.slice(0,300);
+    corpo = `<div class="panel" style="padding:12px 18px"><div class="searchbox" style="max-width:420px">${icon('search')}<input placeholder="Buscar código ou descrição" value="${escapeHtml(STATE.fornBusca||'')}" data-action="forn-busca"></div></div>
+      ${blocos||'<div class="panel" style="padding:14px 18px"><div class="desc">Nenhuma linha de componentes marcada.</div></div>'}
+      <div class="panel" style="padding:14px 18px"><div style="display:flex;gap:8px;align-items:baseline"><b>Perfis · metro linear</b><span class="desc">${PF.length} itens${PF.length>VF.length?` · mostrando ${VF.length}`:''} · dos orçamentos de alumínio</span></div>
+        ${VF.length?`<div style="overflow-x:auto"><table class="table"><thead><tr><th>Código</th><th>Descrição · cor</th><th class="tright">R$/metro</th><th>Orçamento</th></tr></thead><tbody>${VF.map(it=>`<tr><td class="mono">${escapeHtml(it.codigo)}</td><td>${escapeHtml(it.descricao||'')}</td><td class="tright mono">${fmtMoney(it.metro)}</td><td class="desc">${escapeHtml(it.orc.nome||'')}</td></tr>`).join('')}</tbody></table></div>`:'<div class="desc">Sem tabela de perfis. Anexe a planilha em Arquivos.</div>'}</div>`;
+  }
+  if(tab==='arquivos'){
+    const A = arquivosForn(f);
+    corpo = `<div class="panel" style="padding:16px 18px"><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><div><h3 style="margin:0">Tabelas e orçamentos de ${escapeHtml(f.nome)}</h3><div class="desc">Ligue "Disponível para alimentação" nos arquivos que a equipe pode abrir quando estiver alimentando um cliente deste fornecedor.</div></div>
+      <label class="btn btn-primary" style="margin-left:auto;cursor:pointer">${icon('paperclip')} Anexar PDF, print ou Excel<input type="file" multiple accept=".pdf,image/*,.xlsx,.xls,.csv" data-action="forn-anexo" style="display:none"></label></div>
+      ${A.length?`<div style="overflow-x:auto;margin-top:12px"><table class="table"><thead><tr><th>Arquivo</th><th>Tipo</th><th>Itens lidos</th><th>Disponível para alimentação</th></tr></thead><tbody>${A.map(a=>`<tr>
+        <td>${a.path?`<button class="btn btn-sm btn-ghost" data-action="abrir-pdf-assinado" data-path="${escapeHtml(a.path)}">${icon('file')} ${escapeHtml(a.nome)}</button>`:escapeHtml(a.nome)}</td>
+        <td class="desc">${a.tipo==='arq'?'Anexo':escapeHtml(a.rot)}</td><td class="mono">${a.itens==null?'—':a.itens}</td>
+        <td><label style="display:inline-flex;gap:6px;align-items:center;cursor:pointer"><input type="checkbox" data-action="forn-disp" data-tipo="${a.tipo}" data-id="${a.id}" ${a.disponivel?'checked':''}> ${a.disponivel?'<b style="color:#15803d">liberado</b>':'<span class="desc">só você</span>'}</label></td></tr>`).join('')}</tbody></table></div>`:emptyState('paperclip','Nenhum arquivo ainda','Anexe PDF, print ou Excel. Também dá para colar um print com Ctrl+V nesta tela.')}
+      <div class="desc" style="margin-top:8px">Dica: tirou um print? Aperte <b>Ctrl+V</b> aqui que ele entra como anexo.</div></div>`;
+  }
+  if(tab==='reajuste'){
+    const nomes = [f.nome].concat(f.aliases||[]); const pct = cat => { for(const n of nomes){ const v = ajusteFornecedor(n, cat); if(v) return v; } return 0; };
+    corpo = `<div class="panel" style="padding:16px 18px"><h3 style="margin:0 0 4px">Reajuste de ${escapeHtml(f.nome)}</h3><div class="desc" style="margin-bottom:10px">É o mesmo número da tela Reajustes de preço. Mudou lá, vale aqui e em todos os clientes que usam ${escapeHtml(f.nome)}.</div>
+      <table class="table" style="max-width:420px"><tbody>${[['componentes','Componentes'],['perfis','Perfis'],['vidro','Vidro']].map(([k,t])=>`<tr><td>${t}</td><td class="tright mono"><b>${pct(k)}%</b></td></tr>`).join('')}</tbody></table>
+      <button class="btn" style="margin-top:12px" data-action="forn-ir-reajustes">${icon('percent')} Abrir Reajustes de preço</button></div>`;
+  }
+  return `<button class="backlink" data-action="forn-voltar">${icon('arrow-left')} Todos os fornecedores</button>
+    <div class="clienthead"><div class="clienthead-top"><div><h2>${escapeHtml(f.nome)}</h2><span class="badge">${ls.length} linha${ls.length===1?'':'s'}</span></div></div></div>
+    <div class="tabbar">${tabs.map(([k,t])=>`<button class="tabbtn ${tab===k?'active':''}" data-action="forn-tab" data-tab="${k}">${t}</button>`).join('')}</div>${corpo}`;
+}
+async function fornAnexar(files){
+  const f = FORN_CAD.find(x=>x.id===STATE.fornSel); if(!f) return;
+  for(const file of files){
+    const nomeSeguro = (file.name||'print.png').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^\w.\-]+/g,'_');
+    const path = `fornecedores/${f.id}/${Date.now()}-${nomeSeguro}`;
+    const up = await sb.storage.from(ORCAMENTOS_BUCKET).upload(path, file, {upsert:false, contentType:file.type||undefined}); if(up.error) return avisarErroSalvar(up.error);
+    const r = await sb.from('impl_fornecedor_arquivos').insert({fornecedor_id:f.id, nome:file.name||'print.png', storage_path:path, tipo:file.type||null}).select().single(); if(r.error) return avisarErroSalvar(r.error);
+    FORN_ARQ.unshift(r.data);
+  }
+  toastSalvo(files.length>1?files.length+' arquivos anexados':'Arquivo anexado'); render();
+}
+document.addEventListener('paste', ev=>{ if(STATE.view!=='fornecedores' || !STATE.fornSel || (STATE.fornTab||'linhas')!=='arquivos') return; const fs=[...((ev.clipboardData&&ev.clipboardData.files)||[])].filter(x=>/^image\//.test(x.type)); if(fs.length){ ev.preventDefault(); fornAnexar(fs); } });
+// Arquivos liberados dos fornecedores do cliente (aparecem na tela de quem alimenta)
+function arquivosLiberadosCliente(c){
+  const nomes = [].concat(...Object.values(c.fornecedoresSel||{})).concat([c.fornecedor||'']).filter(Boolean);
+  const fs = [...new Set(nomes.map(fornDeNome).filter(Boolean))];
+  return fs.map(f=>({f, A: arquivosForn(f).filter(a=>a.disponivel && a.path)})).filter(x=>x.A.length);
+}
 function renderFila(){
   const admin = !ehAlimentador();
   const minhas = TAREFAS.filter(t=>admin || t.email.toLowerCase()===meuEmail());
@@ -2112,12 +2202,13 @@ function renderClienteAlimentador(c){
     <div style="display:flex;gap:8px">${t.status==='terminada'?'<span class="badge">✔ Enviado para conferência</span>':`<button class="btn btn-primary" data-action="tarefa-status" data-id="${t.id}" data-st="terminada">${icon('check-circle')} Terminei esta parte</button>`}</div></div>
     <div class="metarow"><div class="metaitem">Sistema · login<b>${escapeHtml(c.sistema_login||'—')}</b></div><div class="metaitem">Senha<b>${escapeHtml(c.sistema_senha||'—')}</b></div><div class="metaitem">Licença<b>${escapeHtml(c.sistema_licenca||'—')}</b></div>
       <div class="metaitem">Progresso<div class="pbar-row" style="margin-top:4px;width:160px"><div class="pbar-track"><div class="pbar-fill" style="width:${p.pct}%"></div></div><div class="pct">${p.pct}%</div></div></div></div>
-    ${t.obs?`<div class="desc" style="margin-top:8px">💬 Observação da FC: <b>${escapeHtml(t.obs)}</b></div>`:''}</div>
+    ${t.obs?`<div class="desc" style="margin-top:8px">💬 Observação da FC: <b>${escapeHtml(t.obs)}</b></div>`:''}
+    ${(()=>{ const L = arquivosLiberadosCliente(c); return L.length ? `<div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap;align-items:center"><span class="desc">📎 Tabelas dos fornecedores:</span>${[].concat(...L.map(x=>x.A.map(a=>`<button class="btn btn-sm" data-action="abrir-pdf-assinado" data-path="${escapeHtml(a.path)}">${escapeHtml(x.f.nome)} · ${escapeHtml(a.nome)}</button>`))).join('')}</div>` : ''; })()}</div>
   ${corpo}<div style="margin:18px 0 8px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-action="voltar-fila">${icon('arrow-left')} Voltar à tela inicial${ehAlimentador()?' (Minha fila)':''}</button>${t.status==='terminada'?'':`<button class="btn btn-primary" data-action="tarefa-status" data-id="${t.id}" data-st="terminada">${icon('check-circle')} Terminei esta parte</button>`}</div></div>`;
 }
 
 // Presença da equipe: avisa o Painel da Matriz (quadro Ao vivo) onde a pessoa está, a cada 45 s com a aba visível
-const NOMES_VIEW = {fila:'Fila de alimentação', clientes:'Clientes', banco:'Banco de Preços', consulta:'Consultar preço', 'orcamentos-fornecedor':'Orçamentos de Fornecedores', 'orcamentos-aluminio':'Alumínio (Fornecedores)', reajustes:'Reajustes de preço', espelho:'Espelho da equipe'};
+const NOMES_VIEW = {fornecedores:'Fornecedores', fila:'Fila de alimentação', clientes:'Clientes', banco:'Banco de Preços', consulta:'Consultar preço', 'orcamentos-fornecedor':'Orçamentos de Fornecedores', 'orcamentos-aluminio':'Alumínio (Fornecedores)', reajustes:'Reajustes de preço', espelho:'Espelho da equipe'};
 function ondeEstouImplantacao(){
   if(STATE.view==='cliente'){ const c = CLIENTS.find(x=>x.id===STATE.clientId); const ABAS={visao:'Visão geral',etapas:'Etapas',cadastro:'Contrato & Acesso',componentes:'Componentes',vidro:'Vidro',perfis:'Perfis',orcamentos:'Orçamentos',relatorios:'Relatórios',anotacoes:'Anotações'}; return (c?c.nome:'Cliente')+(STATE.clienteTab?' · '+(ABAS[STATE.clienteTab]||STATE.clienteTab):''); }
   return NOMES_VIEW[STATE.view] || STATE.view;
@@ -2325,6 +2416,7 @@ function render(){
   if(STATE.view==='fila') root.innerHTML = renderFila();
   else if(STATE.view==='cliente' && (ehAlimentador() || (STATE.modoTarefa && STATE.tarefaAtiva))){ const c = CLIENTS.find(x=>x.id===STATE.clientId); root.innerHTML = c ? renderClienteAlimentador(c) : renderFila(); }
   else if(STATE.view==='clientes') root.innerHTML = renderClientes();
+  else if(STATE.view==='fornecedores') root.innerHTML = renderFornecedores();
   else if(STATE.view==='banco') root.innerHTML = renderBanco();
   else if(STATE.view==='consulta') root.innerHTML = renderConsulta();
   else if(STATE.view==='orcamentos-fornecedor') root.innerHTML = renderOrcamentosFornecedor();
@@ -6020,6 +6112,13 @@ function wireEvents(){
       };
       return;
     }
+    if(action==='forn-busca'){ el.oninput=(e)=>{ STATE.fornBusca=e.target.value; clearTimeout(window.__fbT); window.__fbT=setTimeout(()=>{ render(); const n=document.querySelector('[data-action="forn-busca"]'); if(n){ n.focus(); n.setSelectionRange(n.value.length,n.value.length); } },250); }; return; }
+    if(action==='forn-anexo'){ el.onchange=(e)=>{ const fs=[...(e.target.files||[])]; e.target.value=''; if(fs.length) fornAnexar(fs); }; return; }
+    if(action==='forn-aliases'){ el.onchange=async(e)=>{ const f=FORN_CAD.find(x=>x.id===STATE.fornSel); const al=[...new Set([f.nome].concat(e.target.value.split(',').map(x=>x.trim()).filter(Boolean)))]; const r=await sb.from('impl_fornecedores_cad').update({aliases:al}).eq('id',f.id); if(r.error) return avisarErroSalvar(r.error); f.aliases=al; toastSalvo('Nomes salvos'); render(); }; return; }
+    if(action==='forn-disp'){ el.onchange=async(e)=>{ const v=e.target.checked, tb={arq:'impl_fornecedor_arquivos', orc:'impl_orcamentos_fornecedor', alu:'impl_orcamentos_aluminio'}[el.dataset.tipo];
+        const r=await sb.from(tb).update({disponivel:v}).eq('id',el.dataset.id); if(r.error){ e.target.checked=!v; return avisarErroSalvar(r.error); }
+        const L = el.dataset.tipo==='arq'?FORN_ARQ.find(x=>x.id===el.dataset.id):(el.dataset.tipo==='orc'?ORC_FORNECEDOR:ORC_ALUMINIO).find(x=>x._id===el.dataset.id); if(L) L.disponivel=v;
+        toastSalvo(v?'Liberado para a equipe':'Só você vê'); render(); }; return; }
     if(action==='atribuir-tarefa'){
       el.onchange = (e)=>{ const c = CLIENTS.find(x=>x.id===STATE.clientId); if(c) atribuirTarefa(c, el.dataset.linha, el.dataset.topico, e.target.value||null); };
       return;
@@ -7227,6 +7326,14 @@ function wireEvents(){
       if(action==='abrir-cliente-perfis-metro'){ STATE.modoTarefa=false; STATE.view='cliente'; STATE.clientId=el.dataset.id; STATE.clienteTab='perfis'; STATE.filtro='todos'; STATE.search=''; render(); return; }
       if(action==='voltar-clientes'){ STATE.view='clientes'; render(); return; }
       if(action==='set-linha'){ STATE.bancoLinha = el.dataset.linha; STATE.search=''; render(); return; }
+      if(action==='forn-abrir'){ STATE.fornSel=el.dataset.id; STATE.fornTab='linhas'; STATE.fornBusca=''; render(); window.scrollTo(0,0); return; }
+      if(action==='forn-voltar'){ STATE.fornSel=null; render(); return; }
+      if(action==='forn-tab'){ STATE.fornTab=el.dataset.tab; render(); return; }
+      if(action==='forn-ir-reajustes'){ STATE.view='reajustes'; render(); window.scrollTo(0,0); return; }
+      if(action==='forn-novo'){ (async()=>{ const nome=(prompt('Nome do fornecedor novo:')||'').trim(); if(!nome) return; const r = await sb.from('impl_fornecedores_cad').insert({nome, aliases:[nome]}).select().single(); if(r.error) return avisarErroSalvar(r.error); FORN_CAD.push(r.data); FORN_CAD.sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR')); STATE.fornSel=r.data.id; STATE.fornTab='linhas'; toastSalvo('Fornecedor criado'); render(); })(); return; }
+      if(action==='forn-linha'){ (async()=>{ const f=FORN_CAD.find(x=>x.id===STATE.fornSel); const l=el.dataset.linha; const tem=FORN_LINHAS.some(x=>x.fornecedor_id===f.id&&x.linha===l);
+        const r = tem ? await sb.from('impl_fornecedor_linhas').delete().eq('fornecedor_id',f.id).eq('linha',l) : await sb.from('impl_fornecedor_linhas').insert({fornecedor_id:f.id, linha:l});
+        if(r.error) return avisarErroSalvar(r.error); FORN_LINHAS = tem ? FORN_LINHAS.filter(x=>!(x.fornecedor_id===f.id&&x.linha===l)) : FORN_LINHAS.concat([{fornecedor_id:f.id, linha:l}]); toastSalvo('Salvo'); render(); })(); return; }
       if(action==='ir-fila'){ STATE.view='fila'; render(); return; }
       if(action==='abrir-tarefa'){ const t = TAREFAS.find(x=>x.id===el.dataset.id); if(!t) return; STATE.voltarPara = STATE.view==='clientes'?'clientes':'fila'; STATE.modoTarefa=true; STATE.clientId=t.cliente_id; STATE.tarefaAtiva=t.id; STATE.view='cliente';
         STATE.clienteTab = t.topico==='componentes'?'componentes':t.topico==='vidro'?'vidro':'perfis'; if(t.topico==='componentes') STATE.componenteLinhaAtiva=t.linha; STATE.search=''; render(); window.scrollTo(0,0); return; }
