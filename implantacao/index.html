@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex, nofollow">
@@ -357,7 +358,7 @@ tbody tr:hover{background:var(--panel-2);}
       <button class="navitem" id="btn-logout"><i data-lucide="log-out"></i> Sair</button>
     </div>
     <div class="sidebar-foot">
-      Painel de implantação — dados salvos em banco de dados real (Supabase), acesso restrito à equipe.<br><b>Versão 17/10k — passo a passo do WVetro no card</b>
+      Painel de implantação — dados salvos em banco de dados real (Supabase), acesso restrito à equipe.<br><b>Versão 17/10l — aviso de versão nova</b>
     </div>
   </nav>
   <div class="mobile-topbar">
@@ -8644,6 +8645,24 @@ iniciar();
     box.style.display='block'; pos(e); });
   document.addEventListener('mousemove',e=>{ if(box&&box.style.display==='block') pos(e); });
   document.addEventListener('mouseout',e=>{ const im=e.target.closest&&e.target.closest('img.foto-zoom'); if(im&&box) box.style.display='none'; });
+})();
+</script>
+<script>
+/* Aviso de versão nova: compara a versão desta página com a publicada e oferece atualizar (evita ficar preso em cache) */
+(function(){
+  const atual=(document.body.innerHTML.match(/Versão ([^<]+)/)||[])[1]||'';
+  let avisado=false;
+  async function checar(){
+    if(avisado||!atual) return;
+    try{ const r=await fetch(location.pathname+'?nc='+Date.now(),{cache:'no-store'}); const t=await r.text(); const nova=(t.match(/Versão ([^<]+)/)||[])[1]||'';
+      if(nova && nova!==atual){ avisado=true; const d=document.createElement('div');
+        d.style.cssText='position:fixed;left:50%;top:12px;transform:translateX(-50%);z-index:99999;background:#1f3a5f;color:#fff;padding:10px 16px;border-radius:10px;font:600 14px system-ui;box-shadow:0 8px 24px rgba(0,0,0,.25);display:flex;gap:12px;align-items:center';
+        d.innerHTML='Nova versão do painel disponível <button style="background:#fff;color:#1f3a5f;border:0;border-radius:8px;padding:6px 12px;font-weight:700;cursor:pointer">Atualizar agora</button>';
+        d.querySelector('button').onclick=()=>{ location.replace(location.pathname+'?v='+Date.now()+location.hash); };
+        document.body.appendChild(d); } }catch(_){}
+  }
+  setTimeout(checar,4000); setInterval(checar,5*60*1000);
+  document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') checar(); });
 })();
 </script>
 </body>
