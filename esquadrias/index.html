@@ -65,7 +65,9 @@ main{min-width:0}
 #fsBar .fsx{font:500 13px/1.35 var(--f-b);color:#cfe0e6;background:rgba(255,255,255,.06);border-radius:10px;padding:8px 10px}
 #fsBar .fso>.btn{width:100%;justify-content:flex-start;padding:8px 10px}#fsBar .fso>span{flex-wrap:wrap;margin:2px 0}
 #cmhost[data-fs]{width:calc(100vw - 282px)!important}#cmhost[data-fs] .angw{right:12px}
-@media (max-width:700px){#fsBar{top:auto;left:8px;right:8px;width:auto;max-height:42vh}#cmhost[data-fs]{width:100vw!important;height:56vh!important}}
+@keyframes grvP{50%{opacity:.25}}
+#bGrav{border:1px solid rgba(255,255,255,.5);background:#b42318;color:#fff;border-radius:9px;padding:7px 12px;font:700 14px var(--f-b);cursor:pointer}
+@media (max-width:700px){#bGrav{display:none}#fsBar{top:auto;left:8px;right:8px;width:auto;max-height:42vh}#cmhost[data-fs]{width:100vw!important;height:56vh!important}}
 .pc:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(15,60,70,.12)}
 .pc .im{aspect-ratio:4/3;background:linear-gradient(#f6f9fa,#e9eff1);position:relative}.pc .im img{position:absolute;inset:6px;width:calc(100% - 12px);height:calc(100% - 12px);object-fit:contain}
 .pc .im .b3{position:absolute;right:6px;bottom:6px;background:var(--tl);color:#fff;font:700 11px var(--f-b);border-radius:99px;padding:2px 7px}
@@ -141,7 +143,7 @@ table.tb tr.hi td{background:#e7f7ec;font-weight:700}
 <button type="submit">Entrar</button><p id="gateMsg" role="alert"></p></form></div>
 
 <header class="top"><div class="w"><img src="/img/logo-fc-160.jpg" alt=""><div><small>FC Consultoria · Gold x Suprema</small><b>Treinamento em Esquadrias 3D</b></div><span class="sp"></span>
- <div class="prog" title="Módulos estudados"><i><s id="pgB" style="width:0"></s></i><span id="pgT">0/9</span></div><button type="button" id="bAtu" title="Baixar a versão mais nova">🔄</button><button type="button" id="bHome">☰ Início</button></div></header>
+ <div class="prog" title="Módulos estudados"><i><s id="pgB" style="width:0"></s></i><span id="pgT">0/9</span></div><button type="button" id="bGrav" title="Gravar a aula (tela + sua voz) para virar conteúdo gravado" hidden>⏺ Gravar aula</button><button type="button" id="bAtu" title="Baixar a versão mais nova">🔄</button><button type="button" id="bHome">☰ Início</button></div></header>
 <div class="lay"><nav class="nav" id="nav"></nav><main id="main"><p style="padding:30px">Carregando…</p></main></div>
 <div class="md" id="md" hidden><div><div class="mt"><b id="mdC"></b><span id="mdN"></span><button class="btn" type="button" id="mdFs" style="margin-left:auto;padding:6px 12px">⛶ Tela cheia</button><button class="mx" type="button" id="mdX" aria-label="Fechar">✕</button></div><div id="mdB" style="flex:1;display:flex"></div></div></div>
 
@@ -544,6 +546,35 @@ const LVCSS=`.lvp{position:fixed;right:14px;bottom:14px;z-index:800;width:min(34
 function lvStyle(){if(document.getElementById('lvCss'))return;const st=document.createElement('style');st.id='lvCss';st.textContent=LVCSS;document.head.appendChild(st);}
 function bip(){try{const a=new (window.AudioContext||window.webkitAudioContext)(),o=a.createOscillator(),g=a.createGain();o.frequency.value=880;g.gain.value=.08;o.connect(g);g.connect(a.destination);o.start();setTimeout(()=>{o.stop();a.close();},180);}catch(_){}}
 function chatLinha(m,euKey){return `<div class="${m.fc?'fc':''}"><b>${esc(m.fc?'Fernando':m.n)}${euKey&&m.key===euKey?' (você)':''}:</b> ${esc(m.t)}</div>`;}
+/* ===== Gravar a aula: tela + voz do Fernando + roteiro com os tempos de cada tela ===== */
+const GRV={on:false};
+function grvRotulo(){const m=MOD.find(x=>x.id===AT);let t=m?`Módulo ${String(MOD.indexOf(m)+1).padStart(2,'0')} · ${m.n}`:'Início';
+ if(AT==='cm')t+=` · passo ${CMK+1}: ${CMST[CMK][0]}`+(CMK===CMST.length-1?` · janela ${CMC}${CMF?' · folha '+(CMF===1?'esquerda':'direita')+' aberta':''}`:'')+(CMR?' · parede rebocada'+(CMP2!=='reboco'?' ('+CMP2+')':''):'')+(CMX?' · corte ligado':'');
+ if(AT==='tip'&&TIPS)t+=` · modelo: ${TIPS}`;if(MD)t+=` · abriu 3D: ${String(MD).replace(/^[A-Z]:/,'')}`;return t;}
+const mmss=s=>String(Math.floor(s/60)).padStart(2,'0')+':'+String(Math.floor(s%60)).padStart(2,'0');
+async function gravar(){if(GRV.on)return grvParar();
+ if(!navigator.mediaDevices||!navigator.mediaDevices.getDisplayMedia||!window.MediaRecorder){alert('Este navegador não grava a tela. Use o Google Chrome no computador.');return;}
+ let tela,voz;try{tela=await navigator.mediaDevices.getDisplayMedia({video:{frameRate:20},audio:true,preferCurrentTab:true,selfBrowserSurface:'include',surfaceSwitching:'exclude'});}catch(e){return;}
+ try{voz=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true}});}catch(e){if(!confirm('Não consegui ligar o microfone. Gravar só a tela, sem a sua voz?')){tela.getTracks().forEach(t=>t.stop());return;}}
+ const ac=new AudioContext(),dst=ac.createMediaStreamDestination();[tela,voz].forEach(s=>{if(s&&s.getAudioTracks().length)ac.createMediaStreamSource(s).connect(dst);});
+ const st=new MediaStream([...tela.getVideoTracks(),...dst.stream.getAudioTracks()]);
+ const tipo=['video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'].find(t=>MediaRecorder.isTypeSupported(t))||'';
+ const rec=new MediaRecorder(st,tipo?{mimeType:tipo,videoBitsPerSecond:2500000}:{});const parts=[];rec.ondataavailable=e=>{if(e.data&&e.data.size)parts.push(e.data);};
+ Object.assign(GRV,{on:true,rec,parts,tela,voz,ac,t0:Date.now(),rot:[],ult:'',chat:[]});
+ rec.onstop=grvSalvar;tela.getVideoTracks()[0].addEventListener('ended',()=>grvParar());rec.start(2000);
+ GRV.tm=setInterval(()=>{const r=grvRotulo();if(r!==GRV.ult){GRV.ult=r;GRV.rot.push({s:Math.round((Date.now()-GRV.t0)/1000),r});}const b=$('#grvB');if(b)b.querySelector('span').textContent=mmss((Date.now()-GRV.t0)/1000);},1000);
+ let b=$('#grvB');if(!b){b=document.createElement('div');b.id='grvB';b.style.cssText='position:fixed;left:50%;top:10px;transform:translateX(-50%);z-index:970;display:flex;gap:10px;align-items:center;background:#b42318;color:#fff;border-radius:99px;padding:7px 8px 7px 14px;font:700 15px var(--f-b);box-shadow:0 8px 20px rgba(0,0,0,.35)';document.body.appendChild(b);}
+ b.innerHTML='<i style="width:10px;height:10px;border-radius:50%;background:#fff;animation:grvP 1s infinite"></i>Gravando <span>00:00</span><button type="button" id="grvS" style="border:0;border-radius:99px;padding:5px 12px;font:700 14px var(--f-b);cursor:pointer;background:#fff;color:#b42318">■ Parar</button>';
+ $('#grvS').onclick=grvParar;$('#bGrav').textContent='■ Parar gravação';}
+function grvParar(){if(!GRV.on)return;GRV.on=false;clearInterval(GRV.tm);try{GRV.rec.state!=='inactive'&&GRV.rec.stop();}catch(_){}[GRV.tela,GRV.voz].forEach(s=>s&&s.getTracks().forEach(t=>t.stop()));try{GRV.ac.close();}catch(_){}const b=$('#grvB');if(b)b.remove();$('#bGrav').textContent='⏺ Gravar aula';}
+function grvSalvar(){const dur=Math.round((Date.now()-GRV.t0)/1000),d=new Date(GRV.t0),p2=n=>String(n).padStart(2,'0'),nm=`aula-esquadrias-${d.getFullYear()}${p2(d.getMonth()+1)}${p2(d.getDate())}-${p2(d.getHours())}${p2(d.getMinutes())}`;
+ const baixa=(blob,f)=>{const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=f;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},4000);};
+ baixa(new Blob(GRV.parts,{type:'video/webm'}),nm+'.webm');
+ const txt=`ROTEIRO DA AULA · Treinamento em Esquadrias 3D · FC Consultoria em Esquadria\nData: ${d.toLocaleString('pt-BR')} · Duração: ${mmss(dur)}\nVídeo: ${nm}.webm\n\n`+GRV.rot.map(x=>`[${mmss(x.s)}] ${x.r}`).join('\n')+`\n\nUse este roteiro junto com o vídeo para montar o conteúdo gravado: cada linha marca quando a tela mudou.\n© FC Consultoria em Esquadria · uso exclusivo`;
+ try{sb.from('trein_eventos').insert({tipo:'aula_gravada',detalhe:{arquivo:nm,dur,sala:LIVE.on?(APRES||null):null,rot:GRV.rot.slice(0,400)}}).then(()=>{});}catch(_){}
+ const m=document.createElement('div');m.style.cssText='position:fixed;left:50%;top:14px;transform:translateX(-50%);z-index:970;background:#13232e;color:#fff;border-radius:14px;padding:12px 16px;font:600 15px var(--f-b);box-shadow:0 8px 20px rgba(0,0,0,.35);max-width:92vw';m.innerHTML=`<div style="margin-bottom:8px">✅ Aula gravada (${mmss(dur)}). O vídeo <b>${nm}.webm</b> foi para a pasta Downloads.</div><div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" id="grvR" style="border:0;border-radius:9px;padding:8px 12px;font:700 14px var(--f-b);cursor:pointer;background:#f2a51e;color:#2a1b00">📄 Baixar o roteiro da aula</button><button type="button" id="grvF" style="border:1px solid rgba(255,255,255,.4);border-radius:9px;padding:8px 12px;font:700 14px var(--f-b);cursor:pointer;background:transparent;color:#fff">Fechar</button></div>`;document.body.appendChild(m);
+ $('#grvR').onclick=()=>baixa(new Blob([txt],{type:'text/plain;charset=utf-8'}),nm+'-roteiro.txt');$('#grvF').onclick=()=>m.remove();}
+document.addEventListener('click',e=>{if(e.target.closest('#bGrav')){e.preventDefault();gravar();}});
 function apresentar(c){/* FC conduzindo: tela, microfone, chat e mãos levantadas */
  lvStyle();LIVE.ch=sb.channel('esq-'+c,{config:{broadcast:{self:false},presence:{key:'fc'}}});const ch=LIVE.ch;
  const u=salaLink(c),msg=`Olá! Aqui é o Fernando, da FC Consultoria. Vamos começar o Treinamento em Esquadrias (Gold x Suprema) ao vivo. Abra este link, coloque o seu nome e ligue o som: ${u}`;
@@ -619,7 +650,7 @@ function participar(){/* cliente / funcionário acompanhando: ouve o Fernando, c
 async function iniciar(){try{const j=await fetch('perfis.json?v=1',{cache:'no-cache'}).then(r=>r.json());const raw=j.P;P={};IDX={};
   Object.entries(raw).forEach(([k,v])=>{const o=Object.assign({k},v);P[k]=o;IDX[k]=o;k.split(' / ').forEach(c=>IDX[c.trim()]=o);});}catch(e){console.warn(e);}
  if(ALUNO){participar();return;}const h=location.hash.slice(1);go(R[h]?h:null);if(APRES.length>=10){try{localStorage.setItem('fc_esq_sala',APRES)}catch(_){}apresentar(APRES);}}
-marca();if(ALUNO)iniciar();else gateUI(()=>{try{localStorage.setItem('fc_eu','1')}catch(_){}iniciar();},{soMatriz:true});
+marca();if(!ALUNO){const g=$('#bGrav');if(g)g.hidden=false;}if(ALUNO)iniciar();else gateUI(()=>{try{localStorage.setItem('fc_eu','1')}catch(_){}iniciar();},{soMatriz:true});
 </script>
 </body>
 </html>
