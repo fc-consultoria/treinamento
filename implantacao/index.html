@@ -357,7 +357,7 @@ tbody tr:hover{background:var(--panel-2);}
       <button class="navitem" id="btn-logout"><i data-lucide="log-out"></i> Sair</button>
     </div>
     <div class="sidebar-foot">
-      Painel de implantação — dados salvos em banco de dados real (Supabase), acesso restrito à equipe.<br><b>Versão 17/10g — fotos dos catálogos MettallFleck e Icilegel</b>
+      Painel de implantação — dados salvos em banco de dados real (Supabase), acesso restrito à equipe.<br><b>Versão 17/10h — foto ampliada ao passar o mouse</b>
     </div>
   </nav>
   <div class="mobile-topbar">
@@ -2158,8 +2158,8 @@ async function carregarFotos(){
 function fotoCelula(codigo){
   const k1 = normalizeCodigo(codigo), k2 = normalizeCodigo(String(codigo||'').replace(/-[A-Za-z]{2,3}$/,''));
   const u = FOTOS[k1] || FOTOS[k2]; const inf = FOTOS_INFO[FOTOS[k1] ? k1 : k2] || {};
-  if(u && inf.sim) return `<td style="width:58px; padding-top:6px; padding-bottom:6px;"><a href="${escapeHtml(u)}" target="_blank" rel="noopener" title="Foto ilustrativa (produto parecido no site Vitrasul): ${escapeHtml(inf.cs)} · ${escapeHtml(inf.ds)}" style="position:relative; display:block; width:48px;"><img src="${escapeHtml(u)}" alt="" loading="lazy" style="width:48px; height:48px; object-fit:contain; border:1px dashed #d97706; border-radius:8px; background:#fff; display:block;"><span style="position:absolute; left:0; right:0; bottom:-2px; text-align:center; font-size:9px; font-weight:700; color:#a15c00; background:#fff4dfee; border-radius:0 0 8px 8px;">similar</span></a></td>`;
-  return `<td style="width:58px; padding-top:6px; padding-bottom:6px;">${u ? `<a href="${escapeHtml(u)}" target="_blank" rel="noopener" title="${escapeHtml(inf.cat ? 'Foto do catálogo · ' + inf.ds : 'Abrir foto')}"><img src="${escapeHtml(u)}" alt="" loading="lazy" style="width:48px; height:48px; object-fit:contain; border:1px solid var(--border-2); border-radius:8px; background:#fff; display:block;"></a>` : `<div style="width:48px; height:48px; border:1px dashed var(--border-2); border-radius:8px; display:grid; place-items:center; color:var(--text-3); font-size:10px;">sem foto</div>`}</td>`;
+  if(u && inf.sim) return `<td style="width:58px; padding-top:6px; padding-bottom:6px;"><a href="${escapeHtml(u)}" target="_blank" rel="noopener" title="Foto ilustrativa (produto parecido no site Vitrasul): ${escapeHtml(inf.cs)} · ${escapeHtml(inf.ds)}" style="position:relative; display:block; width:48px;"><img src="${escapeHtml(u)}" alt="" class="foto-zoom" loading="lazy" style="width:48px; height:48px; object-fit:contain; border:1px dashed #d97706; border-radius:8px; background:#fff; display:block;"><span style="position:absolute; left:0; right:0; bottom:-2px; text-align:center; font-size:9px; font-weight:700; color:#a15c00; background:#fff4dfee; border-radius:0 0 8px 8px;">similar</span></a></td>`;
+  return `<td style="width:58px; padding-top:6px; padding-bottom:6px;">${u ? `<a href="${escapeHtml(u)}" target="_blank" rel="noopener" title="${escapeHtml(inf.cat ? 'Foto do catálogo · ' + inf.ds : 'Abrir foto')}"><img src="${escapeHtml(u)}" alt="" class="foto-zoom" loading="lazy" style="width:48px; height:48px; object-fit:contain; border:1px solid var(--border-2); border-radius:8px; background:#fff; display:block;"></a>` : `<div style="width:48px; height:48px; border:1px dashed var(--border-2); border-radius:8px; display:grid; place-items:center; color:var(--text-3); font-size:10px;">sem foto</div>`}</td>`;
 }
 const CLAUDE_IMG = 'https://vprime-server.radocc.com:8443/midias/11083556000105/produtos/';
 let CLAUDE_BASE = null, CLAUDE_CARREGANDO = false;
@@ -8457,6 +8457,22 @@ async function iniciar(){
   setTimeout(()=>{ const i=document.getElementById('login-email'); if(i) i.focus(); },0);
 }
 iniciar();
+</script>
+
+<script>
+/* Foto ampliada ao passar o mouse */
+(function(){
+  let box=null;
+  function pos(e){ if(!box) return; const w=box.offsetWidth||340, h=box.offsetHeight||340; let x=e.clientX+18, y=e.clientY-h/2;
+    if(x+w>innerWidth-8) x=e.clientX-w-18; y=Math.max(8,Math.min(y,innerHeight-h-8)); box.style.left=x+'px'; box.style.top=y+'px'; }
+  document.addEventListener('mouseover',e=>{ const im=e.target.closest&&e.target.closest('img.foto-zoom'); if(!im) return;
+    if(!box){ box=document.createElement('div'); box.style.cssText='position:fixed;z-index:99999;pointer-events:none;background:#fff;border:1px solid #d0d5dd;border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.22);padding:8px;max-width:360px'; document.body.appendChild(box); }
+    const a=im.closest('a'), tit=a?a.getAttribute('title'):'';
+    box.innerHTML='<img src="'+im.src+'" style="width:340px;height:340px;object-fit:contain;display:block">'+(tit&&tit!=='Abrir foto'?'<div style="font:500 12px system-ui;color:#475467;margin-top:6px;max-width:340px">'+tit.replace(/</g,'&lt;')+'</div>':'');
+    box.style.display='block'; pos(e); });
+  document.addEventListener('mousemove',e=>{ if(box&&box.style.display==='block') pos(e); });
+  document.addEventListener('mouseout',e=>{ const im=e.target.closest&&e.target.closest('img.foto-zoom'); if(im&&box) box.style.display='none'; });
+})();
 </script>
 </body>
 </html>
