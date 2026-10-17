@@ -512,21 +512,24 @@ function lvThread(uid,cid,quem){const G=cid==='gestor';
   const rs=LV.sg.filter(e=>e.tipo==='resposta'&&(e.detalhe||{}).para===uid&&(refs.has((e.detalhe||{}).ref)||(e.detalhe||{}).cid===cid||(!G&&(e.detalhe||{}).quem&&(e.detalhe||{}).quem===quem&&!(e.detalhe||{}).cid)));
   const pend=mine.filter(m=>!rs.some(r=>(r.detalhe||{}).ref===m.criado_em));
   return {L:[...mine,...rs].sort((x,y)=>x.criado_em<y.criado_em?-1:1),pend};}
-function lvPessoas(){const P={},now=Date.now(),ZZ={};(EV||[]).forEach(e=>{if(e.tipo==='zerar'){const p=(e.detalhe||{}).para,t=Date.parse(e.criado_em);if(p&&(!ZZ[p]||t>ZZ[p]))ZZ[p]=t;}});
+function zerarMapa(){const ZZ={};(EV||[]).forEach(e=>{if(e.tipo==='zerar'){const p=(e.detalhe||{}).para,t=Date.parse(e.criado_em);if(p&&(!ZZ[p]||t>ZZ[p]))ZZ[p]=t;}});return ZZ;}
+const NCOL={};function nomeColab(uid,cid){if(!cid||cid==='gestor'||/^n:/.test(cid))return '';const k=uid+'|'+cid;if(NCOL[k]===undefined){NCOL[k]='';try{const x=colabs(uid,true).find(c=>c.id===cid);if(x&&x.nome)NCOL[k]=x.nome;}catch(_){}}return NCOL[k];}
+function lvPessoas(){const P={},now=Date.now(),ZZ=zerarMapa();for(const k in NCOL)delete NCOL[k];
   LV.ev.forEach(e=>{const d=e.detalhe||{},G=/^gestor_/.test(e.tipo),cid=G?'gestor':d.cid;if(!cid)return;if(ZZ[e.user_id]&&Date.parse(e.criado_em)<=ZZ[e.user_id])return;if(!lvKind(e.user_id)||livre(ALUNOS.find(x=>x.user_id===e.user_id)))return;
     const k=e.user_id+'|'+cid,p=P[k]||(P[k]={uid:e.user_id,cid,quem:G?'Gestor':(d.quem||''),ult:0,ini:Infinity,tip:null,tipT:0,ts:[]});const t=Date.parse(e.criado_em);if(new Date(t-4*3600e3).toISOString().slice(0,10)===HOJE())p.ts.push(t);
     if(t>p.ult)p.ult=t;if(t<p.ini)p.ini=t;if(!G&&d.quem)p.quem=d.quem;if(e.tipo==='tempo'&&e.tipologia&&t>p.tipT){p.tip=e.tipologia;p.tipT=t;}});
-  Object.values(P).forEach(p=>{p.on=now-p.ult<150e3;const T=p.ts.sort((a,b)=>a-b);let dur=0,ses=T.length?1:0;for(let i=1;i<T.length;i++){const g=T[i]-T[i-1];if(g<=200e3)dur+=g;else if(g>600e3)ses++;}if(p.on&&T.length)dur+=Math.min(now-T[T.length-1],150e3);p.dur=dur;p.ses=ses;});return Object.values(P).sort((x,y)=>(y.on-x.on)||(y.ult-x.ult));}
+  Object.values(P).forEach(p=>{if(p.cid!=='gestor'){const nm=nomeColab(p.uid,p.cid);if(nm)p.quem=nm;}p.on=now-p.ult<150e3;const T=p.ts.sort((a,b)=>a-b);let dur=0,ses=T.length?1:0;for(let i=1;i<T.length;i++){const g=T[i]-T[i-1];if(g<=200e3)dur+=g;else if(g>600e3)ses++;}if(p.on&&T.length)dur+=Math.min(now-T[T.length-1],150e3);p.dur=dur;p.ses=ses;});return Object.values(P).sort((x,y)=>(y.on-x.on)||(y.ult-x.ult));}
 const lvDur=ms=>{const m=Math.round(ms/60000);if(m<1)return 'menos de 1 min';const h=Math.floor(m/60);return h?h+'h'+String(m%60).padStart(2,'0'):m+' min';};
 const LVX=new Set();let LVG=true;try{LVG=localStorage.getItem('treinFC-lvg')!=='0';}catch(_){}
 const lvIni=t=>{const w=String(t||'?').replace(/[^\p{L}\p{N} ]/gu,'').trim().split(/\s+/);return ((w[0]||'?')[0]+((w[1]||'')[0]||'')).toUpperCase();};
 
 let RSP=7,RSS='todos';try{RSP=+localStorage.getItem('treinFC-rsp')||7;RSS=localStorage.getItem('treinFC-rss')||'todos';}catch(_){}
 function resumoUI(P){const E=document.getElementById('lvRs');if(!E)return;const now=Date.now(),lim=RSP===1?Date.parse(HOJE()+'T04:00:00Z'):now-RSP*864e5;
-  const ON={};P.forEach(p=>{if(p.on)ON[p.uid+'|'+p.cid]=1;});const R={};
-  (LV.lg||[]).forEach(e=>{const t=Date.parse(e.criado_em);if(t<lim)return;const a=ALUNOS.find(x=>x.user_id===e.user_id);if(!a||livre(a))return;const d=e.detalhe||{},G=e.tipo==='gestor_in',cid=G?'gestor':(d.cid||('n:'+(d.quem||'')));
+  const ON={};P.forEach(p=>{if(p.on)ON[p.uid+'|'+p.cid]=1;});const R={};const ZZ=zerarMapa();
+  (LV.lg||[]).forEach(e=>{const t=Date.parse(e.criado_em);if(t<lim)return;if(ZZ[e.user_id]&&t<=ZZ[e.user_id])return;const a=ALUNOS.find(x=>x.user_id===e.user_id);if(!a||livre(a))return;const d=e.detalhe||{},G=e.tipo==='gestor_in',cid=G?'gestor':(d.cid||('n:'+(d.quem||'')));
     const k=e.user_id+'|'+cid,r=R[k]||(R[k]={uid:e.user_id,cid,quem:G?'👔 Gestor':(d.quem||'Colaborador'),emp:a.nome||a.login||'',ult:0,n:0});r.n++;if(t>r.ult)r.ult=t;if(!G&&d.quem)r.quem=d.quem;});
   P.forEach(p=>{const k=p.uid+'|'+p.cid;if(p.on&&!R[k]){const a=ALUNOS.find(x=>x.user_id===p.uid)||{};R[k]={uid:p.uid,cid:p.cid,quem:p.cid==='gestor'?'👔 Gestor':(p.quem||'Colaborador'),emp:a.nome||a.login||'',ult:p.ult,n:1};}});
+  Object.values(R).forEach(r=>{const nm=nomeColab(r.uid,r.cid);if(nm)r.quem=nm;});
   const L=Object.values(R).map(r=>(r.on=!!ON[r.uid+'|'+r.cid],r)).sort((x,y)=>(y.on-x.on)||(y.ult-x.ult));
   const nOn=L.filter(r=>r.on).length,nOff=L.length-nOn,emps=new Set(L.map(r=>r.uid));
   const sem=ALUNOS.filter(a=>!livre(a)&&!emps.has(a.user_id)).map(a=>a.nome||a.login);
