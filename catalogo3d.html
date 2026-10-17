@@ -191,7 +191,7 @@ gateUI(async({session,perfil})=>{window.UID=session.user.id;const st=document.ge
  document.getElementById('vOr').hidden=!ACC.adm&&!ACC.orient;
  try{FULL=!!(await abrePack());}catch(e){console.error(e);}
  if(!PK){st.innerHTML='Não foi possível abrir o catálogo agora. Atualize a página ou fale com a FC Consultoria.';return;}
- st.innerHTML=ACC.adm?'✅ Matriz · catálogo completo':FULL?(ACC.cat&&(!ACC.ctr||ACC.cat>=ACC.ctr)?'✅ Catálogo 3D liberado até <b>'+fmtD(ACC.cat)+'</b>':'✅ Incluído no seu contrato até <b>'+fmtD(ACC.ctr)+'</b>'):'🔓 Demonstrativo: 6 perfis liberados. <button type="button" class="lb" onclick="trava(\'todos os perfis\')">Liberar todos</button>';
+ st.innerHTML=ACC.adm?'✅ Matriz · catálogo completo':FULL?'✅ Catálogo 3D liberado: todos os perfis em 3D, medidas e usinagem, sem custo':'🔓 Demonstrativo: 6 perfis liberados. <button type="button" class="lb" onclick="trava(\'todos os perfis\')">Liberar todos</button>';
  HITX('cat3d_abrir','');if(ACC.adm)fcPing();else fcStatusUI();desenha();});
 const USOK=i=>OK(i);function conta(){return '';}
 
