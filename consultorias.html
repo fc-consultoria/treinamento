@@ -137,7 +137,23 @@ const SEED={
   vis:{tit:'Ciclo presencial do mês · 5 dias',prep:['Agenda dos 5 dias combinada com o cliente','Planilha de precificação atualizada'],dur:['Revisão de preços com a equipe','Acompanhamento do plano estratégico'],dep:['Relatório do ciclo','Nota fiscal do mês']},
   arq:[['xlsx','Planilha de precificação · ZFM','exemplo'],['pdf','Plano estratégico','exemplo']]}
 };
-let E={},at='cb',tab='proc',cli=false,HORAS=[];
+let E={},at='cb',tab='proc',cli=false,HORAS=[],PORT={},linkAberto=false;
+const KEY=new URLSearchParams(location.search).get('k'),PUB=!!KEY;
+const URL_BASE='https://fc-consultoria.github.io/treinamento/consultorias.html?k=';
+function novaChave(){const a=new Uint8Array(18);crypto.getRandomValues(a);return Array.from(a,b=>b.toString(16).padStart(2,'0')).join('');}
+async function carregarPortais(){const {data}=await sb.from('cons_portal').select('*');PORT={};(data||[]).forEach(p=>PORT[p.empresa_id]=p);}
+const dtBR=t=>t?new Date(t).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
+function msgLink(e,p){return ['Olá, equipe '+e.nome.split(' · ')[0]+'! Tudo bem?','','Por este link vocês acompanham o andamento da consultoria da FC:',URL_BASE+p.chave,'','*O que vocês encontram lá*','• O fluxo do processo, etapa por etapa, com datas e responsáveis.','• O plano de ação: cada ponto levantado, do diagnóstico até resolvido.','• As entregas e demandas em andamento.','','O link é da empresa, não repassem para fora. Dúvidas: (66) 9 9986-7984, de segunda a sexta, das 08:00 às 11:00 e das 13:00 às 17:00 (horário de Sinop/MT).','','FC Consultoria'].join('\n');}
+function linkBox(e){const p=PORT[at];
+  if(!p)return `<div class="box"><h3>🔗 Link do cliente</h3><p class="nota" style="margin:0 0 10px">${esc(e.nome)} ainda não tem link. Ao criar, o cliente passa a ver o fluxo, o plano de ação e as entregas (sem horas, arquivos e observações internas).</p><button class="btn pri" type="button" id="lkCriar">Criar link do cliente</button></div>`;
+  const u=URL_BASE+p.chave;
+  return `<div class="box"><h3>🔗 Link do cliente ${p.ativo?'<span class="pill p-ok">Ativo</span>':'<span class="pill p-bad">Desativado</span>'}</h3>
+   <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><input readonly value="${u}" style="flex:1;min-width:220px;font:13px var(--f-m);padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface-2);color:var(--fg)" id="lkUrl">
+   <button class="btn" type="button" id="lkCopiar">Copiar link</button><a class="btn" href="${u}" target="_blank" rel="noopener" style="text-decoration:none">Abrir como o cliente</a></div>
+   <p class="nota" style="margin:8px 0">${p.acessos?`Aberto ${p.acessos} vez${p.acessos>1?'es':''} pelo cliente · último acesso ${dtBR(p.ultimo_acesso)}`:'O cliente ainda não abriu o link.'}</p>
+   <label class="nota" style="display:block;margin-bottom:4px;color:var(--fg);font-weight:600">Mensagem pronta para enviar</label><textarea id="lkMsg" rows="7" style="width:100%;font:13.5px var(--f-b);padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--fg)">${esc(msgLink(e,p))}</textarea>
+   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><button class="btn pri" type="button" id="lkCopMsg">Copiar mensagem com o link</button><a class="btn" style="text-decoration:none" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(msgLink(e,p))}">Abrir no WhatsApp</a><button class="btn" type="button" id="lkAtivo" style="margin-left:auto;color:${p.ativo?'var(--bad)':'var(--ok)'}">${p.ativo?'Desativar link':'Reativar link'}</button></div></div>`;}
+function copiar(t,b){(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>{b.textContent='✓ Copiado';setTimeout(()=>render(),1200)},()=>{});}
 const esc=t=>String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const COR=['var(--gb)','var(--cb)','var(--cde)','var(--accent)','var(--ok)','var(--warn)'];
 function limpaSeed(e){e=JSON.parse(JSON.stringify(e));e.frentes.forEach(f=>f.p=f.p.filter(p=>p[2]!=='exemplo'&&p[3]!=='exemplo'));e.dem=(e.dem||[]).filter(d=>d[2]!=='exemplo');e.arq=(e.arq||[]).filter(a=>a[2]!=='exemplo');e.vis=e.vis||{tit:'Visita',prep:[],dur:[],dep:[]};e.vis.ok=e.vis.ok||{};if(e.acao)e.acao.st=e.acao.st||{};return e;}
@@ -147,7 +163,7 @@ async function salvar(k){const el=document.getElementById('sync');el.textContent
 async function carregar(){const {data,error}=await sb.from('rotina_docs').select('id,data').eq('col','consultoria');if(error){alert('Não consegui carregar: '+error.message);return;}
   if(!data.length){for(const [k,e] of Object.entries(SEED)){E[k]=limpaSeed(e);await salvar(k);}}else data.forEach(r=>E[r.id]=r.data);
   if(!E[at])at=Object.keys(E)[0];
-  const h=await sb.from('rotina_docs').select('data').eq('col','horas');HORAS=(h.data||[]).map(x=>x.data);render();}
+  await carregarPortais();const h=await sb.from('rotina_docs').select('data').eq('col','horas');HORAS=(h.data||[]).map(x=>x.data);render();}
 const nrm=t=>String(t||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/s\b/g,'').trim();
 function horasDe(e){const k=nrm(e.nome.split('·')[0]),k2=nrm(e.apelido||'');const mes=new Date().toISOString().slice(0,7);
   return HORAS.filter(x=>{const c=nrm(x.cliente);return c&&(c.includes(k)||k.includes(c)||(k2&&c.includes(k2)))});}
@@ -179,12 +195,18 @@ function ficha(){const e=E[at];let h='';
    h=`<div class="box"><div class="hrs"><div><span class="muted">Total</span><b>${hm(n+x2)}</b></div><div><span class="muted">Horário normal</span><b>${hm(n)}</b></div><div><span class="muted">Hora extra</span><b style="color:var(--bad)">${hm(x2)}</b></div></div></div>
    <div class="box">${L.length?L.map(x=>`<div class="li"><span class="dt">${(x.data||'').slice(8,10)}/${(x.data||'').slice(5,7)}</span><div style="flex:1;min-width:0"><div style="font-weight:600">${esc(x.titulo)}</div>${(x.itens||[]).length?`<div class="nota">${x.itens.map(esc).join(' · ')}</div>`:''}</div><span class="pill ${+x.minExtra?'p-bad':'p-mut'}">${hm((+x.minNormal||0)+(+x.minExtra||0))}${+x.minExtra?' extra':''}</span></div>`).join(''):'<p class="nota" style="margin:0">Ainda não há horas lançadas para esta empresa na Rotina FC.</p>'}</div>
    <p class="nota">Vem da Rotina FC: 07:00 às 18:00 é horário normal; 18:01 às 06:59 e fim de semana, hora extra.</p>`;}
- const abas=(cli?ABAS.filter(a=>['proc','acao','vis','dem'].includes(a[0])):ABAS).filter(a=>a[0]!=='acao'||e.acao); if(cli&&!abas.some(a=>a[0]===tab))tab='proc';
+ const abas=(cli?ABAS.filter(a=>['proc','acao','dem'].includes(a[0])):ABAS).filter(a=>a[0]!=='acao'||e.acao); if(cli&&!abas.some(a=>a[0]===tab))tab='proc';
  $('#ficha').style.setProperty('--c',e.c);
- $('#ficha').innerHTML=`<div class="fh"><span class="sw"></span><div style="min-width:0;flex:1"><h2>${e.nome}</h2><div class="muted" style="font-size:14px">${e.cid} · ${e.mod}</div></div><span class="pill ${e.st[0]}">${e.st[1]}</span></div>
-  ${cli?`<div style="padding:12px 18px 0"><div class="cliente-bar">🔗 <b>Link do cliente</b> · ${e.nome} vê o fluxo, o plano de ação, as visitas e as entregas. Horas, arquivos internos e observações da FC ficam ocultos.</div></div>`:''}<div class="tabs" role="tablist">${abas.map(([k,l])=>`<button class="tab" role="tab" type="button" aria-selected="${k===tab}" data-t="${k}">${l}</button>`).join('')}</div><div class="body">${h}</div>`;
+ $('#ficha').innerHTML=`<div class="fh"><span class="sw"></span><div style="min-width:0;flex:1"><h2>${e.nome}</h2><div class="muted" style="font-size:14px">${e.cid} · ${e.mod}</div></div><span class="pill ${e.st[0]}">${e.st[1]}</span>${cli?'':`<button class="btn" type="button" id="lkTog">🔗 Link do cliente${PORT[at]&&PORT[at].ativo?' ✓':''}</button>`}</div>
+  ${PUB?`<div style="padding:12px 18px 0"><div class="cliente-bar">Acompanhamento atualizado pela FC Consultoria. Dúvidas: (66) 9 9986-7984, de segunda a sexta, das 08:00 às 11:00 e das 13:00 às 17:00 (horário de Sinop/MT).</div></div>`:cli?`<div style="padding:12px 18px 0"><div class="cliente-bar">🔗 <b>Link do cliente</b> · ${e.nome} vê o fluxo, o plano de ação e as entregas. Horas, arquivos, checklist de visita e observações da FC ficam ocultos.</div></div>`:linkAberto?`<div style="padding:12px 18px 0">${linkBox(e)}</div>`:''}<div class="tabs" role="tablist">${abas.map(([k,l])=>`<button class="tab" role="tab" type="button" aria-selected="${k===tab}" data-t="${k}">${l}</button>`).join('')}</div><div class="body">${h}</div>`;
  document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{tab=b.dataset.t;ficha()});
  $('#ficha').classList.toggle('fc',!cli); if(cli)return;
+ const g=id=>document.getElementById(id);
+ if(g('lkTog'))g('lkTog').onclick=()=>{linkAberto=!linkAberto;ficha();};
+ if(g('lkCriar'))g('lkCriar').onclick=async()=>{const r={empresa_id:at,chave:novaChave(),ativo:true};const {error}=await sb.from('cons_portal').insert(r);if(error){alert('Não foi possível criar: '+error.message);return;}PORT[at]=Object.assign({acessos:0},r);ficha();};
+ if(g('lkCopiar'))g('lkCopiar').onclick=e2=>copiar(g('lkUrl').value,e2.target);
+ if(g('lkCopMsg'))g('lkCopMsg').onclick=e2=>copiar(g('lkMsg').value,e2.target);
+ if(g('lkAtivo'))g('lkAtivo').onclick=async()=>{const p=PORT[at];if(p.ativo&&!confirm('Desativar o link? O cliente deixa de ver o acompanhamento.'))return;const {error}=await sb.from('cons_portal').update({ativo:!p.ativo}).eq('empresa_id',at);if(error){alert(error.message);return;}p.ativo=!p.ativo;ficha();};
  document.querySelectorAll('.node[data-f]').forEach(n=>n.onclick=()=>{const p=e.frentes[+n.dataset.f].p[+n.dataset.i];p[0]=p[0]===''?'and':p[0]==='and'?'ok':'';ficha();cards();salvar(at);});
  document.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>{const t=prompt('Nova etapa — o que será feito?');if(!t)return;const d=prompt('Data ou horário (ex.: 24/10 ou 08:00–09:30). Pode deixar em branco:')||'';const r=confirm('Esta etapa depende do cliente?\n\nOK = Cliente · Cancelar = FC')?'Cliente':'';e.frentes[+b.dataset.add].p.push(['',t,'',d,r]);ficha();salvar(at);});
  const af=document.getElementById('addFrente');if(af)af.onclick=()=>{const n=prompt('Nome da nova frente (ex.: Revenda, Fábrica, Pós-visita):');if(!n)return;e.frentes.push({n,p:[]});ficha();salvar(at);};
@@ -197,7 +219,13 @@ $('#cmp').onchange=e=>{$('#app').classList.toggle('compact',e.target.checked);tr
 try{if(localStorage.getItem('cons-cmp')==='1'){$('#cmp').checked=true;$('#app').classList.add('compact')}}catch(_){}
 $('#nova').onclick=()=>{const nome=prompt('Nome da empresa:');if(!nome)return;const cid=prompt('Cidade / estado:')||'';const k='e'+Date.now().toString(36);
   E[k]={nome,cid,c:COR[Object.keys(E).length%COR.length],mod:'Consultoria presencial',st:['p-mut','Novo'],visita:'a definir',frentes:[{n:'Antes da visita',p:[]}],dem:[],vis:{tit:'Próxima visita',prep:[],dur:[],dep:[],ok:{}},arq:[]};at=k;tab='proc';render();salvar(k);};
-gateUI(()=>carregar(),{soMatriz:true});
+if(PUB){(async()=>{document.title='Acompanhamento da consultoria · FC Consultoria';
+  document.querySelectorAll('#app > .top').forEach(t=>t.hidden=true);$('#emps').hidden=true;
+  $('#app').insertAdjacentHTML('afterbegin','<div class="top" style="align-items:center;gap:12px"><img src="midia/logo-fc.png" alt="FC Consultoria e Representação" style="height:44px;border-radius:8px"><div><div class="eyebrow">FC Consultoria · acompanhamento da consultoria</div><h1 id="pubT">Carregando…</h1></div></div>');
+  const {data,error}=await sb.rpc('cons_portal_ver',{p_chave:KEY});
+  if(error||!data){$('#pubT').textContent='Link indisponível';$('#ficha').innerHTML='<div class="body"><p style="margin:0">Este link não está ativo. Fale com a FC Consultoria: (66) 9 9986-7984.</p></div>';return;}
+  E={[data.id]:data};at=data.id;cli=true;$('#pubT').textContent='Acompanhamento da consultoria';ficha();})();}
+else gateUI(()=>carregar(),{soMatriz:true});
 </script>
 
 </body></html>
