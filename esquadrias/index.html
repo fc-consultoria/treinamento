@@ -58,6 +58,7 @@ main{min-width:0}
 .row b{font:800 16px var(--f-d);color:var(--ink)}.row small{display:block;color:var(--tm);font-size:12.5px;line-height:1.25}.row .w{font:700 13px var(--f-b);color:var(--ink);text-align:right;white-space:nowrap}.row .w small{font-weight:500}
 .row.nx{cursor:default}.row.nx:hover{background:#fff}
 .sum{margin-top:8px;font:600 14px var(--f-b);background:var(--bg);border-radius:9px;padding:7px 10px}
+.gc{border:1px solid var(--ln);border-radius:12px;background:#fff;padding:10px;display:flex;flex-direction:column;gap:2px}.gc .gi{height:110px;display:grid;place-items:center;background:#f6f9fa;border-radius:9px;margin-bottom:6px;font-size:34px}.gc .gi img{max-width:90%;max-height:96px;object-fit:contain}.gc b{font:800 19px var(--f-d)}.gc small{color:var(--tm);font-size:12.5px}.gcs{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px;margin:10px 0}
 .comp{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:6px}.cp{display:flex;gap:9px;align-items:center;border:1px solid var(--ln);border-radius:10px;padding:7px 9px;background:#fff}
 .cp i{font-style:normal;font-size:20px;width:32px;height:32px;border-radius:8px;background:var(--bg);display:grid;place-items:center;flex:none}.cp b{font:800 15.5px var(--f-d);display:block}.cp small{color:var(--tm);font-size:12.5px;line-height:1.25;display:block}
 /* botões */
@@ -145,7 +146,7 @@ function row(fn,c){const alt=c.split(' ou ').map(s=>s.trim());const x=pfInfo(alt
 function lista(arr){return `<div class="rows">${arr.map(([f,c])=>row(f,c)).join('')}</div>`;}
 function soma(arr){let s=0,n=0,f=0;arr.forEach(([_,c])=>{const x=pfInfo(c.split(' ou ')[0].trim());if(x.ok&&x.peso!=null){s+=x.peso;n++;}else f++;});return {s,n,f};}
 function sumLine(arr){const r=soma(arr);return `<div class="sum">⚖ Soma dos pesos por metro: <b>${kg(r.s)} kg/m</b> <span style="color:var(--tm);font-weight:500">(${r.n} perfis${r.f?`; ${r.f} fora do catálogo não entram na soma`:''})</span></div>`;}
-function comp(arr){return `<div class="comp">${arr.map(([ic,c,n])=>`<div class="cp"><i>${ic}</i><div><b>${esc(c)}</b><small>${esc(n)}</small></div></div>`).join('')}</div>`;}
+function comp(arr){return `<div class="comp">${arr.map(([ic,c,n])=>{const f=gfile(String(c).split(/\s*\/\s*|\s+ou\s+/)[0]);return `<div class="cp"><i${f?' style="width:64px;height:44px;background:#fff;border:1px solid var(--ln)"':''}>${f?`<img src="${f}" alt="" style="max-width:58px;max-height:38px;object-fit:contain">`:ic}</i><div><b>${esc(c)}</b><small>${esc(n)}</small></div></div>`;}).join('')}</div>`;}
 function cmpGS(g,s,extra){return `<div class="cmp"><div class="G"><h3>GOLD <span class="tag tg">Linha Gold</span></h3>${lista(g)}${sumLine(g)}</div><div class="S"><h3>SUPREMA <span class="tag ts">Linha Suprema</span></h3>${lista(s)}${sumLine(s)}</div></div>${extra||''}`;}
 
 /* ---------- desenhos (SVG gerado) ---------- */
@@ -268,6 +269,13 @@ function mCm(){return head(2,'Contramarco · instalação e componentes')+`<div 
  quiz([['Quando a esquadria de alumínio é instalada?',['Depois que o contramarco está chumbado e a obra pronta','Antes de chumbar o contramarco','Junto com o reboco'],0,'O contramarco é chumbado primeiro; a esquadria entra depois, com a obra acabada.'],['Qual a distância da primeira grapa até o canto, no desenho do treinamento?',['150 mm','450 mm','50 mm'],0,'Primeira grapa a 150 mm do canto; as demais a cada 450 mm.']])+foot(2);}
 
 /* --- 04 guarnições --- */
+/* desenhos do catálogo Sealway (guarnição EPDM e espuma PVC adesivada) */
+const GIMG={GUA007:['SW GUA 007','ED 084','Guarnição EPDM'],GUA053:['SW GUA 053','GUA 053','Guarnição EPDM'],GUA239:['SW GUA 239','GUA 239','Guarnição EPDM'],GUA256:['SW GUA 256','SD 626','Guarnição EPDM'],GUA259:['SW GUA 259','SD 631','Guarnição EPDM'],GUA283:['SW GUA 283','GUA 283','Guarnição EPDM'],GUA284:['SW GUA 284','GUA 283 / SD 2562N','Guarnição EPDM'],GUA412:['SW GUA 412','1087101','Guarnição EPDM'],
+ GUA157:['Espuma PVC adesivada 11x6','GUA 157','Espuma adesiva'],GUA258:['Espuma PVC adesivada 11x4','GUA 258','Espuma adesiva'],GUA305:['Espuma PVC adesivada 14x3','GUA 305','Espuma adesiva'],GUA306:['Espuma PVC adesivada 14x4','GUA 306','Espuma adesiva'],GUA304:['Espuma PVC adesivada 14x6','GUA 304','Espuma adesiva']};
+const gk=c=>String(c||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+const gfile=c=>{const k=gk(c);return GIMG[k]?'gua/GUA-'+k.slice(3)+'.png':null;};
+function gcard(c,papel){const k=gk(c),g=GIMG[k],f=gfile(c);if(!g)return `<div class="gc"><div class="gi">🧵</div><b>${esc(c||'—')}</b><small>${esc(papel||'')}</small></div>`;
+ return `<div class="gc"><div class="gi"><img src="${f}" alt="${esc(c)}" loading="lazy"></div><span class="fn">${esc(papel||g[2])}</span><b>${esc(c)}</b><small>Sealway: ${esc(g[0])}${g[1]&&gk(g[1])!==k?' · ref. '+esc(g[1]):''}</small></div>`;}
 const GUA={gold:[{p:'LG-006',b:'LG-026 ou BG-057',v:{6:['GUA412','GUA306'],8:['GUA259','GUA306'],10:['GUA259','GUA305']}},{p:'LG-050',b:'LG-026 ou BG-057',v:{6:['GUA256','GUA304'],8:['GUA259','GUA304'],10:['GUA259','GUA306']}},{p:'LG-050',b:'LG-059',v:{4:['GUA259','GUA304'],6:['GUA259','GUA306']}},{p:'LG-006',b:'LG-059',v:{4:['GUA259','GUA306'],6:['GUA259','GUA305']}}],
  sup:[{p:'SU-200',v:{3:['GUA-256','GUA-157'],4:['GUA-256','GUA-157'],5:['GUA-256','GUA-258'],6:['GUA-259','GUA-157']}},{p:'SU-082',v:{3:['GUA-256','GUA-258'],4:['GUA-256','GUA-258'],5:['GUA-256','GUA-171'],6:['GUA-259','GUA-157']}},{p:'SU-292',v:{3:['GUA-256','GUA-258'],4:['GUA-256','GUA-258'],5:['GUA-256','GUA-171'],6:['GUA-259','GUA-171']}},{p:'SU-039',v:{4:['GUA-256','GUA-157'],5:['GUA-256','GUA-258'],6:['GUA-259','GUA-258']}},{p:'SU-053',v:{4:['GUA-256','GUA-258'],5:['GUA-256','GUA-171'],6:['GUA-259','GUA-171']}},{p:'SU-055',v:{4:['GUA-284',''],5:['GUA-283',''],6:['GUA-283','']}}]};
 let GL='gold',GI=0,GE=null;
@@ -281,8 +289,10 @@ function mGua(){const L=GUA[GL],it=L[Math.min(GI,L.length-1)],es=Object.keys(it.
  <div class="seg" style="margin-bottom:10px"><button class="g ${GL==='gold'?'on':''}" data-gl="gold">Linha Gold</button><button class="s ${GL==='sup'?'on':''}" data-gl="sup">Linha Suprema</button></div>
  <div class="chips">${L.map((x,k)=>`<button class="${k===GI?'on':''}" data-gi="${k}">${esc(x.p)}${x.b?' · baguete '+esc(x.b):''}</button>`).join('')}</div>
  <div class="two"><div><div class="chips">${es.map(n=>`<button class="${n===e?'on':''}" data-ge="${n}">vidro ${n} mm</button>`).join('')}</div>${guaSvg(e,g)}
-  <div class="call">Perfil <b>${esc(it.p)}</b>${it.b?` com baguete <b>${esc(it.b)}</b>`:''} e vidro de <b>${e} mm</b>: guarnição interna <b>${esc(g[0])}</b>${g[1]?` e externa <b>${esc(g[1])}</b>`:' (sem guarnição externa)'}.</div></div>
-  <div>${card(it.p,'Perfil escolhido',GL==='gold'?'g':'s')}<table class="tb" style="margin-top:10px"><tr><th>Vidro</th><th>Interna</th><th>Externa</th></tr>${es.map(n=>`<tr class="${n===e?'hi':''}"><td>${n} mm</td><td>${esc(it.v[n][0])}</td><td>${esc(it.v[n][1]||'—')}</td></tr>`).join('')}</table></div></div></div>`+
+  <div class="call">Perfil <b>${esc(it.p)}</b>${it.b?` com baguete <b>${esc(it.b)}</b>`:''} e vidro de <b>${e} mm</b>: guarnição interna <b>${esc(g[0])}</b>${g[1]?` e externa <b>${esc(g[1])}</b>`:' (sem guarnição externa)'}.</div>
+  <div class="gcs">${gcard(g[0],'Interna')}${g[1]?gcard(g[1],'Externa'):''}</div></div>
+  <div>${card(it.p,'Perfil escolhido',GL==='gold'?'g':'s')}<table class="tb" style="margin-top:10px"><tr><th>Vidro</th><th>Interna</th><th>Externa</th></tr>${es.map(n=>{const th=c=>{const f=gfile(c);return f?`<img src="${f}" alt="" style="height:26px;max-width:60px;object-fit:contain;vertical-align:middle;margin-right:6px">`:''};return `<tr class="${n===e?'hi':''}"><td>${n} mm</td><td>${th(it.v[n][0])}${esc(it.v[n][0])}</td><td>${it.v[n][1]?th(it.v[n][1])+esc(it.v[n][1]):'—'}</td></tr>`;}).join('')}</table></div></div></div>`+
+`<div class="sec"><h2>🧵 Guarnições e espumas do treinamento</h2><p class="nt">Desenhos do catálogo Sealway, com o código equivalente no mercado.</p><div class="gcs">${Object.keys(GIMG).map(k=>gcard('GUA-'+k.slice(3))).join('')}</div></div>`+
  quiz([['Na Suprema, perfil SU-200 com vidro de 6 mm: qual a guarnição interna?',['GUA-259','GUA-256','GUA-283'],0,'Com 6 mm a interna passa a ser a GUA-259; até 5 mm é a GUA-256.'],['O que muda quando o vidro fica mais grosso?',['A guarnição precisa ser trocada','Nada muda','Só o perfil muda'],0,'Cada espessura de vidro pede a guarnição do tamanho certo para travar o vidro.']])+foot(3);}
 
 /* --- 05 maxim-ar --- */
