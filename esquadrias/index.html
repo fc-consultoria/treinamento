@@ -58,6 +58,14 @@ main{min-width:0}
 @media print{#wm{opacity:1}}
 .d3b{position:absolute;right:6px;top:6px;z-index:1;background:var(--tl);color:#fff;font:700 11.5px var(--f-b);border-radius:99px;padding:2px 8px;box-shadow:0 2px 6px rgba(0,0,0,.18)}
 .md.fs{padding:0}.md.fs>div{width:100vw;height:100vh;border-radius:0}
+#fsBar{position:fixed;right:0;top:0;bottom:0;width:282px;z-index:955;overflow:auto;background:#13232e;color:#fff;border-radius:0;padding:68px 12px 12px;font:600 14px var(--f-b);box-shadow:0 10px 26px rgba(0,0,0,.35);display:flex;flex-direction:column;gap:10px}
+#fsBar .fst{font:800 18px var(--f-d);color:var(--or)}#fsBar .fsn{display:grid;grid-template-columns:1fr 1fr;gap:6px}#fsBar .fsn .btn{padding:8px 6px;justify-content:center}
+#fsBar .fsg{display:flex;flex-direction:column;gap:5px}#fsBar .fsl{display:flex;gap:8px;align-items:center;text-align:left;width:100%;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:#fff;border-radius:10px;padding:8px 10px;font:600 14px var(--f-b);cursor:pointer}
+#fsBar .fsl span{min-width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.14);font-size:12px}#fsBar .fsl.on{background:var(--tl);border-color:var(--tl2)}#fsBar .fsl.on span{background:var(--or);color:#2a1b00}
+#fsBar .fsx{font:500 13px/1.35 var(--f-b);color:#cfe0e6;background:rgba(255,255,255,.06);border-radius:10px;padding:8px 10px}
+#fsBar .fso>.btn{width:100%;justify-content:flex-start;padding:8px 10px}#fsBar .fso>span{flex-wrap:wrap;margin:2px 0}
+#cmhost[data-fs]{width:calc(100vw - 282px)!important}#cmhost[data-fs] .angw{right:12px}
+@media (max-width:700px){#fsBar{top:auto;left:8px;right:8px;width:auto;max-height:42vh}#cmhost[data-fs]{width:100vw!important;height:56vh!important}}
 .pc:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(15,60,70,.12)}
 .pc .im{aspect-ratio:4/3;background:linear-gradient(#f6f9fa,#e9eff1);position:relative}.pc .im img{position:absolute;inset:6px;width:calc(100% - 12px);height:calc(100% - 12px);object-fit:contain}
 .pc .im .b3{position:absolute;right:6px;bottom:6px;background:var(--tl);color:#fff;font:700 11px var(--f-b);border-radius:99px;padding:2px 7px}
@@ -246,8 +254,12 @@ function telaCheia(id){const H=document.getElementById(id);if(!H)return;const on
  if(on){H.dataset.fs='1';Object.assign(H.style,{position:'fixed',left:'0',top:'0',width:'100vw',height:'100vh',zIndex:'950',borderRadius:'0'});
   const x=document.createElement('button');x.type='button';x.id='fsX';x.textContent='✕ Sair da tela cheia';x.style.cssText='position:fixed;right:16px;top:16px;z-index:960;border:0;border-radius:99px;padding:10px 16px;font:700 15px var(--f-b);background:#13232e;color:#fff;cursor:pointer;box-shadow:0 8px 20px rgba(0,0,0,.35)';x.onclick=()=>telaCheia(id);document.body.appendChild(x);fsBar();}
  else{delete H.dataset.fs;H.style.position='absolute';H.style.zIndex='5';H.style.borderRadius='14px';const x=$('#fsX');if(x)x.remove();const b=$('#fsBar');if(b)b.remove();place3d();}}
-function fsBar(){let b=$('#fsBar');const H=$('#cmhost');if(!H||!H.dataset.fs||AT!=='cm'){if(b)b.remove();return;}if(!b){b=document.createElement('div');b.id='fsBar';b.style.cssText='position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:960;display:flex;gap:8px;align-items:center;background:rgba(19,35,46,.92);color:#fff;border-radius:99px;padding:8px 10px;font:600 15px var(--f-b);box-shadow:0 10px 26px rgba(0,0,0,.35);max-width:calc(100vw - 24px)';document.body.appendChild(b);}
- b.innerHTML=`<button type="button" class="btn" data-cmk="${Math.max(0,CMK-1)}" style="padding:6px 12px">←</button><span style="padding:0 8px">Passo ${CMK+1} de ${CMST.length} · <b>${esc(CMST[CMK][0])}</b></span><button type="button" class="btn p" data-cmk="${Math.min(CMST.length-1,CMK+1)}" style="padding:6px 12px">→</button><button type="button" class="btn ${CMX?'o':''}" data-cmx="1" style="padding:6px 12px">🔍 Corte</button>${cmOpc(1)}`;b.style.flexWrap='wrap';b.style.justifyContent='center';b.style.borderRadius='22px';}
+function fsBar(){let b=$('#fsBar');const H=$('#cmhost');if(!H||!H.dataset.fs||AT!=='cm'){if(b)b.remove();return;}if(!b){b=document.createElement('div');b.id='fsBar';document.body.appendChild(b);}
+ const st=CMST.map((x,k)=>`<button type="button" data-cmk="${k}" class="fsl ${k===CMK?'on':''}"><span>${k+1}</span>${esc(x[0])}</button>`).join('');
+ const opc=cmOpc(1);
+ b.innerHTML=`<div class="fst">Passo ${CMK+1} de ${CMST.length}</div><div class="fsn"><button type="button" class="btn" data-cmk="${Math.max(0,CMK-1)}">← Anterior</button><button type="button" class="btn p" data-cmk="${Math.min(CMST.length-1,CMK+1)}">Próximo →</button></div>
+ <div class="fsg">${st}</div><div class="fsx">${esc(CMST[CMK][1])}</div>
+ <div class="fsg"><button type="button" class="fsl ${CMX?'on':''}" data-cmx="1"><span>🔍</span>${CMX?'Corte ligado':'Ver o corte da parede'}</button></div>${opc?`<div class="fsg fso">${opc}</div>`:''}`;}
 addEventListener('keydown',e=>{if(e.key==='Escape'){const H=document.querySelector('[data-fs="1"]');if(H)telaCheia(H.id);}});
 function place3d(){try{placeCm();fsBar();}catch(e){console.warn(e);}let H=$('#e3host');const ph=document.querySelector('.e3');
  if(!H){H=document.createElement('div');H.id='e3host';H.style.cssText='position:absolute;z-index:5;display:none;border-radius:14px;overflow:hidden;box-shadow:0 10px 30px rgba(10,40,50,.18);background:#fff';H.innerHTML=`<iframe id="d3f" title="Esquadria em 3D" allow="fullscreen" style="border:0;width:100%;height:100%;display:block"></iframe>${ALUNO?'<div style="position:absolute;inset:0;cursor:not-allowed" title="O Fernando está conduzindo"></div>':''}`;document.body.appendChild(H);}
