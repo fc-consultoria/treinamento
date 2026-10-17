@@ -38,7 +38,7 @@
     box.innerHTML = `<div class="fcchat-head"><div style="font-size:20px">💬</div><div style="flex:1"><div style="font-weight:700">Conversa da equipe</div><div style="font-size:12px;opacity:.9">Matriz e equipe · texto e imagem</div></div><button type="button" data-x style="background:rgba(255,255,255,.2);border:0;color:#fff;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:16px">✕</button></div>
       <div class="fcchat-list"></div>
       <div class="fcchat-prev"><img style="width:44px;height:44px;object-fit:cover;border-radius:8px"><span style="flex:1">Imagem pronta para enviar</span><button type="button" data-tirar style="border:0;background:none;cursor:pointer;color:#b42318;font-weight:600">remover</button></div>
-      <div class="fcchat-foot"><button type="button" class="fcchat-ico" data-anexo title="Anexar imagem">📎</button><input type="file" accept="image/*" hidden><textarea rows="1" placeholder="Escreva… (Enter envia · Shift+Enter quebra linha · Ctrl+V cola print)"></textarea><button type="button" class="fcchat-ico fcchat-send" data-enviar title="Enviar">➤</button></div>`;
+      <div class="fcchat-emojis" style="display:none;flex-wrap:wrap;gap:2px;padding:8px;border-top:1px solid #e6e9ee;background:#fff;max-height:150px;overflow:auto"></div><div class="fcchat-foot"><button type="button" class="fcchat-ico" data-anexo title="Anexar imagem">📎</button><button type="button" class="fcchat-ico" data-emoji title="Emoji">😊</button><input type="file" accept="image/*" hidden><textarea rows="1" placeholder="Escreva uma mensagem…" title="Enter envia · Shift+Enter quebra linha · Ctrl+V cola print"></textarea><button type="button" class="fcchat-ico fcchat-send" data-enviar title="Enviar">➤</button></div>`;
     document.body.appendChild(box); document.body.appendChild(btn);
     lista = box.querySelector('.fcchat-list'); txt = box.querySelector('textarea'); prev = box.querySelector('.fcchat-prev'); fileInp = box.querySelector('input[type=file]');
     btn.onclick = ()=>{ S.aberto = !S.aberto; box.style.display = S.aberto?'flex':'none'; if(S.aberto){ desenhar(true); marcarLido(); setTimeout(()=>txt.focus(),50); } };
@@ -47,6 +47,13 @@
     fileInp.onchange = ()=>{ const f=fileInp.files&&fileInp.files[0]; fileInp.value=''; if(f) prepararImagem(f); };
     box.querySelector('[data-tirar]').onclick = ()=>{ S.img=null; prev.style.display='none'; };
     box.querySelector('[data-enviar]').onclick = enviar;
+    const EMO='😊 😀 😁 😂 🤣 😅 😉 😍 🥰 😘 😎 🤩 🤔 😐 😕 😢 😭 😡 🙏 👍 👎 👏 🙌 💪 👋 🤝 👀 ✅ ❌ ⚠️ ❓ ❗ 💡 🔥 ⭐ 🎉 🎯 🚀 ⏰ 📌 📎 📷 📝 📊 💰 🏠 🪟 🚪 🔧 🛠️ 📦 ☕ ❤️ 💙 💚 💜 🧡 💛'.split(' ');
+    const emoBox = box.querySelector('.fcchat-emojis');
+    emoBox.innerHTML = EMO.map(e=>`<button type="button" data-e="${e}" style="border:0;background:none;font-size:21px;width:36px;height:36px;border-radius:8px;cursor:pointer">${e}</button>`).join('');
+    emoBox.addEventListener('click', e=>{ const b=e.target.closest('[data-e]'); if(!b) return; const a=txt.selectionStart??txt.value.length, z=txt.selectionEnd??txt.value.length; txt.value = txt.value.slice(0,a)+b.dataset.e+txt.value.slice(z); const p=a+b.dataset.e.length; txt.focus(); txt.setSelectionRange(p,p); });
+    emoBox.addEventListener('mouseover', e=>{ const b=e.target.closest('[data-e]'); if(b) b.style.background='#f0f2f5'; });
+    emoBox.addEventListener('mouseout', e=>{ const b=e.target.closest('[data-e]'); if(b) b.style.background='none'; });
+    box.querySelector('[data-emoji]').onclick = ()=>{ emoBox.style.display = emoBox.style.display==='none' ? 'flex' : 'none'; };
     txt.addEventListener('keydown', e=>{ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); enviar(); } });
     txt.addEventListener('input', ()=>{ txt.style.height='auto'; txt.style.height=Math.min(110,txt.scrollHeight)+'px'; });
     txt.addEventListener('paste', e=>{ const it=[...(e.clipboardData&&e.clipboardData.items||[])].find(i=>i.type.startsWith('image/')); if(it){ e.preventDefault(); prepararImagem(it.getAsFile()); } });
@@ -62,7 +69,7 @@
   async function enviar(){
     const t = txt.value.trim(); if(!t && !S.img) return;
     const corpo = {autor_nome:S.nome||null, texto:t||null, imagem:S.img||null};
-    txt.value=''; txt.style.height='auto'; S.img=null; prev.style.display='none';
+    txt.value=''; txt.style.height='auto'; S.img=null; prev.style.display='none'; const eb=box.querySelector('.fcchat-emojis'); if(eb) eb.style.display='none';
     const {data, error} = await sb.from('impl_chat').insert(corpo).select().single();
     if(error){ alert('Não foi possível enviar: '+error.message); return; }
     if(data && !S.msgs.some(m=>m.id===data.id)){ S.msgs.push(data); S.ultimaId=Math.max(S.ultimaId,data.id); }
