@@ -357,7 +357,7 @@ tbody tr:hover{background:var(--panel-2);}
       <button class="navitem" id="btn-logout"><i data-lucide="log-out"></i> Sair</button>
     </div>
     <div class="sidebar-foot">
-      Painel de implantação — dados salvos em banco de dados real (Supabase), acesso restrito à equipe.<br><b>Versão 17/10d — foto do produto nas tabelas</b>
+      Painel de implantação — dados salvos em banco de dados real (Supabase), acesso restrito à equipe.<br><b>Versão 17/10e — liberação de preços por linha</b>
     </div>
   </nav>
   <div class="mobile-topbar">
@@ -439,6 +439,7 @@ function montarDBDaLinha(linha, fornecedoresPorLinha, itensPorLinha, precosPorIt
 
 function mapClienteRow(c){
   return {
+    precosLiberados: c.precos_liberados || {},
     id: c.id, nome: c.nome, fornecedor: c.fornecedor_base||'',
     dataInicio: c.data_inicio||'', dataFim: c.data_fim||'', status: c.status,
     cnpj: c.cnpj||'',
@@ -4239,6 +4240,66 @@ function celulaPrecoAlimentacao(c, key, db, it){
   if(!esc) return `<td><span class="desc">—</span>${sel}</td>`;
   return `<td style="white-space:nowrap;"><b>${fmtMoney(esc.v)}</b><div style="font-size:11.5px; color:var(--text-3);">${esc.fixo?'📌 ':''}${escapeHtml(esc.f)} · ${esc.pos}º</div>${alerta?`<div style="font-size:11.5px; font-weight:650; color:#b42318;" title="${escapeHtml(alerta.a.f)}: ${fmtMoney(alerta.a.v)} · ${escapeHtml(alerta.b.f)}: ${fmtMoney(alerta.b.v)}">⚠️ diferença de ${alerta.pct}%</div>`:''}${sel}</td>`;
 }
+// Liberação de preços por linha: a equipe só alimenta o que a matriz conferiu e liberou
+function vistaEquipe(){ return !ehAdminEspelho() || !!STATE.verComoEquipe; }
+function linhaLiberada(c, key){ return !!(c.precosLiberados||{})[key]; }
+async function liberarLinhaPrecos(c, key, liberar){
+  const m = {...(c.precosLiberados||{})};
+  if(liberar) m[key] = {em:new Date().toISOString()}; else delete m[key];
+  c.precosLiberados = m; render();
+  const {error} = await sb.from('impl_clientes').update({precos_liberados:m}).eq('id', c.id);
+  if(error) avisarErroSalvar(error); else toastSalvo(liberar ? 'Linha liberada para alimentação' : 'Liberação desfeita');
+}
+function botoesLiberacao(c, key, nome){
+  if(!ehAdminEspelho()) return '';
+  const lib = linhaLiberada(c, key), d = lib && c.precosLiberados[key].em ? new Date(c.precosLiberados[key].em).toLocaleDateString('pt-BR') : '';
+  return `<div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+    ${lib ? `<span class="badge badge-ok">🔓 ${escapeHtml(nome)} liberada para a equipe${d?' em '+d:''}</span><button class="btn btn-sm" data-action="liberar-precos" data-key="${escapeHtml(key)}" data-v="0">Desfazer liberação</button>`
+          : `<span class="badge badge-warn">🔒 Equipe ainda não vê ${escapeHtml(nome)}</span><button class="btn btn-sm btn-primary" data-action="liberar-precos" data-key="${escapeHtml(key)}" data-v="1">🔓 Liberar para alimentação</button>`}
+    <button class="btn btn-sm" data-action="ver-como-equipe">${STATE.verComoEquipe ? '↩ Voltar à visão da matriz' : '👁 Ver como a equipe vê'}</button></div>`;
+}
+// Tabela simples da equipe: só o preço que vale. Item com diferença > limite e sem fixar fica bloqueado.
+function renderChecklistEquipe(cliente, todas, titulo, bloqueadas){
+  const filtro = STATE.filtro, search = normalizeText(STATE.search), searchCodigo = normalizeCodigo(STATE.search);
+  const R = todas.map(r=>{ const pa = precoAlimentacao(cliente, r.key, r.db, r.it); const duvida = !!(pa.alerta && !(pa.esc && pa.esc.fixo));
+    const mapa = r.key==='vidro' ? cliente.alimentadosVidro : (cliente.alimentadosComponentes||{})[r.key];
+    const fed = !!(mapa && mapa[r.it.codigo]); return {...r, pa, duvida, fed, temPreco: !!pa.esc && !duvida}; });
+  const rows = R.filter(r=>{
+    if(search && !(searchCodigo && (normalizeCodigo(r.it.codigo).includes(searchCodigo) || normalizeCodigo(codSisComp(cliente, r.key, r.it.codigo)).includes(searchCodigo))) && !normalizeText(r.it.descricao||'').includes(search)) return false;
+    if(filtro==='pendentes') return !r.fed; if(filtro==='alimentados') return r.fed; if(filtro==='revisao') return emRevComp(cliente, r.key, r.it.codigo);
+    return true; });
+  const tot = R.length, ali = R.filter(r=>r.fed).length;
+  return `
+  ${ehAdminEspelho() ? `<div class="exemplo-banner">${icon('eye')}<div><b>Você está vendo como a equipe vê.</b> <button class="btn btn-sm" data-action="ver-como-equipe">↩ Voltar à visão da matriz</button></div></div>` : ''}
+  ${(bloqueadas||[]).length ? `<div class="exemplo-banner">${icon('lock')}<div><b>Preços em conferência pela matriz:</b> ${bloqueadas.map(escapeHtml).join(', ')}. Essas linhas aparecem aqui assim que forem liberadas.</div></div>` : ''}
+  <div class="panel">
+    <div class="panel-head"><div><h3>${icon('list-checks')} ${escapeHtml(titulo)}</h3><div class="desc">Lance no sistema de ${escapeHtml(cliente.nome)} o <b>preço para alimentação</b> de cada item e marque como alimentado. Progresso: <b>${tot?Math.round(ali/tot*100):0}%</b> (${ali} de ${tot}).</div></div></div>
+    <div class="panel-head" style="border-top:1px solid var(--border-2);">
+      <div class="chiprow">
+        <button class="chip ${filtro==='todos'?'active':''}" data-action="set-filtro" data-filtro="todos">Todos (${tot})</button>
+        <button class="chip ${filtro==='pendentes'?'active':''}" data-action="set-filtro" data-filtro="pendentes">Pendentes</button>
+        <button class="chip ${filtro==='alimentados'?'active':''}" data-action="set-filtro" data-filtro="alimentados">Alimentados</button>
+        <button class="chip ${filtro==='revisao'?'active':''}" data-action="set-filtro" data-filtro="revisao">🔎 Em revisão</button>
+        ${btnMarcarTodosAlimentados(rows, r=>r.key)}
+      </div>
+      <div class="searchbox">${icon('search')}<input placeholder="Buscar código, código sistema ou descrição" value="${STATE.search}" data-action="buscar-item"></div>
+    </div>
+    ${rows.length===0 ? emptyState('search-x','Nada por aqui','Nenhum item bate com esse filtro/busca.') : `
+    <div style="overflow-x:auto;"><table>
+      <thead><tr>${thMarcarTodosAlimentados(rows, r=>r.key)}<th style="width:58px;">Foto</th>${todas.some(r=>r.key!==todas[0].key)?'<th>Linha</th>':''}<th>Código</th>${thCodSis}<th>Descrição</th><th class="tright">Preço para alimentação</th><th>Status</th>${thRevisao}</tr></thead>
+      <tbody>${rows.map(r=>`<tr${emRevComp(cliente, r.key, r.it.codigo)?' style="background:#fff7e6;"':''}>
+        <td class="tcenter"><input type="checkbox" class="chk" ${r.fed?'checked':''} ${(!r.fed && !r.temPreco)?'disabled title="Sem preço liberado: não pode ser marcado"':''} data-action="toggle-alimentado-categoria" data-key="${escapeHtml(r.key)}" data-codigo="${escapeHtml(r.it.codigo)}"></td>
+        ${fotoCelula(r.it.codigo)}
+        ${todas.some(x=>x.key!==todas[0].key)?`<td><span class="badge badge-muted">${escapeHtml(r.key)}</span></td>`:''}
+        <td class="mono">${escapeHtml(r.it.codigo)}</td>
+        ${inpCodSisComp(cliente, r.key, r.it.codigo)}
+        <td>${escapeHtml(r.it.descricao||'—')}</td>
+        <td class="tright" style="white-space:nowrap;">${r.duvida ? '<span class="badge badge-warn">⏳ aguardando conferência da matriz</span>' : r.pa.esc ? `<b style="font-size:15px;">${fmtMoney(r.pa.esc.v)}</b>` : '<span class="desc">sem preço</span>'}</td>
+        <td>${r.fed ? `<span class="badge badge-ok">${icon('check')} Alimentado</span>` : '<span class="badge badge-muted">Pendente</span>'}</td>
+        ${chkRevComp(cliente, r.key, r.it.codigo)}
+      </tr>`).join('')}</tbody></table></div>`}
+  </div>`;
+}
 const thPrecoAlimentacao = `<th title="Preço que a equipe usa: 1º fornecedor da ordem com preço (Contrato & Acesso), ou o fixado no item">Preço p/ alimentação</th>`;
 async function salvarOrdemFornecedores(c, cat){
   const lista = fornecedoresSelecionadosCliente(c, cat);
@@ -4427,6 +4488,11 @@ function resolverSelecaoFornecedoresChecklist(filtroKey, fornecedoresDisponiveis
 }
 
 function renderChecklistComponentesTodas(cliente, contratadas){
+  // "Todas": a visão simplificada da equipe só entra quando todas as linhas contratadas estiverem liberadas
+  if(vistaEquipe() && contratadas.length && contratadas.every(l=>linhaLiberada(cliente, l))){
+    const todas = []; contratadas.forEach(l=>{ const db = PRICE_DB[l]; if(db) db.itens.forEach(it=>todas.push({it, key:l, db})); });
+    return renderChecklistEquipe(cliente, todas, 'Checklist de alimentação — todas as linhas', []);
+  }
   const fornecedorAtual = fornecedorSelecionadoPorPrefixo(cliente, 'componentes', cliente.fornecedor) ? cliente.fornecedor : null;
   const filtro = STATE.filtro;
   const search = normalizeText(STATE.search);
@@ -4600,6 +4666,8 @@ function btnMarcarTodosAlimentados(rowsVisiveis, getKey){
 }
 
 function renderChecklistCategoria(nome, db, key, cliente){
+  // Linha liberada pela matriz: a equipe vê só o preço para alimentação. Não liberada: tela completa, como antes.
+  if(vistaEquipe() && linhaLiberada(cliente, key)) return renderChecklistEquipe(cliente, db.itens.map(it=>({it, key, db})), 'Checklist de alimentação — '+nome, []);
   const p = categoriaProgress(cliente, key);
   const mapa = key==='vidro' ? cliente.alimentadosVidro : key==='perfis' ? cliente.alimentadosPerfis : (cliente.alimentadosComponentes && cliente.alimentadosComponentes[key]);
   const mapaCotacao = key==='vidro' ? cliente.cotacaoVidro : key==='perfis' ? cliente.cotacaoPerfis : (cliente.cotacaoComponentes && cliente.cotacaoComponentes[key]);
@@ -4641,6 +4709,7 @@ function renderChecklistCategoria(nome, db, key, cliente){
     <div class="panel-head">
       <div><h3>${icon('list-checks')} Checklist de alimentação — ${nome}</h3><div class="desc">Marque aqui o que já foi cadastrado de verdade no sistema (Wvetro/Cem) de ${cliente.nome}. Progresso atual: <b>${p.pct}%</b> (${p.alimentados} de ${p.total}).</div></div>
     </div>
+    <div class="panel-head" style="border-top:1px solid var(--border-2);">${botoesLiberacao(cliente, key, nome)}</div>
     <div class="panel-head" style="border-top:1px solid var(--border-2); flex-direction:column; align-items:flex-start; gap:8px;">
       <div class="metaitem" style="margin:0;">Ver preço de</div>
       <div class="chiprow">
@@ -4705,6 +4774,7 @@ function renderChecklistCategoria(nome, db, key, cliente){
 
 function renderExemploCategoria(nome, db, key, cliente, fornecedorScope, mostrarChecklist){
   if(mostrarChecklist==null) mostrarChecklist = true;
+  if(mostrarChecklist && vistaEquipe() && linhaLiberada(cliente, key)) return renderChecklistCategoria(nome, db, key, cliente);
   const fornecedores = filtrarFornecedoresCliente(cliente, catDeKey(key), db.fornecedores);
   const imp = STATE.lastImport && STATE.lastImport[key];
   const campoLabel = db.campoLabel || 'Descrição';
@@ -7345,6 +7415,12 @@ function wireEvents(){
         atualizarAlimentado.forEach(it=>{ if(it._id) salvarMetroItem(it._id, {alimentado:true}); });
         return;
       }
+      if(action==='liberar-precos'){
+        if(!ehAdminEspelho()) return;
+        const c = CLIENTS.find(x=>x.id===STATE.clientId); if(!c) return;
+        liberarLinhaPrecos(c, el.dataset.key, el.dataset.v==='1'); return;
+      }
+      if(action==='ver-como-equipe'){ STATE.verComoEquipe = !STATE.verComoEquipe; render(); return; }
       if(action==='forn-ordem'){
         if(!ehAdminEspelho()) return;
         const c = CLIENTS.find(x=>x.id===STATE.clientId); if(!c) return;
