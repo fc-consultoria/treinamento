@@ -55,9 +55,21 @@ td .c{font:800 17px var(--f-d);color:var(--tl)}td .eq{display:flex;flex-directio
 .nota{margin-top:16px;font-size:13px;color:var(--tm);line-height:1.5}
 #wm{position:fixed;inset:0;pointer-events:none;z-index:800}
 #bVolta{margin-left:auto;order:99;border:1px solid rgba(255,255,255,.55);color:#fff;text-decoration:none;border-radius:9px;padding:7px 12px;font:700 14px var(--f-b,system-ui);white-space:nowrap}#bVolta:hover{background:rgba(255,255,255,.12)}
+.rgate{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;background:#e9f0f0;padding:16px;font-family:system-ui,sans-serif}
+.rgate[hidden]{display:none}
+.rgate form{width:min(360px,100%);background:#fff;border:1px solid #d6e1e1;border-radius:14px;padding:26px 22px;display:flex;flex-direction:column;gap:12px}
+.rgate h1{margin:0;font:700 24px system-ui;color:#13262a}
+.rgate small{color:#5a6e72;font-size:12px;letter-spacing:.06em;text-transform:uppercase}
+.rgate label{display:flex;flex-direction:column;gap:5px;font-weight:600;font-size:14px}
+.rgate input{font:15px system-ui;padding:9px 10px;border:1px solid #c4ccd2;border-radius:8px}
+.rgate button{background:#0f6b6e;color:#fff;border:0;border-radius:9px;padding:11px;font:700 15px system-ui;cursor:pointer}
 </style>
 </head>
 <body>
+<div class="rgate" id="gate" hidden><form id="gateForm"><small>FC Consultoria · Matriz</small><h1>🔁 Conversão de códigos</h1>
+<label>Login<input name="login" autocomplete="username" required placeholder="matriz"></label>
+<label>Senha<input name="senha" type="password" autocomplete="current-password" required></label>
+<button type="submit">Entrar</button><p id="gateMsg" role="alert"></p></form></div>
 <header class="top"><div class="w"><img src="/img/logo-fc-160.jpg" alt=""><div><small>FC Consultoria · Setor de compras</small><b>Conversão de códigos · Linha Suprema</b></div></div></header>
 <main id="app"><p style="padding:30px">Carregando…</p></main>
 <div class="zm" id="zm" hidden><div><button type="button" id="zmX">✕ Fechar</button><img id="zmI" alt=""><b id="zmT"></b></div></div>
