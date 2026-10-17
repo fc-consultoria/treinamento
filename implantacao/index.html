@@ -357,7 +357,7 @@ tbody tr:hover{background:var(--panel-2);}
       <button class="navitem" id="btn-logout"><i data-lucide="log-out"></i> Sair</button>
     </div>
     <div class="sidebar-foot">
-      Painel de implantação — dados salvos em banco de dados real (Supabase), acesso restrito à equipe.<br><b>Versão 17/10j — cadastro do WVetro do cliente</b>
+      Painel de implantação — dados salvos em banco de dados real (Supabase), acesso restrito à equipe.<br><b>Versão 17/10k — passo a passo do WVetro no card</b>
     </div>
   </nav>
   <div class="mobile-topbar">
@@ -4585,6 +4585,21 @@ function renderWvetroBox(c, contratadas){
         <label class="btn btn-sm btn-primary" style="cursor:pointer;">${icon('upload')} ${tem.length?'Reimportar':'Importar'} cadastro do WVetro<input type="file" accept=".xlsx,.xls,.csv" data-action="wv-importar" hidden></label>
         ${tem.length?`<button class="btn btn-sm" data-action="wv-baixar">${icon('download')} Baixar planilha por linha</button><button class="btn btn-sm" data-action="wv-remover" style="color:#b42318;">Voltar ao checklist padrão</button>`:''}
       </div></div>
+    <details style="margin:0 18px 12px; border:1px solid var(--border-2); border-radius:10px; padding:8px 12px; background:#f8fafc;">
+      <summary style="cursor:pointer; font-weight:650;">📘 Passo a passo (como usar)</summary>
+      <ol style="margin:8px 0 4px 18px; padding:0; line-height:1.6; font-size:13.5px;">
+        <li>No WVetro do cliente, abra a tela de <b>Acessórios</b> (Configura preço de acessórios) e clique em <b>Exportar</b> → salve o arquivo <b>ExportWWAcessorios.xlsx</b>.</li>
+        <li>Aqui, clique em <b>Importar cadastro do WVetro</b> e escolha esse arquivo.</li>
+        <li>Confira o resumo (códigos por linha, quantos vão para Revisão, quantos ficam fora das linhas) e confirme.</li>
+        <li>Baixe a <b>planilha por linha</b> (abas: uma por linha com preço para alimentar, Conferir, Fora das linhas e Banco sem código no WVetro).</li>
+        <li>Resolva os itens da aba <b>Revisão de implantação</b> (descrição diferente: COM × SEM chave, tampas trocadas etc.).</li>
+        <li>Itens com <b>diferença &gt; 30%</b> entre fornecedores: confira e, se precisar, fixe o fornecedor no item (📌).</li>
+        <li>Quando a linha estiver conferida, clique em <b>🔓 Liberar para alimentação</b>. Só então a equipe (Antonia) vê os códigos e o preço para alimentar.</li>
+        <li>Mudou o cadastro no WVetro? Exporte de novo e use <b>Reimportar</b>: entram os códigos novos e saem os que não existem mais (os já alimentados ficam).</li>
+        <li>Para desfazer tudo: <b>Voltar ao checklist padrão</b>.</li>
+      </ol>
+      <div class="note" style="margin-top:4px;">Só você (matriz) vê este quadro. Preço nunca é copiado: vem sempre do Banco de Preços, pela ordem de fornecedores do cliente.</div>
+    </details>
     <div style="padding:0 18px 14px; display:flex; gap:6px; flex-wrap:wrap;">${chips}${c._wvRel?`<span class="note" style="margin-left:6px;">Última importação: ${escapeHtml(c._wvRel.arquivo)} · ${c._wvRel.fora.length} fora das linhas · ${c._wvRel.faltando.length} do banco sem código no WVetro</span>`:''}</div>
   </div>`;
 }
