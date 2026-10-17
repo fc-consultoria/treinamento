@@ -54,6 +54,7 @@ td .c{font:800 17px var(--f-d);color:var(--tl)}td .eq{display:flex;flex-directio
 .zm img{max-width:100%;max-height:80vh;object-fit:contain}.zm button{align-self:flex-end;border:0;background:var(--ink);color:#fff;border-radius:99px;padding:8px 14px;font:700 14px var(--f-b);cursor:pointer}
 .nota{margin-top:16px;font-size:13px;color:var(--tm);line-height:1.5}
 #wm{position:fixed;inset:0;pointer-events:none;z-index:800}
+#bVolta{margin-left:auto;order:99;border:1px solid rgba(255,255,255,.55);color:#fff;text-decoration:none;border-radius:9px;padding:7px 12px;font:700 14px var(--f-b,system-ui);white-space:nowrap}#bVolta:hover{background:rgba(255,255,255,.12)}
 </style>
 </head>
 <body>
@@ -70,6 +71,10 @@ const kg=v=>v==null?'—':v.toFixed(3).replace('.',',')+' kg/m';
 const norm=s=>String(s||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
 let D=null,Q='',FIL='todos',OK={},ADM=false;
 const FS=()=>Object.keys(D.forn).filter(f=>f!=='alcoa');
+function voltaUrl(adm){if(adm)return '/treinamento/painel.html';let u='';try{u=localStorage.getItem('fc_painel_cli')||'';}catch(_){}
+ const k=new URLSearchParams(location.search).get('k');if(k)u='/treinamento/consultorias.html?k='+encodeURIComponent(k);return u||'/treinamento/';}
+function voltaBtn(adm){if(window.top!==window)return;let b=document.getElementById('bVolta');if(!b){b=document.createElement('a');b.id='bVolta';const h=document.querySelector('header.top .w');if(!h)return;h.appendChild(b);}
+ b.href=voltaUrl(adm);b.textContent=adm?'← Painel matriz':'← Painel inicial';b.title=adm?'Voltar para o painel matriz da FC':'Voltar para o painel inicial da empresa';}
 function img(f,c){return 'img/'+f+'/'+encodeURIComponent(c)+'.webp';}
 function achar(q){const n=norm(q);if(!n)return null;
  for(const r of D.perfis){if(norm(r.c)===n)return {r};for(const e of r.eq){if(norm(e.c)===n||norm(e.cc)===n)return {r,e};}}
@@ -100,12 +105,12 @@ function lista(){let L=D.perfis;
  return h;}
 function tela(){const x=Q?achar(Q):null;
  const cont={alta:0,media:0,baixa:0};D.perfis.forEach(r=>r.eq.forEach(e=>cont[e.n]++));
- $('#app').innerHTML=`<section class="busca"><h1>Digite o código do fornecedor ou da Alcoa</h1><p>Exemplos: <b>25C-001</b> (Texa), <b>EX-0747</b> ou <b>SU-001A</b> (Selta), <b>SU-001</b> (Alcoa). Aparece o desenho 2D de cada um, lado a lado, para conferir.</p>
+ $('#app').innerHTML=`<section class="busca"><h1>Digite o código do fornecedor ou da Alcoa</h1><p>Exemplos: <b>25C-001</b> (Texa), <b>EX-0747</b> (Selta), <b>FASU-0053</b> (FBK), <b>ESU-039</b> (Ecoalumi), <b>PLS-0130</b> (Perfileve), <b>SU-001</b> (Alcoa). Aparece o desenho 2D de cada um, lado a lado, para conferir.</p>
   <form class="sb" id="fb"><input id="q" value="${esc(Q)}" placeholder="Ex.: 25C-040" autocomplete="off" aria-label="Código do perfil"><button>Converter</button></form>
   <div class="chips"><button type="button" data-f="todos" class="${FIL==='todos'?'on':''}">Todos os perfis (${D.perfis.length})</button><button type="button" data-f="baixa" class="${FIL==='baixa'?'on':''}">Para revisar (${cont.baixa})</button><button type="button" data-f="sem" class="${FIL==='sem'?'on':''}">Sem par</button>${Q?'<button type="button" data-limpa="1">✕ Limpar busca</button>':''}</div>
   <div class="leg"><span><span class="nv alta">Confirmado</span> mesmo código e peso (até 3% de diferença)</span><span><span class="nv media">Provável</span> mesmo código, peso difere de 3 a 10%, versão leve ou variante</span><span><span class="nv baixa">Revisar</span> peso difere mais de 10% ou o desenho parece diferente</span></div></section>
   ${Q?(x?detalhe(x):`<div class="card" style="margin-top:16px"><b style="font:800 22px var(--f-d)">Código não encontrado: ${esc(Q)}</b><span class="ob">Confira se digitou certo. Nesta fase, a base tem só a linha Suprema (Alcoa, Texa e Selta).</span></div>`):lista()}
-  <p class="nota">Base de teste: catálogo Suprema da Alcoa, catálogo City 2.5 da Texa e catálogo de perfis da Selta (19/09/2024). Equivalências montadas pela FC a partir do código, do peso e do desenho de cada catálogo. Confira sempre o desenho antes de fechar a compra. © FC Consultoria em Esquadria.</p>`;
+  <p class="nota">Base: catálogo Suprema da Alcoa; Texa (City 2.5), Selta (19/09/2024), FBK (Construção Civil, linha FASU), Ecoalumi (Catálogo Técnico) e Perfileve (Catálogo Geral). Equivalências montadas pela FC a partir do código, do peso e do desenho de cada catálogo. Confira sempre o desenho antes de fechar a compra. © FC Consultoria em Esquadria.</p>`;
  $('#fb').onsubmit=ev=>{ev.preventDefault();Q=$('#q').value.trim();tela();history.replaceState(null,'','#'+encodeURIComponent(Q));};}
 document.addEventListener('click',async ev=>{const t=ev.target.closest('[data-q],[data-f],[data-limpa],[data-zoom],[data-ok]');if(!t)return;const d=t.dataset;
  if(d.q!=null){Q=d.q;tela();scrollTo({top:0,behavior:'smooth'});history.replaceState(null,'','#'+encodeURIComponent(Q));}
@@ -119,8 +124,8 @@ async function iniciar(){D=await fetch('dados.json?v=1',{cache:'no-cache'}).then
  if(ADM){try{const r=await sb.from('trein_eventos').select('detalhe,criado_em').eq('tipo','equiv_ok').order('criado_em');(r.data||[]).forEach(x=>{if(x.detalhe&&x.detalhe.k)OK[x.detalhe.k]=!!x.detalhe.on;});}catch(_){}}
  Q=decodeURIComponent(location.hash.slice(1)||'');tela();}
 (async()=>{if(KEY){let ok=false;try{const r=await sb.rpc('cons_portal_ver',{p_chave:KEY});ok=!r.error&&!!r.data;}catch(_){}
-  if(!ok){$('#app').innerHTML='<p class="vazio">Link inválido ou expirado. Fale com a FC Consultoria.</p>';return;}marca('uso exclusivo do cliente');iniciar();}
- else gateUI(async()=>{try{const r=await sb.rpc('trein_is_admin');ADM=!!r.data;}catch(_){}marca('uso interno');iniciar();});})();
+  if(!ok){$('#app').innerHTML='<p class="vazio">Link inválido ou expirado. Fale com a FC Consultoria.</p>';return;}marca('uso exclusivo do cliente');voltaBtn(false);iniciar();}
+ else gateUI(async()=>{try{const r=await sb.rpc('trein_is_admin');ADM=!!r.data;}catch(_){}marca('uso interno');voltaBtn(true);iniciar();});})();
 </script>
 </body>
 </html>

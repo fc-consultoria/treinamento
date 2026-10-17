@@ -261,7 +261,7 @@ const SEED={
   arq:[['xlsx','Planilha de precificação · ZFM','exemplo'],['pdf','Plano estratégico','exemplo']]}
 };
 let OPEN={},openLane=null,pasteKey=null,E={},at=null,tab='proc',fr=0,frFlow=-1,cli=false,HORAS=[],PORT={},linkAberto=false;
-const KEY=new URLSearchParams(location.search).get('k'),PUB=!!KEY;
+const KEY=new URLSearchParams(location.search).get('k'),PUB=!!KEY;try{if(KEY)localStorage.setItem('fc_painel_cli',location.href);}catch(_){}
 const URL_BASE='https://fc-consultoria.github.io/treinamento/consultorias.html?k=';
 function novaChave(){const a=new Uint8Array(18);crypto.getRandomValues(a);return Array.from(a,b=>b.toString(16).padStart(2,'0')).join('');}
 async function carregarPortais(){const {data}=await sb.from('cons_portal').select('*');PORT={};(data||[]).forEach(p=>PORT[p.empresa_id]=p);}

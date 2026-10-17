@@ -140,6 +140,7 @@ table.tb tr.hi td{background:#e7f7ec;font-weight:700}
 #exBar{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);display:flex;gap:12px;align-items:center;background:#13232e;color:#fff;border-radius:99px;padding:8px 8px 8px 18px;font:600 14px var(--f-b);box-shadow:0 8px 24px rgba(0,0,0,.25);z-index:3;white-space:nowrap}
 #exBar button{border:0;border-radius:99px;background:#f2a51e;color:#2a1b00;font:700 14px var(--f-b);padding:9px 16px;cursor:pointer}
 @media(max-width:600px){#exBar span{display:none}}
+#bVolta{margin-left:auto;order:99;border:1px solid rgba(255,255,255,.55);color:#fff;text-decoration:none;border-radius:9px;padding:7px 12px;font:700 14px var(--f-b,system-ui);white-space:nowrap}#bVolta:hover{background:rgba(255,255,255,.12)}
 </style>
 </head>
 <body>
@@ -279,6 +280,10 @@ function exTela(on){const H=document.getElementById('cmhost');if(!H)return;on=on
  else{delete H.dataset.ex;const b=document.getElementById('exBar');if(b)b.remove();posHosts();}
  if(CMS&&CMS.sc)CMS.sc.background=on?null:new THREE.Color(0xe9eef1);}
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&CMD&&document.getElementById('cmhost')?.dataset.ex){CMD=false;re();}});
+function voltaUrl(adm){if(adm)return '/treinamento/painel.html';let u='';try{u=localStorage.getItem('fc_painel_cli')||'';}catch(_){}
+ const k=new URLSearchParams(location.search).get('k');if(k)u='/treinamento/consultorias.html?k='+encodeURIComponent(k);return u||'/treinamento/';}
+function voltaBtn(adm){if(window.top!==window)return;let b=document.getElementById('bVolta');if(!b){b=document.createElement('a');b.id='bVolta';const h=document.querySelector('header.top .w');if(!h)return;h.appendChild(b);}
+ b.href=voltaUrl(adm);b.textContent=adm?'← Painel matriz':'← Painel inicial';b.title=adm?'Voltar para o painel matriz da FC':'Voltar para o painel inicial da empresa';}
 function posHosts(){[['cmhost','.cm3'],['e3host','.e3']].forEach(([id,sel])=>{const H=document.getElementById(id),ph=document.querySelector(sel);if(!H||H.dataset.fs||H.dataset.ex||!ph||H.style.display==='none')return;const r=ph.getBoundingClientRect(),L=(r.left+scrollX)+'px',T=(r.top+scrollY)+'px',W=r.width+'px',Hh=r.height+'px';if(H.style.left!==L||H.style.top!==T||H.style.width!==W||H.style.height!==Hh)Object.assign(H.style,{left:L,top:T,width:W,height:Hh});});}
 setInterval(posHosts,300);addEventListener('load',posHosts);document.fonts&&document.fonts.ready.then(posHosts);
 addEventListener('resize',()=>place3d());addEventListener('hashchange',()=>{const h=location.hash.slice(1);if(!ALUNO&&R[h]&&h!==AT)go(h);});try{new ResizeObserver(()=>place3d()).observe(document.body);}catch(_){}
@@ -663,7 +668,7 @@ function participar(){/* cliente / funcionário acompanhando: ouve o Fernando, c
 async function iniciar(){try{const j=await fetch('perfis.json?v=1',{cache:'no-cache'}).then(r=>r.json());const raw=j.P;P={};IDX={};
   Object.entries(raw).forEach(([k,v])=>{const o=Object.assign({k},v);P[k]=o;IDX[k]=o;k.split(' / ').forEach(c=>IDX[c.trim()]=o);});}catch(e){console.warn(e);}
  if(ALUNO){participar();return;}const h=location.hash.slice(1);go(R[h]?h:null);if(APRES.length>=10){try{localStorage.setItem('fc_esq_sala',APRES)}catch(_){}apresentar(APRES);}}
-marca();if(!ALUNO){const g=$('#bGrav');if(g)g.hidden=false;}if(ALUNO)iniciar();else gateUI(()=>{try{localStorage.setItem('fc_eu','1')}catch(_){}iniciar();},{soMatriz:true});
+marca();if(!ALUNO){const g=$('#bGrav');if(g)g.hidden=false;}voltaBtn(!ALUNO);if(ALUNO)iniciar();else gateUI(()=>{try{localStorage.setItem('fc_eu','1')}catch(_){}iniciar();},{soMatriz:true});
 </script>
 </body>
 </html>
