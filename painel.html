@@ -1740,5 +1740,6 @@ setTimeout(()=>{if(PTAB==='cat')ui();},2500);
  const P=['painel.html','consultorias.html','catalogos.html','rotina.html','index.html','auth.js','esquadrias/','esquadrias/index.html','esquadrias/perfis.json','demo/index.html','acompanhamento/','vitrine-admin.js','/','/perfis/','/catalogo/','/catalogo/cat-vitrine.js','/vitrine.js','/teatro.js','/demo.html'];
  await Promise.all(P.map(u=>fetch(u,{cache:'reload'}).catch(()=>{})));try{if(window.caches){const k=await caches.keys();await Promise.all(k.map(x=>caches.delete(x)));}}catch(_){}
  location.replace(location.pathname+'?v='+Date.now()+location.hash);};})();</script>
+<script src="conversa-equipe.js?v=4"></script>
 </body>
 </html>

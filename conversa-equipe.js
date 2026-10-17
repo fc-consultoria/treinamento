@@ -90,6 +90,7 @@
     const b = btn.querySelector('.fcchat-badge'); b.style.display = n?'block':'none'; b.textContent = n>9?'9+':n;
   }
   function avisar(m){
+    try{ if(typeof toast==='function' && !S.aberto) toast('💬 '+(m.autor_nome||'Equipe')+': '+(m.texto? String(m.texto).slice(0,80) : '📷 imagem')); }catch(_){ }
     try{ const c=new (window.AudioContext||window.webkitAudioContext)(), o=c.createOscillator(), g=c.createGain(); o.frequency.value=880; g.gain.value=.06; o.connect(g); g.connect(c.destination); o.start(); setTimeout(()=>{o.frequency.value=1175;},120); setTimeout(()=>{o.stop(); c.close();},260); }catch(_){ }
     try{ if('Notification' in window && Notification.permission==='granted' && document.hidden) new Notification('💬 '+(m.autor_nome||'Equipe FC'), {body: m.texto || '📷 Imagem', tag:'fcchat'}); }catch(_){ }
   }
@@ -112,6 +113,7 @@
     if(!session){ setTimeout(iniciar, 4000); return; }
     S.eu = String(session.user.email||'').toLowerCase();
     S.nome = (typeof MEU_ACESSO!=='undefined' && MEU_ACESSO && MEU_ACESSO.nome) || S.eu.split('@')[0];
+    if(typeof MEU_ACESSO==='undefined' || !MEU_ACESSO){ try{ const r=await sb.from('impl_acesso').select('nome').eq('email', S.eu).maybeSingle(); if(r.data && r.data.nome) S.nome=r.data.nome; }catch(_){ } }
     montar(); await carregar();
     if(!S.ok) return;
     setInterval(()=>{ if(typeof MEU_ACESSO!=='undefined' && MEU_ACESSO && MEU_ACESSO.nome) S.nome = MEU_ACESSO.nome; carregar(); }, 10000);
