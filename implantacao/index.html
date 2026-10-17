@@ -3666,11 +3666,11 @@ function renderClienteCadastro(c){
         <div class="desc" style="margin-top:6px;">"Cliente ativo" é para quem já usou nosso serviço antes e está retomando — os avisos automáticos de progresso (por quantidade de itens) passam a falar em "revisão" em vez de "implantação".</div>
       </div>
       <div>
-        <label style="display:block; font-size:12px; font-weight:650; color:var(--text-2); margin-bottom:6px;">Linhas de Componentes contratadas</label>
+        <label style="display:block; font-size:12px; font-weight:650; color:var(--text-2); margin-bottom:6px;">Linhas contratadas</label>
         <div class="chiprow">
           ${Object.keys(PRICE_DB).sort().map(nome=>`<button class="chip ${(c.linhas_componentes||[]).includes(nome)?'active':''}" data-action="toggle-linha-componente" data-linha="${nome}">${nome}</button>`).join('')}
         </div>
-        <div class="desc" style="margin-top:6px;">Marque as linhas que ${c.nome} contratou (ex: Chroma, Ecoline). Só essas aparecem na aba "Componentes" desse cliente, entram na % geral de Componentes e nos avisos automáticos de progresso — cada linha avisa separadamente, dizendo qual delas bateu o marco.</div>
+        <div class="desc" style="margin-top:6px;">Marque as linhas que ${c.nome} contratou (ex: Chroma, Ecoline). Valem para componentes e perfis: só essas aparecem na aba "Componentes" e no portal do cliente, entram na % geral de Componentes e nos avisos automáticos de progresso — cada linha avisa separadamente, dizendo qual delas bateu o marco.</div>
         ${(c.linhas_componentes||[]).length?`<div style="margin-top:14px;">
           <label style="display:block; font-size:12px; font-weight:650; color:var(--text-2); margin-bottom:6px;">Situação de cada linha (o cliente vê no portal)</label>
           ${[...(c.linhas_componentes||[]),'Vidro'].map(l=>{const st=(c.linhas_status||{})[l]||'';const op=[['','Automática','#6b7a83'],['aguardando','⚪ Aguardando','#6b7a83'],['alimentando','🟢 Em alimentação','#1f7a45'],['concluida','✅ Concluída','#0a6d6f']];

@@ -241,7 +241,7 @@ function situacaoHtml(s){
   const det=(s.detalhe||'').trim();
   const corpo=s.tipo==='livre'?det:(txt+(det?' '+det:''));
   if(!corpo) return '';
-  return `<section class="sit" role="status"><span class="ic" aria-hidden="true">${ic}</span><div><b>${esc(tit)}</b><p>${esc(corpo)}</p>${s.em?`<div class="em">Informado em ${esc(dt(s.em))} às ${esc(hora(s.em))}</div>`:''}</div></section>`;
+  return `<section class="sit" role="status"><span class="ic" aria-hidden="true">${ic}</span><div><div style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;opacity:.75;margin-bottom:2px">📌 Aviso da FC</div><b>${esc(tit)}</b><p>${esc(corpo)}</p>${s.em?`<div class="em">Informado em ${esc(dt(s.em))} às ${esc(hora(s.em))}</div>`:''}</div></section>`;
 }
 function baseHtml(f){
   if(!f) return '';
@@ -322,11 +322,11 @@ function render(r){
   const avancoGeral=ant?avanco(somaFoto(ant),{a:alim,t:total},deltaTotal):(pctGeral+'%');
 
   // ritmo: diferença entre fotos consecutivas (mais recente primeiro), até 5
-  const ritmo=[];
-  for(let i=0;i<fotos.length-1&&ritmo.length<5;i++){
-    const a=fotos[i],b=linhasPorNome(fotos[i+1]);
+  const ritmo=[],FD=[];fotos.forEach(f=>{const k=ymd(new Date(f.em));if(!FD.length||ymd(new Date(FD[FD.length-1].em))!==k)FD.push(f);}); // uma por dia (a mais recente)
+  for(let i=0;i<FD.length-1&&ritmo.length<5;i++){
+    const a=FD[i],b=linhasPorNome(FD[i+1]);
     const d=(a.dados.linhas||[]).reduce((s,l)=>s+Math.max(0,Number(l.alimentados||0)-Number((b[l.nome]||{}).alimentados||0)),0);
-    ritmo.push({em:a.em,d,txt:avanco(somaFoto(fotos[i+1]),somaFoto(a),d)});
+    ritmo.push({em:a.em,d,txt:avanco(somaFoto(FD[i+1]),somaFoto(a),d)});
   }
 
   const linhaHtml=l=>{
@@ -389,7 +389,7 @@ function render(r){
   if(concluida){const k='fc-portal-festa-'+(ENVIO.chave||'demo').slice(0,12);let ja=false;try{ja=!ENVIO.demo&&localStorage.getItem(k)==='1';}catch(_){}
     if(!ja&&!render._festa){render._festa=true;setTimeout(confete,500);try{if(!ENVIO.demo)localStorage.setItem(k,'1');}catch(_){}}}
   const etAll=etapasDaFoto(atual.dados), etAt=etAll.find(e=>!e.feita);
-  $('#topo').innerHTML=`<div class="topo"><span><span class="num">${pctGeral}%</span> <span class="muted">da alimentação concluída</span></span>
+  $('#topo').innerHTML=`<div class="topo"><span><span class="num">${pctGeral}%</span> <span class="muted">da alimentação concluída (todas as linhas)</span></span>
     ${etAll.length?`<span class="sep"></span><span>${etAt?`<span class="muted">Etapa ${etAll.indexOf(etAt)+1} de ${etAll.length}:</span> <b>${esc(etAt.titulo)}</b>`:'<b>Implantação concluída ✓</b>'}</span>`:''}
     <a class="ver" href="#andamento">Ver andamento completo ↓</a></div>`;
   document.getElementById('siteSec').hidden=false;
@@ -397,14 +397,14 @@ function render(r){
     ${ENVIO.nome?`<div class="ola">👋 Olá, <b>${esc(ENVIO.nome)}</b><button type="button" id="trocarPessoa">Não é você? Trocar</button></div>`:''}
     <h2 class="andtit" id="andamento">Andamento da sua implantação</h2>
     <div class="kpis">
-      <div class="kpi hi"><div class="l">Alimentação concluída</div><div class="v">${pctGeral}%</div></div>
+      <div class="kpi hi"><div class="l">Alimentação concluída</div><div class="v">${pctGeral}%</div><div class="l" style="margin-top:2px">somando todas as linhas</div></div>
       <div class="kpi"><div class="l">Avanço nesta atualização</div><div class="v">${ant?avancoGeral:'—'}</div></div>
       <div class="kpi"><div class="l">Etapas concluídas</div><div class="v">${etAll.filter(e=>e.feita).length} <small>de ${etAll.length||10}</small></div></div>
     </div>
     ${concluida?`<section class="festa" role="status"><div class="fx">🎉</div><h2>Implantação concluída!</h2><p>Todas as linhas contratadas foram alimentadas, conferidas e com margem ajustada. Obrigado pela parceria. Qualquer dúvida no uso do sistema, fale com a FC.</p></section>`:''}
     ${situacaoHtml(atual.dados.situacao)}
     ${etapasHtml(etapasDaFoto(atual.dados))}
-    ${ritmo.length>1?`<section class="sec"><h2>Ritmo das últimas atualizações</h2><div class="ritmo">${ritmo.map((x,i)=>`<div class="dia ${i===0?'ult':''}"><div class="d">${esc(dt(x.em))}</div><div class="n">${x.txt}</div></div>`).join('')}</div></section>`:''}
+    ${ritmo.some(x=>x.d>0)?`<section class="sec"><h2>Ritmo das últimas atualizações</h2><div class="ritmo">${ritmo.map((x,i)=>`<div class="dia ${i===0?'ult':''}"><div class="d">${esc(dt(x.em))}</div><div class="n">${x.txt}</div></div>`).join('')}</div></section>`:''}
     ${G?gruposHtml():`<section class="sec card"><h2>Andamento por linha <span class="muted" style="font-family:var(--body);font-size:13px;font-weight:500;margin-left:auto">${L.filter(feitaL).length} de ${L.length} ${L.length>1?'linhas concluídas':'linha concluída'}</span></h2>${seqInfo}${baseHtml(atual.dados.fornecedores)}${vis.map(linhaHtml).join('')}${proxHtml}</section>`}
     <div class="foot">FC Consultoria e Representação · Atendimento de segunda a sexta, das 08:00 às 11:00 e das 13:00 às 17:00 (horário de Sinop/MT, 1 hora a menos que Brasília)</div>`;
 }
