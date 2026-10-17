@@ -309,7 +309,7 @@ tbody tr:hover{background:var(--panel-2);}
   input.editable-price{border:none !important; background:transparent !important; -webkit-appearance:none;}
   input.editable-price::placeholder{color:transparent !important;}
 }
-</style>
+.modo-alim [data-action="set-cliente-tab"],.modo-alim [data-action="zerar-implantacao-linha"],.modo-alim [data-action="bp-excluir"],.modo-alim [data-action="set-componente-linha"][data-linha="todas"]{display:none!important}</style>
 </head>
 <body>
 <div id="login-screen" class="login-screen">
@@ -342,6 +342,7 @@ tbody tr:hover{background:var(--panel-2);}
     </div>
     <div class="navgroup">
       <div class="navlabel">Geral</div>
+      <button class="navitem" data-nav="fila" id="nav-fila"><i data-lucide="list-todo"></i> Fila de alimentação</button>
       <button class="navitem" data-nav="clientes"><i data-lucide="users"></i> Clientes</button>
       <button class="navitem" data-nav="banco"><i data-lucide="database"></i> Banco de Preços</button>
       <button class="navitem" data-nav="consulta"><i data-lucide="search"></i> Consultar preço</button>
@@ -2032,14 +2033,88 @@ let MEU_ACESSO = null, ACESSOS = [];
 async function carregarAcessosEspelho(){
   try{
     const {data:{user}} = await sb.auth.getUser();
-    const {data, error} = await sb.from('impl_acesso').select('email,nome,admin,ver_espelho').order('nome');
+    const {data, error} = await sb.from('impl_acesso').select('email,nome,admin,ver_espelho,alimentador').order('nome');
     if(error) throw error;
     ACESSOS = data||[];
     MEU_ACESSO = ACESSOS.find(a=>user && a.email.toLowerCase()===String(user.email||'').toLowerCase()) || null;
   }catch(e){ console.warn('espelho: acessos', e); ACESSOS=[]; MEU_ACESSO=null; }
+  await carregarTarefas();
+  if(ehAlimentador() && STATE.view!=='fila' && STATE.view!=='cliente') STATE.view='fila';
 }
+// ===== Fila de alimentação: tarefas por cliente + linha + tópico, cada colaborador vê só as suas =====
+let TAREFAS = [];
+const TOPICOS = {perfis:'Perfis', componentes:'Componentes', vidro:'Vidro'};
+function ehAlimentador(){ return !!(MEU_ACESSO && MEU_ACESSO.alimentador && !MEU_ACESSO.admin); }
+function meuEmail(){ return String((MEU_ACESSO&&MEU_ACESSO.email)||'').toLowerCase(); }
+function nomeAcesso(email){ const a = ACESSOS.find(x=>x.email.toLowerCase()===String(email||'').toLowerCase()); return a ? (a.nome||a.email) : (email||''); }
+async function carregarTarefas(){ try{ const {data,error} = await sb.from('impl_tarefas').select('*').order('criado_em'); if(!error) TAREFAS = data||[]; }catch(_){ TAREFAS=[]; } }
+function tarefaDe(cid, linha, topico){ return TAREFAS.find(t=>t.cliente_id===cid && t.linha===linha && t.topico===topico) || null; }
+function progressoTarefa(c, t){
+  if(t.topico==='componentes') return categoriaProgress(c, t.linha);
+  if(t.topico==='vidro') return categoriaProgress(c, 'vidro');
+  return categoriaProgress(c, c.perfisBase==='kg' ? 'perfis_kg' : 'perfis_metro');
+}
+async function atribuirTarefa(c, linha, topico, email){
+  const t = tarefaDe(c.id, linha, topico);
+  if(!email){ if(t){ const {error} = await sb.from('impl_tarefas').delete().eq('id', t.id); if(error) return avisarErroSalvar(error); TAREFAS = TAREFAS.filter(x=>x.id!==t.id); } toastSalvo('Tarefa removida'); render(); return; }
+  const {data, error} = await sb.from('impl_tarefas').upsert({cliente_id:c.id, linha, topico, email, status:'aberta', terminado_em:null}, {onConflict:'cliente_id,linha,topico'}).select().single();
+  if(error) return avisarErroSalvar(error);
+  TAREFAS = TAREFAS.filter(x=>!(x.cliente_id===c.id && x.linha===linha && x.topico===topico)).concat([data]);
+  const st = Object.assign({}, c.linhas_status||{});
+  if(!st[linha]){ st[linha]='alimentando'; c.linhas_status=st; salvarCliente(c.id,{linhas_status:st}).then(()=>sb.rpc('impl_portal_atualizar_linhas',{p_cliente:c.id})).catch(()=>{}); }
+  toastSalvo('Tarefa enviada para '+nomeAcesso(email)); render();
+}
+async function mudarStatusTarefa(id, status, obs){
+  const campos = {status, terminado_em: status==='terminada' ? new Date().toISOString() : null}; if(obs!==undefined) campos.obs = obs;
+  const {error} = await sb.from('impl_tarefas').update(campos).eq('id', id); if(error) return avisarErroSalvar(error);
+  const t = TAREFAS.find(x=>x.id===id); if(t) Object.assign(t, campos);
+  toastSalvo(status==='terminada'?'Enviado para conferência':status==='concluida'?'Tarefa concluída':status==='aberta'?'Devolvida para ajuste':'Salvo'); render();
+}
+function selAtribuir(c, linha, topico){
+  const t = tarefaDe(c.id, linha, topico), pessoas = ACESSOS.filter(a=>a.alimentador || a.admin);
+  const stTxt = t ? ({aberta:'', terminada:' · ✔ terminou, conferir', concluida:' · ✅ conferida'}[t.status]||'') : '';
+  return `<label style="display:inline-flex;gap:4px;align-items:center;font-size:12.5px;color:var(--text-2)">${TOPICOS[topico]} →
+    <select class="select-inline" data-action="atribuir-tarefa" data-linha="${escapeHtml(linha)}" data-topico="${topico}"><option value="">ninguém</option>${pessoas.map(a=>`<option value="${escapeHtml(a.email)}" ${t&&t.email.toLowerCase()===a.email.toLowerCase()?'selected':''}>${escapeHtml(a.nome||a.email)}</option>`).join('')}</select>${stTxt?`<b style="color:${t.status==='terminada'?'#b45309':'#1f8a4c'}">${stTxt}</b>`:''}</label>`;
+}
+function renderFila(){
+  const admin = !ehAlimentador();
+  const minhas = TAREFAS.filter(t=>admin || t.email.toLowerCase()===meuEmail());
+  const card = t => { const c = CLIENTS.find(x=>x.id===t.cliente_id); if(!c) return ''; const p = progressoTarefa(c,t);
+    const cor = {aberta:'#1f6f9a', terminada:'#b45309', concluida:'#1f8a4c'}[t.status]||'#1f6f9a';
+    const rot = {aberta:'Em alimentação', terminada:'Terminou · aguardando conferência', concluida:'Conferida ✅'}[t.status]||t.status;
+    return `<div class="panel" style="margin:0;padding:14px 16px;display:grid;gap:8px;border-left:4px solid ${cor}">
+      <div style="display:flex;gap:8px;align-items:baseline;flex-wrap:wrap"><b style="font-size:15px">${escapeHtml(c.nome)}</b><span class="desc">${escapeHtml(t.topico==='vidro'?'Vidro':t.linha)} · ${TOPICOS[t.topico]}</span>${admin?`<span class="desc" style="margin-left:auto">👤 ${escapeHtml(nomeAcesso(t.email))}</span>`:''}</div>
+      <div class="pbar-row"><div class="pbar-track"><div class="pbar-fill" style="width:${p.pct}%"></div></div><div class="pct">${p.pct}%</div></div>
+      <div class="desc">${p.alimentados} de ${p.total} alimentados · <b style="color:${cor}">${rot}</b>${t.obs?` · 💬 ${escapeHtml(t.obs)}`:''}</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn btn-sm btn-primary" data-action="abrir-tarefa" data-id="${t.id}">${icon('play')} Abrir para alimentar</button>
+        ${admin && t.status==='terminada' ? `<button class="btn btn-sm" data-action="tarefa-status" data-id="${t.id}" data-st="concluida">${icon('check')} Conferi, concluir</button><button class="btn btn-sm" data-action="tarefa-devolver" data-id="${t.id}">${icon('corner-up-left')} Devolver com observação</button>` : ''}
+      </div></div>`; };
+  const abertas = minhas.filter(t=>t.status!=='concluida'), feitas = minhas.filter(t=>t.status==='concluida');
+  const equipe = admin ? `<div class="panel" style="margin-top:18px"><div class="panel-head"><div><h3>${icon('users')} Equipe de alimentação</h3><div class="desc">Marque quem é alimentador: essa pessoa entra direto na Fila e vê só as tarefas dela (sem contratos, valores e outros clientes).</div></div></div>
+    <div style="padding:10px 18px;display:grid;gap:8px">${ACESSOS.filter(a=>!a.admin).map(a=>`<label style="display:flex;gap:8px;align-items:center"><input type="checkbox" data-action="toggle-alimentador" data-email="${escapeHtml(a.email)}" ${a.alimentador?'checked':''}> <b>${escapeHtml(a.nome||a.email)}</b> <span class="desc">${escapeHtml(a.email)}</span></label>`).join('')||'<span class="desc">Nenhum outro login cadastrado.</span>'}
+    <span class="desc">Para um colaborador novo (ex.: Paulo), primeiro crie o login dele; depois ele aparece aqui.</span></div></div>` : '';
+  return `<div class="pagehead"><div><h1>${admin?'Fila de alimentação da equipe':'Minha fila de alimentação'}</h1><div class="desc">${admin?'Distribua as tarefas no cliente → Contrato & Acesso → Situação de cada linha.':'Abra a tarefa, alimente os preços e clique em "Terminei esta parte".'}</div></div></div>
+    ${abertas.length?`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px">${abertas.map(card).join('')}</div>`:emptyState('list-todo','Nenhuma tarefa aberta', admin?'Atribua tarefas no cliente, em Contrato & Acesso.':'Quando a FC liberar uma tarefa para você, ela aparece aqui.')}
+    ${feitas.length?`<h3 style="margin:20px 0 10px">Concluídas</h3><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px;opacity:.75">${feitas.slice(-12).map(card).join('')}</div>`:''}${equipe}`;
+}
+function renderClienteAlimentador(c){
+  const t = TAREFAS.find(x=>x.id===STATE.tarefaAtiva && x.cliente_id===c.id && x.email.toLowerCase()===meuEmail());
+  if(!t) return `<button class="backlink" data-action="voltar-fila">${icon('arrow-left')} Minha fila</button>`+emptyState('lock','Sem tarefa aberta para este cliente','Volte para a sua fila e abra uma tarefa.');
+  const p = progressoTarefa(c,t);
+  const cc = Object.assign({}, c, {linhas_componentes:[t.linha]});
+  const corpo = t.topico==='componentes' ? (STATE.componenteLinhaAtiva = t.linha, renderClienteComponentes(cc)) : t.topico==='vidro' ? renderBancoProprio(c,'vidro') : (c.perfisBase==='kg' ? renderBancoProprio(c,'perfis_kg') : renderPerfisTab(c));
+  return `<div class="modo-alim"><button class="backlink" data-action="voltar-fila">${icon('arrow-left')} Minha fila</button>
+  <div class="clienthead"><div class="clienthead-top"><div><h2>${escapeHtml(c.nome)}</h2><span class="badge">${escapeHtml(t.topico==='vidro'?'Vidro':t.linha+' · '+TOPICOS[t.topico])}</span></div>
+    <div style="display:flex;gap:8px">${t.status==='terminada'?'<span class="badge">✔ Enviado para conferência</span>':`<button class="btn btn-primary" data-action="tarefa-status" data-id="${t.id}" data-st="terminada">${icon('check-circle')} Terminei esta parte</button>`}</div></div>
+    <div class="metarow"><div class="metaitem">Sistema · login<b>${escapeHtml(c.sistema_login||'—')}</b></div><div class="metaitem">Senha<b>${escapeHtml(c.sistema_senha||'—')}</b></div><div class="metaitem">Licença<b>${escapeHtml(c.sistema_licenca||'—')}</b></div>
+      <div class="metaitem">Progresso<div class="pbar-row" style="margin-top:4px;width:160px"><div class="pbar-track"><div class="pbar-fill" style="width:${p.pct}%"></div></div><div class="pct">${p.pct}%</div></div></div></div>
+    ${t.obs?`<div class="desc" style="margin-top:8px">💬 Observação da FC: <b>${escapeHtml(t.obs)}</b></div>`:''}</div>
+  ${corpo}</div>`;
+}
+
 // Presença da equipe: avisa o Painel da Matriz (quadro Ao vivo) onde a pessoa está, a cada 45 s com a aba visível
-const NOMES_VIEW = {clientes:'Clientes', banco:'Banco de Preços', consulta:'Consultar preço', 'orcamentos-fornecedor':'Orçamentos de Fornecedores', 'orcamentos-aluminio':'Alumínio (Fornecedores)', reajustes:'Reajustes de preço', espelho:'Espelho da equipe'};
+const NOMES_VIEW = {fila:'Fila de alimentação', clientes:'Clientes', banco:'Banco de Preços', consulta:'Consultar preço', 'orcamentos-fornecedor':'Orçamentos de Fornecedores', 'orcamentos-aluminio':'Alumínio (Fornecedores)', reajustes:'Reajustes de preço', espelho:'Espelho da equipe'};
 function ondeEstouImplantacao(){
   if(STATE.view==='cliente'){ const c = CLIENTS.find(x=>x.id===STATE.clientId); const ABAS={visao:'Visão geral',etapas:'Etapas',cadastro:'Contrato & Acesso',componentes:'Componentes',vidro:'Vidro',perfis:'Perfis',orcamentos:'Orçamentos',relatorios:'Relatórios',anotacoes:'Anotações'}; return (c?c.nome:'Cliente')+(STATE.clienteTab?' · '+(ABAS[STATE.clienteTab]||STATE.clienteTab):''); }
   return NOMES_VIEW[STATE.view] || STATE.view;
@@ -2242,7 +2317,11 @@ function render(){
   }
   const root = document.getElementById('view-root');
   document.querySelectorAll('.navitem').forEach(b=>b.classList.toggle('active', b.dataset.nav===STATE.view));
-  if(STATE.view==='clientes') root.innerHTML = renderClientes();
+  if(ehAlimentador() && !['fila','cliente'].includes(STATE.view)) STATE.view='fila';
+  document.querySelectorAll('.navitem').forEach(b=>{ if(b.dataset.nav!=='fila') b.style.display = ehAlimentador() ? 'none' : ''; });
+  if(STATE.view==='fila') root.innerHTML = renderFila();
+  else if(STATE.view==='cliente' && ehAlimentador()){ const c = CLIENTS.find(x=>x.id===STATE.clientId); root.innerHTML = c ? renderClienteAlimentador(c) : renderFila(); }
+  else if(STATE.view==='clientes') root.innerHTML = renderClientes();
   else if(STATE.view==='banco') root.innerHTML = renderBanco();
   else if(STATE.view==='consulta') root.innerHTML = renderConsulta();
   else if(STATE.view==='orcamentos-fornecedor') root.innerHTML = renderOrcamentosFornecedor();
@@ -2251,7 +2330,7 @@ function render(){
   else if(STATE.view==='cliente') root.innerHTML = renderClienteDetail();
   else if(STATE.view==='espelho') root.innerHTML = renderEspelho();
   const navEsp = document.getElementById('nav-espelho');
-  if(navEsp) navEsp.style.display = podeVerEspelho() ? '' : 'none';
+  if(navEsp) navEsp.style.display = (podeVerEspelho() && !ehAlimentador()) ? '' : 'none';
   if(STATE.view==='espelho' && !podeVerEspelho()){ STATE.view='clientes'; return render(); }
   if(window.lucide) lucide.createIcons();
   wireEvents();
@@ -3674,7 +3753,8 @@ function renderClienteCadastro(c){
         ${(c.linhas_componentes||[]).length?`<div style="margin-top:14px;">
           <label style="display:block; font-size:12px; font-weight:650; color:var(--text-2); margin-bottom:6px;">Situação de cada linha (o cliente vê no portal)</label>
           ${[...(c.linhas_componentes||[]),'Vidro'].map(l=>{const st=(c.linhas_status||{})[l]||'';const op=[['','Automática','#6b7a83'],['aguardando','⚪ Aguardando','#6b7a83'],['alimentando','🟢 Em alimentação','#1f7a45'],['concluida','✅ Concluída','#0a6d6f']];
-            return `<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:4px 0"><b style="min-width:120px;font-size:13.5px">${l}</b>${op.map(([v,t])=>`<button class="chip ${st===v?'active':''}" data-action="set-linha-status" data-linha="${l}" data-valor="${v}">${t}</button>`).join('')}</div>`;}).join('')}
+            return `<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:6px 0;padding-bottom:6px;border-bottom:1px dashed var(--border-2,#e3e8eb)"><b style="min-width:120px;font-size:13.5px">${l}</b>${op.map(([v,t])=>`<button class="chip ${st===v?'active':''}" data-action="set-linha-status" data-linha="${l}" data-valor="${v}">${t}</button>`).join('')}
+              <span style="display:inline-flex;gap:10px;flex-wrap:wrap;margin-left:6px">${l==='Vidro'?selAtribuir(c,'Vidro','vidro'):selAtribuir(c,l,'perfis')+selAtribuir(c,l,'componentes')}</span></div>`;}).join('')}
           <div class="desc" style="margin-top:6px;">Quando você começar a alimentar uma linha, marque 🟢 Em alimentação; ao terminar, ✅ Concluída. "Automática" segue a % alimentada. Os perfis por metro entram na linha pelo início do código (LG = Gold, SU = Suprema); os demais aparecem como "Outros perfis". A situação aparece para o cliente na hora; os números (% e itens) seguem a publicação do andamento.</div>
         </div>`:''}
         <div style="margin-top:14px;">
@@ -5933,6 +6013,15 @@ function wireEvents(){
       };
       return;
     }
+    if(action==='atribuir-tarefa'){
+      el.onchange = (e)=>{ const c = CLIENTS.find(x=>x.id===STATE.clientId); if(c) atribuirTarefa(c, el.dataset.linha, el.dataset.topico, e.target.value||null); };
+      return;
+    }
+    if(action==='toggle-alimentador'){
+      el.onchange = async (e)=>{ const v = e.target.checked; const {error} = await sb.from('impl_acesso').update({alimentador:v}).eq('email', el.dataset.email); if(error){ e.target.checked=!v; return avisarErroSalvar(error); }
+        const a = ACESSOS.find(x=>x.email===el.dataset.email); if(a) a.alimentador=v; toastSalvo(v?'Agora é alimentador':'Acesso completo de volta'); render(); };
+      return;
+    }
     if(action==='edit-linhas-fora'){
       el.onchange = (e)=>{
         const c = CLIENTS.find(x=>x.id===STATE.clientId);
@@ -7131,6 +7220,11 @@ function wireEvents(){
       if(action==='abrir-cliente-perfis-metro'){ STATE.view='cliente'; STATE.clientId=el.dataset.id; STATE.clienteTab='perfis'; STATE.filtro='todos'; STATE.search=''; render(); return; }
       if(action==='voltar-clientes'){ STATE.view='clientes'; render(); return; }
       if(action==='set-linha'){ STATE.bancoLinha = el.dataset.linha; STATE.search=''; render(); return; }
+      if(action==='abrir-tarefa'){ const t = TAREFAS.find(x=>x.id===el.dataset.id); if(!t) return; STATE.clientId=t.cliente_id; STATE.tarefaAtiva=t.id; STATE.view='cliente';
+        STATE.clienteTab = t.topico==='componentes'?'componentes':t.topico==='vidro'?'vidro':'perfis'; if(t.topico==='componentes') STATE.componenteLinhaAtiva=t.linha; STATE.search=''; render(); window.scrollTo(0,0); return; }
+      if(action==='voltar-fila'){ STATE.view='fila'; STATE.tarefaAtiva=null; render(); return; }
+      if(action==='tarefa-status'){ mudarStatusTarefa(el.dataset.id, el.dataset.st); return; }
+      if(action==='tarefa-devolver'){ const o = prompt('O que precisa ajustar? (a pessoa vê esta observação na fila)'); if(o===null) return; mudarStatusTarefa(el.dataset.id, 'aberta', o.trim()||null); return; }
       if(action==='set-cliente-tab'){ STATE.clienteTab = el.dataset.tab; STATE.search=''; STATE.filtro='todos'; render(); return; }
       if(action==='etapa-ver'){ const n=Number(el.dataset.n); STATE.etapaPreview = STATE.etapaPreview===n ? null : n; render(); return; }
       if(action==='etapa-wa'){ const c = CLIENTS.find(x=>x.id===STATE.clientId); if(c && abrirWaEtapa(c, Number(el.dataset.n), el.dataset.tipo)) render(); return; }
