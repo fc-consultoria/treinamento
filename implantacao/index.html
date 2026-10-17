@@ -357,7 +357,7 @@ tbody tr:hover{background:var(--panel-2);}
       <button class="navitem" id="btn-logout"><i data-lucide="log-out"></i> Sair</button>
     </div>
     <div class="sidebar-foot">
-      Painel de implantação — dados salvos em banco de dados real (Supabase), acesso restrito à equipe.<br><b>Versão 17/10c — ordem de prioridade dos fornecedores</b>
+      Painel de implantação — dados salvos em banco de dados real (Supabase), acesso restrito à equipe.<br><b>Versão 17/10d — foto do produto nas tabelas</b>
     </div>
   </nav>
   <div class="mobile-topbar">
@@ -604,6 +604,7 @@ async function carregarClientes(){
   });
 
   // Revisão de implantação (componentes): código sistema e itens enviados para revisão
+  carregarFotos();
   CLIENTS.forEach(cl=>{ cl.fixoChecklist = {}; checklistRows.filter(r=>r.cliente_id===cl.id && r.fornecedor_fixo).forEach(r=>{ cl.fixoChecklist[(r.linha||'')+'|'+r.codigo] = r.fornecedor_fixo; }); });
   CLIENTS.forEach(cl=>{ cl.revisaoChecklist = {}; checklistRows.filter(r=>r.cliente_id===cl.id && (r.em_revisao || r.codigo_sistema)).forEach(r=>{ cl.revisaoChecklist[(r.linha||'')+'|'+r.codigo] = {sis:r.codigo_sistema||'', rev:!!r.em_revisao, obs:r.revisao_obs||'', em:r.revisao_em||null}; }); });
 
@@ -2143,6 +2144,19 @@ const fornDeNome = nome => FORN_CAD.find(f=>fornBate(f, nome)) || null;
 const linhasForn = f => FORN_LINHAS.filter(x=>x.fornecedor_id===f.id).map(x=>x.linha);
 // ===== Base "Claude (site Vitrasul)": conferência com foto dentro da aba Preços do fornecedor =====
 const CLAUDE_FORN = 'Claude (site Vitrasul)';
+// Fotos dos produtos (pesquisadas no site da Vitrasul): ficam numa coluna fixa nas tabelas de Componentes e Perfis
+let FOTOS = {}, FOTOS_OK = false;
+async function carregarFotos(){
+  try{ const {data, error} = await sb.from('impl_claude_base').select('codigo,img,variantes,excluido').limit(5000); if(error) return;
+    const F = {}; (data||[]).forEach(r=>{ if(r.excluido) return; let im = r.img && !/sem-imagem/.test(r.img) ? r.img : null;
+      if(!im) (r.variantes||[]).some(v=>{ if(v.i && !/sem-imagem/.test(v.i)){ im = v.i; return true; } return false; });
+      if(im){ const k = normalizeCodigo(r.codigo); if(k && !F[k]) F[k] = im.startsWith('~') ? CLAUDE_IMG + im.slice(1) : im; } });
+    FOTOS = F; FOTOS_OK = true; render(); }catch(_){}
+}
+function fotoCelula(codigo){
+  const u = FOTOS[normalizeCodigo(codigo)] || FOTOS[normalizeCodigo(String(codigo||'').replace(/-[A-Za-z]{2,3}$/,''))];
+  return `<td style="width:58px; padding-top:6px; padding-bottom:6px;">${u ? `<a href="${escapeHtml(u)}" target="_blank" rel="noopener" title="Abrir foto"><img src="${escapeHtml(u)}" alt="" loading="lazy" style="width:48px; height:48px; object-fit:contain; border:1px solid var(--border-2); border-radius:8px; background:#fff; display:block;"></a>` : `<div style="width:48px; height:48px; border:1px dashed var(--border-2); border-radius:8px; display:grid; place-items:center; color:var(--text-3); font-size:10px;">sem foto</div>`}</td>`;
+}
 const CLAUDE_IMG = 'https://vprime-server.radocc.com:8443/midias/11083556000105/produtos/';
 let CLAUDE_BASE = null, CLAUDE_CARREGANDO = false;
 const claudeStatus = {ok:['✅ Encontrado','#e3f5ea','#1f8a4c'], parecido:['⚠️ Parecido','#fff4df','#a15c00'], sem_preto:['⚠️ Sem preto','#fff4df','#a15c00'], nao_encontrado:['❌ Não encontrado','#fde8e6','#b42318']};
@@ -4495,6 +4509,7 @@ function renderChecklistComponentesTodas(cliente, contratadas){
       <thead><tr>
         ${thMarcarTodosAlimentados(rows, r=>r.linha)}
         <th>Linha</th>
+        <th style="width:58px;">Foto</th>
         <th>Código</th>
         ${thCodSis}
         <th>Descrição</th>
@@ -4511,6 +4526,7 @@ function renderChecklistComponentesTodas(cliente, contratadas){
         <tr${emRevComp(cliente, r.linha, r.it.codigo)?' style="background:#fff7e6;"':''}>
           <td class="tcenter"><input type="checkbox" class="chk" ${r.fed?'checked':''} ${(!r.fed && !r.temPreco)?'disabled title="Sem preço — não pode ser marcado como alimentado"':''} data-action="toggle-alimentado-categoria" data-key="${r.linha}" data-codigo="${r.it.codigo}"></td>
           <td><span class="badge badge-muted">${r.linha}</span></td>
+          ${fotoCelula(r.it.codigo)}
           <td class="mono">${r.it.codigo}</td>
           ${inpCodSisComp(cliente, r.linha, r.it.codigo)}
           <td>${escapeHtml(r.it.descricao||'—')}</td>
@@ -4650,6 +4666,7 @@ function renderChecklistCategoria(nome, db, key, cliente){
     <table>
       <thead><tr>
         ${thMarcarTodosAlimentados(rows, r=>key)}
+        <th style="width:58px;">Foto</th>
         <th>Código</th>
         ${thCodSis}
         <th>${db.campoLabel||'Descrição'}</th>
@@ -4665,6 +4682,7 @@ function renderChecklistCategoria(nome, db, key, cliente){
       ${rows.map(r=>`
         <tr${emRevComp(cliente, key, r.it.codigo)?' style="background:#fff7e6;"':''}>
           <td class="tcenter"><input type="checkbox" class="chk" ${r.fed?'checked':''} ${(!r.fed && !r.temPreco)?'disabled title="Sem preço — não pode ser marcado como alimentado"':''} data-action="toggle-alimentado-categoria" data-key="${key}" data-codigo="${r.it.codigo}"></td>
+          ${fotoCelula(r.it.codigo)}
           <td class="mono">${r.it.codigo}</td>
           ${inpCodSisComp(cliente, key, r.it.codigo)}
           <td>${escapeHtml(r.it.descricao||'—')}</td>
@@ -5089,12 +5107,13 @@ function renderPerfisMetroLinear(c, vista){
     ${itens.length===0 ? (ehPrecos ? emptyState('table','Nenhum preço importado ainda','Clique em "Importar do banco" acima, escolha o orçamento do fornecedor no banco de alumínio e marque os perfis que este cliente vai usar.') : emptyState('table','Nenhum item ainda','Clique em "Novo item" ou anexe o PDF do orçamento acima pra detectar os itens automaticamente.')) : visiveis.length===0 ? emptyState('search','Nada encontrado','Nenhum item bate com a pesquisa. Ajuste o termo ou limpe o filtro.') : `
     <div style="overflow-x:auto;">
     <table>
-      <thead><tr><th style="width:40px;"><input type="checkbox" data-action="toggle-selecao-metro-todos" ${visiveis.length>0 && visiveis.every(({it})=>it._selecionado)?'checked':''}></th><th style="width:80px;">Alimentado <input type="checkbox" class="chk" title="Marcar todos os itens exibidos como alimentados" data-action="marcar-todos-metro-alimentado" ${visiveis.length>0 && visiveis.filter(({it})=>Number(it.preco)>0||it.alimentado).every(({it})=>it.alimentado) && visiveis.some(({it})=>Number(it.preco)>0||it.alimentado)?'checked':''}></th><th><button type="button" data-action="ordem-metro-th" title="Clique para classificar" style="all:unset; cursor:pointer; font:inherit; text-transform:inherit; letter-spacing:inherit; color:inherit; display:inline-flex; gap:4px; align-items:center;">Código ${ordemMetro==='az'?'▲ A–Z':ordemMetro==='za'?'▼ Z–A':'⇅'}</button></th><th title="Código usado no sistema do cliente (Wvetro/Cem) quando for diferente do código do fornecedor">Código sistema</th><th>Descrição</th><th class="tright">Preço tabela (R$/m)</th>${temReajuste?'<th class="tright">Reajuste</th>':''}${temLiquido?'<th class="tright">Preço líquido (R$/m)</th>':''}<th class="tcenter" style="width:90px;" title="Não encontrado no sistema: vai para a aba Revisão de implantação">🔎 Revisão</th><th></th></tr></thead>
+      <thead><tr><th style="width:40px;"><input type="checkbox" data-action="toggle-selecao-metro-todos" ${visiveis.length>0 && visiveis.every(({it})=>it._selecionado)?'checked':''}></th><th style="width:80px;">Alimentado <input type="checkbox" class="chk" title="Marcar todos os itens exibidos como alimentados" data-action="marcar-todos-metro-alimentado" ${visiveis.length>0 && visiveis.filter(({it})=>Number(it.preco)>0||it.alimentado).every(({it})=>it.alimentado) && visiveis.some(({it})=>Number(it.preco)>0||it.alimentado)?'checked':''}></th><th style="width:58px;">Foto</th><th><button type="button" data-action="ordem-metro-th" title="Clique para classificar" style="all:unset; cursor:pointer; font:inherit; text-transform:inherit; letter-spacing:inherit; color:inherit; display:inline-flex; gap:4px; align-items:center;">Código ${ordemMetro==='az'?'▲ A–Z':ordemMetro==='za'?'▼ Z–A':'⇅'}</button></th><th title="Código usado no sistema do cliente (Wvetro/Cem) quando for diferente do código do fornecedor">Código sistema</th><th>Descrição</th><th class="tright">Preço tabela (R$/m)</th>${temReajuste?'<th class="tright">Reajuste</th>':''}${temLiquido?'<th class="tright">Preço líquido (R$/m)</th>':''}<th class="tcenter" style="width:90px;" title="Não encontrado no sistema: vai para a aba Revisão de implantação">🔎 Revisão</th><th></th></tr></thead>
       <tbody>
       ${visiveis.map(({it,idx})=>`
         <tr${it.emRevisao?' style="background:#fff7e6;"':''}>
           <td class="tcenter"><input type="checkbox" class="chk" ${it._selecionado?'checked':''} data-action="toggle-selecao-metro-item" data-idx="${idx}"></td>
           <td class="tcenter"><input type="checkbox" class="chk" ${it.alimentado?'checked':''} ${(!it.alimentado && !(Number(it.preco)>0))?'disabled title="Sem preço — não pode ser marcado como alimentado"':''} data-action="toggle-metro-item-alimentado" data-idx="${idx}"></td>
+          ${fotoCelula(it.codigo)}
           <td class="mono"><input class="editable-price" style="text-align:left; width:130px;" value="${it.codigo}" data-action="edit-metro-item" data-campo="codigo" data-idx="${idx}"></td>
           <td><input class="editable-price" style="text-align:left; width:120px;" value="${escapeHtml(it.codigoSistema||'')}" placeholder="${escapeHtml(codSisSugeridoMetro(it)||'—')}" data-action="edit-codsis-metro" data-idx="${idx}"></td>
           <td><textarea class="editable-price" style="text-align:left; width:100%; white-space:pre-wrap; word-break:break-word; resize:vertical; min-height:38px; line-height:1.4;" rows="2" data-action="edit-metro-item" data-campo="descricao" data-idx="${idx}">${escapeHtml(it.descricao||'')}</textarea></td>
