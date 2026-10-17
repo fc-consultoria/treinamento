@@ -3612,6 +3612,29 @@ const soDigitos = t => String(t||'').replace(/\D/g,'');
 function copiarTexto(t, ok){
   (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(()=>toastSalvo(ok), ()=>{ const ta=document.createElement('textarea'); ta.value=t; document.body.appendChild(ta); ta.select(); try{ document.execCommand('copy'); toastSalvo(ok); }catch(_){} ta.remove(); });
 }
+// Relatório do andamento com o link (o link é publicado na hora, então o cliente abre já atualizado)
+function mensagemRelatorioPortal(c){
+  const hoje = new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
+  const tot = progressoImplantacaoTotal(c);
+  const et = etapasCliente(c), feitas = et.filter(e=>e.status==='concluida').length, atual = etapaAtual(c);
+  const linhas = linhasDeProgressoCliente(c).map(cat=>({cat, p:categoriaProgress(c, cat.key)})).filter(x=>x.p.total>0);
+  const aguardando = et.filter(e=>e.quem==='cliente' && e.status!=='concluida');
+  const dm = ymd => ymd ? ymd.slice(8,10)+'/'+ymd.slice(5,7) : '';
+  const L = [`Olá, equipe ${c.nome}! Tudo bem?`,'',`Segue a posição da implantação de preços hoje (${hoje}):`,'',
+    `*Alimentação concluída: ${tot.pct}%* (somando todas as linhas)`];
+  if(linhas.length){ L.push(''); linhas.forEach(x=>L.push(`• ${x.cat.nome}: ${x.p.pct}%`)); }
+  L.push('',`*Etapas: ${feitas} de ${et.length} concluídas*`);
+  if(atual) L.push(`Etapa atual: ${atual.n} — ${atual.titulo}${atual.atrasada?'':' (previsão '+dm(atual.dataPrevista)+')'}`);
+  if(aguardando.length){ L.push('','*Aguardando de vocês*'); aguardando.forEach(e=>L.push(`• ${e.titulo}${e.pedido?': '+e.pedido:''}.`)); }
+  L.push('','*Acompanhe na hora pelo link* (já está atualizado com esta posição):', urlPortalCliente(c),'',
+    'Dúvidas: (66) 9 9986-7984, de segunda a sexta, das 08:00 às 11:00 e das 13:00 às 17:00 (horário de Sinop/MT).','','FC Consultoria');
+  return L.join('\n');
+}
+async function publicarPortalAgora(c){
+  const r = await sb.rpc('impl_portal_publicar', {p_cliente: c.id});
+  if(r.error){ alert('Não foi possível atualizar o link agora: '+r.error.message); return false; }
+  return true;
+}
 function mensagemLinkPortal(c){
   const temPessoas = (PESSOAS_PORTAL[c.id]||[]).length>0;
   return [
@@ -3749,6 +3772,17 @@ function renderLinkClientePortal(c){
       </div>
       <textarea readonly onclick="this.select()" rows="9" style="width:100%; font-size:12.5px; line-height:1.45; padding:9px 11px; border:1px solid var(--border); border-radius:8px; background:#fff; resize:vertical; font-family:inherit;">${escapeHtml(mensagemLinkPortal(c))}</textarea>
       <div class="desc" style="margin-top:4px;">Os asteriscos (*) viram negrito no WhatsApp.</div>
+    </div>
+    <div style="flex-basis:100%; border-top:1px solid #cfe9e6; padding-top:10px; margin-top:2px;">
+      <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:6px;">
+        <b style="font-size:13px;">📊 Relatório do andamento com acesso imediato</b>
+        <span class="desc">Ao enviar, o link é publicado na hora: o cliente abre e já vê esta posição.</span>
+        <span style="margin-left:auto; display:flex; gap:6px;">
+          <button class="btn btn-sm btn-primary" data-action="relatorio-portal-wa">${icon('message-circle')} Publicar e enviar no WhatsApp</button>
+          <button class="btn btn-sm" data-action="relatorio-portal-copiar">${icon('copy')} Publicar e copiar</button>
+        </span>
+      </div>
+      <textarea readonly onclick="this.select()" rows="9" style="width:100%; font-size:12.5px; line-height:1.45; padding:9px 11px; border:1px solid var(--border); border-radius:8px; background:#fff; resize:vertical; font-family:inherit;">${escapeHtml(mensagemRelatorioPortal(c))}</textarea>
     </div>
     ${pessoasLinkHtml(c)}
   </div>`;
@@ -7833,6 +7867,28 @@ function wireEvents(){
           await importarPlanilhaBancoProprio(c, cat, f);
           if(itensProprios(c, cat).length!==antes || (c.arquivosProprios||[]).some(a=>a.nome===f.name)) marcarRecebido(c, id, {visto:true, importado_em:new Date().toISOString()});
         })();
+        return;
+      }
+      if(action==='relatorio-portal-wa' || action==='relatorio-portal-copiar'){
+        const c = CLIENTS.find(x=>x.id===STATE.clientId); if(!c) return;
+        const txt = mensagemRelatorioPortal(c);
+        let w = null;
+        if(action==='relatorio-portal-wa'){
+          const tel = telefoneWhatsApp(c);
+          if(!tel){ alert('Cadastre o telefone (WhatsApp) do cliente em Contrato & Acesso para enviar.'); return; }
+          w = window.open('about:blank', '_blank');
+          el.disabled = true; el.textContent = 'Publicando…';
+          publicarPortalAgora(c).then(ok=>{
+            if(!ok){ if(w) w.close(); render(); return; }
+            const u = `https://wa.me/${tel}?text=${encodeURIComponent(txt)}`;
+            if(w) w.location.href = u; else window.open(u, '_blank', 'noopener');
+            toastSalvo('Link atualizado · relatório pronto no WhatsApp'); render();
+          });
+          return;
+        }
+        el.disabled = true; el.textContent = 'Publicando…';
+        copiarTexto(txt, 'Relatório copiado');
+        publicarPortalAgora(c).then(ok=>{ if(ok) toastSalvo('Link atualizado · relatório copiado'); render(); });
         return;
       }
       if(action==='copiar-texto-link-portal'){
