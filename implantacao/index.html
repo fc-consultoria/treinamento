@@ -3784,7 +3784,39 @@ function renderLinkClientePortal(c){
       </div>
       <textarea readonly onclick="this.select()" rows="9" style="width:100%; font-size:12.5px; line-height:1.45; padding:9px 11px; border:1px solid var(--border); border-radius:8px; background:#fff; resize:vertical; font-family:inherit;">${escapeHtml(mensagemRelatorioPortal(c))}</textarea>
     </div>
+    ${acessosPortalHtml(c)}
     ${pessoasLinkHtml(c)}
+  </div>`;
+}
+// Registro de cada vez que o cliente abriu o link (impl_portal_acessos; entradas com menos de 10 min de diferença contam como uma)
+var ACESSOS_PORTAL = {};
+function carregarAcessosPortal(cid){
+  if(ACESSOS_PORTAL[cid] && ACESSOS_PORTAL[cid].carregando) return;
+  ACESSOS_PORTAL[cid] = Object.assign(ACESSOS_PORTAL[cid]||{lista:[]}, {carregando:true});
+  sb.from('impl_portal_acessos').select('em,usuario_nome').eq('cliente_id', cid).order('em',{ascending:false}).limit(500).then(({data,error})=>{
+    ACESSOS_PORTAL[cid] = {lista: error ? [] : (data||[]), ok: !error, carregado: Date.now()};
+    if(STATE.clientId===cid) render();
+  });
+}
+function acessosPortalHtml(c){
+  const A = ACESSOS_PORTAL[c.id];
+  if(!A || (!A.carregado && !A.carregando) || (A.carregado && Date.now()-A.carregado>60000)) carregarAcessosPortal(c.id);
+  if(!A || !A.carregado) return `<div style="flex-basis:100%; border-top:1px solid #cfe9e6; padding-top:10px; margin-top:2px;"><b style="font-size:13px;">👁 Vezes que o cliente abriu o link</b> <span class="desc">carregando…</span></div>`;
+  const L = A.lista, tz = {timeZone:'America/Cuiaba'};
+  const dia = d => new Date(d).toLocaleDateString('pt-BR', Object.assign({weekday:'short', day:'2-digit', month:'2-digit'}, tz));
+  const hora = d => new Date(d).toLocaleTimeString('pt-BR', Object.assign({hour:'2-digit', minute:'2-digit'}, tz));
+  const seteDias = L.filter(x=>Date.now()-new Date(x.em)<7*864e5).length;
+  const grupos = []; L.forEach(x=>{ const k = dia(x.em); let g = grupos.find(y=>y.k===k); if(!g) grupos.push(g={k, itens:[]}); g.itens.push(x); });
+  const aberto = STATE.acessosAberto===c.id;
+  return `<div style="flex-basis:100%; border-top:1px solid #cfe9e6; padding-top:10px; margin-top:2px;">
+    <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+      <b style="font-size:13px;">👁 Vezes que o cliente abriu o link</b>
+      <span class="badge" style="background:#e0f2f1;color:#0f5d5a;font-weight:700;">${L.length} no total</span>
+      <span class="desc">${seteDias} nos últimos 7 dias${L.length ? ' · última: '+dia(L[0].em)+' às '+hora(L[0].em) : ''}</span>
+      ${L.length ? `<button class="btn btn-sm btn-ghost" data-action="acessos-portal-ver" style="margin-left:auto;">${aberto?'Ocultar registro':'Ver registro (dia e hora)'}</button>` : ''}
+    </div>
+    ${!L.length ? '<div class="desc" style="margin-top:4px;">Ainda não abriu. Cada abertura fica registrada aqui com dia e hora (horário de Sinop/MT).</div>' : ''}
+    ${aberto ? `<div style="margin-top:8px; max-height:260px; overflow:auto; border:1px solid var(--border); border-radius:8px; background:#fff;">${grupos.map(g=>`<div style="padding:7px 11px; border-bottom:1px solid var(--border-2); display:flex; gap:10px; flex-wrap:wrap; align-items:baseline;"><b style="min-width:92px; font-size:12.5px;">${escapeHtml(g.k)}</b><span class="desc">${g.itens.length}×</span><span style="font-size:12.5px; font-family:var(--mono,monospace);">${g.itens.slice().reverse().map(x=>hora(x.em)+(x.usuario_nome?' ('+escapeHtml(x.usuario_nome)+')':'')).join(' · ')}</span></div>`).join('')}</div><div class="desc" style="margin-top:4px;">Horário de Sinop/MT. Aberturas com menos de 10 minutos de diferença contam como uma. A FC logada não conta.</div>` : ''}
   </div>`;
 }
 function pessoasLinkHtml(c){
@@ -7869,6 +7901,7 @@ function wireEvents(){
         })();
         return;
       }
+      if(action==='acessos-portal-ver'){ STATE.acessosAberto = STATE.acessosAberto===STATE.clientId ? null : STATE.clientId; render(); return; }
       if(action==='relatorio-portal-wa' || action==='relatorio-portal-copiar'){
         const c = CLIENTS.find(x=>x.id===STATE.clientId); if(!c) return;
         const txt = mensagemRelatorioPortal(c);
