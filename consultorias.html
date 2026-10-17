@@ -105,6 +105,8 @@ h1{font-size:28px}h2{font-size:21px}h3{font-size:17px}
 .sm{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:3px;font-size:13px;color:var(--muted)}
 .ftag{display:inline-block;font:700 10.5px var(--f-b);letter-spacing:.06em;text-transform:uppercase;border-radius:5px;padding:1px 6px;margin-right:7px;vertical-align:1px}.ftag.rev{background:#e0f2f1;color:#0e6b6a}.ftag.fab{background:#fde9dc;color:#a63b0a}
 @media(max-width:560px){.st2{grid-template-columns:48px 24px minmax(0,1fr)}.st2::before{left:69px}.ring{width:66px;height:66px}.ring span{width:52px;height:52px;font-size:15px}}
+.acbar{position:sticky;bottom:max(10px,env(safe-area-inset-bottom,0px));z-index:20;display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 12px;box-shadow:0 10px 28px rgba(15,30,39,.16)}
+.acbar .st{flex:1;min-width:140px;font-size:13.5px;color:var(--muted)}
 .stsel{font:600 12.5px var(--f-b);border:1px solid var(--line);border-radius:99px;padding:3px 8px;background:var(--surface);color:var(--fg)}
 .saving{position:fixed;right:16px;bottom:16px;background:var(--fg);color:var(--bg);padding:8px 14px;border-radius:9px;font-weight:600;font-size:14px;z-index:50}
 </style></head><body>
@@ -123,6 +125,7 @@ h1{font-size:28px}h2{font-size:21px}h3{font-size:17px}
   </div>
   <div class="emps" id="emps"></div>
   <section class="ficha" id="ficha"></section>
+  <div class="acbar" id="acbar" hidden><button class="btn" type="button" id="bVoltar">← Voltar às empresas</button><a class="btn" href="painel.html" style="text-decoration:none">Painel da Matriz</a><span class="st" id="acSt">Tudo salvo</span><button class="btn pri" type="button" id="bSalvar">💾 Salvar</button></div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
@@ -199,9 +202,9 @@ function copiar(t,b){(navigator.clipboard?navigator.clipboard.writeText(t):Promi
 const esc=t=>String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const COR=['var(--gb)','var(--cb)','var(--cde)','var(--accent)','var(--ok)','var(--warn)'];
 function limpaSeed(e){e=JSON.parse(JSON.stringify(e));e.frentes.forEach(f=>f.p=f.p.filter(p=>p[2]!=='exemplo'&&p[3]!=='exemplo'));e.dem=(e.dem||[]).filter(d=>d[2]!=='exemplo');e.arq=(e.arq||[]).filter(a=>a[2]!=='exemplo');e.vis=e.vis||{tit:'Visita',prep:[],dur:[],dep:[]};e.vis.ok=e.vis.ok||{};if(e.acao)e.acao.st=e.acao.st||{};return e;}
-async function salvar(k){const el=document.getElementById('sync');el.textContent='Salvando…';
+async function salvar(k){const el=document.getElementById('sync'),st=document.getElementById('acSt');el.textContent='Salvando…';if(st)st.textContent='Salvando…';
   const {error}=await sb.from('rotina_docs').upsert({col:'consultoria',id:k,data:E[k],atualizado:new Date().toISOString()});
-  el.textContent=error?'⚠ Não salvou: '+error.message:'✓ Salvo às '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});}
+  el.textContent=error?'⚠ Não salvou: '+error.message:'✓ Salvo às '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});if(st){st.textContent=el.textContent;st.style.color=error?'var(--bad)':'var(--ok)';}return !error;}
 async function carregar(){const {data,error}=await sb.from('rotina_docs').select('id,data').eq('col','consultoria');if(error){alert('Não consegui carregar: '+error.message);return;}
   if(!data.length){for(const [k,e] of Object.entries(SEED)){E[k]=limpaSeed(e);await salvar(k);}}else data.forEach(r=>E[r.id]=r.data);
   const EXTRA=SEED.cb.acao.temas.slice(-2);
@@ -294,7 +297,10 @@ if(PUB){(async()=>{document.title='Acompanhamento da consultoria · FC Consultor
   const {data,error}=await sb.rpc('cons_portal_ver',{p_chave:KEY});
   if(error||!data){$('#pubT').textContent='Link indisponível';$('#ficha').innerHTML='<div class="body"><p style="margin:0">Este link não está ativo. Fale com a FC Consultoria: (66) 9 9986-7984.</p></div>';return;}
   E={[data.id]:data};at=data.id;cli=true;$('#pubT').textContent='Acompanhamento da consultoria';ficha();})();}
-else gateUI(()=>carregar(),{soMatriz:true});
+else{gateUI(()=>carregar(),{soMatriz:true});
+  $('#acbar').hidden=false;
+  $('#bVoltar').onclick=()=>{openLane=null;window.scrollTo({top:0,behavior:'smooth'});};
+  $('#bSalvar').onclick=async()=>{const b=$('#bSalvar');b.disabled=true;b.textContent='Salvando…';const ok=await salvar(at);b.disabled=false;b.textContent=ok?'✓ Salvo':'💾 Tentar de novo';setTimeout(()=>{b.textContent='💾 Salvar'},1800);};}
 </script>
 
 </body></html>
