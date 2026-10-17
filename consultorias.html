@@ -175,6 +175,7 @@ body.pres-on #hdTop,body.pres-on #app>.top:first-child,body.pres-on #acbar a,bod
 .tg{display:flex;flex-direction:column;gap:5px;min-width:0}.tgl{font:700 10.5px var(--f-b);letter-spacing:.09em;text-transform:uppercase;color:var(--muted);padding-left:4px}
 .tgb{display:flex;flex-wrap:wrap;gap:5px}.tabg .tab{all:unset;cursor:pointer;padding:6px 11px;border-radius:9px;font:600 13.5px var(--f-b);color:var(--fg);background:var(--surface);border:1px solid var(--line);white-space:nowrap}
 .tabg .tab:hover{border-color:var(--c)}.tabg .tab[aria-selected="true"]{background:var(--c);border-color:var(--c);color:#fff}.tabg .tab:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.mk .leg{background:var(--surface-2);border:1px dashed var(--line);border-radius:10px;padding:8px 10px}.mk .leg small{font:700 10.5px var(--f-b);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}.mk .leg p{margin:3px 0 0;font-size:14px;white-space:pre-wrap}
 .stsel{font:600 12.5px var(--f-b);border:1px solid var(--line);border-radius:99px;padding:3px 8px;background:var(--surface);color:var(--fg)}
 .saving{position:fixed;right:16px;bottom:16px;background:var(--fg);color:var(--bg);padding:8px 14px;border-radius:9px;font-weight:600;font-size:14px;z-index:50}
 </style></head><body>
@@ -348,8 +349,8 @@ function cards(){if(PUB)return;const ks0=Object.keys(E);const M={};ks0.forEach(k
   const ps=document.getElementById('presSair');if(ps)ps.onclick=()=>{PRES=null;document.body.classList.remove('pres-on');cards();};
   const red=matchMedia('(prefers-reduced-motion: reduce)').matches;document.querySelectorAll('#emps [data-cnt]').forEach(el=>{const v=el.dataset.cnt;if(v===''){return;}const n=+v;if(red||!n){el.textContent=n;return;}let t0=null;const step=t=>{t0=t0||t;const p=Math.min(1,(t-t0)/700);el.textContent=Math.round(n*(1-Math.pow(1-p,3)));if(p<1)requestAnimationFrame(step);};requestAnimationFrame(step);});}
 function abrirEmpresa(k,t){at=k;openLane=null;OPEN={};if(t)tab=t;else tab='proc';render();window.scrollTo({top:0,behavior:'smooth'});}
-const GRUPOS_ABA=[['Andamento',['proc','acao','dem']],['Ferramentas',['pla','cat','ori','dia']],['Com o cliente',['div','sol','age']],['Interno FC',['dsp','vis','arq','hrs']]];
-const ABAS=[['proc','🧭 Fluxo do processo'],['acao','✅ Plano de ação'],['pla','📊 Planilhas'],['cat','📚 Catálogo'],['ori','🎓 Orientativo'],['dia','🧩 Diagramas'],['div','📣 Divulgação'],['sol','📨 Solicitações'],['age','🗓 Agenda'],['dsp','💳 Despesas'],['vis','📋 Visitas'],['dem','📦 Demandas e entregas'],['arq','📁 Arquivos'],['hrs','⏱ Horas']];
+const GRUPOS_ABA=[['Andamento',['proc','acao','dem']],['Ferramentas',['pla','cat','ori','dia']],['Com o cliente',['div','mkt','sol','age']],['Interno FC',['dsp','vis','arq','hrs']]];
+const ABAS=[['proc','🧭 Fluxo do processo'],['acao','✅ Plano de ação'],['pla','📊 Planilhas'],['cat','📚 Catálogo'],['ori','🎓 Orientativo'],['dia','🧩 Diagramas'],['div','📣 Divulgação'],['mkt','💡 Dicas de marketing'],['sol','📨 Solicitações'],['age','🗓 Agenda'],['dsp','💳 Despesas'],['vis','📋 Visitas'],['dem','📦 Demandas e entregas'],['arq','📁 Arquivos'],['hrs','⏱ Horas']];
 function ficha(){const e=E[at];let h='';
  if(tab==='proc'&&e.objetivo)h=`<details class="box obj"><summary><b>🎯 Objetivo da consultoria</b><span class="muted" style="font-size:13px"> · toque para ler</span></summary><p style="margin:8px 0 0">${esc(e.objetivo)}</p></details>`;
  if(tab==='proc'){const tot=e.frentes.reduce((n,f)=>n+f.p.length,0),ok=e.frentes.reduce((n,f)=>n+f.p.filter(p=>p[0]==='ok').length,0),pct=tot?Math.round(ok/tot*100):0;
@@ -388,6 +389,7 @@ function ficha(){const e=E[at];let h='';
  if(tab==='dia')h+=diaTabHtml(e,hero,nextc);
  if(tab==='ori')h+=oriTabHtml(e);
  if(tab==='div')h+=divTabHtml(e,hero,nextc);
+ if(tab==='mkt')h+=mktTabHtml(e,hero,nextc);
  if(tab==='dsp')h+=dspTabHtml(e,hero,nextc,sec);
  if(tab==='cat'){if(OPEN.cat===undefined)OPEN.cat='cat';h+=catTabHtml(e,hero,nextc,sec);}
  if(tab==='sol')h+=solTabHtml(e);
@@ -422,7 +424,7 @@ function ficha(){const e=E[at];let h='';
      return sec(d,`${d.slice(8,10)}/${d.slice(5,7)}`,`${l.length} registro${l.length>1?'s':''}`,nn,nn+ee,`<span class="pill p-mut">${hm(nn+ee)}</span>${ee?`<span class="pill p-bad">${hm(ee)} extra</span>`:''}`,`<ol class="steps">${l.map(x=>`<li class="st2"><span class="tm mono">${esc(x.ini||'')}${x.fim?'–'+esc(x.fim):''}</span><span class="dotc ${+x.minExtra?'':'ok'}" style="${+x.minExtra?'border-color:var(--bad)':''}">${+x.minExtra?'':'✓'}</span><div class="sb"><div class="stt">${esc(x.titulo)}</div><div class="sm">${(x.itens||[]).map(esc).join(' · ')}</div></div></li>`).join('')}</ol>`)}).join('')}</div>`
      :'<div class="box"><p class="nota" style="margin:0">Ainda não há horas lançadas para esta empresa na Rotina FC.</p></div>';
    h+='<p class="nota"><b>🔒 Só para o seu controle:</b> o cliente não vê as horas nem quando a FC trabalhou na consultoria. Vem da Rotina FC: 07:00 às 18:00 é horário normal; 18:01 às 06:59 e fim de semana, hora extra. A barra de cada dia mostra a parte em horário normal.</p>';}
- const abas=(cli?ABAS.filter(a=>['proc','acao','age','pla','cat','ori','dia','sol','dem'].includes(a[0])):ABAS).filter(a=>a[0]!=='acao'||e.acao); if(cli&&!abas.some(a=>a[0]===tab))tab='proc';
+ const abas=(cli?ABAS.filter(a=>['proc','acao','age','pla','cat','ori','dia','mkt','sol','dem'].includes(a[0])):ABAS).filter(a=>a[0]!=='acao'||e.acao); if(cli&&!abas.some(a=>a[0]===tab))tab='proc';
  $('#ficha').style.setProperty('--c',e.c);
  $('#ficha').innerHTML=`<div class="fh"><span class="sw"></span><div style="min-width:0;flex:1"><h2>${e.nome}</h2><div class="muted" style="font-size:14px">${e.cid} · ${e.mod}</div></div><span class="pill ${e.st[0]}">${e.st[1]}</span>${cli?'':`<button class="btn" type="button" id="lkTog">🔗 Link do cliente${PORT[at]&&PORT[at].ativo?' ✓':''}</button>`}</div>
   ${PUB?`<div style="padding:12px 18px 0"><div class="cliente-bar">Acompanhamento atualizado pela FC Consultoria. Dúvidas: (66) 9 9986-7984, de segunda a sexta, das 08:00 às 11:00 e das 13:00 às 17:00 (horário de Sinop/MT).</div></div>`:cli&&PRES?`<div style="padding:12px 18px 0"><div class="cliente-bar">📡 <b>Acompanhamento da consultoria</b> · tudo o que a FC faz aparece aqui e no link da empresa, em tempo real.</div></div>`:cli?`<div style="padding:12px 18px 0"><div class="cliente-bar">🔗 <b>Link do cliente</b> · ${e.nome} vê o fluxo, o plano de ação, as planilhas, o catálogo, as solicitações e as entregas. Horas, arquivos internos, checklist de visita e observações da FC ficam ocultos.</div></div>`:linkAberto?`<div style="padding:12px 18px 0">${linkBox(e)}</div>`:''}<div class="tabg" role="tablist">${GRUPOS_ABA.map(([g,ks])=>{const L=abas.filter(x=>ks.includes(x[0]));return L.length?`<div class="tg"><span class="tgl">${g}</span><div class="tgb">${L.map(([k,l])=>`<button class="tab" role="tab" type="button" aria-selected="${k===tab}" data-t="${k}">${l}${k==='sol'&&!cli&&solNovas(at)?` <span class="pill p-bad">${solNovas(at)}</span>`:''}</button>`).join('')}</div></div>`:''}).join('')}</div><div class="body">${h}</div>`;
@@ -521,7 +523,7 @@ async function importarPlanilha(file,tema,trocarId){if(!file)return;const st=doc
     else{const nome=prompt('Nome da planilha (aparece para o cliente):',file.name.replace(/\.xlsx$/i,'').replace(/_/g,' '));if(!nome)return;
       const {error}=await sb.from('cons_planilhas').insert({empresa_id:at,tema:tema||null,nome,dados:m});if(error)throw error;}
     await carregarPlan();st.textContent='✓ Planilha salva';ficha();}catch(err){alert('Não foi possível importar: '+(err.message||err));st.textContent='';}}
-function wirePlSol(e){const q=(s,f)=>document.querySelectorAll(s).forEach(f);wireDiaVer(e);
+function wirePlSol(e){const q=(s,f)=>document.querySelectorAll(s).forEach(f);wireDiaVer(e);wireMktCli(e,q);
   q('[data-plab]',b=>b.onclick=()=>abrirPlanilha(b.dataset.plab));
   if(PUB||cli){const se=document.getElementById('soEnv');if(se){try{document.getElementById('soNome').value=localStorage.getItem('cons-nome')||''}catch(_){}
     se.onclick=async()=>{const nome=document.getElementById('soNome').value.trim(),txt=document.getElementById('soTxt').value.trim(),m=document.getElementById('soMsg');if(!txt){m.textContent='Escreva o que vocês precisam.';return;}
@@ -533,7 +535,7 @@ function wirePlSol(e){const q=(s,f)=>document.querySelectorAll(s).forEach(f);wir
   const cs=document.getElementById('catSel');if(cs)cs.onchange=()=>{if(!cs.value)return;e.catalogo=cs.value;salvar(at);ficha();};
   const cd=document.getElementById('catDesl');if(cd)cd.onclick=()=>{if(!confirm('Desligar o catálogo desta empresa? O catálogo continua existindo; só sai deste painel e do link.'))return;e.catalogo=null;salvar(at);ficha();};
   q('[data-cet]',b=>b.onclick=()=>{e.catEt=e.catEt||{};const k=b.dataset.cet,cur=catEtapas(e,CATS.find(x=>x.id===e.catalogo))[k]||'';e.catEt[k]=cur===''?'and':cur==='and'?'ok':'none';if(e.catEt[k]==='none')e.catEt[k]='';ficha();salvar(at);});
-  wireAgeDsp(e,q);wireDia(e,q);wireDiv(e,q);wireOri(e);
+  wireAgeDsp(e,q);wireDia(e,q);wireDiv(e,q);wireOri(e);wireMkt(e,q);
   q('[data-plimp]',i=>i.onchange=()=>importarPlanilha(i.files[0],i.dataset.plimp));
   q('[data-pltr]',i=>i.onchange=()=>importarPlanilha(i.files[0],null,i.dataset.pltr));
   q('[data-plve]',b=>b.onclick=async()=>{const p=PLAN.find(x=>x.id===b.dataset.plve);await sb.from('cons_planilhas').update({cliente_ve:!p.cliente_ve}).eq('id',p.id);p.cliente_ve=!p.cliente_ve;ficha();});
@@ -692,6 +694,54 @@ function wireDia(e,q){const g=id=>document.getElementById(id);
 function wireDiaVer(e){document.querySelectorAll('[data-dgver]').forEach(b=>b.onclick=async()=>{const d=(e.diag||[]).find(x=>x.id===b.dataset.dgver);if(!d)return;let u=d.url;if(!u&&d.png&&!PUB){[u]=await urlsDe([d.png]);}if(u)window.open(u,'_blank','noopener');else if(!PUB&&!cli)abrirDrawio(e,d);});
   if(PUB||cli)document.querySelectorAll('.dthumb').forEach(b=>{const d=(e.diag||[]).find(x=>x.id===b.dataset.dgver);if(d&&d.url){b.style.backgroundImage=`url("${d.url}")`;b.removeAttribute('data-thumb');}});}
 /* ===== Divulgação na tela do cliente + aviso de acesso ===== */
+/* ===== Dicas de marketing ===== */
+const MK_CAT={folder:['🗂','Folder com a sua marca'],insta:['📸','Instagram'],status:['🟢','Status do WhatsApp'],show:['🏬','Showroom / loja'],promo:['🏷','Promoção'],obra:['🏗','Obra entregue'],tec:['🔧','Dica técnica'],outro:['💡','Outra ideia']};
+const MK_IDEIAS=[
+ ['obra','Antes e depois da obra','Fotografe o vão antes e a esquadria instalada, do mesmo ângulo. Poste as duas fotos lado a lado.','Antes e depois 👀 Mais luz, mais conforto e acabamento de primeira. Obra entregue pela nossa equipe! Peça seu orçamento.'],
+ ['tec','Dica: como limpar a esquadria','Vídeo curto (até 30 s) mostrando pano macio, água e sabão neutro nos trilhos e perfis.','Sua janela de alumínio dura muito mais com um cuidado simples: pano macio, água e sabão neutro. Nada de palha de aço! 💧'],
+ ['status','Bastidores da produção','Grave 10 a 15 s da equipe cortando ou montando os perfis. Status todo dia gera lembrança da marca.','Por aqui a produção não para 💪 Esquadrias feitas sob medida para o seu projeto.'],
+ ['show','Destaque da semana no showroom','Escolha um produto do showroom, fotografe com boa luz e coloque preço ou "condição especial".','Destaque da semana no nosso showroom ✨ Venha conhecer de perto!'],
+ ['insta','Linha Suprema x Gold','Carrossel com 3 fotos: uma de cada linha e uma comparando acabamentos. Use o catálogo virtual como apoio.','Suprema ou Gold? Cada linha tem o seu ponto forte. Arraste para ver a diferença e fale com a gente para escolher a ideal ➡️'],
+ ['promo','Condição para serralheiros','Arte simples com a condição (prazo, desconto ou frete) e validade. Envie também nos grupos de serralheiros.','Serralheiro parceiro tem condição especial esta semana 🤝 Chame no WhatsApp e confira.'],
+ ['tec','Vidro temperado: por que usar','Post explicativo com 3 tópicos: segurança, resistência e acabamento.','Vidro temperado é até 5x mais resistente e, se quebrar, vira pequenos fragmentos sem pontas. Segurança para a sua família 🛡'],
+ ['status','Depoimento do cliente','Peça ao cliente um áudio ou print de elogio e publique com autorização.','Nada melhor que cliente satisfeito 🙌 Obrigado pela confiança!']];
+let mkForm=null;
+function mktCard(x,adm,feitas){const c=MK_CAT[x.cat]||MK_CAT.outro;const img=x.url&&/^image\//.test(x.tipo||'');return `<div class="dcard mk">${img?`<div class="dthumb" style="cursor:zoom-in;background-image:url('${esc(x.url)}')" data-mkimg="${esc(x.url)}"></div>`:(x.path&&adm?`<div class="dthumb" data-thumb="${esc(x.path)}" data-img="${/^image\//.test(x.tipo||'')?1:0}"></div>`:'')}
+  <div style="padding:12px 14px;display:flex;flex-direction:column;gap:8px"><div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><span class="pill p-acc">${c[0]} ${c[1]}</span>${feitas?`<span class="pill p-ok">✓ postado${feitas>1?' '+feitas+'x':''}</span>`:''}${adm&&!x.cli?'<span class="pill p-mut">🔒 rascunho</span>':''}</div>
+   <b style="font:700 16px var(--f-d)">${esc(x.titulo)}</b>${x.dica?`<div class="nota" style="color:var(--fg)"><b>Como fazer:</b> ${esc(x.dica)}</div>`:''}
+   ${x.leg?`<div class="leg"><small>Legenda pronta</small><p>${esc(x.leg)}</p></div>`:''}
+   <div style="display:flex;gap:6px;flex-wrap:wrap">${x.leg?`<button class="mini on" type="button" data-mkcop="${x.id}">📋 Copiar legenda</button>`:''}${img?`<a class="mini" href="${esc(x.url)}" target="_blank" rel="noopener" style="text-decoration:none">⬇ Abrir imagem</a>`:''}${x.url&&!img?`<a class="mini on" href="${esc(x.url)}" target="_blank" rel="noopener" style="text-decoration:none">📄 Abrir folder</a>`:''}${x.link?`<a class="mini on" href="${esc(x.link)}" target="_blank" rel="noopener" style="text-decoration:none">🔗 Abrir link</a>`:''}
+    ${adm?`<button class="mini ${x.cli?'on':''}" type="button" data-mkcli="${x.id}">${x.cli?'👁 no link do cliente':'🔒 só FC'}</button><button class="mini" type="button" data-mked="${x.id}">✏ Editar</button><button class="mini" type="button" data-mkrm="${x.id}">✕</button>`:`<button class="mini" type="button" data-mkfeito="${x.id}">✓ Já postei</button>`}</div></div></div>`;}
+function mktTabHtml(e,hero,nextc){const adm=!PUB&&!cli;let L=(e.mkt||[]).slice().sort((a,b)=>(b.em||'').localeCompare(a.em||''));if(!adm)L=L.filter(x=>x.cli);
+  const F=adm?(DIVV[at]||[]).filter(v=>String(v.div_id).startsWith('mk-')):[];const nF=id=>F.filter(v=>v.div_id==='mk-'+id).length;const post=L.filter(x=>nF(x.id)).length;
+  let h=hero(L.length?Math.round(post/L.length*100):0,L.length?`${L.length} dica${L.length>1?'s':''} de marketing`:'Nenhuma dica ainda','💡 Dicas de marketing',nextc(post?'ok':'',adm?(post?`${post} já postada${post>1?'s':''} pelo cliente`:'O cliente marca quando postar'):'Ideias prontas da FC para vocês postarem',adm?'Ideias, legendas e imagens para o cliente divulgar':'Copie a legenda, use a imagem e marque "Já postei"'));
+  if(adm)h+=mkForm?`<div class="box"><h3>${mkForm.id?'Editar dica':'Nova dica de marketing'}</h3><div class="frm">
+    <label>Onde postar<select class="inpx" id="mkC">${Object.entries(MK_CAT).map(([k,v])=>`<option value="${k}" ${mkForm.cat===k?'selected':''}>${v[0]} ${v[1]}</option>`).join('')}</select></label>
+    <label class="full">Título<input class="inpx" id="mkT" value="${esc(mkForm.titulo||'')}" placeholder="Ex.: Antes e depois da obra"></label>
+    <label class="full">Como fazer<textarea class="inpx" id="mkD" rows="2">${esc(mkForm.dica||'')}</textarea></label>
+    <label class="full">Legenda pronta<textarea class="inpx" id="mkL" rows="3">${esc(mkForm.leg||'')}</textarea></label>
+    <label class="full">Link (opcional)<input class="inpx" id="mkU" value="${esc(mkForm.link||'')}" placeholder="Ex.: link do folder, do Canva ou do catálogo"></label>
+    ${mkForm.id?'':'<label class="full">Folder, arte ou imagem com a logo do cliente (opcional)<input class="inpx" type="file" id="mkF" accept="image/*,.pdf"></label>'}
+    <label class="full" style="display:flex;gap:8px;align-items:center;font-weight:600"><input type="checkbox" id="mkV" ${mkForm.cli!==false?'checked':''}> Aparece no link do cliente</label></div>
+    <div style="display:flex;gap:8px;margin-top:10px"><button class="btn pri" type="button" id="mkSalvar">Salvar dica</button><button class="btn" type="button" id="mkCanc">Cancelar</button></div></div>`
+   :`<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn pri" type="button" id="mkNovo">+ Nova dica</button></div>
+     <details class="box obj"><summary><b>✨ Ideias prontas da FC</b><span class="muted" style="font-size:13px"> · toque para escolher e adaptar</span></summary><div style="display:flex;flex-direction:column;gap:6px;margin-top:8px">${MK_IDEIAS.map((x,i)=>`<button type="button" class="pd" data-mkidea="${i}"><span>${MK_CAT[x[0]][0]}</span><div style="min-width:0;flex:1"><b>${esc(x[1])}</b><small>${esc(MK_CAT[x[0]][1])}</small></div><span class="muted">+</span></button>`).join('')}</div></details>`;
+  h+=L.length?`<div class="dgrid">${L.map(x=>mktCard(x,adm,adm?nF(x.id):0)).join('')}</div>`:`<div class="box"><p class="nota" style="margin:0">${adm?'Use as ideias prontas ou crie a sua. O cliente copia a legenda, usa a imagem e marca quando postar.':'Quando a FC enviar dicas de divulgação, elas aparecem aqui.'}</p></div>`;
+  return h;}
+function wireMkt(e,q){const g=id=>document.getElementById(id);
+  if(g('mkNovo'))g('mkNovo').onclick=()=>{mkForm={cat:'insta',cli:true};ficha();};
+  if(g('mkCanc'))g('mkCanc').onclick=()=>{mkForm=null;ficha();};
+  q('[data-mkidea]',b=>b.onclick=()=>{const x=MK_IDEIAS[+b.dataset.mkidea];mkForm={cat:x[0],titulo:x[1],dica:x[2],leg:x[3],cli:true};ficha();});
+  if(g('mkSalvar'))g('mkSalvar').onclick=async()=>{const x=mkForm;const t=g('mkT').value.trim();if(!t){alert('Dê um título para a dica.');return;}
+    Object.assign(x,{link:(g('mkU').value.trim()&&!/^https?:\/\//i.test(g('mkU').value.trim())?'https://':'')+g('mkU').value.trim(),cat:g('mkC').value,titulo:t,dica:g('mkD').value.trim(),leg:g('mkL').value.trim(),cli:g('mkV').checked});e.mkt=e.mkt||[];
+    if(!x.id){x.id=uidc();x.em=new Date().toISOString();const f=g('mkF')&&g('mkF').files[0];if(f){g('mkSalvar').disabled=true;const [u]=await subir([f],'marketing');if(u){x.path=u.path;x.tipo=u.tipo;try{x.url=await urlAssinada(u.path,60*60*24*365);}catch(_){}}}e.mkt.push(x);}
+    else{const i=e.mkt.findIndex(m=>m.id===x.id);e.mkt[i]=x;}mkForm=null;ficha();salvar(at);};
+  q('[data-mked]',b=>b.onclick=()=>{mkForm=JSON.parse(JSON.stringify(e.mkt.find(m=>m.id===b.dataset.mked)));ficha();});
+  q('[data-mkcli]',b=>b.onclick=()=>{const x=e.mkt.find(m=>m.id===b.dataset.mkcli);x.cli=!x.cli;ficha();salvar(at);});
+  q('[data-mkrm]',b=>b.onclick=async()=>{const x=e.mkt.find(m=>m.id===b.dataset.mkrm);if(!confirm('Apagar a dica "'+x.titulo+'"?'))return;if(x.path)await sb.storage.from(BK).remove([x.path]);e.mkt=e.mkt.filter(m=>m!==x);ficha();salvar(at);});}
+function wireMktCli(e,q){q('[data-mkcop]',b=>b.onclick=()=>{const x=(e.mkt||[]).find(m=>m.id===b.dataset.mkcop);if(x)copiar(x.leg,b);});
+  q('[data-mkimg]',b=>b.onclick=()=>window.open(b.dataset.mkimg,'_blank','noopener'));
+  q('[data-mkfeito]',b=>b.onclick=()=>{if(PUB)sb.rpc('cons_portal_div_visto',{p_chave:KEY,p_id:'mk-'+b.dataset.mkfeito,p_nome:nomeCli()}).then(()=>{},()=>{});b.textContent='✓ Obrigado! A FC foi avisada';b.disabled=true;});}
 let ALUNOS=[];
 async function carregarAlunos(){const {data}=await sb.from('trein_alunos').select('user_id,login,nome,papel,ativo').neq('papel','admin').order('nome');ALUNOS=(data||[]).filter(a=>!/^gestor cat/i.test(a.nome||''));
   const nn=t=>String(t||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]/g,'');const mud=[];
