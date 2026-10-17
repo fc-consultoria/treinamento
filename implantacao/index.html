@@ -8671,10 +8671,10 @@ iniciar();
   }
   // depois de atualizar: mostra o que é novo (uma vez por versão neste navegador)
   try{ const vista=localStorage.getItem('fc_impl_versao_vista'); if(atual && vista && vista!==atual){ setTimeout(()=>cartao('Novidade instalada!', '<b>'+oQue(atual).replace(/</g,'&lt;')+'</b><br><span style="color:#5b6570;font-size:13px">O painel já está atualizado.</span>'), 1500); } if(atual) localStorage.setItem('fc_impl_versao_vista', atual); }catch(_){}
-  // botão fixo "Atualizar agora" (canto de baixo, à esquerda): recarrega a versão mais nova a qualquer momento
+  // botão fixo "Atualizar agora" (canto de baixo, ao lado do 🎨): recarrega a versão mais nova a qualquer momento
   const atualizarJa=()=>location.replace(location.pathname+'?v='+Date.now()+location.hash);
   const bt=document.createElement('button'); bt.type='button'; bt.title='Carregar a versão mais nova do painel'; bt.innerHTML='🔄 Atualizar agora';
-  bt.style.cssText='position:fixed;left:14px;bottom:14px;z-index:9997;border:0;border-radius:99px;padding:8px 14px;cursor:pointer;font:700 13px system-ui,-apple-system,Segoe UI,sans-serif;color:#fff;background:linear-gradient(135deg,var(--g1,#3452eb),var(--g2,#6f8bff));box-shadow:0 6px 18px -6px rgba(0,0,0,.4)';
+  bt.style.cssText='position:fixed;right:62px;bottom:16px;z-index:9997;border:0;border-radius:99px;padding:8px 14px;cursor:pointer;font:700 13px system-ui,-apple-system,Segoe UI,sans-serif;color:#fff;background:linear-gradient(135deg,var(--g1,#3452eb),var(--g2,#6f8bff));box-shadow:0 6px 18px -6px rgba(0,0,0,.4)';
   bt.onclick=atualizarJa; (document.readyState==='loading'?document.addEventListener('DOMContentLoaded',()=>document.body.appendChild(bt)):document.body.appendChild(bt));
   const pulso=document.createElement('style'); pulso.textContent='@keyframes fcPulso{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}'; document.head.appendChild(pulso);
   let avisado=false;
