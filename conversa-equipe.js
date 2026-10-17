@@ -88,6 +88,7 @@
   function badge(){
     if(!btn) return; const l = lido(); const n = S.msgs.filter(m=>m.id>l && String(m.autor_email||'').toLowerCase()!==S.eu).length;
     const b = btn.querySelector('.fcchat-badge'); b.style.display = n?'block':'none'; b.textContent = n>9?'9+':n;
+    document.querySelectorAll('.fcchat-count').forEach(e=>{ e.style.display = n?'inline-block':'none'; e.textContent = n>9?'9+':n; });
   }
   function avisar(m){
     try{ if(typeof toast==='function' && !S.aberto) toast('💬 '+(m.autor_nome||'Equipe')+': '+(m.texto? String(m.texto).slice(0,80) : '📷 imagem')); }catch(_){ }
@@ -119,5 +120,6 @@
     setInterval(()=>{ if(typeof MEU_ACESSO!=='undefined' && MEU_ACESSO && MEU_ACESSO.nome) S.nome = MEU_ACESSO.nome; carregar(); }, 10000);
     try{ if('Notification' in window && Notification.permission==='default') btn.addEventListener('click', ()=>Notification.requestPermission(), {once:true}); }catch(_){ }
   }
+  window.fcChatAbrir = ()=>{ if(!btn) return; if(!S.aberto) btn.click(); };
   setTimeout(iniciar, 1500);
 })();
