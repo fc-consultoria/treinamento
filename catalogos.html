@@ -209,7 +209,7 @@ function bind(){const A=cc();
   const ok=await salvaItem(base,p);if(ok&&!['c','n','txt'].includes(k))draw();});
  A.querySelectorAll('[data-cor]').forEach(s=>s.onclick=async()=>{const base=s.dataset.q,e=itemOf(CUR,q0(base)),cs=(e.cores||CUR.cores||['branco','preto','natural']).slice(),k=s.dataset.cor,n=cs.includes(k)?cs.filter(x=>x!==k):cs.concat(k);if(await salvaItem(base,{cores:n}))s.classList.toggle('on');});}
 gateUI(async({session,perfil})=>{UID=session.user.id;ADM=perfil.papel==='admin';await carregar();
- if(ADM){VIEW='lista';}else{CUR=CL.find(x=>x.gestor_uid===UID);if(!CUR){cc().innerHTML='<div style="padding:40px;text-align:center">Este login não tem catálogo de cliente. Fale com a FC Consultoria: WhatsApp (66) 9 9986-7984.<br><br><button class="btn" onclick="sair()">Sair</button></div>';return;}VIEW='ed';}
+ if(ADM){VIEW='lista';const ed=new URLSearchParams(location.search).get('editar');const cx=ed&&CL.find(x=>x.id===ed);if(cx){CUR=cx;VIEW='ed';LI='sup';Q='';FL='todos';}}else{CUR=CL.find(x=>x.gestor_uid===UID);if(!CUR){cc().innerHTML='<div style="padding:40px;text-align:center">Este login não tem catálogo de cliente. Fale com a FC Consultoria: WhatsApp (66) 9 9986-7984.<br><br><button class="btn" onclick="sair()">Sair</button></div>';return;}VIEW='ed';}
  draw();});
 </script>
 

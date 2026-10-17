@@ -218,7 +218,7 @@ async function carregar(){const {data,error}=await sb.from('rotina_docs').select
   const EXTRA=SEED.cb.acao.temas.slice(-2);
   for(const k of Object.keys(E)){const a=E[k].acao;if(a&&!a._extra1){EXTRA.forEach(t=>{if(!a.temas.some(x=>x[0]===t[0]))a.temas.push(t.slice(0,1+a.cols.length));});a._extra1=true;await salvar(k);}}
   if(!E[at])at=Object.keys(E)[0];
-  await carregarPortais();await carregarPlan();await carregarSol();const h=await sb.from('rotina_docs').select('data').eq('col','horas');HORAS=(h.data||[]).map(x=>x.data);render();}
+  await carregarPortais();await carregarPlan();await carregarSol();await carregarCat();const h=await sb.from('rotina_docs').select('data').eq('col','horas');HORAS=(h.data||[]).map(x=>x.data);render();}
 const nrm=t=>String(t||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/s\b/g,'').trim();
 function horasDe(e){const k=nrm(e.nome.split('·')[0]),k2=nrm(e.apelido||'');const mes=new Date().toISOString().slice(0,7);
   return HORAS.filter(x=>{const c=nrm(x.cliente);return c&&(c.includes(k)||k.includes(c)||(k2&&c.includes(k2)))});}
@@ -230,7 +230,7 @@ function cards(){ $('#emps').innerHTML=Object.entries(E).map(([k,e])=>`<button c
   <div class="kv"><div><small>Próxima visita</small><b>${e.visita}</b></div><div><small>Demandas</small><b>${e.dem.length}</b></div><div><small>Horas no mês</small><b>${(l=>l.length?hm(l.reduce((s,x)=>s+(+x.minNormal||0)+(+x.minExtra||0),0)):'—')(horasDe(e).filter(x=>(x.data||'').slice(0,7)===new Date().toISOString().slice(0,7)))}</b></div></div>
   <div class="nx muted">Próximo passo: ${e.dem? e.dem[0][2]||e.dem[0][1] : '—'}</div></button>`).join('');
   document.querySelectorAll('.emp').forEach(b=>b.onclick=()=>{at=b.dataset.k;openLane=null;OPEN={};render()}); }
-const ABAS=[['proc','Fluxo do processo'],['acao','Plano de ação'],['pla','📊 Planilhas'],['sol','📨 Solicitações'],['vis','Visitas'],['dem','Demandas e entregas'],['arq','Arquivos'],['hrs','Horas']];
+const ABAS=[['proc','Fluxo do processo'],['acao','Plano de ação'],['pla','📊 Planilhas'],['cat','📚 Catálogo'],['sol','📨 Solicitações'],['vis','Visitas'],['dem','Demandas e entregas'],['arq','Arquivos'],['hrs','Horas']];
 function ficha(){const e=E[at];let h='';
  if(tab==='proc'&&e.objetivo)h=`<details class="box obj"><summary><b>🎯 Objetivo da consultoria</b><span class="muted" style="font-size:13px"> · toque para ler</span></summary><p style="margin:8px 0 0">${esc(e.objetivo)}</p></details>`;
  if(tab==='proc'){const tot=e.frentes.reduce((n,f)=>n+f.p.length,0),ok=e.frentes.reduce((n,f)=>n+f.p.filter(p=>p[0]==='ok').length,0),pct=tot?Math.round(ok/tot*100):0;
@@ -265,6 +265,7 @@ function ficha(){const e=E[at];let h='';
      return sec(o.key,esc(o.t[0]),'',o.si,4,`<span class="pill ${ST[o.si][2]}">${o.x.s==='ok'?'✓ ':''}${ST[o.si][1]}</span>${nA?`<span class="pill p-mut">📎 ${nA}</span>`:''}`,body);}).join('')}</div>`;
    h+=cli?'<p class="nota">Toque num tema para ver o que será feito, a situação e os arquivos de base. Verde = resolvido.</p>':'<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" type="button" id="addTema">+ Novo tema</button><button class="btn" type="button" id="delTema" style="color:var(--bad)">Remover um tema</button></div><p class="nota">Toque num tema e clique na etapa (Aguardando → Diagnóstico → Ação → Execução → Resolvido). Ao marcar Resolvido, registre como foi resolvido.</p>';}
  if(tab==='pla')h+=plTabHtml(e);
+ if(tab==='cat'){if(OPEN.cat===undefined)OPEN.cat='cat';h+=catTabHtml(e,hero,nextc,sec);}
  if(tab==='sol')h+=solTabHtml(e);
  if(tab==='vis'){const v=e.vis;v.ok=v.ok||{};const G=[['a','Antes da visita','preparação',v.prep||[]],['d','Durante a visita','execução',v.dur||[]],['p','Depois da visita','fechamento',v.dep||[]]];
    const tot=G.reduce((n,g)=>n+g[3].length,0),ok=G.reduce((n,g)=>n+g[3].filter((_,i)=>v.ok[g[0]+i]).length,0),pct=tot?Math.round(ok/tot*100):0;
@@ -297,10 +298,10 @@ function ficha(){const e=E[at];let h='';
      return sec(d,`${d.slice(8,10)}/${d.slice(5,7)}`,`${l.length} registro${l.length>1?'s':''}`,nn,nn+ee,`<span class="pill p-mut">${hm(nn+ee)}</span>${ee?`<span class="pill p-bad">${hm(ee)} extra</span>`:''}`,`<ol class="steps">${l.map(x=>`<li class="st2"><span class="tm mono">${esc(x.ini||'')}${x.fim?'–'+esc(x.fim):''}</span><span class="dotc ${+x.minExtra?'':'ok'}" style="${+x.minExtra?'border-color:var(--bad)':''}">${+x.minExtra?'':'✓'}</span><div class="sb"><div class="stt">${esc(x.titulo)}</div><div class="sm">${(x.itens||[]).map(esc).join(' · ')}</div></div></li>`).join('')}</ol>`)}).join('')}</div>`
      :'<div class="box"><p class="nota" style="margin:0">Ainda não há horas lançadas para esta empresa na Rotina FC.</p></div>';
    h+='<p class="nota"><b>🔒 Só para o seu controle:</b> o cliente não vê as horas nem quando a FC trabalhou na consultoria. Vem da Rotina FC: 07:00 às 18:00 é horário normal; 18:01 às 06:59 e fim de semana, hora extra. A barra de cada dia mostra a parte em horário normal.</p>';}
- const abas=(cli?ABAS.filter(a=>['proc','acao','pla','sol','dem'].includes(a[0])):ABAS).filter(a=>a[0]!=='acao'||e.acao); if(cli&&!abas.some(a=>a[0]===tab))tab='proc';
+ const abas=(cli?ABAS.filter(a=>['proc','acao','pla','cat','sol','dem'].includes(a[0])):ABAS).filter(a=>a[0]!=='acao'||e.acao); if(cli&&!abas.some(a=>a[0]===tab))tab='proc';
  $('#ficha').style.setProperty('--c',e.c);
  $('#ficha').innerHTML=`<div class="fh"><span class="sw"></span><div style="min-width:0;flex:1"><h2>${e.nome}</h2><div class="muted" style="font-size:14px">${e.cid} · ${e.mod}</div></div><span class="pill ${e.st[0]}">${e.st[1]}</span>${cli?'':`<button class="btn" type="button" id="lkTog">🔗 Link do cliente${PORT[at]&&PORT[at].ativo?' ✓':''}</button>`}</div>
-  ${PUB?`<div style="padding:12px 18px 0"><div class="cliente-bar">Acompanhamento atualizado pela FC Consultoria. Dúvidas: (66) 9 9986-7984, de segunda a sexta, das 08:00 às 11:00 e das 13:00 às 17:00 (horário de Sinop/MT).</div></div>`:cli?`<div style="padding:12px 18px 0"><div class="cliente-bar">🔗 <b>Link do cliente</b> · ${e.nome} vê o fluxo, o plano de ação e as entregas. Horas, arquivos, checklist de visita e observações da FC ficam ocultos.</div></div>`:linkAberto?`<div style="padding:12px 18px 0">${linkBox(e)}</div>`:''}<div class="tabs" role="tablist">${abas.map(([k,l])=>`<button class="tab" role="tab" type="button" aria-selected="${k===tab}" data-t="${k}">${l}${k==='sol'&&!cli&&solNovas(at)?` <span class="pill p-bad">${solNovas(at)}</span>`:''}</button>`).join('')}</div><div class="body">${h}</div>`;
+  ${PUB?`<div style="padding:12px 18px 0"><div class="cliente-bar">Acompanhamento atualizado pela FC Consultoria. Dúvidas: (66) 9 9986-7984, de segunda a sexta, das 08:00 às 11:00 e das 13:00 às 17:00 (horário de Sinop/MT).</div></div>`:cli?`<div style="padding:12px 18px 0"><div class="cliente-bar">🔗 <b>Link do cliente</b> · ${e.nome} vê o fluxo, o plano de ação, as planilhas, o catálogo, as solicitações e as entregas. Horas, arquivos internos, checklist de visita e observações da FC ficam ocultos.</div></div>`:linkAberto?`<div style="padding:12px 18px 0">${linkBox(e)}</div>`:''}<div class="tabs" role="tablist">${abas.map(([k,l])=>`<button class="tab" role="tab" type="button" aria-selected="${k===tab}" data-t="${k}">${l}${k==='sol'&&!cli&&solNovas(at)?` <span class="pill p-bad">${solNovas(at)}</span>`:''}</button>`).join('')}</div><div class="body">${h}</div>`;
  document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{tab=b.dataset.t;ficha()});
  document.querySelectorAll('[data-lane]').forEach(b=>b.onclick=()=>{const v=+b.dataset.lane;openLane=openLane===v?-1:v;ficha();});
  document.querySelectorAll('[data-fr]').forEach(b=>b.onclick=()=>{fr=+b.dataset.fr;delete OPEN.acao;ficha();});
@@ -337,7 +338,25 @@ function ficha(){const e=E[at];let h='';
 function setAcao(key,v){const e=E[at];e.acao.st=e.acao.st||{};const o=e.acao.st[key]||{};const x={s:v,em:new Date().toISOString().slice(0,10)};
   if(v==='ok'){const ev=prompt('Como foi resolvido? Descreva a evidência (planilha em uso, print, foto…):',o.ev||'');if(ev===null)return;x.ev=ev;}else if(o.ev&&v!=='aguarda')x.ev=o.ev;
   e.acao.st[key]=x;ficha();salvar(at);}
-let PLAN=[],SOL=[],PUBPL=null,PUBSOL=null;
+let PLAN=[],SOL=[],PUBPL=null,PUBSOL=null,CATS=[];
+const CAT_PUB='https://fc-consultoria.github.io/catalogo/';
+const CAT_ET=[['linhas','Linhas do catálogo definidas (Suprema e Gold)'],['gestor','Login do gestor criado'],['zap','WhatsApp do catálogo configurado'],['cores','Cores e códigos ajustados ao cliente'],['sc','"Sob consulta" revisado'],['pub','Catálogo publicado para a equipe'],['trein','Gestor treinado para editar o catálogo']];
+async function carregarCat(){const {data}=await sb.from('cat_clientes').select('id,nome,slug,dominio,ativo,aviso,linhas,gestor_uid,zap').order('nome');CATS=data||[];
+  const nn=t=>String(t||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/s\b/g,'');let mud=[];
+  Object.entries(E).forEach(([k,e])=>{if(e.catalogo===undefined){const c=CATS.find(c=>nn(e.nome).includes(nn(c.nome))||nn(c.nome).includes(nn(e.nome.split('·')[0].trim())));if(c){e.catalogo=c.id;mud.push(k);}}});
+  for(const k of mud)await salvar(k);}
+function catUrl(c){return c.dominio?'https://'+c.dominio.replace(/^https?:\/\//,'').replace(/\/$/,'')+'/':CAT_PUB+c.slug;}
+function catEtapas(e,c){const m=Object.assign({},e.catEt||{});if(c){if((c.linhas||[]).length)m.linhas=m.linhas||'ok';if(c.gestor_uid)m.gestor=m.gestor||'ok';if(c.zap)m.zap=m.zap||'ok';}return m;}
+function catTabHtml(e,hero,nextc,sec){const adm=!PUB&&!cli;const c=PUB?e.cat:CATS.find(x=>x.id===e.catalogo);
+  if(!c)return adm?`<div class="box"><h3>📚 Catálogo virtual</h3><p class="nota">Esta empresa ainda não tem catálogo ligado.</p><label class="nota" style="color:var(--fg);font-weight:600">Ligar ao catálogo<select class="inpx" id="catSel"><option value="">— escolher —</option>${CATS.map(x=>`<option value="${x.id}">${esc(x.nome)}</option>`).join('')}</select></label><p class="nota">Para criar um catálogo novo, use <a href="catalogos.html" style="color:var(--accent)">📚 Catálogos clientes</a> no Painel da Matriz.</p></div>`:'<div class="box"><p class="nota" style="margin:0">O catálogo virtual de vocês aparece aqui quando a FC liberar.</p></div>';
+  const m=catEtapas(e,c),ok=CAT_ET.filter(([k])=>m[k]==='ok').length,pct=Math.round(ok/CAT_ET.length*100),nx=CAT_ET.find(([k])=>m[k]==='and')||CAT_ET.find(([k])=>m[k]!=='ok');
+  const u=catUrl(c),av=c.aviso==='manutencao'?'<span class="pill p-warn">🔧 Em manutenção</span>':c.aviso==='atualizacao'?'<span class="pill p-acc">🔄 Em atualização</span>':'';
+  let h=hero(pct,`${ok} de ${CAT_ET.length} etapas do catálogo`,'📚 Catálogo virtual · '+esc(c.nome),nx?nextc(m[nx[0]]==='and'?'and':'',m[nx[0]]==='and'?'Em andamento agora':'Próxima etapa',esc(nx[1])):nextc('ok','Catálogo pronto','✓ Todas as etapas concluídas'));
+  h+=`<div class="box"><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span style="font-size:26px">📚</span><div style="flex:1;min-width:0"><b style="font-size:16px">${esc(c.nome)}</b> ${c.ativo?'<span class="pill p-ok">No ar</span>':'<span class="pill p-mut">Fora do ar</span>'} ${av}<div class="nota" style="overflow-wrap:anywhere">🔗 ${esc(u)}</div><div class="nota">Linhas: ${(c.linhas||[]).map(l=>l==='sup'?'Suprema':l==='gold'?'Gold':esc(l)).join(', ')||'—'}</div></div>
+    <a class="btn pri" href="${esc(u)}" target="_blank" rel="noopener" style="text-decoration:none">Abrir o catálogo</a>${adm?`<a class="btn" href="catalogos.html?editar=${encodeURIComponent(c.id)}" target="_blank" rel="noopener" style="text-decoration:none">✏️ Editar como gestor</a><a class="btn" href="${esc(u)}?print=1" target="_blank" rel="noopener" style="text-decoration:none">🖨 Imprimir</a>`:''}</div></div>`;
+  h+=`<div class="lanes">${sec('cat','Etapas do catálogo',adm?'clique no círculo para mudar':'o que a FC já fez no catálogo de vocês',ok,CAT_ET.length,pct===100?'<span class="pill p-ok">Concluído</span>':'',`<ol class="steps">${CAT_ET.map(([k,t])=>`<li class="st2 nt ${m[k]==='ok'?'ok':''}"><button type="button" class="dotc ${m[k]||''}" data-cet="${k}" ${adm?'':'disabled'}>${m[k]==='ok'?'✓':''}</button><div class="sb"><div class="stt">${esc(t)}</div>${m[k]==='and'?'<div class="sm"><span class="pill p-acc">Em andamento</span></div>':''}</div></li>`).join('')}</ol>`)}</div>`;
+  if(adm)h+=`<p class="nota">Algumas etapas marcam sozinhas (linhas, gestor e WhatsApp), puxadas do cadastro do catálogo. O cliente vê estas etapas e o botão "Abrir o catálogo" no link dele. <button class="mini" type="button" id="catDesl">Desligar catálogo desta empresa</button></p>`;
+  return h;}
 async function carregarPlan(){const {data}=await sb.from('cons_planilhas').select('id,empresa_id,tema,nome,cliente_ve,cliente_edita,versao,atualizado,atualizado_por').order('criado_em');PLAN=data||[];}
 async function carregarSol(){const {data}=await sb.from('cons_solicitacoes').select('*').order('criado_em',{ascending:false});SOL=data||[];}
 const solNovas=k=>SOL.filter(x=>x.empresa_id===k&&x.status==='nova').length;
@@ -387,6 +406,9 @@ function wirePlSol(e){const q=(s,f)=>document.querySelectorAll(s).forEach(f);
       se.disabled=false;if(r.error||!r.data){m.textContent='Não foi possível enviar. Tente de novo.';return;}const l=await sb.rpc('cons_portal_solicitacoes',{p_chave:KEY});PUBSOL=(l.data||[]).map(x=>Object.assign(x,{criado_em:x.em}));ficha();
       setTimeout(()=>{const mm=document.getElementById('soMsg');if(mm)mm.textContent='✓ Solicitação enviada! A FC já recebeu.';},50);};}
     return;}
+  const cs=document.getElementById('catSel');if(cs)cs.onchange=()=>{if(!cs.value)return;e.catalogo=cs.value;salvar(at);ficha();};
+  const cd=document.getElementById('catDesl');if(cd)cd.onclick=()=>{if(!confirm('Desligar o catálogo desta empresa? O catálogo continua existindo; só sai deste painel e do link.'))return;e.catalogo=null;salvar(at);ficha();};
+  q('[data-cet]',b=>b.onclick=()=>{e.catEt=e.catEt||{};const k=b.dataset.cet,cur=catEtapas(e,CATS.find(x=>x.id===e.catalogo))[k]||'';e.catEt[k]=cur===''?'and':cur==='and'?'ok':'none';if(e.catEt[k]==='none')e.catEt[k]='';ficha();salvar(at);});
   q('[data-plimp]',i=>i.onchange=()=>importarPlanilha(i.files[0],i.dataset.plimp));
   q('[data-pltr]',i=>i.onchange=()=>importarPlanilha(i.files[0],null,i.dataset.pltr));
   q('[data-plve]',b=>b.onclick=async()=>{const p=PLAN.find(x=>x.id===b.dataset.plve);await sb.from('cons_planilhas').update({cliente_ve:!p.cliente_ve}).eq('id',p.id);p.cliente_ve=!p.cliente_ve;ficha();});
