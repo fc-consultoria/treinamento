@@ -384,9 +384,22 @@ const NT=Object.keys(TIPOS).length;
 let ALUNOS=[],EV=[],sel=null;
 const fmtD=d=>d?new Date(d).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
 const fmtH=s=>{const m=Math.round(s/60);return m<60?m+' min':Math.floor(m/60)+' h '+String(m%60).padStart(2,'0');};
+/* Botão Atualizar: mostra a hora da última atualização dos dados — verde quando deu certo e tem menos de 10 min; cinza quando falhou ou ficou antiga */
+const ATUZ={em:null,ok:false,
+ el(){return document.getElementById('recarregar');},
+ ini(){const b=this.el();if(b){b.textContent='Atualizando…';b.disabled=true;}},
+ fim(ok){this.ok=ok;if(ok)this.em=new Date();this.pinta();const b=this.el();if(b)b.disabled=false;},
+ pinta(){const b=this.el();if(!b)return;const h=this.em?this.em.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):'';
+  const novo=this.ok&&this.em&&(Date.now()-this.em)<600000;
+  b.textContent=!this.ok?'⚠ Atualizar · falhou'+(h?' (última '+h+')':''):'Atualizado às '+h;
+  b.title=!this.ok?'A última tentativa não carregou os dados. Clique para tentar de novo.':novo?'Dados carregados às '+h+'. Clique para atualizar de novo.':'Dados de '+h+', há mais de 10 minutos. Clique para atualizar.';
+  b.style.background=novo?'#e7f6ec':'#eef0f2';b.style.color=novo?'#17663a':'#5b6570';b.style.borderColor=novo?'#9ad3ae':'#d0d5dd';b.style.fontWeight='700';}};
+setInterval(()=>ATUZ.pinta(),30000);
 async function carregar(){
-  const a=await sb.from('trein_alunos').select('*').order('login');ALUNOS=(a.data||[]).filter(x=>x.papel==='aluno');
-  EV=[];for(let i=0;;i+=1000){const r=await sb.from('trein_eventos').select('user_id,tipo,tipologia,detalhe,criado_em').not('tipo','in','(div_art,novidade,divulga,mapa,parceiros,dicas)').order('criado_em',{ascending:false}).range(i,i+999);if(r.error||!r.data.length)break;EV.push(...r.data);if(r.data.length<1000)break;}
+  ATUZ.ini();let okA=true;
+  const a=await sb.from('trein_alunos').select('*').order('login');if(a.error)okA=false;ALUNOS=(a.data||[]).filter(x=>x.papel==='aluno');
+  EV=[];for(let i=0;;i+=1000){const r=await sb.from('trein_eventos').select('user_id,tipo,tipologia,detalhe,criado_em').not('tipo','in','(div_art,novidade,divulga,mapa,parceiros,dicas)').order('criado_em',{ascending:false}).range(i,i+999);if(r.error){okA=false;break;}if(!r.data.length)break;EV.push(...r.data);if(r.data.length<1000)break;}
+  ATUZ.fim(okA);
   EV=zerarFiltro(EV);
   render();setTimeout(orSync,800);try{finUI();}catch(e){console.warn(e);}
 }
