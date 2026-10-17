@@ -69,6 +69,7 @@ section[hidden]{display:none}
 .btn.danger{color:var(--red);border-color:var(--red)}
 .btn.sm{padding:4px 9px;font-size:12.5px}
 .btn.ghost{border-color:transparent;background:none}
+#dp-tempo .card,#dp-tempo details{margin-bottom:10px}
 .pill{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:99px;white-space:nowrap;letter-spacing:.01em}
 .t-teal{background:var(--teal-soft);color:var(--teal)} .t-amber{background:var(--amber-soft);color:var(--amber)}
 .t-slate{background:var(--slate-soft);color:var(--slate)} .t-green{background:var(--green-soft);color:var(--green)}
@@ -917,6 +918,35 @@ function modalReal(b){const r=regDia(vd())[b.id]||{};M={bloco:b,status:r.status=
   <div class="foot"><div class="row">${r.status?'<button class="btn danger" data-act="real-limpar">Limpar registro</button>':''}</div>
    <div class="row"><button class="btn" data-act="fechar">Cancelar</button><button class="btn pri" data-act="real-salvar">Salvar</button></div></div>`)}
 
+/* ---------- horas: trabalho registrado pelo Claude (07:00–18:00 normal; 18:01–06:59 e fim de semana = hora extra) ---------- */
+const H_TIPO={cliente:['💰 Cliente','t-green'],investimento:['🚀 Investimento FC','t-teal'],representacao:['🤝 Representação','t-slate'],admin:['🗂 Administrativo','t-amber']};
+const hhmm=m=>{m=Math.round(+m||0);const h=Math.floor(m/60),r=m%60;return h?(h+'h'+(r?String(r).padStart(2,'0'):'')):(r+'min')};
+const hNorm=x=>+x.minNormal||0, hExtra=x=>+x.minExtra||0, hTot=x=>hNorm(x)+hExtra(x);
+function horasLinha(x){const t=H_TIPO[x.tipo]||[x.tipo||'—','t-muted'];
+  return `<div class="reg"><div class="dt">${fmtCurto(x.data)}<small>${esc(x.ini||'')}${x.fim?'–'+esc(x.fim):''}</small></div><div style="min-width:0">
+   <div class="row" style="gap:6px;flex-wrap:wrap"><span style="font-weight:600">${esc(x.titulo||'')}</span><span class="pill ${t[1]}">${t[0]}</span>${hExtra(x)?`<span class="pill t-red">Hora extra ${hhmm(hExtra(x))}</span>`:''}${hNorm(x)?`<span class="pill t-muted">Normal ${hhmm(hNorm(x))}</span>`:''}${x.status==='pendente'?'<span class="pill t-amber">Pendente</span>':'<span class="pill t-green">Finalizado</span>'}</div>
+   ${(x.itens||[]).length?`<ul style="margin:6px 0 0;padding-left:18px;font-size:13.5px">${x.itens.map(i=>`<li>${esc(i)}</li>`).join('')}</ul>`:''}
+   ${x.pendencia?`<div class="small" style="margin-top:4px;color:var(--amber)">⏳ ${esc(x.pendencia)}</div>`:''}</div></div>`}
+function resumoHoras(l){const n=l.reduce((s,x)=>s+hNorm(x),0),e=l.reduce((s,x)=>s+hExtra(x),0);return{n,e,t:n+e}}
+function rTempo(){const N=S.dper||7,d=new Date();d.setDate(d.getDate()-(N-1));const ini=ymd(d);
+  const l=(S.horas||[]).filter(x=>x.data>=ini).sort((a,b)=>(b.data+(b.ini||'')).localeCompare(a.data+(a.ini||'')));
+  const r=resumoHoras(l);
+  if(!l.length)return `<div class="sec-h"><h2>Tempo investido · últimos ${N} dias</h2></div><div class="card empty"><span>Nenhum trabalho registrado pelo Claude no período. Cada entrega feita com o Claude entra aqui sozinha, com o horário.</span></div>`;
+  const porTipo=Object.keys(H_TIPO).map(k=>({k,...resumoHoras(l.filter(x=>x.tipo===k))})).filter(x=>x.t);
+  const cli={};l.forEach(x=>{const c=x.cliente||GERAL;(cli[c]=cli[c]||[]).push(x)});
+  const porCli=Object.entries(cli).map(([c,v])=>({c,...resumoHoras(v)})).sort((a,b)=>b.t-a.t);
+  const bar=(v,max,cor)=>`<div style="flex:1;min-width:60px;height:8px;border-radius:99px;background:var(--line);overflow:hidden"><i style="display:block;height:100%;width:${max?Math.round(v/max*100):0}%;background:${cor}"></i></div>`;
+  const pe=r.t?Math.round(r.e/r.t*100):0;
+  return `<div class="sec-h"><h2>Tempo investido · últimos ${N} dias</h2><span class="hint">registrado pelo Claude · 07:00–18:00 normal</span></div>
+   <div class="card" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;text-align:center">
+     <div><div class="small muted">Total</div><div style="font-size:22px;font-weight:700">${hhmm(r.t)}</div></div>
+     <div><div class="small muted">Horário normal</div><div style="font-size:22px;font-weight:700">${hhmm(r.n)}</div></div>
+     <div><div class="small muted">Hora extra</div><div style="font-size:22px;font-weight:700;color:var(--red)">${hhmm(r.e)}</div><div class="small muted">${pe}% do total</div></div></div>
+   <div class="card"><b style="font-size:14px">Por tipo de trabalho</b>${porTipo.map(x=>`<div class="row" style="gap:10px;margin-top:8px;align-items:center;flex-wrap:nowrap"><span class="pill ${H_TIPO[x.k][1]}" style="min-width:140px">${H_TIPO[x.k][0]}</span>${bar(x.t,r.t,'var(--teal)')}<span class="small" style="min-width:110px;text-align:right">${hhmm(x.t)}${x.e?` · <span style="color:var(--red)">${hhmm(x.e)} extra</span>`:''}</span></div>`).join('')}</div>
+   <div class="card"><b style="font-size:14px">Por cliente</b>${porCli.map(x=>`<div class="row" style="gap:10px;margin-top:8px;align-items:center;flex-wrap:nowrap"><button class="btn sm ghost" data-act="ver-cliente" data-nome="${esc(x.c)}" style="min-width:140px;justify-content:flex-start">${esc(x.c)}</button>${bar(x.t,porCli[0].t,'var(--teal)')}<span class="small" style="min-width:110px;text-align:right">${hhmm(x.t)}${x.e?` · <span style="color:var(--red)">${hhmm(x.e)} extra</span>`:''}</span></div>`).join('')}</div>
+   <details class="card"><summary style="cursor:pointer;font-weight:600">Ver os ${l.length} registros</summary>${l.map(horasLinha).join('')}</details>`}
+function horasDoCliente(nome){const k=norm(nome),l=(S.horas||[]).filter(x=>norm(x.cliente||GERAL)===k).sort((a,b)=>(b.data+(b.ini||'')).localeCompare(a.data+(a.ini||'')));if(!l.length)return '';
+  const r=resumoHoras(l);return `<div class="sec-h"><h2>Trabalho realizado com o Claude</h2><span class="hint">${hhmm(r.t)} no total${r.e?` · ${hhmm(r.e)} em hora extra`:''}</span></div><div class="card">${l.slice(0,40).map(horasLinha).join('')}</div>`}
 /* ---------- desempenho ---------- */
 function ocorrencias(nDias){const all=S.realizado.filter(x=>x.blocos&&Object.keys(x.blocos).length).map(x=>x.id).sort();if(!all.length)return{occ:[],dias:[]};
   const hoje=today(),m=nowMin(),ini=new Date();ini.setDate(ini.getDate()-(nDias-1));let d0=ymd(ini);if(all[0]>d0)d0=all[0];
@@ -983,7 +1013,7 @@ function porCliente(d0){const by={},k=n=>String(n||'').split(' / ')[0].trim()||G
   return `<div class="chart"><div class="ch-h"><h3>Desempenho por cliente</h3><span class="small muted">Atendimentos registrados nos blocos e demandas no período</span></div><div style="overflow-x:auto"><table class="tb"><thead><tr><th>Cliente</th><th>Atendimentos</th><th>No horário</th><th>Outro horário</th><th>Aguardando</th><th>Não fiz</th><th>Cumprido</th><th>Resolvidos</th><th>Pendentes</th><th>Demandas concluídas</th><th>Demandas abertas</th></tr></thead><tbody>
    ${l.map(r=>`<tr><td><button class="lnk" data-act="ver-cliente" data-nome="${esc(r.nome)}">${esc(r.nome)}</button></td><td>${r.ct}</td><td>${r.feito}</td><td>${r.outro}</td><td>${r.agu}</td><td style="${r.pulado?'color:var(--red);font-weight:600':''}">${r.pulado}</td><td><b>${pc(r)}</b></td><td>${r.res}</td><td style="${r.pen?'color:var(--amber);font-weight:600':''}">${r.pen}</td><td>${r.dc}</td><td>${r.da}</td></tr>`).join('')}</tbody></table></div>
    <p class="small muted" style="margin:6px 0 0">Cumprido = (no horário + outro horário) ÷ (feitos + não fiz). "Aguardando" e "Não foi necessário" não contam como falha.</p></div>`}
-function rDesempenho(){const N=S.dper;const{occ,dias}=ocorrencias(N);const dIni=(()=>{const d=new Date();d.setDate(d.getDate()-(N-1));return ymd(d)})();
+function rDesempenho(){setTimeout(()=>{const v=document.getElementById('dp-view');if(v&&!document.getElementById('dp-tempo'))v.insertAdjacentHTML('afterbegin','<div id="dp-tempo">'+rTempo()+'</div>')},0);const N=S.dper;const{occ,dias}=ocorrencias(N);const dIni=(()=>{const d=new Date();d.setDate(d.getDate()-(N-1));return ymd(d)})();
   const per=`<div class="filters" style="margin-bottom:12px">${[[7,'7 dias'],[30,'30 dias'],[90,'90 dias']].map(([k,l])=>`<button class="chip" data-dper="${k}" aria-pressed="${N===k}">${l}</button>`).join('')}</div>`;
   const dia=rDia(S.ddia||today());
   if(!occ.length){$('#dp-view').innerHTML=`${dia}<div class="sec-h"><h2>Período</h2></div>${per}<div class="card empty"><strong>Ainda sem blocos registrados no período</strong><span>No Roteiro de hoje, em cada bloco que já começou, toque em <b>✓ No horário</b>, <b>Outro horário</b> ou <b>Não fiz</b>. Com alguns dias registrados, os gráficos e os pontos fortes e a melhorar aparecem aqui.</span><button class="btn pri" data-act="ir-hoje">Ir para o Roteiro de hoje</button></div>${porCliente(dIni)}`;return}
@@ -1026,7 +1056,7 @@ const regAtrasado=n=>!n.finalizada&&n.previsao&&n.previsao<today();
 const fmtData=s=>s?parseD(s).toLocaleDateString('pt-BR'):'';
 const iniciais=n=>n.split(/\s+/).filter(Boolean).slice(0,2).map(w=>w[0]).join('').toUpperCase();
 const norm=s=>String(s||'').trim().toLowerCase();
-function nomesClientes(){const m=new Map();[GERAL,...S.clientes.map(c=>c.nome),...S.demandas.map(x=>x.cliente),...S.agenda.map(x=>x.cliente),...S.notas.map(x=>x.cliente),...S.contatos.map(x=>x.nome)]
+function nomesClientes(){const m=new Map();[GERAL,...(S.horas||[]).map(x=>x.cliente),...S.clientes.map(c=>c.nome),...S.demandas.map(x=>x.cliente),...S.agenda.map(x=>x.cliente),...S.notas.map(x=>x.cliente),...S.contatos.map(x=>x.nome)]
   .filter(Boolean).forEach(n=>{const k=norm(n);if(!m.has(k))m.set(k,n.trim())});return[...m.values()].sort((a,b)=>a.localeCompare(b,'pt-BR'))}
 async function renomearCliente(velho,novo){const k=norm(velho),kn=norm(novo);
   for(const d of S.demandas.filter(x=>norm(x.cliente)===k))await save('demandas',d.id,{...d,cliente:novo});
@@ -1055,7 +1085,7 @@ function rClientes(){if(S.cli){rCliente(S.cli);return}
      <span style="min-width:0"><span class="nm">${esc(n)}</span><span class="sub" style="display:block">${r.ultima?'Último registro '+fmtData(r.ultima):'Sem registros ainda'}</span></span>
      <span class="row" style="gap:4px;justify-content:flex-end">${(k=>k?`<span class="pill t-red">${k} atrasado${k>1?'s':''}</span>`:'')(r.notas.filter(regAtrasado).length)}${r.abertas?`<span class="pill t-amber">${r.abertas} em aberto</span>`:''}${r.demAtivas?`<span class="pill t-teal">${r.demAtivas} demanda${r.demAtivas>1?'s':''}</span>`:''}</span></button>`).join('')+'</div>'
      :`<div class="card empty"><strong>${q?'Nenhum cliente encontrado':'Nenhum cliente ainda'}</strong><span>Cadastre um cliente para registrar reuniões e andamentos com data.</span><button class="btn pri" data-act="novo-cliente">Novo cliente</button></div>`}`;}
-function rCliente(nome){const r=resumoCliente(nome),hoje=today();
+function rCliente(nome){setTimeout(()=>{const h=horasDoCliente(nome),c=document.querySelector('#c-view .cap');if(h&&c&&!document.getElementById('cli-horas')){c.insertAdjacentHTML('afterend','<div id="cli-horas">'+h+'</div>')}},0);const r=resumoCliente(nome),hoje=today();
   const regs=r.notas.filter(n=>S.cfil==='todos'||(S.cfil==='aberto'?!n.finalizada:n.finalizada)).sort((a,b)=>regAtrasado(b)-regAtrasado(a)||dataNota(b).localeCompare(dataNota(a))||(b.criadoEm||'').localeCompare(a.criadoEm||''));
   const dem=r.dem.filter(d=>d.status!=='concluido').sort((a,b)=>score(b)-score(a));
   const ag=r.ag.filter(c=>c.data>=hoje&&!c.feito).sort((a,b)=>(a.data+(a.hora||'')).localeCompare(b.data+(b.hora||'')));
@@ -1939,7 +1969,7 @@ document.addEventListener('focusout',e=>{if(e.target.classList&&e.target.classLi
   window.claude.use('assets').then(a=>{AS=a;render()}).catch(()=>{});
   window.claude.use('sample').then(async sm=>{SAMPLE=sm;if(sm){const l=await sm.limits().catch(()=>null);SAMPLE_IMG=!!(l&&l.images)}}).catch(()=>{});window.claude.use('downloads').then(x=>{DL=x}).catch(()=>{});
   const fail=()=>setSync('warn','Sem conexão');
-  ['demandas','agenda','notas','clientes','contatos','realizado','prioridades','financeiro','banco','extratos','links'].forEach(col=>db.collection(col).onSnapshot(s=>{S[col]=s.docs.map(x=>({...x.data(),id:x.id}));render();if(col==='links'&&M&&M._links)drawLinks()},fail));
+  ['demandas','agenda','notas','clientes','contatos','realizado','prioridades','financeiro','banco','extratos','links','horas'].forEach(col=>db.collection(col).onSnapshot(s=>{S[col]=s.docs.map(x=>({...x.data(),id:x.id}));render();if(col==='links'&&M&&M._links)drawLinks()},fail));
   db.doc('config/bancos').onSnapshot(s=>{S.bancos=s.exists?(s.data().contas||null):null;render()},()=>{});
   db.doc('config/rotina').onSnapshot(s=>{S.rotina=s.exists&&Array.isArray(s.data().blocos)?s.data().blocos:null;render()},fail);
 })();
