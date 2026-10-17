@@ -165,6 +165,8 @@
    for(let q=0;q<QN;q++){P.g.rotation.y=q*Math.PI*2/QN;P.r.render(P.sc,P.cam);a.push(P.r.domElement.toDataURL(fmt,.9));}P.fim();QUADROS[k]=a;if(cb)cb(k,a);}catch(e){console.warn(e);}setTimeout(um,30);};setTimeout(um,60);});return qRod;}
  let TMAD=null;
  function janela(S,o){if(!S||!S.mJan)return;o=o||{};const c=CORES[o.cor]||CORES.natural;const m=S.mJan;m.color.setHex(c.color);m.metalness=c.metalness;m.roughness=c.roughness;m.map=o.cor==='madeira'?(TMAD||(TMAD=texMadeira())):null;m.needsUpdate=true;S.folA=o.fol||0;}
+ let TPINT=null;const TINTAS={reboco:null,branco:0xf3f1ea,amarelo:0xf2c230,azul:0x2f6db5,vermelho:0xc23a2c};
+ function pintar(S,c){if(!S||!S.rm)return;const h=TINTAS[c];const m=S.rm;if(h==null){m.map=mats().reboco.map;m.color.setHex(0xffffff);}else{m.map=TPINT||(TPINT=texRuido('#ffffff',.035));m.color.setHex(h);}m.needsUpdate=true;}
  function reboco(S,on){if(!S)return;S.rebOn=!!on;S.parts.reb.userData.on=!!on;}
- window.CM3D={janela,reboco,carregar,cena,passo,cortar,camGet,camSet,destruir,pecaCena,fotos,quadros,QUADROS,QN,PECAS};
+ window.CM3D={janela,reboco,pintar,carregar,cena,passo,cortar,camGet,camSet,destruir,pecaCena,fotos,quadros,QUADROS,QN,PECAS};
 })();
