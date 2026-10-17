@@ -357,7 +357,7 @@ tbody tr:hover{background:var(--panel-2);}
       <button class="navitem" id="btn-logout"><i data-lucide="log-out"></i> Sair</button>
     </div>
     <div class="sidebar-foot">
-      Painel de implantação — dados salvos em banco de dados real (Supabase), acesso restrito à equipe.<br><b>Versão 17/10b — conferência da base Claude com fotos</b>
+      Painel de implantação — dados salvos em banco de dados real (Supabase), acesso restrito à equipe.<br><b>Versão 17/10c — ordem de prioridade dos fornecedores</b>
     </div>
   </nav>
   <div class="mobile-topbar">
@@ -599,11 +599,12 @@ async function carregarClientes(){
       etapas: (()=>{ const m={}; (etapasRows||[]).filter(r=>r.cliente_id===c.id).forEach(r=>{ m[r.etapa]={status:r.status||'pendente', dataPrevista:r.data_prevista||'', concluidoEm:r.concluido_em||'', obs:r.obs||''}; }); return m; })(),
       alimentadosVidro, alimentadosPerfis, alimentadosComponentes, cotacaoVidro, cotacaoPerfis, cotacaoComponentes, perfisMetro, perfisMetroPdfs, conferencia, orcamentos, orcamentosRegistro, anotacoes,
       emailMarcos: (()=>{ const m={}; (notifRows||[]).filter(r=>r.cliente_id===c.id).forEach(r=>{ (m[r.categoria]=m[r.categoria]||[]).push(r.marco); }); return m; })(),
-      fornecedoresSel: (()=>{ const s={componentes:[],vidro:[],perfis:[]}; (fornSelRows||[]).filter(r=>r.cliente_id===c.id).forEach(r=>{ if(s[r.categoria] && !s[r.categoria].includes(r.fornecedor)) s[r.categoria].push(r.fornecedor); }); return s; })()
+      fornecedoresSel: (()=>{ const s={componentes:[],vidro:[],perfis:[]}; (fornSelRows||[]).filter(r=>r.cliente_id===c.id).sort((a,b)=>(a.ordem??9999)-(b.ordem??9999)).forEach(r=>{ if(s[r.categoria] && !s[r.categoria].includes(r.fornecedor)) s[r.categoria].push(r.fornecedor); }); return s; })()
     };
   });
 
   // Revisão de implantação (componentes): código sistema e itens enviados para revisão
+  CLIENTS.forEach(cl=>{ cl.fixoChecklist = {}; checklistRows.filter(r=>r.cliente_id===cl.id && r.fornecedor_fixo).forEach(r=>{ cl.fixoChecklist[(r.linha||'')+'|'+r.codigo] = r.fornecedor_fixo; }); });
   CLIENTS.forEach(cl=>{ cl.revisaoChecklist = {}; checklistRows.filter(r=>r.cliente_id===cl.id && (r.em_revisao || r.codigo_sistema)).forEach(r=>{ cl.revisaoChecklist[(r.linha||'')+'|'+r.codigo] = {sis:r.codigo_sistema||'', rev:!!r.em_revisao, obs:r.revisao_obs||'', em:r.revisao_em||null}; }); });
 
   // Acompanhamento online (versão nova): quem já tem link do portal do cliente. Falha aqui não trava o painel.
@@ -4200,6 +4201,43 @@ function renderClienteCadastro(c){
 }
 
 
+// ---------- Preço para alimentação: ordem de prioridade dos fornecedores ----------
+// Para cada item usa o 1º fornecedor da ordem que tem preço; se o item foi fixado num fornecedor, usa ele.
+// Alerta quando os dois primeiros com preço diferem mais que LIMITE_DIF_FORN (provável produto diferente com o mesmo código).
+const LIMITE_DIF_FORN = 0.30;
+function ordemFornecedoresItem(c, cat, db){ const sel = fornecedoresSelecionadosCliente(c, cat); const dbf = db.fornecedores||[]; return sel.map(s=>dbf.find(f=>chaveFornAjuste(f)===chaveFornAjuste(s))).filter(Boolean); }
+function precoAlimentacao(c, key, db, it){
+  const cat = catDeKey(key), ordem = ordemFornecedoresItem(c, cat, db);
+  const comPreco = ordem.map((f,i)=>({f, pos:i+1, v:precoFornecedor(it, f, cat)})).filter(x=>x.v!=null && x.v>0);
+  const fixoNome = (c.fixoChecklist||{})[key+'|'+it.codigo];
+  let esc = null;
+  if(fixoNome){ const x = comPreco.find(y=>chaveFornAjuste(y.f)===chaveFornAjuste(fixoNome)); if(x) esc = {...x, fixo:true}; }
+  if(!esc) esc = comPreco[0] || null;
+  let alerta = null;
+  if(comPreco.length>=2){ const a = comPreco[0], b = comPreco[1], d = Math.abs(a.v-b.v)/Math.min(a.v,b.v); if(d>LIMITE_DIF_FORN) alerta = {a, b, pct:Math.round(d*100)}; }
+  return {esc, comPreco, alerta, ordem};
+}
+function celulaPrecoAlimentacao(c, key, db, it){
+  const {esc, comPreco, alerta} = precoAlimentacao(c, key, db, it);
+  const fixo = (c.fixoChecklist||{})[key+'|'+it.codigo] || '';
+  const sel = ehAdminEspelho() && comPreco.length>1 ? `<select class="select-inline" style="font-size:11.5px; padding:2px 4px; margin-top:4px; max-width:150px;" data-action="fixar-fornecedor-item" data-key="${escapeHtml(key)}" data-codigo="${escapeHtml(it.codigo)}" title="Só a matriz muda: fixa este item num fornecedor">
+      <option value="">Automático (ordem)</option>${comPreco.map(x=>`<option value="${escapeHtml(x.f)}" ${chaveFornAjuste(fixo)===chaveFornAjuste(x.f)?'selected':''}>📌 ${escapeHtml(x.f)} · ${fmtMoney(x.v)}</option>`).join('')}</select>` : '';
+  if(!esc) return `<td><span class="desc">—</span>${sel}</td>`;
+  return `<td style="white-space:nowrap;"><b>${fmtMoney(esc.v)}</b><div style="font-size:11.5px; color:var(--text-3);">${esc.fixo?'📌 ':''}${escapeHtml(esc.f)} · ${esc.pos}º</div>${alerta?`<div style="font-size:11.5px; font-weight:650; color:#b42318;" title="${escapeHtml(alerta.a.f)}: ${fmtMoney(alerta.a.v)} · ${escapeHtml(alerta.b.f)}: ${fmtMoney(alerta.b.v)}">⚠️ diferença de ${alerta.pct}%</div>`:''}${sel}</td>`;
+}
+const thPrecoAlimentacao = `<th title="Preço que a equipe usa: 1º fornecedor da ordem com preço (Contrato & Acesso), ou o fixado no item">Preço p/ alimentação</th>`;
+async function salvarOrdemFornecedores(c, cat){
+  const lista = fornecedoresSelecionadosCliente(c, cat);
+  const {error} = await sb.from('impl_cliente_fornecedores').upsert(lista.map((f,i)=>({cliente_id:c.id, categoria:cat, fornecedor:f, ordem:i+1})), {onConflict:'cliente_id,categoria,fornecedor'});
+  if(error) avisarErroSalvar(error); else toastSalvo('Ordem salva');
+}
+function coberturaFornecedor(c, cat, f){
+  const dbs = cat==='vidro' ? [VIDRO_DB] : componentesLinhasContratadas(c).map(l=>PRICE_DB[l]);
+  let tot = 0, com = 0;
+  dbs.forEach(db=>{ if(!db) return; const nome = (db.fornecedores||[]).find(x=>chaveFornAjuste(x)===chaveFornAjuste(f)); (db.itens||[]).forEach(it=>{ tot++; if(nome && precoFornecedor(it, nome, cat)>0) com++; }); });
+  return {tot, com};
+}
+
 // ---------- Fornecedores da alimentação (escolhidos por cliente, por categoria) ----------
 function nomeBatePrefixo(a,b){ const ka=chaveFornAjuste(a), kb=chaveFornAjuste(b); return !!ka && !!kb && (ka===kb || ka.startsWith(kb+' ') || kb.startsWith(ka+' ')); }
 function fornecedoresSelecionadosCliente(c, cat){ return (c && c.fornecedoresSel && c.fornecedoresSel[cat]) || []; }
@@ -4239,6 +4277,12 @@ function renderFornecedoresAlimentacao(c){
         const todos = disp.concat(extras);
         return `<div>
           <div style="font-size:12.5px; font-weight:650; margin-bottom:5px;">${g.nome} <span style="font-weight:500; color:var(--text-3);">· ${sel.length} selecionado(s)</span></div>
+          ${(g.cat!=='perfis' && sel.length>1) ? `<div style="border:1px solid var(--border-2); border-radius:10px; padding:8px 10px; margin-bottom:8px; background:#fafbfc;">
+            <div style="font-size:12px; font-weight:650; margin-bottom:4px;">Ordem de prioridade do preço ${ehAdminEspelho()?'':'<span class="desc">(só a matriz altera)</span>'}</div>
+            ${sel.map((f,i)=>{ const cob = coberturaFornecedor(c, g.cat, f); return `<div style="display:flex; gap:8px; align-items:center; padding:3px 0;"><b style="width:26px;">${i+1}º</b><span style="flex:1;">${escapeHtml(f)}</span><span class="desc">${cob.com} de ${cob.tot} itens com preço</span>
+              ${ehAdminEspelho()?`<button class="iconbtn" ${i===0?'disabled':''} data-action="forn-ordem" data-cat="${g.cat}" data-i="${i}" data-dir="-1" title="Subir">▲</button><button class="iconbtn" ${i===sel.length-1?'disabled':''} data-action="forn-ordem" data-cat="${g.cat}" data-i="${i}" data-dir="1" title="Descer">▼</button>`:''}</div>`; }).join('')}
+            <div class="desc" style="margin-top:4px;">Cada item usa o preço do 1º fornecedor que tiver preço; se não tiver, o 2º, e assim por diante. Diferença acima de ${Math.round(LIMITE_DIF_FORN*100)}% entre os dois primeiros aparece com ⚠️ no checklist.</div>
+          </div>` : ''}
           <div class="chiprow">
             ${todos.length ? todos.map(f=>`<button class="chip ${sel.some(s=>chaveFornAjuste(s)===chaveFornAjuste(f))?'active':''}" data-action="toggle-fornecedor-alimentacao" data-cat="${g.cat}" data-nome="${escapeHtml(f)}">${escapeHtml(f)}</button>`).join('') : `<span class="desc">Nenhum fornecedor cadastrado em ${g.nome} ainda.</span>`}
           </div>
@@ -4416,6 +4460,7 @@ function renderChecklistComponentesTodas(cliente, contratadas){
     if(filtro==='alimentados') return r.fed;
     if(filtro==='cotacao') return r.cotacao;
     if(filtro==='revisao') return emRevComp(cliente, r.linha, r.it.codigo);
+    if(filtro==='diferenca') return !!precoAlimentacao(cliente, r.linha, r.db, r.it).alerta;
     return true;
   });
 
@@ -4438,6 +4483,7 @@ function renderChecklistComponentesTodas(cliente, contratadas){
         <button class="chip ${filtro==='pendentes'?'active':''}" data-action="set-filtro" data-filtro="pendentes">Pendentes</button>
         <button class="chip ${filtro==='alimentados'?'active':''}" data-action="set-filtro" data-filtro="alimentados">Alimentados</button>
         <button class="chip ${filtro==='cotacao'?'active':''}" data-action="set-filtro" data-filtro="cotacao">${icon('flag')} P/ cotação (${totalCotacao})</button>
+        <button class="chip ${filtro==='diferenca'?'active':''}" data-action="set-filtro" data-filtro="diferenca">⚠️ Diferença &gt; ${Math.round(LIMITE_DIF_FORN*100)}% (${todasLinhasRows.filter(r=>precoAlimentacao(cliente, r.linha, r.db, r.it).alerta).length})</button>
         <button class="chip ${filtro==='revisao'?'active':''}" data-action="set-filtro" data-filtro="revisao">🔎 Em revisão (${todasLinhasRows.filter(r=>emRevComp(cliente, r.linha, r.it.codigo)).length})</button>
         ${btnMarcarTodosAlimentados(rows, r=>r.linha)}
       </div>
@@ -4455,6 +4501,7 @@ function renderChecklistComponentesTodas(cliente, contratadas){
         ${modoGrade
           ? selecionados.map(f=>`<th class="tright">${f}</th>`).join('')
           : `<th class="tright">Preço${selecionados[0]?` (${selecionados[0]})`:''}</th>`}
+        ${thPrecoAlimentacao}
         <th>Status</th>
         <th style="width:110px;" title="Marque quando precisar pedir cotação desse item a um fornecedor">${icon('flag')} Cotação</th>
         ${thRevisao}
@@ -4477,6 +4524,7 @@ function renderChecklistComponentesTodas(cliente, contratadas){
             : ((r.db.fornecedores||[]).includes(selecionados[0])
                 ? `<td class="tright">${precoCelula(r.it.precos[selecionados[0]], selecionados[0], `data-action="edit-preco-exemplo" data-key="${r.linha}" data-codigo="${r.it.codigo}" data-fornecedor="${selecionados[0]}"`, '', 'componentes')}</td>`
                 : `<td class="tright" style="color:var(--text-3)">—</td>`)}
+          ${celulaPrecoAlimentacao(cliente, r.linha, r.db, r.it)}
           <td>${r.semPreco ? `<span class="badge badge-warn">${icon('help-circle')} Sem preço${fornecedorAtual?` em ${fornecedorAtual}`:''}</span>` : r.fed ? `<span class="badge badge-ok">${icon('check')} Alimentado</span>` : `<span class="badge badge-muted">Pendente</span>`}</td>
           <td class="tcenter"><input type="checkbox" class="chk" ${r.cotacao?'checked':''} data-action="toggle-cotacao-categoria" data-key="${r.linha}" data-codigo="${r.it.codigo}" title="Marcar pra pedir cotação"></td>
           ${chkRevComp(cliente, r.linha, r.it.codigo)}
@@ -4567,6 +4615,7 @@ function renderChecklistCategoria(nome, db, key, cliente){
     if(filtro==='alimentados') return r.fed;
     if(filtro==='cotacao') return r.cotacao;
     if(filtro==='revisao') return emRevComp(cliente, key, r.it.codigo);
+    if(filtro==='diferenca') return !!precoAlimentacao(cliente, key, db, r.it).alerta;
     return true;
   });
   const totalCotacao = db.itens.filter(it=>mapaCotacao && mapaCotacao[it.codigo]).length;
@@ -4590,6 +4639,7 @@ function renderChecklistCategoria(nome, db, key, cliente){
         <button class="chip ${filtro==='pendentes'?'active':''}" data-action="set-filtro" data-filtro="pendentes">Pendentes</button>
         <button class="chip ${filtro==='alimentados'?'active':''}" data-action="set-filtro" data-filtro="alimentados">Alimentados</button>
         <button class="chip ${filtro==='cotacao'?'active':''}" data-action="set-filtro" data-filtro="cotacao">${icon('flag')} P/ cotação (${totalCotacao})</button>
+        <button class="chip ${filtro==='diferenca'?'active':''}" data-action="set-filtro" data-filtro="diferenca">⚠️ Diferença &gt; ${Math.round(LIMITE_DIF_FORN*100)}% (${db.itens.filter(it=>precoAlimentacao(cliente, key, db, it).alerta).length})</button>
         <button class="chip ${filtro==='revisao'?'active':''}" data-action="set-filtro" data-filtro="revisao">🔎 Em revisão (${db.itens.filter(it=>emRevComp(cliente, key, it.codigo)).length})</button>
         ${btnMarcarTodosAlimentados(rows, r=>key)}
       </div>
@@ -4606,6 +4656,7 @@ function renderChecklistCategoria(nome, db, key, cliente){
         ${modoGrade
           ? selecionados.map(f=>`<th class="tright">${f}</th>`).join('')
           : `<th class="tright">Preço${selecionados[0]?` (${selecionados[0]})`:''}</th>`}
+        ${thPrecoAlimentacao}
         <th>Status</th>
         <th style="width:110px;" title="Marque quando precisar pedir cotação desse item a um fornecedor">${icon('flag')} Cotação</th>
         ${thRevisao}
@@ -4620,6 +4671,7 @@ function renderChecklistCategoria(nome, db, key, cliente){
           ${modoGrade
             ? selecionados.map(f=>`<td class="tright">${precoCelula(r.it.precos[f], f, `data-action="edit-preco-exemplo" data-key="${key}" data-codigo="${r.it.codigo}" data-fornecedor="${f}"`, r.menorFornecedor===f?'font-weight:700; color:var(--accent-dark);':'', catDeKey(key))}</td>`).join('')
             : `<td class="tright">${precoCelula(r.it.precos[selecionados[0]], selecionados[0], `data-action="edit-preco-exemplo" data-key="${key}" data-codigo="${r.it.codigo}" data-fornecedor="${selecionados[0]}"`, '', catDeKey(key))}</td>`}
+          ${celulaPrecoAlimentacao(cliente, key, db, r.it)}
           <td>${r.semPreco ? `<span class="badge badge-warn">${icon('help-circle')} Sem preço${fornecedorAtual?` em ${fornecedorAtual}`:''}</span>` : r.fed ? `<span class="badge badge-ok">${icon('check')} Alimentado</span>` : `<span class="badge badge-muted">Pendente</span>`}</td>
           <td class="tcenter"><input type="checkbox" class="chk" ${r.cotacao?'checked':''} data-action="toggle-cotacao-categoria" data-key="${key}" data-codigo="${r.it.codigo}" title="Marcar pra pedir cotação"></td>
           ${chkRevComp(cliente, key, r.it.codigo)}
@@ -6242,6 +6294,18 @@ function wireEvents(){
       };
       return;
     }
+    if(action==='fixar-fornecedor-item'){
+      el.onchange = async (e)=>{
+        if(!ehAdminEspelho()){ alert('Só o login da matriz pode fixar o fornecedor de um item.'); render(); return; }
+        const c = CLIENTS.find(x=>x.id===STATE.clientId); if(!c) return;
+        const {key, codigo} = el.dataset, v = e.target.value || null;
+        c.fixoChecklist = c.fixoChecklist || {}; if(v) c.fixoChecklist[key+'|'+codigo] = v; else delete c.fixoChecklist[key+'|'+codigo];
+        render();
+        const {error} = await sb.from('impl_checklist').upsert({cliente_id:c.id, codigo, linha:key, fornecedor_fixo:v}, {onConflict:'cliente_id,codigo,linha'});
+        if(error) avisarErroSalvar(error); else toastSalvo(v ? 'Item fixado em '+v : 'Item volta a seguir a ordem');
+      };
+      return;
+    }
     if(action==='cl-preco'){
       el.onchange = async (e)=>{
         const r = (CLAUDE_BASE||[]).find(x=>x.codigo===el.dataset.cod); if(!r) return;
@@ -7260,6 +7324,15 @@ function wireEvents(){
         render();
         excluirMetroItensDB(remover.filter(it=>it._id).map(it=>it._id));
         atualizarAlimentado.forEach(it=>{ if(it._id) salvarMetroItem(it._id, {alimentado:true}); });
+        return;
+      }
+      if(action==='forn-ordem'){
+        if(!ehAdminEspelho()) return;
+        const c = CLIENTS.find(x=>x.id===STATE.clientId); if(!c) return;
+        const cat = el.dataset.cat, i = +el.dataset.i, d = +el.dataset.dir, L = fornecedoresSelecionadosCliente(c, cat), jx = i+d;
+        if(jx<0 || jx>=L.length) return;
+        [L[i], L[jx]] = [L[jx], L[i]];
+        render(); salvarOrdemFornecedores(c, cat);
         return;
       }
       if(action==='cl-filtro'){ STATE.claudeFiltro = el.dataset.f; render(); return; }
