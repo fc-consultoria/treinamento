@@ -2865,14 +2865,15 @@ function demo2Init(){
   document.head.appendChild(st);
   const gate=document.createElement('div');gate.id='d2Gate';gate.innerHTML='<div class="c"><div style="font:600 13px var(--f-mono);letter-spacing:.12em;color:#1fb3c9">ORIENTATIVO FC 3D · DEMONSTRATIVO</div><h2>Carregando…</h2></div>';document.body.appendChild(gate);
   const fim=(tt,tx)=>{gate.innerHTML=`<div class="c"><div style="font:600 13px var(--f-mono);letter-spacing:.12em;color:#1fb3c9">ORIENTATIVO FC 3D · DEMONSTRATIVO</div><h2>${tt}</h2><p>${tx}</p><a href="${WA('Olá Fernando, usei o demonstrativo do Orientativo FC 3D e quero saber mais.')}" target="_blank" rel="noopener">💬 Falar com a FC no WhatsApp</a></div>`;};
-  const PREV=new URLSearchParams(location.search).has('previa');
+  const ESQE=new URLSearchParams(location.search).has('esq')&&window.top!==window&&/\/treinamento\/esquadrias\//.test(document.referrer||'');
+  const PREV=new URLSearchParams(location.search).has('previa')||ESQE;
   if(PREV){let tk=null,uid=null;try{const a=JSON.parse(localStorage.getItem('trein-fc-auth')||'null');tk=a&&a.access_token;uid=a&&a.user&&a.user.id;}catch(_){}
     const no=()=>fim('Visualização só para a Matriz','Entre no Painel da Matriz neste mesmo navegador e clique de novo em “👁 Ver como o cliente vê”.');
-    if(!tk||!uid){no();return;}
-    fetch('https://cpkjphodruyxfouirhpd.supabase.co/rest/v1/trein_alunos?select=papel&user_id=eq.'+uid,{headers:{apikey:KEY,Authorization:'Bearer '+tk}}).then(r=>r.json()).then(j=>{if(!Array.isArray(j)||!j[0]||j[0].papel!=='admin'){no();return;}previa();}).catch(no);}
+    if(ESQE){setTimeout(previa,0);}else{if(!tk||!uid){no();return;}
+    fetch('https://cpkjphodruyxfouirhpd.supabase.co/rest/v1/trein_alunos?select=papel&user_id=eq.'+uid,{headers:{apikey:KEY,Authorization:'Bearer '+tk}}).then(r=>r.json()).then(j=>{if(!Array.isArray(j)||!j[0]||j[0].papel!=='admin'){no();return;}previa();}).catch(no);}}
   else if(!code){fim('Link incompleto','Peça para a FC Consultoria enviar o link do demonstrativo de novo.');return;}
   /* 4 tipologias liberadas */
-  LINHAS[0].t=['jcr200','pcr200'];LINHAS[1].t=['gjc2f','gpc2f'];LINCUR=null;
+  if(!ESQE){LINHAS[0].t=['jcr200','pcr200'];LINHAS[1].t=['gjc2f','gpc2f'];}LINCUR=null;
   let NOME='',FIM=0,q=[],last={},PROMO=null;
   const fmt=s=>{s=Math.max(0,s);const h=Math.floor(s/3600),m=Math.floor(s%3600/60);return h?`${h} h ${String(m).padStart(2,'0')} min`:`${m} min`;};
   const send=(t,d)=>PREV?Promise.resolve():rpc('demo_log',{p_code:code,p_tipo:t,p_detalhe:d||null,p_dev:DEV}).then(r=>r&&r.ok!==undefined?r:rpc('demo_log',{p_code:code,p_tipo:t,p_detalhe:d||null})).then(r=>{if(r&&r.ok===false&&r.restante===undefined){FIM=Date.now();tick();}if(r&&r.convite)setTimeout(()=>convite(r.convite),800);}).catch(()=>{});
@@ -2898,7 +2899,19 @@ function demo2Init(){
     try{espelho();}catch(e){console.warn(e);}
   }
   /* ===== Espelho: o instrutor da FC acompanha o demonstrativo (só visualização) ===== */
-  function espelho(){const ESP=(new URLSearchParams(location.search).get('espelho')||'').trim();
+  function espelho(){if(new URLSearchParams(location.search).has('esq')&&window.top!==window&&/\/treinamento\//.test(document.referrer||'')){/* dentro do Treinamento em Esquadrias da FC */
+      const r3=v=>Math.round(v*1000)/1000,modo=s=>s.dia?'dia':s.cem?'cem':s.wv?'wv':s.m;
+      const st=document.createElement('style');st.textContent='.d2bar,#d2Prev,#d2ChB,#d2ChP,#d2Esp,#d2Vid,#d2Cv{display:none!important}';document.head.appendChild(st);
+      const tb=()=>{const p=document.getElementById('d2Prev');if(p)p.remove();document.querySelectorAll('.d2bar').forEach(x=>x.remove());};tb();setTimeout(tb,800);
+      const t0=new URLSearchParams(location.search).get('t');setTimeout(()=>{if(t0&&TYPOS[t0]&&t0!==S.typo)setTypo(t0);},60);
+      window.ESQ_SNAP=()=>({t:S.typo,m:S.mode,wv:!!S.wvOn,cem:!!S.cemOn,dia:!!S.diaOn,o:Object.assign({},S.open),d:typeof DESM!=='undefined'?!!DESM:false,c:[r3(camera.position.x),r3(camera.position.y),r3(camera.position.z)],g:[r3(controls.target.x),r3(controls.target.y),r3(controls.target.z)],y:Math.round(scrollY)});
+      window.ESQ_APPLY=s=>{try{if(s.t&&s.t!==S.typo&&TYPOS[s.t])setTypo(s.t);
+        if(modo(s)!==modo({m:S.mode,wv:S.wvOn,cem:S.cemOn,dia:S.diaOn}))setMode(modo(s));
+        if(typeof DESM!=='undefined'&&!!s.d!==!!DESM){const b=document.getElementById('v-desm');if(b)b.click();}
+        if(s.o){S.open=Object.assign({},s.o);if(typeof stopAll==='function')stopAll();placeSashes();Object.keys(S.open).forEach(k=>{try{syncSlider(k);}catch(_){}});}
+        camTarget=null;camera.position.set(...s.c);controls.target.set(...s.g);controls.update();if(typeof s.y==='number')window.scrollTo({top:s.y,behavior:'smooth'});}catch(e){console.warn('esq',e);}};
+      setTimeout(()=>{try{parent.postMessage({esq3d:'pronto'},location.origin);}catch(_){}},450);return;}
+    const ESP=(new URLSearchParams(location.search).get('espelho')||'').trim();
     if(PREV&&!ESP)return;const room=PREV?ESP:code;if(!room)return;
     const go=()=>{if(!window.supabase){const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js';s.onload=go;document.head.appendChild(s);return;}
       const cli=window.supabase.createClient('https://cpkjphodruyxfouirhpd.supabase.co',KEY,{auth:{persistSession:false,autoRefreshToken:false,storageKey:'fc-esp'}});
