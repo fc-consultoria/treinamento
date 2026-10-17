@@ -1,0 +1,203 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<link rel="icon" href="midia/logo-fc.png">
+<title>Consultorias Presenciais · Painel da Matriz</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@600;700&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: painel interno de trabalho — faixa de empresas no topo, ficha da empresa com abas embaixo */
+:root{
+  --bg:#eef2f4;--surface:#ffffff;--surface-2:#f6f8f9;--line:#d9e1e6;--fg:#15232b;--muted:#5d6f7a;
+  --accent:#0d5c8f;--accent-soft:#e3eef6;--ok:#1f7a45;--ok-soft:#e2f3e8;--warn:#a85d00;--warn-soft:#fdf0dc;--bad:#b42318;--bad-soft:#fde8e6;
+  --gb:#0e7c7b;--cb:#7a4bc4;--cde:#c2410c;
+  --f-d:"Barlow Semi Condensed","Arial Narrow",system-ui,sans-serif;--f-b:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;--f-m:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f171c;--surface:#16222a;--surface-2:#1b2a33;--line:#2a3b46;--fg:#e4ecf0;--muted:#97a9b4;--accent:#5fb0e6;--accent-soft:#17344a;--ok:#5fd08f;--ok-soft:#163626;--warn:#f0a648;--warn-soft:#3a2a12;--bad:#ff8a7a;--bad-soft:#3d1d1a;--gb:#3fc2c0;--cb:#b597ec;--cde:#fb8a50;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0f171c;--surface:#16222a;--surface-2:#1b2a33;--line:#2a3b46;--fg:#e4ecf0;--muted:#97a9b4;--accent:#5fb0e6;--accent-soft:#17344a;--ok:#5fd08f;--ok-soft:#163626;--warn:#f0a648;--warn-soft:#3a2a12;--bad:#ff8a7a;--bad-soft:#3d1d1a;--gb:#3fc2c0;--cb:#b597ec;--cde:#fb8a50;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font:15px/1.5 var(--f-b);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 40px}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+h1,h2,h3{font-family:var(--f-d);letter-spacing:.01em;margin:0;text-wrap:balance}
+h1{font-size:28px}h2{font-size:21px}h3{font-size:17px}
+.muted{color:var(--muted)}.mono{font-family:var(--f-m);font-variant-numeric:tabular-nums}
+.demo{background:var(--warn-soft);color:var(--warn);border-radius:10px;padding:8px 12px;font-size:13.5px;font-weight:600}
+.top{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap}.top .sp{flex:1}
+.eyebrow{font:600 12px var(--f-b);letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.btn{font:600 14px var(--f-b);border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:9px;padding:8px 13px;cursor:pointer}
+.btn:hover{border-color:var(--accent)}.btn:focus-visible,.tab:focus-visible,.emp:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.btn.pri{background:var(--accent);color:#fff;border-color:var(--accent)}
+.comp{display:inline-flex;gap:7px;align-items:center;font:600 13.5px var(--f-b);cursor:pointer}
+.emps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media(max-width:860px){.emps{grid-template-columns:1fr}}
+.emp{all:unset;box-sizing:border-box;cursor:pointer;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:9px;border-top:5px solid var(--c)}
+.emp[aria-pressed="true"]{box-shadow:0 0 0 2px var(--c);border-color:var(--c)}
+.emp .hd{display:flex;gap:10px;align-items:baseline}.emp .hd b{font:700 19px var(--f-d)}.emp .hd span{margin-left:auto;font-size:12.5px;color:var(--muted)}
+.emp .mod{font-size:13.5px;color:var(--muted)}
+.emp .kv{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;border-top:1px dashed var(--line);padding-top:9px}
+.emp .kv div{display:flex;flex-direction:column}.emp .kv small{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}.emp .kv b{font:600 16px var(--f-m)}
+.emp .nx{font-size:13.5px}
+.pill{display:inline-flex;align-items:center;gap:5px;font:600 12px var(--f-b);border-radius:99px;padding:2px 9px;white-space:nowrap}
+.p-ok{background:var(--ok-soft);color:var(--ok)}.p-warn{background:var(--warn-soft);color:var(--warn)}.p-bad{background:var(--bad-soft);color:var(--bad)}.p-acc{background:var(--accent-soft);color:var(--accent)}.p-mut{background:var(--surface-2);color:var(--muted);border:1px solid var(--line)}
+.compact .emp .kv,.compact .emp .mod,.compact .emp .nx{display:none}
+.ficha{background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.fh{padding:16px 18px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;border-bottom:1px solid var(--line);background:linear-gradient(90deg,color-mix(in srgb,var(--c) 12%,transparent),transparent 60%)}
+.fh .sw{width:12px;height:38px;border-radius:4px;background:var(--c)}
+.tabs{display:flex;gap:2px;padding:0 10px;border-bottom:1px solid var(--line);overflow-x:auto}
+.tab{all:unset;cursor:pointer;padding:11px 12px;font:600 14px var(--f-b);color:var(--muted);border-bottom:3px solid transparent;white-space:nowrap}
+.tab[aria-selected="true"]{color:var(--fg);border-color:var(--c)}
+.body{padding:18px;display:flex;flex-direction:column;gap:16px}
+.g2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}@media(max-width:860px){.g2{grid-template-columns:1fr}}
+.box{border:1px solid var(--line);border-radius:12px;padding:14px;background:var(--surface);min-width:0}
+.box h3{margin-bottom:8px;display:flex;gap:8px;align-items:center}
+.frente{border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.frente .fhd{padding:10px 14px;background:var(--surface-2);display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.frente .fhd b{font:700 16px var(--f-d)}.frente .fhd .bar{flex:1;min-width:120px;height:7px;border-radius:99px;background:var(--line);overflow:hidden}.frente .fhd .bar i{display:block;height:100%;background:var(--c)}
+.passo{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:10px;align-items:start;padding:10px 14px;border-top:1px solid var(--line)}
+.passo .n{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font:600 12px var(--f-m);background:var(--surface-2);border:1px solid var(--line)}
+.passo.ok .n{background:var(--ok);color:#fff;border-color:var(--ok)}.passo.and .n{background:var(--c);color:#fff;border-color:var(--c)}
+.passo .t{font-weight:600}.passo .d{font-size:13.5px;color:var(--muted)}
+.li{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-top:1px dashed var(--line)}.li:first-of-type{border-top:0}
+.li .dt{font:500 12.5px var(--f-m);color:var(--muted);min-width:46px}
+.ck{display:flex;gap:9px;align-items:flex-start;padding:6px 0;font-size:14.5px;cursor:pointer}.ck input{margin-top:3px;width:16px;height:16px;accent-color:var(--c)}
+.ck input:checked+span{color:var(--muted);text-decoration:line-through}
+.hrs{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;text-align:center}.hrs b{display:block;font:600 22px var(--f-m)}
+.hbar{display:flex;gap:10px;align-items:center;margin-top:8px;font-size:13.5px}.hbar .tr{flex:1;height:8px;border-radius:99px;background:var(--line);overflow:hidden}.hbar .tr i{display:block;height:100%;background:var(--c)}
+.arq{display:flex;gap:10px;align-items:center;padding:9px 0;border-top:1px dashed var(--line)}.arq:first-of-type{border-top:0}.arq .ext{font:600 11px var(--f-m);padding:3px 6px;border-radius:5px;background:var(--surface-2);border:1px solid var(--line)}
+[hidden]{display:none!important}.nota{font-size:13px;color:var(--muted)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface)}.seg button{all:unset;cursor:pointer;padding:7px 12px;font:600 13.5px var(--f-b);color:var(--muted)}.seg button[aria-pressed="true"]{background:var(--accent);color:#fff}
+.flow{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:repeating-linear-gradient(0deg,transparent 0 23px,color-mix(in srgb,var(--line) 45%,transparent) 23px 24px),var(--surface-2);padding:14px}
+.lane{display:flex;align-items:stretch;gap:0;min-width:max-content;padding:8px 0}
+.lane+.lane{border-top:1px dashed var(--line)}
+.lh2{width:150px;flex:none;display:flex;flex-direction:column;justify-content:center;padding-right:14px}
+.lh2 b{font:700 16px var(--f-d)}.lh2 span{font:500 12px var(--f-m);color:var(--muted)}
+.node{width:190px;flex:none;background:var(--surface);border:1.5px solid var(--line);border-radius:10px;padding:9px 11px;display:flex;flex-direction:column;gap:4px;position:relative}
+.node .t{font-weight:600;font-size:14px;line-height:1.3}.node .m{display:flex;gap:6px;align-items:center;flex-wrap:wrap;font:500 11.5px var(--f-m);color:var(--muted)}
+.node.ok{border-color:var(--ok);background:color-mix(in srgb,var(--ok-soft) 70%,var(--surface))}.node.and{border-color:var(--c);box-shadow:0 0 0 3px color-mix(in srgb,var(--c) 22%,transparent)}.node.cli{border-style:dashed}
+.arrow{width:34px;flex:none;align-self:center;height:2px;background:var(--muted);position:relative;opacity:.7}.arrow::after{content:"";position:absolute;right:-1px;top:-4px;border:5px solid transparent;border-left:7px solid var(--muted)}
+.leg{display:flex;gap:12px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);align-items:center}.leg i{display:inline-block;width:14px;height:10px;border-radius:3px;border:1.5px solid var(--line);margin-right:5px;vertical-align:-1px}
+.cliente-bar{background:var(--accent-soft);color:var(--accent);border-radius:10px;padding:9px 12px;font-size:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+@media(prefers-reduced-motion:no-preference){.emp{transition:box-shadow .15s,border-color .15s}}
+.rgate{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;background:#e9f0f0;padding:16px;font-family:system-ui,sans-serif}.rgate[hidden]{display:none}.rgate form{width:min(360px,100%);background:#fff;border:1px solid #d6e1e1;border-radius:14px;padding:26px 22px;display:flex;flex-direction:column;gap:12px}.rgate h1{margin:0;font:700 24px system-ui;color:#13262a}.rgate small{color:#5a6e72;font-size:12px;letter-spacing:.06em;text-transform:uppercase}.rgate label{display:flex;flex-direction:column;gap:5px;font-weight:600;font-size:14px;color:#13262a}.rgate input{font:15px system-ui;padding:9px 10px;border:1px solid #c4ccd2;border-radius:8px}.rgate button{background:#0d5c8f;color:#fff;border:0;border-radius:9px;padding:11px;font:700 15px system-ui;cursor:pointer}.rgate p{margin:0;color:#b42318;font-size:14px}
+.fc .node{cursor:pointer}.fc .node:hover{border-color:var(--accent)}.addn{all:unset;cursor:pointer;align-self:center;margin-left:12px;font:600 13px var(--f-b);color:var(--accent);border:1.5px dashed var(--line);border-radius:10px;padding:10px 12px;white-space:nowrap}.addn:hover{border-color:var(--accent)}
+.stsel{font:600 12.5px var(--f-b);border:1px solid var(--line);border-radius:99px;padding:3px 8px;background:var(--surface);color:var(--fg)}
+.saving{position:fixed;right:16px;bottom:16px;background:var(--fg);color:var(--bg);padding:8px 14px;border-radius:9px;font-weight:600;font-size:14px;z-index:50}
+</style></head><body>
+<div class="rgate" id="gate" hidden><form id="gateForm"><small>FC Consultoria · Matriz</small><h1>Consultorias presenciais</h1>
+<label>Login<input name="login" autocomplete="username" required placeholder="matriz"></label>
+<label>Senha<input name="senha" type="password" autocomplete="current-password" required></label>
+<button type="submit">Entrar</button><p id="gateMsg" role="alert"></p></form></div>
+<div class="wrap" id="app">
+  <div class="top" style="gap:8px"><a class="btn" href="painel.html" style="text-decoration:none">← Voltar ao Painel</a><a class="btn" href="rotina.html" style="text-decoration:none">🗓 Rotina FC</a><span class="muted" id="sync" style="font-size:13px;align-self:center"></span></div>
+  <div class="top">
+    <div><div class="eyebrow">Painel da Matriz · programação de processos</div><h1>Consultorias presenciais</h1></div>
+    <div class="sp"></div>
+    <div class="seg" role="group" aria-label="Visão"><button type="button" id="vFC" aria-pressed="true">Visão FC</button><button type="button" id="vCli" aria-pressed="false">Como o cliente vê</button></div>
+    <label class="comp"><input type="checkbox" id="cmp"> Ocultar detalhes</label>
+    <button class="btn pri" type="button" id="nova">+ Nova empresa</button>
+  </div>
+  <div class="emps" id="emps"></div>
+  <section class="ficha" id="ficha"></section>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="auth.js"></script>
+<script>
+const SEED={
+ gb:{nome:'Guaporé Vidros',cid:'Cuiabá e Sinop · MT',c:'var(--gb)',mod:'Consultoria contínua · cliente principal, muita demanda',st:['p-warn','Muitas demandas'],visita:'a definir',horas:'—',
+  frentes:[
+   {n:'Showrooms',p:[['ok','Lista de perfis amadeirados do showroom','Enviada'],['and','Showroom Cerejeira Real','Entrega no barracão do Elias; instalação começando','até 21/10','Cliente'],['','Conferir showroom instalado','']]},
+   {n:'Compras e fornecedores',p:[['ok','Pedido TEXA dos ripados','Cancelado: cliente ficou com a Cerejeira Real de outro fornecedor'],['','Próxima cotação','exemplo']]},
+   {n:'Catálogo virtual',p:[['and','Login do gestor e WhatsApp do catálogo','Detalhes do catálogo definidos em 20/10','20/10'],['','Publicar catálogo para a equipe','']]}],
+  dem:[['21/10','Showroom Cerejeira Real: entrega e instalação (Elias)','Confirmar com a Bárbara a entrega e o início da instalação','p-warn','Aguardando'],['20/10','Catálogo virtual: login do gestor','Definir os detalhes do catálogo','p-acc','Fazendo'],['—','Consultoria Cuiabá: retorno das solicitações','exemplo','p-mut','A fazer']],
+  vis:{tit:'Próxima visita · data a definir',prep:['Levar a lista de pendências dos showrooms','Revisar cotações abertas com fornecedores','Mostrar o catálogo virtual no celular do gestor'],dur:['Conferir showroom instalado','Fotos para a galeria do processo'],dep:['Relatório da visita para o cliente','Lançar demandas novas na Rotina FC']},
+  arq:[['png','Print do WhatsApp · showroom Cerejeira Real','08/10'],['pdf','Lista de perfis amadeirados · showroom','30/09']]},
+ cb:{nome:'Casa Bandeirante',cid:'Pernambuco',c:'var(--cb)',mod:'Processo completo · Revenda e Fábrica de esquadria (sistema CEM)',st:['p-acc','Visita 19 a 22/10'],visita:'19 a 22/10',horas:'—',
+  objetivo:'Conhecer a empresa e os processos como funcionam hoje na Revenda e na Fábrica de Esquadria, verificar precificação, compras, comercial, expedição e divulgação, apresentar as ferramentas da FC e realizar o Treinamento 3D sobre Esquadria com a equipe comercial. Ao final, apresentar à direção o diagnóstico e os próximos passos.',
+  frentes:[
+   {n:'Antes da visita',s:'separar · cliente',p:[['','Planilhas atuais de precificação','Revenda e fábrica','até 19/10','Cliente'],['','Pedidos de compra recentes','Perfis e componentes','até 19/10','Cliente'],['','Orçamentos recentes','Revenda e fábrica','até 19/10','Cliente'],['','Acesso ao Sistema CEM','Com quem opera no dia a dia','até 19/10','Cliente'],['','Sala com TV ou projetor','Para o Treinamento 3D','até 19/10','Cliente'],['','Um responsável por área','Para cada horário da agenda','até 19/10','Cliente']]},
+   {n:'Seg · 19/10',s:'Abertura e Revenda',p:[['','Reunião de abertura: objetivos e agenda','Direção','08:00–08:30'],['','Conhecer a empresa: áreas e processos atuais','Direção / gerência','08:30–10:00'],['','Revenda · Precificação atual + sugestão FC','Precificação / direção','10:30–12:00'],['','Revenda · Compra de perfis + planilha FC','Compras','13:30–15:00'],['','Revenda · Compra de componentes + planilha FC','Compras','15:00–16:30'],['','Revenda · Kits próprios (instalação e box)','Produção / compras','16:30–17:30']]},
+   {n:'Ter · 20/10',s:'Revenda e Fábrica',p:[['','Revenda · Comercial: orçamentos e negociação','Vendedores','08:00–09:30'],['','Revenda · Separação e envio ao cliente','Estoque / expedição','09:30–11:00'],['','Revenda · Divulgação para serralheiros','Comercial / marketing','11:00–12:00'],['','Fábrica · Precificação atual + sugestão FC','Orçamentista / direção','13:30–15:30'],['','Fábrica · Compra de perfis + planilha FC','Compras / PCP','15:30–17:30'],['','Treinamento 3D sobre Esquadria · parte 1','Equipe comercial','18:00–19:30']]},
+   {n:'Qua · 21/10',s:'Sistema CEM e Treinamento',p:[['','Fábrica · Compra de componentes + planilha FC','Compras / PCP','08:00–09:30'],['','Fábrica · Sistema CEM: uso atual e ferramentas','Usuários do CEM','09:30–12:00'],['','Consolidação das constatações','FC','13:30–16:30'],['','Treinamento 3D sobre Esquadria · parte 2','Equipe comercial','18:00–19:30']]},
+   {n:'Qui · 22/10',s:'Fábrica e Encerramento',p:[['','Fábrica · Comercial: orçamentos e negociação','Vendedores / orçamentistas','08:00–09:30'],['','Fábrica · Separação e envio ao cliente','Produção / expedição','09:30–11:00'],['','Fábrica · Divulgação para o cliente final','Comercial / marketing','11:00–12:00'],['','Preparação da devolutiva','FC','13:30–15:30'],['','Devolutiva: diagnóstico e próximos passos','Direção','15:30–17:00']]}],
+  acao:{cols:['Revenda','Fábrica de Esquadria'],temas:[
+   ['Precificação','Formação do preço, atualização e tabelas por cliente · sugestão FC','Orçamento (planilha ou CEM), custos e margem · sugestão FC'],
+   ['Compra de perfis','O que e quanto comprar, fornecedores e estoque · planilha FC','Compra a partir das obras, otimização de barras e sobras · planilha FC'],
+   ['Compra de componentes','Critérios de compra, itens com falta ou excesso · planilha FC','Lista por obra e itens que atrasam a produção · planilha FC'],
+   ['Ponto específico','Kits próprios: instalação e box (composição, custo, volume)','Sistema CEM: módulos, cadastros, relatórios e ferramentas não usadas'],
+   ['Comercial','Entrada dos pedidos, orçamento, descontos e fechamento','Captação, medição, orçamento, negociação e formalização'],
+   ['Separação e envio','Separação, conferência, carregamento e divergências','Da produção à entrega/instalação, conferência antes do envio'],
+   ['Divulgação','Catálogos, tabelas e contato com os serralheiros','Materiais e canais para o cliente final']]},
+  dem:[['19/10','Visita técnica presencial (19 a 22/10)','Programação de 4 dias enviada ao cliente','p-acc','Agendada'],['22/10','Devolutiva à direção: diagnóstico e próximos passos','15:30','p-acc','Agendada'],['—','Validar códigos sem correspondência no comparativo de perfis','','p-mut','A fazer']],
+  vis:{tit:'Visita técnica · 19 a 22/10 · 08:00–12:00 e 13:30–17:30',prep:['Programação enviada ao cliente','Checklist interno da visita','Planilhas FC (precificação e compras) prontas para apresentar','Logins do Orientativo FC 3D para a equipe comercial'],dur:['Registrar as constatações de cada horário','Fotos para a galeria do processo','Consolidação das constatações (21/10 à tarde)'],dep:['Devolutiva à direção (22/10, 15:30)','Plano de ação por frente com datas','Lançar horas e demandas na Rotina FC']},
+  arq:[['docx','Programação da Visita Técnica · Casa Bandeirante (3 páginas)','14/10'],['pdf','Checklist FC · visita (uso interno)','14/10'],['link','Comparativo de perfis TEXA × CDA × Perfis Tec','—']]},
+ cde:{nome:'CDE · Casa dos Espelhos',cid:'Manaus · AM',c:'var(--cde)',mod:'Contrato de 12 meses · 5 dias por mês presencial · franquia Blindex',st:['p-ok','Em dia'],visita:'próximo ciclo',horas:'—',
+  frentes:[
+   {n:'Precificação ZFM',p:[['ok','Planilha de precificação (300 itens)','Lucro Presumido, Crédito Estímulo SUFRAMA, ICMS efetivo após ZFM'],['','Revisão mensal dos preços','exemplo']]},
+   {n:'Lançamento Suprema e Gold',p:[['ok','Treinamento CEM','Concluído','08/10'],['and','Plano estratégico','Entrega do contrato'],['','Acompanhamento das vendas das linhas','exemplo']]}],
+  dem:[['—','Plano estratégico do lançamento','','p-acc','Fazendo']],
+  vis:{tit:'Ciclo presencial do mês · 5 dias',prep:['Agenda dos 5 dias combinada com o cliente','Planilha de precificação atualizada'],dur:['Revisão de preços com a equipe','Acompanhamento do plano estratégico'],dep:['Relatório do ciclo','Nota fiscal do mês']},
+  arq:[['xlsx','Planilha de precificação · ZFM','exemplo'],['pdf','Plano estratégico','exemplo']]}
+};
+let E={},at='cb',tab='proc',cli=false,HORAS=[];
+const esc=t=>String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const COR=['var(--gb)','var(--cb)','var(--cde)','var(--accent)','var(--ok)','var(--warn)'];
+function limpaSeed(e){e=JSON.parse(JSON.stringify(e));e.frentes.forEach(f=>f.p=f.p.filter(p=>p[2]!=='exemplo'&&p[3]!=='exemplo'));e.dem=(e.dem||[]).filter(d=>d[2]!=='exemplo');e.arq=(e.arq||[]).filter(a=>a[2]!=='exemplo');e.vis=e.vis||{tit:'Visita',prep:[],dur:[],dep:[]};e.vis.ok=e.vis.ok||{};if(e.acao)e.acao.st=e.acao.st||{};return e;}
+async function salvar(k){const el=document.getElementById('sync');el.textContent='Salvando…';
+  const {error}=await sb.from('rotina_docs').upsert({col:'consultoria',id:k,data:E[k],atualizado:new Date().toISOString()});
+  el.textContent=error?'⚠ Não salvou: '+error.message:'✓ Salvo às '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});}
+async function carregar(){const {data,error}=await sb.from('rotina_docs').select('id,data').eq('col','consultoria');if(error){alert('Não consegui carregar: '+error.message);return;}
+  if(!data.length){for(const [k,e] of Object.entries(SEED)){E[k]=limpaSeed(e);await salvar(k);}}else data.forEach(r=>E[r.id]=r.data);
+  if(!E[at])at=Object.keys(E)[0];
+  const h=await sb.from('rotina_docs').select('data').eq('col','horas');HORAS=(h.data||[]).map(x=>x.data);render();}
+const nrm=t=>String(t||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/s\b/g,'').trim();
+function horasDe(e){const k=nrm(e.nome.split('·')[0]),k2=nrm(e.apelido||'');const mes=new Date().toISOString().slice(0,7);
+  return HORAS.filter(x=>{const c=nrm(x.cliente);return c&&(c.includes(k)||k.includes(c)||(k2&&c.includes(k2)))});}
+const hm=m=>{m=Math.round(m||0);const h=Math.floor(m/60),r=m%60;return h?h+'h'+(r?String(r).padStart(2,'0'):''):r+'min'};
+const $=s=>document.querySelector(s);
+function cards(){ $('#emps').innerHTML=Object.entries(E).map(([k,e])=>`<button class="emp" type="button" style="--c:${e.c}" data-k="${k}" aria-pressed="${k===at}">
+  <div class="hd"><b>${e.nome}</b><span>${e.cid}</span></div><div class="mod">${e.mod}</div>
+  <div><span class="pill ${e.st[0]}">${e.st[1]}</span></div>
+  <div class="kv"><div><small>Próxima visita</small><b>${e.visita}</b></div><div><small>Demandas</small><b>${e.dem.length}</b></div><div><small>Horas no mês</small><b>${(l=>l.length?hm(l.reduce((s,x)=>s+(+x.minNormal||0)+(+x.minExtra||0),0)):'—')(horasDe(e).filter(x=>(x.data||'').slice(0,7)===new Date().toISOString().slice(0,7)))}</b></div></div>
+  <div class="nx muted">Próximo passo: ${e.dem? e.dem[0][2]||e.dem[0][1] : '—'}</div></button>`).join('');
+  document.querySelectorAll('.emp').forEach(b=>b.onclick=()=>{at=b.dataset.k;render()}); }
+const ABAS=[['proc','Fluxo do processo'],['acao','Plano de ação'],['vis','Visitas'],['dem','Demandas e entregas'],['arq','Arquivos'],['hrs','Horas']];
+function ficha(){const e=E[at];let h='';
+ if(tab==='proc'&&e.objetivo)h=`<div class="box"><h3>Objetivo</h3><p style="margin:0">${e.objetivo}</p></div>`;
+ if(tab==='proc'){const tot=e.frentes.reduce((n,f)=>n+f.p.length,0),ok=e.frentes.reduce((n,f)=>n+f.p.filter(p=>p[0]==='ok').length,0);
+   h+=`<div class="leg"><span><i style="border-color:var(--ok);background:var(--ok-soft)"></i>Feito</span><span><i style="border-color:${e.c}"></i>Em andamento</span><span><i></i>Programado</span><span><i style="border-style:dashed"></i>Depende do cliente</span><span style="margin-left:auto" class="mono">${ok} de ${tot} etapas concluídas · ${(tot?Math.round(ok/tot*100):0)}%</span></div>
+   <div class="flow">${e.frentes.map((f,fi)=>{const k=f.p.filter(p=>p[0]==='ok').length;return `<div class="lane"><div class="lh2"><b>${f.n}</b>${f.s?`<span style="font-family:var(--f-b);font-size:12.5px">${f.s}</span>`:''}<span>${k}/${f.p.length} feitas</span></div>${f.p.map((p,i)=>`${i?'<span class="arrow"></span>':''}<div class="node ${p[0]} ${p[4]==='Cliente'?'cli':''}" data-f="${fi}" data-i="${i}" ${cli?'':'title="Clique para mudar: programado → em andamento → feito"'}><div class="t">${p[1]}</div>${p[2]&&!(cli&&p[2]==='exemplo')?`<div class="nota">${p[2]}</div>`:''}<div class="m"><span>📅 ${p[3]||'a definir'}</span><span>· ${p[4]||'FC'}</span></div></div>`).join('')}${cli?'':`<button class="addn" type="button" data-add="${fi}">+ etapa</button>`}</div>`}).join('')}</div>${cli?'':'<div><button class="btn" type="button" id="addFrente">+ Nova frente</button></div>'}
+   <p class="nota">${cli?'Este é o caminho combinado do trabalho. Cada etapa muda de cor quando avança; as datas são atualizadas pela FC.':'Cada empresa tem as suas frentes e etapas. Clique numa etapa para mudar a situação (programado → em andamento → feito). Use + etapa para incluir. O cliente vê este mesmo fluxo no link dele.'}</p>`;}
+ if(tab==='acao'&&e.acao){const A=e.acao,ST=[['aguarda','Aguardando a visita','p-mut'],['diag','Diagnóstico feito','p-acc'],['acao','Ação combinada','p-acc'],['exec','Em execução','p-warn'],['ok','Resolvido','p-ok']];
+   h=`<div class="box"><h3>Do diagnóstico à solução</h3><div class="leg">${ST.map((x,i)=>`${i?'→':''}<span class="pill ${x[2]}">${x[1]}</span>`).join(' ')}</div><p class="nota" style="margin:8px 0 0">Cada ponto levantado na visita vira uma linha. A FC atualiza a situação; quando chega em <b>Resolvido</b>, fica registrada a data e a evidência (print, planilha ou foto). É isso que o cliente acompanha no link.</p></div>
+   <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;min-width:640px;font-size:14px"><thead><tr><th style="text-align:left;padding:8px;border-bottom:2px solid var(--line);font-family:var(--f-d);font-size:15px">Tema</th>${A.cols.map(c=>`<th style="text-align:left;padding:8px;border-bottom:2px solid var(--line);font-family:var(--f-d);font-size:15px">${c}</th>`).join('')}</tr></thead>
+   <tbody>${A.temas.map(t=>`<tr><td style="padding:10px 8px;border-bottom:1px solid var(--line);font-weight:600;vertical-align:top;width:160px">${t[0]}</td>${t.slice(1).map((c,ci)=>{const key=t[0]+'|'+ci,x=(A.st||{})[key]||{s:'aguarda'},sd=ST.find(z=>z[0]===x.s)||ST[0];return `<td style="padding:10px 8px;border-bottom:1px solid var(--line);vertical-align:top"><div class="nota" style="color:var(--fg)">${esc(c)}</div><div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;align-items:center">${cli?`<span class="pill ${sd[2]}">${x.s==='ok'?'✓ ':''}${sd[1]}</span>`:`<select class="stsel" data-key="${esc(key)}">${ST.map(z=>`<option value="${z[0]}" ${z[0]===x.s?'selected':''}>${z[1]}</option>`).join('')}</select>`}${x.em?`<span class="nota">desde ${x.em.split('-').reverse().join('/')}</span>`:''}</div>${x.ev?`<div class="nota" style="margin-top:4px">📎 ${esc(x.ev)}</div>`:''}</td>`}).join('')}</tr>`).join('')}</tbody></table></div>`;}
+ if(tab==='vis'){const v=e.vis,ck=(l,g)=>l.map((t,i)=>`<label class="ck"><input type="checkbox" id="ck-${at}-${g}-${i}" data-ck="${g}${i}" ${(v.ok||{})[g+i]?'checked':''} ${cli?'disabled':''}><span>${esc(t)}</span></label>`).join('');
+   h=`<div class="box"><h3>${v.tit}</h3><div class="g2"><div><b>Antes da visita</b>${ck(v.prep,'a')}</div><div><b>Durante</b>${ck(v.dur,'d')}</div></div><div style="margin-top:10px"><b>Depois</b>${ck(v.dep,'p')}</div></div>
+   <div class="box"><h3>Relatório da visita</h3><p class="nota" style="margin:0">Ao fechar a visita, o relatório sai em tópicos curtos (o que foi feito, decisões, pendências do cliente e da FC) e vira o resumo do mês no link do cliente.</p></div>`}
+ if(tab==='dem')h=`<div class="box">${e.dem.map(d=>`<div class="li"><span class="dt">${d[0]}</span><div style="flex:1;min-width:0"><div style="font-weight:600">${d[1]}</div>${d[2]?`<div class="nota">${d[2]}</div>`:''}</div><span class="pill ${d[3]}">${d[4]}</span></div>`).join('')}</div><p class="nota">As demandas são as mesmas da Rotina FC: criou aqui, aparece lá, e o contrário também.</p>`;
+ if(tab==='arq')h=`<div class="box">${e.arq.map(a=>`<div class="arq"><span class="ext">${a[0].toUpperCase()}</span><span style="flex:1;min-width:0">${a[1]}</span><span class="mono muted" style="font-size:12.5px">${a[2]}</span></div>`).join('')}</div><p class="nota">Anexe PDF, planilha, print (Ctrl+V) ou link. Tudo fica separado por empresa.</p>`;
+ if(tab==='hrs'){const L=horasDe(e).sort((a,b)=>(b.data+(b.ini||'')).localeCompare(a.data+(a.ini||''))),n=L.reduce((s,x)=>s+(+x.minNormal||0),0),x2=L.reduce((s,x)=>s+(+x.minExtra||0),0);
+   h=`<div class="box"><div class="hrs"><div><span class="muted">Total</span><b>${hm(n+x2)}</b></div><div><span class="muted">Horário normal</span><b>${hm(n)}</b></div><div><span class="muted">Hora extra</span><b style="color:var(--bad)">${hm(x2)}</b></div></div></div>
+   <div class="box">${L.length?L.map(x=>`<div class="li"><span class="dt">${(x.data||'').slice(8,10)}/${(x.data||'').slice(5,7)}</span><div style="flex:1;min-width:0"><div style="font-weight:600">${esc(x.titulo)}</div>${(x.itens||[]).length?`<div class="nota">${x.itens.map(esc).join(' · ')}</div>`:''}</div><span class="pill ${+x.minExtra?'p-bad':'p-mut'}">${hm((+x.minNormal||0)+(+x.minExtra||0))}${+x.minExtra?' extra':''}</span></div>`).join(''):'<p class="nota" style="margin:0">Ainda não há horas lançadas para esta empresa na Rotina FC.</p>'}</div>
+   <p class="nota">Vem da Rotina FC: 07:00 às 18:00 é horário normal; 18:01 às 06:59 e fim de semana, hora extra.</p>`;}
+ const abas=(cli?ABAS.filter(a=>['proc','acao','vis','dem'].includes(a[0])):ABAS).filter(a=>a[0]!=='acao'||e.acao); if(cli&&!abas.some(a=>a[0]===tab))tab='proc';
+ $('#ficha').style.setProperty('--c',e.c);
+ $('#ficha').innerHTML=`<div class="fh"><span class="sw"></span><div style="min-width:0;flex:1"><h2>${e.nome}</h2><div class="muted" style="font-size:14px">${e.cid} · ${e.mod}</div></div><span class="pill ${e.st[0]}">${e.st[1]}</span></div>
+  ${cli?`<div style="padding:12px 18px 0"><div class="cliente-bar">🔗 <b>Link do cliente</b> · ${e.nome} vê o fluxo, o plano de ação, as visitas e as entregas. Horas, arquivos internos e observações da FC ficam ocultos.</div></div>`:''}<div class="tabs" role="tablist">${abas.map(([k,l])=>`<button class="tab" role="tab" type="button" aria-selected="${k===tab}" data-t="${k}">${l}</button>`).join('')}</div><div class="body">${h}</div>`;
+ document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{tab=b.dataset.t;ficha()});
+ $('#ficha').classList.toggle('fc',!cli); if(cli)return;
+ document.querySelectorAll('.node[data-f]').forEach(n=>n.onclick=()=>{const p=e.frentes[+n.dataset.f].p[+n.dataset.i];p[0]=p[0]===''?'and':p[0]==='and'?'ok':'';ficha();cards();salvar(at);});
+ document.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>{const t=prompt('Nova etapa — o que será feito?');if(!t)return;const d=prompt('Data ou horário (ex.: 24/10 ou 08:00–09:30). Pode deixar em branco:')||'';const r=confirm('Esta etapa depende do cliente?\n\nOK = Cliente · Cancelar = FC')?'Cliente':'';e.frentes[+b.dataset.add].p.push(['',t,'',d,r]);ficha();salvar(at);});
+ const af=document.getElementById('addFrente');if(af)af.onclick=()=>{const n=prompt('Nome da nova frente (ex.: Revenda, Fábrica, Pós-visita):');if(!n)return;e.frentes.push({n,p:[]});ficha();salvar(at);};
+ document.querySelectorAll('.stsel').forEach(sel=>sel.onchange=()=>{e.acao.st=e.acao.st||{};const x={s:sel.value,em:new Date().toISOString().slice(0,10)};if(sel.value==='ok'){x.ev=prompt('Como foi resolvido? Descreva a evidência (planilha em uso, print, foto…):')||'';}else{const o=e.acao.st[sel.dataset.key];if(o&&o.ev&&sel.value!=='aguarda')x.ev=o.ev;}e.acao.st[sel.dataset.key]=x;ficha();salvar(at);});
+ document.querySelectorAll('[data-ck]').forEach(c=>c.onchange=()=>{e.vis.ok=e.vis.ok||{};e.vis.ok[c.dataset.ck]=c.checked;salvar(at);}); }
+function render(){cards();ficha()}
+function setCli(v){cli=v;$('#vFC').setAttribute('aria-pressed',!v);$('#vCli').setAttribute('aria-pressed',v);$('#emps').hidden=v;$('#nova').hidden=v;render();}
+$('#vFC').onclick=()=>setCli(false);$('#vCli').onclick=()=>setCli(true);
+$('#cmp').onchange=e=>{$('#app').classList.toggle('compact',e.target.checked);try{localStorage.setItem('cons-cmp',e.target.checked?'1':'')}catch(_){}};
+try{if(localStorage.getItem('cons-cmp')==='1'){$('#cmp').checked=true;$('#app').classList.add('compact')}}catch(_){}
+$('#nova').onclick=()=>{const nome=prompt('Nome da empresa:');if(!nome)return;const cid=prompt('Cidade / estado:')||'';const k='e'+Date.now().toString(36);
+  E[k]={nome,cid,c:COR[Object.keys(E).length%COR.length],mod:'Consultoria presencial',st:['p-mut','Novo'],visita:'a definir',frentes:[{n:'Antes da visita',p:[]}],dem:[],vis:{tit:'Próxima visita',prep:[],dur:[],dep:[],ok:{}},arq:[]};at=k;tab='proc';render();salvar(k);};
+gateUI(()=>carregar(),{soMatriz:true});
+</script>
+
+</body></html>
