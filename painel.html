@@ -200,6 +200,7 @@ td.qd{cursor:help}td.qd:hover{background:#eef6f8;box-shadow:inset 0 -2px 0 #1f6f
 <section class="card" id="mktCard" data-tab="mkt"><h2 style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">🚀 Marketing · catálogo de esquadria<span class="note" style="font-weight:500;text-transform:none;letter-spacing:0">status, Instagram e mensagens para contatos</span><span style="margin-left:auto;display:flex;gap:6px"><select id="mkP" style="font-size:13px"><option value="7">7 dias</option><option value="30">30 dias</option><option value="1">Hoje</option></select><button type="button" id="mkRe" style="font-size:13px">🔄 Atualizar</button></span></h2>
  <div style="padding:12px 16px 18px">
   <div id="fsBox"></div>
+  <div id="vtBox"></div>
   <h3 class="dvt">📊 Resultado por origem <span class="note" style="text-transform:none;letter-spacing:0;font-weight:500">· visitas ao site e ao catálogo</span></h3><div id="mkRes" class="mkres"><p class="note">Carregando…</p></div>
   <h3 class="dvt">🔗 Links com origem <span class="note" style="text-transform:none;letter-spacing:0;font-weight:500">· use o link certo em cada lugar para saber o que trouxe visita</span></h3><div id="mkLk"></div>
   <h3 class="dvt">📱 Status do WhatsApp · 1080×1920 <span class="note" style="text-transform:none;letter-spacing:0;font-weight:500">· um por dia, de segunda a sexta</span></h3><div class="mkg" id="mkSt"></div>
@@ -337,7 +338,7 @@ td.qd{cursor:help}td.qd:hover{background:#eef6f8;box-shadow:inset 0 -2px 0 #1f6f
 </main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="auth.js"></script>
-<script src="mapa.js?v=1792037768"></script><script src="acompanhamento-admin.js?v=14"></script><script src="presenca-admin.js?v=1"></script><script src="festa-admin.js?v=1"></script><script src="conclusao-admin.js?v=1"></script><script src="dicas.js?v=1792028270"></script>
+<script src="mapa.js?v=1792037768"></script><script src="acompanhamento-admin.js?v=14"></script><script src="presenca-admin.js?v=1"></script><script src="festa-admin.js?v=1"></script><script src="vitrine-admin.js?v=1"></script><script src="conclusao-admin.js?v=1"></script><script src="dicas.js?v=1792028270"></script>
 <script>
 const ZCFG=new Set(['senha_forte','vit_nome','logo_mapa','logo_ok','implantacao','promo','contrato','empresa_local','gestor_in','gestor_hb','gestor_acao','colab','liberacao','sistema','gestor','chave_app','sugestao','resposta','sug_excluida','zerar','interesse','interesse_ok','cat3d','chave_cat3d','chave_cat3d_demo']);
 function zerarFiltro(ev,zs){const Z={};(zs||ev).forEach(e=>{if(e.tipo==='zerar'){const p=(e.detalhe||{}).para,t=Date.parse(e.criado_em);if(!Z[p]||t>Z[p])Z[p]=t;}});
