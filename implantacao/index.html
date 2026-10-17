@@ -2320,7 +2320,7 @@ function render(){
   const root = document.getElementById('view-root');
   document.querySelectorAll('.navitem').forEach(b=>b.classList.toggle('active', b.dataset.nav===STATE.view));
   if(ehAlimentador() && !['fila','cliente'].includes(STATE.view)) STATE.view='fila';
-  document.querySelectorAll('.navitem').forEach(b=>{ if(b.dataset.nav!=='fila') b.style.display = ehAlimentador() ? 'none' : ''; });
+  document.querySelectorAll('.navitem[data-nav]').forEach(b=>{ if(b.dataset.nav!=='fila') b.style.display = ehAlimentador() ? 'none' : ''; });
   if(STATE.view==='fila') root.innerHTML = renderFila();
   else if(STATE.view==='cliente' && ehAlimentador()){ const c = CLIENTS.find(x=>x.id===STATE.clientId); root.innerHTML = c ? renderClienteAlimentador(c) : renderFila(); }
   else if(STATE.view==='clientes') root.innerHTML = renderClientes();
