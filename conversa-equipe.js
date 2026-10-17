@@ -93,7 +93,28 @@
   function avisar(m){
     try{ if(typeof toast==='function' && !S.aberto) toast('💬 '+(m.autor_nome||'Equipe')+': '+(m.texto? String(m.texto).slice(0,80) : '📷 imagem')); }catch(_){ }
     try{ const c=new (window.AudioContext||window.webkitAudioContext)(), o=c.createOscillator(), g=c.createGain(); o.frequency.value=880; g.gain.value=.06; o.connect(g); g.connect(c.destination); o.start(); setTimeout(()=>{o.frequency.value=1175;},120); setTimeout(()=>{o.stop(); c.close();},260); }catch(_){ }
-    try{ if('Notification' in window && Notification.permission==='granted' && document.hidden) new Notification('💬 '+(m.autor_nome||'Equipe FC'), {body: m.texto || '📷 Imagem', tag:'fcchat'}); }catch(_){ }
+    try{ if('Notification' in window && Notification.permission==='granted' && (document.hidden || !document.hasFocus() || !S.aberto)){
+      const n = new Notification('💬 '+(m.autor_nome||'Equipe FC')+' mandou mensagem', {body: (m.texto ? String(m.texto).slice(0,140) : '📷 Imagem'), tag:'fcchat-'+m.id, requireInteraction:true, icon: m.imagem && m.imagem.length<200000 ? m.imagem : undefined});
+      n.onclick = ()=>{ try{ window.focus(); }catch(_){ } n.close(); if(!S.aberto && btn) btn.click(); };
+    } }catch(_){ }
+    piscarTitulo();
+  }
+  // título da aba piscando com o número de mensagens novas (aparece na barra de abas e na barra de tarefas)
+  let tituloOrig = document.title, piscaT = null;
+  function piscarTitulo(){
+    if(piscaT) return; tituloOrig = document.title; let on = false;
+    piscaT = setInterval(()=>{ const n = naoLidas(); if(!n || (document.hasFocus() && S.aberto)){ clearInterval(piscaT); piscaT=null; document.title = tituloOrig; return; } on=!on; document.title = on ? '('+n+') 💬 Nova mensagem' : tituloOrig; }, 1000);
+  }
+  function naoLidas(){ const l = lido(); return S.msgs.filter(m=>m.id>l && String(m.autor_email||'').toLowerCase()!==S.eu).length; }
+  // pede uma vez para o navegador liberar os avisos do Windows (só precisa aceitar 1 vez)
+  function pedirAvisos(){
+    try{ if(!('Notification' in window) || Notification.permission!=='default' || localStorage.getItem('fc_chat_pediu_aviso')) return; }catch(_){ return; }
+    const d=document.createElement('div');
+    d.style.cssText='position:fixed;right:14px;bottom:118px;z-index:9999;width:min(330px,calc(100vw - 28px));background:#fff;border:1px solid #dde1e6;border-radius:14px;box-shadow:0 14px 40px -12px rgba(15,23,42,.35);padding:12px 14px;font:400 13.5px system-ui,-apple-system,Segoe UI,sans-serif;color:#1c2126';
+    d.innerHTML='<b>🔔 Receber aviso de mensagem?</b><div style="margin:6px 0 10px;color:#5b6570">Mesmo com o painel minimizado ou em outra aba, o Windows mostra um aviso quando chegar mensagem na conversa da equipe.</div><div style="display:flex;gap:8px;justify-content:flex-end"><button data-n style="border:1px solid #dde1e6;background:#fff;border-radius:9px;padding:6px 10px;cursor:pointer">Agora não</button><button data-s style="border:0;color:#fff;background:linear-gradient(135deg,var(--g1,#3452eb),var(--g2,#6f8bff));border-radius:9px;padding:6px 12px;font-weight:700;cursor:pointer">Ativar avisos</button></div>';
+    const fim=()=>{ try{ localStorage.setItem('fc_chat_pediu_aviso','1'); }catch(_){ } d.remove(); };
+    d.querySelector('[data-n]').onclick=fim; d.querySelector('[data-s]').onclick=()=>{ Notification.requestPermission().finally(fim); };
+    document.body.appendChild(d);
   }
   async function carregar(){
     if(S.carregando) return; S.carregando = true;
@@ -117,6 +138,7 @@
     if(typeof MEU_ACESSO==='undefined' || !MEU_ACESSO){ try{ const r=await sb.from('impl_acesso').select('nome').eq('email', S.eu).maybeSingle(); if(r.data && r.data.nome) S.nome=r.data.nome; }catch(_){ } }
     montar(); await carregar();
     if(!S.ok) return;
+    setTimeout(pedirAvisos, 3000);
     setInterval(()=>{ if(typeof MEU_ACESSO!=='undefined' && MEU_ACESSO && MEU_ACESSO.nome) S.nome = MEU_ACESSO.nome; carregar(); }, 10000);
     try{ if('Notification' in window && Notification.permission==='default') btn.addEventListener('click', ()=>Notification.requestPermission(), {once:true}); }catch(_){ }
   }
