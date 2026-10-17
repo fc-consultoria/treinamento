@@ -464,6 +464,7 @@ function iniciarDemo(){
   $('#dmR').oninput=e=>{parar();demoIr(+e.target.value);};
   $('#dmPlay').onclick=()=>{if(DEMO.timer){parar();return;}if(DEMO.dia>=DEMO.max)demoIr(1);$('#dmPlay').textContent='⏸ Pausar';DEMO.timer=setInterval(()=>{if(DEMO.dia>=DEMO.max){parar();return;}demoIr(DEMO.dia+1);},2200);};
   demoIr(DEMO.dia);
+  if(new URLSearchParams(location.search).get('play')==='1')setTimeout(()=>{const b=$('#dmPlay');if(b&&!DEMO.timer)b.click();},900);
 }
 
 (async()=>{

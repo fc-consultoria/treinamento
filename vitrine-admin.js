@@ -10,7 +10,7 @@
   async function carregar(){
     try{const [c,r]=await Promise.all([fetch(SITE+'vitrine.json',{cache:'no-cache'}).then(x=>x.json()),sb.from('trein_eventos').select('detalhe,criado_em').eq('tipo','site_vitrine').order('criado_em',{ascending:false}).limit(1)]);
       V.cat=c.itens||[];V.cfg=(r.data&&r.data[0])?Object.assign({em:r.data[0].criado_em},r.data[0].detalhe):null;
-      const g=V.cfg||{};V.on=!!g.on;V.seg=+g.seg||6;V.mist=g.mist!==false;V.t=Object.assign({},g.t||{});V.sel=new Set(Array.isArray(g.ids)&&g.ids.length?g.ids:V.cat.map(x=>x.id));
+      const g=V.cfg||{};V.on=!!g.on;V.seg=+g.seg||6;V.mist=g.mist!==false;V.t=Object.assign({},g.t||{});V.sel=new Set(Array.isArray(g.ids)&&g.ids.length?g.ids:V.cat.map(x=>x.id));V.cat.filter(x=>x.acao&&!(g.off||[]).includes(x.id)).forEach(x=>V.sel.add(x.id));
     }catch(e){console.error('vitrine',e);V.cat=V.cat||[];V.sel=V.sel||new Set();}
     V.carregado=true;desenhar();}
   const bt=(ac,t,pri,extra)=>`<button type="button" data-vt="${ac}" ${extra||''} style="font:600 13.5px var(--f-body);padding:8px 13px;border-radius:8px;cursor:pointer;border:1px solid ${pri==='bad'?'#b42318':pri?'#15803d':'var(--line)'};background:${pri&&pri!=='bad'?'#16a34a':'#fff'};color:${pri==='bad'?'#b42318':pri?'#fff':'var(--fg)'}">${t}</button>`;
@@ -45,7 +45,7 @@
     if(a==='todos'||a==='nenhum'){V.cat.filter(x=>!V.marca||x.marca===V.marca).forEach(x=>a==='todos'?V.sel.add(x.id):V.sel.delete(x.id));desenhar();return;}
     if(a==='publicar'){if(!V.sel.size){aviso('Marque pelo menos um folder',true);return;}
       const ids=V.cat.map(x=>x.id).filter(id=>V.sel.has(id));el.disabled=true;
-      const r=await ins('site_vitrine',{on:true,seg:V.seg,mist:V.mist,ids,t:V.t});el.disabled=false;if(r&&r.error)return;
+      const off=V.cat.filter(x=>x.acao&&!V.sel.has(x.id)).map(x=>x.id);const r=await ins('site_vitrine',{on:true,seg:V.seg,mist:V.mist,ids,t:V.t,off});el.disabled=false;if(r&&r.error)return;
       V.aberto=false;aviso('🚀 Vitrine no ar com '+ids.length+' folders. Abra o site para ver.');return carregar();}
     if(a==='tirar'){if(!confirm('Tirar a vitrine de folders do site?'))return;const r=await ins('site_vitrine',{on:false,seg:V.seg,mist:V.mist,ids:[...V.sel],t:V.t});if(r&&r.error)return;aviso('Vitrine tirada do ar');return carregar();}
   });
