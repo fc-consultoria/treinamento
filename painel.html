@@ -511,8 +511,8 @@ function lvThread(uid,cid,quem){const G=cid==='gestor';
   const rs=LV.sg.filter(e=>e.tipo==='resposta'&&(e.detalhe||{}).para===uid&&(refs.has((e.detalhe||{}).ref)||(e.detalhe||{}).cid===cid||(!G&&(e.detalhe||{}).quem&&(e.detalhe||{}).quem===quem&&!(e.detalhe||{}).cid)));
   const pend=mine.filter(m=>!rs.some(r=>(r.detalhe||{}).ref===m.criado_em));
   return {L:[...mine,...rs].sort((x,y)=>x.criado_em<y.criado_em?-1:1),pend};}
-function lvPessoas(){const P={},now=Date.now();
-  LV.ev.forEach(e=>{const d=e.detalhe||{},G=/^gestor_/.test(e.tipo),cid=G?'gestor':d.cid;if(!cid)return;if(!lvKind(e.user_id)||livre(ALUNOS.find(x=>x.user_id===e.user_id)))return;
+function lvPessoas(){const P={},now=Date.now(),ZZ={};(EV||[]).forEach(e=>{if(e.tipo==='zerar'){const p=(e.detalhe||{}).para,t=Date.parse(e.criado_em);if(p&&(!ZZ[p]||t>ZZ[p]))ZZ[p]=t;}});
+  LV.ev.forEach(e=>{const d=e.detalhe||{},G=/^gestor_/.test(e.tipo),cid=G?'gestor':d.cid;if(!cid)return;if(ZZ[e.user_id]&&Date.parse(e.criado_em)<=ZZ[e.user_id])return;if(!lvKind(e.user_id)||livre(ALUNOS.find(x=>x.user_id===e.user_id)))return;
     const k=e.user_id+'|'+cid,p=P[k]||(P[k]={uid:e.user_id,cid,quem:G?'Gestor':(d.quem||''),ult:0,ini:Infinity,tip:null,tipT:0,ts:[]});const t=Date.parse(e.criado_em);if(new Date(t-4*3600e3).toISOString().slice(0,10)===HOJE())p.ts.push(t);
     if(t>p.ult)p.ult=t;if(t<p.ini)p.ini=t;if(!G&&d.quem)p.quem=d.quem;if(e.tipo==='tempo'&&e.tipologia&&t>p.tipT){p.tip=e.tipologia;p.tipT=t;}});
   Object.values(P).forEach(p=>{p.on=now-p.ult<150e3;const T=p.ts.sort((a,b)=>a-b);let dur=0,ses=T.length?1:0;for(let i=1;i<T.length;i++){const g=T[i]-T[i-1];if(g<=200e3)dur+=g;else if(g>600e3)ses++;}if(p.on&&T.length)dur+=Math.min(now-T[T.length-1],150e3);p.dur=dur;p.ses=ses;});return Object.values(P).sort((x,y)=>(y.on-x.on)||(y.ult-x.ult));}
