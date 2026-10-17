@@ -133,7 +133,7 @@
   return S;}
  const VIS=[/* o que aparece em cada passo */
   ['CM','cantos'],['CM','cantos','esq'],['CM','cantos','esq','gr','cotas'],['CM','cantos','esq','gr','ferr'],['CM','cantos','gr','arg'],['CM','cantos','gr','arg','esd']];
- const CAMS=[[[.75,.35,1.25],[-.25,-.2,0]],[[-.25,-.55,.85],[-.45,-.38,0]],[[-1.05,.05,.9],[-.55,-.2,0]],[[.2,-.1,1.7],[0,-.1,0]],[[1.2,.4,1.6],[0,0,0]],[[1.1,.45,2.1],[0,0,0]]];
+ const CAMS=[[[1.05,.55,3.0],[0,0,0]],[[-.25,-.55,.85],[-.45,-.38,0]],[[-1.05,.05,.9],[-.55,-.2,0]],[[.2,-.1,1.7],[0,-.1,0]],[[1.2,.4,1.6],[0,0,0]],[[1.1,.45,2.1],[0,0,0]]];
  function passo(S,k){if(!S)return;const on=new Set(VIS[k]||VIS[0]);Object.entries(S.parts).forEach(([n,g])=>{g.userData.on=on.has(n);});const c=CAMS[k]||CAMS[0];S.alvo=[new THREE.Vector3(...c[0]),new THREE.Vector3(...c[1])];}
  function cortar(S,on,k){if(!S)return;on=on||k===2||k===4;S.pm.clippingPlanes=on?[S.corte]:[];S.pm.side=on?THREE.DoubleSide:THREE.FrontSide;S.am.side=on?THREE.DoubleSide:THREE.FrontSide;S.am.clippingPlanes=on?[S.corte]:[];S.pm.needsUpdate=S.am.needsUpdate=true;}
  function camGet(S){if(!S)return null;const r=v=>Math.round(v*1000)/1000;return [r(S.cam.position.x),r(S.cam.position.y),r(S.cam.position.z),r(S.ctl.target.x),r(S.ctl.target.y),r(S.ctl.target.z)];}
@@ -145,9 +145,14 @@
   const o=PECAS[code]();const box=new THREE.Box3().setFromObject(o),c=box.getCenter(new THREE.Vector3()),sz=box.getSize(new THREE.Vector3()).length();o.position.sub(c);const g=new THREE.Group();g.add(o);sc.add(g);
   const cam=new THREE.PerspectiveCamera(35,W/H,.001,10);cam.position.set(sz*.9,sz*.55,sz*1.25);cam.lookAt(0,0,0);
   const ctl=new THREE.OrbitControls(cam,r.domElement);ctl.enableDamping=true;ctl.autoRotate=!!auto;ctl.autoRotateSpeed=2.2;
-  const P={r,sc,cam,ctl};const loop=()=>{if(!P.r)return;P.raf=requestAnimationFrame(loop);ctl.update();r.render(sc,cam);};loop();P.fim=()=>{cancelAnimationFrame(P.raf);r.dispose();r.domElement.remove();P.r=null;};return P;}
+  const P={r,sc,cam,ctl,g};const loop=()=>{if(!P.r)return;P.raf=requestAnimationFrame(loop);ctl.update();r.render(sc,cam);};loop();P.fim=()=>{cancelAnimationFrame(P.raf);r.dispose();r.domElement.remove();P.r=null;};return P;}
  let FOTOS=null;
  function fotos(){if(FOTOS)return FOTOS;const d=document.createElement('div');d.style.cssText='position:fixed;left:-9999px;top:0;width:420px;height:300px';document.body.appendChild(d);FOTOS={};
   Object.keys(PECAS).forEach(k=>{const P=pecaCena(k,d,false);P.ctl.update();P.r.render(P.sc,P.cam);FOTOS[k]=P.r.domElement.toDataURL('image/png');P.fim();});d.remove();return FOTOS;}
- window.CM3D={carregar,cena,passo,cortar,camGet,camSet,destruir,pecaCena,fotos,PECAS};
+ /* giro da peça em quadros (controle de ângulo nas fotos dos cards) */
+ const QN=24,QUADROS={};let qRod=null;
+ function quadros(cb){if(qRod)return qRod;const ks=Object.keys(PECAS);const d=document.createElement('div');d.style.cssText='position:fixed;left:-9999px;top:0;width:420px;height:300px';document.body.appendChild(d);
+  qRod=new Promise(ok=>{let i=0;const um=()=>{if(i>=ks.length){d.remove();ok(QUADROS);return;}const k=ks[i++];try{const P=pecaCena(k,d,false);P.ctl.update();const a=[];const fmt=P.r.domElement.toDataURL('image/webp').startsWith('data:image/webp')?'image/webp':'image/png';
+   for(let q=0;q<QN;q++){P.g.rotation.y=q*Math.PI*2/QN;P.r.render(P.sc,P.cam);a.push(P.r.domElement.toDataURL(fmt,.9));}P.fim();QUADROS[k]=a;if(cb)cb(k,a);}catch(e){console.warn(e);}setTimeout(um,30);};setTimeout(um,60);});return qRod;}
+ window.CM3D={carregar,cena,passo,cortar,camGet,camSet,destruir,pecaCena,fotos,quadros,QUADROS,QN,PECAS};
 })();

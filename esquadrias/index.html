@@ -43,6 +43,19 @@ main{min-width:0}
 /* cartões de perfil */
 .pg{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
 .pc{border:1px solid var(--ln);border-radius:12px;background:#fff;overflow:hidden;cursor:pointer;display:flex;flex-direction:column;transition:transform .15s,box-shadow .15s;position:relative;text-align:left;padding:0}
+.angw{position:absolute;right:10px;bottom:10px;z-index:4}
+.angpad{display:grid;grid-template-columns:repeat(3,30px);grid-template-rows:repeat(3,30px);gap:3px;padding:5px;background:rgba(255,255,255,.92);border:1px solid var(--ln);border-radius:12px;box-shadow:0 4px 14px rgba(0,0,0,.18);user-select:none;-webkit-user-select:none;touch-action:manipulation}
+.angpad button{font:700 15px var(--f-b);line-height:1;padding:0;border:1px solid var(--ln);border-radius:8px;background:#fff;color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center}
+.angpad button:hover{border-color:var(--tl);color:var(--tl)}.angpad button:active{background:var(--tl);color:#fff}
+.angpad .c{font-size:10px;font-weight:800}.angpad .e{visibility:hidden}
+.angpad .rd{grid-column:1/4;font:700 11px var(--f-b);color:var(--tm);text-align:center;white-space:pre-line}
+@media (max-width:640px){.angpad{grid-template-columns:repeat(3,36px);grid-template-rows:repeat(3,36px)}}
+.pcw{display:flex;flex-direction:column}.pcw .pc{border-bottom-left-radius:0;border-bottom-right-radius:0;flex:1}
+.angr{display:flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--ln);border-top:0;border-radius:0 0 12px 12px;background:#f7fafb;padding:5px 8px}
+.angr button{border:1px solid var(--ln);background:#fff;border-radius:8px;width:34px;height:28px;font:700 14px var(--f-b);cursor:pointer;color:var(--ink)}.angr button:hover{border-color:var(--tl);color:var(--tl)}
+.angr span{font:700 12.5px var(--f-b);color:var(--tm);min-width:92px;text-align:center}
+#wm{position:fixed;inset:0;z-index:958;pointer-events:none;background-repeat:repeat;opacity:1}
+@media print{#wm{opacity:1}}
 .pc:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(15,60,70,.12)}
 .pc .im{aspect-ratio:4/3;background:linear-gradient(#f6f9fa,#e9eff1);position:relative}.pc .im img{position:absolute;inset:6px;width:calc(100% - 12px);height:calc(100% - 12px);object-fit:contain}
 .pc .im .b3{position:absolute;right:6px;bottom:6px;background:var(--tl);color:#fff;font:700 11px var(--f-b);border-radius:99px;padding:2px 7px}
@@ -124,7 +137,7 @@ table.tb tr.hi td{background:#e7f7ec;font-weight:700}
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="../auth.js"></script>
-<script src="cm3d.js?v=2"></script>
+<script src="cm3d.js?v=3"></script>
 <script>
 /* Treinamento em Esquadrias 3D · FC Consultoria em Esquadria · Sinop-MT · todos os direitos reservados */
 const IMG='/perfis/img/',PERFIS='/perfis/';
@@ -239,6 +252,8 @@ function place3d(){try{placeCm();fsBar();}catch(e){console.warn(e);}let H=$('#e3
  if(!ph||$('#md').hidden===false&&false){H.style.display='none';return;}
  const t=ph.dataset.t;if(H.dataset.t!==t){H.dataset.t=t;H.querySelector('iframe').src='/treinamento/demo/index.html?previa&esq=1&t='+encodeURIComponent(t);}
  if(H.dataset.fs)return;const r=ph.getBoundingClientRect();Object.assign(H.style,{display:'block',left:(r.left+scrollX)+'px',top:(r.top+scrollY)+'px',width:r.width+'px',height:r.height+'px'});}
+function posHosts(){[['cmhost','.cm3'],['e3host','.e3']].forEach(([id,sel])=>{const H=document.getElementById(id),ph=document.querySelector(sel);if(!H||H.dataset.fs||!ph||H.style.display==='none')return;const r=ph.getBoundingClientRect(),L=(r.left+scrollX)+'px',T=(r.top+scrollY)+'px',W=r.width+'px',Hh=r.height+'px';if(H.style.left!==L||H.style.top!==T||H.style.width!==W||H.style.height!==Hh)Object.assign(H.style,{left:L,top:T,width:W,height:Hh});});}
+setInterval(posHosts,300);addEventListener('load',posHosts);document.fonts&&document.fonts.ready.then(posHosts);
 addEventListener('resize',()=>place3d());addEventListener('hashchange',()=>{const h=location.hash.slice(1);if(!ALUNO&&R[h]&&h!==AT)go(h);});try{new ResizeObserver(()=>place3d()).observe(document.body);}catch(_){}
 const b3d=(t,txt)=>`<button type="button" class="btn p" data-d3="${t}">🧊 ${esc(txt||'Ver em 3D: '+T3[t])}</button>`;
 function mTip(){const fam=MODELOS.filter(([f])=>!TIPF||f===TIPF);const sel=TIPS||MODELOS[1][1][0];const t=parseModelo(sel);
@@ -275,7 +290,7 @@ function mCm(){const F=window.CM3D&&CM3D.__fotos||{};
  return head(2,'Contramarco · instalação e componentes')+`<div class="sec"><h2>O que é o contramarco?</h2><div class="call t">É um <b>requadro de alumínio natural</b> preparado para ser <b>chumbado no vão da alvenaria</b>, onde depois será instalada a esquadria de alumínio. Assim a esquadria entra com a obra pronta, sem sujar e sem riscar.</div>
  <p style="margin:6px 0">Usado em <b>janelas de correr</b> de 2, 3 e 4 planos, <b>portas de correr</b> de 2, 3 e 4 planos, <b>portas de abrir</b> e <b>maxim-ar</b>.</p></div>
  <div class="sec"><h2>🧩 Componentes em 3D</h2><p class="nt">Toque na peça para girar em 3D e ver de perto. Peças ilustrativas, sem escala de fabricação.</p>
- <div class="pg" style="grid-template-columns:repeat(auto-fill,minmax(250px,1fr))">${CMP.map(([c,n,d])=>`<button type="button" class="pc" data-cmp="${c}"><div class="im" style="aspect-ratio:4/3;background:radial-gradient(circle at 50% 40%,#fff,#e6edf0)">${F[c]?`<img src="${F[c]}" alt="${c}">`:'<div style="position:absolute;inset:0;display:grid;place-items:center;color:#9aa8b0;font:600 13px var(--f-b)">gerando 3D…</div>'}<span class="b3">↻ 3D</span></div><div class="tx"><b>${c}</b><span>${esc(n)}</span><span style="margin-top:4px;color:var(--ink)">${esc(d)}</span></div></button>`).join('')}</div></div>
+ <div class="pg" style="grid-template-columns:repeat(auto-fill,minmax(250px,1fr))">${CMP.map(([c,n,d])=>`<div class="pcw"><button type="button" class="pc" data-cmp="${c}"><div class="im" style="aspect-ratio:4/3;background:radial-gradient(circle at 50% 40%,#fff,#e6edf0)">${F[c]?`<img data-qimg="${c}" src="${(CM3D.QUADROS[c]||[])[QA[c]||0]||F[c]}" alt="${c}">`:'<div style="position:absolute;inset:0;display:grid;place-items:center;color:#9aa8b0;font:600 13px var(--f-b)">gerando 3D…</div>'}<span class="b3">↻ 3D</span></div><div class="tx"><b>${c}</b><span>${esc(n)}</span><span style="margin-top:4px;color:var(--ink)">${esc(d)}</span></div></button><div class="angr" role="group" aria-label="Controle de ângulo"><button type="button" data-qd="-1" data-q="${c}" title="Girar 15° para a esquerda">◀</button><span data-qr="${c}">${angTx(c)}</span><button type="button" data-qd="1" data-q="${c}" title="Girar 15° para a direita">▶</button></div></div>`).join('')}</div></div>
  <div class="sec"><h2>🧱 Passo a passo da instalação em 3D</h2><p class="nt">Toque no passo: as peças entram na parede e a câmera vai até o detalhe. Arraste para girar, role para aproximar.</p>
  <div class="cm3" style="height:min(680px,78vh);border-radius:14px;background:#0c161d;color:#9fb3bf;display:grid;place-items:center;font:600 14px var(--f-b)">Carregando a parede em 3D…</div>
   <div class="rng"><button class="btn" data-cmk="${Math.max(0,CMK-1)}">← Anterior</button><button class="btn p" data-cmk="${Math.min(CMST.length-1,CMK+1)}">Próximo passo →</button><button class="btn ${CMX?'o':''}" data-cmx="1">${CMX?'🔍 Corte ligado':'🔍 Ver o corte da parede'}</button><button class="btn" data-fs="cmhost">⛶ Tela cheia</button></div>
@@ -288,7 +303,7 @@ function placeCm(){const ph=document.querySelector('.cm3');let H=$('#cmhost');
  if(!H){H=document.createElement('div');H.id='cmhost';H.style.cssText='position:absolute;z-index:5;border-radius:14px;overflow:hidden;box-shadow:0 10px 30px rgba(10,40,50,.18)';document.body.appendChild(H);
   if(ALUNO){const cv=document.createElement('div');cv.style.cssText='position:absolute;inset:0;z-index:2;cursor:not-allowed';H.appendChild(cv);}}
  if(!H.dataset.fs){const r=ph.getBoundingClientRect();Object.assign(H.style,{display:'block',left:(r.left+scrollX)+'px',top:(r.top+scrollY)+'px',width:r.width+'px',height:r.height+'px'});}
- if(!CMS&&!placeCm.ld){placeCm.ld=1;CM3D.carregar().then(()=>{CMS=CM3D.cena(H);CM3D.passo(CMS,CMK);CM3D.cortar(CMS,CMX,CMK);if(!CM3D.__fotos){try{CM3D.__fotos=CM3D.fotos();if(AT==='cm')re();}catch(e){console.warn(e);}}}).catch(e=>{console.warn(e);ph.textContent='Não foi possível carregar o 3D.';});}
+ if(!CMS&&!placeCm.ld){placeCm.ld=1;CM3D.carregar().then(()=>{CMS=CM3D.cena(H);CM3D.passo(CMS,CMK);angPad(H,AD.orbit(()=>CMS&&CMS.r?CMS:null,()=>{CMS.alvo=null;}));CM3D.cortar(CMS,CMX,CMK);if(!CM3D.__fotos){try{CM3D.__fotos=CM3D.fotos();if(AT==='cm')re();}catch(e){console.warn(e);}}quadrosPrep();}).catch(e=>{console.warn(e);ph.textContent='Não foi possível carregar o 3D.';});}
  else if(CMS){CM3D.passo(CMS,CMK);CM3D.cortar(CMS,CMX,CMK);}}
 /* --- 04 guarnições --- */
 /* desenhos do catálogo Sealway (guarnição EPDM e espuma PVC adesivada) */
@@ -410,11 +425,33 @@ function home(){const G=LS.g('fc_esq_prova',null);return `<div class="hero"><div
 const R={cat:mCat,tip:mTip,cm:mCm,gua:mGua,max:mMax,cor:mCor,pad:mPad,giro:mGiro,div:mDiv,quiz:mQuiz};
 function go(id,keep){AT=id&&R[id]?id:null;$('#main').innerHTML=AT?R[AT]():home();navUI();setTimeout(place3d,0);if(!keep)scrollTo({top:0,behavior:'smooth'});try{if(!ALUNO)history.replaceState(null,'',(location.search||'')+(AT?'#'+AT:''));}catch(_){}LIVE.push();}
 function re(){const y=scrollY;go(AT,true);scrollTo(0,y);}
-function abre3d(c){if(String(c).startsWith('P:')){const k=c.slice(2),it=CMP.find(x=>x[0]===k)||[k,'',''];$('#mdC').textContent=k;$('#mdN').textContent=it[1]+' · '+it[2];$('#mdB').innerHTML='<div id="pc3" style="flex:1;background:radial-gradient(circle at 50% 40%,#fff,#dfe7eb)"></div>';$('#md').hidden=false;MD=c;LIVE.push();CM3D.carregar().then(()=>{if(MD===c)PEC=CM3D.pecaCena(k,$('#pc3'),true);});return;}
+/* ===== Controle de ângulo (o mesmo direcionador do Orientativo) em todo 3D do treinamento ===== */
+const QA={};function angTx(c){const Q=window.CM3D&&CM3D.QUADROS[c];return Q?`↻ ${(QA[c]||0)*15}°`:'↻ preparando…';}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-qd]');if(!b)return;e.preventDefault();e.stopPropagation();const c=b.dataset.q,Q=CM3D.QUADROS[c];if(!Q)return;
+ QA[c]=((QA[c]||0)+Number(b.dataset.qd)+Q.length)%Q.length;const im=document.querySelector(`[data-qimg="${c}"]`);if(im)im.src=Q[QA[c]];const t=document.querySelector(`[data-qr="${c}"]`);if(t)t.textContent=angTx(c);},true);
+function quadrosPrep(){if(!window.CM3D||!CM3D.quadros)return;CM3D.quadros((c,Q)=>{const t=document.querySelector(`[data-qr="${c}"]`);if(t)t.textContent=angTx(c);});}
+const AD={orbit(get,antes){const cur=()=>{const o=get();if(!o)return null;const v=o.cam.position.clone().sub(o.ctl.target),R=v.length();return{R,az:Math.atan2(v.x,v.z)*180/Math.PI,el:Math.asin(Math.max(-1,Math.min(1,v.y/R)))*180/Math.PI};};
+  return{cur,put(az,el,R){const o=get();if(!o)return;if(antes)antes();o.ctl.autoRotate=false;const a=az*Math.PI/180,e=el*Math.PI/180;o.cam.position.set(o.ctl.target.x+Math.sin(a)*Math.cos(e)*R,o.ctl.target.y+Math.sin(e)*R,o.ctl.target.z+Math.cos(a)*Math.cos(e)*R);o.ctl.update();}};},
+ frame(ifr){const A=()=>{try{return ifr.contentWindow&&ifr.contentWindow.__ang}catch(_){return null}};return{cur(){const a=A();return a?a.get():null;},put(az,el){const a=A();if(a)a.set(az,el);}};}};
+function angPad(host,ad,opt){if(ALUNO||!host)return;opt=opt||{};let w=host.querySelector(':scope>.angw');if(!w){w=document.createElement('div');w.className='angw';host.appendChild(w);}
+ w.innerHTML=`<div class="angpad" role="group" aria-label="Direcionador de ângulo"><span class="e"></span><button type="button" data-k="u" title="Inclinar para cima">▲</button><span class="e"></span><button type="button" data-k="l" title="Girar 15° para a esquerda">◀</button><button type="button" data-k="c" class="c" title="Voltar de frente">${opt.cLabel||'0°'}</button><button type="button" data-k="r" title="Girar 15° para a direita">▶</button><span class="e"></span><button type="button" data-k="d" title="Inclinar para baixo">▼</button><span class="e"></span><span class="rd"></span></div>`;
+ const rd=w.querySelector('.rd');let tw=null;
+ const go=(az,el)=>{const c=ad.cur();if(!c)return;el=Math.max(opt.elMin??-30,Math.min(80,el));let da=az-c.az;while(da>180)da-=360;while(da<-180)da+=360;const a0=c.az,e0=c.el,t0=performance.now();cancelAnimationFrame(tw);
+  const st=t=>{const k=Math.min(1,(t-t0)/260),q=k*k*(3-2*k);ad.put(a0+da*q,e0+(el-e0)*q,c.R);if(k<1)tw=requestAnimationFrame(st);};tw=requestAnimationFrame(st);};
+ w.querySelectorAll('button').forEach(b=>b.addEventListener('click',ev=>{ev.stopPropagation();const c=ad.cur();if(!c)return;const k=b.dataset.k,az=Math.round(c.az/15)*15,el=Math.round(c.el/10)*10;
+  if(k==='l')go(az-15,c.el);if(k==='r')go(az+15,c.el);if(k==='u')go(c.az,el+10);if(k==='d')go(c.az,el-10);if(k==='c')go(0,opt.frontEl||0);}));
+ let last='';(function lp(){if(!document.body.contains(w))return;const c=ad.cur();if(c){const t=`↻ ${Math.round(c.az)>0?'+':''}${Math.round(c.az)}°  ↕ ${Math.round(c.el)}°`;if(t!==last){last=t;rd.textContent=t;}}requestAnimationFrame(lp);})();}
+/* ===== Marca d'água da FC em todo o treinamento (inclusive 3D e tela cheia) ===== */
+function marca(){let el=$('#wm');if(!el){el=document.createElement('div');el.id='wm';el.setAttribute('aria-hidden','true');document.body.appendChild(el);}
+ let q='';try{const o=JSON.parse(localStorage.getItem('fc_esq_aluno')||'{}');if(ALUNO&&o.n)q=o.n+(o.e?' · '+o.e:'');}catch(_){}
+ const d=new Date().toLocaleDateString('pt-BR'),x=v=>String(v).replace(/[<>&"]/g,'');
+ const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="460" height="300"><g transform="rotate(-24 230 150)" font-family="Barlow,Arial,sans-serif" text-anchor="middle" fill="#0f4f53" fill-opacity=".075"><text x="230" y="140" font-size="26" font-weight="800">FC CONSULTORIA EM ESQUADRIA</text><text x="230" y="168" font-size="14" font-weight="600">Treinamento exclusivo · ${x(q||'uso interno')} · ${d}</text></g></svg>`;
+ el.style.backgroundImage=`url("data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}")`;}
+function abre3d(c){if(String(c).startsWith('P:')){const k=c.slice(2),it=CMP.find(x=>x[0]===k)||[k,'',''];$('#mdC').textContent=k;$('#mdN').textContent=it[1]+' · '+it[2];$('#mdB').innerHTML='<div style="position:relative;flex:1;display:flex"><div id="pc3" style="flex:1;background:radial-gradient(circle at 50% 40%,#fff,#dfe7eb)"></div></div>';$('#md').hidden=false;MD=c;LIVE.push();CM3D.carregar().then(()=>{if(MD===c){PEC=CM3D.pecaCena(k,$('#pc3'),true);const P=PEC;angPad($('#pc3').parentNode,AD.orbit(()=>P.r?P:null),{elMin:-80});}});return;}
  if(String(c).startsWith('D:')){const t=c.slice(2);$('#mdC').textContent='🧊 '+(T3[t]||'Esquadria em 3D');$('#mdN').textContent='Gire, abra as folhas, desmonte e veja os cortes';
   $('#mdB').innerHTML=`<div style="position:relative;flex:1;display:flex"><iframe id="d3f" src="/treinamento/demo/index.html?previa&esq=1&t=${encodeURIComponent(t)}" title="Esquadria em 3D" allow="fullscreen"></iframe>${ALUNO?'<div style="position:absolute;inset:0;cursor:not-allowed" title="O Fernando está conduzindo"></div>':''}</div>`;$('#md').hidden=false;MD=c;LIVE.push();return;}
  const x=pfInfo(c);if(!x.ok)return;$('#mdC').textContent=c;$('#mdN').textContent=(x.n||'')+(x.peso!=null?' · '+kg(x.peso)+' kg/m':'')+(x.d?' · '+mm(x.d[0])+' × '+mm(x.d[1])+' mm':'');
- $('#mdB').innerHTML=x.d3?`<iframe src="${PERFIS}?ver=${encodeURIComponent(x.k.split(' / ')[0])}&embed=1" title="Perfil ${esc(c)} em 3D" allow="fullscreen"></iframe>`:`<div class="alt"><div><img src="${x.img}" alt=""><p>Este perfil não tem modelo 3D: veja o corte.</p></div></div>`;$('#md').hidden=false;MD=c;LIVE.push();}
+ $('#mdB').innerHTML=x.d3?`<div style="position:relative;flex:1;display:flex"><iframe id="pf3f" src="${PERFIS}?ver=${encodeURIComponent(x.k.split(' / ')[0])}&embed=1" title="Perfil ${esc(c)} em 3D" allow="fullscreen"></iframe></div>`:`<div class="alt"><div><img src="${x.img}" alt=""><p>Este perfil não tem modelo 3D: veja o corte.</p></div></div>`;$('#md').hidden=false;MD=c;LIVE.push();const f=$('#pf3f');if(f)angPad(f.parentNode,AD.frame(f),{elMin:-80});}
 let MD=null,PEC=null;function fecha(){if(PEC){PEC.fim();PEC=null;}$('#md').hidden=true;$('#mdB').innerHTML='';if(MD){MD=null;if(!ALUNO)LIVE.push();}}
 addEventListener('message',e=>{if(e.origin===location.origin&&e.data&&e.data.fc3d==='fechou')fecha();});
 $('#mdX').onclick=fecha;$('#md').onclick=e=>{if(e.target.id==='md')fecha();};addEventListener('keydown',e=>{if(e.key==='Escape')fecha();});
@@ -545,11 +582,11 @@ function participar(){/* cliente / funcionário acompanhando: ouve o Fernando, c
   $('#alGo').onclick=entrar;$('#alTr').onclick=()=>{try{localStorage.removeItem('fc_esq_aluno')}catch(_){}participar();};return;}
  $('#main').innerHTML=`<div class="hero"><div class="ey">FC Consultoria · ao vivo</div><h1 style="font-size:36px">Treinamento em Esquadrias 3D</h1><div class="bar"></div><p>O Fernando vai conduzir o treinamento e a sua tela acompanha sozinha. Ligue o som do aparelho para ouvir. Se tiver dúvida, use o ✋ ou o 💬 chat.</p>
   <form id="alN" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px"><input name="n" required placeholder="Seu nome" style="flex:1;min-width:180px;font:600 16px var(--f-b);padding:10px 12px;border-radius:10px;border:0"><input name="e" placeholder="Empresa" style="flex:1;min-width:160px;font:600 16px var(--f-b);padding:10px 12px;border-radius:10px;border:0"><button class="btn o" style="font-size:16px">🔊 Entrar no treinamento</button></form></div>`;
- $('#alN').onsubmit=ev=>{ev.preventDefault();nome=ev.target.n.value.trim().slice(0,40);emp=ev.target.e.value.trim().slice(0,40);if(!nome)return;try{localStorage.setItem('fc_esq_aluno',JSON.stringify({n:nome,e:emp}))}catch(_){}entrar();};}
+ $('#alN').onsubmit=ev=>{ev.preventDefault();nome=ev.target.n.value.trim().slice(0,40);emp=ev.target.e.value.trim().slice(0,40);if(!nome)return;try{localStorage.setItem('fc_esq_aluno',JSON.stringify({n:nome,e:emp}))}catch(_){}marca();entrar();};}
 async function iniciar(){try{const j=await fetch('perfis.json?v=1',{cache:'no-cache'}).then(r=>r.json());const raw=j.P;P={};IDX={};
   Object.entries(raw).forEach(([k,v])=>{const o=Object.assign({k},v);P[k]=o;IDX[k]=o;k.split(' / ').forEach(c=>IDX[c.trim()]=o);});}catch(e){console.warn(e);}
  if(ALUNO){participar();return;}const h=location.hash.slice(1);go(R[h]?h:null);if(APRES.length>=10){try{localStorage.setItem('fc_esq_sala',APRES)}catch(_){}apresentar(APRES);}}
-if(ALUNO)iniciar();else gateUI(()=>{try{localStorage.setItem('fc_eu','1')}catch(_){}iniciar();},{soMatriz:true});
+marca();if(ALUNO)iniciar();else gateUI(()=>{try{localStorage.setItem('fc_eu','1')}catch(_){}iniciar();},{soMatriz:true});
 </script>
 </body>
 </html>
