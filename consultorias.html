@@ -414,7 +414,7 @@ function ficha(){const e=E[at];let h='';
  if(tab==='pla')h+=plTabHtml(e);
  if(tab==='age')h+=ageTabHtml(e,hero,nextc,sec);
  if(tab==='dia')h+=diaTabHtml(e,hero,nextc);
- if(tab==='ori')h+=oriTabHtml(e);
+ if(tab==='ori')h+=oriTabHtml(e)+`<div class="box"><h3>📘 Apostila do treinamento</h3><p class="nota">Material de estudo do Treinamento em Esquadrias, para ler aqui ou imprimir (A4 paisagem).</p><div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px"><a class="btn pri" href="/treinamento/apostila/apostila-540257d2315acb84.pdf" download="Apostila-Treinamento-Esquadrias-FC.pdf" style="text-decoration:none">⬇ Baixar para imprimir</a></div><iframe src="/treinamento/apostila/apostila-540257d2315acb84.pdf#view=FitH" title="Apostila" loading="lazy" style="width:100%;height:min(780px,80vh);border:1px solid #d8e2e6;border-radius:12px"></iframe></div>`;
  if(tab==='esq')h+=esqTabHtml(e);
  if(tab==='conv')h+=`<div style="background:#fff;border:1px solid #d8e2e6;border-radius:14px;overflow:hidden"><iframe src="/treinamento/equivalencias/${KEY?'?k='+encodeURIComponent(KEY):''}" title="Conversão de códigos" style="width:100%;height:max(760px,82vh);border:0;display:block"></iframe></div>`;
  if(tab==='div')h+=divTabHtml(e,hero,nextc);
