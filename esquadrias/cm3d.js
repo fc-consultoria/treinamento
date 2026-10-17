@@ -18,11 +18,11 @@
   for(let n=0;n<4000;n++){const v=Math.random()*amp;x.fillStyle=`rgba(${Math.random()<.5?0:255},${Math.random()<.5?0:255},${Math.random()<.5?0:255},${v})`;x.fillRect(Math.random()*256,Math.random()*256,2,2);}
   const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;return t;}
  function mats(){if(M)return M;const tij=texTijolo();
-  M={tij,parede:new THREE.MeshStandardMaterial({map:tij,roughness:.95}),
-   alu:new THREE.MeshStandardMaterial({color:0xd7dcdf,metalness:.35,roughness:.38}),
+  M={tij,parede:new THREE.MeshStandardMaterial({map:tij,roughness:.95,envMapIntensity:.35}),
+   alu:new THREE.MeshStandardMaterial({color:0xd9dde0,metalness:.85,roughness:.32}),
    aluEsc:new THREE.MeshStandardMaterial({color:0x9aa3a9,metalness:.7,roughness:.4}),
-   pvc:new THREE.MeshStandardMaterial({color:0x1d1f22,roughness:.55}),
-   zinco:new THREE.MeshStandardMaterial({color:0xc4c9cc,metalness:.45,roughness:.3,side:THREE.DoubleSide}),
+   pvc:new THREE.MeshStandardMaterial({color:0x202224,roughness:.62,metalness:.05,envMapIntensity:.5}),
+   zinco:new THREE.MeshStandardMaterial({color:0xb9b4a6,metalness:.8,roughness:.38,side:THREE.DoubleSide}),
    arg:new THREE.MeshStandardMaterial({map:texRuido('#9a9893',.12),roughness:1}),
    madeira:new THREE.MeshStandardMaterial({map:texRuido('#b98b55',.15),roughness:.8}),
    amarelo:new THREE.MeshStandardMaterial({color:0xf2b705,roughness:.45}),
@@ -30,42 +30,67 @@
    linha:new THREE.MeshBasicMaterial({color:0x222222}),
    chumbo:new THREE.MeshStandardMaterial({color:0x5a5f63,metalness:.6,roughness:.35})};return M;}
  /* ---------- peças (1 unidade = 1 metro) ---------- */
- function perfilCM(comp){/* CM-200: L com aba de 26 mm, altura 25,6 mm e retorno de 13,6 mm */
-  const s=new THREE.Shape(),e=.0015;s.moveTo(0,0);s.lineTo(.026,0);s.lineTo(.026,e);s.lineTo(e,e);s.lineTo(e,.0256);s.lineTo(-.006,.0256);s.lineTo(-.006,.0256-e);s.lineTo(-e*.5,.0256-e);s.lineTo(-e*.5,.012);s.lineTo(-.0136*.5,.012);s.lineTo(-.0136*.5,.012-e);s.lineTo(0,.012-e);s.lineTo(0,0);
-  const g=new THREE.ExtrudeGeometry(s,{depth:comp,bevelEnabled:false});g.translate(0,0,-comp/2);return new THREE.Mesh(g,mats().alu);}
- function grapa(){/* CHU-787: chapa dobrada com ponta em forquilha */
-  const G=new THREE.Group(),m=mats().zinco,t=.002,w=.02;
-  const pts=[[0,0],[.045,0],[.11,.028]];const sh=new THREE.Shape();sh.moveTo(pts[0][0],pts[0][1]);pts.slice(1).forEach(p=>sh.lineTo(p[0],p[1]));[...pts].reverse().forEach(p=>sh.lineTo(p[0]+0,p[1]+t));
-  const g=new THREE.ExtrudeGeometry(sh,{depth:w,bevelEnabled:false});g.translate(0,0,-w/2);G.add(new THREE.Mesh(g,m));
-  [-1,1].forEach(sz=>{const p=new THREE.Mesh(new THREE.BoxGeometry(.04,t,.007),m);p.position.set(.11+.016,.028+.007,sz*.009);p.rotation.set(0,-sz*.45,.4);G.add(p);});
-  for(let k=0;k<2;k++){const f=new THREE.Mesh(new THREE.CylinderGeometry(.0032,.0032,t*2,14),mats().linha);f.position.set(.014+k*.016,t/2,0);G.add(f);}
+ function ambiente(r){/* reflexo de estúdio para o alumínio e o aço parecerem reais */
+  const c=document.createElement('canvas');c.width=512;c.height=256;const x=c.getContext('2d');const g=x.createLinearGradient(0,0,0,256);g.addColorStop(0,'#ffffff');g.addColorStop(.45,'#dfe6ea');g.addColorStop(.5,'#9aa5ab');g.addColorStop(1,'#4b5257');x.fillStyle=g;x.fillRect(0,0,512,256);
+  x.fillStyle='rgba(255,255,255,.95)';x.fillRect(60,40,120,30);x.fillRect(320,30,140,26);x.fillStyle='rgba(255,255,255,.6)';x.fillRect(200,90,90,16);
+  const t=new THREE.CanvasTexture(c);t.mapping=THREE.EquirectangularReflectionMapping;const pm=new THREE.PMREMGenerator(r);const env=pm.fromEquirectangular(t).texture;pm.dispose();return env;}
+ function serra(sh,x0,x1,y,dente,alt,cima){/* borda serrilhada */const n=Math.max(2,Math.round((x1-x0)/dente));for(let k=0;k<=n;k++){const x=x0+(x1-x0)*k/n;sh.lineTo(x,y+(k%2?(cima?alt:-alt):0));}}
+ function perfilCM(comp){/* CM-200 conforme o desenho: altura 23,6 · aba a 11,6 · largura 26 mm, com serrilhado de fixação */
+  const s=new THREE.Shape(),t=.0014;
+  s.moveTo(0,0);s.lineTo(.0045,0);s.lineTo(.0045,.0022);s.lineTo(.0032,.0022);s.lineTo(.0032,t);s.lineTo(t,t);s.lineTo(t,.0116-t);
+  s.lineTo(.026-t,.0116-t);s.lineTo(.026-t,.0012);s.lineTo(.0215,.0012);s.lineTo(.0215,0);s.lineTo(.026,0);
+  for(let k=0;k<5;k++){const y=.0012+k*.0021;s.lineTo(.026,y+.001);s.lineTo(.0268,y+.0016);s.lineTo(.026,y+.0021);}
+  s.lineTo(.026,.0116);s.lineTo(t,.0116);s.lineTo(t,.0236);s.lineTo(-.0012,.0236);s.lineTo(-.0012,.0224);s.lineTo(0,.0224);s.lineTo(0,0);
+  const g=new THREE.ExtrudeGeometry(s,{depth:comp,bevelEnabled:false,curveSegments:2});g.translate(0,0,-comp/2);return new THREE.Mesh(g,mats().alu);}
+ function grapa(dobra){/* CHU-787: chapa de aço zincada com recortes e furos (grapa ou chumbador) */
+  const L=.11,W=.026,t=.0015,s=new THREE.Shape();s.moveTo(0,0);
+  const borda=(y,dir)=>{const pts=[];for(let k=0;k<=6;k++){const x=k*L/6;pts.push([x,y]);if(k<6){pts.push([x+L/24,y]);pts.push([x+L/16,y+dir*.0045]);pts.push([x+L/9.5,y+dir*.0045]);pts.push([x+L/8.2,y]);}}return pts;};
+  borda(0,1).forEach(([x,y])=>s.lineTo(x,y));s.lineTo(L,W);borda(W,-1).reverse().forEach(([x,y])=>s.lineTo(x,y));s.lineTo(0,0);
+  [[.016],[.05],[.084]].forEach(([x],k)=>{const h=new THREE.Path();if(k===1){h.absellipse(x,W/2,.007,.0035,0,Math.PI*2,false,0);}else{h.absarc(x,W/2,.0035,0,Math.PI*2,false);}s.holes.push(h);});
+  const g=new THREE.ExtrudeGeometry(s,{depth:t,bevelEnabled:false,curveSegments:16});g.translate(0,-W/2,-t/2);
+  const m=new THREE.Mesh(g,mats().zinco);m.rotation.x=Math.PI/2;const G=new THREE.Group();
+  if(dobra){/* dobrada em L: uma parte presa no contramarco, outra na parede */const a=m.clone();a.scale.x=.38;const b=m.clone();b.scale.x=.62;b.position.x=L*.38;b.rotation.z=.6;G.add(a,b);}else G.add(m);
   return G;}
- function esquadro(){/* ESQ160: esquadro plástico triangular com nervuras */
-  const s=new THREE.Shape(),L=.16,w=.022;s.moveTo(0,0);s.lineTo(L,0);s.lineTo(0,L);s.lineTo(0,0);
-  const h=new THREE.Path();h.moveTo(w,w);h.lineTo(L-w*2.4,w);h.lineTo(w,L-w*2.4);h.lineTo(w,w);s.holes.push(h);
-  const g=new THREE.ExtrudeGeometry(s,{depth:.012,bevelEnabled:true,bevelSize:.0015,bevelThickness:.0015,bevelSegments:1});const G=new THREE.Group();G.add(new THREE.Mesh(g,mats().pvc));
-  const r=new THREE.Mesh(new THREE.BoxGeometry(.006,.085,.01),mats().pvc);r.position.set(.045,.045,.006);r.rotation.z=-Math.PI/4;G.add(r);return G;}
- function canto(){/* CON063: cantoneira de conexão em L */
-  const G=new THREE.Group(),m=mats().pvc;const a=new THREE.Mesh(new THREE.BoxGeometry(.06,.014,.02),m);a.position.set(.03,0,0);const b=new THREE.Mesh(new THREE.BoxGeometry(.014,.06,.02),m);b.position.set(0,.03,0);
-  const c=new THREE.Mesh(new THREE.BoxGeometry(.018,.018,.022),m);G.add(a,b,c);for(const [x,y] of [[.045,0],[0,.045]]){const f=new THREE.Mesh(new THREE.BoxGeometry(.004,.016,.024),mats().aluEsc);f.position.set(x,y,0);if(y)f.rotation.z=Math.PI/2;G.add(f);}return G;}
- function cantoneira(comp){/* CL-006: cantoneira (perfil L) */
-  const s=new THREE.Shape(),a=.02,e=.0015;s.moveTo(0,0);s.lineTo(a,0);s.lineTo(a,e);s.lineTo(e,e);s.lineTo(e,a);s.lineTo(0,a);s.lineTo(0,0);
-  const g=new THREE.ExtrudeGeometry(s,{depth:comp||.25,bevelEnabled:false});g.translate(0,0,-(comp||.25)/2);return new THREE.Mesh(g,mats().alu);}
- function cunha(){/* CL-011: macho e cunha */
+ function esquadro(){/* ESQ160: esquadro plástico preto em treliça, com abas e furos */
+  const L=.16,s=new THREE.Shape();s.moveTo(0,0);s.lineTo(L,0);s.lineTo(0,L);s.lineTo(0,0);
+  const tri=(a,b,c)=>{const h=new THREE.Path();h.moveTo(...a);h.lineTo(...b);h.lineTo(...c);h.lineTo(...a);s.holes.push(h);};
+  const e=.013,m=L/2;
+  tri([e,e*1.6],[m-e*.8,e*1.6],[e,m-e*.8]);tri([m+e*.8,e*1.6],[L-e*3.2,e*1.6],[m+e*.8,m-e*2.6]);tri([e*1.6,m+e*.8],[m-e*2.6,m+e*.8],[e*1.6,L-e*3.2]);tri([m-e*.2,e*2.4],[m-e*.2,m-e*2.4],[e*2.4,m-e*.2]);
+  const g=new THREE.ExtrudeGeometry(s,{depth:.006,bevelEnabled:true,bevelSize:.0008,bevelThickness:.0008,bevelSegments:1});const G=new THREE.Group();G.add(new THREE.Mesh(g,mats().pvc));
+  /* abas laterais que abraçam o contramarco */
+  [[L/2,-.004,L,.008,0],[-.004,L/2,.008,L,0]].forEach(([x,y,w,h])=>{const a=new THREE.Mesh(new THREE.BoxGeometry(w,h,.022),mats().pvc);a.position.set(x,y,.008);G.add(a);});
+  for(let k=1;k<7;k++){[[k*L/7.5,-.004],[-.004,k*L/7.5]].forEach(([x,y])=>{const f=new THREE.Mesh(new THREE.CylinderGeometry(.0018,.0018,.024,10),new THREE.MeshStandardMaterial({color:0x3a3d40}));f.rotation.x=Math.PI/2;f.position.set(x,y,.008);G.add(f);});}
+  return G;}
+ function canto(){/* CON063: cantoneira de conexão em PVC, em L, com nervuras */
+  const G=new THREE.Group(),m=mats().pvc,c=.055,w=.016,t=.012;
+  const perna=(rot)=>{const P=new THREE.Group();const b=new THREE.Mesh(new THREE.BoxGeometry(c,w,t),m);b.position.x=c/2;P.add(b);
+   for(let k=0;k<6;k++){const r=new THREE.Mesh(new THREE.BoxGeometry(.003,w+.003,t+.002),new THREE.MeshStandardMaterial({color:0x141516,roughness:.5}));r.position.x=.012+k*.0075;P.add(r);}
+   const ponta=new THREE.Mesh(new THREE.BoxGeometry(.006,w-.004,t-.003),m);ponta.position.x=c+.002;P.add(ponta);P.rotation.z=rot;return P;};
+  G.add(perna(0),perna(Math.PI/2));const n=new THREE.Mesh(new THREE.CylinderGeometry(w*.75,w*.75,t+.004,4,1),m);n.rotation.set(Math.PI/2,0,Math.PI/4);G.add(n);return G;}
+ function cantoneira(comp){/* CL-006: cantoneira de PVC preta em L (barra de 6 m) */
+  const s=new THREE.Shape(),a=.022,e=.0022;s.moveTo(0,0);s.lineTo(a,0);s.lineTo(a,e);s.lineTo(e,e);s.lineTo(e,a);s.lineTo(0,a);s.lineTo(0,0);
+  const g=new THREE.ExtrudeGeometry(s,{depth:comp||.25,bevelEnabled:true,bevelSize:.0005,bevelThickness:.0005,bevelSegments:1});g.translate(0,0,-(comp||.25)/2);return new THREE.Mesh(g,mats().pvc);}
+ function cunha(){/* CL-011: macho e cunha, perfil de PVC cinza em "telhado" com dentes */
+  const G=new THREE.Group(),m=new THREE.MeshStandardMaterial({color:0x6f7579,roughness:.65,metalness:0,side:THREE.DoubleSide,envMapIntensity:.4}),Lc=.18;
+  const s=new THREE.Shape(),e=.0018;s.moveTo(-.02,0);s.lineTo(0,.016);s.lineTo(.02,0);s.lineTo(.02-e,0);s.lineTo(0,.016-e*1.4);s.lineTo(-.02+e,0);s.lineTo(-.02,0);
+  const g=new THREE.ExtrudeGeometry(s,{depth:Lc,bevelEnabled:false});g.translate(0,0,-Lc/2);G.add(new THREE.Mesh(g,m));
+  for(let k=0;k<9;k++){[-1,1].forEach(sx=>{const d=new THREE.Mesh(new THREE.BoxGeometry(.004,.012,.012),m);d.position.set(sx*.021,-.004,-Lc/2+.012+k*.019);d.rotation.z=sx*.25;G.add(d);});}
+  return G;}
+ function calco(){/* calço de madeira usado junto com o macho e cunha no vão */
   const G=new THREE.Group();const s=new THREE.Shape();s.moveTo(0,0);s.lineTo(.12,0);s.lineTo(0,.025);s.lineTo(0,0);
-  const g=new THREE.ExtrudeGeometry(s,{depth:.03,bevelEnabled:false});const a=new THREE.Mesh(g,mats().madeira);const b=new THREE.Mesh(g,mats().madeira);b.rotation.z=Math.PI;b.position.set(.15,.032,0);G.add(a,b);return G;}
+  const g=new THREE.ExtrudeGeometry(s,{depth:.03,bevelEnabled:false});const a=new THREE.Mesh(g,mats().madeira);const b=new THREE.Mesh(g,mats().madeira);b.rotation.z=Math.PI;b.position.set(.12,.026,0);G.add(a,b);return G;}
  function nivel(){const G=new THREE.Group();const c=new THREE.Mesh(new THREE.BoxGeometry(.5,.035,.025),mats().amarelo);G.add(c);
   const v=new THREE.Mesh(new THREE.CylinderGeometry(.008,.008,.06,16),new THREE.MeshStandardMaterial({color:0x9be37a,transparent:true,opacity:.85}));v.rotation.z=Math.PI/2;v.position.z=.014;G.add(v);return G;}
  function prumo(h){const G=new THREE.Group();const f=new THREE.Mesh(new THREE.CylinderGeometry(.0008,.0008,h,6),mats().linha);f.position.y=-h/2;G.add(f);
   const p=new THREE.Mesh(new THREE.ConeGeometry(.014,.04,16),mats().chumbo);p.rotation.x=Math.PI;p.position.y=-h-.02;G.add(p);return G;}
- const PECAS={'CM-200':()=>{const m=perfilCM(.3);m.scale.set(2.2,2.2,1);m.rotation.set(.35,-.9,0);return m;},'CHU-787':grapa,'ESQ160':esquadro,'CON063':canto,'CL-006':()=>{const m=cantoneira(.25);m.scale.set(2.2,2.2,1);m.rotation.set(.35,-.9,0);return m;},'CL-011':cunha};
+ const PECAS={'CM-200':()=>{const m=perfilCM(.12);m.rotation.set(.25,-.75,0);return m;},'CHU-787':()=>{const g=grapa(false);g.rotation.set(.9,.25,.15);return g;},'ESQ160':()=>{const e=esquadro();e.rotation.set(-.5,.35,0);return e;},'CON063':()=>{const c=canto();c.rotation.set(-.55,.4,-.1);return c;},'CL-006':()=>{const m=cantoneira(.12);m.rotation.set(.3,-.75,0);return m;},'CL-011':()=>{const g=cunha();g.rotation.set(.45,-.7,0);return g;},};
  /* ---------- cena da parede ---------- */
  const VW=1.2,VH=1.0,FOL=.02,PE=.14;/* vão, folga para argamassa, espessura da parede */
  function cena(el){const S={el};const W=el.clientWidth,H=el.clientHeight;
   const r=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});r.setPixelRatio(Math.min(2,devicePixelRatio));r.setSize(W,H);r.shadowMap.enabled=true;r.localClippingEnabled=true;el.appendChild(r.domElement);
-  const sc=new THREE.Scene();sc.background=new THREE.Color(0xe9eef1);const cam=new THREE.PerspectiveCamera(38,W/H,.01,50);cam.position.set(1.15,.55,2.2);
+  const sc=new THREE.Scene();sc.background=new THREE.Color(0xe9eef1);sc.environment=ambiente(r);const cam=new THREE.PerspectiveCamera(38,W/H,.01,50);cam.position.set(1.15,.55,2.2);
   const ctl=new THREE.OrbitControls(cam,r.domElement);ctl.enableDamping=true;ctl.target.set(0,0,0);ctl.minDistance=.25;ctl.maxDistance=5;
-  sc.add(new THREE.HemisphereLight(0xffffff,0x8a8070,.75));const sol=new THREE.DirectionalLight(0xffffff,.85);sol.position.set(2.5,3,3);sol.castShadow=true;sol.shadow.mapSize.set(2048,2048);
+  sc.add(new THREE.HemisphereLight(0xffffff,0x8a8070,.35));const sol=new THREE.DirectionalLight(0xffffff,.6);sol.position.set(2.5,3,3);sol.castShadow=true;sol.shadow.mapSize.set(2048,2048);
   Object.assign(sol.shadow.camera,{left:-2,right:2,top:2,bottom:-2});sc.add(sol);
   const corte=new THREE.Plane(new THREE.Vector3(0,0,-1),-.005);S.corte=corte;
   const m=mats();const pm=m.parede.clone();pm.clippingPlanes=[];const am=m.arg.clone();
@@ -83,15 +108,15 @@
   const cantos=new THREE.Group();G.add(cantos);[[-1,-1],[1,-1],[1,1],[-1,1]].forEach(([sx,sy])=>{const c=canto();c.scale.set(.8,.8,.8);c.position.set(sx*(iw/2-.012),sy*(ih/2-.012),-PE/2+.045);c.rotation.z=sx<0&&sy<0?0:sx>0&&sy<0?Math.PI/2:sx>0&&sy>0?Math.PI:-Math.PI/2;cantos.add(c);});
   const esq=new THREE.Group();G.add(esq);[[-1,-1],[1,-1],[1,1],[-1,1]].forEach(([sx,sy])=>{const e=esquadro();e.position.set(sx*(iw/2-.028),sy*(ih/2-.028),.01);e.rotation.z=sx<0&&sy<0?0:sx>0&&sy<0?Math.PI/2:sx>0&&sy>0?Math.PI:-Math.PI/2;esq.add(e);});
   const gr=new THREE.Group();G.add(gr);const pos=(L)=>{const o=[.15];let p=.15+.45;while(p<L-.1){o.push(p);p+=.45;}if(L-.15-o[o.length-1]>.08)o.push(L-.15);return o;};
-  pos(ih).forEach(d=>[-1,1].forEach(sx=>{const g=grapa();g.position.set(sx*(iw/2),-ih/2+d,-PE/2+.045);g.rotation.y=sx>0?0:Math.PI;gr.add(g);}));
-  pos(iw).forEach(d=>[-1,1].forEach(sy=>{const g=grapa();g.position.set(-iw/2+d,sy*(ih/2),-PE/2+.045);g.rotation.set(0,0,sy>0?Math.PI/2:-Math.PI/2);gr.add(g);}));
+  pos(ih).forEach(d=>[-1,1].forEach(sx=>{const g=grapa(true);g.position.set(sx*(iw/2),-ih/2+d,-PE/2+.045);g.rotation.y=sx>0?0:Math.PI;gr.add(g);}));
+  pos(iw).forEach(d=>[-1,1].forEach(sy=>{const g=grapa(true);g.position.set(-iw/2+d,sy*(ih/2),-PE/2+.045);g.rotation.set(0,0,sy>0?Math.PI/2:-Math.PI/2);gr.add(g);}));
   /* cotas 150 / 450 */
   const cota=(txt,x,y)=>{const c=document.createElement('canvas');c.width=256;c.height=96;const k=c.getContext('2d');k.fillStyle='rgba(19,35,46,.88)';k.beginPath();k.roundRect?k.roundRect(4,8,248,80,18):k.rect(4,8,248,80);k.fill();k.fillStyle='#ffd58a';k.font='bold 46px system-ui';k.textAlign='center';k.fillText(txt,128,66);
    const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),depthTest:false}));sp.scale.set(.16,.06,1);sp.position.set(x,y,.08);return sp;};
   const cotas=new THREE.Group();G.add(cotas);cotas.add(cota('150 mm',-iw/2-.16,-ih/2+.075),cota('450 mm',-iw/2-.16,-ih/2+.15+.225));
   /* nível, prumo e cunhas */
   const ferr=new THREE.Group();G.add(ferr);const nv=nivel();nv.position.set(0,-ih/2+.02,.04);ferr.add(nv);const pr=prumo(ih*.8);pr.position.set(iw/2-.06,ih/2-.03,.03);ferr.add(pr);
-  [[-iw/2-FOL/2,0,Math.PI/2],[iw/2+FOL/2,0,-Math.PI/2],[0,-ih/2-FOL/2,0],[0,ih/2+FOL/2,Math.PI]].forEach(([x,y,rz])=>{const c=cunha();c.scale.set(.5,.6,.8);c.position.set(x-(rz===0||rz===Math.PI?.03:0),y,-.015);c.rotation.z=rz;ferr.add(c);});
+  [[-iw/2-FOL/2,0,Math.PI/2],[iw/2+FOL/2,0,-Math.PI/2],[0,-ih/2-FOL/2,0],[0,ih/2+FOL/2,Math.PI]].forEach(([x,y,rz])=>{const c=calco();c.scale.set(.5,.6,.8);c.position.set(x-(rz===0||rz===Math.PI?.03:0),y,-.015);c.rotation.z=rz;ferr.add(c);});
   /* argamassa na folga */
   const arg=new THREE.Group();G.add(arg);[[0,VH/2-FOL/2,VW,FOL],[0,-VH/2+FOL/2,VW,FOL],[VW/2-FOL/2,0,FOL,VH-2*FOL],[-VW/2+FOL/2,0,FOL,VH-2*FOL]].forEach(([x,y,w,h])=>{const ms=new THREE.Mesh(new THREE.BoxGeometry(w,h,PE*.98),am);ms.position.set(x,y,0);ms.receiveShadow=true;arg.add(ms);});
   /* esquadria final (janela de correr simples) */
@@ -116,7 +141,7 @@
  function destruir(S){if(!S)return;cancelAnimationFrame(S.raf);try{S.ro.disconnect();}catch(_){}S.r.dispose();S.r.domElement.remove();S.r=null;}
  /* ---------- peça isolada (visualizador e miniaturas) ---------- */
  function pecaCena(code,el,auto){const W=el.clientWidth||400,H=el.clientHeight||300;const r=new THREE.WebGLRenderer({antialias:true,alpha:true,preserveDrawingBuffer:true});r.setPixelRatio(Math.min(2,devicePixelRatio));r.setSize(W,H);el.appendChild(r.domElement);
-  const sc=new THREE.Scene();sc.add(new THREE.HemisphereLight(0xffffff,0x707a80,.9));const l=new THREE.DirectionalLight(0xffffff,.9);l.position.set(1,2,2);sc.add(l);
+  const sc=new THREE.Scene();sc.environment=ambiente(r);sc.add(new THREE.HemisphereLight(0xffffff,0x707a80,.35));const l=new THREE.DirectionalLight(0xffffff,.6);l.position.set(1,2,2);sc.add(l);
   const o=PECAS[code]();const box=new THREE.Box3().setFromObject(o),c=box.getCenter(new THREE.Vector3()),sz=box.getSize(new THREE.Vector3()).length();o.position.sub(c);const g=new THREE.Group();g.add(o);sc.add(g);
   const cam=new THREE.PerspectiveCamera(35,W/H,.001,10);cam.position.set(sz*.9,sz*.55,sz*1.25);cam.lookAt(0,0,0);
   const ctl=new THREE.OrbitControls(cam,r.domElement);ctl.enableDamping=true;ctl.autoRotate=!!auto;ctl.autoRotateSpeed=2.2;

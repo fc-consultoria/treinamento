@@ -124,7 +124,7 @@ table.tb tr.hi td{background:#e7f7ec;font-weight:700}
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="../auth.js"></script>
-<script src="cm3d.js?v=1"></script>
+<script src="cm3d.js?v=2"></script>
 <script>
 /* Treinamento em Esquadrias 3D · FC Consultoria em Esquadria · Sinop-MT · todos os direitos reservados */
 const IMG='/perfis/img/',PERFIS='/perfis/';
@@ -270,7 +270,7 @@ function cmSvg(k){const on=s=>CMST.findIndex(x=>x[2]===s)<=k;let s=`<svg viewBox
  if(on('esd')){s+=`<rect x="70" y="50" width="220" height="160" fill="#cfd8dc" stroke="#37474f" stroke-width="2"/>`+vidro(76,56,104,148)+vidro(180,56,104,148)+seta(128,130,1,10)+seta(232,130,-1,10);}
  return s+'</svg>';}
 let CMX=false,CMT='jcr200',CMS=null;
-const CMP=[['CM-200','Perfil do contramarco','Alumínio natural. Forma o requadro que fica chumbado no vão.'],['CHU-787','Chumbador (grapa)','Chapa dobrada que fica presa na argamassa e segura o contramarco na parede.'],['ESQ160','Esquadro do contramarco','Mantém o requadro no esquadro durante a obra. Sai depois da cura.'],['CON063','Cantoneira de conexão','Une os perfis nos cantos do requadro.'],['CL-006','Cantoneira (6 m)','Perfil em L usado como acabamento e reforço.'],['CL-011','Cunha (6 m) · macho e cunha','Calça o requadro no vão para acertar prumo e nível.']];
+const CMP=[['CM-200','Perfil do contramarco','Alumínio natural. Forma o requadro que fica chumbado no vão.'],['CHU-787','Chumbador (grapa)','Chapa dobrada que fica presa na argamassa e segura o contramarco na parede.'],['ESQ160','Esquadro do contramarco','Mantém o requadro no esquadro durante a obra. Sai depois da cura.'],['CON063','Cantoneira de conexão','Une os perfis nos cantos do requadro.'],['CL-006','Cantoneira de PVC (barra de 6 m)','Perfil de PVC preto em L, que vai nas laterais do contramarco.'],['CL-011','Macho e cunha (barra de 6 m)','Perfil de PVC em barra. Confira a aplicação no catálogo do fornecedor.']];
 function mCm(){const F=window.CM3D&&CM3D.__fotos||{};
  return head(2,'Contramarco · instalação e componentes')+`<div class="sec"><h2>O que é o contramarco?</h2><div class="call t">É um <b>requadro de alumínio natural</b> preparado para ser <b>chumbado no vão da alvenaria</b>, onde depois será instalada a esquadria de alumínio. Assim a esquadria entra com a obra pronta, sem sujar e sem riscar.</div>
  <p style="margin:6px 0">Usado em <b>janelas de correr</b> de 2, 3 e 4 planos, <b>portas de correr</b> de 2, 3 e 4 planos, <b>portas de abrir</b> e <b>maxim-ar</b>.</p></div>
