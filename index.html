@@ -92,8 +92,8 @@ const fmtR=ms=>{const h=Math.floor(ms/3600e3),m=Math.floor(ms%3600e3/60e3);retur
 async function estadoEmpresa(uid){
   const [c,e,l,zr]=await Promise.all([sb.from('trein_eventos').select('detalhe,criado_em').eq('tipo','colab').order('criado_em'),
     sb.from('trein_eventos').select('tipo,detalhe,criado_em').eq('user_id',uid).in('tipo',['colab_inicio','pedido_tempo']).order('criado_em'),
-    sb.from('trein_eventos').select('detalhe').eq('tipo','liberacao').order('criado_em',{ascending:false}).limit(1),sb.from('trein_eventos').select('criado_em').eq('tipo','zerar')]);
-  const zt=Math.max(0,...(zr.data||[]).map(r=>Date.parse(r.criado_em)));window.ZERAR_T=zt;
+    sb.from('trein_eventos').select('detalhe').eq('tipo','liberacao').order('criado_em',{ascending:false}).limit(1),sb.from('trein_eventos').select('criado_em,detalhe').eq('tipo','zerar')]);
+  const zt=Math.max(0,...(zr.data||[]).filter(r=>!(r.detalhe||{}).para||(r.detalhe||{}).para===uid).map(r=>Date.parse(r.criado_em)));window.ZERAR_T=zt;
   const C={};(c.data||[]).forEach(r=>{const d=r.detalhe||{};if(d.para!==uid)return;C[d.id]=Object.assign({},C[d.id]||{},d,{alt:r.criado_em});});
   (e.data||[]).filter(r=>Date.parse(r.criado_em)>zt).forEach(r=>{const d=r.detalhe||{},x=C[d.cid];if(!x)return;if(r.tipo==='colab_inicio'){if(!x.ini)x.ini=r.criado_em;}else x.ped=r.criado_em;});
   const L0=((l.data||[])[0]||{}).detalhe||{},CT=L0.contrato&&L0.ate?Date.parse(L0.ate+'T23:59:59-04:00'):0;window.CONTRATO_FIM=CT>Date.now()?CT:0;window.CONTRATO_ATE=CT>Date.now()?L0.ate:null;window.IMPL_ATE=L0.impl&&CT>Date.now()?L0.ate:null;
@@ -147,7 +147,8 @@ function escolherColab(uid,perfil){return new Promise(res=>{
     let last='';try{last=sessionStorage.getItem('treinFC-cid')||'';}catch(e){}
     const lx=st.lst.find(x=>x.id===last&&x.ini&&x.resta>0);if(lx&&!window.ALUNO_CID){[...L.children][st.lst.indexOf(lx)].click();}}
   window.COLAB_DRAW=draw;draw();});}
-function escolherColabAviso(uid,perfil,nome){escolherColab(uid,perfil);setTimeout(()=>{const M=document.getElementById('quemMsg');M.style.color='';
+const trocouRecarrega=p=>p.then(x=>{if(x)location.reload();});
+function escolherColabAviso(uid,perfil,nome){trocouRecarrega(escolherColab(uid,perfil));setTimeout(()=>{const M=document.getElementById('quemMsg');M.style.color='';
   M.textContent='O nome '+nome+' foi aberto em outro aparelho, e este foi desconectado. Cada colaborador só pode usar um aparelho por vez. Para continuar aqui, toque no seu nome de novo.';},700);}
 function vigiaPrazo(uid,perfil){setInterval(()=>{if(window.ALUNO_CID&&window.COLAB_S&&document.visibilityState==='visible')sb.from('trein_eventos').insert({user_id:uid,tipo:'hb',tipologia:null,detalhe:{cid:window.ALUNO_CID,s:window.COLAB_S}});},60000);
   setInterval(async()=>{if(!window.ALUNO_CID||!window.COLAB_S)return;
@@ -156,8 +157,8 @@ function vigiaPrazo(uid,perfil){setInterval(()=>{if(window.ALUNO_CID&&window.COL
     if(ult&&ult.s!==window.COLAB_S){const nome=window.ALUNO_NOME;window.ALUNO_CID=null;window.COLAB_S=null;window.ALUNO_FIM=null;if(window.TRKFLUSH)TRKFLUSH();
       await escolherColabAviso(uid,perfil,nome);}},45000);
   setInterval(()=>{if(window.ALUNO_FIM&&Date.now()>window.ALUNO_FIM){window.ALUNO_FIM=null;window.ALUNO_CID=null;
-    if(window.TRKFLUSH)TRKFLUSH();escolherColab(uid,perfil);}},30000);
-  document.getElementById('quemTag').onclick=()=>{window.ALUNO_CID=null;try{sessionStorage.removeItem('treinFC-cid');}catch(e){}escolherColab(uid,perfil);};}
+    if(window.TRKFLUSH)TRKFLUSH();trocouRecarrega(escolherColab(uid,perfil));}},30000);
+  document.getElementById('quemTag').onclick=async()=>{const antes=window.ALUNO_CID;if(window.TRKFLUSH)await TRKFLUSH();window.ALUNO_CID=null;window.ALUNO_NOME=null;window.COLAB_S=null;try{sessionStorage.removeItem('treinFC-cid');}catch(e){}const x=await escolherColab(uid,perfil);if(x&&x.id!==antes)location.reload();};}
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="auth.js"></script>
