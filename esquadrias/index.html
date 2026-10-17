@@ -134,6 +134,7 @@ table.tb tr.hi td{background:#e7f7ec;font-weight:700}
 .two{display:grid;grid-template-columns:1.1fr 1fr;gap:14px;align-items:start}@media(max-width:860px){.two{grid-template-columns:1fr}}
 .game{display:grid;gap:8px}.slot{display:grid;grid-template-columns:170px 1fr;gap:10px;align-items:center;border:1px dashed var(--ln);border-radius:10px;padding:7px 10px}.slot.ok{border-style:solid;border-color:#16a34a;background:#eefaf2}
 .slot b{font-size:14px}.pool{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}.pool button{border:1px solid var(--ln);background:#fff;border-radius:8px;padding:5px 10px;font:800 15px var(--f-d);cursor:pointer}.pool button.sel{background:var(--ink);color:#fff}.pool button.us{opacity:.3;pointer-events:none}
+.cmpl{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-start}.cmpd{border:1px solid var(--ln);border-radius:12px;background:#fff}.cmpd>summary{list-style:none;cursor:pointer;padding:9px 14px;font:600 14px var(--f-b);display:flex;gap:6px;align-items:center}.cmpd>summary::-webkit-details-marker{display:none}.cmpd>summary::before{content:'▸';color:var(--tl);transition:transform .2s}.cmpd[open]>summary::before{transform:rotate(90deg)}.cmpd>summary b{color:var(--tl)}.cmpd>summary span{color:var(--tm);font-weight:500}.cmpd[open]{flex-basis:100%}.cmpd[open] .pcw{max-width:420px;margin:0 14px 14px}
 </style>
 </head>
 <body>
@@ -153,7 +154,7 @@ table.tb tr.hi td{background:#e7f7ec;font-weight:700}
 <script>
 /* Treinamento em Esquadrias 3D · FC Consultoria em Esquadria · Sinop-MT · todos os direitos reservados */
 const IMG='/perfis/img/',PERFIS='/perfis/';
-let P={},IDX={};
+let CMPO=null;let P={},IDX={};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const num=v=>{const n=parseFloat(String(v||'').replace(',','.'));return isNaN(n)?null:n;};
 const kg=n=>n==null?'':n.toLocaleString('pt-BR',{minimumFractionDigits:3,maximumFractionDigits:3});
@@ -314,8 +315,8 @@ const CMP=[['CM-200','Perfil do contramarco','Alumínio natural. Forma o requadr
 function mCm(){const F=window.CM3D&&CM3D.__fotos||{};
  return head(2,'Contramarco · instalação e componentes')+`<div class="sec"><h2>O que é o contramarco?</h2><div class="call t">É um <b>requadro de alumínio natural</b> preparado para ser <b>chumbado no vão da alvenaria</b>, onde depois será instalada a esquadria de alumínio. Assim a esquadria entra com a obra pronta, sem sujar e sem riscar.</div>
  <p style="margin:6px 0">Usado em <b>janelas de correr</b> de 2, 3 e 4 planos, <b>portas de correr</b> de 2, 3 e 4 planos, <b>portas de abrir</b> e <b>maxim-ar</b>.</p></div>
- <div class="sec"><h2>🧩 Componentes em 3D</h2><p class="nt">Toque na peça para girar em 3D e ver de perto. Peças ilustrativas, sem escala de fabricação.</p>
- <div class="pg" style="grid-template-columns:repeat(auto-fill,minmax(250px,1fr))">${CMP.map(([c,n,d])=>`<div class="pcw"><button type="button" class="pc" data-cmp="${c}"><div class="im" style="aspect-ratio:4/3;background:radial-gradient(circle at 50% 40%,#fff,#e6edf0)">${F[c]?`<img data-qimg="${c}" src="${(CM3D.QUADROS[c]||[])[QA[c]||0]||F[c]}" alt="${c}">`:'<div style="position:absolute;inset:0;display:grid;place-items:center;color:#9aa8b0;font:600 13px var(--f-b)">gerando 3D…</div>'}<span class="b3">↻ 3D</span></div><div class="tx"><b>${c}</b><span>${esc(n)}</span><span style="margin-top:4px;color:var(--ink)">${esc(d)}</span></div></button><div class="angr" role="group" aria-label="Controle de ângulo"><button type="button" data-qd="-1" data-q="${c}" title="Girar 15° para a esquerda">◀</button><span data-qr="${c}">${angTx(c)}</span><button type="button" data-qd="1" data-q="${c}" title="Girar 15° para a direita">▶</button></div></div>`).join('')}</div></div>
+ <div class="sec"><h2>🧩 Componentes em 3D</h2><p class="nt">Toque no nome da peça para abrir a demonstração em 3D. Peças ilustrativas, sem escala de fabricação.</p>
+ <div class="cmpl">${CMP.map(([c,n,d])=>`<details class="cmpd"${CMPO===c?' open':''} data-cmpo="${c}"><summary><b>${c}</b> <span>${esc(n)}</span></summary><div class="pcw"><button type="button" class="pc" data-cmp="${c}"><div class="im" style="aspect-ratio:4/3;background:radial-gradient(circle at 50% 40%,#fff,#e6edf0)">${F[c]?`<img data-qimg="${c}" src="${(CM3D.QUADROS[c]||[])[QA[c]||0]||F[c]}" alt="${c}">`:'<div style="position:absolute;inset:0;display:grid;place-items:center;color:#9aa8b0;font:600 13px var(--f-b)">gerando 3D…</div>'}<span class="b3">↻ 3D</span></div><div class="tx"><b>${c}</b><span>${esc(n)}</span><span style="margin-top:4px;color:var(--ink)">${esc(d)}</span></div></button><div class="angr" role="group" aria-label="Controle de ângulo"><button type="button" data-qd="-1" data-q="${c}" title="Girar 15° para a esquerda">◀</button><span data-qr="${c}">${angTx(c)}</span><button type="button" data-qd="1" data-q="${c}" title="Girar 15° para a direita">▶</button></div></div></details>`).join('')}</div></div>
  <div class="sec"><h2>🧱 Passo a passo da instalação em 3D</h2><p class="nt">Toque no passo: as peças entram na parede e a câmera vai até o detalhe. Arraste para girar, role para aproximar.</p>
  <div class="cm3" style="height:min(680px,78vh);border-radius:14px;background:#0c161d;color:#9fb3bf;display:grid;place-items:center;font:600 14px var(--f-b)">Carregando a parede em 3D…</div>
   <div class="rng"><button class="btn" data-cmk="${Math.max(0,CMK-1)}">← Anterior</button><button class="btn p" data-cmk="${Math.min(CMST.length-1,CMK+1)}">Próximo passo →</button><button class="btn ${CMX?'o':''}" data-cmx="1">${CMX?'🔍 Corte ligado':'🔍 Ver o corte da parede'}</button><button class="btn" data-fs="cmhost">⛶ Tela cheia</button></div>${cmOpc()?`<div class="rng" style="align-items:center;flex-wrap:wrap">${cmOpc()}</div>`:''}
@@ -452,6 +453,7 @@ function go(id,keep){AT=id&&R[id]?id:null;$('#main').innerHTML=AT?R[AT]():home()
 function re(){const y=scrollY;go(AT,true);scrollTo(0,y);}
 /* ===== Controle de ângulo (o mesmo direcionador do Orientativo) em todo 3D do treinamento ===== */
 const QA={};function angTx(c){const Q=window.CM3D&&CM3D.QUADROS[c];return Q?`↻ ${(QA[c]||0)*15}°`:'↻ preparando…';}
+document.addEventListener('toggle',e=>{const d=e.target;if(!d.classList||!d.classList.contains('cmpd'))return;if(d.open){CMPO=d.dataset.cmpo;document.querySelectorAll('details.cmpd[open]').forEach(x=>{if(x!==d)x.open=false;});}else if(CMPO===d.dataset.cmpo)CMPO=null;},true);
 document.addEventListener('click',e=>{const b=e.target.closest('[data-qd]');if(!b)return;e.preventDefault();e.stopPropagation();const c=b.dataset.q,Q=CM3D.QUADROS[c];if(!Q)return;
  QA[c]=((QA[c]||0)+Number(b.dataset.qd)+Q.length)%Q.length;const im=document.querySelector(`[data-qimg="${c}"]`);if(im)im.src=Q[QA[c]];const t=document.querySelector(`[data-qr="${c}"]`);if(t)t.textContent=angTx(c);},true);
 function quadrosPrep(){if(!window.CM3D||!CM3D.quadros)return;CM3D.quadros((c,Q)=>{const t=document.querySelector(`[data-qr="${c}"]`);if(t)t.textContent=angTx(c);});}
