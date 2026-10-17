@@ -357,7 +357,7 @@ tbody tr:hover{background:var(--panel-2);}
       <button class="navitem" id="btn-logout"><i data-lucide="log-out"></i> Sair</button>
     </div>
     <div class="sidebar-foot">
-      Painel de implantação — dados salvos em banco de dados real (Supabase), acesso restrito à equipe.<br><b>Versão 17/10e — liberação de preços por linha</b>
+      Painel de implantação — dados salvos em banco de dados real (Supabase), acesso restrito à equipe.<br><b>Versão 17/10f — fotos por descrição (similar)</b>
     </div>
   </nav>
   <div class="mobile-topbar">
@@ -2146,16 +2146,18 @@ const linhasForn = f => FORN_LINHAS.filter(x=>x.fornecedor_id===f.id).map(x=>x.l
 // ===== Base "Claude (site Vitrasul)": conferência com foto dentro da aba Preços do fornecedor =====
 const CLAUDE_FORN = 'Claude (site Vitrasul)';
 // Fotos dos produtos (pesquisadas no site da Vitrasul): ficam numa coluna fixa nas tabelas de Componentes e Perfis
-let FOTOS = {}, FOTOS_OK = false;
+let FOTOS_INFO = {}, FOTOS = {}, FOTOS_OK = false;
 async function carregarFotos(){
-  try{ const {data, error} = await sb.from('impl_claude_base').select('codigo,img,variantes,excluido').limit(5000); if(error) return;
-    const F = {}; (data||[]).forEach(r=>{ if(r.excluido) return; let im = r.img && !/sem-imagem/.test(r.img) ? r.img : null;
+  try{ const {data, error} = await sb.from('impl_claude_base').select('codigo,img,variantes,excluido,status,cod_site,desc_site').limit(5000); if(error) return;
+    const F = {}; FOTOS_INFO = {}; (data||[]).sort((a,b)=>(a.status==='foto_sim')-(b.status==='foto_sim')).forEach(r=>{ if(r.excluido) return; let im = r.img && !/sem-imagem/.test(r.img) ? r.img : null;
       if(!im) (r.variantes||[]).some(v=>{ if(v.i && !/sem-imagem/.test(v.i)){ im = v.i; return true; } return false; });
-      if(im){ const k = normalizeCodigo(r.codigo); if(k && !F[k]) F[k] = im.startsWith('~') ? CLAUDE_IMG + im.slice(1) : im; } });
+      if(im){ const k = normalizeCodigo(r.codigo); if(k && !F[k]){ F[k] = im.startsWith('~') ? CLAUDE_IMG + im.slice(1) : im; FOTOS_INFO[k] = {sim: r.status==='foto_sim', cs: r.cod_site||'', ds: r.desc_site||''}; } } });
     FOTOS = F; FOTOS_OK = true; render(); }catch(_){}
 }
 function fotoCelula(codigo){
-  const u = FOTOS[normalizeCodigo(codigo)] || FOTOS[normalizeCodigo(String(codigo||'').replace(/-[A-Za-z]{2,3}$/,''))];
+  const k1 = normalizeCodigo(codigo), k2 = normalizeCodigo(String(codigo||'').replace(/-[A-Za-z]{2,3}$/,''));
+  const u = FOTOS[k1] || FOTOS[k2]; const inf = FOTOS_INFO[FOTOS[k1] ? k1 : k2] || {};
+  if(u && inf.sim) return `<td style="width:58px; padding-top:6px; padding-bottom:6px;"><a href="${escapeHtml(u)}" target="_blank" rel="noopener" title="Foto ilustrativa (produto parecido no site Vitrasul): ${escapeHtml(inf.cs)} · ${escapeHtml(inf.ds)}" style="position:relative; display:block; width:48px;"><img src="${escapeHtml(u)}" alt="" loading="lazy" style="width:48px; height:48px; object-fit:contain; border:1px dashed #d97706; border-radius:8px; background:#fff; display:block;"><span style="position:absolute; left:0; right:0; bottom:-2px; text-align:center; font-size:9px; font-weight:700; color:#a15c00; background:#fff4dfee; border-radius:0 0 8px 8px;">similar</span></a></td>`;
   return `<td style="width:58px; padding-top:6px; padding-bottom:6px;">${u ? `<a href="${escapeHtml(u)}" target="_blank" rel="noopener" title="Abrir foto"><img src="${escapeHtml(u)}" alt="" loading="lazy" style="width:48px; height:48px; object-fit:contain; border:1px solid var(--border-2); border-radius:8px; background:#fff; display:block;"></a>` : `<div style="width:48px; height:48px; border:1px dashed var(--border-2); border-radius:8px; display:grid; place-items:center; color:var(--text-3); font-size:10px;">sem foto</div>`}</td>`;
 }
 const CLAUDE_IMG = 'https://vprime-server.radocc.com:8443/midias/11083556000105/produtos/';
