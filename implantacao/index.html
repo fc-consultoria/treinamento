@@ -357,7 +357,7 @@ tbody tr:hover{background:var(--panel-2);}
       <button class="navitem" id="btn-logout"><i data-lucide="log-out"></i> Sair</button>
     </div>
     <div class="sidebar-foot">
-      Painel de implantação — dados salvos em banco de dados real (Supabase), acesso restrito à equipe.<br><b>Versão 15/10o — pessoas com acesso e mensagem do link prontas</b>
+      Painel de implantação — dados salvos em banco de dados real (Supabase), acesso restrito à equipe.<br><b>Versão 16/10 — ocultar detalhes, liberação manual e Suporte FC</b>
     </div>
   </nav>
   <div class="mobile-topbar">
@@ -2584,6 +2584,7 @@ function renderClientes(){
 
   ${renderCentralAvisosWA()}
 
+  <div style="display:flex;justify-content:flex-end;margin:-6px 0 10px"><label style="display:inline-flex;gap:8px;align-items:center;cursor:pointer;font-size:14px;font-weight:600;background:#fff;border:1px solid var(--border,#d6dee4);border-radius:99px;padding:6px 14px"><input type="checkbox" data-action="toggle-compacto" ${STATE.compacto?'checked':''} style="width:16px;height:16px;cursor:pointer"> Ocultar detalhes (mostrar só o nome)</label></div>
   ${STATE.compacto ? `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px">${CLIENTS.map(c=>{ const p = progressoImplantacaoTotal(c), s = statusInfo(c);
       return `<button class="panel" data-action="abrir-cliente" data-id="${c.id}" style="all:unset;box-sizing:border-box;cursor:pointer;background:var(--surface,#fff);border:1px solid var(--border,#e5e7eb);border-radius:10px;padding:10px 12px;display:flex;gap:8px;align-items:center" title="${escapeHtml(s.label)} · ${p.pct}%">
         <span style="width:9px;height:9px;border-radius:50%;flex:none;background:${/atraso|critico|crítico/i.test(s.label+' '+s.cls)?'#dc2626':p.pct>=100?'#15803d':'#3b4fe0'}"></span><b style="flex:1;font-size:13.5px;min-width:0;line-height:1.3">${escapeHtml(c.nome)}</b><span class="mono" style="font-size:12px;color:var(--text-3,#6b7280)">${p.pct}%</span></button>`; }).join('')}</div>` : `
