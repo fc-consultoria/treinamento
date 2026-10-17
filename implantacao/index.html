@@ -2044,8 +2044,8 @@ async function carregarAcessosEspelho(){
 // ===== Fila de alimentação: tarefas por cliente + linha + tópico, cada colaborador vê só as suas =====
 let TAREFAS = [];
 const TOPICOS = {perfis:'Perfis', componentes:'Componentes', vidro:'Vidro'};
-function ehAlimentador(){ return !!(MEU_ACESSO && MEU_ACESSO.alimentador && !MEU_ACESSO.admin); }
-function meuEmail(){ return String((MEU_ACESSO&&MEU_ACESSO.email)||'').toLowerCase(); }
+function ehAlimentador(){ return !!(STATE.simular || (MEU_ACESSO && MEU_ACESSO.alimentador && !MEU_ACESSO.admin)); }
+function meuEmail(){ return String(STATE.simular || (MEU_ACESSO&&MEU_ACESSO.email) || '').toLowerCase(); }
 function nomeAcesso(email){ const a = ACESSOS.find(x=>x.email.toLowerCase()===String(email||'').toLowerCase()); return a ? (a.nome||a.email) : (email||''); }
 async function carregarTarefas(){ try{ const {data,error} = await sb.from('impl_tarefas').select('*').order('criado_em'); if(!error) TAREFAS = data||[]; }catch(_){ TAREFAS=[]; } }
 function tarefaDe(cid, linha, topico){ return TAREFAS.find(t=>t.cliente_id===cid && t.linha===linha && t.topico===topico) || null; }
@@ -2076,6 +2076,7 @@ function selAtribuir(c, linha, topico){
   return `<label style="display:inline-flex;gap:4px;align-items:center;font-size:12.5px;color:var(--text-2)">${TOPICOS[topico]} →
     <select class="select-inline" data-action="atribuir-tarefa" data-linha="${escapeHtml(linha)}" data-topico="${topico}"><option value="">ninguém</option>${pessoas.map(a=>`<option value="${escapeHtml(a.email)}" ${t&&t.email.toLowerCase()===a.email.toLowerCase()?'selected':''}>${escapeHtml(a.nome||a.email)}</option>`).join('')}</select>${stTxt?`<b style="color:${t.status==='terminada'?'#b45309':'#1f8a4c'}">${stTxt}</b>`:''}</label>`;
 }
+function bannerSimular(){ if(!STATE.simular) return ''; return `<div style="position:sticky;top:0;z-index:20;background:#b45309;color:#fff;border-radius:10px;padding:10px 14px;margin-bottom:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">${icon('eye')} <b>Você está vendo como ${escapeHtml(nomeAcesso(STATE.simular))} vê.</b> <span style="opacity:.9">O que marcar aqui vale de verdade.</span><button class="btn btn-sm" style="margin-left:auto" data-action="sair-simular">Sair e voltar ao meu painel</button></div>`; }
 function renderFila(){
   const admin = !ehAlimentador();
   const minhas = TAREFAS.filter(t=>admin || t.email.toLowerCase()===meuEmail());
@@ -2092,9 +2093,10 @@ function renderFila(){
       </div></div>`; };
   const abertas = minhas.filter(t=>t.status!=='concluida'), feitas = minhas.filter(t=>t.status==='concluida');
   const equipe = admin ? `<div class="panel" style="margin-top:18px"><div class="panel-head"><div><h3>${icon('users')} Equipe de alimentação</h3><div class="desc">Marque quem é alimentador: essa pessoa entra direto na Fila e vê só as tarefas dela (sem contratos, valores e outros clientes).</div></div></div>
-    <div style="padding:10px 18px;display:grid;gap:8px">${ACESSOS.filter(a=>!a.admin).map(a=>`<label style="display:flex;gap:8px;align-items:center"><input type="checkbox" data-action="toggle-alimentador" data-email="${escapeHtml(a.email)}" ${a.alimentador?'checked':''}> <b>${escapeHtml(a.nome||a.email)}</b> <span class="desc">${escapeHtml(a.email)}</span></label>`).join('')||'<span class="desc">Nenhum outro login cadastrado.</span>'}
+    <div style="padding:10px 18px;display:grid;gap:8px">${ACESSOS.filter(a=>!a.admin).map(a=>`<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><label style="display:flex;gap:8px;align-items:center"><input type="checkbox" data-action="toggle-alimentador" data-email="${escapeHtml(a.email)}" ${a.alimentador?'checked':''}> <b>${escapeHtml(a.nome||a.email)}</b> <span class="desc">${escapeHtml(a.email)}</span></label>
+      <span style="margin-left:auto;display:flex;gap:6px"><button class="btn btn-sm" data-action="simular-pessoa" data-email="${escapeHtml(a.email)}">${icon('eye')} Ver como ${escapeHtml((a.nome||'').split(' ')[0]||'ela')} vê</button><button class="btn btn-sm" data-action="espelho-pessoa" data-email="${escapeHtml(a.email)}">${icon('monitor-play')} Espelho</button></span></div>`).join('')||'<span class="desc">Nenhum outro login cadastrado.</span>'}
     <span class="desc">Para um colaborador novo (ex.: Paulo), primeiro crie o login dele; depois ele aparece aqui.</span></div></div>` : '';
-  return `<div class="pagehead"><div><h1>${admin?'Fila de alimentação da equipe':'Minha fila de alimentação'}</h1><div class="desc">${admin?'Distribua as tarefas no cliente → Contrato & Acesso → Situação de cada linha.':'Abra a tarefa, alimente os preços e clique em "Terminei esta parte".'}</div></div></div>
+  return `${bannerSimular()}<div class="pagehead"><div><h1>${admin?'Fila de alimentação da equipe':'Minha fila de alimentação'}</h1><div class="desc">${admin?'Distribua as tarefas no cliente → Contrato & Acesso → Situação de cada linha.':'Abra a tarefa, alimente os preços e clique em "Terminei esta parte".'}</div></div></div>
     ${abertas.length?`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px">${abertas.map(card).join('')}</div>`:emptyState('list-todo','Nenhuma tarefa aberta', admin?'Atribua tarefas no cliente, em Contrato & Acesso.':'Quando a FC liberar uma tarefa para você, ela aparece aqui.')}
     ${feitas.length?`<h3 style="margin:20px 0 10px">Concluídas</h3><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px;opacity:.75">${feitas.slice(-12).map(card).join('')}</div>`:''}${equipe}`;
 }
@@ -2104,7 +2106,7 @@ function renderClienteAlimentador(c){
   const p = progressoTarefa(c,t);
   const cc = Object.assign({}, c, {linhas_componentes:[t.linha]});
   const corpo = t.topico==='componentes' ? (STATE.componenteLinhaAtiva = t.linha, renderClienteComponentes(cc)) : t.topico==='vidro' ? renderBancoProprio(c,'vidro') : (c.perfisBase==='kg' ? renderBancoProprio(c,'perfis_kg') : renderPerfisTab(c));
-  return `<div class="modo-alim"><button class="backlink" data-action="voltar-fila">${icon('arrow-left')} Minha fila</button>
+  return `${bannerSimular()}<div class="modo-alim"><button class="backlink" data-action="voltar-fila">${icon('arrow-left')} Minha fila</button>
   <div class="clienthead"><div class="clienthead-top"><div><h2>${escapeHtml(c.nome)}</h2><span class="badge">${escapeHtml(t.topico==='vidro'?'Vidro':t.linha+' · '+TOPICOS[t.topico])}</span></div>
     <div style="display:flex;gap:8px">${t.status==='terminada'?'<span class="badge">✔ Enviado para conferência</span>':`<button class="btn btn-primary" data-action="tarefa-status" data-id="${t.id}" data-st="terminada">${icon('check-circle')} Terminei esta parte</button>`}</div></div>
     <div class="metarow"><div class="metaitem">Sistema · login<b>${escapeHtml(c.sistema_login||'—')}</b></div><div class="metaitem">Senha<b>${escapeHtml(c.sistema_senha||'—')}</b></div><div class="metaitem">Licença<b>${escapeHtml(c.sistema_licenca||'—')}</b></div>
@@ -7222,6 +7224,9 @@ function wireEvents(){
       if(action==='set-linha'){ STATE.bancoLinha = el.dataset.linha; STATE.search=''; render(); return; }
       if(action==='abrir-tarefa'){ const t = TAREFAS.find(x=>x.id===el.dataset.id); if(!t) return; STATE.clientId=t.cliente_id; STATE.tarefaAtiva=t.id; STATE.view='cliente';
         STATE.clienteTab = t.topico==='componentes'?'componentes':t.topico==='vidro'?'vidro':'perfis'; if(t.topico==='componentes') STATE.componenteLinhaAtiva=t.linha; STATE.search=''; render(); window.scrollTo(0,0); return; }
+      if(action==='simular-pessoa'){ STATE.simular=el.dataset.email; STATE.view='fila'; render(); window.scrollTo(0,0); return; }
+      if(action==='sair-simular'){ STATE.simular=null; STATE.view='fila'; STATE.tarefaAtiva=null; render(); return; }
+      if(action==='espelho-pessoa'){ STATE.simular=null; ESPELHO.pessoa=el.dataset.email; ESPELHO.carregado=false; ESPELHO.itens=[]; ESPELHO.ultimoId=0; STATE.view='espelho'; render(); window.scrollTo(0,0); return; }
       if(action==='voltar-fila'){ STATE.view='fila'; STATE.tarefaAtiva=null; render(); return; }
       if(action==='tarefa-status'){ mudarStatusTarefa(el.dataset.id, el.dataset.st); return; }
       if(action==='tarefa-devolver'){ const o = prompt('O que precisa ajustar? (a pessoa vê esta observação na fila)'); if(o===null) return; mudarStatusTarefa(el.dataset.id, 'aberta', o.trim()||null); return; }
