@@ -3,6 +3,7 @@
 (function(){
   if(typeof sb==='undefined') return;
   const S = {aberto:false, msgs:[], eu:'', nome:'', ultimaId:0, ok:true, img:null, carregando:false};
+  const MARCA = '[[FC_ATUALIZAR]]';   // aviso "atualize o painel" que a matriz dispara (não aparece na conversa)
   const esc = s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const lidoKey = ()=>'fc_chat_lido_'+S.eu;
   const lido = ()=>{ try{ return Number(localStorage.getItem(lidoKey())||0); }catch(_){ return 0; } };
@@ -38,13 +39,19 @@
     document.head.appendChild(st);
     btn = document.createElement('button'); btn.type='button'; btn.className='fcchat-btn'; btn.title='Conversa da equipe'; btn.innerHTML='💬<span class="fcchat-badge" style="display:none"></span>';
     box = document.createElement('div'); box.className='fcchat-box';
-    box.innerHTML = `<div class="fcchat-head"><div style="font-size:20px">💬</div><div style="flex:1"><div style="font-weight:700">Conversa da equipe</div><div style="font-size:12px;opacity:.9">Matriz e equipe · texto e imagem</div></div><button type="button" data-x style="background:rgba(255,255,255,.2);border:0;color:#fff;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:16px">✕</button></div>
+    box.innerHTML = `<div class="fcchat-head"><div style="font-size:20px">💬</div><div style="flex:1"><div style="font-weight:700">Conversa da equipe</div><div style="font-size:12px;opacity:.9">Matriz e equipe · texto e imagem</div></div>${/\/implantacao\//.test(location.pathname)?'':'<button type="button" data-atu title="Mandar para a equipe o aviso de atualizar o Painel de Implantação" style="background:rgba(255,255,255,.2);border:0;color:#fff;height:30px;border-radius:15px;padding:0 10px;cursor:pointer;font:700 12px system-ui;white-space:nowrap">📣 Pedir atualização</button>'}<button type="button" data-x style="background:rgba(255,255,255,.2);border:0;color:#fff;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:16px">✕</button></div>
       <div class="fcchat-list"></div>
       <div class="fcchat-prev"><img style="width:44px;height:44px;object-fit:cover;border-radius:8px"><span style="flex:1">Imagem pronta para enviar</span><button type="button" data-tirar style="border:0;background:none;cursor:pointer;color:#b42318;font-weight:600">remover</button></div>
       <div class="fcchat-emojis" style="display:none;flex-wrap:wrap;gap:2px;padding:8px;border-top:1px solid #e6e9ee;background:#fff;max-height:150px;overflow:auto"></div><div class="fcchat-foot"><button type="button" class="fcchat-ico" data-anexo title="Anexar imagem">📎</button><button type="button" class="fcchat-ico" data-emoji title="Emoji">😊</button><input type="file" accept="image/*" hidden><textarea rows="1" placeholder="Escreva uma mensagem…" title="Enter envia · Shift+Enter quebra linha · Ctrl+V cola print"></textarea><button type="button" class="fcchat-ico fcchat-send" data-enviar title="Enviar">➤</button></div>`;
     document.body.appendChild(box); document.body.appendChild(btn);
     lista = box.querySelector('.fcchat-list'); txt = box.querySelector('textarea'); prev = box.querySelector('.fcchat-prev'); fileInp = box.querySelector('input[type=file]');
     btn.onclick = ()=>{ S.aberto = !S.aberto; box.style.display = S.aberto?'flex':'none'; if(S.aberto){ desenhar(true); marcarLido(); setTimeout(()=>txt.focus(),50); } };
+    const ba = box.querySelector('[data-atu]'); if(ba) ba.onclick = async ()=>{
+      if(!confirm('Mandar para a equipe o aviso de atualizar o Painel de Implantação?')) return;
+      ba.disabled=true; const {error} = await sb.from('impl_chat').insert({texto:MARCA, autor_nome:S.nome||'Matriz'});
+      ba.disabled=false; const ok=!error; const msg = ok?'📣 Aviso de atualização enviado para a equipe':'Não consegui enviar o aviso: '+(error.message||'');
+      if(typeof toast==='function') toast(msg); else alert(msg);
+    };
     box.querySelector('[data-x]').onclick = ()=>{ S.aberto=false; box.style.display='none'; };
     box.querySelector('[data-anexo]').onclick = ()=>fileInp.click();
     fileInp.onchange = ()=>{ const f=fileInp.files&&fileInp.files[0]; fileInp.value=''; if(f) prepararImagem(f); };
@@ -125,7 +132,7 @@
       S.ok = true; if(btn) btn.style.display='';
       let novos = (data||[]); if(!S.ultimaId) novos = novos.reverse();
       const primeira = !S.ultimaId;
-      novos.forEach(m=>{ if(!S.msgs.some(x=>x.id===m.id)){ S.msgs.push(m); if(!primeira && String(m.autor_email||'').toLowerCase()!==S.eu) avisar(m); } S.ultimaId = Math.max(S.ultimaId, m.id); });
+      novos.forEach(m=>{ if(m.texto===MARCA){ S.ultimaId = Math.max(S.ultimaId, m.id); return; } if(!S.msgs.some(x=>x.id===m.id)){ S.msgs.push(m); if(!primeira && String(m.autor_email||'').toLowerCase()!==S.eu) avisar(m); } S.ultimaId = Math.max(S.ultimaId, m.id); });
       if(novos.length){ desenhar(S.aberto); if(S.aberto) marcarLido(); }
       badge();
     } finally { S.carregando = false; }

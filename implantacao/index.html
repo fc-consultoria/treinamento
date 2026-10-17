@@ -358,7 +358,7 @@ tbody tr:hover{background:var(--panel-2);}
       <button class="navitem" id="btn-logout"><i data-lucide="log-out"></i> Sair</button>
     </div>
     <div class="sidebar-foot">
-      Painel de implantação — dados salvos em banco de dados real (Supabase), acesso restrito à equipe.<br><b>Versão 17/10w — conversa da matriz só no Painel da Matriz</b>
+      Painel de implantação — dados salvos em banco de dados real (Supabase), acesso restrito à equipe.<br><b>Versão 17/10x — aviso de atualizar só quando a matriz pedir</b>
     </div>
   </nav>
   <div class="mobile-topbar">
@@ -8677,17 +8677,28 @@ iniciar();
   bt.style.cssText='position:fixed;right:62px;bottom:16px;z-index:9997;border:0;border-radius:99px;padding:8px 14px;cursor:pointer;font:700 13px system-ui,-apple-system,Segoe UI,sans-serif;color:#fff;background:linear-gradient(135deg,var(--g1,#3452eb),var(--g2,#6f8bff));box-shadow:0 6px 18px -6px rgba(0,0,0,.4)';
   bt.onclick=atualizarJa; (document.readyState==='loading'?document.addEventListener('DOMContentLoaded',()=>document.body.appendChild(bt)):document.body.appendChild(bt));
   const pulso=document.createElement('style'); pulso.textContent='@keyframes fcPulso{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}'; document.head.appendChild(pulso);
+  // O aviso "Chegou novidade" NÃO é automático: só aparece quando a matriz aperta "📣 Pedir atualização" (na conversa do Painel da Matriz)
+  const MARCA='[[FC_ATUALIZAR]]', VISTO='fc_impl_aviso_visto';
   let avisado=false;
   async function checar(){
-    if(avisado||!atual) return;
-    try{ const r=await fetch(location.pathname+'?nc='+Date.now(),{cache:'no-store'}); const nova=pegar(await r.text());
-      if(nova && nova!==atual){ avisado=true; bt.innerHTML='🎉 Novidade! Atualizar agora'; bt.style.animation='fcPulso 1.2s ease-in-out infinite'; cartao('Chegou novidade no painel!', '<b>'+oQue(nova).replace(/</g,'&lt;')+'</b><br><span style="color:#5b6570;font-size:13px">Clique em atualizar para usar agora.</span>', 'Atualizar agora', ()=>location.replace(location.pathname+'?v='+Date.now()+location.hash)); } }catch(_){}
+    if(avisado||!atual||typeof sb==='undefined') return;
+    try{ const {data:{session}}=await sb.auth.getSession(); if(!session) return;
+      if(typeof MEU_ACESSO!=='undefined' && MEU_ACESSO && MEU_ACESSO.admin) return;   // a matriz não recebe o próprio aviso
+      const {data}=await sb.from('impl_chat').select('id,criado_em').eq('texto',MARCA).order('id',{ascending:false}).limit(1);
+      const m=(data||[])[0]; if(!m) return;
+      const visto=Number(localStorage.getItem(VISTO)||0);
+      if(m.id<=visto) return;
+      localStorage.setItem(VISTO,String(m.id));
+      if(Date.now()-new Date(m.criado_em).getTime() > 3*24*3600*1000) return;   // aviso antigo: ignora
+      avisado=true; bt.innerHTML='🎉 Novidade! Atualizar agora'; bt.style.animation='fcPulso 1.2s ease-in-out infinite';
+      cartao('Chegou novidade no painel!', '<b>A matriz pediu para atualizar o painel.</b><br><span style="color:#5b6570;font-size:13px">Clique em atualizar para usar a versão nova.</span>', 'Atualizar agora', atualizarJa);
+    }catch(_){}
   }
-  setTimeout(checar,4000); setInterval(checar,3*60*1000);
+  setTimeout(checar,5000); setInterval(checar,60*1000);
   document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') checar(); });
 })();
 </script>
 <script src="../tema-cor.js?v=4"></script>
-<script src="../conversa-equipe.js?v=7"></script>
+<script src="../conversa-equipe.js?v=8"></script>
 </body>
 </html>
