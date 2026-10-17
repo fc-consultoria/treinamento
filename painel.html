@@ -287,7 +287,7 @@ td.qd{cursor:help}td.qd:hover{background:#eef6f8;box-shadow:inset 0 -2px 0 #1f6f
   </div></section>
  <section class="card" id="sugCard" data-tab="sug"><h2 style="display:flex;justify-content:space-between;align-items:center;gap:8px">💬 Dúvidas e sugestões dos alunos <span class="sgn" id="sugN" style="flex:1"></span><button type="button" id="sugTog" style="font-size:12px;padding:4px 10px">Mostrar</button></h2><div id="sugBody" hidden><p class="note" style="padding:0 16px">O aluno envia pelo botão “💬 Sugestão” na barra escura do orientativo. Escreva a resposta embaixo da mensagem e clique em Responder: ela aparece para o aluno no mesmo botão.</p><ul class="tl" id="sugList"></ul></div></section>
  <section class="card" data-tab="emp">
-  <h2>Empresas</h2>
+  <h2 style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">Empresas <button type="button" id="bSenTodas" style="margin-left:auto;font:600 13px var(--f-display);text-transform:none;letter-spacing:0;padding:7px 12px;border-radius:9px;cursor:pointer">🔐 Senhas fortes para as empresas</button></h2>
   <div id="ctrResumo" style="display:flex;gap:10px;flex-wrap:wrap;padding:10px 16px 0"></div>
   <p class="ihint">Clique no nome, no login ou em nova senha para editar · Enter salva · Esc desfaz. O login novo vale no próximo acesso do aluno (a senha continua a mesma). Maiúsculas aparecem no painel, mas o aluno pode digitar o login com ou sem maiúsculas.</p>
   <p class="msg bad" id="tbMsg" hidden></p>
@@ -308,7 +308,7 @@ td.qd{cursor:help}td.qd:hover{background:#eef6f8;box-shadow:inset 0 -2px 0 #1f6f
   <div class="det">
    <div>
     <div class="edit"><input id="eNome" placeholder="Nome do aluno" aria-label="Nome do aluno"><button type="button" id="bNome">Salvar nome</button><button type="button" id="bAtivo"></button></div>
-    <div class="edit"><input id="eSenha" placeholder="Digite a nova senha da empresa (mín. 6) e clique em Salvar senha" aria-label="Nova senha"><button type="button" class="pri" id="bSenha">💾 Salvar senha</button></div>
+    <div class="edit"><input id="eSenha" placeholder="Nova senha (mín. 8, letras e números) ou toque em 🎲" aria-label="Nova senha"><button type="button" id="bGerSen" title="Cria uma senha forte aleatória no campo ao lado">🎲 Gerar senha forte</button><button type="button" class="pri" id="bSenha">💾 Salvar senha</button></div>
     <div class="edit"><input id="eCid" placeholder="Cidade da empresa" aria-label="Cidade da empresa" style="max-width:260px"><select id="eUf" aria-label="Estado"><option value="">UF</option><option>AC</option><option>AL</option><option>AM</option><option>AP</option><option>BA</option><option>CE</option><option>DF</option><option>ES</option><option>GO</option><option>MA</option><option>MG</option><option>MS</option><option>MT</option><option>PA</option><option>PB</option><option>PE</option><option>PI</option><option>PR</option><option>RJ</option><option>RN</option><option>RO</option><option>RR</option><option>RS</option><option>SC</option><option>SE</option><option>SP</option><option>TO</option></select><button type="button" id="bLocal">📍 Salvar cidade</button></div>
     <p class="msg" id="eMsg" role="status"></p>
     <h3>Colaboradores <span class="note" id="cColN"></span></h3><ul class="cl" id="cCol"></ul><div class="edit"><button type="button" class="pri" id="bColSv" disabled>💾 Salvar colaboradores</button><span class="note">Edite os nomes acima e clique em salvar.</span></div>
@@ -338,7 +338,7 @@ td.qd{cursor:help}td.qd:hover{background:#eef6f8;box-shadow:inset 0 -2px 0 #1f6f
 <script src="auth.js"></script>
 <script src="mapa.js?v=1792037768"></script><script src="acompanhamento-admin.js?v=14"></script><script src="presenca-admin.js?v=1"></script><script src="festa-admin.js?v=1"></script><script src="conclusao-admin.js?v=1"></script><script src="dicas.js?v=1792028270"></script>
 <script>
-const ZCFG=new Set(['vit_nome','logo_mapa','logo_ok','implantacao','promo','contrato','empresa_local','gestor_in','gestor_hb','gestor_acao','colab','liberacao','sistema','gestor','chave_app','sugestao','resposta','sug_excluida','zerar','interesse','interesse_ok','cat3d','chave_cat3d','chave_cat3d_demo']);
+const ZCFG=new Set(['senha_forte','vit_nome','logo_mapa','logo_ok','implantacao','promo','contrato','empresa_local','gestor_in','gestor_hb','gestor_acao','colab','liberacao','sistema','gestor','chave_app','sugestao','resposta','sug_excluida','zerar','interesse','interesse_ok','cat3d','chave_cat3d','chave_cat3d_demo']);
 function zerarFiltro(ev,zs){const Z={};(zs||ev).forEach(e=>{if(e.tipo==='zerar'){const p=(e.detalhe||{}).para,t=Date.parse(e.criado_em);if(!Z[p]||t>Z[p])Z[p]=t;}});
   return ev.filter(e=>ZCFG.has(e.tipo)||!Z[e.user_id]||Date.parse(e.criado_em)>Z[e.user_id]);}
 const TIPOS={jcr200:'Suprema JCR 200',jcr200a:'Suprema JCR 200A',jcr300:'Suprema JCR 300',jcr205:'Suprema JCR 205',pcr200:'Suprema PCR 200',pvz300:'Suprema PVZ 300',pgr100:'Suprema PGR 100',max800:'Suprema MAX 800',gjc2f:'Gold JC-2F',gpc3fvz:'Gold PC3F-VZ',gpc2fpe:'Gold PC-2FPE',gjc4f:'Gold JC-4F',gjc4fs:'Gold JC-4FS',gpc2f:'Gold PC-2F',gpc2fm:'Gold PC-2F MAC',gmax:'Gold MAX'};
@@ -396,7 +396,11 @@ const livre=a=>/^aluno\d+$/i.test(a.login)&&!a.nome&&!implDe(a.user_id)&&!ctrFim
 const limCol=uid=>{const m=implDe(uid);return m?(+m.pessoas||3):6;};
 const slugLogin=t=>{let v=String(t||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/^(vidracaria|vidraçaria|esquadrias?|serralheria|vidros?)\s+/,'').replace(/[^a-z0-9]+/g,'').slice(0,18);if(v.length<3)v='cliente'+v;
   let x=v,n=2;while(ALUNOS.some(a=>a.login.toLowerCase()===x))x=v+n++;return x;};
-const senhaNova=()=>{const A='abcdefghjkmnpqrstuvwxyz23456789';let s='';crypto.getRandomValues(new Uint8Array(6)).forEach(b=>s+=A[b%A.length]);return s;};
+const senhaNova=()=>{const U='ABCDEFGHJKMNPQRSTUVWXYZ',L='abcdefghjkmnpqrstuvwxyz',D='23456789',T=U+L+D;
+  for(;;){const r=crypto.getRandomValues(new Uint8Array(12));let s='';r.forEach((b,i)=>{s+=T[b%T.length];if(i===3||i===7)s+='-';});
+    if(/[A-Z]/.test(s)&&/[a-z]/.test(s)&&/\d/.test(s))return s;}};
+const senhaForte=v=>v.length>=8&&/[A-Za-z]/.test(v)&&/\d/.test(v);
+const SENHA_REGRA='A senha precisa ter pelo menos 8 caracteres, com letras e números (ex.: use o botão 🎲 Gerar senha forte).';
 function implMsg(a,m){const URL0='https://fc-consultoria.github.io/treinamento/',sen=senhaLoc(a.user_id)||'[SENHA]',pins=locGet('treinFC-pins'),gp=locGet('treinFC-gestor')[a.user_id]||'[SENHA DO GESTOR]';
   const L=colabs(a.user_id);
   return `*Orientativo FC 3D · Acesso da implantação* 🪟\n\nOlá${m.cliente?', '+m.cliente:''}! Durante a implantação da precificação no sistema${m.empresa?' da '+m.empresa:''}, você e a sua equipe têm acesso *exclusivo e sem custo* ao Orientativo FC 3D, para conhecer as linhas Suprema e Gold e entender como lançar os pedidos no sistema.\n\n🔗 Link: ${URL0}\n👤 Login: ${a.login}\n🔑 Senha: ${sen}\n📅 Válido até: ${brD(m.ate)}\n\nDepois de entrar, toque no seu nome e digite o seu código:\n${L.map(x=>`• ${x.nome} · código ${pins[x.id]||'[código]'}`).join('\n')}\n\n📊 Painel do gestor (acompanhar a equipe): ${URL0}empresa.html\n🛡 Senha do gestor: ${gp}\n\nEsse acesso faz parte da consultoria e termina junto com a implantação. Se quiser manter o Orientativo para a sua equipe depois disso, é só contratar a licença do link: planos a partir de R$ 50,00 por mês (1 acesso R$ 50 · até 3 pessoas R$ 70 · até 6 pessoas R$ 100).\n\nFernando · FC Consultoria em Esquadria`;}
@@ -424,7 +428,7 @@ function implNovoUI(){const vg=ALUNOS.filter(livre);let o=document.getElementByI
       if(!ate||ate<HOJE())throw new Error('a data precisa ser hoje ou depois');
       const lg=slugLogin(empresa),sen=senhaNova(),gp=novoPin();let r;
       st('Criando login…');r=await sb.rpc('trein_set_login',{alvo:a.user_id,novo:lg});if(r.error)throw r.error;
-      st('Criando senha…');r=await sb.rpc('trein_set_senha',{alvo:a.user_id,nova:sen});if(r.error)throw r.error;senhaSave(a.user_id,sen);
+      st('Criando senha…');r=await sb.rpc('trein_set_senha',{alvo:a.user_id,nova:sen});if(r.error)throw r.error;senhaSave(a.user_id,sen);ins('senha_forte',{para:a.user_id}).catch(()=>{});
       r=await sb.from('trein_alunos').update({nome:empresa,ativo:true}).eq('user_id',a.user_id);if(r.error)throw r.error;
       st('Criando a equipe…');for(const x of colabs(a.user_id))await ins('colab',{para:a.user_id,id:x.id,removido:true});
       for(let n=1;n<=pessoas;n++){const id=Math.random().toString(36).slice(2,9),pin=novoPin();await ins('colab',{para:a.user_id,id,nome:'Colaborador '+n,horas:72,ph:await sha(id+':'+pin)});locSet('treinFC-pins',id,pin);}
@@ -448,9 +452,9 @@ function implEditUI(a,m){let o=document.getElementById('ieOv');if(o)o.remove();o
     try{const cliente=document.getElementById('ieC').value.trim(),empresa=document.getElementById('ieE').value.trim(),fone=document.getElementById('ieW').value.trim(),ate=document.getElementById('ieA').value,pessoas=+document.getElementById('ieP').value,lg=document.getElementById('ieL').value.trim(),sen=document.getElementById('ieS').value.trim();
       if(!empresa)throw new Error('informe a empresa');if(!ate)throw new Error('informe a data');
       if(pessoas<C.length)throw new Error(`a equipe tem ${C.length} pessoas: remova quem sai em Detalhes antes de diminuir`);
-      if(sen&&sen.length<6)throw new Error('a senha precisa ter pelo menos 6 caracteres');
+      if(sen&&!senhaForte(sen))throw new Error(SENHA_REGRA);
       let r;if(lg&&lg!==a.login){r=await sb.rpc('trein_set_login',{alvo:a.user_id,novo:lg});if(r.error)throw r.error;}
-      if(sen){r=await sb.rpc('trein_set_senha',{alvo:a.user_id,nova:sen});if(r.error)throw r.error;senhaSave(a.user_id,sen);}
+      if(sen){r=await sb.rpc('trein_set_senha',{alvo:a.user_id,nova:sen});if(r.error)throw r.error;senhaSave(a.user_id,sen);ins('senha_forte',{para:a.user_id}).catch(()=>{});}
       if(empresa!==(a.nome||'')){r=await sb.from('trein_alunos').update({nome:empresa}).eq('user_id',a.user_id);if(r.error)throw r.error;}
       for(let n=C.length+1;n<=pessoas;n++){const id=Math.random().toString(36).slice(2,9),pin=novoPin();await ins('colab',{para:a.user_id,id,nome:'Colaborador '+n,horas:72,ph:await sha(id+':'+pin)});locSet('treinFC-pins',id,pin);}
       await ins('implantacao',{para:a.user_id,cliente,empresa,fone,pessoas,ate});
@@ -630,9 +634,9 @@ function render(){
     tr.querySelectorAll('.ied').forEach(inp=>{const k=inp.dataset.e,orig=inp.value;
       inp.addEventListener('keydown',e=>{if(e.key==='Enter')inp.blur();if(e.key==='Escape'){inp.value=orig;inp.blur();}});
       inp.addEventListener('blur',async()=>{const v=inp.value.trim();if(v===orig)return;inp.disabled=true;let error;
-        if(k==='senha'){if(!v){inp.disabled=false;return;}if(v.length<6){inp.disabled=false;inp.classList.add('bad');alert0('A senha precisa ter pelo menos 6 caracteres.');return;}
+        if(k==='senha'){if(!v){inp.disabled=false;return;}if(!senhaForte(v)){inp.disabled=false;inp.classList.add('bad');alert0(SENHA_REGRA);return;}
           ({error}=await sb.rpc('trein_set_senha',{alvo:a.user_id,nova:v}));inp.disabled=false;inp.classList.toggle('ok',!error);inp.classList.toggle('bad',!!error);
-          if(error){alert0(error.message);}else{senhaSave(a.user_id,v);inp.title='Senha trocada para: '+v+'. Passe para o aluno.';const m=document.getElementById('tbMsg');m.textContent='Senha de '+a.login+' trocada para: '+v+' (anote e passe para o aluno).';m.style.color='var(--ok)';m.hidden=false;setTimeout(()=>{m.hidden=true;m.style.color='';},12000);}
+          if(error){alert0(error.message);}else{senhaSave(a.user_id,v);ins('senha_forte',{para:a.user_id}).catch(()=>{});inp.title='Senha trocada para: '+v+'. Passe para o aluno.';const m=document.getElementById('tbMsg');m.textContent='Senha de '+a.login+' trocada para: '+v+' (anote e passe para o aluno).';m.style.color='var(--ok)';m.hidden=false;setTimeout(()=>{m.hidden=true;m.style.color='';},12000);}
           return;}
         if(k==='nome')({error}=await sb.from('trein_alunos').update({nome:v||null}).eq('user_id',a.user_id));
         else{if(!v){inp.value=orig;inp.disabled=false;return;}({error}=await sb.rpc('trein_set_login',{alvo:a.user_id,novo:v}));}
@@ -904,11 +908,39 @@ const alert0=t=>{const m=document.getElementById('tbMsg');if(m){m.textContent='N
 const msg=(t,ok)=>{const m=document.getElementById('eMsg');m.textContent=t;m.className='msg '+(ok?'ok':'bad');};
 document.getElementById('bNome').addEventListener('click',async()=>{const {error}=await sb.from('trein_alunos').update({nome:document.getElementById('eNome').value.trim()||null}).eq('user_id',sel);msg(error?'Não salvou: '+error.message:'Nome salvo.',!error);if(!error)carregar();});
 document.getElementById('bAtivo').addEventListener('click',async()=>{const a=ALUNOS.find(x=>x.user_id===sel);if(a.ativo&&!confirm('Cancelar o acesso de '+(a.nome||a.login)+'?\n\nO login e os colaboradores param de entrar. Quem abrir o link é levado ao site da FC. O histórico fica guardado e dá para liberar de novo depois.'))return;const {error}=await sb.from('trein_alunos').update({ativo:!a.ativo}).eq('user_id',sel);msg(error?'Não salvou: '+error.message:(a.ativo?'Acesso cancelado. Quem tentar entrar vai para o site da FC.':'Acesso liberado.'),!error);if(!error)carregar();});
+
+/* ===== Senhas fortes em lote (Fernando clica; a senha é gerada no navegador dele) ===== */
+function senhasUI(){const fortes={};EV.filter(e=>e.tipo==='senha_forte').forEach(e=>{const p=(e.detalhe||{}).para;if(p&&(!fortes[p]||e.criado_em>fortes[p]))fortes[p]=e.criado_em;});
+  const L=ALUNOS.filter(a=>a.papel!=='admin'&&!livre(a)).sort((x,y)=>(!!fortes[x.user_id])-(!!fortes[y.user_id])||(x.nome||x.login).localeCompare(y.nome||y.login));
+  let o=document.getElementById('snOv');if(o)o.remove();o=document.createElement('div');o.id='snOv';o.style.cssText='position:fixed;inset:0;z-index:400;background:rgba(10,16,22,.6);display:grid;place-items:center;padding:16px';
+  const nF=L.filter(a=>!fortes[a.user_id]).length;
+  o.innerHTML=`<div style="background:#fff;border-radius:14px;max-width:760px;width:100%;max-height:90vh;overflow:auto;padding:20px;box-shadow:0 20px 50px rgba(0,0,0,.4)">
+   <h3 style="margin:0 0 6px">🔐 Senhas fortes para as empresas</h3>
+   <p class="note" style="margin:0 0 10px">Gera uma senha forte (ex.: <b style="font-family:var(--f-mono)">${senhaNova()}</b>) para cada empresa marcada e já salva. <b>${nF}</b> empresa${nF===1?'':'s'} ainda com senha antiga. Quem já está com o orientativo aberto continua; no próximo login vale a senha nova, então mande a senha para cada empresa logo depois.</p>
+   <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap"><button type="button" id="snAnt">Marcar só as de senha antiga</button><button type="button" id="snAll">Marcar todas</button><button type="button" id="snNone">Desmarcar</button></div>
+   <div id="snL">${L.map(a=>`<label style="display:flex;gap:10px;align-items:center;padding:7px 4px;border-bottom:1px solid #eef1f3"><input type="checkbox" data-sn="${a.user_id}" ${fortes[a.user_id]?'':'checked'}><span style="flex:1;min-width:0"><b>${desc(a.nome||a.login)}</b> <span class="note">· login ${desc(a.login)}${a.ativo?'':' · acesso cancelado'}</span></span>${fortes[a.user_id]?`<span style="background:#e3f4ea;color:#1f8a4c;border-radius:99px;padding:2px 9px;font-size:12px;font-weight:700">✓ forte desde ${new Date(fortes[a.user_id]).toLocaleDateString('pt-BR')}</span>`:'<span style="background:#fff3e0;color:#b4620a;border-radius:99px;padding:2px 9px;font-size:12px;font-weight:700">senha antiga</span>'}</label>`).join('')||'<p class="note">Nenhuma empresa cadastrada.</p>'}</div>
+   <div id="snR"></div>
+   <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px;flex-wrap:wrap"><span class="msg" id="snMsg" style="margin-right:auto"></span><button type="button" id="snX">Fechar</button><button type="button" class="pri" id="snGo">🔐 Gerar e salvar as senhas marcadas</button></div></div>`;
+  document.body.appendChild(o);const g=id=>document.getElementById(id),cks=()=>[...o.querySelectorAll('[data-sn]')];
+  g('snX').onclick=()=>{o.remove();carregar();};g('snAll').onclick=()=>cks().forEach(c=>c.checked=true);g('snNone').onclick=()=>cks().forEach(c=>c.checked=false);g('snAnt').onclick=()=>cks().forEach(c=>c.checked=!fortes[c.dataset.sn]);
+  g('snGo').onclick=async()=>{const sel=cks().filter(c=>c.checked).map(c=>ALUNOS.find(a=>a.user_id===c.dataset.sn)).filter(Boolean);if(!sel.length){g('snMsg').textContent='Marque pelo menos uma empresa.';return;}
+    if(!confirm('Trocar a senha de '+sel.length+' empresa'+(sel.length>1?'s':'')+' agora?\n\nDepois mande a senha nova para cada uma (a lista com as mensagens aparece aqui).'))return;
+    g('snGo').disabled=true;const R=[];for(const [i,a] of sel.entries()){g('snMsg').textContent='Salvando '+(i+1)+' de '+sel.length+'…';const v=senhaNova();
+      const {error}=await sb.rpc('trein_set_senha',{alvo:a.user_id,nova:v});if(error){R.push({a,err:error.message});continue;}senhaSave(a.user_id,v);try{await ins('senha_forte',{para:a.user_id});}catch(_){}R.push({a,v});}
+    g('snMsg').textContent='✔ '+R.filter(x=>x.v).length+' senha(s) salvas'+(R.some(x=>x.err)?' · '+R.filter(x=>x.err).length+' com erro':'');g('snL').hidden=true;g('snGo').hidden=true;
+    const txt=x=>`Olá, equipe ${x.a.nome||x.a.login}! Para mais segurança, a FC trocou a senha do Orientativo FC 3D.\n\n🔗 https://fc-consultoria.github.io/treinamento/\n👤 Login: ${x.a.login}\n🔑 Senha nova: ${x.v}\n\nOs códigos de cada colaborador continuam os mesmos. Se o navegador oferecer, salve a senha nova.\n\nFC Consultoria · (66) 9 9986-7984`;
+    g('snR').innerHTML=`<h4 style="margin:6px 0">Senhas novas · mande para cada empresa</h4>${R.map((x,i)=>x.err?`<p class="msg bad">${desc(x.a.nome||x.a.login)}: não salvou (${desc(x.err)})</p>`:`<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:8px 4px;border-bottom:1px solid #eef1f3"><span style="flex:1;min-width:0"><b>${desc(x.a.nome||x.a.login)}</b> · login <span style="font-family:var(--f-mono)">${desc(x.a.login)}</span> · senha <b style="font-family:var(--f-mono)">${desc(x.v)}</b></span><button type="button" data-snc="${i}">📋 Copiar mensagem</button><button type="button" data-snw="${i}">💬 WhatsApp</button></div>`).join('')}
+      <div style="margin-top:8px"><button type="button" id="snCpAll">📋 Copiar a lista toda</button></div>`;
+    o.querySelectorAll('[data-snc]').forEach(b=>b.onclick=async()=>{try{await navigator.clipboard.writeText(txt(R[+b.dataset.snc]));b.textContent='✔ Copiado';}catch(_){}});
+    o.querySelectorAll('[data-snw]').forEach(b=>b.onclick=()=>window.open('https://wa.me/?text='+encodeURIComponent(txt(R[+b.dataset.snw])),'_blank'));
+    g('snCpAll').onclick=async e=>{try{await navigator.clipboard.writeText(R.filter(x=>x.v).map(x=>`${x.a.nome||x.a.login} · login ${x.a.login} · senha ${x.v}`).join('\n'));e.target.textContent='✔ Lista copiada';}catch(_){}};};}
+document.addEventListener('click',e=>{if(e.target&&e.target.id==='bSenTodas')senhasUI();});
 document.getElementById('bSenha').addEventListener('click',async()=>{const inp=document.getElementById('eSenha'),v=inp.value.trim(),b=document.getElementById('bSenha');
-  if(v.length<6){msg('A senha precisa ter pelo menos 6 caracteres (você digitou '+v.length+').',false);return;}
+  if(!senhaForte(v)){msg(SENHA_REGRA,false);return;}
   b.disabled=true;b.textContent='Salvando…';const {error}=await sb.rpc('trein_set_senha',{alvo:sel,nova:v});b.disabled=false;b.textContent='💾 Salvar senha';
   if(error){msg('Não salvou: '+error.message,false);return;}
-  senhaSave(sel,v);inp.value='';const a=ALUNOS.find(x=>x.user_id===sel)||{};msg('✔ Senha salva! Login '+(a.login||'')+' · senha '+v+'. Passe para a empresa.',true);render();});
+  senhaSave(sel,v);ins('senha_forte',{para:sel}).catch(()=>{});inp.value='';const a=ALUNOS.find(x=>x.user_id===sel)||{};msg('✔ Senha salva! Login '+(a.login||'')+' · senha '+v+'. Passe para a empresa.',true);render();});
+document.getElementById('bGerSen').addEventListener('click',()=>{const i=document.getElementById('eSenha');i.value=senhaNova();i.focus();i.select();msg('Senha forte gerada no campo. Confira e clique em 💾 Salvar senha.',true);});
 document.getElementById('eSenha').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('bSenha').click();});
 document.getElementById('recarregar').addEventListener('click',carregar);
 /* Avisos: a cada 30 s procura entradas de colaboradores, pedidos de mais tempo e sugestões novas */
