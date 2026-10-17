@@ -365,15 +365,15 @@ function home(){const G=LS.g('fc_esq_prova',null);return `<div class="hero"><div
  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px"><button class="btn o" data-go="${(MOD.find(m=>!FEITO.has(m.id))||MOD[0]).id}">${FEITO.size?'▶ Continuar':'▶ Começar o treinamento'}</button><button class="btn" data-go="quiz" style="background:transparent;color:#fff;border-color:rgba(255,255,255,.5)">✓ Prova final${G?' · '+G.a+'/10':''}</button></div></div>
  <div class="mg">${MOD.map((m,k)=>`<button class="mc ${FEITO.has(m.id)?'ok':''}" data-go="${m.id}"><span class="n">${FEITO.has(m.id)?'✓':String(k+1).padStart(2,'0')}</span><div><b>${esc(m.n)}</b><small>${esc(m.d)}</small></div></button>`).join('')}</div>`;}
 const R={cat:mCat,tip:mTip,cm:mCm,gua:mGua,max:mMax,cor:mCor,pad:mPad,giro:mGiro,div:mDiv,quiz:mQuiz};
-function go(id,keep){AT=id&&R[id]?id:null;$('#main').innerHTML=AT?R[AT]():home();navUI();if(!keep)scrollTo({top:0,behavior:'smooth'});try{history.replaceState(null,'',AT?'#'+AT:location.pathname);}catch(_){}}
+function go(id,keep){AT=id&&R[id]?id:null;$('#main').innerHTML=AT?R[AT]():home();navUI();if(!keep)scrollTo({top:0,behavior:'smooth'});try{if(!ALUNO)history.replaceState(null,'',(location.search||'')+(AT?'#'+AT:''));}catch(_){}LIVE.push();}
 function re(){const y=scrollY;go(AT,true);scrollTo(0,y);}
 function abre3d(c){const x=pfInfo(c);if(!x.ok)return;$('#mdC').textContent=c;$('#mdN').textContent=(x.n||'')+(x.peso!=null?' · '+kg(x.peso)+' kg/m':'')+(x.d?' · '+mm(x.d[0])+' × '+mm(x.d[1])+' mm':'');
- $('#mdB').innerHTML=x.d3?`<iframe src="${PERFIS}?ver=${encodeURIComponent(x.k.split(' / ')[0])}&embed=1" title="Perfil ${esc(c)} em 3D" allow="fullscreen"></iframe>`:`<div class="alt"><div><img src="${x.img}" alt=""><p>Este perfil não tem modelo 3D: veja o corte.</p></div></div>`;$('#md').hidden=false;}
-function fecha(){$('#md').hidden=true;$('#mdB').innerHTML='';}
+ $('#mdB').innerHTML=x.d3?`<iframe src="${PERFIS}?ver=${encodeURIComponent(x.k.split(' / ')[0])}&embed=1" title="Perfil ${esc(c)} em 3D" allow="fullscreen"></iframe>`:`<div class="alt"><div><img src="${x.img}" alt=""><p>Este perfil não tem modelo 3D: veja o corte.</p></div></div>`;$('#md').hidden=false;MD=c;LIVE.push();}
+let MD=null;function fecha(){$('#md').hidden=true;$('#mdB').innerHTML='';if(MD){MD=null;if(!ALUNO)LIVE.push();}}
 addEventListener('message',e=>{if(e.origin===location.origin&&e.data&&e.data.fc3d==='fechou')fecha();});
 $('#mdX').onclick=fecha;$('#md').onclick=e=>{if(e.target.id==='md')fecha();};addEventListener('keydown',e=>{if(e.key==='Escape')fecha();});
 $('#bHome').onclick=()=>go(null);
-document.addEventListener('click',e=>{const t=e.target.closest('[data-go],[data-feito],[data-pf],[data-catl],[data-catg],[data-tipf],[data-tip],[data-cmk],[data-gl],[data-gi],[data-ge],[data-mxl],[data-mxv],[data-crk],[data-gml],[data-pool],[data-slot],.q [data-o],#bRes');if(!t)return;const d=t.dataset;
+document.addEventListener('click',e=>{if(ALUNO&&!e.target.closest('.q [data-o],#mdX,#md,#alN')){if(e.target.closest('[data-go],[data-feito],[data-pf],[data-catl],[data-catg],[data-tipf],[data-tip],[data-cmk],[data-gl],[data-gi],[data-ge],[data-mxl],[data-mxv],[data-crk],[data-gml],[data-pool],[data-slot],#bHome')){e.preventDefault();e.stopImmediatePropagation();LIVE.aviso();}return;}const t=e.target.closest('[data-go],[data-feito],[data-pf],[data-catl],[data-catg],[data-tipf],[data-tip],[data-cmk],[data-gl],[data-gi],[data-ge],[data-mxl],[data-mxv],[data-crk],[data-gml],[data-pool],[data-slot],.q [data-o],#bRes');if(!t)return;const d=t.dataset;
  if(d.go!==undefined)return go(d.go);
  if(d.feito){FEITO.has(d.feito)?FEITO.delete(d.feito):FEITO.add(d.feito);LS.s('fc_esq_feito',[...FEITO]);return re();}
  if(d.pf)return abre3d(d.pf);
@@ -390,17 +390,60 @@ document.addEventListener('click',e=>{const t=e.target.closest('[data-go],[data-
  if(t.matches('.q [data-o]')){const q=t.closest('.q');if(q.dataset.done)return;q.dataset.done=1;const ok=+t.dataset.o===+q.dataset.r;t.classList.add(ok?'ok':'no');if(!ok)q.querySelector(`[data-o="${q.dataset.r}"]`).classList.add('ok');q.dataset.acerto=ok?1:0;q.querySelector('.ex').hidden=false;return;}
  if(t.id==='bRes'){const qs=[...document.querySelectorAll('.q')],r=qs.filter(q=>q.dataset.acerto==='1').length,f=qs.filter(q=>!q.dataset.done).length;if(f){alert('Faltam '+f+' perguntas.');return;}LS.s('fc_esq_prova',{a:r,em:Date.now()});t.textContent=r>=8?`🏆 ${r}/10 · Excelente!`:r>=6?`👍 ${r}/10 · Bom, revise o que errou`:`📚 ${r}/10 · Vale revisar os módulos`;}
 });
-document.addEventListener('input',e=>{const t=e.target;
+document.addEventListener('input',e=>{const t=e.target;if(ALUNO){e.preventDefault();return;}setTimeout(()=>LIVE.push(),0);
  if(t.id==='catQ'){CATQ=t.value;clearTimeout(window.__q);window.__q=setTimeout(()=>{re();const n=$('#catQ');n.focus();n.setSelectionRange(n.value.length,n.value.length);},350);}
  if(t.id==='mxH'){MXH=t.value;clearTimeout(window.__h);window.__h=setTimeout(()=>{re();const n=$('#mxH');n.focus();},450);}
  if(t.dataset.mxa!==undefined){MXA=+t.value;const lf=document.querySelector('.fr3 .lf');if(lf)lf.style.transform=`rotateX(${-MXA}deg)`;t.nextElementSibling.textContent=MXA+'°';}
  if(t.dataset.ga!==undefined){GA=+t.value;const lf=document.querySelector('.fr3 .lf');if(lf)lf.style.transform=`rotateY(${-GA}deg)`;t.nextElementSibling.textContent=GA+'°';}
  if(t.dataset.cra!==undefined){CRA=+t.value;const st=t.closest('.sec').querySelector('.stage');const T=COR[CRK].t;const tmp=document.createElement('div');tmp.innerHTML=corStage(T);st.replaceWith(tmp.firstElementChild);t.nextElementSibling.textContent=CRA+'%';}
 });
+/* ===================== AO VIVO: a FC conduz e todos acompanham ===================== */
+const QS=new URLSearchParams(location.search),SALA=(QS.get('sala')||'').replace(/[^a-z0-9]/gi,'').slice(0,24),APRES=(QS.get('apresentar')||'').replace(/[^a-z0-9]/gi,'').slice(0,24);
+const ALUNO=SALA.length>=10;
+const LIVE={ch:null,on:false,tm:null,
+ snap(){const dh=document.documentElement.scrollHeight-innerHeight;return {at:AT,md:MD,y:dh>0?Math.round(scrollY/dh*1000)/1000:0,v:{CATL,CATG,CATQ,TIPF,TIPS,CMK,GL,GI,GE,MXL,MXH,MXA,MXV,CRK,CRA,GA}};},
+ push(){if(!this.on||ALUNO)return;clearTimeout(this.tm);this.tm=setTimeout(()=>{try{this.ch.send({type:'broadcast',event:'st',payload:this.snap()});}catch(_){}},120);},
+ aviso(){let a=$('#alAv');if(!a){a=document.createElement('div');a.id='alAv';a.style.cssText='position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:#13232e;color:#fff;padding:9px 16px;border-radius:99px;font:600 14px var(--f-b);z-index:999';document.body.appendChild(a);}a.textContent='🔴 O Fernando está conduzindo: a tela acompanha sozinha';clearTimeout(a.t);a.t=setTimeout(()=>a.remove(),2500);}};
+function aplica(st){const v=st.v||{};({CATL,CATG,CATQ,TIPF,TIPS,CMK,GL,GI,GE,MXL,MXH,MXA,MXV,CRK,CRA,GA}=Object.assign({CATL,CATG,CATQ,TIPF,TIPS,CMK,GL,GI,GE,MXL,MXH,MXA,MXV,CRK,CRA,GA},v));
+ const mud=JSON.stringify([st.at,v])!==aplica.ult;aplica.ult=JSON.stringify([st.at,v]);if(mud){const y=scrollY;go(st.at||null,true);scrollTo(0,y);}
+ if((st.md||null)!==(MD||null)){if(st.md)abre3d(st.md);else fecha();}
+ const dh=document.documentElement.scrollHeight-innerHeight;if(typeof st.y==='number')scrollTo({top:st.y*dh,behavior:'smooth'});}
+function salaLink(c){return location.origin+'/treinamento/esquadrias/?sala='+c;}
+function apresentar(c){/* FC conduzindo */
+ LIVE.ch=sb.channel('esq-'+c,{config:{broadcast:{self:false},presence:{key:'fc'}}});
+ const box=document.createElement('div');box.id='lvBox';box.style.cssText='position:fixed;right:14px;bottom:14px;z-index:800;width:min(320px,calc(100vw - 28px));background:#13232e;color:#fff;border-radius:14px;padding:12px 14px;box-shadow:0 14px 34px rgba(0,0,0,.35);font:500 14px var(--f-b)';
+ const u=salaLink(c),msg=`Olá! Aqui é o Fernando, da FC Consultoria. Vamos começar o Treinamento em Esquadrias (Gold x Suprema) ao vivo. Abra este link e coloque o seu nome: ${u}`;
+ const draw=(ps)=>{box.innerHTML=`<div style="display:flex;align-items:center;gap:8px"><span style="width:10px;height:10px;border-radius:50%;background:#ef4444;box-shadow:0 0 0 4px rgba(239,68,68,.3)"></span><b style="font:800 18px var(--f-d);flex:1">AO VIVO · você conduz</b><button type="button" id="lvMin" style="all:unset;cursor:pointer;opacity:.7">–</button></div>
+  <div id="lvCt"><div style="margin:6px 0;color:#bcd">👥 ${ps.length?ps.length+' acompanhando: '+ps.map(p=>esc(p.n+(p.e?' ('+p.e+')':''))).join(', '):'Ninguém entrou ainda'}</div>
+  <div style="display:flex;gap:6px;flex-wrap:wrap"><button type="button" class="btn" id="lvCp" style="padding:6px 10px">📋 Copiar link</button><a class="btn" style="padding:6px 10px;background:#1f9d55;border-color:#1f9d55;color:#fff" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(msg)}">💬 WhatsApp</a><button type="button" class="btn" id="lvFim" style="padding:6px 10px;color:#b42318">Encerrar</button></div>
+  <div style="margin-top:6px;font-size:12px;color:#9fb3bf;overflow-wrap:anywhere">${esc(u)}</div></div>`;
+  box.querySelector('#lvCp').onclick=e=>{navigator.clipboard&&navigator.clipboard.writeText(u);e.target.textContent='✓ Copiado';};
+  box.querySelector('#lvMin').onclick=()=>{const k=box.querySelector('#lvCt');k.hidden=!k.hidden;};
+  box.querySelector('#lvFim').onclick=async()=>{try{await LIVE.ch.send({type:'broadcast',event:'fim',payload:{}});await LIVE.ch.untrack();sb.removeChannel(LIVE.ch);}catch(_){}LIVE.on=false;box.remove();try{localStorage.removeItem('fc_esq_sala')}catch(_){}history.replaceState(null,'',location.pathname+(AT?'#'+AT:''));};};
+ document.body.appendChild(box);draw([]);
+ const lista=()=>{const st=LIVE.ch.presenceState();return Object.entries(st).filter(([k])=>k!=='fc').map(([k,v])=>v[0]||{});};
+ LIVE.ch.on('presence',{event:'sync'},()=>{draw(lista());LIVE.push();})
+  .on('broadcast',{event:'oi'},()=>LIVE.push())
+  .subscribe(async s=>{if(s==='SUBSCRIBED'){await LIVE.ch.track({n:'FC',fc:1});LIVE.on=true;LIVE.push();}});
+ addEventListener('scroll',()=>LIVE.push(),{passive:true});}
+function participar(){/* cliente / funcionário acompanhando */
+ document.body.classList.add('aluno');const st=document.createElement('style');st.textContent='.aluno .nav,.aluno #bHome,.aluno .foot,.aluno [data-feito]{display:none!important}.aluno .lay{grid-template-columns:1fr}.aluno .top .prog{display:none}';document.head.appendChild(st);const sm=document.querySelector('.top small');if(sm)sm.textContent='🔴 Ao vivo com a FC Consultoria';
+ const wait=t=>{$('#main').innerHTML=`<div class="hero" style="text-align:center"><div class="ey">FC Consultoria · ao vivo</div><h1 style="font-size:36px">Treinamento em Esquadrias 3D</h1><div class="bar" style="margin:12px auto"></div><p style="margin:0 auto">${t}</p></div>`;};
+ let nome='',emp='';try{const o=JSON.parse(localStorage.getItem('fc_esq_aluno')||'{}');nome=o.n||'';emp=o.e||'';}catch(_){}
+ const entrar=()=>{wait('⏳ Aguardando o Fernando iniciar o treinamento…');
+  const ch=sb.channel('esq-'+SALA,{config:{broadcast:{self:false},presence:{key:'al-'+Math.random().toString(36).slice(2,9)}}});let fc=false;
+  ch.on('broadcast',{event:'st'},({payload})=>{if(!fc)return;aplica(payload);})
+   .on('broadcast',{event:'fim'},()=>{fc=false;fecha();wait('✅ Treinamento encerrado. Obrigado por participar!<br><br>FC Consultoria · WhatsApp (66) 9 9986-7984');})
+   .on('presence',{event:'sync'},()=>{const tem=!!ch.presenceState().fc;if(tem&&!fc){fc=true;ch.send({type:'broadcast',event:'oi',payload:{}});}else if(!tem&&fc){fc=false;fecha();aplica.ult='';wait('⏸ O Fernando saiu por um instante. A tela volta sozinha quando ele voltar.');}})
+   .subscribe(async s=>{if(s==='SUBSCRIBED')await ch.track({n:nome,e:emp});});};
+ if(nome){entrar();return;}
+ $('#main').innerHTML=`<div class="hero"><div class="ey">FC Consultoria · ao vivo</div><h1 style="font-size:36px">Treinamento em Esquadrias 3D</h1><div class="bar"></div><p>O Fernando vai conduzir o treinamento e a sua tela acompanha sozinha. Para entrar, escreva o seu nome.</p>
+  <form id="alN" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px"><input name="n" required placeholder="Seu nome" style="flex:1;min-width:180px;font:600 16px var(--f-b);padding:10px 12px;border-radius:10px;border:0"><input name="e" placeholder="Empresa" style="flex:1;min-width:160px;font:600 16px var(--f-b);padding:10px 12px;border-radius:10px;border:0"><button class="btn o" style="font-size:16px">Entrar no treinamento</button></form></div>`;
+ $('#alN').onsubmit=ev=>{ev.preventDefault();nome=ev.target.n.value.trim().slice(0,40);emp=ev.target.e.value.trim().slice(0,40);if(!nome)return;try{localStorage.setItem('fc_esq_aluno',JSON.stringify({n:nome,e:emp}))}catch(_){}entrar();};}
 async function iniciar(){try{const j=await fetch('perfis.json?v=1',{cache:'no-cache'}).then(r=>r.json());const raw=j.P;P={};IDX={};
   Object.entries(raw).forEach(([k,v])=>{const o=Object.assign({k},v);P[k]=o;IDX[k]=o;k.split(' / ').forEach(c=>IDX[c.trim()]=o);});}catch(e){console.warn(e);}
- const h=location.hash.slice(1);go(R[h]?h:null);}
-gateUI(()=>{try{localStorage.setItem('fc_eu','1')}catch(_){}iniciar();},{soMatriz:true});
+ if(ALUNO){participar();return;}const h=location.hash.slice(1);go(R[h]?h:null);if(APRES.length>=10){try{localStorage.setItem('fc_esq_sala',APRES)}catch(_){}apresentar(APRES);}}
+if(ALUNO)iniciar();else gateUI(()=>{try{localStorage.setItem('fc_eu','1')}catch(_){}iniciar();},{soMatriz:true});
 </script>
 </body>
 </html>
