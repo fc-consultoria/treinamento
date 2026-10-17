@@ -114,7 +114,7 @@ function detalhe(x){
 function lista(){let L=D.perfis;
  if(FIL==='baixa')L=L.filter(r=>r.eq.some(e=>e.n==='baixa'&&!OK[r.c+'|'+e.c]));
  if(FIL==='sem')L=L.filter(r=>!r.eq.length);
- const cel=(r,f)=>{const es=r.eq.filter(e=>e.f===f);return es.length?`<div class="eq">${es.map(e=>`<span><b>${esc(e.c)}</b>${e.t==='leve'?' <small>leve</small>':e.t==='pesada'?' <small>pesada</small>':''} ${nvTag(e,r)}</span>`).join('')}</div>`:'<span style="color:var(--tm)">—</span>';};
+ const cel=(r,f)=>{const es=r.eq.filter(e=>e.f===f);return es.length?`<div class="eq">${es.map(e=>`<span><b>${esc(e.c)}</b>${e.t==='leve'?' <small>leve</small>':e.t==='pesada'?' <small>pesada</small>':''} ${nvTag(e,r,true)}</span>`).join('')}</div>`:'<span style="color:var(--tm)">—</span>';};
  let h=`<div class="tab"><table><tr><th>Desenho</th><th>Alcoa</th><th>Peso</th>${FS().map(f=>`<th>${esc(D.forn[f].nome)}</th>`).join('')}</tr>${L.map(r=>`<tr class="lk" data-q="${esc(r.c)}"><td><img src="${img('alcoa',r.c)}" alt="" loading="lazy"></td><td><span class="c">${esc(r.c)}</span><br><small style="color:var(--tm)">${esc(r.n||'')}</small></td><td>${kg(r.p)}</td>${FS().map(f=>`<td>${cel(r,f)}</td>`).join('')}</tr>`).join('')}</table></div>`;
  if(FIL==='sem'||FIL==='todos'){const s=D.semPar;h+=`<div class="tab" style="padding:12px 14px"><b style="font:800 20px var(--f-d);color:#0f4f53">Códigos dos fornecedores sem par no catálogo Suprema</b><p style="margin:4px 0 8px;color:var(--tm);font-size:14px">Toque para ver o desenho.</p><div class="chips">${FS().map(f=>(s[f]||[]).map(x=>`<button type="button" data-q="${esc(x.c)}">${esc(D.forn[f].nome)} · ${esc(x.c)}${x.cc?' ('+esc(x.cc)+')':''}</button>`).join('')).join('')}</div></div>`;}
  return h;}
