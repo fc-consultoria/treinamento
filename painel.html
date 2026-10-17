@@ -322,9 +322,9 @@ td.qd{cursor:help}td.qd:hover{background:#eef6f8;box-shadow:inset 0 -2px 0 #1f6f
     <div class="wam"><div><b>Mensagem para o dono</b> <span class="note">curta, só quem acessou ou não</span><textarea id="wmD1" rows="6"></textarea><div class="edit"><button type="button" data-w="wmD1">📋 Copiar</button><button type="button" data-z="wmD1">Abrir no WhatsApp</button></div></div></div>
     <div class="edit"><button type="button" class="pri" id="bRel">📄 Relatório para o cliente</button><button type="button" id="bLib"></button></div>
     <h3>🎯 Pontos de interesse</h3><div id="cInt"></div>
-    <h3>Tipologias estudadas</h3><ul class="chips" id="cTip"></ul>
-    <h3>Cortes das junções vistos</h3><p class="note" id="cCor"></p>
-    <h3>Desafios (monte a esquadria)</h3><p class="note" id="cTes"></p>
+    <h3>Tipologias estudadas<span class="note estQuem"></span></h3><ul class="chips" id="cTip"></ul>
+    <h3>Cortes das junções vistos<span class="note estQuem"></span></h3><p class="note" id="cCor"></p>
+    <h3>Desafios (monte a esquadria)<span class="note estQuem"></span></h3><p class="note" id="cTes"></p>
     <h3>💳 Contrato mensal (1 acesso R$ 50 · até 3 pessoas R$ 70 · até 6 pessoas R$ 100 · + Catálogo 3D R$ 5 por usuário)</h3><div id="ctrBox"></div>
     <h3>👔 Uso do gestor (Painel da Empresa)</h3><p class="note" id="cGes"></p>
    </div>
@@ -351,8 +351,9 @@ async function carregar(){
   EV=zerarFiltro(EV);
   render();setTimeout(orSync,800);try{finUI();}catch(e){console.warn(e);}
 }
-function resumo(uid){
-  const ev=EV.filter(e=>e.user_id===uid),tip=new Set(),cor=new Set(),per=new Set(),tes=[];let seg=0,ult=null;
+const pkEv=e=>{const d=e.detalhe||{};return d.cid||(d.quem?'q:'+d.quem:'');};
+function resumo(uid,pessoa){
+  const ev=EV.filter(e=>e.user_id===uid&&(!pessoa||pkEv(e)===pessoa)),tip=new Set(),cor=new Set(),per=new Set(),tes=[];let seg=0,ult=null;
   ev.forEach(e=>{if(/^gestor_/.test(e.tipo))return;if(!ult||e.criado_em>ult)ult=e.criado_em;const d=e.detalhe||{};
     if(e.tipo==='tempo')seg+=d.s||60;if(e.tipologia&&e.tipo!=='login')tip.add(e.tipologia);
     if(e.tipo==='corte')cor.add((d.t||'')+'·'+d.k);if(e.tipo==='perfil')per.add(d.c);if(e.tipo==='teste')tes.push(d);});
@@ -685,7 +686,7 @@ function gvSync(a){const box=document.getElementById('gvBox');
 let INTC='';
 function pontosUI(uid){const E=document.getElementById('cInt');if(!E)return;
   const ev=EV.filter(e=>e.user_id===uid&&!/^gestor_/.test(e.tipo));
-  const pk=e=>{const d=e.detalhe||{};return d.cid||(d.quem?'q:'+d.quem:'');};const pessoas={};ev.forEach(e=>{const d=e.detalhe||{},k=pk(e);if(k&&d.quem)pessoas[k]=d.quem;});
+  const pk=pkEv;const pessoas={};ev.forEach(e=>{const d=e.detalhe||{},k=pk(e);if(k&&d.quem)pessoas[k]=d.quem;});try{colabs(uid).forEach(x=>{pessoas[x.id]=x.nome||pessoas[x.id]||'Colaborador';});}catch(_){}
   if(INTC&&!pessoas[INTC])INTC='';
   const L=INTC?ev.filter(e=>pk(e)===INTC):ev;
   const cnt=(f,k)=>{const o={};L.filter(f).forEach(e=>{const v=k(e);if(v)o[v]=(o[v]||0)+1;});return Object.entries(o).sort((a,b)=>b[1]-a[1]);};
@@ -708,17 +709,23 @@ function pontosUI(uid){const E=document.getElementById('cInt');if(!E)return;
   if(!MO.some(x=>x[0]==='Orientação em Sistema')&&L.length>5)sug.push('ainda não abriu a <b>Orientação em Sistema</b>: vale mostrar');
   if(PF[0]&&PF[0][1]>=3)sug.push(`tem curiosidade no perfil <b>${desc(PF[0][0])}</b>: bom gancho para o catálogo 3D`);
   const P=Object.entries(pessoas);
-  E.innerHTML=(P.length>1?`<div class="ints"><button type="button" data-ic="" class="${INTC?'':'on'}">Toda a equipe</button>${P.map(([c,q])=>`<button type="button" data-ic="${c}" class="${INTC===c?'on':''}">${desc(q)}</button>`).join('')}</div>`:'')
+  E.innerHTML=(P.length?`<div class="ints"><span class="note" style="align-self:center;font-weight:700">👤 Ver por colaborador:</span><button type="button" data-ic="" class="${INTC?'':'on'}">Toda a equipe</button>${P.map(([c,q])=>`<button type="button" data-ic="${c}" class="${INTC===c?'on':''}">${desc(q)}</button>`).join('')}</div>`:'')
    +(L.length?`<div class="intd">${dst.length?'🎯 '+dst.join(' · '):'Ainda pouca atividade para mostrar interesse.'}${sug.length?'<br>💡 <b>Sugestão:</b> '+sug.join('; ')+'.':''}</div>`:'<p class="note">Ainda não há atividade registrada.</p>')
    +(L.length?`<div class="intg"><div class="intb"><h4>⏱ Tempo por tipologia · ${fmtM(totMin)}</h4>${bars(TT.map(([k,v])=>[TIPOS[k]||k,v]),fmtM)}</div><div class="intb"><h4>🗂 Abas mais abertas</h4>${bars(MO,v=>v+'×')}</div>
      <div class="intb"><h4>🧩 Perfis mais tocados</h4>${chips(PF)}</div><div class="intb"><h4>✂ Cortes mais vistos</h4>${chips(CO)}</div>
      <div class="intb"><h4>🔩 Componentes vistos</h4>${chips(CP)}</div><div class="intb"><h4>🔁 Trocas de perfil</h4>${chips(TR)}</div></div>`:'');
-  E.querySelectorAll('[data-ic]').forEach(b=>b.onclick=()=>{INTC=b.dataset.ic;pontosUI(uid);});}
+  E.querySelectorAll('[data-ic]').forEach(b=>b.onclick=()=>{INTC=b.dataset.ic;pontosUI(uid);estudoUI(uid);});
+  const nm=INTC?(pessoas[INTC]||''):'';document.querySelectorAll('.estQuem').forEach(x=>x.textContent=nm?' · '+nm:' · toda a equipe');}
 function donoMsg(a){const t1=document.getElementById('wmD1');if(!t1)return;
   const L=colabs(a.user_id),cr=EV.filter(e=>e.tipo==='colab'&&(e.detalhe||{}).para===a.user_id).map(e=>e.criado_em).sort()[0],ct=ctrList(a.user_id).map(e=>e.detalhe&&e.detalhe.ini).filter(Boolean).sort()[0];
   const lib=cr?cr.slice(0,10):ct||'',dt=lib?lib.split('-').reverse().join('/'):'[data]',foi=L.filter(x=>x.ini||x.seg>0),nao=L.filter(x=>!(x.ini||x.seg>0)),nm=x=>(x.nome||'').trim();
   document.getElementById('dnLst').innerHTML=L.length?L.map(x=>`<span style="display:inline-block;margin:0 6px 6px 0;padding:4px 10px;border-radius:14px;font-weight:600;${(x.ini||x.seg>0)?'background:#e3f4ea;color:#1f8a4c':'background:#fff3e0;color:#b4620a'}">${(x.ini||x.seg>0)?'✅':'⏳'} ${desc(nm(x))}</span>`).join(''):'<span class="note">Nenhum colaborador cadastrado.</span>';
   t1.value=`Olá! Aqui é o Fernando, da FC Consultoria.\nAcompanhamento do Orientativo FC 3D (liberado em ${dt}):\n\n✅ Acessaram: ${foi.map(nm).join(', ')||'ninguém ainda'}\n⏳ Ainda não: ${nao.map(nm).join(', ')||'todos já acessaram 👏'}`;}
+function estudoUI(uid){const r=resumo(uid,INTC||'');
+  document.getElementById('cTip').innerHTML=Object.entries(TIPOS).map(([k,n])=>`<li class="${r.tip.has(k)?'on':''}">${n}</li>`).join('');
+  document.getElementById('cCor').textContent=r.cor.size?[...r.cor].map(x=>{const [t,k]=x.split('·');return (TIPOS[t]||t)+' ('+({esq:'lateral esq.',dir:'lateral dir.',sup:'superior',inf:'inferior',trav:'travessa'}[k]||'encontro')+')';}).join(' · '):'Nenhum corte aberto ainda.';
+  document.getElementById('cTes').textContent=r.tes.length?Object.values(r.best).map(x=>`${TIPOS[x.t]||x.t}: ${'★'.repeat(x.stars)}${'☆'.repeat(3-x.stars)} ${x.pct}%${x.nivel?(x.nivel==='desm'?' (desmontada)':' (montada)'):''}`).join(' · ')+` — ${r.tes.length} desafio${r.tes.length===1?'':'s'} feito${r.tes.length===1?'':'s'}, ${r.rein} reinício${r.rein===1?'':'s'}`:'Nenhum desafio concluído ainda.';
+}
 function detalhe(){
   const a=ALUNOS.find(x=>x.user_id===sel);if(!a)return;const r=resumo(a.user_id);
   document.getElementById('detCard').hidden=false;document.getElementById('detTit').textContent=(a.nome||a.login)+' · '+a.login;
@@ -730,9 +737,7 @@ function detalhe(){
     `${g.tot} acesso${g.tot===1?'':'s'} no total · ${g.n30} nos últimos 30 dias · tempo aberto ${fmtH(g.min*60)} · último ${fmtD(g.ult)}${g.agora?' · <b style="color:#1f8a4c">🟢 aberto agora em '+g.agora+' aparelho'+(g.agora>1?'s':'')+'</b>':''}<br>`+
     `Últimas entradas: ${g.ins.slice(0,6).map(e=>fmtD(e.criado_em)+' ('+((e.detalhe||{}).ua||'aparelho')+')').join(' · ')}<br>`+
     (g.ac.length?`O que mais clicou: ${g.ac.slice(0,8).map(([t,n])=>t.replace(/</g,'')+' ('+n+')').join(' · ')}`:'Ainda não clicou em nada dentro do painel.');}
-  document.getElementById('cTip').innerHTML=Object.entries(TIPOS).map(([k,n])=>`<li class="${r.tip.has(k)?'on':''}">${n}</li>`).join('');
-  document.getElementById('cCor').textContent=r.cor.size?[...r.cor].map(x=>{const [t,k]=x.split('·');return (TIPOS[t]||t)+' ('+({esq:'lateral esq.',dir:'lateral dir.',sup:'superior',inf:'inferior',trav:'travessa'}[k]||'encontro')+')';}).join(' · '):'Nenhum corte aberto ainda.';
-  document.getElementById('cTes').textContent=r.tes.length?Object.values(r.best).map(x=>`${TIPOS[x.t]||x.t}: ${'★'.repeat(x.stars)}${'☆'.repeat(3-x.stars)} ${x.pct}%${x.nivel?(x.nivel==='desm'?' (desmontada)':' (montada)'):''}`).join(' · ')+` — ${r.tes.length} desafio${r.tes.length===1?'':'s'} feito${r.tes.length===1?'':'s'}, ${r.rein} reinício${r.rein===1?'':'s'}`:'Nenhum desafio concluído ainda.';
+  estudoUI(a.user_id);
   document.getElementById('tl').innerHTML=r.ev.filter(e=>ROT[e.tipo]).slice(0,150).map(e=>{const d=e.detalhe||{};
     const CK={esq:'lateral esquerda',dir:'lateral direita',sup:'superior',inf:'inferior',trav:'travessa'};const x=e.tipo==='perfil'?d.c:e.tipo==='componente'?d.c:e.tipo==='corte'?(CK[d.k]||'encontro das folhas'):e.tipo==='troca'?`${d.de} → ${d.para}`:e.tipo==='sugestao'?(d.txt||'').replace(/</g,''):(e.tipo==='wvetro'||e.tipo==='cem')?`${d.pct}%${d.stars?' '+'★'.repeat(d.stars):''}`:e.tipo==='teste'?`${d.pct!=null?d.pct:Math.round(d.tot/((d.tot+d.err)||1)*100)}%${d.stars?' '+'★'.repeat(d.stars):''}`:e.tipo==='modo'?(d.m==='test'?'Desafio':'Explorar'):e.tipo==='falta'?(d.ok?'acertou (LG-091)':'errou, marcou '+d.resp):'';
     const qn=(d.quem||'').replace(/</g,'');return `<li><time>${fmtD(e.criado_em)}</time><span>${qn&&e.tipo!=='quem'?'<b style="color:#0e6b62">'+qn+'</b> · ':''}${ROT[e.tipo]} ${(e.tipo==='quem'||e.tipo==='colab_inicio'||e.tipo==='pedido_tempo'||e.tipo==='colab_sessao')?'<strong>'+qn+'</strong>':x?'<strong>'+x+'</strong>':''} <span class="note">${TIPOS[e.tipologia]||''}</span></span></li>`;}).join('')||'<li><span class="note">Sem atividades.</span></li>';
