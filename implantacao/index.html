@@ -357,7 +357,7 @@ tbody tr:hover{background:var(--panel-2);}
       <button class="navitem" id="btn-logout"><i data-lucide="log-out"></i> Sair</button>
     </div>
     <div class="sidebar-foot">
-      Painel de implantação — dados salvos em banco de dados real (Supabase), acesso restrito à equipe.<br><b>Versão 16/10 — ocultar detalhes, liberação manual e Suporte FC</b>
+      Painel de implantação — dados salvos em banco de dados real (Supabase), acesso restrito à equipe.<br><b>Versão 17/10 — código sistema e Revisão de implantação</b>
     </div>
   </nav>
   <div class="mobile-topbar">
@@ -563,7 +563,7 @@ async function carregarClientes(){
         if(r.precisa_cotacao) (cotacaoComponentes[r.linha] = cotacaoComponentes[r.linha]||{})[r.codigo] = true;
       }
     });
-    const perfisMetro = metroRows.filter(r=>r.cliente_id===c.id).map(r=>({_id:r.id, codigo:r.codigo, descricao:r.descricao||'', preco:Number(r.preco)||0, alimentado:!!r.alimentado, orcId:r.orcamento_aluminio_id||null}));
+    const perfisMetro = metroRows.filter(r=>r.cliente_id===c.id).map(r=>({_id:r.id, codigo:r.codigo, descricao:r.descricao||'', preco:Number(r.preco)||0, alimentado:!!r.alimentado, orcId:r.orcamento_aluminio_id||null, codigoSistema:r.codigo_sistema||'', emRevisao:!!r.em_revisao, revisaoObs:r.revisao_obs||'', revisaoEm:r.revisao_em||null}));
     const perfisMetroPdfs = metroPdfRows.filter(r=>r.cliente_id===c.id).map(r=>({
       _id:r.id, nome:r.nome_arquivo, storagePath:r.storage_path,
       data: r.created_at ? new Date(r.created_at).toLocaleDateString('pt-BR') : '',
@@ -602,6 +602,9 @@ async function carregarClientes(){
       fornecedoresSel: (()=>{ const s={componentes:[],vidro:[],perfis:[]}; (fornSelRows||[]).filter(r=>r.cliente_id===c.id).forEach(r=>{ if(s[r.categoria] && !s[r.categoria].includes(r.fornecedor)) s[r.categoria].push(r.fornecedor); }); return s; })()
     };
   });
+
+  // Revisão de implantação (componentes): código sistema e itens enviados para revisão
+  CLIENTS.forEach(cl=>{ cl.revisaoChecklist = {}; checklistRows.filter(r=>r.cliente_id===cl.id && (r.em_revisao || r.codigo_sistema)).forEach(r=>{ cl.revisaoChecklist[(r.linha||'')+'|'+r.codigo] = {sis:r.codigo_sistema||'', rev:!!r.em_revisao, obs:r.revisao_obs||'', em:r.revisao_em||null}; }); });
 
   // Acompanhamento online (versão nova): quem já tem link do portal do cliente. Falha aqui não trava o painel.
   try{
@@ -2327,7 +2330,7 @@ function renderClienteAlimentador(c){
 // Presença da equipe: avisa o Painel da Matriz (quadro Ao vivo) onde a pessoa está, a cada 45 s com a aba visível
 const NOMES_VIEW = {fornecedores:'Fornecedores', fila:'Fila de alimentação', clientes:'Clientes', banco:'Banco de Preços', consulta:'Buscar preço', 'orcamentos-fornecedor':'Orçamentos recebidos', 'orcamentos-aluminio':'Banco de Preços · Perfis', reajustes:'Reajustes de preço', espelho:'Espelho da equipe'};
 function ondeEstouImplantacao(){
-  if(STATE.view==='cliente'){ const c = CLIENTS.find(x=>x.id===STATE.clientId); const ABAS={visao:'Visão geral',etapas:'Etapas',cadastro:'Contrato & Acesso',componentes:'Componentes',vidro:'Vidro',perfis:'Perfis',orcamentos:'Orçamentos',relatorios:'Relatórios',anotacoes:'Anotações'}; return (c?c.nome:'Cliente')+(STATE.clienteTab?' · '+(ABAS[STATE.clienteTab]||STATE.clienteTab):''); }
+  if(STATE.view==='cliente'){ const c = CLIENTS.find(x=>x.id===STATE.clientId); const ABAS={visao:'Visão geral',etapas:'Etapas',cadastro:'Contrato & Acesso',componentes:'Componentes',vidro:'Vidro',perfis:'Perfis',orcamentos:'Orçamentos',relatorios:'Relatórios',anotacoes:'Anotações',revisao:'Revisão de implantação'}; return (c?c.nome:'Cliente')+(STATE.clienteTab?' · '+(ABAS[STATE.clienteTab]||STATE.clienteTab):''); }
   return NOMES_VIEW[STATE.view] || STATE.view;
 }
 function pingPresencaEquipe(){
@@ -3395,6 +3398,7 @@ function renderClienteDetail(){
     ['orcamentos','Orçamentos','file-text'],
     ['relatorios','Relatórios','file-bar-chart-2'],
     ['anotacoes','Anotações','sticky-note'],
+    ['revisao','🔎 Revisão de implantação'+(itensEmRevisao(c).length?' ('+itensEmRevisao(c).length+')':''),'search-check'],
   ];
 
   return `
@@ -3440,6 +3444,7 @@ function renderClienteDetail(){
   ${STATE.clienteTab==='orcamentos' ? renderClienteOrcamentosTab(c) : ''}
   ${STATE.clienteTab==='relatorios' ? renderClienteRelatorios(c,p) : ''}
   ${STATE.clienteTab==='anotacoes' ? renderClienteAnotacoes(c) : ''}
+  ${STATE.clienteTab==='revisao' ? renderRevisaoImplantacao(c) : ''}
   `;
 }
 
@@ -4183,6 +4188,60 @@ function marcarFornecedorCliente(c, cat, nome, marcar){
   return true;
 }
 
+// ===== Revisão de implantação: itens que não foram encontrados no sistema por diferença de código =====
+function revComp(c, linha, codigo){ return (c.revisaoChecklist||{})[linha+'|'+codigo] || null; }
+function codSisComp(c, linha, codigo){ const r = revComp(c, linha, codigo); return (r && r.sis) || ''; }
+function emRevComp(c, linha, codigo){ const r = revComp(c, linha, codigo); return !!(r && r.rev); }
+function setRevComp(c, linha, codigo, patch){ c.revisaoChecklist = c.revisaoChecklist || {}; const k = linha+'|'+codigo; return c.revisaoChecklist[k] = Object.assign({sis:'', rev:false, obs:'', em:null}, c.revisaoChecklist[k]||{}, patch); }
+async function salvarRevComp(clienteId, linha, codigo, campos){
+  const {error} = await sb.from('impl_checklist').upsert(Object.assign({cliente_id:clienteId, codigo, linha}, campos), {onConflict:'cliente_id,codigo,linha'});
+  if(error) avisarErroSalvar(error); else toastSalvo('Salvo');
+}
+function codSisSugeridoMetro(it){
+  const o = (ORC_ALUMINIO||[]).find(x=>x._id===it.orcId); if(!o) return '';
+  const n = normalizeCodigo(it.codigo); const m = (o.itens||[]).find(x=>normalizeCodigo(x.codigo)===n && x.codigoSistema);
+  return m ? m.codigoSistema : '';
+}
+function itensEmRevisao(c){
+  const L = [];
+  (c.perfisMetro||[]).forEach((it,idx)=>{ if(it.emRevisao) L.push({tipo:'perfis', idx, linha:'Perfis', codigo:it.codigo, descricao:it.descricao, sis:it.codigoSistema||'', sug:codSisSugeridoMetro(it), obs:it.revisaoObs||'', em:it.revisaoEm}); });
+  Object.entries(c.revisaoChecklist||{}).forEach(([k,r])=>{
+    if(!r.rev) return; const i = k.indexOf('|'), linha = k.slice(0,i), codigo = k.slice(i+1);
+    const db = linha==='vidro' ? VIDRO_DB : PRICE_DB[linha]; const it = db && (db.itens||[]).find(x=>x.codigo===codigo);
+    L.push({tipo:'comp', linha, codigo, descricao: it ? it.descricao : '', sis:r.sis||'', sug:'', obs:r.obs||'', em:r.em});
+  });
+  return L;
+}
+const thCodSis = `<th title="Código usado no sistema do cliente (Wvetro/Cem) quando for diferente do código do fornecedor">Código sistema</th>`;
+const thRevisao = `<th style="width:96px;" class="tcenter" title="Marque quando não encontrar o item no sistema: ele vai para a aba Revisão de implantação">🔎 Revisão</th>`;
+function inpCodSisComp(c, linha, codigo){ return `<td><input class="editable-price" style="text-align:left; width:120px;" value="${escapeHtml(codSisComp(c,linha,codigo))}" placeholder="—" data-action="edit-codsis-comp" data-key="${escapeHtml(linha)}" data-codigo="${escapeHtml(codigo)}"></td>`; }
+function chkRevComp(c, linha, codigo){ return `<td class="tcenter"><input type="checkbox" class="chk" ${emRevComp(c,linha,codigo)?'checked':''} data-action="toggle-revisao-comp" data-key="${escapeHtml(linha)}" data-codigo="${escapeHtml(codigo)}" title="Não encontrado no sistema: enviar para Revisão de implantação"></td>`; }
+
+function renderRevisaoImplantacao(c){
+  const L = itensEmRevisao(c);
+  const dataBr = s => s ? new Date(s).toLocaleDateString('pt-BR') : '';
+  const attrs = (x, campo) => x.tipo==='perfis' ? `data-action="${campo}-metro" data-idx="${x.idx}"` : `data-action="${campo}-comp" data-key="${escapeHtml(x.linha)}" data-codigo="${escapeHtml(x.codigo)}"`;
+  const tabela = (titulo, lista) => !lista.length ? '' : `
+    <div class="panel">
+      <div class="panel-head"><div><h3>${titulo} <span class="badge badge-warn">${lista.length}</span></h3></div></div>
+      <div style="overflow-x:auto;"><table>
+        <thead><tr><th>Linha</th><th>Código fornecedor</th><th>Descrição</th><th>Código sistema</th><th>Observação</th><th>Desde</th><th></th></tr></thead>
+        <tbody>${lista.map(x=>`<tr>
+          <td><span class="badge badge-muted">${escapeHtml(x.linha)}</span></td>
+          <td class="mono">${escapeHtml(x.codigo)}</td>
+          <td>${escapeHtml(x.descricao||'—')}</td>
+          <td><input class="editable-price" style="text-align:left; width:130px;" value="${escapeHtml(x.sis)}" placeholder="${escapeHtml(x.sug||'código no sistema')}" ${attrs(x,'edit-codsis')}></td>
+          <td><input class="editable-price" style="text-align:left; width:100%; min-width:200px;" value="${escapeHtml(x.obs)}" placeholder="Ex.: no sistema é LG-002A" ${attrs(x,'edit-revobs')}></td>
+          <td class="desc" style="white-space:nowrap;">${dataBr(x.em)}</td>
+          <td class="tright"><button class="btn btn-sm btn-primary" data-action="revisao-resolver" data-tipo="${x.tipo}" ${x.tipo==='perfis'?`data-idx="${x.idx}"`:`data-key="${escapeHtml(x.linha)}" data-codigo="${escapeHtml(x.codigo)}"`}>${icon('check')} Resolvido</button></td>
+        </tr>`).join('')}</tbody></table></div>
+    </div>`;
+  return `
+  <div class="exemplo-banner">${icon('info')}<div><b>Revisão de implantação — itens pendentes de alimentação por alteração de código.</b> Aqui ficam os itens que a equipe não encontrou no sistema de ${escapeHtml(c.nome)} porque o código do fornecedor é diferente do código do sistema. Preencha o <b>Código sistema</b> (e uma observação, se quiser) e clique em <b>Resolvido</b>: o item volta para a alimentação normal, já com o código sistema à vista na tabela.</div></div>
+  ${L.length ? tabela(icon('ruler')+' Perfis', L.filter(x=>x.tipo==='perfis')) + tabela(icon('box')+' Componentes', L.filter(x=>x.tipo==='comp'))
+    : `<div class="panel">${emptyState('check-circle','Nenhum item em revisão','Quando a equipe não encontrar um código no sistema, ela marca o item (coluna 🔎 Revisão em Componentes, ou selecionando em Perfis) e ele aparece aqui.')}</div>`}`;
+}
+
 function renderClienteComponentes(c){
   const contratadas = componentesLinhasContratadas(c);
   if(contratadas.length===0){
@@ -4278,6 +4337,7 @@ function renderChecklistComponentesTodas(cliente, contratadas){
     if(filtro==='pendentes') return !r.fed;
     if(filtro==='alimentados') return r.fed;
     if(filtro==='cotacao') return r.cotacao;
+    if(filtro==='revisao') return emRevComp(cliente, r.linha, r.it.codigo);
     return true;
   });
 
@@ -4300,6 +4360,7 @@ function renderChecklistComponentesTodas(cliente, contratadas){
         <button class="chip ${filtro==='pendentes'?'active':''}" data-action="set-filtro" data-filtro="pendentes">Pendentes</button>
         <button class="chip ${filtro==='alimentados'?'active':''}" data-action="set-filtro" data-filtro="alimentados">Alimentados</button>
         <button class="chip ${filtro==='cotacao'?'active':''}" data-action="set-filtro" data-filtro="cotacao">${icon('flag')} P/ cotação (${totalCotacao})</button>
+        <button class="chip ${filtro==='revisao'?'active':''}" data-action="set-filtro" data-filtro="revisao">🔎 Em revisão (${todasLinhasRows.filter(r=>emRevComp(cliente, r.linha, r.it.codigo)).length})</button>
         ${btnMarcarTodosAlimentados(rows, r=>r.linha)}
       </div>
       <div class="searchbox">${icon('search')}<input placeholder="Buscar código ou descrição em todas as linhas" value="${STATE.search}" data-action="buscar-item"></div>
@@ -4311,19 +4372,22 @@ function renderChecklistComponentesTodas(cliente, contratadas){
         ${thMarcarTodosAlimentados(rows, r=>r.linha)}
         <th>Linha</th>
         <th>Código</th>
+        ${thCodSis}
         <th>Descrição</th>
         ${modoGrade
           ? selecionados.map(f=>`<th class="tright">${f}</th>`).join('')
           : `<th class="tright">Preço${selecionados[0]?` (${selecionados[0]})`:''}</th>`}
         <th>Status</th>
         <th style="width:110px;" title="Marque quando precisar pedir cotação desse item a um fornecedor">${icon('flag')} Cotação</th>
+        ${thRevisao}
       </tr></thead>
       <tbody>
       ${rows.map(r=>`
-        <tr>
+        <tr${emRevComp(cliente, r.linha, r.it.codigo)?' style="background:#fff7e6;"':''}>
           <td class="tcenter"><input type="checkbox" class="chk" ${r.fed?'checked':''} ${(!r.fed && !r.temPreco)?'disabled title="Sem preço — não pode ser marcado como alimentado"':''} data-action="toggle-alimentado-categoria" data-key="${r.linha}" data-codigo="${r.it.codigo}"></td>
           <td><span class="badge badge-muted">${r.linha}</span></td>
           <td class="mono">${r.it.codigo}</td>
+          ${inpCodSisComp(cliente, r.linha, r.it.codigo)}
           <td>${escapeHtml(r.it.descricao||'—')}</td>
           ${modoGrade
             ? selecionados.map(f=>{
@@ -4337,6 +4401,7 @@ function renderChecklistComponentesTodas(cliente, contratadas){
                 : `<td class="tright" style="color:var(--text-3)">—</td>`)}
           <td>${r.semPreco ? `<span class="badge badge-warn">${icon('help-circle')} Sem preço${fornecedorAtual?` em ${fornecedorAtual}`:''}</span>` : r.fed ? `<span class="badge badge-ok">${icon('check')} Alimentado</span>` : `<span class="badge badge-muted">Pendente</span>`}</td>
           <td class="tcenter"><input type="checkbox" class="chk" ${r.cotacao?'checked':''} data-action="toggle-cotacao-categoria" data-key="${r.linha}" data-codigo="${r.it.codigo}" title="Marcar pra pedir cotação"></td>
+          ${chkRevComp(cliente, r.linha, r.it.codigo)}
         </tr>`).join('')}
       </tbody>
     </table>
@@ -4423,6 +4488,7 @@ function renderChecklistCategoria(nome, db, key, cliente){
     if(filtro==='pendentes') return !r.fed;
     if(filtro==='alimentados') return r.fed;
     if(filtro==='cotacao') return r.cotacao;
+    if(filtro==='revisao') return emRevComp(cliente, key, r.it.codigo);
     return true;
   });
   const totalCotacao = db.itens.filter(it=>mapaCotacao && mapaCotacao[it.codigo]).length;
@@ -4446,6 +4512,7 @@ function renderChecklistCategoria(nome, db, key, cliente){
         <button class="chip ${filtro==='pendentes'?'active':''}" data-action="set-filtro" data-filtro="pendentes">Pendentes</button>
         <button class="chip ${filtro==='alimentados'?'active':''}" data-action="set-filtro" data-filtro="alimentados">Alimentados</button>
         <button class="chip ${filtro==='cotacao'?'active':''}" data-action="set-filtro" data-filtro="cotacao">${icon('flag')} P/ cotação (${totalCotacao})</button>
+        <button class="chip ${filtro==='revisao'?'active':''}" data-action="set-filtro" data-filtro="revisao">🔎 Em revisão (${db.itens.filter(it=>emRevComp(cliente, key, it.codigo)).length})</button>
         ${btnMarcarTodosAlimentados(rows, r=>key)}
       </div>
       <div class="searchbox">${icon('search')}<input placeholder="Buscar código ou descrição" value="${STATE.search}" data-action="buscar-item"></div>
@@ -4456,24 +4523,28 @@ function renderChecklistCategoria(nome, db, key, cliente){
       <thead><tr>
         ${thMarcarTodosAlimentados(rows, r=>key)}
         <th>Código</th>
+        ${thCodSis}
         <th>${db.campoLabel||'Descrição'}</th>
         ${modoGrade
           ? selecionados.map(f=>`<th class="tright">${f}</th>`).join('')
           : `<th class="tright">Preço${selecionados[0]?` (${selecionados[0]})`:''}</th>`}
         <th>Status</th>
         <th style="width:110px;" title="Marque quando precisar pedir cotação desse item a um fornecedor">${icon('flag')} Cotação</th>
+        ${thRevisao}
       </tr></thead>
       <tbody>
       ${rows.map(r=>`
-        <tr>
+        <tr${emRevComp(cliente, key, r.it.codigo)?' style="background:#fff7e6;"':''}>
           <td class="tcenter"><input type="checkbox" class="chk" ${r.fed?'checked':''} ${(!r.fed && !r.temPreco)?'disabled title="Sem preço — não pode ser marcado como alimentado"':''} data-action="toggle-alimentado-categoria" data-key="${key}" data-codigo="${r.it.codigo}"></td>
           <td class="mono">${r.it.codigo}</td>
+          ${inpCodSisComp(cliente, key, r.it.codigo)}
           <td>${escapeHtml(r.it.descricao||'—')}</td>
           ${modoGrade
             ? selecionados.map(f=>`<td class="tright">${precoCelula(r.it.precos[f], f, `data-action="edit-preco-exemplo" data-key="${key}" data-codigo="${r.it.codigo}" data-fornecedor="${f}"`, r.menorFornecedor===f?'font-weight:700; color:var(--accent-dark);':'', catDeKey(key))}</td>`).join('')
             : `<td class="tright">${precoCelula(r.it.precos[selecionados[0]], selecionados[0], `data-action="edit-preco-exemplo" data-key="${key}" data-codigo="${r.it.codigo}" data-fornecedor="${selecionados[0]}"`, '', catDeKey(key))}</td>`}
           <td>${r.semPreco ? `<span class="badge badge-warn">${icon('help-circle')} Sem preço${fornecedorAtual?` em ${fornecedorAtual}`:''}</span>` : r.fed ? `<span class="badge badge-ok">${icon('check')} Alimentado</span>` : `<span class="badge badge-muted">Pendente</span>`}</td>
           <td class="tcenter"><input type="checkbox" class="chk" ${r.cotacao?'checked':''} data-action="toggle-cotacao-categoria" data-key="${key}" data-codigo="${r.it.codigo}" title="Marcar pra pedir cotação"></td>
+          ${chkRevComp(cliente, key, r.it.codigo)}
         </tr>`).join('')}
       </tbody>
     </table>
@@ -4814,7 +4885,8 @@ function renderPerfisMetroLinear(c, vista){
   const visiveis = (c.perfisMetro||[]).map((it,idx)=>({it,idx})).filter(({it})=> ehPrecos ? !!it.orcId : !it.orcId).filter(({it})=>{
     if(mb.status==='pendentes' && it.alimentado) return false;
     if(mb.status==='alimentados' && !it.alimentado) return false;
-    return bateBuscaItem(it.codigo, it.descricao, mb.termo);
+    if(mb.status==='revisao' && !it.emRevisao) return false;
+    return bateBuscaItem(it.codigo, (it.codigoSistema||'')+' '+(it.descricao||''), mb.termo);
   });
   // Ordem da tabela (só a exibição; não muda nada no banco). Fica lembrada neste navegador.
   const ordemMetro = STATE.metroOrdem || (()=>{ try{ return localStorage.getItem('impl-metro-ordem')||'az'; }catch(e){ return 'importado'; } })();
@@ -4859,6 +4931,7 @@ function renderPerfisMetroLinear(c, vista){
     <div class="panel-head">
       <div class="desc">${itens.length} item(ns) ${ehPrecos?'dos preços do banco':'do orçamento exclusivo'} · ${alimentadosCount} alimentado(s) (${pctAlimentado}%)${duplicadosCount ? ` · <span style="color:#a16207; font-weight:600;">${duplicadosCount} duplicado(s) (mesmo código e descrição)</span>` : ''}${selecionadosCount ? ` · <span style="color:var(--accent-dark); font-weight:600;">${selecionadosCount} selecionado(s)</span>` : ''}</div>
       <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        ${selecionadosCount ? `<button class="btn btn-sm" style="border-color:#f1c27d; background:#fff7e6; color:#8a5a12;" data-action="revisao-selecionados-metro">🔎 Enviar ${selecionadosCount} para revisão</button>` : ''}
         ${selecionadosCount ? `<button class="btn btn-sm btn-danger-ghost" data-action="excluir-selecionados-metro">${icon('trash-2')} Excluir ${selecionadosCount} selecionado(s)</button>` : ''}
         ${duplicadosCount ? `<button class="btn btn-sm btn-danger-ghost" data-action="remover-duplicados-metro">${icon('trash-2')} Remover ${duplicadosCount} duplicado(s)</button>` : ''}
         ${itens.length>0 ? `<button class="btn btn-sm" data-action="ajuste-cod-abrir">${icon('wand-sparkles')} Ajustar códigos</button>` : ''}
@@ -4873,6 +4946,7 @@ function renderPerfisMetroLinear(c, vista){
         <option value="todos" ${mb.status==='todos'?'selected':''}>Todos</option>
         <option value="pendentes" ${mb.status==='pendentes'?'selected':''}>Só pendentes</option>
         <option value="alimentados" ${mb.status==='alimentados'?'selected':''}>Só alimentados</option>
+        <option value="revisao" ${mb.status==='revisao'?'selected':''}>🔎 Só em revisão (${itens.filter(it=>it.emRevisao).length})</option>
       </select>
       <select class="select-inline" data-action="ordem-metro" title="Ordem dos códigos na tabela">
         <option value="importado" ${ordemMetro==='importado'?'selected':''}>Ordem: como importado</option>
@@ -4885,17 +4959,19 @@ function renderPerfisMetroLinear(c, vista){
     ${itens.length===0 ? (ehPrecos ? emptyState('table','Nenhum preço importado ainda','Clique em "Importar do banco" acima, escolha o orçamento do fornecedor no banco de alumínio e marque os perfis que este cliente vai usar.') : emptyState('table','Nenhum item ainda','Clique em "Novo item" ou anexe o PDF do orçamento acima pra detectar os itens automaticamente.')) : visiveis.length===0 ? emptyState('search','Nada encontrado','Nenhum item bate com a pesquisa. Ajuste o termo ou limpe o filtro.') : `
     <div style="overflow-x:auto;">
     <table>
-      <thead><tr><th style="width:40px;"><input type="checkbox" data-action="toggle-selecao-metro-todos" ${visiveis.length>0 && visiveis.every(({it})=>it._selecionado)?'checked':''}></th><th style="width:80px;">Alimentado <input type="checkbox" class="chk" title="Marcar todos os itens exibidos como alimentados" data-action="marcar-todos-metro-alimentado" ${visiveis.length>0 && visiveis.filter(({it})=>Number(it.preco)>0||it.alimentado).every(({it})=>it.alimentado) && visiveis.some(({it})=>Number(it.preco)>0||it.alimentado)?'checked':''}></th><th><button type="button" data-action="ordem-metro-th" title="Clique para classificar" style="all:unset; cursor:pointer; font:inherit; text-transform:inherit; letter-spacing:inherit; color:inherit; display:inline-flex; gap:4px; align-items:center;">Código ${ordemMetro==='az'?'▲ A–Z':ordemMetro==='za'?'▼ Z–A':'⇅'}</button></th><th>Descrição</th><th class="tright">Preço tabela (R$/m)</th>${temReajuste?'<th class="tright">Reajuste</th>':''}${temLiquido?'<th class="tright">Preço líquido (R$/m)</th>':''}<th></th></tr></thead>
+      <thead><tr><th style="width:40px;"><input type="checkbox" data-action="toggle-selecao-metro-todos" ${visiveis.length>0 && visiveis.every(({it})=>it._selecionado)?'checked':''}></th><th style="width:80px;">Alimentado <input type="checkbox" class="chk" title="Marcar todos os itens exibidos como alimentados" data-action="marcar-todos-metro-alimentado" ${visiveis.length>0 && visiveis.filter(({it})=>Number(it.preco)>0||it.alimentado).every(({it})=>it.alimentado) && visiveis.some(({it})=>Number(it.preco)>0||it.alimentado)?'checked':''}></th><th><button type="button" data-action="ordem-metro-th" title="Clique para classificar" style="all:unset; cursor:pointer; font:inherit; text-transform:inherit; letter-spacing:inherit; color:inherit; display:inline-flex; gap:4px; align-items:center;">Código ${ordemMetro==='az'?'▲ A–Z':ordemMetro==='za'?'▼ Z–A':'⇅'}</button></th><th title="Código usado no sistema do cliente (Wvetro/Cem) quando for diferente do código do fornecedor">Código sistema</th><th>Descrição</th><th class="tright">Preço tabela (R$/m)</th>${temReajuste?'<th class="tright">Reajuste</th>':''}${temLiquido?'<th class="tright">Preço líquido (R$/m)</th>':''}<th class="tcenter" style="width:90px;" title="Não encontrado no sistema: vai para a aba Revisão de implantação">🔎 Revisão</th><th></th></tr></thead>
       <tbody>
       ${visiveis.map(({it,idx})=>`
-        <tr>
+        <tr${it.emRevisao?' style="background:#fff7e6;"':''}>
           <td class="tcenter"><input type="checkbox" class="chk" ${it._selecionado?'checked':''} data-action="toggle-selecao-metro-item" data-idx="${idx}"></td>
           <td class="tcenter"><input type="checkbox" class="chk" ${it.alimentado?'checked':''} ${(!it.alimentado && !(Number(it.preco)>0))?'disabled title="Sem preço — não pode ser marcado como alimentado"':''} data-action="toggle-metro-item-alimentado" data-idx="${idx}"></td>
           <td class="mono"><input class="editable-price" style="text-align:left; width:130px;" value="${it.codigo}" data-action="edit-metro-item" data-campo="codigo" data-idx="${idx}"></td>
+          <td><input class="editable-price" style="text-align:left; width:120px;" value="${escapeHtml(it.codigoSistema||'')}" placeholder="${escapeHtml(codSisSugeridoMetro(it)||'—')}" data-action="edit-codsis-metro" data-idx="${idx}"></td>
           <td><textarea class="editable-price" style="text-align:left; width:100%; white-space:pre-wrap; word-break:break-word; resize:vertical; min-height:38px; line-height:1.4;" rows="2" data-action="edit-metro-item" data-campo="descricao" data-idx="${idx}">${escapeHtml(it.descricao||'')}</textarea></td>
           <td class="tright"><input class="editable-price" value="${fmtPrecoInput(it.preco)}" data-action="edit-metro-item" data-campo="preco" data-idx="${idx}"></td>
           ${temReajuste?`<td class="tright mono">${ajusteDoItemMetro(it)?fmtAjuste(ajusteDoItemMetro(it)):'—'}</td>`:''}
           ${temLiquido?`<td class="tright mono"><b>${fmtMoney(precoLiquidoMetro(it, descontoPct))}</b></td>`:''}
+          <td class="tcenter"><input type="checkbox" class="chk" ${it.emRevisao?'checked':''} data-action="toggle-revisao-metro" data-idx="${idx}" title="Não encontrado no sistema: enviar para Revisão de implantação"></td>
           <td class="tright"><button class="iconbtn" data-action="excluir-metro-item" data-idx="${idx}" title="Excluir">${icon('trash-2')}</button></td>
         </tr>`).join('')}
       </tbody>
@@ -6049,6 +6125,45 @@ function wireEvents(){
       };
       return;
     }
+    if(action==='edit-codsis-comp' || action==='edit-revobs-comp'){
+      el.onchange = (e)=>{
+        const c = CLIENTS.find(x=>x.id===STATE.clientId); if(!c) return;
+        const {key, codigo} = el.dataset, v = e.target.value.trim();
+        if(action==='edit-codsis-comp'){ setRevComp(c, key, codigo, {sis:v}); salvarRevComp(c.id, key, codigo, {codigo_sistema: v||null}); }
+        else { setRevComp(c, key, codigo, {obs:v}); salvarRevComp(c.id, key, codigo, {revisao_obs: v||null}); }
+      };
+      return;
+    }
+    if(action==='toggle-revisao-comp'){
+      el.onchange = (e)=>{
+        const c = CLIENTS.find(x=>x.id===STATE.clientId); if(!c) return;
+        const {key, codigo} = el.dataset, on = e.target.checked, em = on ? new Date().toISOString() : null;
+        setRevComp(c, key, codigo, {rev:on, em});
+        render();
+        salvarRevComp(c.id, key, codigo, {em_revisao:on, revisao_em:em});
+      };
+      return;
+    }
+    if(action==='edit-codsis-metro' || action==='edit-revobs-metro'){
+      el.onchange = (e)=>{
+        const c = CLIENTS.find(x=>x.id===STATE.clientId); if(!c) return;
+        const item = (c.perfisMetro||[])[parseInt(el.dataset.idx,10)]; if(!item) return;
+        const v = e.target.value.trim();
+        if(action==='edit-codsis-metro'){ item.codigoSistema = v; salvarMetroItem(item._id, {codigo_sistema: v||null}); }
+        else { item.revisaoObs = v; salvarMetroItem(item._id, {revisao_obs: v||null}); }
+      };
+      return;
+    }
+    if(action==='toggle-revisao-metro'){
+      el.onchange = (e)=>{
+        const c = CLIENTS.find(x=>x.id===STATE.clientId); if(!c) return;
+        const item = (c.perfisMetro||[])[parseInt(el.dataset.idx,10)]; if(!item) return;
+        item.emRevisao = e.target.checked; item.revisaoEm = item.emRevisao ? new Date().toISOString() : null;
+        render();
+        salvarMetroItem(item._id, {em_revisao:item.emRevisao, revisao_em:item.revisaoEm});
+      };
+      return;
+    }
     if(action==='toggle-cotacao-categoria'){
       el.onchange = ()=>{
         const c = CLIENTS.find(x=>x.id===STATE.clientId);
@@ -7058,6 +7173,31 @@ function wireEvents(){
         render();
         excluirMetroItensDB(remover.filter(it=>it._id).map(it=>it._id));
         atualizarAlimentado.forEach(it=>{ if(it._id) salvarMetroItem(it._id, {alimentado:true}); });
+        return;
+      }
+      if(action==='revisao-selecionados-metro'){
+        const c = CLIENTS.find(x=>x.id===STATE.clientId); if(!c) return;
+        const sel = (c.perfisMetro||[]).filter(it=>it._selecionado && itemNaVistaMetro(it));
+        if(!sel.length) return;
+        const em = new Date().toISOString();
+        sel.forEach(it=>{ it.emRevisao = true; it.revisaoEm = em; it._selecionado = false; });
+        render();
+        (async()=>{ const ids = sel.map(it=>it._id); let erro = null;
+          for(let i=0;i<ids.length;i+=100){ const {error} = await sb.from('impl_perfis_metro').update({em_revisao:true, revisao_em:em}).in('id', ids.slice(i,i+100)); if(error){ erro = error; break; } }
+          if(erro) avisarErroSalvar(erro); else toastSalvo(sel.length+' item(ns) enviados para Revisão de implantação'); })();
+        return;
+      }
+      if(action==='revisao-resolver'){
+        const c = CLIENTS.find(x=>x.id===STATE.clientId); if(!c) return;
+        if(el.dataset.tipo==='perfis'){
+          const item = (c.perfisMetro||[])[parseInt(el.dataset.idx,10)]; if(!item) return;
+          item.emRevisao = false; item.revisaoEm = null; render();
+          salvarMetroItem(item._id, {em_revisao:false, revisao_em:null});
+        } else {
+          const {key, codigo} = el.dataset; setRevComp(c, key, codigo, {rev:false, em:null}); render();
+          salvarRevComp(c.id, key, codigo, {em_revisao:false, revisao_em:null});
+        }
+        toastSalvo('Item liberado para alimentação');
         return;
       }
       if(action==='excluir-selecionados-metro'){
