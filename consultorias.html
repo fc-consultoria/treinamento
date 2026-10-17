@@ -371,7 +371,7 @@ function cards(){if(PUB)return;const ks0=Object.keys(E);const M={};ks0.forEach(k
   const red=matchMedia('(prefers-reduced-motion: reduce)').matches;document.querySelectorAll('#emps [data-cnt]').forEach(el=>{const v=el.dataset.cnt;if(v===''){return;}const n=+v;if(red||!n){el.textContent=n;return;}let t0=null;const step=t=>{t0=t0||t;const p=Math.min(1,(t-t0)/700);el.textContent=Math.round(n*(1-Math.pow(1-p,3)));if(p<1)requestAnimationFrame(step);};requestAnimationFrame(step);});}
 function abrirEmpresa(k,t){at=k;openLane=null;OPEN={};if(t)tab=t;else tab='proc';render();window.scrollTo({top:0,behavior:'smooth'});}
 const GRUPOS_ABA=[['Andamento',['proc','acao','gal','dem']],['Ferramentas',['pla','cat','ori','esq','dia']],['Com o cliente',['div','mkt','sol','age']],['Interno FC',['dsp','vis','arq','hrs']]];
-const ABAS=[['proc','🧭 Fluxo do processo'],['acao','✅ Plano de ação'],['pla','📊 Planilhas'],['cat','📚 Catálogo'],['ori','🎓 Orientativo'],['esq','🪟 Treinamento 3D'],['dia','🧩 Diagramas'],['div','📣 Divulgação'],['mkt','💡 Dicas de marketing'],['gal','📸 Galeria'],['sol','📨 Solicitações'],['age','🗓 Agenda'],['dsp','💳 Despesas'],['vis','📋 Visitas'],['dem','📦 Demandas e entregas'],['arq','📁 Arquivos'],['hrs','⏱ Horas']];
+const ABAS=[['proc','🧭 Fluxo do processo'],['acao','✅ Plano de ação'],['pla','📊 Planilhas'],['cat','📚 Catálogo'],['ori','🎓 Orientativo'],['esq','🪟 Treinamento 3D'],['conv','🔁 Conversão de códigos'],['dia','🧩 Diagramas'],['div','📣 Divulgação'],['mkt','💡 Dicas de marketing'],['gal','📸 Galeria'],['sol','📨 Solicitações'],['age','🗓 Agenda'],['dsp','💳 Despesas'],['vis','📋 Visitas'],['dem','📦 Demandas e entregas'],['arq','📁 Arquivos'],['hrs','⏱ Horas']];
 function ficha(){const e=E[at];let h='';
  if(tab==='proc'&&e.objetivo)h=`<details class="box obj"><summary><b>🎯 Objetivo da consultoria</b><span class="muted" style="font-size:13px"> · toque para ler</span></summary><p style="margin:8px 0 0">${esc(e.objetivo)}</p></details>`;
  if(tab==='proc'){const tot=e.frentes.reduce((n,f)=>n+f.p.length,0),ok=e.frentes.reduce((n,f)=>n+f.p.filter(p=>p[0]==='ok').length,0),pct=tot?Math.round(ok/tot*100):0;
@@ -416,6 +416,7 @@ function ficha(){const e=E[at];let h='';
  if(tab==='dia')h+=diaTabHtml(e,hero,nextc);
  if(tab==='ori')h+=oriTabHtml(e);
  if(tab==='esq')h+=esqTabHtml(e);
+ if(tab==='conv')h+=`<div style="background:#fff;border:1px solid #d8e2e6;border-radius:14px;overflow:hidden"><iframe src="/treinamento/equivalencias/${KEY?'?k='+encodeURIComponent(KEY):''}" title="Conversão de códigos" style="width:100%;height:max(760px,82vh);border:0;display:block"></iframe></div>`;
  if(tab==='div')h+=divTabHtml(e,hero,nextc);
  if(tab==='mkt')h+=mktTabHtml(e,hero,nextc);
  if(tab==='gal'){h+=galTabHtml(e,hero,nextc,sec);}
