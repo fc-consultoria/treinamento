@@ -161,7 +161,8 @@ details summary{cursor:pointer;color:var(--teal-d);font-weight:500;margin-top:8p
 #galFull[hidden],#galSec[hidden],#galGrade[hidden]{display:none!important}.gl{border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-top:10px}
 .gl.agu{background:#f6f8f9}.gl.agu .lh b{color:var(--muted)}
 .st{font-weight:600;font-size:12.5px;border-radius:99px;padding:2px 10px;white-space:nowrap}
-.st.con{background:#0a6d6f;color:#fff}.st.ali{background:#dcf3e4;color:#1f7a45}.st.agu{background:#e7ecef;color:var(--muted)}
+.st.con{background:#0a6d6f;color:#fff}.st.man{background:#fff1dc;color:#9a5800}.gl.man{border-color:#f3d29b;background:#fffcf6}.revnota{font-size:13.5px;color:#7a4a00;background:#fff6e6;border-radius:8px;padding:8px 10px;margin-top:8px}.cem{font-size:13.5px;color:#0a6d6f;background:#e9f6f5;border-radius:8px;padding:8px 10px;margin-top:8px}.atualiz{border:1px solid #f3d29b;background:#fff8ec;border-radius:12px;padding:12px 14px;margin-top:12px;font-size:14px}.liberado{border-radius:12px;padding:12px 14px;margin-top:12px;font-size:15px}.liberado.ok{background:#e9f6f5;color:#0a6d6f}.liberado.rev{background:#fff6e6;color:#7a4a00}
+#supSec:empty{display:none}#supSec .fm{display:grid;gap:10px;margin-top:12px}#supSec label{font-size:13px;font-weight:600;display:block;margin-bottom:4px}#supSec select,#supSec input[type=text],#supSec textarea{width:100%;box-sizing:border-box;padding:9px 11px;border:1px solid var(--line);border-radius:9px;font:inherit;font-size:15px;background:#fff}.supbtn{background:#0e8a8c;color:#fff;border:0;border-radius:10px;padding:11px 16px;font:600 15px var(--body);cursor:pointer}.supbtn{display:inline-block}.supbtn.sec{background:#fff;color:#0a6d6f;border:1px solid #9fd0cf}.chm{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-top:8px;font-size:14px}.chm .r{background:#e9f6f5;border-radius:8px;padding:7px 9px;margin-top:6px;color:#0a5557}.st.ali{background:#dcf3e4;color:#1f7a45}.st.agu{background:#e7ecef;color:var(--muted)}
 .sub{margin-top:10px}.sub .sh{display:flex;gap:8px;align-items:baseline;font-size:14px}.sub .sh b{font-weight:600}.sub .sh span{margin-left:auto;color:var(--muted);font-size:13px;white-space:nowrap}
 .sub .bar{height:8px;margin-top:5px}
 .legst{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:13px;color:var(--muted);margin:0 0 6px}
@@ -304,6 +305,7 @@ function linhasPorNome(foto){const m={};((foto&&foto.dados&&foto.dados.linhas)||
 function render(r){
   const fotos=r.fotos||[];
   $('#cliente').textContent=r.cliente||'';
+  try{if(((r.fotos||[])[0]||{}).dados&&r.fotos[0].dados.tipo_cliente==='ativo'){document.querySelector('.top .eyebrow').textContent='Acompanhamento da revisão de preços';}}catch(_){}
   document.title='Acompanhamento — '+(r.cliente||'FC Consultoria');
   if(!fotos.length){estado('Tudo pronto por aqui','O primeiro andamento da sua implantação aparece aqui a partir da próxima atualização, às 09:00 de Brasília (08:00 em Sinop/MT), de segunda a sexta.');$('#cliente').textContent=r.cliente||'';return;}
   const atual=fotos[0], ant=fotos[1]||null;
@@ -369,43 +371,57 @@ function render(r){
       return `<div class="sub"><div class="sh"><b>Perfis · preço do kg por cor</b><span>${K.filter(x=>x.ok).length} de ${K.length} cores</span></div>${kgTab(K)}</div>`;};
     const stDe=l=>{const t=(+((l.perfis||{}).total)||0)+(+((l.componentes||{}).total)||0),a=(+((l.perfis||{}).alimentados)||0)+(+((l.componentes||{}).alimentados)||0);
       return l.status||(t&&a>=t?'concluida':a>0?'alimentando':'aguardando');};
-    const ST={concluida:['con','✓ Concluída'],alimentando:['ali','● Em alimentação'],aguardando:['agu','○ Aguardando liberação']};
+    const REV=atual.dados.tipo_cliente==='ativo';
+    const ST={concluida:['con',REV?'✓ Revisada':'✓ Concluída'],manual:['man','✅ Sistema alimentado · preços em revisão'],alimentando:['ali',REV?'● Em revisão':'● Em alimentação'],aguardando:['agu','○ Aguardando liberação']};
+    const dBR=d=>{const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(d||'');return m?`${m[3]}/${m[2]}/${m[1]}`:'';};
+    const notaSt=(st,dd,pct)=>st==='manual'?`<div class="revnota">O sistema já está alimentado e funcionando nesta linha${dd&&dd.manual?` desde ${dBR(dd.manual)}`:''}. Nossa equipe está revisando os preços item a item${pct!=null?` (<b>${pct}% revisados</b>)`:''}. Abaixo aparecem só os itens já revisados.</div>`
+      :st==='concluida'&&dd&&dd.concluida?`<div class="cem">✅ <b>Sistema alimentado 100% em ${dBR(dd.concluida)}</b> · preços revisados até esta data.</div>`:'';
     const LS=G.linhas||[];
     const cards=LS.map(l=>{const st=stDe(l),[c,r]=ST[st]||ST.aguardando;const t=(+((l.perfis||{}).total)||0)+(+((l.componentes||{}).total)||0),a=(+((l.perfis||{}).alimentados)||0)+(+((l.componentes||{}).alimentados)||0),pct=t?Math.round(a/t*100):0;
-      return `<div class="gl ${c}"><div class="lh"><b>${esc(l.nome)}</b><span class="st ${c}">${r}</span>${t?`<span class="q"><strong>${pct}%</strong> concluído</span>`:''}</div>
+      return `<div class="gl ${c}"><div class="lh"><b>${esc(l.nome)}</b><span class="st ${c}">${r}</span>${t?`<span class="q"><strong>${pct}%</strong> ${st==='manual'?'dos preços revisados':'concluído'}</span>`:''}</div>${notaSt(st,l.datas,t?pct:null)}
         ${(G.base==='kg'?kgHtml(l.nome):subHtml(l.nome,'perfis','Perfis · metro linear',l.perfis,'nenhum perfil desta linha na lista'))+subHtml(l.nome,'componentes','Componentes',l.componentes)}</div>`;}).join('');
     const op=G.outros_perfis&&+G.outros_perfis.total?`<div class="gl"><div class="lh"><b>Outros perfis</b><span class="muted" style="font-size:13px">perfis avulsos, fora das linhas acima</span></div>${subHtml('__outros','perfis','Perfis · metro linear',G.outros_perfis)}</div>`:'';
     const brl=v=>'R$ '+Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
     const kg=(kgUma||(G.base!=='kg'&&(G.kg||[]).length))?`<div class="gl"><div class="lh"><b>Perfis por kg · preço por cor</b><span class="q">${G.kg.filter(x=>x.ok).length} de ${G.kg.length} cores lançadas</span></div>${kgTab(G.kg)}</div>`:'';
-    const VL=G.vidros||[],vOk=VL.filter(x=>x.ok).length,vSt=G.vidro_status||(VL.length&&vOk>=VL.length?'concluida':vOk>0?'alimentando':'aguardando'),[vc,vr]=ST[vSt]||ST.aguardando;
-    const vd=(VL.length||G.vidro_status)?`<div class="gl ${vc==='agu'?'agu':''}"><div class="lh"><b>Vidro</b><span class="st ${vc}">${vr}</span>${VL.length?`<span class="q">${vOk} de ${VL.length} alimentados</span>`:''}</div>${VL.length?`<div style="margin-top:8px">${VL.map(x=>`<span class="vchip ${x.ok?'ok':''}">${x.ok?'✓':'○'} ${esc(x.nome)}</span>`).join('')}</div>`:`<div class="muted" style="font-size:13.5px;margin-top:6px">${vSt==='aguardando'?'Aguardando a tabela de preços dos vidros.':'Tabela de vidros em alimentação.'}</div>`}</div>`:'';
+    const VL=G.vidros||[],vOk=VL.filter(x=>x.ok).length,vSt=G.vidro_status||(VL.length&&vOk>=VL.length?'concluida':vOk>0?'alimentando':'aguardando'),[vc,vr]=ST[vSt]||ST.aguardando,vNota=notaSt(vSt,G.vidro_datas,VL.length?Math.round(vOk/VL.length*100):null);
+    const vd=(VL.length||G.vidro_status)?`<div class="gl ${vc==='agu'?'agu':''}"><div class="lh"><b>Vidro</b><span class="st ${vc}">${vr}</span>${VL.length?`<span class="q">${vOk} de ${VL.length} ${vSt==='manual'?'revisados':'alimentados'}</span>`:''}</div>${vNota}${VL.length?`<div style="margin-top:8px">${VL.map(x=>`<span class="vchip ${x.ok?'ok':''}">${x.ok?'✓':'○'} ${esc(x.nome)}</span>`).join('')}</div>`:`<div class="muted" style="font-size:13.5px;margin-top:6px">${vSt==='aguardando'?'Aguardando a tabela de preços dos vidros.':'Tabela de vidros em alimentação.'}</div>`}</div>`:'';
     const fora=(G.fora||[]).length?`<div class="fora"><b>Linhas liberadas no sistema, fora do contrato:</b> ${G.fora.map(esc).join(', ')}.<br><span class="muted" style="font-size:13px">Elas aparecem no seu sistema, mas não fazem parte desta alimentação.</span></div>`:'';
     const conc=LS.filter(l=>stDe(l)==='concluida').length;
+    const todas=LS.map(l=>({st:stDe(l),dd:l.datas||{}})).concat((VL.length||G.vidro_status)?[{st:vSt,dd:G.vidro_datas||{}}]:[]);
+    const algumMan=todas.some(x=>x.st==='manual'), algumLib=todas.some(x=>x.st==='manual'||x.st==='concluida');
+    const tudoCon=todas.length&&todas.every(x=>x.st==='concluida'), tudoLib=todas.length&&todas.every(x=>x.st==='manual'||x.st==='concluida');
+    const somaT=LS.reduce((s,l)=>s+(+((l.perfis||{}).total)||0)+(+((l.componentes||{}).total)||0),0)+VL.length, somaA=LS.reduce((s,l)=>s+(+((l.perfis||{}).alimentados)||0)+(+((l.componentes||{}).alimentados)||0),0)+vOk, pctRev=somaT?Math.round(somaA/somaT*100):pctGeral;
+    const ultCon=tudoCon?todas.map(x=>x.dd.concluida||'').sort().pop():'';
+    const topoLib=tudoCon?`<div class="liberado ok">✅ <b>Implantação concluída${ultCon?` em ${dBR(ultCon)}`:''}</b> · todas as linhas contratadas alimentadas e com preços revisados.</div>`
+      :tudoLib?`<div class="liberado rev">✅ <b>Sistema liberado em todas as linhas contratadas</b> · revisão de preços em andamento: <b>${pctRev}%</b>.</div>`:'';
+    const atualiz=algumLib?`<div class="atualiz">⚠️ <b>Atenção às atualizações do WVetro / CEM</b><br>Quando o sistema recebe uma atualização, podem surgir itens novos sem preço. A empresa do sistema nem sempre avisa a FC sobre essas atualizações. Se aparecer algum item sem preço, <a href="#supSec" style="color:#0a6d6f;font-weight:600">chame o Suporte FC aqui no link</a>.</div>`:'';
     return `<section class="sec card"><h2>Andamento por linha contratada <span class="muted" style="font-family:var(--body);font-size:13px;font-weight:500;margin-left:auto">${conc} de ${LS.length} ${LS.length===1?'linha concluída':'linhas concluídas'}</span></h2>
-      <div class="legst"><span class="st con">✓ Concluída</span><span class="st ali">● Em alimentação</span><span class="st agu">○ Aguardando liberação</span></div>
+      <div class="legst"><span class="st con">✓ Concluída</span>${algumMan?'<span class="st man">✅ Alimentado · em revisão</span>':''}<span class="st ali">${REV?'● Em revisão':'● Em alimentação'}</span><span class="st agu">○ Aguardando liberação</span></div>${topoLib}${atualiz}
       ${baseHtml(atual.dados.fornecedores)}${cards}${op}${kg}${vd}${fora}</section>`;};
   const proxHtml=faltam>0?`<div class="prox"><span class="cad">🔒</span><span><b style="color:var(--fg)">${faltam} ${faltam>1?'próximas linhas contratadas':'próxima linha contratada'}</b> · ${faltam>1?'aparecem':'aparece'} aqui assim que a linha em alimentação chegar a 100%.</span></div>`:'';
   const etAll0=etapasDaFoto(atual.dados),concluida=etAll0.length>0&&etAll0.every(e=>e.feita);
   if(concluida){const k='fc-portal-festa-'+(ENVIO.chave||'demo').slice(0,12);let ja=false;try{ja=!ENVIO.demo&&localStorage.getItem(k)==='1';}catch(_){}
     if(!ja&&!render._festa){render._festa=true;setTimeout(confete,500);try{if(!ENVIO.demo)localStorage.setItem(k,'1');}catch(_){}}}
   const etAll=etapasDaFoto(atual.dados), etAt=etAll.find(e=>!e.feita);
-  $('#topo').innerHTML=`<div class="topo"><span><span class="num">${pctGeral}%</span> <span class="muted">da alimentação concluída (todas as linhas)</span></span>
+  $('#topo').innerHTML=`<div class="topo"><span><span class="num">${pctGeral}%</span> <span class="muted">${atual.dados.tipo_cliente==='ativo'?'dos preços revisados (todas as linhas)':'da alimentação concluída (todas as linhas)'}</span></span>
     ${etAll.length?`<span class="sep"></span><span>${etAt?`<span class="muted">Etapa ${etAll.indexOf(etAt)+1} de ${etAll.length}:</span> <b>${esc(etAt.titulo)}</b>`:'<b>Implantação concluída ✓</b>'}</span>`:''}
     <a class="ver" href="#andamento">Ver andamento completo ↓</a></div>`;
   document.getElementById('siteSec').hidden=false;
   $('#app').innerHTML=`
     ${ENVIO.nome?`<div class="ola">👋 Olá, <b>${esc(ENVIO.nome)}</b><button type="button" id="trocarPessoa">Não é você? Trocar</button></div>`:''}
-    <h2 class="andtit" id="andamento">Andamento da sua implantação</h2>
+    <h2 class="andtit" id="andamento">${atual.dados.tipo_cliente==='ativo'?'Andamento da revisão de preços':'Andamento da sua implantação'}</h2>
+    ${atual.dados.tipo_cliente==='ativo'?`<div class="liberado rev" style="margin:0 0 12px">🔄 <b>Seu sistema está em revisão de preços.</b> Ele continua funcionando normalmente: nossa equipe está conferindo e atualizando os preços linha a linha. Os itens já revisados aparecem abaixo.</div>`:''}
     <div class="kpis">
-      <div class="kpi hi"><div class="l">Alimentação concluída</div><div class="v">${pctGeral}%</div><div class="l" style="margin-top:2px">somando todas as linhas</div></div>
+      <div class="kpi hi"><div class="l">${atual.dados.tipo_cliente==='ativo'?'Preços revisados':'Alimentação concluída'}</div><div class="v">${pctGeral}%</div><div class="l" style="margin-top:2px">somando todas as linhas</div></div>
       <div class="kpi"><div class="l">Avanço nesta atualização</div><div class="v">${ant?avancoGeral:'—'}</div></div>
       <div class="kpi"><div class="l">Etapas concluídas</div><div class="v">${etAll.filter(e=>e.feita).length} <small>de ${etAll.length||10}</small></div></div>
     </div>
-    ${concluida?`<section class="festa" role="status"><div class="fx">🎉</div><h2>Implantação concluída!</h2><p>Todas as linhas contratadas foram alimentadas, conferidas e com margem ajustada. Obrigado pela parceria. Qualquer dúvida no uso do sistema, fale com a FC.</p></section>`:''}
+    ${concluida?`<section class="festa" role="status"><div class="fx">🎉</div><h2>${atual.dados.tipo_cliente==='ativo'?'Revisão concluída!':'Implantação concluída!'}</h2><p>Todas as linhas contratadas foram alimentadas, conferidas e com margem ajustada. Obrigado pela parceria. Qualquer dúvida no uso do sistema, fale com a FC.</p></section>`:''}
     ${situacaoHtml(atual.dados.situacao)}
     ${etapasHtml(etapasDaFoto(atual.dados))}
     ${ritmo.some(x=>x.d>0)?`<section class="sec"><h2>Ritmo das últimas atualizações</h2><div class="ritmo">${ritmo.map((x,i)=>`<div class="dia ${i===0?'ult':''}"><div class="d">${esc(dt(x.em))}</div><div class="n">${x.txt}</div></div>`).join('')}</div></section>`:''}
     ${G?gruposHtml():`<section class="sec card"><h2>Andamento por linha <span class="muted" style="font-family:var(--body);font-size:13px;font-weight:500;margin-left:auto">${L.filter(feitaL).length} de ${L.length} ${L.length>1?'linhas concluídas':'linha concluída'}</span></h2>${seqInfo}${baseHtml(atual.dados.fornecedores)}${vis.map(linhaHtml).join('')}${proxHtml}</section>`}
+    <section class="sec card" id="supSec"></section>
     <div class="foot">FC Consultoria e Representação · Atendimento de segunda a sexta, das 08:00 às 11:00 e das 13:00 às 17:00 (horário de Sinop/MT, 1 hora a menos que Brasília)</div>`;
 }
 
@@ -490,8 +506,46 @@ function iniciarDemo(){
     render(data);
     setTimeout(buscarNovidades,1200);
     galeria(sb,chave,ENVIO.nome||'');
+    suporte(sb,chave,ENVIO.nome||'');
   }catch(e){console.error(e);estado('Não foi possível carregar','Verifique sua internet e recarregue a página.');}
 })();
+// Suporte FC: o cliente abre o chamado pelo próprio link (WhatsApp fica como opção)
+const SUP_TIPOS=[['sem_preco','Item sem preço (apareceu depois de atualização do sistema)'],['preco_errado','Preço diferente do esperado'],['duvida','Dúvida sobre o sistema ou a implantação'],['outro','Outro assunto']];
+const SUP_ST={aberto:['🔴 Recebido','#b91c1c'],atendimento:['🟠 Em atendimento','#b45309'],resolvido:['✅ Resolvido','#15803d']};
+function supReduzir(file){return new Promise((ok,no)=>{const fr=new FileReader();fr.onload=()=>{const im=new Image();im.onload=()=>{const k=Math.min(1,1600/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);ok(c.toDataURL('image/jpeg',.8));};im.onerror=no;im.src=fr.result;};fr.onerror=no;fr.readAsDataURL(file);});}
+async function suporte(sb,chave,nome){const box=document.getElementById('supSec');if(!box)return;
+  const LN=Array.from(document.querySelectorAll('.gl .lh b')).map(b=>b.textContent.trim()).filter((v,i,a)=>v&&a.indexOf(v)===i&&v!=='Outros perfis'&&!/^Perfis por kg/.test(v));
+  let print=null,lista=[];
+  const wa='https://wa.me/5566999867984?text='+encodeURIComponent(`Olá, FC! Aqui é ${nome||'da equipe'} (${(document.getElementById('cliente')||{}).textContent||''}). Preciso de suporte no sistema.`);
+  const desenhar=()=>{box.innerHTML=`<h2>🛟 Suporte FC</h2>
+    <p class="muted" style="margin:0 0 4px;font-size:14.5px">Encontrou item sem preço depois de uma atualização do WVetro / CEM, ou tem alguma dúvida? Abra um chamado aqui: ele chega direto para a equipe da FC, e a resposta aparece nesta página.</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button type="button" class="supbtn" id="supAbrir">Chamar suporte FC</button><a class="supbtn sec" href="${wa}" target="_blank" rel="noopener" style="text-decoration:none">ou pelo WhatsApp</a></div>
+    <div id="supForm" hidden><div class="fm">
+      <div><label for="supTipo">Assunto</label><select id="supTipo">${SUP_TIPOS.map(([v,t])=>`<option value="${v}">${esc(t)}</option>`).join('')}</select></div>
+      <div><label for="supLinha">Linha</label><select id="supLinha"><option value="">Não sei / várias</option>${LN.map(l=>`<option>${esc(l)}</option>`).join('')}<option>Outra linha</option></select></div>
+      <div><label for="supCod">Código(s) do item</label><input type="text" id="supCod" maxlength="200" placeholder="Ex.: SU-001, GUA053"></div>
+      <div><label for="supDesc">O que aconteceu?</label><textarea id="supDesc" rows="3" maxlength="2000" placeholder="Ex.: depois da atualização de ontem, o item apareceu sem preço no orçamento."></textarea></div>
+      <div><label>Print da tela (opcional)</label><input type="file" id="supArq" accept="image/*"> <span class="muted" style="font-size:13px">ou cole com Ctrl+V</span><div id="supPrev"></div></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="supbtn" id="supEnviar">Enviar chamado</button><button type="button" class="supbtn sec" id="supCanc">Cancelar</button></div>
+      <div id="supMsg" class="muted" style="font-size:14px"></div></div></div>
+    ${lista.length?`<h3 style="font-size:15px;margin:16px 0 0">Seus chamados</h3>${lista.map(x=>{const [r,c]=SUP_ST[x.status]||SUP_ST.aberto;return `<div class="chm"><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:baseline"><b style="color:${c}">${r}</b><span class="muted" style="font-size:13px">${esc(new Date(x.em).toLocaleDateString('pt-BR'))}${x.nome?' · '+esc(x.nome):''}</span></div><div>${esc((SUP_TIPOS.find(t=>t[0]===x.tipo)||[,x.tipo])[1])}${x.linha?' · '+esc(x.linha):''}${x.codigo?' · <span style="font-family:monospace">'+esc(x.codigo)+'</span>':''}</div>${x.descricao?`<div class="muted" style="font-size:13.5px">${esc(x.descricao)}</div>`:''}${x.resposta?`<div class="r"><b>Resposta da FC:</b> ${esc(x.resposta)}</div>`:''}</div>`;}).join('')}`:''}`;
+    const f=box.querySelector('#supForm');
+    box.querySelector('#supAbrir').onclick=()=>{f.hidden=!f.hidden;if(!f.hidden)box.querySelector('#supTipo').focus();};
+    box.querySelector('#supCanc').onclick=()=>{f.hidden=true;print=null;};
+    const usar=async file=>{if(!file||!/^image\//.test(file.type))return;try{print=await supReduzir(file);box.querySelector('#supPrev').innerHTML=`<img src="${print}" style="max-width:220px;max-height:160px;border-radius:8px;border:1px solid var(--line);margin-top:6px">`;}catch(_){}};
+    box.querySelector('#supArq').onchange=e=>usar(e.target.files[0]);
+    box.querySelector('#supEnviar').onclick=async()=>{const m=box.querySelector('#supMsg');
+      if(ENVIO.previa){m.textContent='Prévia: o envio fica desativado.';return;}
+      const desc=box.querySelector('#supDesc').value.trim(),cod=box.querySelector('#supCod').value.trim();
+      if(!desc&&!cod&&!print){m.textContent='Conte o que aconteceu, informe o código ou anexe o print.';return;}
+      const b=box.querySelector('#supEnviar');b.disabled=true;m.textContent='Enviando…';
+      const r=await sb.rpc('impl_portal_suporte_abrir',{p_chave:chave,p_nome:nome,p_tipo:box.querySelector('#supTipo').value,p_linha:box.querySelector('#supLinha').value||null,p_codigo:cod||null,p_descricao:desc||null,p_print:print});
+      if(r.error||!r.data){b.disabled=false;m.textContent='Não foi possível enviar agora. Tente de novo ou use o WhatsApp.';return;}
+      print=null;await carregar();desenhar();const ok=document.createElement('div');ok.className='cem';ok.innerHTML='✅ Chamado enviado! A equipe da FC já recebeu e responde por aqui no horário de atendimento.';box.insertBefore(ok,box.children[2]);};
+  };
+  const carregar=async()=>{try{const r=await sb.rpc('impl_portal_suporte_listar',{p_chave:chave,p_nome:nome});lista=Array.isArray(r.data)?r.data:[];}catch(_){lista=[];}};
+  document.addEventListener('paste',e=>{const f=box.querySelector('#supForm');if(!f||f.hidden)return;const it=[...(e.clipboardData||{}).items||[]].find(i=>/^image\//.test(i.type));if(it){e.preventDefault();const file=it.getAsFile();box.querySelector('#supArq').value='';(async()=>{print=await supReduzir(file);box.querySelector('#supPrev').innerHTML=`<img src="${print}" style="max-width:220px;max-height:160px;border-radius:8px;border:1px solid var(--line);margin-top:6px">`;})();}});
+  await carregar();desenhar();}
 // Galeria do processo de implantação: fica fechada; abre a grade por etapa; toque abre a foto em tela cheia.
 // Cada etapa da lista também ganha o link "📷 N fotos".
 async function galeria(sb,chave,nome){try{

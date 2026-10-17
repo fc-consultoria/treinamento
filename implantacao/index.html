@@ -344,6 +344,7 @@ tbody tr:hover{background:var(--panel-2);}
       <div class="navlabel">Dia a dia</div>
       <button class="navitem" data-nav="fila" id="nav-fila"><i data-lucide="list-todo"></i> Fila de alimentação</button>
       <button class="navitem" data-nav="clientes"><i data-lucide="users"></i> Clientes</button>
+      <button class="navitem" data-nav="suporte"><i data-lucide="life-buoy"></i> Suporte FC <span id="badge-suporte" style="display:none;margin-left:auto;background:#dc2626;color:#fff;border-radius:99px;font-size:11px;font-weight:700;padding:1px 7px"></span></button>
       <div class="navlabel" data-adm style="margin-top:14px">Preços</div>
       <button class="navitem" data-nav="fornecedores"><i data-lucide="truck"></i> Fornecedores</button>
       <button class="navitem" data-nav="banco"><i data-lucide="database"></i> Banco de Preços</button>
@@ -458,6 +459,7 @@ function mapClienteRow(c){
     tipo_cliente: c.tipo_cliente || 'novo',
     linhas_componentes: c.linhas_componentes || [],
     linhas_status: c.linhas_status || {},
+    linhas_datas: c.linhas_datas || {},
     linhas_fora_contrato: c.linhas_fora_contrato || [],
     aviso_passo: c.aviso_passo!=null ? Number(c.aviso_passo) : null,
     perfisBase: c.perfis_base==='kg' ? 'kg' : 'metro',
@@ -2040,7 +2042,44 @@ async function carregarAcessosEspelho(){
     MEU_ACESSO = ACESSOS.find(a=>user && a.email.toLowerCase()===String(user.email||'').toLowerCase()) || null;
   }catch(e){ console.warn('espelho: acessos', e); ACESSOS=[]; MEU_ACESSO=null; }
   await carregarTarefas();
+  carregarSuporte();
   if(ehAlimentador() && STATE.view!=='fila' && STATE.view!=='cliente') STATE.view='fila';
+}
+// ===== Suporte FC: chamados abertos pelo cliente no link de acompanhamento =====
+let SUPORTE = [];
+const SUP_TIPO = {sem_preco:'Item sem preço após atualização', preco_errado:'Preço diferente do esperado', duvida:'Dúvida', outro:'Outro assunto'};
+const SUP_ST = {aberto:['Aberto','#dc2626','#fdecec'], atendimento:['Em atendimento','#b45309','#fff4e0'], resolvido:['Resolvido','#15803d','#e8f6ee']};
+async function carregarSuporte(){
+  try{ const {data,error} = await sb.from('impl_suporte').select('id,cliente_id,nome,tipo,linha,codigo,descricao,status,resposta,criado_em,respondido_em,resolvido_em').order('criado_em',{ascending:false}).limit(300);
+    if(!error) SUPORTE = data||[]; }catch(_){ SUPORTE=[]; }
+  badgeSuporte(); if(STATE.view==='suporte') render();
+}
+function badgeSuporte(){ const n = SUPORTE.filter(x=>x.status==='aberto').length, b=document.getElementById('badge-suporte'); if(b){ b.textContent=n; b.style.display=n?'':'none'; } }
+setInterval(()=>{ if(STATE.loggedIn && !ehAlimentador()) carregarSuporte(); }, 120000);
+function renderSuporte(){
+  const f = STATE.supFiltro||'pendentes';
+  const nomeCli = id => (CLIENTS.find(c=>c.id===id)||{}).nome || 'Cliente';
+  const lista = SUPORTE.filter(x=> f==='todos' || (f==='pendentes' ? x.status!=='resolvido' : x.status===f));
+  const cont = k => SUPORTE.filter(x=> k==='pendentes' ? x.status!=='resolvido' : x.status===k).length;
+  const dt = t => t ? new Date(t).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}) : '';
+  return `<div class="pagehead"><div><h1>Suporte FC</h1><div class="sub">Chamados abertos pelos clientes no link de acompanhamento (ex.: item sem preço depois de atualização do WVetro/CEM).</div></div>
+    <button class="btn" data-action="sup-recarregar">${icon('refresh-cw')} Atualizar</button></div>
+  <div class="chiprow" style="margin-bottom:14px">${[['pendentes','Pendentes'],['aberto','Abertos'],['atendimento','Em atendimento'],['resolvido','Resolvidos'],['todos','Todos']].map(([k,t])=>`<button class="chip ${f===k?'active':''}" data-action="sup-filtro" data-f="${k}">${t}${k!=='todos'?` (${cont(k)})`:''}</button>`).join('')}</div>
+  ${lista.length ? lista.map(x=>{ const [r,cor,bg]=SUP_ST[x.status]||SUP_ST.aberto; const c=CLIENTS.find(k=>k.id===x.cliente_id); const ln = c && x.linha && [...(c.linhas_componentes||[]),'Vidro'].includes(x.linha) ? x.linha : '';
+    return `<div class="panel" style="padding:14px 16px;margin-bottom:12px;border-left:4px solid ${cor}">
+      <div style="display:flex;gap:10px;align-items:baseline;flex-wrap:wrap"><b style="font-size:15px">${escapeHtml(nomeCli(x.cliente_id))}</b><span style="background:${bg};color:${cor};font-size:11.5px;font-weight:700;border-radius:99px;padding:2px 9px">${r}</span><span class="desc">${escapeHtml(SUP_TIPO[x.tipo]||x.tipo)} · ${dt(x.criado_em)}${x.nome?' · por '+escapeHtml(x.nome):''}</span>
+        <button class="btn btn-sm btn-ghost" style="margin-left:auto" data-action="abrir-cliente" data-id="${x.cliente_id}">Abrir cliente</button></div>
+      <div style="margin-top:8px;font-size:13.5px;line-height:1.5">${x.linha?`<div><b>Linha:</b> ${escapeHtml(x.linha)}</div>`:''}${x.codigo?`<div><b>Código(s):</b> <span class="mono">${escapeHtml(x.codigo)}</span></div>`:''}${x.descricao?`<div style="white-space:pre-wrap;margin-top:4px">${escapeHtml(x.descricao)}</div>`:''}</div>
+      <div id="sup-print-${x.id}"></div>
+      <div style="margin-top:10px"><label class="desc" style="display:block;margin-bottom:4px">Resposta para o cliente (aparece no link)</label>
+        <textarea data-sup-resp="${x.id}" rows="2" style="width:100%;padding:8px 10px;border:1px solid var(--border,#d6dee4);border-radius:8px;font:inherit">${escapeHtml(x.resposta||'')}</textarea></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+        <button class="btn btn-sm" data-action="sup-print" data-id="${x.id}">${icon('image')} Ver print</button>
+        ${x.status!=='atendimento'?`<button class="btn btn-sm" data-action="sup-status" data-id="${x.id}" data-st="atendimento">🟠 Em atendimento</button>`:''}
+        ${x.status!=='resolvido'?`<button class="btn btn-sm btn-primary" data-action="sup-status" data-id="${x.id}" data-st="resolvido">✅ Resolvido</button>`:`<button class="btn btn-sm" data-action="sup-status" data-id="${x.id}" data-st="aberto">Reabrir chamado</button>`}
+        <button class="btn btn-sm btn-ghost" data-action="sup-status" data-id="${x.id}" data-st="">💾 Salvar resposta</button>
+        ${ln && ['concluida','manual'].includes((c.linhas_status||{})[ln]) ? `<button class="btn btn-sm btn-ghost" data-action="sup-reabrir-linha" data-id="${x.id}" title="Volta a linha para Em alimentação (a data do 100% fica no histórico)">↩ Reabrir a linha ${escapeHtml(ln)}</button>`:''}
+      </div></div>`; }).join('') : emptyState('life-buoy','Nenhum chamado aqui','Quando um cliente pedir suporte pelo link, o chamado aparece nesta tela.')}`;
 }
 // ===== Fila de alimentação: tarefas por cliente + linha + tópico, cada colaborador vê só as suas =====
 let TAREFAS = [];
@@ -2495,6 +2534,7 @@ function render(){
   if(STATE.view==='fila') root.innerHTML = renderFila();
   else if(STATE.view==='cliente' && (ehAlimentador() || (STATE.modoTarefa && STATE.tarefaAtiva))){ const c = CLIENTS.find(x=>x.id===STATE.clientId); root.innerHTML = c ? renderClienteAlimentador(c) : renderFila(); }
   else if(STATE.view==='clientes') root.innerHTML = renderClientes();
+  else if(STATE.view==='suporte') root.innerHTML = renderSuporte();
   else if(STATE.view==='fornecedores') root.innerHTML = renderFornecedores();
   else if(STATE.view==='banco') root.innerHTML = abasBanco() + renderBanco();
   else if(STATE.view==='consulta') root.innerHTML = abasBanco() + renderConsulta();
@@ -2533,6 +2573,7 @@ function renderClientes(){
     <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-action="toggle-compacto">${icon(STATE.compacto?'layout-grid':'list')} ${STATE.compacto?'Mostrar detalhes':'Ocultar detalhes (só nomes)'}</button><button class="btn btn-primary" data-action="novo-cliente">${icon('plus')} Novo cliente</button></div>
   </div>
 
+  ${!ehAlimentador() && SUPORTE.some(x=>x.status==='aberto') ? `<div class="panel" style="padding:12px 16px;margin-bottom:16px;border-left:4px solid #dc2626;display:flex;gap:10px;align-items:center;flex-wrap:wrap"><b>🛟 ${SUPORTE.filter(x=>x.status==='aberto').length} chamado(s) de suporte aberto(s) pelos clientes</b><button class="btn btn-sm btn-primary" style="margin-left:auto" data-action="ir-suporte">Ver chamados</button></div>` : ''}
   ${blocoMinhas}
   <div class="statgrid">
     <div class="statcard"><div class="lbl">${icon('users')} Clientes</div><div class="num">${total}</div><div class="sub">cadastrados</div></div>
@@ -3460,6 +3501,32 @@ function mensagemLinkPortal(c){
     'Dúvidas: (66) 9 9986-7984, de segunda a sexta, das 08:00 às 11:00 e das 13:00 às 17:00 (horário de Sinop/MT, 1 hora a menos que Brasília).','',
     'FC Consultoria'].join('\n');
 }
+// Situação de uma linha (o cliente vê no link). Guarda a data de cada mudança importante.
+const ST_LINHA = {'':'Automática', aguardando:'⚪ Aguardando', alimentando:'🟢 Em alimentação', manual:'🚨 Liberada · em revisão de preços', concluida:'✅ 100% revisada'};
+function setLinhaStatus(c, linhas, valor){
+  const st = Object.assign({}, c.linhas_status||{}), dt = JSON.parse(JSON.stringify(c.linhas_datas||{}));
+  (Array.isArray(linhas)?linhas:[linhas]).forEach(l=>{
+    if(valor) st[l]=valor; else delete st[l];
+    if(valor==='manual' || valor==='concluida'){ dt[l] = Object.assign({}, dt[l]||{}, {[valor]: hojeYmd()}); }
+  });
+  c.linhas_status = st; c.linhas_datas = dt; render();
+  sb.from('impl_clientes').update({linhas_status: st, linhas_datas: dt}).eq('id', c.id).then(({error})=>{
+    if(error) return avisarErroSalvar(error);
+    toastSalvo('Salvo — o cliente já vê no link');
+    sb.rpc('impl_portal_atualizar_linhas',{p_cliente:c.id}).then(()=>{},()=>{});
+  });
+}
+function linhaStatusDoKey(c, key){ if(key==='vidro') return 'Vidro'; return (c.linhas_componentes||[]).includes(key) ? key : null; }
+function blocoEmergenciaLinha(c, key, p){
+  const l = linhaStatusDoKey(c, key); if(!l) return '';
+  const st = (c.linhas_status||{})[l]||'', dt = (c.linhas_datas||{})[l]||{};
+  if(st==='concluida') return `<span class="desc" style="color:#0a6d6f;font-weight:650">✅ 100% em ${fmtDate(dt.concluida||'')}</span><button class="btn btn-sm btn-ghost" data-action="linha-emerg" data-linha="${escapeHtml(l)}" data-valor="alimentando" title="Reabre a linha (ex.: item novo sem preço após atualização do sistema)">Reabrir</button>`;
+  if(st==='manual') return `<span class="desc" style="color:#b45309;font-weight:650">🚨 Liberada em ${fmtDate(dt.manual||'')} · em revisão</span>`
+    + `<button class="btn btn-sm ${p.total && p.alimentados>=p.total?'btn-primary':''}" data-action="linha-emerg" data-linha="${escapeHtml(l)}" data-valor="concluida" title="Marca a linha como 100% revisada, com a data de hoje">✅ Marcar 100% revisado</button>`
+    + `<button class="btn btn-sm btn-ghost" data-action="linha-emerg" data-linha="${escapeHtml(l)}" data-valor="alimentando" title="Desfaz a liberação manual">Desfazer</button>`;
+  return `<button class="btn btn-sm" data-action="linha-emerg" data-linha="${escapeHtml(l)}" data-valor="manual" style="border-color:#f5c27a;color:#b45309" title="O cliente passa a ver: sistema alimentado, preços em revisão. Só os itens alimentados de verdade aparecem na lista.">🚨 Liberar manual</button>`
+    + (p.total && p.alimentados>=p.total ? `<button class="btn btn-sm btn-primary" data-action="linha-emerg" data-linha="${escapeHtml(l)}" data-valor="concluida">✅ Marcar 100%</button>` : '');
+}
 function renderPainelAvisosLinhasPortal(c){
   const linhas = linhasDeProgressoCliente(c);
   const enviado = AVISOS_WA.get(c.id+'|portal|link')==='enviado';
@@ -3471,17 +3538,20 @@ function renderPainelAvisosLinhasPortal(c){
       <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
         ${enviado ? '<span class="desc" style="color:#15803d;">✓ link enviado</span>' : ''}
         <button class="btn btn-sm ${enviado?'':'btn-primary'}" data-action="enviar-link-portal">${icon('message-circle')} ${enviado?'Reenviar o link pelo WhatsApp':'Enviar o link pelo WhatsApp'}</button>
+        <button class="btn btn-sm" data-action="linha-emerg-todas" style="border-color:#f5c27a;color:#b45309" title="Libera todas as linhas contratadas e o vidro como 'sistema alimentado, em revisão de preços'">🚨 Liberar todas (emergência)</button>
         <button class="btn btn-sm btn-ghost" data-action="zerar-implantacao-cliente" style="color:var(--danger);">${icon('rotate-ccw')} Zerar tudo do cliente</button>
       </div>
     </div>
+    <div style="padding:10px 18px;background:#fff8ec;border-top:1px solid #f5e1bf;font-size:12.5px;color:#7a4a00"><b>🚨 Liberação manual:</b> o cliente vê <i>"Sistema alimentado · preços em revisão"</i> e o percentual de preços revisados. A lista de códigos mostra só os itens alimentados de verdade. Quando a revisão terminar, use <b>✅ Marcar 100% revisado</b>: o cliente vê a data e o aviso sobre atualizações do WVetro/CEM.</div>
     ${linhas.map(cat=>{ const p = categoriaProgress(c, cat.key); return `
       <div style="padding:12px 18px; border-top:1px solid var(--border-2); display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
         <div style="min-width:170px; font-weight:650; font-size:13.5px;">${icon(cat.icone,'style="width:14px;height:14px;vertical-align:-2px; margin-right:6px; color:var(--text-3)"')}${escapeHtml(cat.nome)}</div>
         <div class="pbar-row" style="flex:1; min-width:180px;"><div class="pbar-track" style="height:10px;"><div class="pbar-fill" style="width:${p.pct}%; height:10px;"></div></div><div class="pct" style="font-size:13px;">${p.pct}%</div></div>
         <div class="desc" style="min-width:110px; text-align:right;">${p.total ? p.alimentados+' de '+p.total+' itens' : 'sem itens ainda'}</div>
+        <span style="display:inline-flex;gap:6px;align-items:center;flex-wrap:wrap">${blocoEmergenciaLinha(c, cat.key, p)}</span>
         ${p.total && (p.alimentados>0) ? `<button class="btn btn-sm btn-ghost" data-action="zerar-implantacao-linha" data-key="${escapeHtml(cat.key)}" style="color:var(--danger);">${icon('rotate-ccw')} Zerar linha</button>` : ''}
       </div>`; }).join('')}
-    <div class="footnote">Para você a contagem aparece em itens; o cliente vê só o percentual no link.</div>
+    <div class="footnote">Perfis (metro/kg) entram dentro de cada linha contratada no link do cliente, por isso a liberação é feita na linha. Para você a contagem aparece em itens; o cliente vê só o percentual no link.</div>
   </div>`;
 }
 function renderPainelAvisosLinhas(c){
@@ -3924,7 +3994,7 @@ function renderClienteCadastro(c){
           <button class="chip ${c.tipo_cliente!=='ativo'?'active':''}" data-action="set-cliente-campo" data-campo="tipo_cliente" data-valor="novo">Cliente novo</button>
           <button class="chip ${c.tipo_cliente==='ativo'?'active':''}" data-action="set-cliente-campo" data-campo="tipo_cliente" data-valor="ativo">Cliente ativo (revisão)</button>
         </div>
-        <div class="desc" style="margin-top:6px;">"Cliente ativo" é para quem já usou nosso serviço antes e está retomando — os avisos automáticos de progresso (por quantidade de itens) passam a falar em "revisão" em vez de "implantação".</div>
+        <div class="desc" style="margin-top:6px;">"Cliente ativo" é para quem já usou nosso serviço antes e está retomando — os avisos automáticos de progresso (por quantidade de itens) passam a falar em "revisão" em vez de "implantação". No link de acompanhamento o cliente passa a ver "Seu sistema está em revisão de preços" (muda na hora).</div>
       </div>
       <div>
         <label style="display:block; font-size:12px; font-weight:650; color:var(--text-2); margin-bottom:6px;">Linhas contratadas</label>
@@ -3934,7 +4004,7 @@ function renderClienteCadastro(c){
         <div class="desc" style="margin-top:6px;">Marque as linhas que ${c.nome} contratou (ex: Chroma, Ecoline). Valem para componentes e perfis: só essas aparecem na aba "Componentes" e no portal do cliente, entram na % geral de Componentes e nos avisos automáticos de progresso — cada linha avisa separadamente, dizendo qual delas bateu o marco.</div>
         ${(c.linhas_componentes||[]).length?`<div style="margin-top:14px;">
           <label style="display:block; font-size:12px; font-weight:650; color:var(--text-2); margin-bottom:6px;">Situação de cada linha (o cliente vê no portal)</label>
-          ${[...(c.linhas_componentes||[]),'Vidro'].map(l=>{const st=(c.linhas_status||{})[l]||'';const op=[['','Automática','#6b7a83'],['aguardando','⚪ Aguardando','#6b7a83'],['alimentando','🟢 Em alimentação','#1f7a45'],['concluida','✅ Concluída','#0a6d6f']];
+          ${[...(c.linhas_componentes||[]),'Vidro'].map(l=>{const st=(c.linhas_status||{})[l]||'';const op=[['','Automática','#6b7a83'],['aguardando','⚪ Aguardando','#6b7a83'],['alimentando','🟢 Em alimentação','#1f7a45'],['manual','🚨 Liberada · em revisão','#b45309'],['concluida','✅ 100% revisada','#0a6d6f']];
             return `<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:6px 0;padding-bottom:6px;border-bottom:1px dashed var(--border-2,#e3e8eb)"><b style="min-width:120px;font-size:13.5px">${l}</b>${op.map(([v,t])=>`<button class="chip ${st===v?'active':''}" data-action="set-linha-status" data-linha="${l}" data-valor="${v}">${t}</button>`).join('')}
               <span style="display:inline-flex;gap:10px;flex-wrap:wrap;margin-left:6px">${l==='Vidro'?selAtribuir(c,'Vidro','vidro'):selAtribuir(c,l,'perfis')+selAtribuir(c,l,'componentes')}</span></div>`;}).join('')}
           <div class="desc" style="margin-top:6px;">Quando você começar a alimentar uma linha, marque 🟢 Em alimentação; ao terminar, ✅ Concluída. "Automática" segue a % alimentada. Os perfis por metro entram na linha pelo início do código (LG = Gold, SU = Suprema); os demais aparecem como "Outros perfis". A situação aparece para o cliente na hora; os números (% e itens) seguem a publicação do andamento.</div>
@@ -6771,6 +6841,7 @@ function wireEvents(){
       }
       if(action==='set-cliente-campo'){
         const c = CLIENTS.find(x=>x.id===STATE.clientId);
+        if(el.dataset.campo==='tipo_cliente') setTimeout(()=>sb.rpc('impl_portal_atualizar_linhas',{p_cliente:c.id}).then(()=>{},()=>{}),1500);
         const campo = el.dataset.campo;
         let valor = el.dataset.valor;
         if(el.dataset.tipo==='bool') valor = valor==='true';
@@ -7493,10 +7564,36 @@ function wireEvents(){
       }
       if(action==='set-linha-status'){
         const c = CLIENTS.find(x=>x.id===STATE.clientId);
-        const st = Object.assign({}, c.linhas_status||{});
-        if(el.dataset.valor) st[el.dataset.linha] = el.dataset.valor; else delete st[el.dataset.linha];
-        c.linhas_status = st; render();
-        salvarCliente(c.id, {linhas_status: st}).then(()=>sb.rpc('impl_portal_atualizar_linhas',{p_cliente:c.id})).catch(()=>{});
+        setLinhaStatus(c, el.dataset.linha, el.dataset.valor||'');
+        return;
+      }
+      if(action==='ir-suporte'){ STATE.view='suporte'; render(); return; }
+      if(action==='sup-filtro'){ STATE.supFiltro=el.dataset.f; render(); return; }
+      if(action==='sup-recarregar'){ carregarSuporte().then(()=>toastSalvo('Atualizado')); return; }
+      if(action==='sup-print'){ (async()=>{ const box=document.getElementById('sup-print-'+el.dataset.id); const {data,error}=await sb.from('impl_suporte').select('print').eq('id',el.dataset.id).single();
+          if(error||!data||!data.print){ toastSalvo('Este chamado não tem print'); return; }
+          if(box) box.innerHTML=`<a href="${data.print}" target="_blank" rel="noopener"><img src="${data.print}" style="max-width:100%;max-height:420px;border:1px solid var(--border-2);border-radius:8px;margin-top:10px"></a>`; })(); return; }
+      if(action==='sup-status'){ (async()=>{ const x=SUPORTE.find(k=>k.id===el.dataset.id); if(!x) return; const ta=document.querySelector(`[data-sup-resp="${x.id}"]`);
+          const campos={resposta: ta ? ta.value.trim()||null : x.resposta}; if(campos.resposta!==x.resposta) campos.respondido_em=new Date().toISOString();
+          if(el.dataset.st){ campos.status=el.dataset.st; campos.resolvido_em = el.dataset.st==='resolvido' ? new Date().toISOString() : null; }
+          const {error}=await sb.from('impl_suporte').update(campos).eq('id',x.id); if(error) return avisarErroSalvar(error);
+          Object.assign(x,campos); badgeSuporte(); toastSalvo('Salvo — o cliente vê no link'); render(); })(); return; }
+      if(action==='sup-reabrir-linha'){ const x=SUPORTE.find(k=>k.id===el.dataset.id); const c=x&&CLIENTS.find(k=>k.id===x.cliente_id); if(!c) return;
+        if(!confirm(`Reabrir a linha "${x.linha}" de ${c.nome} como Em alimentação?`)) return; setLinhaStatus(c, x.linha, 'alimentando'); return; }
+      if(action==='linha-emerg'){
+        const c = CLIENTS.find(x=>x.id===STATE.clientId); if(!c) return;
+        const v = el.dataset.valor;
+        if(v==='manual' && !confirm(`Liberar "${el.dataset.linha}" manualmente?\n\nO cliente vai ver: "Sistema alimentado · preços em revisão".\nA lista de códigos continua mostrando só os itens alimentados de verdade.`)) return;
+        if(v==='concluida' && !confirm(`Marcar "${el.dataset.linha}" como 100% revisada em ${fmtDate(hojeYmd())}?\n\nO cliente vê a data e o aviso sobre atualizações do WVetro/CEM.`)) return;
+        setLinhaStatus(c, el.dataset.linha, v);
+        return;
+      }
+      if(action==='linha-emerg-todas'){
+        const c = CLIENTS.find(x=>x.id===STATE.clientId); if(!c) return;
+        const ls = [...(c.linhas_componentes||[]),'Vidro'].filter(l=>!['concluida','manual'].includes((c.linhas_status||{})[l]));
+        if(!ls.length){ toastSalvo('Todas as linhas já estão liberadas'); return; }
+        if(!confirm(`Liberar manualmente (emergência):\n• ${ls.join('\n• ')}\n\nO cliente vai ver "Sistema alimentado · preços em revisão" nessas linhas.`)) return;
+        setLinhaStatus(c, ls, 'manual');
         return;
       }
       if(action==='toggle-linha-componente'){
@@ -7576,7 +7673,7 @@ function openNovoClienteModal(versaoNova){
           <button type="button" class="chip active" data-tipo="novo">Cliente novo</button>
           <button type="button" class="chip" data-tipo="ativo">Cliente ativo (revisão)</button>
         </div>
-        <div class="desc" style="margin-top:6px;">"Cliente ativo" é para quem já usou nosso serviço antes e está retomando agora — os avisos automáticos de progresso passam a falar em "revisão" em vez de "implantação".</div>
+        <div class="desc" style="margin-top:6px;">"Cliente ativo" é para quem já usou nosso serviço antes e está retomando agora — os avisos automáticos de progresso passam a falar em "revisão" em vez de "implantação". No link de acompanhamento o cliente passa a ver "Seu sistema está em revisão de preços" (muda na hora).</div>
       </div>
       <div>
         <label style="display:block; font-size:12px; font-weight:650; color:var(--text-2); margin-bottom:6px;">${versaoNova ? 'Linhas sendo alimentadas' : 'Linhas de Componentes contratadas'}</label>
