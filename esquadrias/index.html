@@ -1,0 +1,406 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<meta name="generator" content="Treinamento em Esquadrias 3D · FC Consultoria em Esquadria">
+<title>Treinamento em Esquadrias 3D · FC Consultoria</title>
+<link rel="icon" href="/img/logo-fc-160.jpg">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600;700&display=swap">
+<style>
+:root{--tl:#0f6b70;--tl2:#13878d;--tlc:#e5f2f2;--or:#f2a51e;--or2:#e08a00;--ink:#13232e;--tx:#13232e;--tm:#5a6b75;--ln:#d8e2e6;--bg:#f2f6f7;--gd:#c8932f;--gdc:#fbf3e4;--sp:#2f7fb8;--spc:#e8f1fa;--ok:#16a34a;--f-d:'Barlow Condensed',system-ui,sans-serif;--f-b:'Barlow',system-ui,sans-serif}
+*{box-sizing:border-box}html,body{margin:0}body{background:var(--bg);color:var(--tx);font:400 16px/1.5 var(--f-b)}
+button{font-family:inherit}a{color:var(--tl)}
+.rgate{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;background:#e9f0f0;padding:16px;font-family:system-ui,sans-serif}.rgate[hidden]{display:none}
+.rgate form{width:min(360px,100%);background:#fff;border:1px solid #d6e1e1;border-radius:14px;padding:26px 22px;display:flex;flex-direction:column;gap:12px}
+.rgate h1{margin:0;font:700 24px system-ui;color:#13262a}.rgate small{color:#5a6e72;font-size:12px;letter-spacing:.06em;text-transform:uppercase}
+.rgate label{display:flex;flex-direction:column;gap:5px;font-weight:600;font-size:14px}.rgate input{font:15px system-ui;padding:9px 10px;border:1px solid #c4ccd2;border-radius:8px}
+.rgate button{background:var(--tl);color:#fff;border:0;border-radius:9px;padding:11px;font:700 15px system-ui;cursor:pointer}
+/* topo */
+.top{background:var(--tl);color:#fff;position:sticky;top:0;z-index:50;box-shadow:0 2px 0 var(--or)}
+.top .w{max-width:1280px;margin:0 auto;padding:10px 18px;display:flex;align-items:center;gap:12px}
+.top img{width:40px;height:40px;border-radius:9px}.top b{font:800 21px/1 var(--f-d);letter-spacing:.01em}.top small{display:block;font:600 11.5px var(--f-b);letter-spacing:.12em;text-transform:uppercase;color:#ffd58a}
+.top .sp{flex:1}.prog{display:flex;align-items:center;gap:8px;font:600 13px var(--f-b)}.prog i{display:block;width:120px;height:8px;border-radius:9px;background:rgba(255,255,255,.25);overflow:hidden}.prog i s{display:block;height:100%;background:var(--or);text-decoration:none}
+.top button{border:1px solid rgba(255,255,255,.5);background:transparent;color:#fff;border-radius:8px;padding:7px 11px;font:600 14px var(--f-b);cursor:pointer}
+/* layout */
+.lay{max-width:1280px;margin:0 auto;padding:18px;display:grid;grid-template-columns:250px 1fr;gap:18px;align-items:start}
+@media(max-width:900px){.lay{grid-template-columns:1fr}.nav{position:static!important;display:flex;overflow:auto;gap:6px;padding:6px!important}.nav a{flex:none}.nav .nh{display:none}.prog i{width:70px}}
+.nav{position:sticky;top:76px;background:#fff;border:1px solid var(--ln);border-radius:14px;padding:10px}
+.nav .nh{font:700 12px var(--f-b);letter-spacing:.1em;text-transform:uppercase;color:var(--tm);padding:4px 8px 8px}
+.nav a{display:flex;align-items:center;gap:9px;padding:7px 8px;border-radius:9px;text-decoration:none;color:var(--tx);font:600 14.5px var(--f-b);cursor:pointer}
+.nav a:hover{background:var(--tlc)}.nav a.on{background:var(--tl);color:#fff}.nav a .n{width:26px;height:26px;border-radius:7px;background:var(--or);color:#fff;display:grid;place-items:center;font:800 14px var(--f-d);flex:none}
+.nav a .ck{margin-left:auto;color:var(--ok);font-weight:800}.nav a.on .ck{color:#bff5cf}
+main{min-width:0}
+.mh{background:#fff;border:1px solid var(--ln);border-radius:16px;padding:18px 20px;margin-bottom:14px}
+.mh .ey{font:700 12.5px var(--f-b);letter-spacing:.12em;text-transform:uppercase;color:var(--or2)}
+.mh h1{margin:2px 0 4px;font:800 34px/1.05 var(--f-d);color:var(--tl)}.mh p{margin:0;color:var(--tm)}
+.sec{background:#fff;border:1px solid var(--ln);border-radius:16px;padding:16px 18px;margin-bottom:14px}
+.sec>h2{margin:0 0 4px;font:800 22px var(--f-d);color:var(--ink)}.sec>.nt{margin:0 0 12px;color:var(--tm);font-size:14.5px}
+.tag{display:inline-block;font:700 12px var(--f-b);border-radius:99px;padding:2px 9px}.tg{background:var(--gdc);color:#8a5d10}.ts{background:var(--spc);color:#1d5b8a}
+.seg{display:inline-flex;border:1px solid var(--ln);border-radius:99px;padding:3px;background:#fff;gap:2px;flex-wrap:wrap}.seg button{border:0;background:transparent;border-radius:99px;padding:6px 13px;font:700 14px var(--f-b);cursor:pointer;color:var(--tm)}
+.seg button.on{background:var(--tl);color:#fff}.seg button.on.g{background:var(--gd)}.seg button.on.s{background:var(--sp)}
+/* cartões de perfil */
+.pg{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:10px}
+.pc{border:1px solid var(--ln);border-radius:12px;background:#fff;overflow:hidden;cursor:pointer;display:flex;flex-direction:column;transition:transform .15s,box-shadow .15s;position:relative;text-align:left;padding:0}
+.pc:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(15,60,70,.12)}
+.pc .im{aspect-ratio:4/3;background:linear-gradient(#f6f9fa,#e9eff1);position:relative}.pc .im img{position:absolute;inset:6px;width:calc(100% - 12px);height:calc(100% - 12px);object-fit:contain}
+.pc .im .b3{position:absolute;right:6px;bottom:6px;background:var(--tl);color:#fff;font:700 11px var(--f-b);border-radius:99px;padding:2px 7px}
+.pc .tx{padding:7px 9px 9px;font-size:13px;line-height:1.3}.pc .tx b{display:block;font:800 17px var(--f-d);color:var(--tl)}.pc .tx span{color:var(--tm);display:block}
+.pc .kv{display:flex;gap:6px;flex-wrap:wrap;margin-top:5px}.pc .kv em{font-style:normal;font:600 11.5px var(--f-b);background:var(--bg);border-radius:6px;padding:1px 6px;color:var(--ink)}
+.pc.g{border-top:3px solid var(--gd)}.pc.s{border-top:3px solid var(--sp)}.pc.nx{cursor:default}.pc.nx:hover{transform:none;box-shadow:none}
+.pc .fn{font:700 11px var(--f-b);letter-spacing:.06em;text-transform:uppercase;color:var(--or2);display:block;margin-bottom:1px}
+/* comparação */
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:14px}@media(max-width:760px){.cmp{grid-template-columns:1fr}}
+.cmp>div>h3{margin:0 0 8px;font:800 22px var(--f-d);display:flex;align-items:center;gap:8px}.cmp .G h3{color:var(--gd)}.cmp .S h3{color:var(--sp)}
+.rows{display:grid;gap:6px}.row{display:grid;grid-template-columns:64px 1fr auto;gap:10px;align-items:center;border:1px solid var(--ln);border-radius:10px;padding:5px 8px;background:#fff;cursor:pointer;text-align:left;width:100%;font:inherit;color:inherit}
+.row:hover{background:var(--tlc)}.row img{width:64px;height:46px;object-fit:contain;background:#f3f6f7;border-radius:6px}.row .ph{width:64px;height:46px;border-radius:6px;background:#f3f6f7;display:grid;place-items:center;color:#9aa8b0;font:700 11px var(--f-b);text-align:center}
+.row b{font:800 16px var(--f-d);color:var(--ink)}.row small{display:block;color:var(--tm);font-size:12.5px;line-height:1.25}.row .w{font:700 13px var(--f-b);color:var(--ink);text-align:right;white-space:nowrap}.row .w small{font-weight:500}
+.row.nx{cursor:default}.row.nx:hover{background:#fff}
+.sum{margin-top:8px;font:600 14px var(--f-b);background:var(--bg);border-radius:9px;padding:7px 10px}
+.comp{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:6px}.cp{display:flex;gap:9px;align-items:center;border:1px solid var(--ln);border-radius:10px;padding:7px 9px;background:#fff}
+.cp i{font-style:normal;font-size:20px;width:32px;height:32px;border-radius:8px;background:var(--bg);display:grid;place-items:center;flex:none}.cp b{font:800 15.5px var(--f-d);display:block}.cp small{color:var(--tm);font-size:12.5px;line-height:1.25;display:block}
+/* botões */
+.btn{border:1px solid var(--ln);background:#fff;border-radius:9px;padding:8px 13px;font:700 14.5px var(--f-b);cursor:pointer;color:var(--ink);text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.btn.p{background:var(--tl);border-color:var(--tl);color:#fff}.btn.o{background:var(--or);border-color:var(--or);color:#2a1b00}
+.foot{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:6px 0 30px}
+/* destaque */
+.call{border-left:5px solid var(--or);background:#fff8ea;border-radius:10px;padding:10px 14px;margin:10px 0;font-size:15px}
+.call.t{border-color:var(--tl);background:var(--tlc)}
+/* desenhos */
+.dg{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.dw{border:1px solid var(--ln);border-radius:12px;background:#fff;padding:8px;text-align:center;cursor:pointer}.dw:hover{border-color:var(--tl)}.dw.on{border-color:var(--tl);box-shadow:0 0 0 2px var(--tl) inset}
+.dw svg{width:100%;height:auto;display:block}.dw span{display:block;font:600 12.5px/1.25 var(--f-b);margin-top:4px;color:var(--ink)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}.chips button{border:1px solid var(--ln);background:#fff;border-radius:99px;padding:5px 12px;font:600 13.5px var(--f-b);cursor:pointer}.chips button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+/* 3D com CSS */
+.stage{perspective:1100px;display:grid;place-items:center;padding:16px;background:radial-gradient(circle at 50% 30%,#fff,#e6eef0);border-radius:14px;min-height:300px}
+.fr3{position:relative;transform-style:preserve-3d;transform:rotateY(-18deg) rotateX(6deg);transition:transform .6s}
+.fr3 .fr{position:absolute;inset:0;border:12px solid #b9c3c8;border-radius:3px;box-shadow:inset 0 0 0 2px #9aa6ad,0 14px 30px rgba(0,0,0,.18);background:linear-gradient(135deg,rgba(190,225,240,.35),rgba(255,255,255,.1))}
+.lf{position:absolute;border:9px solid #cdd5d9;box-shadow:inset 0 0 0 2px #a7b2b8;background:linear-gradient(135deg,rgba(170,215,235,.55),rgba(240,250,255,.25));transition:transform .25s}
+.rng{display:flex;align-items:center;gap:10px;margin-top:10px;font:600 14px var(--f-b);flex-wrap:wrap}.rng input{flex:1;min-width:160px;accent-color:var(--tl)}
+/* tabelas */
+table.tb{border-collapse:collapse;width:100%;font-size:14.5px}table.tb th,table.tb td{border-bottom:1px solid var(--ln);padding:7px 8px;text-align:left}table.tb th{font:700 12.5px var(--f-b);letter-spacing:.06em;text-transform:uppercase;color:var(--tm);background:var(--bg)}
+table.tb tr.hi td{background:#e7f7ec;font-weight:700}
+/* modal 3D */
+.md{position:fixed;inset:0;z-index:900;background:rgba(6,20,26,.72);display:grid;place-items:center;padding:14px}.md[hidden]{display:none}
+.md>div{background:#fff;border-radius:16px;width:min(1000px,100%);height:min(720px,92vh);overflow:hidden;position:relative;display:flex;flex-direction:column}
+.md .mt{display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid var(--ln)}.md .mt b{font:800 20px var(--f-d);color:var(--tl)}.md .mt span{color:var(--tm);font-size:14px;flex:1}
+.md iframe{border:0;flex:1;width:100%}.md .mx{border:1px solid var(--ln);background:#fff;border-radius:99px;width:34px;height:34px;font-size:18px;cursor:pointer}
+.md .alt{flex:1;display:grid;place-items:center;padding:20px;text-align:center}.md .alt img{max-width:100%;max-height:60vh}
+/* quiz */
+.qz{display:grid;gap:10px}.q{border:1px solid var(--ln);border-radius:12px;padding:12px 14px;background:#fff}.q p{margin:0 0 8px;font-weight:700}
+.q .op{display:flex;gap:6px;flex-wrap:wrap}.q .op button{border:1px solid var(--ln);background:#fff;border-radius:9px;padding:7px 12px;font:600 14.5px var(--f-b);cursor:pointer}
+.q .op button.ok{background:#e3f6e9;border-color:#16a34a;color:#0d6b2f}.q .op button.no{background:#fdecea;border-color:#e0675d;color:#a1281f}.q .ex{margin-top:6px;font-size:14px;color:var(--tm)}
+/* home */
+.hero{background:linear-gradient(120deg,var(--tl),#0b4f53);color:#fff;border-radius:18px;padding:26px 24px;margin-bottom:14px;position:relative;overflow:hidden}
+.hero h1{margin:0;font:800 44px/1 var(--f-d)}.hero p{margin:8px 0 0;max-width:640px;color:#d8eeee}.hero .ey{font:700 13px var(--f-b);letter-spacing:.14em;color:#ffd58a;text-transform:uppercase}
+.hero .bar{width:90px;height:5px;background:var(--or);border-radius:9px;margin:12px 0}
+.mg{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}.mc{border:1px solid var(--ln);background:#fff;border-radius:14px;padding:12px 14px;cursor:pointer;display:flex;gap:12px;align-items:flex-start;text-align:left;font:inherit;color:inherit}
+.mc:hover{border-color:var(--tl)}.mc .n{width:38px;height:38px;border-radius:9px;background:var(--or);color:#fff;display:grid;place-items:center;font:800 20px var(--f-d);flex:none}.mc b{font:800 19px var(--f-d);display:block}.mc small{color:var(--tm);font-size:13px;line-height:1.3;display:block}
+.mc.ok .n{background:var(--ok)}
+.bars{display:grid;gap:8px}.br{display:grid;grid-template-columns:150px 1fr;gap:10px;align-items:center;font-size:14px}.br .bb{display:grid;gap:3px}.br .bb div{height:16px;border-radius:5px;display:flex;align-items:center;padding:0 6px;font:700 11.5px var(--f-b);color:#fff;white-space:nowrap;min-width:max-content}
+.br .g{background:var(--gd)}.br .s{background:var(--sp)}
+@media(max-width:600px){.br{grid-template-columns:1fr}.mh h1{font-size:28px}.hero h1{font-size:34px}}
+.pl{margin:0;padding-left:20px}.pl li{margin:3px 0}
+.steps{counter-reset:s;display:grid;gap:8px}.stp{display:grid;grid-template-columns:34px 1fr;gap:10px;align-items:start;border:1px solid var(--ln);border-radius:10px;padding:8px 10px;cursor:pointer;background:#fff}
+.stp::before{counter-increment:s;content:counter(s);width:30px;height:30px;border-radius:50%;background:var(--bg);display:grid;place-items:center;font:800 16px var(--f-d);color:var(--tl)}
+.stp.on{border-color:var(--tl);background:var(--tlc)}.stp.on::before{background:var(--tl);color:#fff}.stp b{display:block}.stp small{color:var(--tm)}
+.two{display:grid;grid-template-columns:1.1fr 1fr;gap:14px;align-items:start}@media(max-width:860px){.two{grid-template-columns:1fr}}
+.game{display:grid;gap:8px}.slot{display:grid;grid-template-columns:170px 1fr;gap:10px;align-items:center;border:1px dashed var(--ln);border-radius:10px;padding:7px 10px}.slot.ok{border-style:solid;border-color:#16a34a;background:#eefaf2}
+.slot b{font-size:14px}.pool{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}.pool button{border:1px solid var(--ln);background:#fff;border-radius:8px;padding:5px 10px;font:800 15px var(--f-d);cursor:pointer}.pool button.sel{background:var(--ink);color:#fff}.pool button.us{opacity:.3;pointer-events:none}
+</style>
+</head>
+<body>
+<div class="rgate" id="gate" hidden><form id="gateForm"><small>FC Consultoria · Matriz</small><h1>🎓 Treinamento em Esquadrias</h1>
+<label>Login<input name="login" autocomplete="username" required placeholder="matriz"></label>
+<label>Senha<input name="senha" type="password" autocomplete="current-password" required></label>
+<button type="submit">Entrar</button><p id="gateMsg" role="alert"></p></form></div>
+
+<header class="top"><div class="w"><img src="/img/logo-fc-160.jpg" alt=""><div><small>FC Consultoria · Gold x Suprema</small><b>Treinamento em Esquadrias 3D</b></div><span class="sp"></span>
+ <div class="prog" title="Módulos estudados"><i><s id="pgB" style="width:0"></s></i><span id="pgT">0/9</span></div><button type="button" id="bHome">☰ Início</button></div></header>
+<div class="lay"><nav class="nav" id="nav"></nav><main id="main"><p style="padding:30px">Carregando…</p></main></div>
+<div class="md" id="md" hidden><div><div class="mt"><b id="mdC"></b><span id="mdN"></span><button class="mx" type="button" id="mdX" aria-label="Fechar">✕</button></div><div id="mdB" style="flex:1;display:flex"></div></div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="../auth.js"></script>
+<script>
+/* Treinamento em Esquadrias 3D · FC Consultoria em Esquadria · Sinop-MT · todos os direitos reservados */
+const IMG='/perfis/img/',PERFIS='/perfis/';
+let P={},IDX={};
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const num=v=>{const n=parseFloat(String(v||'').replace(',','.'));return isNaN(n)?null:n;};
+const kg=n=>n==null?'':n.toLocaleString('pt-BR',{minimumFractionDigits:3,maximumFractionDigits:3});
+const mm=n=>Number(n).toLocaleString('pt-BR',{maximumFractionDigits:1});
+/* perfil pelo código (aceita códigos com alternativa "LG-047 / LG-159") */
+function F(c){return IDX[c]||null;}
+function pfInfo(c){const p=F(c);if(!p)return {c,ok:false};return {c,ok:true,k:p.k,n:p.n,peso:num(p.p),d:p.d,d3:p.d3,i:p.i,l:p.l,img:IMG+(p.d3?p.i:'c'+p.i)+'.webp'};}
+/* cartão grande */
+function card(c,fn,lin){const x=pfInfo(c),cl=lin||(c.startsWith('LG')||c.startsWith('BG')||c==='US-622'?'g':'s');
+ if(!x.ok)return `<div class="pc nx ${cl}"><div class="im"><div style="position:absolute;inset:0;display:grid;place-items:center;color:#9aa8b0;font:700 13px var(--f-b);text-align:center;padding:10px">Perfil fora do<br>catálogo 3D</div></div><div class="tx">${fn?`<span class="fn">${esc(fn)}</span>`:''}<b>${esc(c)}</b><span>Medidas e peso: confira no catálogo do fabricante</span></div></div>`;
+ return `<button type="button" class="pc ${cl}" data-pf="${esc(c)}"><div class="im"><img loading="lazy" src="${x.img}" alt="${esc(c)}">${x.d3?'<span class="b3">↻ 3D</span>':''}</div><div class="tx">${fn?`<span class="fn">${esc(fn)}</span>`:''}<b>${esc(c)}</b><span>${esc(x.n)}</span><div class="kv">${x.peso!=null?`<em>⚖ ${kg(x.peso)} kg/m</em>`:''}${x.d?`<em>📐 ${mm(x.d[0])} × ${mm(x.d[1])} mm</em>`:''}</div></div></button>`;}
+/* linha de lista (função + código) */
+function row(fn,c){const alt=c.split(' ou ').map(s=>s.trim());const x=pfInfo(alt[0]);const cods=alt.join(' ou ');
+ if(!x.ok)return `<div class="row nx"><div class="ph">fora do<br>catálogo 3D</div><div><small>${esc(fn)}</small><b>${esc(cods)}</b></div><div class="w"><small>peso: catálogo<br>do fabricante</small></div></div>`;
+ return `<button type="button" class="row" data-pf="${esc(alt[0])}"><img loading="lazy" src="${x.img}" alt=""><div><small>${esc(fn)}</small><b>${esc(cods)}</b>${x.d?`<small>📐 ${mm(x.d[0])} × ${mm(x.d[1])} mm</small>`:''}</div><div class="w">${x.peso!=null?kg(x.peso)+'<small> kg/m</small>':''}${x.d3?'<br><small>↻ 3D</small>':''}</div></button>`;}
+function lista(arr){return `<div class="rows">${arr.map(([f,c])=>row(f,c)).join('')}</div>`;}
+function soma(arr){let s=0,n=0,f=0;arr.forEach(([_,c])=>{const x=pfInfo(c.split(' ou ')[0].trim());if(x.ok&&x.peso!=null){s+=x.peso;n++;}else f++;});return {s,n,f};}
+function sumLine(arr){const r=soma(arr);return `<div class="sum">⚖ Soma dos pesos por metro: <b>${kg(r.s)} kg/m</b> <span style="color:var(--tm);font-weight:500">(${r.n} perfis${r.f?`; ${r.f} fora do catálogo não entram na soma`:''})</span></div>`;}
+function comp(arr){return `<div class="comp">${arr.map(([ic,c,n])=>`<div class="cp"><i>${ic}</i><div><b>${esc(c)}</b><small>${esc(n)}</small></div></div>`).join('')}</div>`;}
+function cmpGS(g,s,extra){return `<div class="cmp"><div class="G"><h3>GOLD <span class="tag tg">Linha Gold</span></h3>${lista(g)}${sumLine(g)}</div><div class="S"><h3>SUPREMA <span class="tag ts">Linha Suprema</span></h3>${lista(s)}${sumLine(s)}</div></div>${extra||''}`;}
+
+/* ---------- desenhos (SVG gerado) ---------- */
+function seta(x,y,d,s){s=s||9;const p=d>0?`${x-s},${y-s*.55} ${x+s*.15},${y-s*.55} ${x+s*.15},${y-s} ${x+s},${y} ${x+s*.15},${y+s} ${x+s*.15},${y+s*.55} ${x-s},${y+s*.55}`:`${x+s},${y-s*.55} ${x-s*.15},${y-s*.55} ${x-s*.15},${y-s} ${x-s},${y} ${x-s*.15},${y+s} ${x-s*.15},${y+s*.55} ${x+s},${y+s*.55}`;return `<polygon points="${p}" fill="#fff" stroke="#37474f" stroke-width="1.2"/>`;}
+function vene(x,y,w,h){let s='';for(let k=y+5;k<y+h-2;k+=5)s+=`<line x1="${x+2}" y1="${k}" x2="${x+w-2}" y2="${k}" stroke="#7b8b93" stroke-width=".9"/>`;return s;}
+function lamb(x,y,w,h){let s='';for(let k=y+8;k<y+h-2;k+=8)s+=`<line x1="${x+2}" y1="${k}" x2="${x+w-2}" y2="${k}" stroke="#7b8b93" stroke-width="1.4"/>`;return s;}
+function tela(x,y,w,h){let s='';for(let k=x+4;k<x+w;k+=4)s+=`<line x1="${k}" y1="${y}" x2="${k}" y2="${y+h}" stroke="#b9c6cc" stroke-width=".5"/>`;for(let k=y+4;k<y+h;k+=4)s+=`<line x1="${x}" y1="${k}" x2="${x+w}" y2="${k}" stroke="#b9c6cc" stroke-width=".5"/>`;return s;}
+function vidro(x,y,w,h){return `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#e3f1f7" stroke="#455a64" stroke-width="1.3"/>`;}
+function fixo(x,y,w,h){return vidro(x,y,w,h)+`<text x="${x+w/2}" y="${y+h/2+4}" text-anchor="middle" font-size="11" font-weight="700" fill="#37474f" font-family="system-ui">F</text>`;}
+function maximFolha(x,y,w,h){return vidro(x,y,w,h)+`<polyline points="${x+3},${y+3} ${x+w/2},${y+h-3} ${x+w-3},${y+3}" fill="none" stroke="#607d8b" stroke-dasharray="4 3" stroke-width="1"/>`;}
+function giroFolha(x,y,w,h,lado,mio){let s=`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#dfe6e9" stroke="#455a64" stroke-width="1.3"/>`;const m=mio||'vidro';const ix=x+5,iw=w-10;
+ if(m==='vidro')s+=vidro(ix,y+5,iw,h-10);else if(m==='veneziana')s+=`<rect x="${ix}" y="${y+5}" width="${iw}" height="${h-10}" fill="#eef2f3"/>`+vene(ix,y+5,iw,h-10);else if(m==='lambri')s+=`<rect x="${ix}" y="${y+5}" width="${iw}" height="${h-10}" fill="#eef2f3"/>`+lamb(ix,y+5,iw,h-10);
+ else{const hs=(h-14)*.45;s+=vidro(ix,y+5,iw,hs);const yb=y+9+hs,hb=h-14-hs;s+=`<rect x="${ix}" y="${yb}" width="${iw}" height="${hb}" fill="#eef2f3"/>`+(m==='vid-ven'?vene(ix,yb,iw,hb):lamb(ix,yb,iw,hb));}
+ const hx=lado==='e'?x+w-2:x+2;s+=`<polyline points="${hx},${y+3} ${lado==='e'?x+3:x+w-3},${y+h/2} ${hx},${y+h-3}" fill="none" stroke="#607d8b" stroke-dasharray="4 3" stroke-width="1"/>`;return s;}
+function desenho(t){/* t: {k:'correr'|'maxim'|'giro', n, porta, set:[], band, parap, tela, ven, mio} */
+ const porta=t.porta,W=t.k==='giro'?(t.n>1?120:66):Math.min(230,(porta?52:60)*Math.max(t.n,2)),H=t.k==='giro'?150:porta?150:t.k==='maxim'&&t.n>1&&t.v?150:100;
+ let s=`<svg viewBox="-6 -6 ${W+12} ${H+12}" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="${W}" height="${H}" fill="#cfd8dc" stroke="#37474f" stroke-width="1.6"/>`;
+ let y0=4,h0=H-8;
+ if(t.band){const bh=porta?22:20;for(let k=0;k<Math.max(t.n,1);k++){const bw=(W-8)/Math.max(t.n,1);if(t.bmax)s+=maximFolha(4+k*bw+1,4,bw-2,bh);else s+=fixo(4+k*bw+1,4,bw-2,bh);}y0+=bh+3;h0-=bh+3;}
+ if(t.parap){const ph=20;for(let k=0;k<Math.max(t.n,1);k++){const bw=(W-8)/Math.max(t.n,1);s+=fixo(4+k*bw+1,H-4-ph,bw-2,ph);}h0-=ph+3;}
+ if(t.k==='correr'){const n=t.n,fw=(W-8)/n;for(let k=0;k<n;k++){const x=4+k*fw+1;s+=vidro(x,y0,fw-2,h0);if(t.ven&&(n<4?k!==Math.floor(n/2):k%2===0)){s+=`<rect x="${x+1}" y="${y0+1}" width="${fw-4}" height="${h0-2}" fill="#eef2f3"/>`+vene(x+1,y0+1,fw-4,h0-2);}
+   if(t.tela&&k===(t.telaK??n-1))s+=tela(x+1,y0+1,fw-4,h0-2);const d=(t.set||[])[k];if(d)s+=d===2?seta(x+fw/2-8,y0+h0/2,-1,8)+seta(x+fw/2+8,y0+h0/2,1,8):seta(x+fw/2,y0+h0/2,d);}}
+ else if(t.k==='maxim'){if(t.v&&t.n>1){const fh=h0/t.n;for(let k=0;k<t.n;k++)s+=maximFolha(5,y0+k*fh+1,W-10,fh-2);}else{const fw=(W-8)/t.n;for(let k=0;k<t.n;k++)s+=maximFolha(4+k*fw+1,y0,fw-2,h0);}}
+ else if(t.k==='giro'){if(t.n>1){const fw=(W-8)/2;s+=giroFolha(4,y0,fw-1,h0,'d',t.mio)+giroFolha(4+fw+1,y0,fw-1,h0,'e',t.mio);}else s+=giroFolha(4,y0,W-8,h0,'d',t.mio);}
+ return s+'</svg>';}
+/* interpreta o nome do modelo */
+function parseModelo(nm){const L=nm.toLowerCase(),n=+(L.match(/(\d)\s*folhas/)||[0,1])[1],porta=/porta/.test(L);
+ if(/maxim/.test(L)&&!/correr/.test(L))return {k:'maxim',n:n||1,band:/bandeira/.test(L),parap:/parapeito/.test(L)};
+ if(/giro/.test(L))return {k:'giro',n:/2 folhas/.test(L)?2:1,porta:true,mio:'vidro'};
+ let set=[];if(/central/.test(L)){for(let k=0;k<n;k++)set.push(k<n/2?(k===Math.floor(n/2)-1?1:0):(k===Math.ceil(n/2)?-1:0));}
+ else if(/sequenc/.test(L)){for(let k=0;k<n;k++)set.push(k===n-1?-1:1);}
+ else if(n===2)set=[1,-1];else if(n===3)set=[1,2,-1];else if(n===4)set=[0,-1,1,0];else if(n===6)set=[0,1,2,2,-1,0];else for(let k=0;k<n;k++)set.push(0);
+ return {k:'correr',n,porta,set,band:/bandeira|maxim/.test(L),bmax:/maxim/.test(L),parap:/parapeito/.test(L),tela:/tela/.test(L),ven:/veneziana/.test(L)};}
+
+/* ---------- módulos ---------- */
+const MOD=[
+ {id:'cat',n:'Catálogo de Perfis',d:'Todos os perfis da Suprema e da Gold em 3D, com peso e medidas'},
+ {id:'tip',n:'Tipologias',d:'Os modelos de janelas e portas e os desenhos de referência'},
+ {id:'cm',n:'Contramarco',d:'O que é, os componentes e a instalação passo a passo'},
+ {id:'gua',n:'Guarnições',d:'Qual guarnição usar em cada perfil e espessura de vidro'},
+ {id:'max',n:'Janela Maxim-Ar',d:'Perfis, componentes e o braço certo para cada folha'},
+ {id:'cor',n:'Janelas de Correr',d:'2, 3 e 4 folhas lado a lado: Gold x Suprema'},
+ {id:'pad',n:'Perfis e Componentes Padrão',d:'O que se repete em janela e porta, e o trilho macarrão'},
+ {id:'giro',n:'Porta de Giro',d:'Modelos, perfis e componentes'},
+ {id:'div',n:'Perfis Diversos',d:'Lambris e venezianas'}];
+const LS={g(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch(_){return d}},s(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(_){}}};
+let FEITO=new Set(LS.g('fc_esq_feito',[])),AT=null;
+const $=s=>document.querySelector(s);
+function navUI(){$('#nav').innerHTML='<div class="nh">Sequência do treinamento</div>'+MOD.map((m,k)=>`<a data-go="${m.id}" class="${AT===m.id?'on':''}"><span class="n">${String(k+1).padStart(2,'0')}</span>${esc(m.n)}${FEITO.has(m.id)?'<span class="ck">✓</span>':''}</a>`).join('')+`<a data-go="quiz" class="${AT==='quiz'?'on':''}"><span class="n" style="background:var(--tl)">✓</span>Prova final</a>`;
+ $('#pgB').style.width=(FEITO.size/9*100)+'%';$('#pgT').textContent=FEITO.size+'/9';}
+function head(k,sub,tags){const m=MOD[k];return `<div class="mh"><div class="ey">Módulo ${String(k+1).padStart(2,'0')} · ${esc(m.n)}</div><h1>${esc(sub||m.n)}</h1><p>${esc(m.d)}</p>${tags?`<div style="margin-top:8px">${tags}</div>`:''}</div>`;}
+function foot(k){const a=MOD[k-1],b=MOD[k+1];return `<div class="foot">${a?`<button class="btn" data-go="${a.id}">← ${esc(a.n)}</button>`:'<span></span>'}<button class="btn ${FEITO.has(MOD[k].id)?'':'o'}" data-feito="${MOD[k].id}">${FEITO.has(MOD[k].id)?'✓ Módulo estudado':'✔ Marcar como estudado'}</button>${b?`<button class="btn p" data-go="${b.id}">${esc(b.n)} →</button>`:`<button class="btn p" data-go="quiz">Prova final →</button>`}</div>`;}
+function quiz(qs){qs=qs.map((q,i)=>{const o=q[1].map((t,j)=>[t,j]);for(let k=o.length-1;k>0;k--){const r=(i*7+k*3+q[0].length)%(k+1);[o[k],o[r]]=[o[r],o[k]];}return [q[0],o.map(x=>x[0]),o.findIndex(x=>x[1]===q[2]),q[3]];});return `<div class="sec"><h2>✍️ Teste rápido</h2><p class="nt">Toque na resposta. Errou? A explicação aparece logo abaixo.</p><div class="qz">${qs.map((q,i)=>`<div class="q" data-q="${i}" data-r="${q[2]}"><p>${esc(q[0])}</p><div class="op">${q[1].map((o,j)=>`<button type="button" data-o="${j}">${esc(o)}</button>`).join('')}</div><div class="ex" hidden>${esc(q[3]||'')}</div></div>`).join('')}</div></div>`;}
+
+/* --- 01 catálogo --- */
+let CATL='gold',CATG='',CATQ='';
+function mCat(){const G={trs:'Trilhos superiores',tri:'Trilhos inferiores',mon:'Montantes da folha',tra:'Travessas da folha',arr:'Arremates e complementos'};
+ const lst=Object.entries(P).filter(([c,p])=>p.l===(CATL==='gold'?'gold':'sup')&&(!CATG||p.g===CATG)&&(!CATQ||(c+' '+p.n).toLowerCase().includes(CATQ.toLowerCase())));
+ /* comparação média por grupo */
+ const av=(l,g)=>{const v=Object.values(P).filter(p=>p.l===l&&p.g===g).map(p=>num(p.p)).filter(x=>x!=null);return v.length?v.reduce((a,b)=>a+b,0)/v.length:0;};
+ const mx=Math.max(...Object.keys(G).flatMap(g=>[av('gold',g),av('sup',g)]));
+ return head(0,'Catálogo de Perfis em 3D')+`<div class="sec"><h2>⚖ Diferença de linha em um olhar</h2><p class="nt">Peso médio por metro de cada grupo de perfis, com os dados do catálogo. Mais peso significa, em geral, perfil mais robusto e esquadria mais pesada e cara.</p>
+ <div class="bars">${Object.entries(G).map(([g,n])=>{const a=av('gold',g),b=av('sup',g);return `<div class="br"><b>${n}</b><div class="bb"><div class="g" style="width:${a/mx*100}%">Gold ${kg(a)} kg/m</div><div class="s" style="width:${b/mx*100}%">Suprema ${kg(b)} kg/m</div></div></div>`;}).join('')}</div>
+ <div class="call t">💡 <b>Para o vendedor:</b> a <b>Gold</b> é a linha mais robusta (perfis mais largos e pesados, vidros maiores e mais opções de vidro duplo). A <b>Suprema</b> é a linha mais leve, para janelas e portas do dia a dia.</div></div>
+ <div class="sec"><div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px"><div class="seg"><button class="g ${CATL==='gold'?'on':''}" data-catl="gold">Linha Gold</button><button class="s ${CATL==='sup'?'on':''}" data-catl="sup">Linha Suprema</button></div>
+  <input id="catQ" value="${esc(CATQ)}" placeholder="Buscar código ou nome (ex.: trilho, SU-053)" style="flex:1;min-width:200px;font:500 15px var(--f-b);padding:8px 12px;border:1px solid var(--ln);border-radius:99px"></div>
+  <div class="chips">${[['','Todos'],...Object.entries(G)].map(([g,n])=>`<button class="${CATG===g?'on':''}" data-catg="${g}">${n}</button>`).join('')}</div>
+  <div class="pg">${lst.map(([c])=>card(c,null,CATL==='gold'?'g':'s')).join('')||'<p>Nenhum perfil.</p>'}</div><p class="nt" style="margin-top:10px">${lst.length} perfis · toque no perfil para girar em 3D e ver medidas e usinagens. Medidas e pesos são demonstrativos e seguem os catálogos dos fabricantes.</p></div>`+
+ quiz([['Qual linha tem perfis, em geral, mais pesados por metro?',['Gold','Suprema','São iguais'],0,'A Gold tem perfis mais robustos: veja as barras do peso médio por grupo.'],['Onde ficam as folhas de uma janela de correr penduradas ou guiadas?',['No trilho superior','No montante','No baguete'],0,'O trilho superior fica no marco de cima e guia as folhas.']])+foot(0);}
+
+/* --- 02 tipologias --- */
+const MODELOS=[['Maxim-ar',['Maxim Ar','Maxim Ar 2 Folhas','Maxim Ar 3 Folhas','Maxim Ar Com Parapeito','Maxim Ar Com Bandeira']],
+ ['Janelas de correr',['Janela 2 Folhas De Correr','Janela 2 Folhas De Correr s/ Baguete','Janela 2 Folhas De Correr C/ Tela Mosqueteira','Janela 2 Folhas De Correr C/ Parapeito','Janela 2 Folhas De Correr C/ Bandeira Fixa','Janela 2 Folhas De Correr C/ Maxim-ar','Janela 4 Folhas De Correr','Janela 4 Folhas De Correr C/ Parapeito','Janela 4 Folhas De Correr C/ Bandeira','Janela 4 Folhas De Correr C/ Maxim-ar','Janela 4 Folhas de Correr c/ Tela Mosqueteira','Janela 3 Folhas de Correr c/ 1 Tela Mosqueteira','Janela 3 Folhas de Correr','Janela 4 Folhas Sequenciais de Correr','Janela 3 Folhas de Correr Veneziana','Janela 6 Folhas de Correr Veneziana','Janela 6 Folhas Fechamento Central','Janela de Canto 4 Folhas de Correr']],
+ ['Portas de correr',['Porta 2 Folhas de Correr Padrão','Porta 2 Folhas de Correr c/ Trilho Macarrão','Porta 2 Folhas de Correr c/ Tela Mosqueteira','Porta 2 Folhas de Correr c/ Bandeira','Porta 2 Folhas de Correr c/ Maxim-ar','Porta 3 Folhas de Correr','Porta 3 Folhas de Correr c/ Trilho Macarrão','Porta 3 Folhas de Correr c/ Tela Mosqueteira','Porta 3 Folhas de Correr Veneziana','Porta 4 Folhas de Correr','Porta 6 Folhas de Correr Veneziana','Porta 4 Folhas de Correr c/ Bandeira','Porta 4 Folhas de Correr c/ Maxim-ar','Porta 6 Folhas c/ Abertura Central','Porta 6 Folhas c/ Trilho Macarrão e Abertura Central','Porta 4 Folhas de Correr Sequenciais','Porta 4 Folhas Sequenciais de Correr c/ Trilho Macarrão','Porta 8 Folhas c/ Abertura Central','Porta 8 Folhas c/ Trilho Macarrão e Abertura Central','Porta 5 Folhas Sequenciais de Correr','Porta 5 Folhas Sequenciais de Correr c/ Trilho Macarrão','Porta 6 Folhas Sequenciais de Correr','Porta 6 Folhas Sequenciais de Correr c/ Trilho Macarrão']],
+ ['Portas de giro',['Porta de Giro 90º','Porta de Giro 45º','Porta de Giro 90º c/ 2 Folhas','Porta de Giro 45º c/ 2 Folhas']]];
+let TIPF='',TIPS=null;
+function mTip(){const fam=MODELOS.filter(([f])=>!TIPF||f===TIPF);const sel=TIPS||MODELOS[1][1][0];const t=parseModelo(sel);
+ return head(1,'Tipologias · os modelos')+`<div class="sec"><h2>🪟 Lista de modelos com desenho</h2><p class="nt">Os ${MODELOS.reduce((a,m)=>a+m[1].length,0)} modelos do treinamento. Toque no desenho para ver o modelo grande e o que ele tem.</p>
+ <div class="chips">${[['','Todos'],...MODELOS.map(m=>[m[0],m[0]])].map(([f,n])=>`<button class="${TIPF===f?'on':''}" data-tipf="${esc(f)}">${esc(n)}</button>`).join('')}</div>
+ <div class="two"><div>${fam.map(([f,ms])=>`<h3 style="margin:8px 0;font:800 18px var(--f-d);color:var(--tl)">${esc(f)} <small style="color:var(--tm);font:500 13px var(--f-b)">${ms.length} modelos</small></h3><div class="dg">${ms.map(m=>`<div class="dw ${m===sel?'on':''}" data-tip="${esc(m)}">${desenho(parseModelo(m))}<span>${esc(m)}</span></div>`).join('')}</div>`).join('')}</div>
+ <div style="position:sticky;top:80px"><div class="sec" style="margin:0"><h2>${esc(sel)}</h2><div style="max-width:340px;margin:8px auto">${desenho(t)}</div>
+  <ul class="pl">${t.k==='correr'?`<li><b>${t.n} folhas</b> de correr${t.set.some(x=>x)?' · as setas mostram as folhas que correm':''}</li>`:t.k==='maxim'?`<li><b>${t.n} folha${t.n>1?'s':''}</b> maxim-ar: abre projetando para fora, presa em cima pelos braços</li>`:`<li>Porta de giro de <b>${t.n} folha${t.n>1?'s':''}</b>: abre girando nas dobradiças</li>`}
+  ${t.band?`<li>Bandeira em cima ${t.bmax?'com <b>maxim-ar</b>':'<b>fixa</b> (F)'}</li>`:''}${t.parap?'<li>Parapeito <b>fixo</b> embaixo (F)</li>':''}${t.tela?'<li>Com <b>tela mosqueteira</b></li>':''}${t.ven?'<li>Folhas com <b>veneziana</b></li>':''}${/macarr/i.test(sel)?'<li>Corre sobre <b>trilho macarrão</b> no piso (veja o Módulo 07)</li>':''}${/º/.test(sel)?`<li>${/45/.test(sel)?'Montagem da folha com cortes a <b>45°</b> (meia-esquadria)':'Montagem da folha com cortes a <b>90°</b> (corte reto)'}</li>`:''}</ul>
+  <a class="btn p" href="../index.html" target="_blank" rel="noopener" style="margin-top:8px">🎓 Abrir no Orientativo FC 3D</a><p class="nt" style="margin:6px 0 0">No Orientativo você gira a esquadria em 3D, abre as folhas, desmonta e vê os cortes.</p></div></div></div></div>`+
+ quiz([['Na janela 2 folhas de correr com bandeira fixa, o que é a bandeira?',['Um vidro fixo em cima das folhas','Uma folha que abre para fora','Um trilho extra'],0,'A bandeira fica em cima das folhas; quando é fixa, aparece com "F" no desenho.'],['O que indica o tracejado em "V" no desenho da maxim-ar?',['O sentido em que a folha abre','O tamanho do vidro','A posição do trinco'],0,'O tracejado mostra a abertura: a maxim-ar projeta para fora, presa em cima.']])+foot(1);}
+
+/* --- 03 contramarco --- */
+const CMST=[['Monte o requadro','Corte o perfil CM-200 nas medidas do vão e una os cantos com a cantoneira de conexão CON063.','req'],['Coloque os esquadros','Prenda os esquadros ESQ160 nos cantos para o requadro não sair do esquadro durante a obra.','esq'],['Fixe os chumbadores','As grapas CHU-787 vão nas laterais: a primeira a 150 mm do canto e as demais a cada 450 mm.','chu'],['Posicione no vão','Ajuste no prumo e no nível e calce com macho e cunha (CL-011).','niv'],['Chumbe na alvenaria','Encha com argamassa em volta dos chumbadores. Depois de curado, tire os esquadros.','arg'],['Instale a esquadria','Com o contramarco pronto, a esquadria de alumínio é instalada depois, já com a obra acabada.','esd']];
+let CMK=0;
+function cmSvg(k){const on=s=>CMST.findIndex(x=>x[2]===s)<=k;let s=`<svg viewBox="0 0 360 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;background:#fff;border-radius:12px">`;
+ for(let y=0;y<260;y+=20)for(let x=(y/20)%2?-20:0;x<360;x+=40)s+=`<rect x="${x}" y="${y}" width="38" height="18" fill="#e9a37c" stroke="#d58a62" stroke-width="1"/>`;
+ s+=`<rect x="60" y="40" width="240" height="180" fill="#f4f1ec"/>`;
+ if(on('arg'))s+=`<rect x="52" y="32" width="256" height="196" fill="none" stroke="#9aa1a5" stroke-width="10" opacity=".75"/>`;
+ s+=`<rect x="64" y="44" width="232" height="172" fill="none" stroke="#9fb0b8" stroke-width="7"/>`;
+ if(on('req'))[[64,44],[296,44],[64,216],[296,216]].forEach(([x,y])=>s+=`<rect x="${x-6}" y="${y-6}" width="12" height="12" fill="#263238"/>`);
+ if(on('esq')&&k<5)[[70,50,1,1],[290,50,-1,1],[70,210,1,-1],[290,210,-1,-1]].forEach(([x,y,a,b])=>s+=`<polygon points="${x},${y} ${x+a*46},${y} ${x},${y+b*46}" fill="none" stroke="#37474f" stroke-width="3"/><line x1="${x+a*10}" y1="${y+b*10}" x2="${x+a*30}" y2="${y+b*10}" stroke="#37474f" stroke-width="2"/>`);
+ if(on('chu'))[44+30,44+30+90,216-30].forEach(y=>{s+=`<path d="M60 ${y} h-16 m0 -6 v12" stroke="#5d4037" stroke-width="4" fill="none"/><path d="M300 ${y} h16 m0 -6 v12" stroke="#5d4037" stroke-width="4" fill="none"/>`;});
+ if(on('chu'))s+=`<text x="20" y="${44+30+4}" font-size="11" font-family="system-ui" fill="#263238" font-weight="700">150</text><text x="20" y="${44+75}" font-size="11" font-family="system-ui" fill="#263238" font-weight="700">450</text>`;
+ if(on('niv')){s+=`<rect x="140" y="200" width="80" height="12" rx="3" fill="#f2a51e" stroke="#9a6b00"/><circle cx="180" cy="206" r="3.5" fill="#7cc576"/><line x1="282" y1="60" x2="282" y2="140" stroke="#263238" stroke-dasharray="3 3"/><polygon points="276,140 288,140 282,152" fill="#263238"/>`;
+  [[64,98],[296,98],[180,44],[180,216]].forEach(([x,y])=>s+=`<rect x="${x-4}" y="${y-4}" width="8" height="8" fill="#8d6e63"/>`);}
+ if(on('esd')){s+=`<rect x="70" y="50" width="220" height="160" fill="#cfd8dc" stroke="#37474f" stroke-width="2"/>`+vidro(76,56,104,148)+vidro(180,56,104,148)+seta(128,130,1,10)+seta(232,130,-1,10);}
+ return s+'</svg>';}
+function mCm(){return head(2,'Contramarco · instalação e componentes')+`<div class="sec"><h2>O que é o contramarco?</h2><div class="call t">É um <b>requadro de alumínio natural</b> preparado para ser <b>chumbado no vão da alvenaria</b>, onde depois será instalada a esquadria de alumínio. Assim a esquadria entra com a obra pronta, sem sujar e sem riscar.</div>
+ <p style="margin:6px 0">Usado em <b>janelas de correr</b> de 2, 3 e 4 planos, <b>portas de correr</b> de 2, 3 e 4 planos, <b>portas de abrir</b> e <b>maxim-ar</b>.</p>
+ ${comp([['📏','CM-200','Perfil do contramarco'],['🔩','CHU-787','Chumbador (grapa) do contramarco'],['📐','ESQ160','Esquadro do contramarco'],['🔗','CON063','Cantoneira de conexão do contramarco'],['🧱','CL-006','Cantoneira (6 m)'],['🪵','CL-011','Cunha (6 m) · macho e cunha']])}</div>
+ <div class="sec"><h2>🧱 Passo a passo da instalação</h2><p class="nt">Toque em cada passo para ver no desenho.</p><div class="two"><div>${cmSvg(CMK)}<div class="rng"><button class="btn" data-cmk="${Math.max(0,CMK-1)}">← Anterior</button><button class="btn p" data-cmk="${Math.min(CMST.length-1,CMK+1)}">Próximo passo →</button></div></div>
+ <div class="steps">${CMST.map((x,k)=>`<div class="stp ${k===CMK?'on':''}" data-cmk="${k}"><div><b>${esc(x[0])}</b><small>${esc(x[1])}</small></div></div>`).join('')}</div></div></div>`+
+ quiz([['Quando a esquadria de alumínio é instalada?',['Depois que o contramarco está chumbado e a obra pronta','Antes de chumbar o contramarco','Junto com o reboco'],0,'O contramarco é chumbado primeiro; a esquadria entra depois, com a obra acabada.'],['Qual a distância da primeira grapa até o canto, no desenho do treinamento?',['150 mm','450 mm','50 mm'],0,'Primeira grapa a 150 mm do canto; as demais a cada 450 mm.']])+foot(2);}
+
+/* --- 04 guarnições --- */
+const GUA={gold:[{p:'LG-006',b:'LG-026 ou BG-057',v:{6:['GUA412','GUA306'],8:['GUA259','GUA306'],10:['GUA259','GUA305']}},{p:'LG-050',b:'LG-026 ou BG-057',v:{6:['GUA256','GUA304'],8:['GUA259','GUA304'],10:['GUA259','GUA306']}},{p:'LG-050',b:'LG-059',v:{4:['GUA259','GUA304'],6:['GUA259','GUA306']}},{p:'LG-006',b:'LG-059',v:{4:['GUA259','GUA306'],6:['GUA259','GUA305']}}],
+ sup:[{p:'SU-200',v:{3:['GUA-256','GUA-157'],4:['GUA-256','GUA-157'],5:['GUA-256','GUA-258'],6:['GUA-259','GUA-157']}},{p:'SU-082',v:{3:['GUA-256','GUA-258'],4:['GUA-256','GUA-258'],5:['GUA-256','GUA-171'],6:['GUA-259','GUA-157']}},{p:'SU-292',v:{3:['GUA-256','GUA-258'],4:['GUA-256','GUA-258'],5:['GUA-256','GUA-171'],6:['GUA-259','GUA-171']}},{p:'SU-039',v:{4:['GUA-256','GUA-157'],5:['GUA-256','GUA-258'],6:['GUA-259','GUA-258']}},{p:'SU-053',v:{4:['GUA-256','GUA-258'],5:['GUA-256','GUA-171'],6:['GUA-259','GUA-171']}},{p:'SU-055',v:{4:['GUA-284',''],5:['GUA-283',''],6:['GUA-283','']}}]};
+let GL='gold',GI=0,GE=null;
+function guaSvg(e,g){const t=Math.max(3,e)*2.2;return `<svg viewBox="0 0 300 170" style="width:100%;max-width:420px;height:auto;display:block;margin:auto"><rect x="0" y="0" width="300" height="170" fill="#fff"/>
+ <rect x="20" y="60" width="90" height="70" fill="#cfd8dc" stroke="#455a64" stroke-width="2"/><rect x="30" y="70" width="70" height="50" fill="#fff" stroke="#90a4ae"/>
+ <rect x="110" y="${95-t/2}" width="170" height="${t}" fill="#bfe3f2" stroke="#4f8fae"/><text x="230" y="${95-t/2-8}" font-size="12" font-family="system-ui" fill="#1d5b8a" font-weight="700">vidro ${e} mm</text>
+ <path d="M110 ${95-t/2-12} q14 0 14 12 l0 0 h-14z" fill="#263238"/><path d="M110 ${95+t/2+12} q14 0 14 -12 h-14z" fill="#263238"/>
+ <text x="128" y="${95-t/2-14}" font-size="11.5" font-family="system-ui" fill="#263238">externa: <tspan font-weight="700">${esc(g[1]||'—')}</tspan></text><text x="128" y="${95+t/2+24}" font-size="11.5" font-family="system-ui" fill="#263238">interna: <tspan font-weight="700">${esc(g[0])}</tspan></text></svg>`;}
+function mGua(){const L=GUA[GL],it=L[Math.min(GI,L.length-1)],es=Object.keys(it.v).map(Number),e=GE&&it.v[GE]?GE:es[0],g=it.v[e];
+ return head(3,'Guarnições · Gold x Suprema')+`<div class="sec"><h2>🔎 Descubra a guarnição certa</h2><p class="nt">Escolha a linha, o perfil e a espessura do vidro. A tabela é a mesma do treinamento.</p>
+ <div class="seg" style="margin-bottom:10px"><button class="g ${GL==='gold'?'on':''}" data-gl="gold">Linha Gold</button><button class="s ${GL==='sup'?'on':''}" data-gl="sup">Linha Suprema</button></div>
+ <div class="chips">${L.map((x,k)=>`<button class="${k===GI?'on':''}" data-gi="${k}">${esc(x.p)}${x.b?' · baguete '+esc(x.b):''}</button>`).join('')}</div>
+ <div class="two"><div><div class="chips">${es.map(n=>`<button class="${n===e?'on':''}" data-ge="${n}">vidro ${n} mm</button>`).join('')}</div>${guaSvg(e,g)}
+  <div class="call">Perfil <b>${esc(it.p)}</b>${it.b?` com baguete <b>${esc(it.b)}</b>`:''} e vidro de <b>${e} mm</b>: guarnição interna <b>${esc(g[0])}</b>${g[1]?` e externa <b>${esc(g[1])}</b>`:' (sem guarnição externa)'}.</div></div>
+  <div>${card(it.p,'Perfil escolhido',GL==='gold'?'g':'s')}<table class="tb" style="margin-top:10px"><tr><th>Vidro</th><th>Interna</th><th>Externa</th></tr>${es.map(n=>`<tr class="${n===e?'hi':''}"><td>${n} mm</td><td>${esc(it.v[n][0])}</td><td>${esc(it.v[n][1]||'—')}</td></tr>`).join('')}</table></div></div></div>`+
+ quiz([['Na Suprema, perfil SU-200 com vidro de 6 mm: qual a guarnição interna?',['GUA-259','GUA-256','GUA-283'],0,'Com 6 mm a interna passa a ser a GUA-259; até 5 mm é a GUA-256.'],['O que muda quando o vidro fica mais grosso?',['A guarnição precisa ser trocada','Nada muda','Só o perfil muda'],0,'Cada espessura de vidro pede a guarnição do tamanho certo para travar o vidro.']])+foot(3);}
+
+/* --- 05 maxim-ar --- */
+const BRA={gold:[['BRA766',342,435,600,'22 kg'],['BRA767',600,690,1000,'30 kg'],['BRA768',951,1040,1200,'36 kg']],sup:[['BRA-705',250,270,500,''],['BRA-702',500,510,760,''],['BRA-703',750,770,900,''],['BRA-725 (reforçado)',810,900,1200,'']]};
+let MXL='gold',MXH=700,MXA=25,MXV='SU-200·90';
+const MXS={'SU-200·90':['Maxim-ar 90° Suprema c/ SU-200',[['Marco','SU-079','45°/45°'],['Marco','SU-079','45°/45°'],['Pingadeira','SU-083','90°/90°'],['Montante folha','SU-200','45°/45°'],['Montante folha','SU-200','90°/45°'],['Montante sup. folha','SU-082','90°/90°'],['Baguete','SU-102','90°/90°'],['Baguete','SU-102','90°/90°']]],
+ 'SU-200·45':['Maxim-ar 45° Suprema c/ SU-200',[['Marco','SU-079'],['Marco','SU-079'],['Pingadeira','SU-083'],['Montante folha','SU-200'],['Montante folha','SU-200'],['Montante sup. folha','SU-080'],['Baguete','SU-102'],['Baguete','SU-102']]],
+ 'SU-081·90':['Maxim-ar 90° Suprema c/ SU-081',[['Marco','SU-079'],['Marco','SU-079'],['Pingadeira','SU-083'],['Montante folha','SU-081'],['Montante folha','SU-081'],['Montante sup. folha','SU-082'],['Baguete','SU-102'],['Baguete','SU-102']]],
+ 'SU-081·45':['Maxim-ar 45° Suprema c/ SU-081',[['Marco','SU-079'],['Marco','SU-079'],['Pingadeira','SU-083'],['Montante folha','SU-081'],['Montante folha','SU-081'],['Montante sup. folha','SU-080'],['Baguete','SU-102'],['Baguete','SU-102']]]};
+function mxStage(){const a=MXA;return `<div class="stage" style="min-height:280px"><div class="fr3" style="width:220px;height:200px"><div class="fr"></div><div class="lf" style="left:12px;top:12px;width:196px;height:176px;transform-origin:50% 0;transform:rotateX(${-a}deg)"></div></div></div>
+ <div class="rng">🪟 Abrir a folha <input type="range" min="0" max="45" value="${a}" data-mxa><span>${a}°</span></div>`;}
+function mMax(){const B=BRA[MXL],h=+MXH||0,ok=B.filter(b=>h>=b[2]&&h<=b[3]);const S=MXS[MXV];
+ return head(4,'Janela Maxim-Ar')+`<div class="sec"><h2>🪟 Como a maxim-ar abre</h2><p class="nt">A folha fica presa em cima e projeta para fora, sustentada pelos braços. Arraste para abrir.</p><div class="two"><div>${mxStage()}</div><div><div style="max-width:240px;margin:auto">${desenho({k:'maxim',n:1})}</div><div class="call t">O <b>braço</b> é escolhido pela <b>altura da folha</b>. Braço curto em folha alta não abre direito; braço longo em folha baixa não fecha.</div></div></div></div>
+ <div class="sec"><h2>📏 Calculadora do braço</h2><p class="nt">Digite a altura da folha e veja o braço da tabela do treinamento.</p>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center"><div class="seg"><button class="g ${MXL==='gold'?'on':''}" data-mxl="gold">Gold</button><button class="s ${MXL==='sup'?'on':''}" data-mxl="sup">Suprema</button></div>
+   <label style="font-weight:700">Altura da folha <input id="mxH" type="number" value="${esc(MXH)}" min="0" step="10" style="width:110px;font:600 16px var(--f-b);padding:6px 8px;border:1px solid var(--ln);border-radius:8px"> mm</label></div>
+  <div class="call" style="margin-top:10px">${ok.length?ok.map(b=>`✅ Braço <b>${esc(b[0])}</b> (${b[1]} mm) · folha de ${b[2]} a ${b[3]} mm${b[4]?' · até '+b[4]:''}`).join('<br>'):`⚠️ ${h?`Nenhum braço da tabela cobre ${h} mm. Confira com o fornecedor.`:'Digite a altura da folha.'}`}</div>
+  <table class="tb"><tr><th>Braço</th><th>Tamanho</th><th>Altura da folha</th>${MXL==='gold'?'<th>Carga</th>':''}</tr>${B.map(b=>`<tr class="${ok.includes(b)?'hi':''}"><td>${esc(b[0])}</td><td>${b[1]} mm</td><td>${b[2]} a ${b[3]} mm</td>${MXL==='gold'?`<td>${b[4]}</td>`:''}</tr>`).join('')}</table></div>
+ <div class="sec"><h2>Perfis da maxim-ar</h2><div class="cmp"><div class="G"><h3>GOLD <span class="tag tg">Linha Gold</span></h3>${lista([['Marco','LG-068'],['Marco','LG-068'],['Pingadeira','LG-091'],['Montante folha','LG-085'],['Montante folha','LG-085'],['Baguete','BG-057'],['Baguete','LG-026']])}</div>
+  <div class="S"><h3>SUPREMA <span class="tag ts">Linha Suprema</span></h3><div class="chips">${Object.entries(MXS).map(([k,v])=>`<button class="${k===MXV?'on':''}" data-mxv="${k}">${esc(v[0].replace('Maxim-ar ','').replace(' Suprema',''))}</button>`).join('')}</div>
+  <div class="rows">${S[1].map(([f,c,ct])=>row(f+(ct?' · corte '+ct:''),c)).join('')}</div></div></div>
+  <div class="call t">💡 Na Suprema existem 4 montagens: folha com <b>SU-200</b> ou <b>SU-081</b>, e travessa de cima <b>SU-082</b> (90°) ou <b>SU-080</b> (45°).</div></div>
+ <div class="sec"><h2>Componentes</h2><div class="cmp"><div class="G"><h3>GOLD</h3>${comp([['🧵','GUA-007','Guarnição'],['🧵','GUA-239','Guarnição'],['🔒','FEC-493 ou FEC-495','Fecho'],['📏','Braço','Olhar a tabela'],['🧵','Guarnições do vidro','Olhar a tabela de guarnições'],['🪵','CL-011','Cunha'],['📐','CL-006','Cantoneira']])}</div>
+  <div class="S"><h3>SUPREMA</h3>${comp([['🧵','GUA-007','Guarnição de EPDM pingadeira'],['🧵','GUA-053','Guarnição de EPDM do quadro da maxim-ar'],['🧵','GUS-239','Guarnição de EPDM do marco da maxim-ar'],['🔒','FEC-009','Fecho'],['📏','Braço','Conferir o tamanho na tabela'],['🔩','PAR-428','Parafuso Philips ponta piloto 4,8 x 32 mm'],['🧵','GUA-256 ou GUA-259','Guarnição de EPDM para travar o vidro no quadro'],['🧽','GUA-157 ou GUA-258','Espuma adesiva externa do vidro (olhar a tabela)'],['🪵','CL-011','Cunha'],['📐','CL-006','Cantoneira']])}</div></div></div>`+
+ quiz([['O que define o tamanho do braço da maxim-ar?',['A altura da folha','A largura do vão','A cor do perfil'],0,'A tabela do braço é por altura da folha.'],['Na Gold, uma folha de 800 mm de altura usa qual braço?',['BRA767','BRA766','BRA768'],0,'BRA767 cobre folhas de 690 a 1000 mm.']])+foot(4);}
+
+/* --- 06 correr --- */
+const COR={'2F':{n:'Janela 2 Folhas de Correr c/ Baguete',t:{k:'correr',n:2,set:[1,-1]},g:[['Trilho superior','LG-044'],['Trilho inferior','LG-047'],['Marco lateral','LG-124 ou LG-045'],['Montante lateral','LG-050 ou LG-017'],['Mão-amigo interno','LG-048'],['Mão-amigo externo','LG-049'],['Travessa sup./inf.','LG-006'],['Baguete','BG-057'],['Baguete','LG-026']],s:[['Trilho superior','SU-001'],['Trilho inferior','SU-002'],['Marco lateral','SU-003'],['Montante lateral','SU-039'],['Mão-amigo interno','SU-040'],['Mão-amigo externo','SU-041'],['Travessa sup./inf.','SU-053'],['Baguete','SU-102'],['Baguete','SU-102']]},
+ '4F':{n:'Janela 4 Folhas de Correr',t:{k:'correr',n:4,set:[0,-1,1,0]},g:[['Trilho superior','LG-044'],['Trilho inferior','LG-047'],['Marco lateral','LG-124 ou LG-045'],['Montante lateral','LG-050 ou LG-017'],['Montante central','LG-051 ou LG-020']],s:[['Trilho superior','SU-001'],['Trilho inferior','SU-002'],['Marco lateral','SU-003'],['Montante lateral','SU-039'],['Montante central','SU-192'],['Mão-amigo interno','SU-040'],['Mão-amigo externo','SU-041'],['Travessa sup./inf.','SU-053'],['Baguete','SU-102'],['Baguete','SU-102']]},
+ '3F':{n:'Janela 3 Folhas de Correr',t:{k:'correr',n:3,set:[1,2,-1]},g:[['Trilho superior','LG-062'],['Trilho inferior','LG-066'],['Marco lateral','LG-158'],['Contrafecho','LG-028']],s:[['Trilho superior','SU-010'],['Trilho inferior','SU-011'],['Marco lateral','SU-012'],['Contrafecho','SU-291']]},
+ '4FS':{n:'Janela 4 Folhas Sequenciais de Correr',t:{k:'correr',n:4,set:[1,1,1,-1]},g:[['Trilho superior','LG-070'],['Trilho inferior','LG-071'],['Marco lateral','LG-072'],['Contrafecho','LG-028']],s:[['Trilho superior','SU-121'],['Trilho inferior','SU-122'],['Marco lateral','SU-123'],['Contrafecho','SU-291']]}};
+let CRK='2F',CRA=0,GM=null;
+function corStage(t){const n=t.n,W=Math.min(420,n*105),H=200,fw=(W-24)/n,o=CRA/100;let lf='';
+ for(let k=0;k<n;k++){const d=t.set[k]||0,dx=(d===2?.45:d)*o*fw*.9,z=(k%2?6:0);lf+=`<div class="lf" style="left:${12+k*fw}px;top:12px;width:${fw}px;height:${H-24}px;transform:translateX(${dx}px) translateZ(${z}px)"></div>`;}
+ return `<div class="stage"><div class="fr3" style="width:${W}px;height:${H}px"><div class="fr"></div>${lf}</div></div><div class="rng">↔ Abrir as folhas <input type="range" min="0" max="100" value="${CRA}" data-cra><span>${CRA}%</span></div>`;}
+function game(){const T=COR['2F'],lin=GM.l,arr=T[lin==='gold'?'g':'s'];const slots=arr.map(([f,c],k)=>({f,c,k}));
+ const pool=[...new Set(slots.map(s=>s.c))].concat(lin==='gold'?['SU-001','SU-053']:['LG-044','LG-006']).sort();
+ return `<div class="game">${slots.map(s=>`<div class="slot ${GM.ok[s.k]?'ok':''}" data-slot="${s.k}"><b>${esc(s.f)}</b><span>${GM.ok[s.k]?'✅ '+esc(s.c):'<span style="color:var(--tm)">toque aqui depois de escolher o código</span>'}</span></div>`).join('')}</div>
+ <div class="pool">${pool.map(c=>`<button type="button" class="${GM.sel===c?'sel':''}" data-pool="${esc(c)}">${esc(c)}</button>`).join('')}</div><p class="nt" id="gmMsg">${Object.keys(GM.ok).length===slots.length?'🎉 Parabéns! Janela 2 folhas '+(lin==='gold'?'Gold':'Suprema')+' montada.':'Escolha um código e toque na peça da janela onde ele vai.'}</p>`;}
+function mCor(){const T=COR[CRK];if(!GM)GM={l:'gold',ok:{},sel:null};
+ return head(5,'Janelas de Correr · Gold x Suprema')+`<div class="sec"><div class="chips">${Object.entries(COR).map(([k,v])=>`<button class="${k===CRK?'on':''}" data-crk="${k}">${esc(v.n.replace('Janela ',''))}</button>`).join('')}</div>
+ <h2>${esc(T.n)}</h2><div class="two"><div>${corStage(T.t)}</div><div style="width:100%;max-width:340px;margin:auto">${desenho(T.t)}</div></div></div>
+ <div class="sec"><h2>Perfis lado a lado</h2><p class="nt">Toque no perfil para ver em 3D. A soma dos pesos ajuda a comparar o quanto uma linha é mais robusta que a outra.</p>${cmpGS(T.g,T.s)}</div>
+ ${CRK==='2F'?`<div class="sec"><h2>Componentes · janela 2 folhas c/ baguete</h2><div class="cmp"><div class="G"><h3>GOLD</h3>${comp([['🛞','NYL-396','Guia deslizante'],['🛞','ROL-012','Roldana c/ regulagem e rolamento p/ folhas de até 40 kg'],['🔒','FEC-636','Fecho concha'],['🔒','CON-383','Contrafecho da lingueta'],['💧','NYL-395','Caixa de dreno e vedador'],['🌬','CON-381','Vedador de vento superior'],['🧱','NYL-398','Batente amortecedor'],['🪥','FIT-224','Escovinha 7 x 8 p/ LG-006 e LG-007'],['🧱','CAL-929','Vedador dos montantes da altura'],['🪥','FIT-206','Escovinha 5 x 6 p/ mão-amiga e contrafecho'],['🧵','GUA-256 / GUA-259','Guarnição EPDM: 256 vidro 6 mm · 259 vidro 8/10 mm'],['🧽','GUA-304 / GUA-306','Espuma adesiva: 304 vidro 6/8 mm · 306 vidro 10 mm'],['🔩','PAR-428','Parafuso Philips ponta piloto 4,8 x 32']])}</div>
+  <div class="S"><h3>SUPREMA</h3>${comp([['🛞','NYL-332','Guia deslizante'],['🛞','ROL-440','Roldana c/ regulagem e rolamento p/ folhas de até 40 kg'],['🔒','FEC-636','Fecho concha'],['🔒','CON-370','Contrafecho da lingueta'],['💧','NYL-329','Caixa de dreno e vedador'],['🌬','NYL-335','Vedador de vento superior'],['🧱','NYL-414','Batente amortecedor'],['🪥','FIT-212','Escovinha 5 x 8 p/ SU-053'],['🪥','FIT-246','Escovinha 6 x 7,5 p/ SU-039'],['🪥','FIT-206','Escovinha 5 x 6 p/ SU-041'],['🧵','GUA-256 / GUA-259','Guarnição EPDM: 256 vidro 4 mm · 259 vidro 6 mm'],['🧽','GUA-157 / GUA-258','Espuma adesiva: 157 vidro 4 mm · 258 vidro 6 mm'],['🔩','PAR-428','Parafuso Philips ponta piloto 4,8 x 32']])}</div></div>
+  <div class="call t">💡 Repare na diferença de linha: a <b>Gold</b> trabalha com vidros de <b>6 a 10 mm</b>; a <b>Suprema</b>, com vidros de <b>4 e 6 mm</b>.</div></div>
+ <div class="sec"><h2>🧩 Monte a janela 2 folhas</h2><p class="nt">Como no Orientativo: escolha o código certo para cada peça.</p><div class="seg" style="margin-bottom:10px"><button class="g ${GM.l==='gold'?'on':''}" data-gml="gold">Gold</button><button class="s ${GM.l==='sup'?'on':''}" data-gml="sup">Suprema</button></div><div id="gmBox">${game()}</div></div>`:''}`+
+ quiz([['Na janela 2 folhas Suprema, qual é o trilho superior?',['SU-001','SU-002','SU-053'],0,'SU-001 é o trilho superior; SU-002 é o inferior.'],['Qual perfil aparece a mais na janela 4 folhas, comparada com a de 2 folhas?',['O montante central','O baguete','O contrafecho'],0,'Na 4 folhas entra o montante central (Gold LG-051 ou LG-020; Suprema SU-192).'],['Na 4 folhas sequenciais, como as folhas correm?',['Todas para o mesmo lado, uma atrás da outra','Duas para cada lado','Nenhuma corre'],0,'Sequenciais: as folhas se empilham para um lado.']])+foot(5);}
+
+/* --- 07 padrão --- */
+function mPad(){return head(6,'Perfis e Componentes Padrão')+`<div class="sec"><h2>Perfis padrão</h2><p class="nt">São os perfis que se repetem em várias tipologias. Sabendo estes, o vendedor já conhece a maior parte da esquadria.</p>
+ <div class="cmp"><div class="G"><h3>GOLD <span class="tag tg">janela e porta</span></h3>${lista([['Montante lateral','LG-050 ou LG-017'],['Mão-amigo interno','LG-048'],['Mão-amigo externo','LG-049'],['Travessa sup./inf.','LG-006'],['Baguete','BG-057'],['Baguete','LG-026']])}<h3 style="margin-top:12px">GOLD <span class="tag tg">porta</span></h3>${lista([['Trilho macarrão','TRILHO MACARRÃO'],['Travessa inferior','LG-007']])}</div>
+ <div class="S"><h3>SUPREMA <span class="tag ts">porta</span></h3>${lista([['Montante lateral','SU-245 ou SU-280'],['Mão-amigo interno largo','SU-243'],['Mão-amigo externo largo','SU-242'],['Trilho macarrão','TRILHO MACARRÃO']])}</div></div></div>
+ <div class="sec"><h2>🛤 Trilho macarrão</h2><div class="two"><div><svg viewBox="0 0 345 150" style="width:100%;height:auto;background:#fff;border-radius:12px"><rect x="10" y="100" width="300" height="40" fill="#e0e4e6"/><path d="M60 100 h200 v-6 h-81 a19 19 0 0 0 -38 0 h-81z" fill="#455a64"/>
+  <line x1="141" y1="60" x2="179" y2="60" stroke="#f2a51e" stroke-width="2"/><text x="160" y="54" text-anchor="middle" font-size="13" font-family="system-ui" font-weight="700" fill="#9a6b00">9,3 mm</text><line x1="60" y1="120" x2="260" y2="120" stroke="#f2a51e" stroke-width="2"/><text x="160" y="135" text-anchor="middle" font-size="13" font-family="system-ui" font-weight="700" fill="#9a6b00">34,5 mm</text>
+  <line x1="280" y1="75" x2="280" y2="100" stroke="#f2a51e" stroke-width="2"/><text x="288" y="92" font-size="13" font-family="system-ui" font-weight="700" fill="#9a6b00">7 mm</text></svg></div>
+  <div><p>A roldana côncava da folha corre <b>em cima do trilho</b> que fica no piso. Peso: <b>0,183 kg/m</b>.</p><div class="call">O trilho macarrão é encontrado em <b>duas versões</b>:<br>1️⃣ <b>Convencional:</b> é preciso cortar o piso ou o granito, fazendo um filete.<br>2️⃣ <b>Colada com PU:</b> vai colada direto sobre o piso.</div></div></div></div>
+ <div class="sec"><h2>Componentes padrão de porta</h2><div class="cmp"><div class="G"><h3>GOLD</h3>${comp([['🛞','Roldana côncava','Para trilho macarrão · verificar o código com o fornecedor'],['🛞','ROL-013','Roldana c/ regulagem e rolamento p/ folhas de até 80 kg']])}</div><div class="S"><h3>SUPREMA</h3>${comp([['🛞','NYL-332C','Guia deslizante trilho macarrão'],['🛞','Roldana côncava','Para trilho macarrão · verificar o código com o fornecedor']])}</div></div>
+ <div class="call t">💡 Na porta Gold a roldana ROL-013 aguenta folhas de até <b>80 kg</b>, o dobro da roldana da janela (40 kg).</div></div>`+
+ quiz([['Quais são as duas versões do trilho macarrão?',['Convencional (com filete no piso) e colada com PU','De alumínio e de plástico','Superior e inferior'],0,'Convencional exige cortar o piso; a outra é colada com PU.'],['Na Gold, qual roldana é usada na porta para folhas de até 80 kg?',['ROL-013','ROL-012','ROL-440'],0,'ROL-013 é a de porta (até 80 kg); ROL-012 é a de janela (até 40 kg).']])+foot(6);}
+
+/* --- 08 giro --- */
+let GA=35;
+function mGiro(){const mods=[['Suprema','Porta de giro 1 folha c/ vidro superior e veneziana inferior','vid-ven'],['Suprema','Porta de giro 1 folha c/ veneziana','veneziana'],['Suprema','Porta de giro 1 folha c/ vidro superior e lambri inferior','vid-lam'],['Suprema','Porta de giro 1 folha c/ lambri','lambri'],['Gold','Porta de giro 1 folha','vidro'],['Gold','Porta de giro 1 folha c/ lambri','lambri'],['Gold','Porta de giro 1 folha c/ veneziana','veneziana'],['Gold','Porta de giro 1 folha c/ vidro superior e lambri inferior','vid-lam']];
+ return head(7,'Porta de Giro')+`<div class="sec"><h2>🚪 Como a porta de giro abre</h2><div class="two"><div><div class="stage" style="min-height:330px"><div class="fr3" style="width:160px;height:280px"><div class="fr"></div><div class="lf" style="left:12px;top:12px;width:136px;height:256px;transform-origin:0 50%;transform:rotateY(${-GA}deg);background:linear-gradient(#cfe6f0 0 45%,#e3e8ea 45%)"></div></div></div>
+ <div class="rng">🚪 Abrir a porta <input type="range" min="0" max="80" value="${GA}" data-ga><span>${GA}°</span></div></div><div class="call t">A porta de giro abre girando nas <b>dobradiças</b>. O treinamento mostra as duas montagens: <b>90°</b> (corte reto) e <b>45°</b> (meia-esquadria), que mudam alguns componentes, como a cunha e a cantoneira.</div></div></div>
+ <div class="sec"><h2>Modelos</h2><div class="dg">${mods.map(([l,n,m])=>`<div class="dw" style="cursor:default">${desenho({k:'giro',n:1,mio:m})}<span><span class="tag ${l==='Gold'?'tg':'ts'}">${l}</span><br>${esc(n)}</span></div>`).join('')}</div></div>
+ <div class="sec"><h2>Perfis</h2>${cmpGS([['Marco','LG-056'],['Marco','LG-056'],['Montante da folha','LG-043'],['Batente interno','LG-016'],['Montante sup. folha','LG-058'],['Travessa central folha','LG-055'],['Veneziana ventilada','US-622'],['Baguete','BG-057'],['Baguete','LG-026']],[['Marco','SU-279'],['Marco','SU-279'],['Montante da folha','SU-111'],['Batente interno','25-548'],['Montante sup. folha','SU-110'],['Montante central folha','SU-227'],['Veneziana ventilada','US-294'],['Baguete','SU-102'],['Baguete','SU-102']])}</div>
+ <div class="sec"><h2>Componentes</h2><div class="cmp"><div class="G"><h3>GOLD</h3>${comp([['🔩','DOB-828','Dobradiça'],['🔑','FRA-990','Fechadura'],['🔒','CON-386','Contrafecho'],['🔩','PAR-428','Parafuso · usar na porta 90°'],['⚪','Tapa furo','Usar na porta 90°'],['🧽','GUA-157 / GUA-258','Espuma adesiva'],['🪥','FIT-212','Escovinha'],['🪵','CL-011','Cunha · usar na porta 45°'],['📐','CL-006','Cantoneira · usar na porta 45°']])}</div>
+ <div class="S"><h3>SUPREMA</h3>${comp([['🔩','DOB-840','Dobradiça 3 abas'],['🔑','FRA-822','Fechadura'],['🔒','CON-295','Contrafecho'],['🔩','PAR-428','Parafuso Philips ponta piloto 4,8 x 32 · porta 90°'],['⚪','Tapa furo','Usar na porta 90°'],['🧽','GUA-157 / GUA-258','Espuma adesiva: 157 vidro 4 mm · 258 vidro 6 mm'],['🪥','FIT-212','Escovinha 5 x 8'],['🪵','CL-011','Cunha · usar na porta 45°'],['📐','CL-006','Cantoneira · usar na porta 45°']])}</div></div></div>`+
+ quiz([['Na porta de giro 45°, quais componentes entram para unir os cantos?',['Cunha CL-011 e cantoneira CL-006','Parafuso PAR-428 e tapa furo','Só a dobradiça'],0,'No 45° (meia-esquadria) usa cunha e cantoneira; no 90°, parafuso e tapa furo.'],['Qual é o batente interno da porta de giro Suprema?',['25-548','LG-016','SU-110'],0,'25-548 na Suprema; LG-016 na Gold.']])+foot(7);}
+
+/* --- 09 diversos --- */
+function divSvg(k){const S={TLB620:`<path d="M10 60 h30 v-20 h30 v20 h30 v-20 h30 v20 h30 v-20 h30 v20 h20" fill="none" stroke="#263238" stroke-width="4"/><text x="110" y="25" font-size="12" font-family="system-ui" font-weight="700" fill="#9a6b00" text-anchor="middle">150,2 mm</text>`,
+ 'PLR-054':`<rect x="15" y="40" width="190" height="16" fill="none" stroke="#263238" stroke-width="4"/><line x1="75" y1="40" x2="75" y2="56" stroke="#263238" stroke-width="3"/><line x1="135" y1="40" x2="135" y2="56" stroke="#263238" stroke-width="3"/><path d="M205 44 h10 v8 h-10" fill="none" stroke="#263238" stroke-width="3"/><text x="110" y="30" font-size="12" font-family="system-ui" font-weight="700" fill="#9a6b00" text-anchor="middle">lambril duplo</text>`,
+ 'VZ-006':`<path d="M30 80 l18 -8 l90 -40 h40 v40 l6 4" fill="none" stroke="#263238" stroke-width="4"/><text x="110" y="22" font-size="12" font-family="system-ui" font-weight="700" fill="#9a6b00" text-anchor="middle">74 × 21,9 mm</text>`,
+ 'VZ-024':`<path d="M30 70 h14 v-14 h10 l130 10 v4 h-10" fill="none" stroke="#263238" stroke-width="4"/><text x="110" y="40" font-size="12" font-family="system-ui" font-weight="700" fill="#9a6b00" text-anchor="middle">74 × 9,5 mm</text>`}[k];return `<svg viewBox="0 0 220 100" style="width:100%;height:auto;background:#fff;border-radius:10px">${S}</svg>`;}
+function mDiv(){const it=[['TLB620','Lambril ripado'],['PLR-054','Lambril duplo'],['VZ-006','Veneziana alta'],['VZ-024','Veneziana baixa']];
+ return head(8,'Perfis Diversos · lambris e venezianas')+`<div class="sec"><h2>Lambris e venezianas</h2><p class="nt">Perfis que fecham a folha no lugar do vidro: dão privacidade (lambril) ou ventilação (veneziana).</p>
+ <div class="dg" style="grid-template-columns:repeat(auto-fill,minmax(220px,1fr))">${it.map(([c,n])=>`<div class="dw" style="cursor:default">${divSvg(c)}<span><b style="font:800 17px var(--f-d)">${c}</b> · ${n}</span></div>`).join('')}</div>
+ <div class="call t">💡 <b>Lambril</b> = fechamento liso, sem ventilação. <b>Veneziana</b> = aletas inclinadas que deixam o ar passar e seguram a chuva.</div></div>
+ <div class="sec"><h2>Venezianas e arremates no catálogo 3D</h2><div class="pg">${['VZ-006','VZ-051','US-285','US-294','VZ-074','US-622'].map(c=>card(c)).join('')}</div></div>`+
+ quiz([['Qual a diferença entre lambril e veneziana?',['Veneziana ventila; lambril é fechado','Lambril ventila; veneziana é fechada','São a mesma coisa'],0,'A veneziana tem aletas que deixam o ar passar.']])+foot(8);}
+
+/* --- prova final --- */
+function mQuiz(){const Q=[['Qual linha é mais robusta e pesada?',['Gold','Suprema'],0,'Gold.'],['Trilho superior da janela 2 folhas Gold:',['LG-044','LG-047','LG-062'],0,'LG-044 superior; LG-047 inferior.'],['Trilho inferior da janela 3 folhas Suprema:',['SU-011','SU-010','SU-122'],0,'SU-011.'],['O contramarco é feito de:',['Alumínio natural','PVC','Madeira'],0,'Requadro de alumínio natural.'],['Guarnição interna do SU-053 com vidro de 4 mm:',['GUA-256','GUA-259','GUA-284'],0,'GUA-256.'],['Braço Suprema para folha de 600 mm:',['BRA-702','BRA-705','BRA-703'],0,'BRA-702 cobre 510 a 760 mm.'],['Montante central da janela 4 folhas Suprema:',['SU-192','SU-039','SU-245'],0,'SU-192.'],['Roldana da janela Gold aguenta folhas de até:',['40 kg','80 kg','20 kg'],0,'ROL-012: até 40 kg.'],['Dobradiça da porta de giro Suprema:',['DOB-840','DOB-828','FRA-822'],0,'DOB-840 (3 abas).'],['Veneziana que ventila na Gold (porta de giro):',['US-622','US-294','VZ-024'],0,'US-622 na Gold; US-294 na Suprema.']];
+ const r=LS.g('fc_esq_prova',null);
+ return `<div class="mh"><div class="ey">Encerramento</div><h1>✓ Prova final</h1><p>10 perguntas sobre Gold x Suprema.${r?` Último resultado: <b>${r.a}/10</b> em ${new Date(r.em).toLocaleDateString('pt-BR')}.`:''}</p></div>`+quiz(Q).replace('Teste rápido','Prova final')+`<div class="foot"><button class="btn" data-go="div">← Perfis Diversos</button><button class="btn p" id="bRes">Ver meu resultado</button><span></span></div>`;}
+
+/* ---------- navegação ---------- */
+function home(){const G=LS.g('fc_esq_prova',null);return `<div class="hero"><div class="ey">FC Consultoria · Passo a passo</div><h1>Treinamento em<br>Esquadrias 3D</h1><div class="bar"></div><p>Linhas Suprema e Gold: catálogo de perfis em 3D com peso e medidas, tipologias, contramarco, guarnições, maxim-ar, correr, perfis padrão, porta de giro e perfis diversos. A mesma ordem do treinamento presencial, agora em 3D e com testes.</p>
+ <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px"><button class="btn o" data-go="${(MOD.find(m=>!FEITO.has(m.id))||MOD[0]).id}">${FEITO.size?'▶ Continuar':'▶ Começar o treinamento'}</button><button class="btn" data-go="quiz" style="background:transparent;color:#fff;border-color:rgba(255,255,255,.5)">✓ Prova final${G?' · '+G.a+'/10':''}</button></div></div>
+ <div class="mg">${MOD.map((m,k)=>`<button class="mc ${FEITO.has(m.id)?'ok':''}" data-go="${m.id}"><span class="n">${FEITO.has(m.id)?'✓':String(k+1).padStart(2,'0')}</span><div><b>${esc(m.n)}</b><small>${esc(m.d)}</small></div></button>`).join('')}</div>`;}
+const R={cat:mCat,tip:mTip,cm:mCm,gua:mGua,max:mMax,cor:mCor,pad:mPad,giro:mGiro,div:mDiv,quiz:mQuiz};
+function go(id,keep){AT=id&&R[id]?id:null;$('#main').innerHTML=AT?R[AT]():home();navUI();if(!keep)scrollTo({top:0,behavior:'smooth'});try{history.replaceState(null,'',AT?'#'+AT:location.pathname);}catch(_){}}
+function re(){const y=scrollY;go(AT,true);scrollTo(0,y);}
+function abre3d(c){const x=pfInfo(c);if(!x.ok)return;$('#mdC').textContent=c;$('#mdN').textContent=(x.n||'')+(x.peso!=null?' · '+kg(x.peso)+' kg/m':'')+(x.d?' · '+mm(x.d[0])+' × '+mm(x.d[1])+' mm':'');
+ $('#mdB').innerHTML=x.d3?`<iframe src="${PERFIS}?ver=${encodeURIComponent(x.k.split(' / ')[0])}&embed=1" title="Perfil ${esc(c)} em 3D" allow="fullscreen"></iframe>`:`<div class="alt"><div><img src="${x.img}" alt=""><p>Este perfil não tem modelo 3D: veja o corte.</p></div></div>`;$('#md').hidden=false;}
+function fecha(){$('#md').hidden=true;$('#mdB').innerHTML='';}
+addEventListener('message',e=>{if(e.origin===location.origin&&e.data&&e.data.fc3d==='fechou')fecha();});
+$('#mdX').onclick=fecha;$('#md').onclick=e=>{if(e.target.id==='md')fecha();};addEventListener('keydown',e=>{if(e.key==='Escape')fecha();});
+$('#bHome').onclick=()=>go(null);
+document.addEventListener('click',e=>{const t=e.target.closest('[data-go],[data-feito],[data-pf],[data-catl],[data-catg],[data-tipf],[data-tip],[data-cmk],[data-gl],[data-gi],[data-ge],[data-mxl],[data-mxv],[data-crk],[data-gml],[data-pool],[data-slot],.q [data-o],#bRes');if(!t)return;const d=t.dataset;
+ if(d.go!==undefined)return go(d.go);
+ if(d.feito){FEITO.has(d.feito)?FEITO.delete(d.feito):FEITO.add(d.feito);LS.s('fc_esq_feito',[...FEITO]);return re();}
+ if(d.pf)return abre3d(d.pf);
+ if(d.catl){CATL=d.catl;CATG='';return re();}if(d.catg!==undefined){CATG=d.catg;return re();}
+ if(d.tipf!==undefined){TIPF=d.tipf;return re();}if(d.tip){TIPS=d.tip;return re();}
+ if(d.cmk!==undefined){CMK=+d.cmk;return re();}
+ if(d.gl){GL=d.gl;GI=0;GE=null;return re();}if(d.gi!==undefined){GI=+d.gi;GE=null;return re();}if(d.ge){GE=+d.ge;return re();}
+ if(d.mxl){MXL=d.mxl;return re();}if(d.mxv){MXV=d.mxv;return re();}
+ if(d.crk){CRK=d.crk;CRA=0;return re();}
+ if(d.gml){GM={l:d.gml,ok:{},sel:null};return re();}
+ if(d.pool){GM.sel=d.pool;$('#gmBox').innerHTML=game();return;}
+ if(d.slot!==undefined){const k=+d.slot,arr=COR['2F'][GM.l==='gold'?'g':'s'];if(!GM.sel){$('#gmMsg').textContent='Primeiro escolha um código embaixo.';return;}
+  if(arr[k][1]===GM.sel){GM.ok[k]=1;GM.sel=null;$('#gmBox').innerHTML=game();}else{$('#gmMsg').textContent='❌ '+GM.sel+' não é '+arr[k][0].toLowerCase()+'. Tente outro.';}return;}
+ if(t.matches('.q [data-o]')){const q=t.closest('.q');if(q.dataset.done)return;q.dataset.done=1;const ok=+t.dataset.o===+q.dataset.r;t.classList.add(ok?'ok':'no');if(!ok)q.querySelector(`[data-o="${q.dataset.r}"]`).classList.add('ok');q.dataset.acerto=ok?1:0;q.querySelector('.ex').hidden=false;return;}
+ if(t.id==='bRes'){const qs=[...document.querySelectorAll('.q')],r=qs.filter(q=>q.dataset.acerto==='1').length,f=qs.filter(q=>!q.dataset.done).length;if(f){alert('Faltam '+f+' perguntas.');return;}LS.s('fc_esq_prova',{a:r,em:Date.now()});t.textContent=r>=8?`🏆 ${r}/10 · Excelente!`:r>=6?`👍 ${r}/10 · Bom, revise o que errou`:`📚 ${r}/10 · Vale revisar os módulos`;}
+});
+document.addEventListener('input',e=>{const t=e.target;
+ if(t.id==='catQ'){CATQ=t.value;clearTimeout(window.__q);window.__q=setTimeout(()=>{re();const n=$('#catQ');n.focus();n.setSelectionRange(n.value.length,n.value.length);},350);}
+ if(t.id==='mxH'){MXH=t.value;clearTimeout(window.__h);window.__h=setTimeout(()=>{re();const n=$('#mxH');n.focus();},450);}
+ if(t.dataset.mxa!==undefined){MXA=+t.value;const lf=document.querySelector('.fr3 .lf');if(lf)lf.style.transform=`rotateX(${-MXA}deg)`;t.nextElementSibling.textContent=MXA+'°';}
+ if(t.dataset.ga!==undefined){GA=+t.value;const lf=document.querySelector('.fr3 .lf');if(lf)lf.style.transform=`rotateY(${-GA}deg)`;t.nextElementSibling.textContent=GA+'°';}
+ if(t.dataset.cra!==undefined){CRA=+t.value;const st=t.closest('.sec').querySelector('.stage');const T=COR[CRK].t;const tmp=document.createElement('div');tmp.innerHTML=corStage(T);st.replaceWith(tmp.firstElementChild);t.nextElementSibling.textContent=CRA+'%';}
+});
+async function iniciar(){try{const j=await fetch('perfis.json?v=1',{cache:'no-cache'}).then(r=>r.json());const raw=j.P;P={};IDX={};
+  Object.entries(raw).forEach(([k,v])=>{const o=Object.assign({k},v);P[k]=o;IDX[k]=o;k.split(' / ').forEach(c=>IDX[c.trim()]=o);});}catch(e){console.warn(e);}
+ const h=location.hash.slice(1);go(R[h]?h:null);}
+gateUI(()=>{try{localStorage.setItem('fc_eu','1')}catch(_){}iniciar();},{soMatriz:true});
+</script>
+</body>
+</html>
