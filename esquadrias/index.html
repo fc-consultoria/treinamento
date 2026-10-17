@@ -124,6 +124,7 @@ table.tb tr.hi td{background:#e7f7ec;font-weight:700}
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="../auth.js"></script>
+<script src="cm3d.js?v=1"></script>
 <script>
 /* Treinamento em Esquadrias 3D · FC Consultoria em Esquadria · Sinop-MT · todos os direitos reservados */
 const IMG='/perfis/img/',PERFIS='/perfis/';
@@ -226,7 +227,7 @@ let TIPF='',TIPS=null;
 const T3={jcr200:'Janela de correr 2 folhas',jcr300:'Janela de correr 3 folhas',pcr200:'Porta de correr 2 folhas',jcr205:'Janela de correr 2 folhas com bandeira móvel',pvz300:'Porta de correr 3 folhas com veneziana',pgr100:'Porta de giro 1 folha',max800:'Janela maxim-ar 1 folha'};
 function t3De(nm){const L=nm.toLowerCase();if(/giro/.test(L))return 'pgr100';if(/maxim/.test(L)&&!/correr/.test(L))return 'max800';if(/veneziana/.test(L)&&/porta/.test(L)&&/3/.test(L))return 'pvz300';if(/porta 2 folhas/.test(L))return 'pcr200';if(/janela 3 folhas/.test(L))return 'jcr300';if(/janela 2 folhas/.test(L)&&/bandeira|maxim/.test(L))return 'jcr205';if(/janela 2 folhas/.test(L))return 'jcr200';return null;}
 const e3=(t,h)=>`<div class="e3" data-t="${t}" style="height:${h||560}px;border-radius:14px;background:#0c161d;display:grid;place-items:center;color:#9fb3bf;font:600 14px var(--f-b)">Carregando o 3D…</div>`;
-function place3d(){let H=$('#e3host');const ph=document.querySelector('.e3');
+function place3d(){try{placeCm();}catch(e){console.warn(e);}let H=$('#e3host');const ph=document.querySelector('.e3');
  if(!H){H=document.createElement('div');H.id='e3host';H.style.cssText='position:absolute;z-index:5;display:none;border-radius:14px;overflow:hidden;box-shadow:0 10px 30px rgba(10,40,50,.18);background:#fff';H.innerHTML=`<iframe id="d3f" title="Esquadria em 3D" allow="fullscreen" style="border:0;width:100%;height:100%;display:block"></iframe>${ALUNO?'<div style="position:absolute;inset:0;cursor:not-allowed" title="O Fernando está conduzindo"></div>':''}`;document.body.appendChild(H);}
  if(!ph||$('#md').hidden===false&&false){H.style.display='none';return;}
  const t=ph.dataset.t;if(H.dataset.t!==t){H.dataset.t=t;H.querySelector('iframe').src='/treinamento/demo/index.html?previa&esq=1&t='+encodeURIComponent(t);}
@@ -261,13 +262,26 @@ function cmSvg(k){const on=s=>CMST.findIndex(x=>x[2]===s)<=k;let s=`<svg viewBox
   [[64,98],[296,98],[180,44],[180,216]].forEach(([x,y])=>s+=`<rect x="${x-4}" y="${y-4}" width="8" height="8" fill="#8d6e63"/>`);}
  if(on('esd')){s+=`<rect x="70" y="50" width="220" height="160" fill="#cfd8dc" stroke="#37474f" stroke-width="2"/>`+vidro(76,56,104,148)+vidro(180,56,104,148)+seta(128,130,1,10)+seta(232,130,-1,10);}
  return s+'</svg>';}
-function mCm(){return head(2,'Contramarco · instalação e componentes')+`<div class="sec"><h2>O que é o contramarco?</h2><div class="call t">É um <b>requadro de alumínio natural</b> preparado para ser <b>chumbado no vão da alvenaria</b>, onde depois será instalada a esquadria de alumínio. Assim a esquadria entra com a obra pronta, sem sujar e sem riscar.</div>
- <p style="margin:6px 0">Usado em <b>janelas de correr</b> de 2, 3 e 4 planos, <b>portas de correr</b> de 2, 3 e 4 planos, <b>portas de abrir</b> e <b>maxim-ar</b>.</p>
- ${comp([['📏','CM-200','Perfil do contramarco'],['🔩','CHU-787','Chumbador (grapa) do contramarco'],['📐','ESQ160','Esquadro do contramarco'],['🔗','CON063','Cantoneira de conexão do contramarco'],['🧱','CL-006','Cantoneira (6 m)'],['🪵','CL-011','Cunha (6 m) · macho e cunha']])}</div>
- <div class="sec"><h2>🧱 Passo a passo da instalação</h2><p class="nt">Toque em cada passo para ver no desenho.</p><div class="two"><div>${cmSvg(CMK)}<div class="rng"><button class="btn" data-cmk="${Math.max(0,CMK-1)}">← Anterior</button><button class="btn p" data-cmk="${Math.min(CMST.length-1,CMK+1)}">Próximo passo →</button></div></div>
- <div class="steps">${CMST.map((x,k)=>`<div class="stp ${k===CMK?'on':''}" data-cmk="${k}"><div><b>${esc(x[0])}</b><small>${esc(x[1])}</small></div></div>`).join('')}</div></div></div>`+
- quiz([['Quando a esquadria de alumínio é instalada?',['Depois que o contramarco está chumbado e a obra pronta','Antes de chumbar o contramarco','Junto com o reboco'],0,'O contramarco é chumbado primeiro; a esquadria entra depois, com a obra acabada.'],['Qual a distância da primeira grapa até o canto, no desenho do treinamento?',['150 mm','450 mm','50 mm'],0,'Primeira grapa a 150 mm do canto; as demais a cada 450 mm.']])+foot(2);}
-
+let CMX=false,CMT='jcr200',CMS=null;
+const CMP=[['CM-200','Perfil do contramarco','Alumínio natural. Forma o requadro que fica chumbado no vão.'],['CHU-787','Chumbador (grapa)','Chapa dobrada que fica presa na argamassa e segura o contramarco na parede.'],['ESQ160','Esquadro do contramarco','Mantém o requadro no esquadro durante a obra. Sai depois da cura.'],['CON063','Cantoneira de conexão','Une os perfis nos cantos do requadro.'],['CL-006','Cantoneira (6 m)','Perfil em L usado como acabamento e reforço.'],['CL-011','Cunha (6 m) · macho e cunha','Calça o requadro no vão para acertar prumo e nível.']];
+function mCm(){const F=window.CM3D&&CM3D.__fotos||{};
+ return head(2,'Contramarco · instalação e componentes')+`<div class="sec"><h2>O que é o contramarco?</h2><div class="call t">É um <b>requadro de alumínio natural</b> preparado para ser <b>chumbado no vão da alvenaria</b>, onde depois será instalada a esquadria de alumínio. Assim a esquadria entra com a obra pronta, sem sujar e sem riscar.</div>
+ <p style="margin:6px 0">Usado em <b>janelas de correr</b> de 2, 3 e 4 planos, <b>portas de correr</b> de 2, 3 e 4 planos, <b>portas de abrir</b> e <b>maxim-ar</b>.</p></div>
+ <div class="sec"><h2>🧩 Componentes em 3D</h2><p class="nt">Toque na peça para girar em 3D e ver de perto. Peças ilustrativas, sem escala de fabricação.</p>
+ <div class="pg" style="grid-template-columns:repeat(auto-fill,minmax(250px,1fr))">${CMP.map(([c,n,d])=>`<button type="button" class="pc" data-cmp="${c}"><div class="im" style="aspect-ratio:4/3;background:radial-gradient(circle at 50% 40%,#fff,#e6edf0)">${F[c]?`<img src="${F[c]}" alt="${c}">`:'<div style="position:absolute;inset:0;display:grid;place-items:center;color:#9aa8b0;font:600 13px var(--f-b)">gerando 3D…</div>'}<span class="b3">↻ 3D</span></div><div class="tx"><b>${c}</b><span>${esc(n)}</span><span style="margin-top:4px;color:var(--ink)">${esc(d)}</span></div></button>`).join('')}</div></div>
+ <div class="sec"><h2>🧱 Passo a passo da instalação em 3D</h2><p class="nt">Toque no passo: as peças entram na parede e a câmera vai até o detalhe. Arraste para girar, role para aproximar.</p>
+ <div class="two" style="grid-template-columns:1.6fr 1fr"><div><div class="cm3" style="height:540px;border-radius:14px;background:#0c161d;color:#9fb3bf;display:grid;place-items:center;font:600 14px var(--f-b)">Carregando a parede em 3D…</div>
+  <div class="rng"><button class="btn" data-cmk="${Math.max(0,CMK-1)}">← Anterior</button><button class="btn p" data-cmk="${Math.min(CMST.length-1,CMK+1)}">Próximo passo →</button><button class="btn ${CMX?'o':''}" data-cmx="1">${CMX?'🔍 Corte ligado':'🔍 Ver o corte da parede'}</button></div></div>
+ <div class="steps">${CMST.map((x,k)=>`<div class="stp ${k===CMK?'on':''}" data-cmk="${k}"><div><b>${esc(x[0])}</b><small>${esc(x[1])}</small></div></div>`).join('')}</div></div>
+ ${CMK===CMST.length-1?`<div style="margin-top:14px"><h3 style="margin:0 0 8px;font:800 20px var(--f-d)">🪟 Escolha a esquadria que vai no contramarco</h3><div class="chips">${Object.entries(T3).map(([k,n])=>`<button class="${k===CMT?'on':''}" data-cmt="${k}">${esc(n)}</button>`).join('')}</div>${e3(CMT,560)}</div>`:''}</div>`+
+ quiz([['Quando a esquadria de alumínio é instalada?',['Depois que o contramarco está chumbado e a obra pronta','Antes de chumbar o contramarco','Junto com o reboco'],0,'O contramarco é chumbado primeiro; a esquadria entra depois, com a obra acabada.'],['Qual a distância da primeira grapa até o canto, no desenho do treinamento?',['150 mm','450 mm','50 mm'],0,'Primeira grapa a 150 mm do canto; as demais a cada 450 mm.'],['Para que serve o esquadro ESQ160?',['Manter o requadro no esquadro durante a obra','Fixar o vidro','Vedar a água'],0,'Ele trava os cantos em 90° e sai depois da cura da argamassa.']])+foot(2);}
+function placeCm(){const ph=document.querySelector('.cm3');let H=$('#cmhost');
+ if(!ph){if(H)H.style.display='none';return;}
+ if(!H){H=document.createElement('div');H.id='cmhost';H.style.cssText='position:absolute;z-index:5;border-radius:14px;overflow:hidden;box-shadow:0 10px 30px rgba(10,40,50,.18)';document.body.appendChild(H);
+  if(ALUNO){const cv=document.createElement('div');cv.style.cssText='position:absolute;inset:0;z-index:2;cursor:not-allowed';H.appendChild(cv);}}
+ const r=ph.getBoundingClientRect();Object.assign(H.style,{display:'block',left:(r.left+scrollX)+'px',top:(r.top+scrollY)+'px',width:r.width+'px',height:r.height+'px'});
+ if(!CMS&&!placeCm.ld){placeCm.ld=1;CM3D.carregar().then(()=>{CMS=CM3D.cena(H);CM3D.passo(CMS,CMK);CM3D.cortar(CMS,CMX,CMK);if(!CM3D.__fotos){try{CM3D.__fotos=CM3D.fotos();if(AT==='cm')re();}catch(e){console.warn(e);}}}).catch(e=>{console.warn(e);ph.textContent='Não foi possível carregar o 3D.';});}
+ else if(CMS){CM3D.passo(CMS,CMK);CM3D.cortar(CMS,CMX,CMK);}}
 /* --- 04 guarnições --- */
 /* desenhos do catálogo Sealway (guarnição EPDM e espuma PVC adesivada) */
 const GIMG={GUA007:['SW GUA 007','ED 084','Guarnição EPDM'],GUA053:['SW GUA 053','GUA 053','Guarnição EPDM'],GUA239:['SW GUA 239','GUA 239','Guarnição EPDM'],GUA256:['SW GUA 256','SD 626','Guarnição EPDM'],GUA259:['SW GUA 259','SD 631','Guarnição EPDM'],GUA283:['SW GUA 283','GUA 283','Guarnição EPDM'],GUA284:['SW GUA 284','GUA 283 / SD 2562N','Guarnição EPDM'],GUA412:['SW GUA 412','1087101','Guarnição EPDM'],
@@ -388,19 +402,23 @@ function home(){const G=LS.g('fc_esq_prova',null);return `<div class="hero"><div
 const R={cat:mCat,tip:mTip,cm:mCm,gua:mGua,max:mMax,cor:mCor,pad:mPad,giro:mGiro,div:mDiv,quiz:mQuiz};
 function go(id,keep){AT=id&&R[id]?id:null;$('#main').innerHTML=AT?R[AT]():home();navUI();setTimeout(place3d,0);if(!keep)scrollTo({top:0,behavior:'smooth'});try{if(!ALUNO)history.replaceState(null,'',(location.search||'')+(AT?'#'+AT:''));}catch(_){}LIVE.push();}
 function re(){const y=scrollY;go(AT,true);scrollTo(0,y);}
-function abre3d(c){if(String(c).startsWith('D:')){const t=c.slice(2);$('#mdC').textContent='🧊 '+(T3[t]||'Esquadria em 3D');$('#mdN').textContent='Gire, abra as folhas, desmonte e veja os cortes';
+function abre3d(c){if(String(c).startsWith('P:')){const k=c.slice(2),it=CMP.find(x=>x[0]===k)||[k,'',''];$('#mdC').textContent=k;$('#mdN').textContent=it[1]+' · '+it[2];$('#mdB').innerHTML='<div id="pc3" style="flex:1;background:radial-gradient(circle at 50% 40%,#fff,#dfe7eb)"></div>';$('#md').hidden=false;MD=c;LIVE.push();CM3D.carregar().then(()=>{if(MD===c)PEC=CM3D.pecaCena(k,$('#pc3'),true);});return;}
+ if(String(c).startsWith('D:')){const t=c.slice(2);$('#mdC').textContent='🧊 '+(T3[t]||'Esquadria em 3D');$('#mdN').textContent='Gire, abra as folhas, desmonte e veja os cortes';
   $('#mdB').innerHTML=`<div style="position:relative;flex:1;display:flex"><iframe id="d3f" src="/treinamento/demo/index.html?previa&esq=1&t=${encodeURIComponent(t)}" title="Esquadria em 3D" allow="fullscreen"></iframe>${ALUNO?'<div style="position:absolute;inset:0;cursor:not-allowed" title="O Fernando está conduzindo"></div>':''}</div>`;$('#md').hidden=false;MD=c;LIVE.push();return;}
  const x=pfInfo(c);if(!x.ok)return;$('#mdC').textContent=c;$('#mdN').textContent=(x.n||'')+(x.peso!=null?' · '+kg(x.peso)+' kg/m':'')+(x.d?' · '+mm(x.d[0])+' × '+mm(x.d[1])+' mm':'');
  $('#mdB').innerHTML=x.d3?`<iframe src="${PERFIS}?ver=${encodeURIComponent(x.k.split(' / ')[0])}&embed=1" title="Perfil ${esc(c)} em 3D" allow="fullscreen"></iframe>`:`<div class="alt"><div><img src="${x.img}" alt=""><p>Este perfil não tem modelo 3D: veja o corte.</p></div></div>`;$('#md').hidden=false;MD=c;LIVE.push();}
-let MD=null;function fecha(){$('#md').hidden=true;$('#mdB').innerHTML='';if(MD){MD=null;if(!ALUNO)LIVE.push();}}
+let MD=null,PEC=null;function fecha(){if(PEC){PEC.fim();PEC=null;}$('#md').hidden=true;$('#mdB').innerHTML='';if(MD){MD=null;if(!ALUNO)LIVE.push();}}
 addEventListener('message',e=>{if(e.origin===location.origin&&e.data&&e.data.fc3d==='fechou')fecha();});
 $('#mdX').onclick=fecha;$('#md').onclick=e=>{if(e.target.id==='md')fecha();};addEventListener('keydown',e=>{if(e.key==='Escape')fecha();});
 $('#bHome').onclick=()=>go(null);$('#bAtu').onclick=async()=>{await Promise.all(['./','index.html','perfis.json?v=1','../demo/index.html','../auth.js'].map(u=>fetch(u,{cache:'reload'}).catch(()=>{})));const q=new URLSearchParams(location.search);q.set('v',Date.now());location.replace(location.pathname+'?'+q+location.hash);};
-document.addEventListener('click',e=>{if(ALUNO&&!e.target.closest('.q [data-o],#mdX,#md,#alN,.lvp,#alGo,#alTr')){if(e.target.closest('[data-go],[data-feito],[data-pf],[data-d3],[data-catl],[data-catg],[data-tipf],[data-tip],[data-cmk],[data-gl],[data-gi],[data-ge],[data-mxl],[data-mxv],[data-crk],[data-gml],[data-pool],[data-slot],#bHome')){e.preventDefault();e.stopImmediatePropagation();LIVE.aviso();}return;}const t=e.target.closest('[data-go],[data-feito],[data-pf],[data-d3],[data-catl],[data-catg],[data-tipf],[data-tip],[data-cmk],[data-gl],[data-gi],[data-ge],[data-mxl],[data-mxv],[data-crk],[data-gml],[data-pool],[data-slot],.q [data-o],#bRes');if(!t)return;const d=t.dataset;
+document.addEventListener('click',e=>{if(ALUNO&&!e.target.closest('.q [data-o],#mdX,#md,#alN,.lvp,#alGo,#alTr')){if(e.target.closest('[data-go],[data-feito],[data-pf],[data-d3],[data-cmp],[data-cmx],[data-cmt],[data-catl],[data-catg],[data-tipf],[data-tip],[data-cmk],[data-gl],[data-gi],[data-ge],[data-mxl],[data-mxv],[data-crk],[data-gml],[data-pool],[data-slot],#bHome')){e.preventDefault();e.stopImmediatePropagation();LIVE.aviso();}return;}const t=e.target.closest('[data-go],[data-feito],[data-pf],[data-d3],[data-cmp],[data-cmx],[data-cmt],[data-catl],[data-catg],[data-tipf],[data-tip],[data-cmk],[data-gl],[data-gi],[data-ge],[data-mxl],[data-mxv],[data-crk],[data-gml],[data-pool],[data-slot],.q [data-o],#bRes');if(!t)return;const d=t.dataset;
  if(d.go!==undefined)return go(d.go);
  if(d.feito){FEITO.has(d.feito)?FEITO.delete(d.feito):FEITO.add(d.feito);LS.s('fc_esq_feito',[...FEITO]);return re();}
  if(d.pf)return abre3d(d.pf);
  if(d.d3)return abre3d('D:'+d.d3);
+ if(d.cmp)return abre3d('P:'+d.cmp);
+ if(d.cmx){CMX=!CMX;return re();}
+ if(d.cmt){CMT=d.cmt;return re();}
  if(d.catl){CATL=d.catl;CATG='';return re();}if(d.catg!==undefined){CATG=d.catg;return re();}
  if(d.tipf!==undefined){TIPF=d.tipf;return re();}if(d.tip){TIPS=d.tip;return re();}
  if(d.cmk!==undefined){CMK=+d.cmk;return re();}
@@ -425,12 +443,13 @@ document.addEventListener('input',e=>{const t=e.target;if(t.closest&&t.closest('
 const QS=new URLSearchParams(location.search),SALA=(QS.get('sala')||'').replace(/[^a-z0-9]/gi,'').slice(0,24),APRES=(QS.get('apresentar')||'').replace(/[^a-z0-9]/gi,'').slice(0,24);
 const ALUNO=SALA.length>=10;
 const LIVE={ch:null,on:false,tm:null,
- snap(){const dh=document.documentElement.scrollHeight-innerHeight;let d3=null;try{const f=$('#d3f');if(f&&f.contentWindow.ESQ_SNAP)d3=f.contentWindow.ESQ_SNAP();}catch(_){}return {at:AT,md:MD,d3,y:dh>0?Math.round(scrollY/dh*1000)/1000:0,v:{CATL,CATG,CATQ,TIPF,TIPS,CMK,GL,GI,GE,MXL,MXH,MXA,MXV,CRK,CRA,GA}};},
+ snap(){const dh=document.documentElement.scrollHeight-innerHeight;let d3=null;try{const f=$('#d3f');if(f&&f.contentWindow.ESQ_SNAP)d3=f.contentWindow.ESQ_SNAP();}catch(_){}return {at:AT,md:MD,d3,y:dh>0?Math.round(scrollY/dh*1000)/1000:0,v:{CATL,CATG,CATQ,TIPF,TIPS,CMK,CMX,CMT,GL,GI,GE,MXL,MXH,MXA,MXV,CRK,CRA,GA},cm:(AT==='cm'&&CMS)?CM3D.camGet(CMS):null};},
  push(){if(!this.on||ALUNO)return;clearTimeout(this.tm);this.tm=setTimeout(()=>{try{this.ch.send({type:'broadcast',event:'st',payload:this.snap()});}catch(_){}},120);},
  aviso(){let a=$('#alAv');if(!a){a=document.createElement('div');a.id='alAv';a.style.cssText='position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:#13232e;color:#fff;padding:9px 16px;border-radius:99px;font:600 14px var(--f-b);z-index:999';document.body.appendChild(a);}a.textContent='🔴 O Fernando está conduzindo: a tela acompanha sozinha';clearTimeout(a.t);a.t=setTimeout(()=>a.remove(),2500);}};
-function aplica(st){const v=st.v||{};({CATL,CATG,CATQ,TIPF,TIPS,CMK,GL,GI,GE,MXL,MXH,MXA,MXV,CRK,CRA,GA}=Object.assign({CATL,CATG,CATQ,TIPF,TIPS,CMK,GL,GI,GE,MXL,MXH,MXA,MXV,CRK,CRA,GA},v));
+function aplica(st){const v=st.v||{};({CATL,CATG,CATQ,TIPF,TIPS,CMK,CMX,CMT,GL,GI,GE,MXL,MXH,MXA,MXV,CRK,CRA,GA}=Object.assign({CATL,CATG,CATQ,TIPF,TIPS,CMK,CMX,CMT,GL,GI,GE,MXL,MXH,MXA,MXV,CRK,CRA,GA},v));
  const mud=JSON.stringify([st.at,v])!==aplica.ult;aplica.ult=JSON.stringify([st.at,v]);if(mud){const y=scrollY;go(st.at||null,true);scrollTo(0,y);}
  if((st.md||null)!==(MD||null)){if(st.md)abre3d(st.md);else fecha();}
+ if(st.cm&&CMS){CM3D.camSet(CMS,st.cm);}
  if(st.d3){try{const f=$('#d3f');if(f&&f.contentWindow.ESQ_APPLY)f.contentWindow.ESQ_APPLY(st.d3);}catch(_){}}
  const dh=document.documentElement.scrollHeight-innerHeight;if(typeof st.y==='number')scrollTo({top:st.y*dh,behavior:'smooth'});}
 function salaLink(c){return location.origin+'/treinamento/esquadrias/?sala='+c;}
@@ -479,7 +498,7 @@ function apresentar(c){/* FC conduzindo: tela, microfone, chat e mãos levantada
   .on('broadcast',{event:'chat'},({payload:m})=>{S.chat.push(m);bip();draw();})
   .on('broadcast',{event:'mao'},({payload:m})=>{S.maos[m.key]=!!m.up;if(m.up)bip();draw();})
   .subscribe(async s=>{if(s==='SUBSCRIBED'){await ch.track({n:'FC',fc:1});LIVE.on=true;LIVE.push();}});
- addEventListener('scroll',()=>LIVE.push(),{passive:true});let u3='';setInterval(()=>{const H=$('#e3host');if(!LIVE.on||!H||H.style.display==='none')return;try{const f=$('#d3f'),v=f&&f.contentWindow.ESQ_SNAP?JSON.stringify(f.contentWindow.ESQ_SNAP()):'';if(v&&v!==u3){u3=v;LIVE.push();}}catch(_){}},400);draw();}
+ addEventListener('scroll',()=>LIVE.push(),{passive:true});let u3='';setInterval(()=>{if(LIVE.on&&AT==='cm'&&CMS){const v=JSON.stringify(CM3D.camGet(CMS));if(v!==LIVE.ucm){LIVE.ucm=v;LIVE.push();}}const H=$('#e3host');if(!LIVE.on||!H||H.style.display==='none')return;try{const f=$('#d3f'),v=f&&f.contentWindow.ESQ_SNAP?JSON.stringify(f.contentWindow.ESQ_SNAP()):'';if(v&&v!==u3){u3=v;LIVE.push();}}catch(_){}},400);draw();}
 function participar(){/* cliente / funcionário acompanhando: ouve o Fernando, chat e mão levantada */
  lvStyle();document.body.classList.add('aluno');const st=document.createElement('style');st.textContent='.aluno .nav,.aluno #bHome,.aluno .foot,.aluno [data-feito]{display:none!important}.aluno .lay{grid-template-columns:1fr}.aluno .top .prog{display:none}';document.head.appendChild(st);const sm=document.querySelector('.top small');if(sm)sm.textContent='🔴 Ao vivo com a FC Consultoria';
  const wait=t=>{$('#main').innerHTML=`<div class="hero" style="text-align:center"><div class="ey">FC Consultoria · ao vivo</div><h1 style="font-size:36px">Treinamento em Esquadrias 3D</h1><div class="bar" style="margin:12px auto"></div><p style="margin:0 auto">${t}</p></div>`;};
