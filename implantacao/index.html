@@ -341,15 +341,17 @@ tbody tr:hover{background:var(--panel-2);}
       <div class="brand-text"><b>Implantação</b><span>Wvetro &amp; Cem</span></div>
     </div>
     <div class="navgroup">
-      <div class="navlabel">Geral</div>
+      <div class="navlabel">Dia a dia</div>
       <button class="navitem" data-nav="fila" id="nav-fila"><i data-lucide="list-todo"></i> Fila de alimentação</button>
       <button class="navitem" data-nav="clientes"><i data-lucide="users"></i> Clientes</button>
+      <div class="navlabel" data-adm style="margin-top:14px">Preços</div>
       <button class="navitem" data-nav="fornecedores"><i data-lucide="truck"></i> Fornecedores</button>
-      <button class="navitem" data-nav="banco"><i data-lucide="database"></i> Banco de Preços</button>
-      <button class="navitem" data-nav="consulta"><i data-lucide="search"></i> Consultar preço</button>
-      <button class="navitem" data-nav="orcamentos-fornecedor"><i data-lucide="inbox"></i> Orçamentos de Fornecedores</button>
-      <button class="navitem" data-nav="orcamentos-aluminio"><i data-lucide="layers"></i> Alumínio (Fornecedores)</button>
+      <button class="navitem" data-nav="banco"><i data-lucide="database"></i> Banco de Preços · Componentes</button>
+      <button class="navitem" data-nav="orcamentos-aluminio"><i data-lucide="layers"></i> Banco de Preços · Perfis</button>
+      <button class="navitem" data-nav="orcamentos-fornecedor"><i data-lucide="inbox"></i> Orçamentos recebidos</button>
+      <button class="navitem" data-nav="consulta"><i data-lucide="search"></i> Buscar preço</button>
       <button class="navitem" data-nav="reajustes"><i data-lucide="percent"></i> Reajustes de preço</button>
+      <div class="navlabel" data-adm style="margin-top:14px">Equipe</div>
       <button class="navitem" data-nav="espelho" id="nav-espelho" style="display:none;"><i data-lucide="monitor-play"></i> Espelho da equipe</button>
     </div>
     <div class="navgroup" style="margin-top:auto;">
@@ -2208,7 +2210,7 @@ function renderClienteAlimentador(c){
 }
 
 // Presença da equipe: avisa o Painel da Matriz (quadro Ao vivo) onde a pessoa está, a cada 45 s com a aba visível
-const NOMES_VIEW = {fornecedores:'Fornecedores', fila:'Fila de alimentação', clientes:'Clientes', banco:'Banco de Preços', consulta:'Consultar preço', 'orcamentos-fornecedor':'Orçamentos de Fornecedores', 'orcamentos-aluminio':'Alumínio (Fornecedores)', reajustes:'Reajustes de preço', espelho:'Espelho da equipe'};
+const NOMES_VIEW = {fornecedores:'Fornecedores', fila:'Fila de alimentação', clientes:'Clientes', banco:'Banco de Preços', consulta:'Buscar preço', 'orcamentos-fornecedor':'Orçamentos recebidos', 'orcamentos-aluminio':'Banco de Preços · Perfis', reajustes:'Reajustes de preço', espelho:'Espelho da equipe'};
 function ondeEstouImplantacao(){
   if(STATE.view==='cliente'){ const c = CLIENTS.find(x=>x.id===STATE.clientId); const ABAS={visao:'Visão geral',etapas:'Etapas',cadastro:'Contrato & Acesso',componentes:'Componentes',vidro:'Vidro',perfis:'Perfis',orcamentos:'Orçamentos',relatorios:'Relatórios',anotacoes:'Anotações'}; return (c?c.nome:'Cliente')+(STATE.clienteTab?' · '+(ABAS[STATE.clienteTab]||STATE.clienteTab):''); }
   return NOMES_VIEW[STATE.view] || STATE.view;
@@ -2412,7 +2414,7 @@ function render(){
   const root = document.getElementById('view-root');
   document.querySelectorAll('.navitem').forEach(b=>b.classList.toggle('active', b.dataset.nav===STATE.view));
   if(ehAlimentador() && !['fila','cliente'].includes(STATE.view)) STATE.view='fila';
-  document.querySelectorAll('.navitem[data-nav]').forEach(b=>{ if(b.dataset.nav!=='fila') b.style.display = ehAlimentador() ? 'none' : ''; });
+  document.querySelectorAll('.navitem[data-nav]').forEach(b=>{ if(b.dataset.nav!=='fila') b.style.display = ehAlimentador() ? 'none' : ''; }); document.querySelectorAll('.navlabel[data-adm]').forEach(x=>x.style.display = ehAlimentador() ? 'none' : '');
   if(STATE.view==='fila') root.innerHTML = renderFila();
   else if(STATE.view==='cliente' && (ehAlimentador() || (STATE.modoTarefa && STATE.tarefaAtiva))){ const c = CLIENTS.find(x=>x.id===STATE.clientId); root.innerHTML = c ? renderClienteAlimentador(c) : renderFila(); }
   else if(STATE.view==='clientes') root.innerHTML = renderClientes();
