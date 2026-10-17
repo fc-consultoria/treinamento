@@ -176,6 +176,11 @@ body.pres-on #hdTop,body.pres-on #app>.top:first-child,body.pres-on #acbar a,bod
 .tgb{display:flex;flex-wrap:wrap;gap:5px}.tabg .tab{all:unset;cursor:pointer;padding:6px 11px;border-radius:9px;font:600 13.5px var(--f-b);color:var(--fg);background:var(--surface);border:1px solid var(--line);white-space:nowrap}
 .tabg .tab:hover{border-color:var(--c)}.tabg .tab[aria-selected="true"]{background:var(--c);border-color:var(--c);color:#fff}.tabg .tab:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 .mk .leg{background:var(--surface-2);border:1px dashed var(--line);border-radius:10px;padding:8px 10px}.mk .leg small{font:700 10.5px var(--f-b);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}.mk .leg p{margin:3px 0 0;font-size:14px;white-space:pre-wrap}
+.gal-g{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(170px,46%),1fr));gap:10px;padding:6px 16px 16px}.gf{margin:0;display:flex;flex-direction:column;gap:5px}
+.gfi{all:unset;box-sizing:border-box;cursor:zoom-in;width:100%;aspect-ratio:4/3;border-radius:12px;background:var(--surface-2) center/cover no-repeat;border:1px solid var(--line);transition:transform .15s}.gfi:hover{transform:scale(1.02)}.gf figcaption{font-size:12.5px;color:var(--fg);line-height:1.35}
+.gv-ov{position:fixed;inset:0;z-index:9700;background:rgba(4,12,20,.94);display:grid;place-items:center;padding:16px}.gv-ov figure{margin:0;display:flex;flex-direction:column;align-items:center;gap:10px;max-width:100%}.gv-ov img{max-width:min(1200px,100%);max-height:calc(100vh - 120px);object-fit:contain;border-radius:8px}
+.gv-ov figcaption{color:#e3eef6;font-size:15px;text-align:center}.gv-ov figcaption small{display:block;color:#9fb6c7;font-size:12px;margin-top:2px}
+.gv-x,.gv-p,.gv-n{all:unset;cursor:pointer;position:fixed;color:#fff;background:rgba(255,255,255,.14);border-radius:50%;width:46px;height:46px;display:grid;place-items:center;font-size:24px}.gv-x{top:14px;right:14px;font-size:18px}.gv-p{left:12px;top:50%}.gv-n{right:12px;top:50%}
 .stsel{font:600 12.5px var(--f-b);border:1px solid var(--line);border-radius:99px;padding:3px 8px;background:var(--surface);color:var(--fg)}
 .saving{position:fixed;right:16px;bottom:16px;background:var(--fg);color:var(--bg);padding:8px 14px;border-radius:9px;font-weight:600;font-size:14px;z-index:50}
 </style></head><body>
@@ -349,8 +354,8 @@ function cards(){if(PUB)return;const ks0=Object.keys(E);const M={};ks0.forEach(k
   const ps=document.getElementById('presSair');if(ps)ps.onclick=()=>{PRES=null;document.body.classList.remove('pres-on');cards();};
   const red=matchMedia('(prefers-reduced-motion: reduce)').matches;document.querySelectorAll('#emps [data-cnt]').forEach(el=>{const v=el.dataset.cnt;if(v===''){return;}const n=+v;if(red||!n){el.textContent=n;return;}let t0=null;const step=t=>{t0=t0||t;const p=Math.min(1,(t-t0)/700);el.textContent=Math.round(n*(1-Math.pow(1-p,3)));if(p<1)requestAnimationFrame(step);};requestAnimationFrame(step);});}
 function abrirEmpresa(k,t){at=k;openLane=null;OPEN={};if(t)tab=t;else tab='proc';render();window.scrollTo({top:0,behavior:'smooth'});}
-const GRUPOS_ABA=[['Andamento',['proc','acao','dem']],['Ferramentas',['pla','cat','ori','dia']],['Com o cliente',['div','mkt','sol','age']],['Interno FC',['dsp','vis','arq','hrs']]];
-const ABAS=[['proc','🧭 Fluxo do processo'],['acao','✅ Plano de ação'],['pla','📊 Planilhas'],['cat','📚 Catálogo'],['ori','🎓 Orientativo'],['dia','🧩 Diagramas'],['div','📣 Divulgação'],['mkt','💡 Dicas de marketing'],['sol','📨 Solicitações'],['age','🗓 Agenda'],['dsp','💳 Despesas'],['vis','📋 Visitas'],['dem','📦 Demandas e entregas'],['arq','📁 Arquivos'],['hrs','⏱ Horas']];
+const GRUPOS_ABA=[['Andamento',['proc','acao','gal','dem']],['Ferramentas',['pla','cat','ori','dia']],['Com o cliente',['div','mkt','sol','age']],['Interno FC',['dsp','vis','arq','hrs']]];
+const ABAS=[['proc','🧭 Fluxo do processo'],['acao','✅ Plano de ação'],['pla','📊 Planilhas'],['cat','📚 Catálogo'],['ori','🎓 Orientativo'],['dia','🧩 Diagramas'],['div','📣 Divulgação'],['mkt','💡 Dicas de marketing'],['gal','📸 Galeria'],['sol','📨 Solicitações'],['age','🗓 Agenda'],['dsp','💳 Despesas'],['vis','📋 Visitas'],['dem','📦 Demandas e entregas'],['arq','📁 Arquivos'],['hrs','⏱ Horas']];
 function ficha(){const e=E[at];let h='';
  if(tab==='proc'&&e.objetivo)h=`<details class="box obj"><summary><b>🎯 Objetivo da consultoria</b><span class="muted" style="font-size:13px"> · toque para ler</span></summary><p style="margin:8px 0 0">${esc(e.objetivo)}</p></details>`;
  if(tab==='proc'){const tot=e.frentes.reduce((n,f)=>n+f.p.length,0),ok=e.frentes.reduce((n,f)=>n+f.p.filter(p=>p[0]==='ok').length,0),pct=tot?Math.round(ok/tot*100):0;
@@ -390,6 +395,7 @@ function ficha(){const e=E[at];let h='';
  if(tab==='ori')h+=oriTabHtml(e);
  if(tab==='div')h+=divTabHtml(e,hero,nextc);
  if(tab==='mkt')h+=mktTabHtml(e,hero,nextc);
+ if(tab==='gal'){h+=galTabHtml(e,hero,nextc,sec);}
  if(tab==='dsp')h+=dspTabHtml(e,hero,nextc,sec);
  if(tab==='cat'){if(OPEN.cat===undefined)OPEN.cat='cat';h+=catTabHtml(e,hero,nextc,sec);}
  if(tab==='sol')h+=solTabHtml(e);
@@ -424,7 +430,7 @@ function ficha(){const e=E[at];let h='';
      return sec(d,`${d.slice(8,10)}/${d.slice(5,7)}`,`${l.length} registro${l.length>1?'s':''}`,nn,nn+ee,`<span class="pill p-mut">${hm(nn+ee)}</span>${ee?`<span class="pill p-bad">${hm(ee)} extra</span>`:''}`,`<ol class="steps">${l.map(x=>`<li class="st2"><span class="tm mono">${esc(x.ini||'')}${x.fim?'–'+esc(x.fim):''}</span><span class="dotc ${+x.minExtra?'':'ok'}" style="${+x.minExtra?'border-color:var(--bad)':''}">${+x.minExtra?'':'✓'}</span><div class="sb"><div class="stt">${esc(x.titulo)}</div><div class="sm">${(x.itens||[]).map(esc).join(' · ')}</div></div></li>`).join('')}</ol>`)}).join('')}</div>`
      :'<div class="box"><p class="nota" style="margin:0">Ainda não há horas lançadas para esta empresa na Rotina FC.</p></div>';
    h+='<p class="nota"><b>🔒 Só para o seu controle:</b> o cliente não vê as horas nem quando a FC trabalhou na consultoria. Vem da Rotina FC: 07:00 às 18:00 é horário normal; 18:01 às 06:59 e fim de semana, hora extra. A barra de cada dia mostra a parte em horário normal.</p>';}
- const abas=(cli?ABAS.filter(a=>['proc','acao','age','pla','cat','ori','dia','mkt','sol','dem'].includes(a[0])):ABAS).filter(a=>a[0]!=='acao'||e.acao); if(cli&&!abas.some(a=>a[0]===tab))tab='proc';
+ const abas=(cli?ABAS.filter(a=>['proc','acao','gal','age','pla','cat','ori','dia','mkt','sol','dem'].includes(a[0])):ABAS).filter(a=>a[0]!=='acao'||e.acao); if(cli&&!abas.some(a=>a[0]===tab))tab='proc';
  $('#ficha').style.setProperty('--c',e.c);
  $('#ficha').innerHTML=`<div class="fh"><span class="sw"></span><div style="min-width:0;flex:1"><h2>${e.nome}</h2><div class="muted" style="font-size:14px">${e.cid} · ${e.mod}</div></div><span class="pill ${e.st[0]}">${e.st[1]}</span>${cli?'':`<button class="btn" type="button" id="lkTog">🔗 Link do cliente${PORT[at]&&PORT[at].ativo?' ✓':''}</button>`}</div>
   ${PUB?`<div style="padding:12px 18px 0"><div class="cliente-bar">Acompanhamento atualizado pela FC Consultoria. Dúvidas: (66) 9 9986-7984, de segunda a sexta, das 08:00 às 11:00 e das 13:00 às 17:00 (horário de Sinop/MT).</div></div>`:cli&&PRES?`<div style="padding:12px 18px 0"><div class="cliente-bar">📡 <b>Acompanhamento da consultoria</b> · tudo o que a FC faz aparece aqui e no link da empresa, em tempo real.</div></div>`:cli?`<div style="padding:12px 18px 0"><div class="cliente-bar">🔗 <b>Link do cliente</b> · ${e.nome} vê o fluxo, o plano de ação, as planilhas, o catálogo, as solicitações e as entregas. Horas, arquivos internos, checklist de visita e observações da FC ficam ocultos.</div></div>`:linkAberto?`<div style="padding:12px 18px 0">${linkBox(e)}</div>`:''}<div class="tabg" role="tablist">${GRUPOS_ABA.map(([g,ks])=>{const L=abas.filter(x=>ks.includes(x[0]));return L.length?`<div class="tg"><span class="tgl">${g}</span><div class="tgb">${L.map(([k,l])=>`<button class="tab" role="tab" type="button" aria-selected="${k===tab}" data-t="${k}">${l}${k==='sol'&&!cli&&solNovas(at)?` <span class="pill p-bad">${solNovas(at)}</span>`:''}</button>`).join('')}</div></div>`:''}).join('')}</div><div class="body">${h}</div>`;
@@ -523,7 +529,7 @@ async function importarPlanilha(file,tema,trocarId){if(!file)return;const st=doc
     else{const nome=prompt('Nome da planilha (aparece para o cliente):',file.name.replace(/\.xlsx$/i,'').replace(/_/g,' '));if(!nome)return;
       const {error}=await sb.from('cons_planilhas').insert({empresa_id:at,tema:tema||null,nome,dados:m});if(error)throw error;}
     await carregarPlan();st.textContent='✓ Planilha salva';ficha();}catch(err){alert('Não foi possível importar: '+(err.message||err));st.textContent='';}}
-function wirePlSol(e){const q=(s,f)=>document.querySelectorAll(s).forEach(f);wireDiaVer(e);wireMktCli(e,q);
+function wirePlSol(e){const q=(s,f)=>document.querySelectorAll(s).forEach(f);wireDiaVer(e);wireMktCli(e,q);wireGalVer(e,q);
   q('[data-plab]',b=>b.onclick=()=>abrirPlanilha(b.dataset.plab));
   if(PUB||cli){const se=document.getElementById('soEnv');if(se){try{document.getElementById('soNome').value=localStorage.getItem('cons-nome')||''}catch(_){}
     se.onclick=async()=>{const nome=document.getElementById('soNome').value.trim(),txt=document.getElementById('soTxt').value.trim(),m=document.getElementById('soMsg');if(!txt){m.textContent='Escreva o que vocês precisam.';return;}
@@ -535,7 +541,7 @@ function wirePlSol(e){const q=(s,f)=>document.querySelectorAll(s).forEach(f);wir
   const cs=document.getElementById('catSel');if(cs)cs.onchange=()=>{if(!cs.value)return;e.catalogo=cs.value;salvar(at);ficha();};
   const cd=document.getElementById('catDesl');if(cd)cd.onclick=()=>{if(!confirm('Desligar o catálogo desta empresa? O catálogo continua existindo; só sai deste painel e do link.'))return;e.catalogo=null;salvar(at);ficha();};
   q('[data-cet]',b=>b.onclick=()=>{e.catEt=e.catEt||{};const k=b.dataset.cet,cur=catEtapas(e,CATS.find(x=>x.id===e.catalogo))[k]||'';e.catEt[k]=cur===''?'and':cur==='and'?'ok':'none';if(e.catEt[k]==='none')e.catEt[k]='';ficha();salvar(at);});
-  wireAgeDsp(e,q);wireDia(e,q);wireDiv(e,q);wireOri(e);wireMkt(e,q);
+  wireAgeDsp(e,q);wireDia(e,q);wireDiv(e,q);wireOri(e);wireMkt(e,q);wireGal(e,q);
   q('[data-plimp]',i=>i.onchange=()=>importarPlanilha(i.files[0],i.dataset.plimp));
   q('[data-pltr]',i=>i.onchange=()=>importarPlanilha(i.files[0],null,i.dataset.pltr));
   q('[data-plve]',b=>b.onclick=async()=>{const p=PLAN.find(x=>x.id===b.dataset.plve);await sb.from('cons_planilhas').update({cliente_ve:!p.cliente_ve}).eq('id',p.id);p.cliente_ve=!p.cliente_ve;ficha();});
@@ -561,7 +567,7 @@ async function subir(files,pasta){const out=[];for(let f of files){f=await reduz
 async function urlsDe(paths){const falta=paths.filter(p=>!URLC[p]||URLC[p].exp<Date.now());if(falta.length){const {data}=await sb.storage.from(BK).createSignedUrls(falta,3600);(data||[]).forEach(x=>{if(x.signedUrl)URLC[x.path]={u:x.signedUrl,exp:Date.now()+50*60e3};});}return paths.map(p=>(URLC[p]||{}).u||'');}
 function thumbsHtml(L,del){return `<div class="thumbs">${(L||[]).map((a,i)=>`<div class="th" data-thumb="${esc(a.path)}" data-img="${/^image\//.test(a.tipo||'')?1:0}" title="${esc(a.nome)}">${/^image\//.test(a.tipo||'')?'':'📄<br>'+esc((a.nome.split('.').pop()||'').toUpperCase())}${del?`<b data-tdel="${del}|${i}">✕</b>`:''}</div>`).join('')}</div>`;}
 async function carregarThumbs(){const els=[...document.querySelectorAll('[data-thumb]')];if(!els.length)return;const us=await urlsDe(els.map(x=>x.dataset.thumb));
-  els.forEach((el,i)=>{if(el.dataset.img==='1'&&us[i])el.style.backgroundImage=`url("${us[i]}")`;el.onclick=ev=>{if(ev.target.dataset.tdel)return;if(us[i])window.open(us[i],'_blank','noopener');};});}
+  els.forEach((el,i)=>{if(el.dataset.img==='1'&&us[i])el.style.backgroundImage=`url("${us[i]}")`;if(el.dataset.gview||el.dataset.dgver)return;el.onclick=ev=>{if(ev.target.dataset.tdel)return;if(us[i])window.open(us[i],'_blank','noopener');};});}
 function ageTabHtml(e,hero,nextc,sec){const adm=!PUB&&!cli;let A=(e.agenda||[]).slice().sort((a,b)=>(a.data+(a.hora||'')).localeCompare(b.data+(b.hora||'')));if(!adm)A=A.filter(x=>x.cli);
   const hoje=new Date().toISOString().slice(0,10),prox=A.filter(x=>x.data>=hoje&&!x.feito),feitos=A.filter(x=>x.feito||x.data<hoje);
   const pct=A.length?Math.round(feitos.length/A.length*100):0,nx=prox[0];
@@ -742,6 +748,44 @@ function wireMkt(e,q){const g=id=>document.getElementById(id);
 function wireMktCli(e,q){q('[data-mkcop]',b=>b.onclick=()=>{const x=(e.mkt||[]).find(m=>m.id===b.dataset.mkcop);if(x)copiar(x.leg,b);});
   q('[data-mkimg]',b=>b.onclick=()=>window.open(b.dataset.mkimg,'_blank','noopener'));
   q('[data-mkfeito]',b=>b.onclick=()=>{if(PUB)sb.rpc('cons_portal_div_visto',{p_chave:KEY,p_id:'mk-'+b.dataset.mkfeito,p_nome:nomeCli()}).then(()=>{},()=>{});b.textContent='✓ Obrigado! A FC foi avisada';b.disabled=true;});}
+/* ===== Galeria de fotos das visitas ===== */
+let galForm=null;
+function galAlbuns(e,L){const m=new Map();L.forEach(f=>{const k=f.alb||'Sem álbum';if(!m.has(k))m.set(k,[]);m.get(k).push(f);});return [...m.entries()].sort((a,b)=>((b[1][0]||{}).data||'').localeCompare((a[1][0]||{}).data||''));}
+function galTabHtml(e,hero,nextc,sec){const adm=!PUB&&!cli;let L=(e.gal||[]).slice().sort((a,b)=>((b.data||'')+(b.em||'')).localeCompare((a.data||'')+(a.em||'')));if(!adm)L=L.filter(f=>f.cli&&f.url);
+  const A=galAlbuns(e,L);if(OPEN.gal===undefined&&A.length)OPEN.gal=A[0][0];
+  let h=hero(L.length?100:0,L.length?`${L.length} foto${L.length>1?'s':''} em ${A.length} álbu${A.length>1?'ns':'m'}`:'Nenhuma foto ainda','📸 Galeria das visitas',nextc(L.length?'ok':'',adm?'Pontos importantes registrados na visita':'Registro das visitas da FC',adm?'Toque na foto para ver em tela cheia':'Toque na foto para ampliar'));
+  h=h.replace(/<span>\d+%<\/span>/,`<span>${L.length}</span>`);
+  if(adm){const ags=(e.agenda||[]).slice().sort((a,b)=>(b.data||'').localeCompare(a.data||''));
+    h+=galForm?`<div class="box"><h3>Adicionar fotos</h3><div class="frm">
+      <label class="full">Álbum<input class="inpx" id="glA" list="glAl" value="${esc(galForm.alb||'')}" placeholder="Ex.: Visita técnica · dia 1"><datalist id="glAl">${[...new Set([...ags.map(a=>a.titulo),...(e.gal||[]).map(f=>f.alb).filter(Boolean)])].map(t=>`<option value="${esc(t)}">`).join('')}</datalist></label>
+      <label>Data<input class="inpx" type="date" id="glD" value="${esc(galForm.data||new Date().toISOString().slice(0,10))}"></label>
+      <label>Área<select class="inpx" id="glR">${[['','Geral'],['rev','Revenda'],['fab','Fábrica']].map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select></label>
+      <label class="full">O que a foto mostra (vale para todas as fotos deste envio)<input class="inpx" id="glL" placeholder="Ex.: estoque de perfis sem identificação"></label>
+      <label class="full">Fotos<input class="inpx" type="file" id="glF" multiple accept="image/*"></label>
+      <label class="full" style="display:flex;gap:8px;align-items:center;font-weight:600"><input type="checkbox" id="glC"> Cliente vê estas fotos no link</label></div><div class="nota" id="glP" style="margin-top:6px">Dá para colar prints com Ctrl+V aqui.</div>
+      <div style="display:flex;gap:8px;margin-top:10px"><button class="btn pri" type="button" id="glEnv">Enviar fotos</button><button class="btn" type="button" id="glCanc">Cancelar</button></div></div>`
+    :`<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn pri" type="button" id="glNovo">📷 Adicionar fotos</button></div>`;}
+  h+=A.length?`<div class="lanes">${A.map(([alb,F])=>sec(alb,esc(alb),`${F.length} foto${F.length>1?'s':''}${F[0].data?' · '+dBR2(F[0].data):''}`,null,null,`<span class="pill p-mut">📸 ${F.length}</span>`,`<div class="gal-g">${F.map(f=>`<figure class="gf"><button type="button" class="gfi" data-gview="${f.id}" ${adm?`data-thumb="${esc(f.path)}" data-img="1"`:`style="background-image:url('${esc(f.url)}')"`} aria-label="${esc(f.leg||'Foto')}"></button>
+      <figcaption>${f.area?`<span class="ftag ${f.area}">${f.area==='rev'?'Revenda':'Fábrica'}</span>`:''}${esc(f.leg||'')}${adm?`<span style="display:flex;gap:4px;margin-top:4px;flex-wrap:wrap"><button class="mini ${f.cli?'on':''}" type="button" data-gcli="${f.id}">${f.cli?'👁 cliente vê':'🔒 só FC'}</button><button class="mini" type="button" data-gleg="${f.id}">✏</button><button class="mini" type="button" data-grm="${f.id}">✕</button></span>`:''}</figcaption></figure>`).join('')}</div>`)).join('')}</div>`
+    :`<div class="box"><p class="nota" style="margin:0">${adm?'Registre os pontos importantes da visita: estoque, produção, expedição, showroom, sistema… Cada foto pode ir para o link do cliente ou ficar só com a FC.':'As fotos das visitas aparecem aqui.'}</p></div>`;
+  return h;}
+function galViewer(L,i){const ov=document.createElement('div');ov.className='gv-ov';const show=async()=>{const f=L[i];let u=f.url;if(!u&&f.path&&!PUB){[u]=await urlsDe([f.path]);}
+    ov.innerHTML=`<button class="gv-x" type="button" aria-label="Fechar">✕</button>${L.length>1?'<button class="gv-p" type="button" aria-label="Anterior">‹</button><button class="gv-n" type="button" aria-label="Próxima">›</button>':''}<figure><img src="${esc(u||'')}" alt="${esc(f.leg||'')}"><figcaption>${f.area?(f.area==='rev'?'Revenda · ':'Fábrica · '):''}${esc(f.leg||'')}${f.data?' · '+dBR2(f.data):''}<small>${i+1} de ${L.length}</small></figcaption></figure>`;
+    ov.querySelector('.gv-x').onclick=fim;const p=ov.querySelector('.gv-p'),n=ov.querySelector('.gv-n');if(p)p.onclick=()=>{i=(i-1+L.length)%L.length;show();};if(n)n.onclick=()=>{i=(i+1)%L.length;show();};};
+  const k=ev=>{if(ev.key==='Escape')fim();if(ev.key==='ArrowRight'&&L.length>1){i=(i+1)%L.length;show();}if(ev.key==='ArrowLeft'&&L.length>1){i=(i-1+L.length)%L.length;show();}};
+  function fim(){document.removeEventListener('keydown',k);ov.remove();}document.addEventListener('keydown',k);document.body.appendChild(ov);show();}
+function wireGalVer(e,q){q('[data-gview]',b=>b.onclick=()=>{const adm=!PUB&&!cli;let L=(e.gal||[]).slice();if(!adm)L=L.filter(f=>f.cli&&f.url);const alb=(L.find(f=>f.id===b.dataset.gview)||{}).alb;L=L.filter(f=>(f.alb||'Sem álbum')===(alb||'Sem álbum')).sort((a,c)=>((c.data||'')+(c.em||'')).localeCompare((a.data||'')+(a.em||'')));galViewer(L,Math.max(0,L.findIndex(f=>f.id===b.dataset.gview)));});}
+function wireGal(e,q){const g=id=>document.getElementById(id);let colados=[];
+  if(g('glNovo'))g('glNovo').onclick=()=>{galForm={alb:OPEN.gal||''};ficha();};
+  if(g('glCanc'))g('glCanc').onclick=()=>{galForm=null;ficha();};
+  if(g('glEnv')){document.onpaste=ev=>{if(!g('glEnv'))return;[...((ev.clipboardData||{}).items||[])].filter(i=>i.type.startsWith('image/')).forEach(it=>{const b=it.getAsFile();colados.push(new File([b],nomePrint(b.type),{type:b.type}));});g('glP').textContent=`✓ ${colados.length} print(s) colado(s)`;};
+    g('glEnv').onclick=async()=>{const fs=[...g('glF').files,...colados];if(!fs.length){alert('Escolha as fotos ou cole prints.');return;}g('glEnv').disabled=true;g('glEnv').textContent='Enviando '+fs.length+' foto(s)…';
+      const up=await subir(fs,'galeria');const cliV=g('glC').checked,alb=g('glA').value.trim()||'Visita '+dBR2(g('glD').value);e.gal=e.gal||[];
+      for(const u of up){const f={id:uidc(),path:u.path,tipo:u.tipo,alb,data:g('glD').value,area:g('glR').value,leg:g('glL').value.trim(),cli:cliV,em:new Date().toISOString()};if(cliV){try{f.url=await urlAssinada(u.path,60*60*24*365);}catch(_){}}e.gal.push(f);}
+      galForm=null;OPEN.gal=alb;ficha();salvar(at);};}
+  q('[data-gcli]',b=>b.onclick=async()=>{const f=e.gal.find(x=>x.id===b.dataset.gcli);if(!f.cli){try{f.url=await urlAssinada(f.path,60*60*24*365);}catch(err){alert(err.message);return;}f.cli=true;}else{f.cli=false;delete f.url;}ficha();salvar(at);});
+  q('[data-gleg]',b=>b.onclick=()=>{const f=e.gal.find(x=>x.id===b.dataset.gleg);const t=prompt('O que a foto mostra:',f.leg||'');if(t===null)return;f.leg=t.trim();ficha();salvar(at);});
+  q('[data-grm]',b=>b.onclick=async()=>{const f=e.gal.find(x=>x.id===b.dataset.grm);if(!confirm('Apagar esta foto?'))return;await sb.storage.from(BK).remove([f.path]);e.gal=e.gal.filter(x=>x!==f);ficha();salvar(at);});}
 let ALUNOS=[];
 async function carregarAlunos(){const {data}=await sb.from('trein_alunos').select('user_id,login,nome,papel,ativo').neq('papel','admin').order('nome');ALUNOS=(data||[]).filter(a=>!/^gestor cat/i.test(a.nome||''));
   const nn=t=>String(t||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]/g,'');const mud=[];
