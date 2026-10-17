@@ -57,6 +57,7 @@ main{min-width:0}
 #wm{position:fixed;inset:0;z-index:958;pointer-events:none;background-repeat:repeat;opacity:1}
 @media print{#wm{opacity:1}}
 .d3b{position:absolute;right:6px;top:6px;z-index:1;background:var(--tl);color:#fff;font:700 11.5px var(--f-b);border-radius:99px;padding:2px 8px;box-shadow:0 2px 6px rgba(0,0,0,.18)}
+.md.fs{padding:0}.md.fs>div{width:100vw;height:100vh;border-radius:0}
 .pc:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(15,60,70,.12)}
 .pc .im{aspect-ratio:4/3;background:linear-gradient(#f6f9fa,#e9eff1);position:relative}.pc .im img{position:absolute;inset:6px;width:calc(100% - 12px);height:calc(100% - 12px);object-fit:contain}
 .pc .im .b3{position:absolute;right:6px;bottom:6px;background:var(--tl);color:#fff;font:700 11px var(--f-b);border-radius:99px;padding:2px 7px}
@@ -134,11 +135,11 @@ table.tb tr.hi td{background:#e7f7ec;font-weight:700}
 <header class="top"><div class="w"><img src="/img/logo-fc-160.jpg" alt=""><div><small>FC Consultoria · Gold x Suprema</small><b>Treinamento em Esquadrias 3D</b></div><span class="sp"></span>
  <div class="prog" title="Módulos estudados"><i><s id="pgB" style="width:0"></s></i><span id="pgT">0/9</span></div><button type="button" id="bAtu" title="Baixar a versão mais nova">🔄</button><button type="button" id="bHome">☰ Início</button></div></header>
 <div class="lay"><nav class="nav" id="nav"></nav><main id="main"><p style="padding:30px">Carregando…</p></main></div>
-<div class="md" id="md" hidden><div><div class="mt"><b id="mdC"></b><span id="mdN"></span><button class="mx" type="button" id="mdX" aria-label="Fechar">✕</button></div><div id="mdB" style="flex:1;display:flex"></div></div></div>
+<div class="md" id="md" hidden><div><div class="mt"><b id="mdC"></b><span id="mdN"></span><button class="btn" type="button" id="mdFs" style="margin-left:auto;padding:6px 12px">⛶ Tela cheia</button><button class="mx" type="button" id="mdX" aria-label="Fechar">✕</button></div><div id="mdB" style="flex:1;display:flex"></div></div></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="../auth.js"></script>
-<script src="cm3d.js?v=5"></script>
+<script src="cm3d.js?v=6"></script>
 <script>
 /* Treinamento em Esquadrias 3D · FC Consultoria em Esquadria · Sinop-MT · todos os direitos reservados */
 const IMG='/perfis/img/',PERFIS='/perfis/';
@@ -316,13 +317,14 @@ function placeCm(){const ph=document.querySelector('.cm3');let H=$('#cmhost');
  if(!CMS&&!placeCm.ld){placeCm.ld=1;CM3D.carregar().then(()=>{CMS=CM3D.cena(H);CM3D.reboco(CMS,CMR);CM3D.pintar(CMS,CMP2);CM3D.passo(CMS,CMK);placeCm.k=CMK;CM3D.janela(CMS,{cor:CMC,fol:CMF});angPad(H,AD.orbit(()=>CMS&&CMS.r?CMS:null,()=>{CMS.alvo=null;}));CM3D.cortar(CMS,CMX,CMK);if(!CM3D.__fotos){try{CM3D.__fotos=CM3D.fotos();if(AT==='cm')re();}catch(e){console.warn(e);}}quadrosPrep();}).catch(e=>{console.warn(e);ph.textContent='Não foi possível carregar o 3D.';});}
  else if(CMS){CM3D.reboco(CMS,CMR);CM3D.pintar(CMS,CMP2);if(placeCm.k!==CMK){CM3D.passo(CMS,CMK);placeCm.k=CMK;}CM3D.cortar(CMS,CMX,CMK);CM3D.janela(CMS,{cor:CMC,fol:CMF});}}
 /* --- 04 guarnições --- */
-/* desenhos do catálogo Sealway (guarnição EPDM e espuma PVC adesivada) */
+/* desenhos de referência (guarnição EPDM e espuma PVC adesivada) */
 const GIMG={GUA007:['SW GUA 007','ED 084','Guarnição EPDM'],GUA053:['SW GUA 053','GUA 053','Guarnição EPDM'],GUA239:['SW GUA 239','GUA 239','Guarnição EPDM'],GUA256:['SW GUA 256','SD 626','Guarnição EPDM'],GUA259:['SW GUA 259','SD 631','Guarnição EPDM'],GUA283:['SW GUA 283','GUA 283','Guarnição EPDM'],GUA284:['SW GUA 284','GUA 283 / SD 2562N','Guarnição EPDM'],GUA412:['SW GUA 412','1087101','Guarnição EPDM'],
  GUA157:['Espuma PVC adesivada 11x6','GUA 157','Espuma adesiva'],GUA258:['Espuma PVC adesivada 11x4','GUA 258','Espuma adesiva'],GUA305:['Espuma PVC adesivada 14x3','GUA 305','Espuma adesiva'],GUA306:['Espuma PVC adesivada 14x4','GUA 306','Espuma adesiva'],GUA304:['Espuma PVC adesivada 14x6','GUA 304','Espuma adesiva']};
+const gref=(g,k)=>{const a=String(g[0]).replace(/^SW\s*/i,'');const r=g[1]&&gk(g[1])!==k&&gk(g[1])!==gk(a)?g[1]:'';return /GUA/i.test(a)?'ref. '+a+(r?' · '+r:''):a+(r?' · ref. '+r:'');};
 const gk=c=>String(c||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
 const gfile=c=>{const k=gk(c);return GIMG[k]?'gua/GUA-'+k.slice(3)+'.png':null;};
 function gcard(c,papel){const k=gk(c),g=GIMG[k],f=gfile(c);if(!g)return `<div class="gc"><div class="gi">🧵</div><b>${esc(c||'—')}</b><small>${esc(papel||'')}</small></div>`;
- return `<div class="gc"><div class="gi"><img src="${f}" alt="${esc(c)}" loading="lazy"></div><span class="fn">${esc(papel||g[2])}</span><b>${esc(c)}</b><small>Sealway: ${esc(g[0])}${g[1]&&gk(g[1])!==k?' · ref. '+esc(g[1]):''}</small></div>`;}
+ return `<div class="gc"><button type="button" class="gi" data-gua3d="${k}" title="Ver ${esc(c)} em 3D" style="border:0;cursor:pointer;position:relative;width:100%"><img src="${f}" alt="${esc(c)}" loading="lazy"><span class="b3" style="position:absolute;right:6px;bottom:6px;background:var(--tl);color:#fff;font:700 11px var(--f-b);border-radius:99px;padding:2px 7px">↻ 3D</span></button><span class="fn">${esc(papel||g[2])}</span><b>${esc(c)}</b><small>${esc(gref(g,k))}</small></div>`;}
 const GUA={gold:[{p:'LG-006',b:'LG-026 ou BG-057',v:{6:['GUA412','GUA306'],8:['GUA259','GUA306'],10:['GUA259','GUA305']}},{p:'LG-050',b:'LG-026 ou BG-057',v:{6:['GUA256','GUA304'],8:['GUA259','GUA304'],10:['GUA259','GUA306']}},{p:'LG-050',b:'LG-059',v:{4:['GUA259','GUA304'],6:['GUA259','GUA306']}},{p:'LG-006',b:'LG-059',v:{4:['GUA259','GUA306'],6:['GUA259','GUA305']}}],
  sup:[{p:'SU-200',v:{3:['GUA-256','GUA-157'],4:['GUA-256','GUA-157'],5:['GUA-256','GUA-258'],6:['GUA-259','GUA-157']}},{p:'SU-082',v:{3:['GUA-256','GUA-258'],4:['GUA-256','GUA-258'],5:['GUA-256','GUA-171'],6:['GUA-259','GUA-157']}},{p:'SU-292',v:{3:['GUA-256','GUA-258'],4:['GUA-256','GUA-258'],5:['GUA-256','GUA-171'],6:['GUA-259','GUA-171']}},{p:'SU-039',v:{4:['GUA-256','GUA-157'],5:['GUA-256','GUA-258'],6:['GUA-259','GUA-258']}},{p:'SU-053',v:{4:['GUA-256','GUA-258'],5:['GUA-256','GUA-171'],6:['GUA-259','GUA-171']}},{p:'SU-055',v:{4:['GUA-284',''],5:['GUA-283',''],6:['GUA-283','']}}]};
 let GL='gold',GI=0,GE=null;
@@ -339,7 +341,7 @@ function mGua(){const L=GUA[GL],it=L[Math.min(GI,L.length-1)],es=Object.keys(it.
   <div class="call">Perfil <b>${esc(it.p)}</b>${it.b?` com baguete <b>${esc(it.b)}</b>`:''} e vidro de <b>${e} mm</b>: guarnição interna <b>${esc(g[0])}</b>${g[1]?` e externa <b>${esc(g[1])}</b>`:' (sem guarnição externa)'}.</div>
   <div class="gcs">${gcard(g[0],'Interna')}${g[1]?gcard(g[1],'Externa'):''}</div></div>
   <div>${card(it.p,'Perfil escolhido',GL==='gold'?'g':'s')}<table class="tb" style="margin-top:10px"><tr><th>Vidro</th><th>Interna</th><th>Externa</th></tr>${es.map(n=>{const th=c=>{const f=gfile(c);return f?`<img src="${f}" alt="" style="height:26px;max-width:60px;object-fit:contain;vertical-align:middle;margin-right:6px">`:''};return `<tr class="${n===e?'hi':''}"><td>${n} mm</td><td>${th(it.v[n][0])}${esc(it.v[n][0])}</td><td>${it.v[n][1]?th(it.v[n][1])+esc(it.v[n][1]):'—'}</td></tr>`;}).join('')}</table></div></div></div>`+
-`<div class="sec"><h2>🧵 Guarnições e espumas do treinamento</h2><p class="nt">Desenhos do catálogo Sealway, com o código equivalente no mercado.</p><div class="gcs">${Object.keys(GIMG).map(k=>gcard('GUA-'+k.slice(3))).join('')}</div></div>`+
+`<div class="sec"><h2>🧵 Guarnições e espumas do treinamento</h2><p class="nt">Desenhos de referência, com o código equivalente no mercado. Toque na peça para ver em 3D.</p><div class="gcs">${Object.keys(GIMG).map(k=>gcard('GUA-'+k.slice(3))).join('')}</div></div>`+
  quiz([['Na Suprema, perfil SU-200 com vidro de 6 mm: qual a guarnição interna?',['GUA-259','GUA-256','GUA-283'],0,'Com 6 mm a interna passa a ser a GUA-259; até 5 mm é a GUA-256.'],['O que muda quando o vidro fica mais grosso?',['A guarnição precisa ser trocada','Nada muda','Só o perfil muda'],0,'Cada espessura de vidro pede a guarnição do tamanho certo para travar o vidro.']])+foot(3);}
 
 /* --- 05 maxim-ar --- */
@@ -457,22 +459,27 @@ function marca(){let el=$('#wm');if(!el){el=document.createElement('div');el.id=
  const d=new Date().toLocaleDateString('pt-BR'),x=v=>String(v).replace(/[<>&"]/g,'');
  const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="460" height="300"><g transform="rotate(-24 230 150)" font-family="Barlow,Arial,sans-serif" text-anchor="middle" fill="#0f4f53" fill-opacity=".075"><text x="230" y="140" font-size="26" font-weight="800">FC CONSULTORIA EM ESQUADRIA</text><text x="230" y="168" font-size="14" font-weight="600">Treinamento exclusivo · ${x(q||'uso interno')} · ${d}</text></g></svg>`;
  el.style.backgroundImage=`url("data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}")`;}
-function abre3d(c){if(String(c).startsWith('P:')){const k=c.slice(2),it=CMP.find(x=>x[0]===k)||[k,'',''];$('#mdC').textContent=k;$('#mdN').textContent=it[1]+' · '+it[2];$('#mdB').innerHTML='<div style="position:relative;flex:1;display:flex"><div id="pc3" style="flex:1;background:radial-gradient(circle at 50% 40%,#fff,#dfe7eb)"></div></div>';$('#md').hidden=false;MD=c;LIVE.push();CM3D.carregar().then(()=>{if(MD===c){PEC=CM3D.pecaCena(k,$('#pc3'),true);const P=PEC;angPad($('#pc3').parentNode,AD.orbit(()=>P.r?P:null),{elMin:-80});}});return;}
+function guaPrep(){if(!window.CM3D)return Promise.reject();Object.entries(GIMG).forEach(([k,g])=>{const m=/(\d+)x(\d+)/.exec(g[0]);if(m)CM3D.guaEspuma(k,+m[1],+m[2]);});return CM3D.guaCarregar('gua/shapes.json');}
+function abre3d(c){if(String(c).startsWith('G:')){const k=c.slice(2),g=GIMG[k]||['','',''];$('#mdC').textContent='GUA-'+k.slice(3);$('#mdN').textContent=g[2]+' · '+gref(g,k);
+  $('#mdB').innerHTML='<div style="position:relative;flex:1;display:flex"><div id="pc3" style="flex:1;background:radial-gradient(circle at 50% 40%,#fff,#dfe7eb)"></div><p style="position:absolute;left:12px;bottom:8px;margin:0;font:600 12.5px var(--f-b);color:var(--tm)">Seção desenhada a partir da referência · ilustrativa, sem escala</p></div>';$('#md').hidden=false;MD=c;LIVE.push();
+  CM3D.carregar().then(guaPrep).then(()=>{if(MD===c){PEC=CM3D.pecaCena(k,$('#pc3'),true);const P=PEC;angPad($('#pc3').parentNode,AD.orbit(()=>P.r?P:null),{elMin:-80});}}).catch(e=>console.warn(e));return;}
+if(String(c).startsWith('P:')){const k=c.slice(2),it=CMP.find(x=>x[0]===k)||[k,'',''];$('#mdC').textContent=k;$('#mdN').textContent=it[1]+' · '+it[2];$('#mdB').innerHTML='<div style="position:relative;flex:1;display:flex"><div id="pc3" style="flex:1;background:radial-gradient(circle at 50% 40%,#fff,#dfe7eb)"></div></div>';$('#md').hidden=false;MD=c;LIVE.push();CM3D.carregar().then(()=>{if(MD===c){PEC=CM3D.pecaCena(k,$('#pc3'),true);const P=PEC;angPad($('#pc3').parentNode,AD.orbit(()=>P.r?P:null),{elMin:-80});}});return;}
  if(String(c).startsWith('D:')){const t=c.slice(2);$('#mdC').textContent='🧊 '+(T3[t]||'Esquadria em 3D');$('#mdN').textContent='Gire, abra as folhas, desmonte e veja os cortes';
   $('#mdB').innerHTML=`<div style="position:relative;flex:1;display:flex"><iframe id="d3f" src="/treinamento/demo/index.html?previa&esq=1&t=${encodeURIComponent(t)}" title="Esquadria em 3D" allow="fullscreen"></iframe>${ALUNO?'<div style="position:absolute;inset:0;cursor:not-allowed" title="O Fernando está conduzindo"></div>':''}</div>`;$('#md').hidden=false;MD=c;LIVE.push();return;}
  const x=pfInfo(c);if(!x.ok)return;$('#mdC').textContent=c;$('#mdN').textContent=(x.n||'')+(x.peso!=null?' · '+kg(x.peso)+' kg/m':'')+(x.d?' · '+mm(x.d[0])+' × '+mm(x.d[1])+' mm':'');
  $('#mdB').innerHTML=x.d3?`<div style="position:relative;flex:1;display:flex"><iframe id="pf3f" src="${PERFIS}?ver=${encodeURIComponent(x.k.split(' / ')[0])}&embed=1" title="Perfil ${esc(c)} em 3D" allow="fullscreen"></iframe></div>`:`<div class="alt"><div><img src="${x.img}" alt=""><p>Este perfil não tem modelo 3D: veja o corte.</p></div></div>`;$('#md').hidden=false;MD=c;LIVE.push();const f=$('#pf3f');if(f)angPad(f.parentNode,AD.frame(f),{elMin:-80});}
-let MD=null,PEC=null;function fecha(){if(PEC){PEC.fim();PEC=null;}$('#md').hidden=true;$('#mdB').innerHTML='';if(MD){MD=null;if(!ALUNO)LIVE.push();}}
+let MD=null,PEC=null;function fecha(){$('#md').classList.remove('fs');$('#mdFs').textContent='⛶ Tela cheia';if(PEC){PEC.fim();PEC=null;}$('#md').hidden=true;$('#mdB').innerHTML='';if(MD){MD=null;if(!ALUNO)LIVE.push();}}
 addEventListener('message',e=>{if(e.origin===location.origin&&e.data&&e.data.fc3d==='fechou')fecha();});
-$('#mdX').onclick=fecha;$('#md').onclick=e=>{if(e.target.id==='md')fecha();};addEventListener('keydown',e=>{if(e.key==='Escape')fecha();});
+$('#mdX').onclick=fecha;$('#mdFs').onclick=e=>{e.stopPropagation();const m=$('#md'),on=m.classList.toggle('fs');$('#mdFs').textContent=on?'↙ Sair da tela cheia':'⛶ Tela cheia';setTimeout(()=>dispatchEvent(new Event('resize')),50);};$('#md').onclick=e=>{if(e.target.id==='md')fecha();};addEventListener('keydown',e=>{if(e.key==='Escape')fecha();});
 $('#bHome').onclick=()=>go(null);$('#bAtu').onclick=async()=>{await Promise.all(['./','index.html','perfis.json?v=1','../demo/index.html','../auth.js'].map(u=>fetch(u,{cache:'reload'}).catch(()=>{})));const q=new URLSearchParams(location.search);q.set('v',Date.now());location.replace(location.pathname+'?'+q+location.hash);};
-document.addEventListener('click',e=>{if(ALUNO&&!e.target.closest('.q [data-o],#mdX,#md,#alN,.lvp,#alGo,#alTr,[data-fs],#fsX')){if(e.target.closest('#fsBar')){e.preventDefault();e.stopImmediatePropagation();LIVE.aviso();return;}if(e.target.closest('[data-go],[data-feito],[data-pf],[data-d3],[data-cmp],[data-cmx],[data-cmr],[data-cmf],[data-cmc],[data-cmp2],[data-cmt],[data-catl],[data-catg],[data-tipf],[data-tip],[data-cmk],[data-gl],[data-gi],[data-ge],[data-mxl],[data-mxv],[data-crk],[data-gml],[data-pool],[data-slot],#bHome')){e.preventDefault();e.stopImmediatePropagation();LIVE.aviso();}return;}const t=e.target.closest('[data-fs],[data-go],[data-feito],[data-pf],[data-d3],[data-cmp],[data-cmx],[data-cmr],[data-cmf],[data-cmc],[data-cmp2],[data-cmt],[data-catl],[data-catg],[data-tipf],[data-tip],[data-cmk],[data-gl],[data-gi],[data-ge],[data-mxl],[data-mxv],[data-crk],[data-gml],[data-pool],[data-slot],.q [data-o],#bRes');if(!t)return;const d=t.dataset;
+document.addEventListener('click',e=>{if(ALUNO&&!e.target.closest('.q [data-o],#mdX,#md,#alN,.lvp,#alGo,#alTr,[data-fs],#fsX')){if(e.target.closest('#fsBar')){e.preventDefault();e.stopImmediatePropagation();LIVE.aviso();return;}if(e.target.closest('[data-go],[data-feito],[data-pf],[data-d3],[data-cmp],[data-gua3d],[data-cmx],[data-cmr],[data-cmf],[data-cmc],[data-cmp2],[data-cmt],[data-catl],[data-catg],[data-tipf],[data-tip],[data-cmk],[data-gl],[data-gi],[data-ge],[data-mxl],[data-mxv],[data-crk],[data-gml],[data-pool],[data-slot],#bHome')){e.preventDefault();e.stopImmediatePropagation();LIVE.aviso();}return;}const t=e.target.closest('[data-fs],[data-go],[data-feito],[data-pf],[data-d3],[data-cmp],[data-gua3d],[data-cmx],[data-cmr],[data-cmf],[data-cmc],[data-cmp2],[data-cmt],[data-catl],[data-catg],[data-tipf],[data-tip],[data-cmk],[data-gl],[data-gi],[data-ge],[data-mxl],[data-mxv],[data-crk],[data-gml],[data-pool],[data-slot],.q [data-o],#bRes');if(!t)return;const d=t.dataset;
  if(d.fs)return telaCheia(d.fs);
  if(d.go!==undefined)return go(d.go);
  if(d.feito){FEITO.has(d.feito)?FEITO.delete(d.feito):FEITO.add(d.feito);LS.s('fc_esq_feito',[...FEITO]);return re();}
  if(d.pf)return abre3d(d.pf);
  if(d.d3)return abre3d('D:'+d.d3);
  if(d.cmp)return abre3d('P:'+d.cmp);
+ if(d.gua3d)return abre3d('G:'+d.gua3d);
  if(d.cmx){CMX=!CMX;return re();}
  if(d.cmr){CMR=!CMR;return re();}
  if(d.cmf!=null){CMF=Number(d.cmf);return re();}
