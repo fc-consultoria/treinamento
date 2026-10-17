@@ -181,6 +181,8 @@ body.pres-on #hdTop,body.pres-on #app>.top:first-child,body.pres-on #acbar a,bod
 .gv-ov{position:fixed;inset:0;z-index:9700;background:rgba(4,12,20,.94);display:grid;place-items:center;padding:16px}.gv-ov figure{margin:0;display:flex;flex-direction:column;align-items:center;gap:10px;max-width:100%}.gv-ov img{max-width:min(1200px,100%);max-height:calc(100vh - 120px);object-fit:contain;border-radius:8px}
 .gv-ov figcaption{color:#e3eef6;font-size:15px;text-align:center}.gv-ov figcaption small{display:block;color:#9fb6c7;font-size:12px;margin-top:2px}
 .gv-x,.gv-p,.gv-n{all:unset;cursor:pointer;position:fixed;color:#fff;background:rgba(255,255,255,.14);border-radius:50%;width:46px;height:46px;display:grid;place-items:center;font-size:24px}.gv-x{top:14px;right:14px;font-size:18px}.gv-p{left:12px;top:50%}.gv-n{right:12px;top:50%}
+.sd-card p{font-size:15.5px}.sd-hoje{display:flex;flex-direction:column;gap:4px;background:var(--surface-2);border-radius:12px;padding:10px 12px;font-size:14.5px}.sd-hoje small{font:700 10.5px var(--f-b);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}.sd-hoje span{color:var(--ok);font-weight:600}
+.sd-site{display:flex;gap:12px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:10px 12px}.sd-site b{display:block}.sd-site small{color:var(--muted);font-size:13px}
 .stsel{font:600 12.5px var(--f-b);border:1px solid var(--line);border-radius:99px;padding:3px 8px;background:var(--surface);color:var(--fg)}
 .saving{position:fixed;right:16px;bottom:16px;background:var(--fg);color:var(--bg);padding:8px 14px;border-radius:9px;font-weight:600;font-size:14px;z-index:50}
 </style></head><body>
@@ -823,6 +825,7 @@ function divTabHtml(e,hero,nextc){const L=(e.divs||[]).slice().sort((a,b)=>(b.em
   h+=L.length?`<div class="dgrid">${L.map(x=>{const vs=vv.filter(v=>v.div_id===x.id);return `<div class="dcard"><div class="dthumb" ${/^image\//.test(x.tipo||'')?`data-thumb="${esc(x.path)}" data-img="1"`:''} style="cursor:default">${/^image\//.test(x.tipo||'')?'':'📄'}</div><div style="padding:10px 12px"><b>${esc(x.titulo||'Divulgação')}</b>${x.texto?`<div class="nota">${esc(x.texto)}</div>`:''}
     <div class="sm" style="margin-top:4px">${x.ativo===false?'<span class="pill p-mut">Retirada</span>':'<span class="pill p-ok">Na tela do cliente</span>'}<span class="pill ${vs.length?'p-acc':'p-mut'}">👀 ${vs.length?`vista ${vs.length}x${vs[0].nome?' · '+esc(vs[0].nome):''}`:'ainda não vista'}</span></div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">${x.ativo===false?`<button class="mini on" type="button" data-dvre="${x.id}">↻ Enviar de novo</button>`:`<button class="mini" type="button" data-dvoff="${x.id}">Retirar da tela</button>`}<button class="mini" type="button" data-dvrm="${x.id}">✕</button></div></div></div>`}).join('')}</div>`:'';
+  const sc=vv.filter(v=>v.div_id==='site');h+=`<div class="box" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span style="font-size:22px">🌐</span><div style="flex:1;min-width:0"><b>Boas-vindas do dia</b><div class="nota">Na primeira vez que o cliente abre o link no dia, aparece "Bom dia / Boa tarde / Boa noite", o resumo da consultoria e o convite para o site da FC.</div></div><span class="pill ${sc.length?'p-acc':'p-mut'}">🌐 ${sc.length} visita${sc.length===1?'':'s'} ao site pelo link${sc[0]&&sc[0].nome?' · '+esc(sc[0].nome):''}</span></div>`;
   h+='<p class="nota">A divulgação abre em destaque na tela do cliente: se ele estiver com o link aberto, aparece em até 1 minuto; se estiver fora, aparece assim que ele entrar. Cada pessoa vê uma vez. Você vê aqui se e quando foi vista.</p>';
   return h;}
 async function carregarDivv(){const {data}=await sb.from('cons_div_vistos').select('empresa_id,div_id,nome,em').order('em',{ascending:false}).limit(500);DIVV={};(data||[]).forEach(x=>{(DIVV[x.empresa_id]=DIVV[x.empresa_id]||[]).push(x);});}
@@ -839,7 +842,26 @@ function wireDiv(e,q){const g=id=>document.getElementById(id);let colado=null;
 /* lado do cliente: mostra divulgações novas e avisa a FC que o link foi aberto */
 function nomeCli(){try{return localStorage.getItem('cons-nome')||''}catch(_){return ''}}
 const vistos=()=>{try{return JSON.parse(localStorage.getItem('cons-vistos-'+KEY.slice(0,10))||'[]')}catch(_){return []}};
-async function checarDivs(){if(!PUB||document.getElementById('divOv'))return;try{const {data}=await sb.rpc('cons_portal_divs',{p_chave:KEY});const v=vistos();const nova=(data||[]).find(x=>!v.includes(x.id));if(nova)mostrarDiv(nova);}catch(_){}}
+async function checarDivs(){if(!PUB||document.getElementById('divOv'))return false;try{const {data}=await sb.rpc('cons_portal_divs',{p_chave:KEY});const v=vistos();const nova=(data||[]).find(x=>!v.includes(x.id));if(nova){mostrarDiv(nova);return true;}}catch(_){}return false;}
+const hojeLocal=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
+const kSaud=()=>'cons-saud-'+KEY.slice(0,10);
+function jaSaudou(){try{return localStorage.getItem(kSaud())===hojeLocal();}catch(_){return false;}}
+function marcarSaudou(){try{localStorage.setItem(kSaud(),hojeLocal());}catch(_){}}
+async function saudacaoDoDia(){if(!PUB||jaSaudou())return;const mostrou=await checarDivs();marcarSaudou();if(mostrou)return;
+  const e=E[at]||{},h=new Date().getHours(),sd=h<12?'Bom dia':h<18?'Boa tarde':'Boa noite',nm=(nomeCli()||'').split(' ')[0];
+  const fl=(e.frentes||[]).flatMap(f=>f.p),ok=fl.filter(p=>p[0]==='ok').length,hj=hojeLocal();
+  const prox=(e.agenda||[]).filter(a=>a.data>=hj&&!a.feito).sort((a,b)=>(a.data+(a.hora||'')).localeCompare(b.data+(b.hora||'')))[0];
+  const A=e.acao,aok=A?Object.values(A.st||{}).filter(x=>x.s==='ok').length:0;
+  const fatos=[fl.length?`${ok} de ${fl.length} etapas concluídas`:'',aok?`${aok} ponto${aok>1?'s':''} resolvido${aok>1?'s':''} no plano de ação`:'',prox?`próxima agenda ${dBR2(prox.data).slice(0,5)}${prox.hora?' às '+prox.hora:''}`:''].filter(Boolean);
+  const ov=document.createElement('div');ov.id='divOv';ov.className='div-ov';
+  ov.innerHTML=`<div class="div-card sd-card" role="dialog" aria-label="Boas-vindas"><div class="div-hd"><img src="midia/logo-fc.png" alt=""><div><small>FC Consultoria e Representação</small><b>${sd}${nm?', '+esc(nm):''}! 👋</b></div></div>
+    <p>Que bom ter você por aqui. Este é o acompanhamento da consultoria da <b>${esc((e.nome||'').split(' · ')[0])}</b>: tudo o que a FC faz aparece nesta página.</p>
+    ${fatos.length?`<div class="sd-hoje"><small>Hoje na consultoria</small>${fatos.map(t=>`<span>✓ ${esc(t)}</span>`).join('')}</div>`:''}
+    <div class="sd-site"><span style="font-size:26px">🌐</span><div style="flex:1;min-width:0"><b>Conheça o site da FC</b><small>Catálogo de perfis em 3D, representadas, dicas de montagem e contato.</small></div></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap"><a class="btn" id="sdSite" href="https://fc-consultoria.github.io/" target="_blank" rel="noopener" style="text-decoration:none">🌐 Conhecer o site</a><button class="btn pri" type="button" id="sdOk">Continuar para o acompanhamento</button></div></div>`;
+  document.body.appendChild(ov);const fim=()=>ov.remove();ov.querySelector('#sdOk').onclick=fim;ov.addEventListener('click',ev=>{if(ev.target===ov)fim();});
+  ov.querySelector('#sdSite').onclick=()=>{sb.rpc('cons_portal_div_visto',{p_chave:KEY,p_id:'site',p_nome:nomeCli()}).then(()=>{},()=>{});setTimeout(fim,300);};
+  const esc2=ev=>{if(ev.key==='Escape'){fim();document.removeEventListener('keydown',esc2);}};document.addEventListener('keydown',esc2);}
 function mostrarDiv(x){const ov=document.createElement('div');ov.id='divOv';ov.className='div-ov';const img=/^image\//.test(x.tipo||'');
   ov.innerHTML=`<div class="div-card" role="dialog" aria-label="Mensagem da FC Consultoria"><div class="div-hd"><img src="midia/logo-fc.png" alt=""><div><small>Mensagem da FC Consultoria</small><b>${esc(x.titulo||'Novidade para vocês')}</b></div></div>
    ${img?`<img class="div-img" src="${esc(x.url)}" alt="${esc(x.titulo||'')}">`:`<a class="btn pri" href="${esc(x.url)}" target="_blank" rel="noopener" style="text-decoration:none;align-self:center;margin:18px 0">📄 Abrir o arquivo</a>`}
@@ -865,7 +887,7 @@ if(PUB){(async()=>{document.title='Acompanhamento da consultoria · FC Consultor
   const [pl,so]=await Promise.all([sb.rpc('cons_portal_planilhas',{p_chave:KEY}),sb.rpc('cons_portal_solicitacoes',{p_chave:KEY})]);PUBPL=pl.data||[];PUBSOL=(so.data||[]).map(x=>Object.assign(x,{criado_em:x.em}));
   E={[data.id]:data};at=data.id;cli=true;
   const ping=()=>{if(!document.hidden)sb.rpc('cons_portal_ping',{p_chave:KEY,p_nome:nomeCli()}).then(()=>{},()=>{});};ping();setInterval(ping,120000);document.addEventListener('visibilitychange',()=>{if(!document.hidden){ping();checarDivs();}});
-  setTimeout(checarDivs,1200);setInterval(checarDivs,60000);$('#pubT').textContent='Acompanhamento da consultoria';ficha();})();}
+  setTimeout(saudacaoDoDia,1000);setInterval(checarDivs,60000);$('#pubT').textContent='Acompanhamento da consultoria';ficha();})();}
 else{gateUI(()=>carregar(),{soMatriz:true});
   $('#acbar').hidden=false;
   $('#bVoltar').onclick=()=>{at=null;cli=false;openLane=null;$('#vFC').setAttribute('aria-pressed',true);$('#vCli').setAttribute('aria-pressed',false);render();window.scrollTo({top:0,behavior:'smooth'});};
