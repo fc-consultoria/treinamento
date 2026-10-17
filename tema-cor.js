@@ -3,7 +3,7 @@
    e não muda a tela de ninguém mais. */
 (function(){
   const CORES = [
-    {id:'padrao',   nome:'Padrão',      c:null},
+    {id:'padrao',   nome:'Padrão',      c:null, g:['#3452eb','#6f8bff']},
     {id:'oceano',   nome:'Oceano',      c:'#2563eb', c2:'#06b6d4'},
     {id:'esmeralda',nome:'Esmeralda',   c:'#059669', c2:'#84cc16'},
     {id:'por-do-sol',nome:'Pôr do sol', c:'#ea580c', c2:'#ec4899'},
@@ -50,7 +50,7 @@ html[data-fc-tema][data-fc-fundo="tingido"] .panel, html[data-fc-tema][data-fc-f
     injetarCSS();
     const tema = CORES.find(x=>x.id===t.cor)||CORES[0]; const cor = tema.c;
     if(cor){ root.setAttribute('data-fc-tema', tema.id); root.setAttribute('data-fc-fundo', t.fundo||'claro'); root.style.setProperty('--g1', cor); root.style.setProperty('--g2', tema.c2||cor); }
-    else { root.removeAttribute('data-fc-tema'); root.removeAttribute('data-fc-fundo'); }
+    else { /* Padrão: mantém as cores originais, só com o acabamento moderno (degradê azul) */ root.setAttribute('data-fc-tema','padrao'); root.setAttribute('data-fc-fundo', t.fundo||'claro'); root.style.setProperty('--g1', tema.g[0]); root.style.setProperty('--g2', tema.g[1]); }
     if(cor){
       root.style.setProperty('--accent', cor);
       root.style.setProperty('--accent-dark', mix(cor,'#000000',0.35));
