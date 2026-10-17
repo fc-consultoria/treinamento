@@ -63,7 +63,7 @@ h1{font-size:28px}h2{font-size:21px}h3{font-size:17px}
 .hbar{display:flex;gap:10px;align-items:center;margin-top:8px;font-size:13.5px}.hbar .tr{flex:1;height:8px;border-radius:99px;background:var(--line);overflow:hidden}.hbar .tr i{display:block;height:100%;background:var(--c)}
 .arq{display:flex;gap:10px;align-items:center;padding:9px 0;border-top:1px dashed var(--line)}.arq:first-of-type{border-top:0}.arq .ext{font:600 11px var(--f-m);padding:3px 6px;border-radius:5px;background:var(--surface-2);border:1px solid var(--line)}
 [hidden]{display:none!important}.nota{font-size:13px;color:var(--muted)}
-.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface)}.seg button{all:unset;cursor:pointer;padding:7px 12px;font:600 13.5px var(--f-b);color:var(--muted)}.seg button[aria-pressed="true"]{background:var(--accent);color:#fff}
+.seg{display:inline-flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface)}.seg button{all:unset;cursor:pointer;padding:7px 12px;font:600 13.5px var(--f-b);color:var(--muted)}.seg button[aria-pressed="true"]{background:var(--accent);color:#fff}
 .flow{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:repeating-linear-gradient(0deg,transparent 0 23px,color-mix(in srgb,var(--line) 45%,transparent) 23px 24px),var(--surface-2);padding:14px}
 .lane{display:flex;align-items:stretch;gap:0;min-width:max-content;padding:8px 0}
 .lane+.lane{border-top:1px dashed var(--line)}
@@ -83,6 +83,28 @@ h1{font-size:28px}h2{font-size:21px}h3{font-size:17px}
 .upl{all:unset;cursor:pointer;font:600 12.5px var(--f-b);color:var(--accent);border:1.5px dashed var(--line);border-radius:8px;padding:3px 9px;align-self:flex-start}.upl:hover{border-color:var(--accent)}
 @media(max-width:560px){.trow{grid-template-columns:1fr!important;gap:4px!important}}
 .node.dim{opacity:.3}
+.obj summary{cursor:pointer;list-style:none}.obj summary::-webkit-details-marker{display:none}.obj[open] summary span{display:none}
+.hero2{display:flex;flex-wrap:wrap;gap:18px;align-items:center;padding:16px 18px;border-radius:14px;background:linear-gradient(120deg,color-mix(in srgb,var(--c) 14%,var(--surface)),var(--surface) 70%);border:1px solid var(--line)}
+.ring{--p:0;width:84px;height:84px;flex:none;border-radius:50%;background:conic-gradient(var(--c) calc(var(--p)*1%),var(--line) 0);display:grid;place-items:center}.ring span{width:66px;height:66px;border-radius:50%;background:var(--surface);display:grid;place-items:center;font:700 19px var(--f-m)}
+.hero2 .big{font:700 20px var(--f-d);margin:2px 0 8px}
+.nextc{display:flex;gap:10px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 12px}.nextc small{display:block;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}.nextc b{font-size:15px}
+.lanes{display:flex;flex-direction:column;gap:10px}
+.ln{border:1px solid var(--line);border-radius:12px;background:var(--surface);overflow:hidden}.ln.open{box-shadow:0 6px 18px rgba(15,30,39,.08);border-color:color-mix(in srgb,var(--c) 45%,var(--line))}
+.lnh{all:unset;box-sizing:border-box;width:100%;cursor:pointer;display:flex;gap:14px;align-items:center;padding:13px 16px;flex-wrap:wrap}.lnh:hover{background:var(--surface-2)}.lnh:focus-visible{outline:3px solid var(--accent);outline-offset:-3px}
+.lnt{min-width:150px;display:flex;flex-direction:column}.lnt b{font:700 17px var(--f-d)}.lnt small{color:var(--muted);font-size:13px}
+.lnb{flex:1;min-width:90px;height:8px;border-radius:99px;background:var(--line);overflow:hidden}.lnb i{display:block;height:100%;background:var(--c);border-radius:99px}
+.lnc{font-size:13px;color:var(--muted)}.chev{color:var(--muted);font-size:14px}
+.steps{list-style:none;margin:0;padding:4px 16px 10px;position:relative}
+.st2{display:grid;grid-template-columns:62px 26px minmax(0,1fr);gap:10px;align-items:start;padding:9px 0;position:relative}
+.st2::before{content:"";position:absolute;left:84px;top:34px;bottom:-9px;width:2px;background:var(--line)}.st2:last-child::before{display:none}
+.st2 .tm{font-size:12px;color:var(--muted);padding-top:4px;text-align:right}
+.dotc{all:unset;box-sizing:border-box;width:24px;height:24px;border-radius:50%;border:2px solid var(--line);background:var(--surface);display:grid;place-items:center;font:700 13px var(--f-b);color:#fff;cursor:pointer;position:relative;z-index:1;flex:none}
+.dotc.and{border-color:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 22%,transparent)}.dotc.ok{background:var(--ok);border-color:var(--ok)}.dotc:disabled{cursor:default}.dotc:not(:disabled):hover{border-color:var(--accent)}
+.st2.cl .dotc:not(.ok){border-color:var(--warn);border-style:dashed}
+.stt{font-weight:600;font-size:14.5px;line-height:1.35}.st2.ok .stt{color:var(--muted)}
+.sm{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:3px;font-size:13px;color:var(--muted)}
+.ftag{display:inline-block;font:700 10.5px var(--f-b);letter-spacing:.06em;text-transform:uppercase;border-radius:5px;padding:1px 6px;margin-right:7px;vertical-align:1px}.ftag.rev{background:#e0f2f1;color:#0e6b6a}.ftag.fab{background:#fde9dc;color:#a63b0a}
+@media(max-width:560px){.st2{grid-template-columns:48px 24px minmax(0,1fr)}.st2::before{left:69px}.ring{width:66px;height:66px}.ring span{width:52px;height:52px;font-size:15px}}
 .stsel{font:600 12.5px var(--f-b);border:1px solid var(--line);border-radius:99px;padding:3px 8px;background:var(--surface);color:var(--fg)}
 .saving{position:fixed;right:16px;bottom:16px;background:var(--fg);color:var(--bg);padding:8px 14px;border-radius:9px;font-weight:600;font-size:14px;z-index:50}
 </style></head><body>
@@ -144,7 +166,7 @@ const SEED={
   vis:{tit:'Ciclo presencial do mês · 5 dias',prep:['Agenda dos 5 dias combinada com o cliente','Planilha de precificação atualizada'],dur:['Revisão de preços com a equipe','Acompanhamento do plano estratégico'],dep:['Relatório do ciclo','Nota fiscal do mês']},
   arq:[['xlsx','Planilha de precificação · ZFM','exemplo'],['pdf','Plano estratégico','exemplo']]}
 };
-let pasteKey=null,E={},at='cb',tab='proc',fr=0,frFlow=-1,cli=false,HORAS=[],PORT={},linkAberto=false;
+let openLane=null,pasteKey=null,E={},at='cb',tab='proc',fr=0,frFlow=-1,cli=false,HORAS=[],PORT={},linkAberto=false;
 const KEY=new URLSearchParams(location.search).get('k'),PUB=!!KEY;
 const URL_BASE='https://fc-consultoria.github.io/treinamento/consultorias.html?k=';
 function novaChave(){const a=new Uint8Array(18);crypto.getRandomValues(a);return Array.from(a,b=>b.toString(16).padStart(2,'0')).join('');}
@@ -196,15 +218,25 @@ function cards(){ $('#emps').innerHTML=Object.entries(E).map(([k,e])=>`<button c
   <div><span class="pill ${e.st[0]}">${e.st[1]}</span></div>
   <div class="kv"><div><small>Próxima visita</small><b>${e.visita}</b></div><div><small>Demandas</small><b>${e.dem.length}</b></div><div><small>Horas no mês</small><b>${(l=>l.length?hm(l.reduce((s,x)=>s+(+x.minNormal||0)+(+x.minExtra||0),0)):'—')(horasDe(e).filter(x=>(x.data||'').slice(0,7)===new Date().toISOString().slice(0,7)))}</b></div></div>
   <div class="nx muted">Próximo passo: ${e.dem? e.dem[0][2]||e.dem[0][1] : '—'}</div></button>`).join('');
-  document.querySelectorAll('.emp').forEach(b=>b.onclick=()=>{at=b.dataset.k;render()}); }
+  document.querySelectorAll('.emp').forEach(b=>b.onclick=()=>{at=b.dataset.k;openLane=null;render()}); }
 const ABAS=[['proc','Fluxo do processo'],['acao','Plano de ação'],['vis','Visitas'],['dem','Demandas e entregas'],['arq','Arquivos'],['hrs','Horas']];
 function ficha(){const e=E[at];let h='';
- if(tab==='proc'&&e.objetivo)h=`<div class="box"><h3>Objetivo</h3><p style="margin:0">${e.objetivo}</p></div>`;
- if(tab==='proc'){const tot=e.frentes.reduce((n,f)=>n+f.p.length,0),ok=e.frentes.reduce((n,f)=>n+f.p.filter(p=>p[0]==='ok').length,0);
-   if(e.acao)h+=`<div class="seg" role="group" aria-label="Destacar frente" style="align-self:flex-start"><button type="button" data-ff="-1" aria-pressed="${frFlow<0}">Todas as etapas</button>${e.acao.cols.map((c,ci)=>`<button type="button" data-ff="${ci}" aria-pressed="${frFlow===ci}">${esc(c)}</button>`).join('')}</div>`;
-   h+=`<div class="leg"><span><i style="border-color:var(--ok);background:var(--ok-soft)"></i>Feito</span><span><i style="border-color:${e.c}"></i>Em andamento</span><span><i></i>Programado</span><span><i style="border-style:dashed"></i>Depende do cliente</span><span style="margin-left:auto" class="mono">${ok} de ${tot} etapas concluídas · ${(tot?Math.round(ok/tot*100):0)}%</span></div>
-   <div class="flow">${e.frentes.map((f,fi)=>{const k=f.p.filter(p=>p[0]==='ok').length;return `<div class="lane"><div class="lh2"><b>${f.n}</b>${f.s?`<span style="font-family:var(--f-b);font-size:12.5px">${f.s}</span>`:''}<span>${k}/${f.p.length} feitas</span></div>${f.p.map((p,i)=>`${i?'<span class="arrow"></span>':''}<div class="node ${p[0]} ${p[4]==='Cliente'?'cli':''} ${frFlow>=0&&e.acao&&!new RegExp('^'+(frFlow?'F[áa]brica':'Revenda'),'i').test(p[1])&&!new RegExp(frFlow?'f[áa]brica':'revenda','i').test(f.n)?'dim':''}" data-f="${fi}" data-i="${i}" ${cli?'':'title="Clique para mudar: programado → em andamento → feito"'}><div class="t">${p[1]}</div>${p[2]&&!(cli&&p[2]==='exemplo')?`<div class="nota">${p[2]}</div>`:''}<div class="m"><span>📅 ${p[3]||'a definir'}</span><span>· ${p[4]||'FC'}</span></div></div>`).join('')}${cli?'':`<button class="addn" type="button" data-add="${fi}">+ etapa</button>`}</div>`}).join('')}</div>${cli?'':'<div><button class="btn" type="button" id="addFrente">+ Nova frente</button></div>'}
-   <p class="nota">${cli?'Este é o caminho combinado do trabalho. Cada etapa muda de cor quando avança; as datas são atualizadas pela FC.':'Cada empresa tem as suas frentes e etapas. Clique numa etapa para mudar a situação (programado → em andamento → feito). Use + etapa para incluir. O cliente vê este mesmo fluxo no link dele.'}</p>`;}
+ if(tab==='proc'&&e.objetivo)h=`<details class="box obj"><summary><b>🎯 Objetivo da consultoria</b><span class="muted" style="font-size:13px"> · toque para ler</span></summary><p style="margin:8px 0 0">${esc(e.objetivo)}</p></details>`;
+ if(tab==='proc'){const tot=e.frentes.reduce((n,f)=>n+f.p.length,0),ok=e.frentes.reduce((n,f)=>n+f.p.filter(p=>p[0]==='ok').length,0),pct=tot?Math.round(ok/tot*100):0;
+   const prox=(()=>{for(const [fi,f] of e.frentes.entries()){const i=f.p.findIndex(p=>p[0]==='and');if(i>=0)return {f,fi,p:f.p[i]};}for(const [fi,f] of e.frentes.entries()){const i=f.p.findIndex(p=>p[0]!=='ok');if(i>=0)return {f,fi,p:f.p[i]};}return null})();
+   if(openLane===null)openLane=prox?prox.fi:0;
+   const tag=t=>{const m=/^(Revenda|F[áa]brica)\s*·\s*/i.exec(t);return m?{fr:/^rev/i.test(m[1])?'rev':'fab',t:t.slice(m[0].length)}:{fr:'',t};};
+   const frOk=(p,f)=>frFlow<0||!e.acao||(()=>{const g=tag(p[1]).fr;return g?(frFlow===0?g==='rev':g==='fab'):true})();
+   h+=`<div class="hero2"><div class="ring" style="--p:${pct}"><span>${pct}%</span></div><div style="min-width:0;flex:1 1 240px"><div class="eyebrow">Andamento geral</div><div class="big">${ok} de ${tot} etapas concluídas</div>
+     ${prox?`<div class="nextc"><span class="dotc ${prox.p[0]}"></span><div style="min-width:0"><small>${prox.p[0]==='and'?'Em andamento agora':'Próxima etapa'} · ${esc(prox.f.n)}</small><b>${esc(tag(prox.p[1]).t)}</b>${prox.p[3]?`<span class="mono muted" style="font-size:12.5px"> · ${esc(prox.p[3])}</span>`:''}</div></div>`:'<div class="nextc"><b>✓ Todas as etapas concluídas</b></div>'}</div></div>`;
+   if(e.acao)h+=`<div class="seg" role="group" aria-label="Mostrar frente" style="align-self:flex-start"><button type="button" data-ff="-1" aria-pressed="${frFlow<0}">Tudo</button>${e.acao.cols.map((c,ci)=>`<button type="button" data-ff="${ci}" aria-pressed="${frFlow===ci}">${ci?'🏭':'🏪'} ${esc(c)}</button>`).join('')}</div>`;
+   h+=`<div class="lanes">${e.frentes.map((f,fi)=>{const P=f.p.map((p,i)=>({p,i})).filter(x=>frOk(x.p,f));if(!P.length&&frFlow>=0)return '';const k=f.p.filter(p=>p[0]==='ok').length,pp=f.p.length?Math.round(k/f.p.length*100):0,ab=openLane===fi,and=f.p.some(p=>p[0]==='and');
+     return `<div class="ln ${ab?'open':''}"><button type="button" class="lnh" data-lane="${fi}" aria-expanded="${ab}"><span class="lnt"><b>${esc(f.n)}</b>${f.s?`<small>${esc(f.s)}</small>`:''}</span>
+       <span class="lnb"><i style="width:${pp}%"></i></span><span class="lnc mono">${k}/${f.p.length}</span>${pp===100?'<span class="pill p-ok">Concluído</span>':and?'<span class="pill p-acc">Em andamento</span>':''}<span class="chev">${ab?'▴':'▾'}</span></button>
+       ${ab?`<ol class="steps">${P.map(({p,i})=>{const tg=tag(p[1]);return `<li class="st2 ${p[0]} ${p[4]==='Cliente'?'cl':''}"><span class="tm mono">${esc(p[3]||'—')}</span><button type="button" class="dotc ${p[0]}" data-f="${fi}" data-i="${i}" ${cli?'disabled':''} title="${cli?'':'Mudar situação: programado → em andamento → feito'}" aria-label="${p[0]==='ok'?'Feito':p[0]==='and'?'Em andamento':'Programado'}">${p[0]==='ok'?'✓':''}</button>
+         <div class="sb"><div class="stt">${tg.fr?`<span class="ftag ${tg.fr}">${tg.fr==='rev'?'Revenda':'Fábrica'}</span>`:''}${esc(tg.t)}</div><div class="sm">${p[2]?`<span>👥 ${esc(p[2])}</span>`:''}${p[4]==='Cliente'?'<span class="pill p-warn">Com o cliente</span>':''}${p[0]==='and'?'<span class="pill p-acc">Em andamento</span>':''}</div></div></li>`}).join('')}</ol>${cli?'':`<div style="padding:4px 16px 14px 92px"><button class="upl" type="button" data-add="${fi}">+ etapa</button></div>`}`:''}</div>`}).join('')}</div>
+   ${cli?'':'<div><button class="btn" type="button" id="addFrente">+ Nova frente</button></div>'}
+   <p class="nota">${cli?'Toque numa fase para ver as etapas. Verde = feito, azul = em andamento, laranja = depende da equipe de vocês.':'Toque numa fase para abrir. Clique no círculo da etapa para mudar: programado → em andamento → feito.'}</p>`;}
  if(tab==='acao'&&e.acao){const A=e.acao,ST=[['aguarda','Aguardando a visita','p-mut'],['diag','Diagnóstico feito','p-acc'],['acao','Ação combinada','p-acc'],['exec','Em execução','p-warn'],['ok','Resolvido','p-ok']];
    h=`<div class="box"><h3>Do diagnóstico à solução</h3><div class="leg">${ST.map((x,i)=>`${i?'→':''}<span class="pill ${x[2]}">${x[1]}</span>`).join(' ')}</div><p class="nota" style="margin:8px 0 0">${cli?'Cada ponto levantado na visita aparece aqui. Quando chega em <b>Resolvido</b>, fica registrada a data e como foi resolvido. Os arquivos 📎 são as bases de trabalho liberadas pela FC.':`Cada tema tem a sua base de trabalho: anexe a planilha ou o material que será usado com este cliente (📎) e escolha se o cliente vê o arquivo. A FC atualiza a situação; quando chega em <b>Resolvido</b>, fica registrada a data e a evidência (print, planilha ou foto). É isso que o cliente acompanha no link.`}</p></div>
    <div class="seg" role="group" aria-label="Frente de serviço" style="align-self:flex-start">${A.cols.map((c,ci)=>{const n=A.temas.filter(t=>((A.st||{})[t[0]+'|'+ci]||{}).s==='ok').length;return `<button type="button" data-fr="${ci}" aria-pressed="${ci===fr}">${esc(c)} · ${n}/${A.temas.length}</button>`}).join('')}</div>
@@ -224,6 +256,7 @@ function ficha(){const e=E[at];let h='';
  $('#ficha').innerHTML=`<div class="fh"><span class="sw"></span><div style="min-width:0;flex:1"><h2>${e.nome}</h2><div class="muted" style="font-size:14px">${e.cid} · ${e.mod}</div></div><span class="pill ${e.st[0]}">${e.st[1]}</span>${cli?'':`<button class="btn" type="button" id="lkTog">🔗 Link do cliente${PORT[at]&&PORT[at].ativo?' ✓':''}</button>`}</div>
   ${PUB?`<div style="padding:12px 18px 0"><div class="cliente-bar">Acompanhamento atualizado pela FC Consultoria. Dúvidas: (66) 9 9986-7984, de segunda a sexta, das 08:00 às 11:00 e das 13:00 às 17:00 (horário de Sinop/MT).</div></div>`:cli?`<div style="padding:12px 18px 0"><div class="cliente-bar">🔗 <b>Link do cliente</b> · ${e.nome} vê o fluxo, o plano de ação e as entregas. Horas, arquivos, checklist de visita e observações da FC ficam ocultos.</div></div>`:linkAberto?`<div style="padding:12px 18px 0">${linkBox(e)}</div>`:''}<div class="tabs" role="tablist">${abas.map(([k,l])=>`<button class="tab" role="tab" type="button" aria-selected="${k===tab}" data-t="${k}">${l}</button>`).join('')}</div><div class="body">${h}</div>`;
  document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{tab=b.dataset.t;ficha()});
+ document.querySelectorAll('[data-lane]').forEach(b=>b.onclick=()=>{const v=+b.dataset.lane;openLane=openLane===v?-1:v;ficha();});
  document.querySelectorAll('[data-fr]').forEach(b=>b.onclick=()=>{fr=+b.dataset.fr;ficha();});
  document.querySelectorAll('[data-ff]').forEach(b=>b.onclick=()=>{frFlow=+b.dataset.ff;ficha();});
  $('#ficha').classList.toggle('fc',!cli); if(cli)return;
@@ -233,7 +266,7 @@ function ficha(){const e=E[at];let h='';
  if(g('lkCopiar'))g('lkCopiar').onclick=e2=>copiar(g('lkUrl').value,e2.target);
  if(g('lkCopMsg'))g('lkCopMsg').onclick=e2=>copiar(g('lkMsg').value,e2.target);
  if(g('lkAtivo'))g('lkAtivo').onclick=async()=>{const p=PORT[at];if(p.ativo&&!confirm('Desativar o link? O cliente deixa de ver o acompanhamento.'))return;const {error}=await sb.from('cons_portal').update({ativo:!p.ativo}).eq('empresa_id',at);if(error){alert(error.message);return;}p.ativo=!p.ativo;ficha();};
- document.querySelectorAll('.node[data-f]').forEach(n=>n.onclick=()=>{const p=e.frentes[+n.dataset.f].p[+n.dataset.i];p[0]=p[0]===''?'and':p[0]==='and'?'ok':'';ficha();cards();salvar(at);});
+ document.querySelectorAll('.dotc[data-f]').forEach(n=>n.onclick=()=>{const p=e.frentes[+n.dataset.f].p[+n.dataset.i];p[0]=p[0]===''?'and':p[0]==='and'?'ok':'';ficha();cards();salvar(at);});
  document.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>{const t=prompt('Nova etapa — o que será feito?');if(!t)return;const d=prompt('Data ou horário (ex.: 24/10 ou 08:00–09:30). Pode deixar em branco:')||'';const r=confirm('Esta etapa depende do cliente?\n\nOK = Cliente · Cancelar = FC')?'Cliente':'';e.frentes[+b.dataset.add].p.push(['',t,'',d,r]);ficha();salvar(at);});
  const af=document.getElementById('addFrente');if(af)af.onclick=()=>{const n=prompt('Nome da nova frente (ex.: Revenda, Fábrica, Pós-visita):');if(!n)return;e.frentes.push({n,p:[]});ficha();salvar(at);};
  document.querySelectorAll('.stsel').forEach(sel=>sel.onchange=()=>{e.acao.st=e.acao.st||{};const x={s:sel.value,em:new Date().toISOString().slice(0,10)};if(sel.value==='ok'){x.ev=prompt('Como foi resolvido? Descreva a evidência (planilha em uso, print, foto…):')||'';}else{const o=e.acao.st[sel.dataset.key];if(o&&o.ev&&sel.value!=='aguarda')x.ev=o.ev;}e.acao.st[sel.dataset.key]=x;ficha();salvar(at);});
