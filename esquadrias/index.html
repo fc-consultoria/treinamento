@@ -117,7 +117,7 @@ table.tb tr.hi td{background:#e7f7ec;font-weight:700}
 <button type="submit">Entrar</button><p id="gateMsg" role="alert"></p></form></div>
 
 <header class="top"><div class="w"><img src="/img/logo-fc-160.jpg" alt=""><div><small>FC Consultoria · Gold x Suprema</small><b>Treinamento em Esquadrias 3D</b></div><span class="sp"></span>
- <div class="prog" title="Módulos estudados"><i><s id="pgB" style="width:0"></s></i><span id="pgT">0/9</span></div><button type="button" id="bHome">☰ Início</button></div></header>
+ <div class="prog" title="Módulos estudados"><i><s id="pgB" style="width:0"></s></i><span id="pgT">0/9</span></div><button type="button" id="bAtu" title="Baixar a versão mais nova">🔄</button><button type="button" id="bHome">☰ Início</button></div></header>
 <div class="lay"><nav class="nav" id="nav"></nav><main id="main"><p style="padding:30px">Carregando…</p></main></div>
 <div class="md" id="md" hidden><div><div class="mt"><b id="mdC"></b><span id="mdN"></span><button class="mx" type="button" id="mdX" aria-label="Fechar">✕</button></div><div id="mdB" style="flex:1;display:flex"></div></div></div>
 
@@ -377,7 +377,7 @@ function abre3d(c){if(String(c).startsWith('D:')){const t=c.slice(2);$('#mdC').t
 let MD=null;function fecha(){$('#md').hidden=true;$('#mdB').innerHTML='';if(MD){MD=null;if(!ALUNO)LIVE.push();}}
 addEventListener('message',e=>{if(e.origin===location.origin&&e.data&&e.data.fc3d==='fechou')fecha();});
 $('#mdX').onclick=fecha;$('#md').onclick=e=>{if(e.target.id==='md')fecha();};addEventListener('keydown',e=>{if(e.key==='Escape')fecha();});
-$('#bHome').onclick=()=>go(null);
+$('#bHome').onclick=()=>go(null);$('#bAtu').onclick=async()=>{await Promise.all(['./','index.html','perfis.json?v=1','../demo/index.html','../auth.js'].map(u=>fetch(u,{cache:'reload'}).catch(()=>{})));const q=new URLSearchParams(location.search);q.set('v',Date.now());location.replace(location.pathname+'?'+q+location.hash);};
 document.addEventListener('click',e=>{if(ALUNO&&!e.target.closest('.q [data-o],#mdX,#md,#alN,.lvp,#alGo,#alTr')){if(e.target.closest('[data-go],[data-feito],[data-pf],[data-d3],[data-catl],[data-catg],[data-tipf],[data-tip],[data-cmk],[data-gl],[data-gi],[data-ge],[data-mxl],[data-mxv],[data-crk],[data-gml],[data-pool],[data-slot],#bHome')){e.preventDefault();e.stopImmediatePropagation();LIVE.aviso();}return;}const t=e.target.closest('[data-go],[data-feito],[data-pf],[data-d3],[data-catl],[data-catg],[data-tipf],[data-tip],[data-cmk],[data-gl],[data-gi],[data-ge],[data-mxl],[data-mxv],[data-crk],[data-gml],[data-pool],[data-slot],.q [data-o],#bRes');if(!t)return;const d=t.dataset;
  if(d.go!==undefined)return go(d.go);
  if(d.feito){FEITO.has(d.feito)?FEITO.delete(d.feito):FEITO.add(d.feito);LS.s('fc_esq_feito',[...FEITO]);return re();}
