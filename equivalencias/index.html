@@ -89,29 +89,62 @@ function voltaUrl(adm){if(adm)return '/treinamento/painel.html';let u='';try{u=l
  const k=new URLSearchParams(location.search).get('k');if(k)u='/treinamento/consultorias.html?k='+encodeURIComponent(k);return u||'/treinamento/';}
 function voltaBtn(adm){if(window.top!==window)return;let b=document.getElementById('bVolta');if(!b){b=document.createElement('a');b.id='bVolta';const h=document.querySelector('header.top .w');if(!h)return;h.appendChild(b);}
  b.href=voltaUrl(adm);b.textContent=adm?'← Painel matriz':'← Painel inicial';b.title=adm?'Voltar para o painel matriz da FC':'Voltar para o painel inicial da empresa';}
+/* Edição dos pares pela matriz: cada mudança fica gravada (trein_eventos 'equiv_edit'); a última vale e o cliente vê a versão editada */
+const EDITS={};
+function aplicarEdits(lista){(lista||[]).forEach(x=>{if(x&&x.f&&x.c)EDITS[x.f+'|'+x.c]=x;});
+ Object.values(EDITS).forEach(x=>{D.perfis.forEach(r=>{r.eq=r.eq.filter(e=>!(e.f===x.f&&e.c===x.c));});
+  (D.semPar[x.f]||[]).splice(0,1e9,...(D.semPar[x.f]||[]).filter(s=>s.c!==x.c));
+  if(!x.a)return;const r=D.perfis.find(y=>y.c===x.a);if(!r)return;
+  const p=x.p!=null&&x.p!==''?+x.p:null,dd=p!=null&&r.p?Math.round((p/r.p-1)*1000)/10:null;
+  r.eq.push({f:x.f,c:x.c,cc:x.cc||undefined,p,d:dd,n:x.n||'media',t:x.t||'padrao',o:x.o||'Par ajustado pela FC Consultoria.',pg:x.pg||'—',ed:1,edEm:x.em||''});});}
+function editar(r,e){const novo=!e;const F=Object.keys(D.forn).filter(f=>f!=='alcoa');
+ const w=document.createElement('div');w.id='edw';w.style.cssText='position:fixed;inset:0;z-index:60;background:rgba(10,30,34,.6);display:flex;align-items:center;justify-content:center;padding:16px;overflow:auto';
+ w.innerHTML=`<div style="max-width:520px;width:100%;background:#fff;border-radius:16px;padding:18px 20px;display:flex;flex-direction:column;gap:10px;font:500 15px var(--f-b);color:var(--ink)">
+  <style>#edw label{display:flex;flex-direction:column;gap:4px;font-weight:600}</style><b style="font:800 24px var(--f-d);color:#0f4f53">${novo?'Adicionar par':'Editar par'} · ${esc(r.c)}</b>
+  <label>Fornecedor<select id="edF" ${novo?'':'disabled'} style="width:100%;padding:8px;border:1px solid var(--ln);border-radius:9px;font:inherit">${F.map(f=>`<option value="${f}" ${e&&e.f===f?'selected':''}>${esc(D.forn[f].nome)}</option>`).join('')}</select></label>
+  <label>Código do fornecedor<input id="edC" value="${esc(e?e.c:'')}" ${novo?'':'readonly'} style="width:100%;padding:8px;border:1px solid var(--ln);border-radius:9px;font:inherit;text-transform:uppercase"></label>
+  <label>Código Alcoa equivalente<input id="edA" list="edAl" value="${esc(r.c)}" style="width:100%;padding:8px;border:1px solid var(--ln);border-radius:9px;font:inherit;text-transform:uppercase"><datalist id="edAl">${D.perfis.map(x=>`<option value="${esc(x.c)}">`).join('')}</datalist></label>
+  <div style="display:flex;gap:10px;flex-wrap:wrap"><label style="flex:1 1 120px">Peso kg/m<input id="edP" inputmode="decimal" value="${e&&e.p!=null?String(e.p).replace('.',','):''}" style="width:100%;padding:8px;border:1px solid var(--ln);border-radius:9px;font:inherit"></label>
+  <label style="flex:1 1 120px">Nível<select id="edN" style="width:100%;padding:8px;border:1px solid var(--ln);border-radius:9px;font:inherit">${['alta','media','baixa'].map(n=>`<option value="${n}" ${(e?e.n:'media')===n?'selected':''}>${NV[n]}</option>`).join('')}</select></label>
+  <label style="flex:1 1 120px">Versão<select id="edT" style="width:100%;padding:8px;border:1px solid var(--ln);border-radius:9px;font:inherit">${[['padrao','Padrão'],['leve','Leve'],['pesada','Mais pesada'],['variante','Variante']].map(([v,t])=>`<option value="${v}" ${(e?e.t:'padrao')===v?'selected':''}>${t}</option>`).join('')}</select></label></div>
+  <label>Observação<textarea id="edO" rows="3" style="width:100%;padding:8px;border:1px solid var(--ln);border-radius:9px;font:inherit">${esc(e?e.o:'')}</textarea></label>
+  <p id="edM" style="margin:0;color:var(--bx);font-size:14px"></p>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">${novo?'':'<button type="button" id="edDel" class="ok" style="border-color:var(--bx);color:var(--bx);margin-right:auto">Remover este par</button>'}<button type="button" id="edX" class="ok" style="border-color:var(--ln);color:var(--ink)">Cancelar</button><button type="button" id="edS" class="ok" style="background:#0f4f53;color:#fff;border-color:#0f4f53">Salvar</button></div></div>`;
+ document.body.appendChild(w);const g=id=>w.querySelector('#'+id);
+ const fechar=()=>w.remove();g('edX').onclick=fechar;w.onclick=ev=>{if(ev.target===w)fechar();};
+ const gravar=async x=>{x.em=new Date().toLocaleDateString('pt-BR');g('edM').textContent='Salvando…';
+  const {error}=await sb.from('trein_eventos').insert({tipo:'equiv_edit',detalhe:x});
+  if(error){g('edM').textContent='Não salvou: '+error.message;return;}
+  aplicarEdits([x]);fechar();Q=x.a||r.c;tela();history.replaceState(null,'','#'+encodeURIComponent(Q));};
+ g('edS').onclick=()=>{const f=g('edF').value,c=g('edC').value.trim().toUpperCase(),a=g('edA').value.trim().toUpperCase(),pv=g('edP').value.trim().replace(',','.');
+  if(!c){g('edM').textContent='Digite o código do fornecedor.';return;}
+  if(!D.perfis.some(x=>x.c===a)){g('edM').textContent='Código Alcoa não encontrado na linha Suprema.';return;}
+  if(pv&&isNaN(+pv)){g('edM').textContent='Peso inválido. Use número, ex.: 0,520';return;}
+  gravar({f,c,a,p:pv?+pv:null,n:g('edN').value,t:g('edT').value,o:g('edO').value.trim(),pg:e?e.pg:'—',cc:e?e.cc:undefined});};
+ if(!novo)g('edDel').onclick=()=>{if(g('edDel').dataset.c){gravar({f:e.f,c:e.c,a:null});return;}g('edDel').dataset.c=1;g('edDel').textContent='Clique de novo para remover';};}
 function img(f,c){return 'img/'+f+'/'+encodeURIComponent(c)+'.webp?v=2';}
 function achar(q){const n=norm(q);if(!n)return null;
  for(const r of D.perfis){if(norm(r.c)===n)return {r};for(const e of r.eq){if(norm(e.c)===n||norm(e.cc)===n)return {r,e};}}
  for(const f of FS())for(const s of (D.semPar[f]||[]))if(norm(s.c)===n||norm(s.cc)===n)return {sp:s,f};
  const m=/^(?:25CL?|SU|ESU|FASU0?)(\d{3})/.exec(n);if(m){const r=D.perfis.find(x=>x.c==='SU-'+m[1]);if(r)return {r};}
  return null;}
-function nvTag(e,r,cl){const k=r?r.c+'|'+e.c:'';if(k&&OK[k])return `<span class="nv alta" title="Conferido pela FC">✔ Confirmado</span>`;
+function nvTag(e,r,cl){const k=r?r.c+'|'+e.c:'';if(k&&OK[k])return cl&&ADM?`<button type="button" class="nv alta nvb" data-ok="${esc(k)}" title="Conferido pela FC · clique para desfazer">✔ Confirmado</button>`:`<span class="nv alta" title="Conferido pela FC">✔ Confirmado</span>`;
  if(cl&&ADM&&e.n!=='alta')return `<button type="button" class="nv ${e.n} nvb" data-ok="${esc(k)}" title="Clique para confirmar que este par está certo">${NV[e.n]} ✓?</button>`;
  return `<span class="nv ${e.n}">${NV[e.n]}</span>`;}
 function eqCard(r,e){const F=D.forn[e.f],k=r.c+'|'+e.c,okd=OK[k];
  return `<div class="card"><span class="fn">${esc(F.nome)}${e.t==='leve'?' · versão leve':e.t==='pesada'?' · versão mais pesada':e.t==='variante'?' · variante':''}</span>
- <div class="im" data-zoom="${img(e.f,e.c)}" data-t="${esc(F.nome+' '+e.c)}"><img src="${img(e.f,e.c)}" alt="${esc(e.c)}" loading="lazy"></div>
+ <div class="im" data-zoom="${img(e.f,e.c)}" data-t="${esc(F.nome+' '+e.c)}"><img src="${img(e.f,e.c)}" alt="${esc(e.c)}" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'sem desenho',className:'ob'}))"></div>
  <div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><b class="cd">${esc(e.c)}</b>${nvTag(e,r,true)}</div>
  <div class="kv"><span>${kg(e.p)}</span>${e.d!=null?`<span style="color:${Math.abs(e.d)>10?'var(--bx)':Math.abs(e.d)>3?'var(--md)':'var(--ok)'}">${e.d>0?'+':''}${String(e.d).replace('.',',')}% no peso</span>`:''}${e.cc?`<span>cód. comercial ${esc(e.cc)}</span>`:''}</div>
  <span class="ob">${esc(e.o)} <span style="color:var(--tm)">${esc(F.cat)}, pág. ${e.pg}.</span></span>
- ${okd?`<span class="nv alta">Conferido pela FC</span>`:''}${ADM?`<button type="button" class="ok ${okd?'on':''}" data-ok="${esc(k)}">${okd?'✔ Conferido':'✔ Marcar como conferido'}</button>`:''}</div>`;}
+ ${okd?`<span class="nv alta">Conferido pela FC</span>`:''}${ADM?`<span style="display:flex;gap:6px;flex-wrap:wrap"><button type="button" class="ok ${okd?'on':''}" data-ok="${esc(k)}">${okd?'✔ Conferido · desfazer':'✔ Marcar como conferido'}</button><button type="button" class="ok ed" data-ed="${esc(r.c+'|'+e.f+'|'+e.c)}">✏ Editar</button></span>`:''}${e.ed?`<span class="ob" style="color:var(--tm)">Editado pela FC${e.edEm?' em '+esc(e.edEm):''}.</span>`:''}</div>`;}
 function detalhe(x){
  if(x.sp){const F=D.forn[x.f];return `<div class="det"><div class="card"><span class="fn">${esc(F.nome)}</span><div class="im" data-zoom="${img(x.f,x.sp.c)}" data-t="${esc(x.sp.c)}"><img src="${img(x.f,x.sp.c)}" alt=""></div><b class="cd">${esc(x.sp.c)}</b><div class="kv"><span>${kg(x.sp.p)}</span>${x.sp.cc?`<span>cód. comercial ${esc(x.sp.cc)}</span>`:''}</div></div>
   <div class="card" style="background:var(--bxc);border-color:#f3c3bd"><b style="color:var(--bx);font:800 22px var(--f-d)">Sem equivalente no catálogo Suprema</b><span class="ob">Este código não tem par no catálogo da Alcoa usado na base. Confira o desenho e fale com a FC para cadastrar.</span></div></div>`;}
  const r=x.r;return `<div class="det"><div class="card alc"><span class="fn">Alcoa · ${esc(D.forn.alcoa.cat)}</span>
   <div class="im" data-zoom="${img('alcoa',r.c)}" data-t="${esc('Alcoa '+r.c)}"><img src="${img('alcoa',r.c)}" alt="${esc(r.c)}"></div>
   <b class="cd" style="font-size:34px">${esc(r.c)}</b><span style="font-weight:600">${esc(r.n||'')}</span><div class="kv"><span>${kg(r.p)}</span><span>pág. ${r.pg}</span></div></div>
-  <div style="display:flex;flex-direction:column;gap:10px"><b style="font:800 22px var(--f-d);color:#0f4f53">${r.eq.length?'Equivalentes nos fornecedores':'Nenhum fornecedor da base tem este perfil'}</b><div class="eqs">${r.eq.map(e=>eqCard(r,e)).join('')}</div></div></div>`;}
+  <div style="display:flex;flex-direction:column;gap:10px"><b style="font:800 22px var(--f-d);color:#0f4f53">${r.eq.length?'Equivalentes nos fornecedores':'Nenhum fornecedor da base tem este perfil'}</b><div class="eqs">${r.eq.map(e=>eqCard(r,e)).join('')}</div>${ADM?`<button type="button" class="ok ed" data-novo="${esc(r.c)}">＋ Adicionar par para ${esc(r.c)}</button>`:''}</div></div>`;}
 function lista(){let L=D.perfis;
  if(FIL==='baixa')L=L.filter(r=>r.eq.some(e=>e.n==='baixa'&&!OK[r.c+'|'+e.c]));
  if(FIL==='sem')L=L.filter(r=>!r.eq.length);
@@ -128,7 +161,9 @@ function tela(){const x=Q?achar(Q):null;
   ${Q?(x?detalhe(x):`<div class="card" style="margin-top:16px"><b style="font:800 22px var(--f-d)">Código não encontrado: ${esc(Q)}</b><span class="ob">Confira se digitou certo. Nesta fase, a base tem só a linha Suprema (Alcoa, Texa e Selta).</span></div>`):lista()}
   <p class="nota">Base: catálogo Suprema da Alcoa; Texa (City 2.5), Selta (19/09/2024), FBK (Construção Civil, linha FASU), Ecoalumi (Catálogo Técnico) e Perfileve (Catálogo Geral). Equivalências montadas pela FC a partir do código, do peso e do desenho de cada catálogo. Confira sempre o desenho antes de fechar a compra. © FC Consultoria em Esquadria.</p>`;
  $('#fb').onsubmit=ev=>{ev.preventDefault();Q=$('#q').value.trim();tela();history.replaceState(null,'','#'+encodeURIComponent(Q));};}
-document.addEventListener('click',async ev=>{const t=ev.target.closest('[data-q],[data-f],[data-limpa],[data-zoom],[data-ok]');if(!t)return;const d=t.dataset;
+document.addEventListener('click',async ev=>{const t=ev.target.closest('[data-q],[data-f],[data-limpa],[data-zoom],[data-ok],[data-ed],[data-novo]');if(!t)return;const d=t.dataset;
+ if(d.ed!=null&&ADM){const [ac,f,c]=d.ed.split('|');const r=D.perfis.find(x=>x.c===ac),e=r&&r.eq.find(x=>x.f===f&&x.c===c);if(e)editar(r,e);return;}
+ if(d.novo!=null&&ADM){editar(D.perfis.find(x=>x.c===d.novo),null);return;}
  if(d.q!=null){Q=d.q;tela();scrollTo({top:0,behavior:'smooth'});history.replaceState(null,'','#'+encodeURIComponent(Q));}
  else if(d.f){FIL=d.f;Q='';tela();}
  else if(d.limpa){Q='';tela();history.replaceState(null,'',location.pathname+location.search);}
@@ -138,6 +173,8 @@ $('#zmX').onclick=()=>$('#zm').hidden=true;$('#zm').onclick=e=>{if(e.target.id==
 function marca(t){const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="460" height="300"><g transform="rotate(-24 230 150)" font-family="Barlow,Arial,sans-serif" text-anchor="middle" fill="#0f4f53" fill-opacity=".04"><text x="230" y="150" font-size="24" font-weight="800">FC CONSULTORIA EM ESQUADRIA</text><text x="230" y="176" font-size="13">${t}</text></g></svg>`;const w=document.createElement('div');w.id='wm';w.style.backgroundImage=`url("data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}")`;document.body.appendChild(w);}
 async function iniciar(){D=await fetch('dados.json?v=1',{cache:'no-cache'}).then(r=>r.json());
  if(ADM){try{const r=await sb.from('trein_eventos').select('detalhe,criado_em').eq('tipo','equiv_ok').order('criado_em');(r.data||[]).forEach(x=>{if(x.detalhe&&x.detalhe.k)OK[x.detalhe.k]=!!x.detalhe.on;});}catch(_){}}
+ try{if(ADM){const r=await sb.from('trein_eventos').select('detalhe,criado_em').eq('tipo','equiv_edit').order('criado_em');aplicarEdits((r.data||[]).map(x=>x.detalhe));}
+  else{const r=await sb.rpc('equiv_edits_lista',{p_chave:KEY});aplicarEdits(r.data||[]);}}catch(_){}
  if(!ADM){/* cliente: só vê os pares confirmados (automático ou conferido pela FC) */
   try{const r=await sb.rpc('equiv_ok_lista',{p_chave:KEY});(r.data||[]).forEach(k=>OK[k]=true);}catch(_){}
   D.perfis.forEach(r=>{r.eq=r.eq.filter(e=>e.n==='alta'||OK[r.c+'|'+e.c]);r.eq.forEach(e=>{e.n='alta';});});
