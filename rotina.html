@@ -434,7 +434,7 @@ details.dist>*:not(summary){margin-top:6px}
 <div class="wrap">
   <header class="top">
     <div class="brand"><div class="logo">FC</div><div><h1>Rotina FC</h1><small>Consultoria · Representação · Treinamentos</small></div></div>
-    <div class="row" style="gap:10px;flex-wrap:nowrap"><a class="btn sm" href="painel.html" title="Voltar ao Painel da Matriz" style="background:#0f766e;color:#fff;border-color:#0f766e;text-decoration:none;font-weight:600;white-space:nowrap">← <span class="rvt">Voltar ao </span>Painel</a><button class="btn sm" data-act="links" title="Meus links de acesso"><svg class="ico"><use href="#i-link"/></svg><span class="hm">Links</span></button><button class="btn sm" data-act="ajuda" title="Vídeos de como usar"><svg class="ico"><use href="#i-play"/></svg><span class="hm">Como usar</span></button><div class="sync" id="sync"><i></i><span>Conectando…</span></div></div>
+    <div class="row" style="gap:10px;flex-wrap:nowrap"><button type="button" class="btn sm" onclick="window.verLembretes&&verLembretes()" title="Ver os lembretes e as prioridades de cada cliente" style="white-space:nowrap">🔔 Lembretes</button><a class="btn sm" href="painel.html" title="Voltar ao Painel da Matriz" style="background:#0f766e;color:#fff;border-color:#0f766e;text-decoration:none;font-weight:600;white-space:nowrap">← <span class="rvt">Voltar ao </span>Painel</a><button class="btn sm" data-act="links" title="Meus links de acesso"><svg class="ico"><use href="#i-link"/></svg><span class="hm">Links</span></button><button class="btn sm" data-act="ajuda" title="Vídeos de como usar"><svg class="ico"><use href="#i-play"/></svg><span class="hm">Como usar</span></button><div class="sync" id="sync"><i></i><span>Conectando…</span></div></div>
   </header>
 
   <nav class="tabs" role="tablist" id="tabs">
@@ -671,19 +671,51 @@ async function save(col,id,obj){const o=JSON.parse(JSON.stringify(obj));delete o
 async function del(col,id){if(db){await db.collection(col).doc(id).delete()}else{delete local[col][id];persistLocal();applyLocal()}}
 
 /* ===== Lembretes: demandas com "lembrete" aparecem na tela no início do dia (até 12h) e no fim do dia (a partir das 16h30) ===== */
-function checaLembretes(){if(document.getElementById('lbOv'))return;const L=(S.demandas||[]).filter(d=>d.lembrete&&d.status!=='concluido');if(!L.length)return;
-  const n=new Date(),hm=n.getHours()*60+n.getMinutes(),per=hm>=300&&hm<720?'m':hm>=990?'t':'';if(!per)return;
-  const k='rot-lemb-'+today()+'-'+per;try{if(localStorage.getItem(k))return;}catch(_){}
+/* Prioridades por cliente de consultoria (Casa Bandeirante, Guaporé, CDE…) */
+const ddmm=t=>{const m=/(\d{1,2})\/(\d{1,2})/.exec(String(t||''));if(!m)return '';const y=new Date().getFullYear();return y+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0');};
+const somaD=(d,n)=>{const x=new Date(d+'T12:00:00');x.setDate(x.getDate()+n);return x.toISOString().slice(0,10);};
+const tiraFr=t=>String(t||'').replace(/^(Revenda|F[áa]brica)\s*·\s*/i,'');
+function prioCliente(e,sols){const hj=today(),em3=somaD(hj,3),I=[];const add=(n,ic,t,x)=>I.push({n,ic,t,x:x||''});
+  (sols||[]).forEach(s=>add(1,'📨','Pedido do cliente sem resposta: '+String(s.texto||'').slice(0,90),(s.nome?s.nome+' · ':'')+'desde '+String(s.criado_em||'').slice(8,10)+'/'+String(s.criado_em||'').slice(5,7)));
+  (e.frentes||[]).forEach(f=>(f.p||[]).forEach(p=>{if(p[0]==='ok')return;const d=ddmm(p[3]);const cli=p[4]==='Cliente';
+    if(d&&d<hj)add(2,'⏰',(cli?'Cobrar do cliente: ':'Atrasada: ')+tiraFr(p[1]),f.n+' · era para '+d.slice(8,10)+'/'+d.slice(5,7));
+    else if(d&&d<=em3)add(3,'📅',(d===hj?'Hoje: ':'Próximos dias: ')+tiraFr(p[1]),f.n+' · '+d.slice(8,10)+'/'+d.slice(5,7)+(cli?' · depende do cliente':''));
+    else if(p[0]==='and')add(4,'▶️','Em andamento: '+tiraFr(p[1]),f.n);}));
+  (e.dem||[]).forEach(d=>{if(d[3]==='p-ok')return;const dt=ddmm(d[0]);if(dt&&dt<hj)add(2,'📦','Entrega atrasada: '+d[1],'prazo '+d[0]);else if(dt&&dt<=em3)add(3,'📦','Entrega próxima: '+d[1],'prazo '+d[0]);else if(d[3]==='p-acc')add(4,'📦','Entrega em andamento: '+d[1],d[2]||'');});
+  if(e.acao){const A=e.acao;Object.entries(A.st||{}).forEach(([k,x])=>{if(x.s==='exec'&&x.em&&x.em<=somaD(hj,-7)){const [tn,fi]=k.split('|');add(4,'🛠','Parado há mais de 7 dias no plano de ação: '+tn+(A.cols[+fi]?' · '+A.cols[+fi]:''),'em execução desde '+x.em.slice(8,10)+'/'+x.em.slice(5,7));}});}
+  (e.agenda||[]).forEach(a=>{if(!a.feito&&a.data>=hj&&a.data<=em3)add(3,'🗓',(a.data===hj?'Hoje ':'')+(a.hora?a.hora+' · ':'')+(a.titulo||'Compromisso'),a.data.slice(8,10)+'/'+a.data.slice(5,7)+(a.local?' · '+a.local:''));});
+  const ur=(e.rels||[])[0];if(!ur||String(ur.geradoEm||'').slice(0,10)<=somaD(hj,-7))add(5,'📄','Mandar o relatório da semana para o cliente',ur?'último em '+String(ur.geradoEm).slice(8,10)+'/'+String(ur.geradoEm).slice(5,7):'nenhum publicado ainda');
+  return I.sort((a,b)=>a.n-b.n);}
+const PRIO_T={1:['URGENTE','#b23a32','#fde8e6'],2:['ATRASADO','#b23a32','#fde8e6'],3:['PRÓXIMOS DIAS','#9a4b00','#fff3e0'],4:['ACOMPANHAR','#1f5f8b','#e8f1fb'],5:['ROTINA','#1f6b3d','#e3f4ea']};
+async function checaLembretes(force){if(document.getElementById('lbOv'))return;const L=(S.demandas||[]).filter(d=>d.lembrete&&d.status!=='concluido');
+  const n=new Date(),hm=n.getHours()*60+n.getMinutes(),per=hm>=300&&hm<720?'m':hm>=990?'t':'';if(!per&&!force)return;
+  const k='rot-lemb-'+today()+'-'+(per||'x');if(!force){try{if(localStorage.getItem(k))return;}catch(_){}}
+  let SOL=[];try{const r=await sb.from('cons_solicitacoes').select('empresa_id,nome,texto,status,criado_em,respondido_em').is('respondido_em',null);SOL=(r.data||[]).filter(x=>!/conclu|respond|feit/i.test(x.status||''));}catch(_){}
+  const CS=(S.consultoria||[]).map(e=>({e,I:prioCliente(e,SOL.filter(x=>x.empresa_id===e.id))})).filter(c=>c.I.length).sort((a,b)=>a.I[0].n-b.I[0].n);
+  if(!L.length&&!CS.length)return;
   const e=t=>String(t||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const PG=[];if(L.length)PG.push({tipo:'lemb'});CS.forEach(c=>PG.push({tipo:'cli',c}));let pi=0;
   const o=document.createElement('div');o.id='lbOv';o.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(8,20,30,.6);display:grid;place-items:center;padding:16px';
-  o.innerHTML=`<div role="dialog" aria-label="Lembretes" style="background:#fff;color:#13232e;border-radius:16px;max-width:520px;width:100%;max-height:88vh;overflow:auto;padding:20px;box-shadow:0 24px 60px rgba(0,0,0,.4);font-family:inherit">
-   <h3 style="margin:0 0 4px;font-size:20px">🔔 ${per==='m'?'Bom dia! Lembretes para hoje':'Antes de fechar o dia: lembretes'}</h3><p style="margin:0 0 12px;color:#5d6f7a;font-size:14px">${L.length} pendência${L.length>1?'s':''} marcada${L.length>1?'s':''} para lembrar.</p>
-   ${L.map(d=>`<div style="border:1px solid #e3e9ed;border-radius:12px;padding:10px 12px;margin-bottom:8px"><b>${e(d.titulo)}</b>${d.prazo?` <span style="font-size:12px;color:${d.prazo<today()?'#b23a32':'#9a4b00'};font-weight:700">· prazo ${d.prazo.split('-').reverse().join('/')}</span>`:''}
-     ${d.proximoPasso?`<div style="font-size:13.5px;margin-top:4px">➡️ ${e(d.proximoPasso)}</div>`:''}${d.obs?`<div style="font-size:13px;color:#5d6f7a;margin-top:4px;white-space:pre-line">${e(d.obs)}</div>`:''}
-     <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap"><button type="button" data-lbok="${d.id}" style="font:600 13px inherit;padding:6px 10px;border-radius:8px;border:1px solid #9fd4b4;background:#e3f4ea;color:#1f8a4c;cursor:pointer">✓ Já resolvi</button></div></div>`).join('')}
-   <div style="display:flex;justify-content:flex-end"><button type="button" id="lbX" style="font:700 14px inherit;padding:9px 16px;border-radius:9px;border:0;background:#0e5a86;color:#fff;cursor:pointer">Ok, lembrar ${per==='m'?'no fim do dia':'amanhã'}</button></div></div>`;
-  document.body.appendChild(o);const fim=()=>{try{localStorage.setItem(k,'1');}catch(_){}o.remove();};o.querySelector('#lbX').onclick=fim;
-  o.querySelectorAll('[data-lbok]').forEach(b=>b.onclick=async()=>{const d=S.demandas.find(x=>x.id===b.dataset.lbok);if(!d)return;b.disabled=true;b.textContent='Salvando…';await save('demandas',d.id,{...d,status:'concluido',lembrete:false,atualizadoEm:new Date().toISOString()});b.closest('div[style]').parentElement.remove();if(!o.querySelector('[data-lbok]'))fim();});}
+  document.body.appendChild(o);const fim=()=>{try{localStorage.setItem(k,'1');}catch(_){}o.remove();};
+  const draw=()=>{const P=PG[pi];let body='',tit='',sub='';
+    if(P.tipo==='lemb'){tit=per==='t'?'Antes de fechar o dia: lembretes':'Bom dia! Lembretes para hoje';sub=`${L.length} pendência${L.length>1?'s':''} marcada${L.length>1?'s':''} para lembrar.`;
+      body=L.map(d=>`<div style="border:1px solid #e3e9ed;border-radius:12px;padding:10px 12px;margin-bottom:8px"><b>${e(d.titulo)}</b>${d.prazo?` <span style="font-size:12px;color:${d.prazo<today()?'#b23a32':'#9a4b00'};font-weight:700">· prazo ${d.prazo.split('-').reverse().join('/')}</span>`:''}
+        ${d.proximoPasso?`<div style="font-size:13.5px;margin-top:4px">➡️ ${e(d.proximoPasso)}</div>`:''}${d.obs?`<div style="font-size:13px;color:#5d6f7a;margin-top:4px;white-space:pre-line">${e(d.obs)}</div>`:''}
+        <div style="margin-top:8px"><button type="button" data-lbok="${d.id}" style="font:600 13px inherit;padding:6px 10px;border-radius:8px;border:1px solid #9fd4b4;background:#e3f4ea;color:#1f8a4c;cursor:pointer">✓ Já resolvi</button></div></div>`).join('');}
+    else{const {e:c,I}=P.c,nm=(c.nome||'').split(' · ')[0],top=I[0];tit='🏢 '+nm;sub=`${I.length} ponto${I.length>1?'s':''} para olhar · o mais importante primeiro`;
+      body=`<div style="background:${PRIO_T[top.n][2]};border-radius:12px;padding:10px 12px;margin-bottom:10px"><small style="font:800 11px inherit;letter-spacing:.08em;color:${PRIO_T[top.n][1]}">⭐ PRIORIDADE ${per==='t'?'PARA AMANHÃ':'DE HOJE'}</small><div style="font-weight:700;margin-top:3px">${top.ic} ${e(top.t)}</div>${top.x?`<div style="font-size:12.5px;color:#5d6f7a">${e(top.x)}</div>`:''}</div>`
+        +I.slice(1,8).map(x=>`<div style="display:flex;gap:8px;padding:7px 2px;border-bottom:1px solid #eef1f3"><span>${x.ic}</span><div style="flex:1;min-width:0"><div style="font-size:14px">${e(x.t)}</div>${x.x?`<div style="font-size:12px;color:#5d6f7a">${e(x.x)}</div>`:''}</div><span style="font:700 10px inherit;color:${PRIO_T[x.n][1]};background:${PRIO_T[x.n][2]};border-radius:99px;padding:2px 7px;align-self:center;white-space:nowrap">${PRIO_T[x.n][0]}</span></div>`).join('')
+        +(I.length>8?`<div style="font-size:12.5px;color:#5d6f7a;margin-top:6px">… e mais ${I.length-8}</div>`:'')
+        +`<div style="margin-top:10px"><a href="consultorias.html#${e(c.id)}" style="font:700 13.5px inherit;color:#0e5a86">Abrir a consultoria de ${e(nm)} →</a></div>`;}
+    o.innerHTML=`<div role="dialog" aria-label="Lembretes" style="background:#fff;color:#13232e;border-radius:16px;max-width:540px;width:100%;max-height:88vh;overflow:auto;padding:20px;box-shadow:0 24px 60px rgba(0,0,0,.4)">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span style="font:700 11.5px inherit;letter-spacing:.08em;color:#5d6f7a">🔔 ${per==='t'?'FIM DO DIA':'INÍCIO DO DIA'} · ${pi+1} DE ${PG.length}</span><span>${PG.map((_,q)=>`<i style="display:inline-block;width:${q===pi?16:7}px;height:7px;border-radius:4px;margin-left:3px;background:${q===pi?'#0e5a86':'#cfd8de'}"></i>`).join('')}</span></div>
+      <h3 style="margin:6px 0 2px;font-size:20px">${e(tit)}</h3><p style="margin:0 0 12px;color:#5d6f7a;font-size:14px">${e(sub)}</p>${body}
+      <div style="display:flex;justify-content:space-between;gap:8px;margin-top:14px">${pi>0?'<button type="button" id="lbAnt" style="font:600 14px inherit;padding:9px 14px;border-radius:9px;border:1px solid #cfd8de;background:#fff;cursor:pointer">‹ Anterior</button>':'<span></span>'}
+        ${pi<PG.length-1?`<button type="button" id="lbProx" style="font:700 14px inherit;padding:9px 16px;border-radius:9px;border:0;background:#0e5a86;color:#fff;cursor:pointer">Próximo: ${e(PG[pi+1].tipo==='cli'?(PG[pi+1].c.e.nome||'').split(' · ')[0]:'lembretes')} ›</button>`:`<button type="button" id="lbX" style="font:700 14px inherit;padding:9px 16px;border-radius:9px;border:0;background:#0e5a86;color:#fff;cursor:pointer">Ok, lembrar ${per==='t'?'amanhã':'no fim do dia'}</button>`}</div></div>`;
+    const q=id=>o.querySelector('#'+id);if(q('lbAnt'))q('lbAnt').onclick=()=>{pi--;draw();};if(q('lbProx'))q('lbProx').onclick=()=>{pi++;draw();};if(q('lbX'))q('lbX').onclick=fim;
+    o.querySelectorAll('[data-lbok]').forEach(b=>b.onclick=async()=>{const d=S.demandas.find(x=>x.id===b.dataset.lbok);if(!d)return;b.disabled=true;b.textContent='Salvando…';await save('demandas',d.id,{...d,status:'concluido',lembrete:false,atualizadoEm:new Date().toISOString()});const ix=L.indexOf(d);if(ix>=0)L.splice(ix,1);if(!L.length){PG.shift();if(!PG.length){fim();return;}pi=0;}draw();});};
+  draw();}
+window.verLembretes=()=>checaLembretes(true);
 async function saveRotina(blocos){const b=JSON.parse(JSON.stringify(blocos));
   if(db){await db.doc('config/rotina').set({blocos:b})}else{local.rotina=b;persistLocal();applyLocal()}}
 function setSync(cls,txt){const e=$('#sync');e.className='sync '+cls;e.querySelector('span').textContent=txt}
@@ -1984,7 +2016,7 @@ document.addEventListener('focusout',e=>{if(e.target.classList&&e.target.classLi
   window.claude.use('assets').then(a=>{AS=a;render()}).catch(()=>{});
   window.claude.use('sample').then(async sm=>{SAMPLE=sm;if(sm){const l=await sm.limits().catch(()=>null);SAMPLE_IMG=!!(l&&l.images)}}).catch(()=>{});window.claude.use('downloads').then(x=>{DL=x}).catch(()=>{});
   const fail=()=>setSync('warn','Sem conexão');
-  ['demandas','agenda','notas','clientes','contatos','realizado','prioridades','financeiro','banco','extratos','links','horas'].forEach(col=>db.collection(col).onSnapshot(s=>{S[col]=s.docs.map(x=>({...x.data(),id:x.id}));render();if(col==='links'&&M&&M._links)drawLinks()},fail));
+  ['demandas','agenda','notas','clientes','contatos','realizado','prioridades','financeiro','banco','extratos','links','horas','consultoria'].forEach(col=>db.collection(col).onSnapshot(s=>{S[col]=s.docs.map(x=>({...x.data(),id:x.id}));render();if(col==='links'&&M&&M._links)drawLinks()},fail));
   db.doc('config/bancos').onSnapshot(s=>{S.bancos=s.exists?(s.data().contas||null):null;render()},()=>{});
   db.doc('config/rotina').onSnapshot(s=>{S.rotina=s.exists&&Array.isArray(s.data().blocos)?s.data().blocos:null;render()},fail);
   setTimeout(checaLembretes,4000);setInterval(checaLembretes,5*60000);
