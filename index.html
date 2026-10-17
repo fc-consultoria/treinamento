@@ -102,12 +102,16 @@ async function estadoEmpresa(uid){
   const ate=((l.data||[])[0]||{}).detalhe?.ate||null;
   return {lst,ate,impl:!!L0.impl,ctr:L0.contrato?L0.ate:null,liberado:(DOW()!==0||!!L0.contrato)&&!!ate&&ate>=HOJE()};}
 const sha=async t=>[...new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t)))].map(b=>b.toString(16).padStart(2,'0')).join('');
-const pinOk=cid=>{try{return sessionStorage.getItem('treinFC-pin-'+cid)==='1';}catch(e){return false;}};
+/* Lembrança por aparelho (localStorage): o mesmo celular não se bloqueia sozinho e volta para a pessoa após recarregar */
+const LSx={g:k=>{try{return localStorage.getItem(k);}catch(e){return null;}},s:(k,v)=>{try{localStorage.setItem(k,v);}catch(e){}},r:k=>{try{localStorage.removeItem(k);}catch(e){}}};
+const pinOk=cid=>{const t=+(LSx.g('treinFC-pin-'+cid)||0);if(t&&Date.now()-t<12*3600e3)return true;try{return sessionStorage.getItem('treinFC-pin-'+cid)==='1';}catch(e){return false;}};
+const ultCid=()=>{const v=(LSx.g('treinFC-cid')||'').split('|');return v[0]&&Date.now()-(+v[1]||0)<4*3600e3?v[0]:'';};
+const marcaCid=id=>{if(id)LSx.s('treinFC-cid',id+'|'+Date.now());};
 function pedirPin(x){return new Promise(res=>{const L=document.getElementById('quemLista'),T=document.getElementById('quemTit'),X=document.getElementById('quemTxt'),M=document.getElementById('quemMsg');
   T.textContent=x.nome;X.textContent='Digite o seu código pessoal de 4 números (você recebeu da FC Consultoria).';M.textContent='';
   L.innerHTML='<input id="pinIn" inputmode="numeric" maxlength="6" autocomplete="off" placeholder="código" style="font:400 22px IBM Plex Mono,monospace;letter-spacing:.3em;text-align:center;padding:10px;border:1px solid #c4ccd2;border-radius:8px"><button type="button" id="pinOk">Entrar</button><button type="button" id="pinVolta" style="background:#fff;color:#1d3f57;border:1px solid #c9d3da">← Voltar</button>';
   const inp=document.getElementById('pinIn');setTimeout(()=>inp.focus(),50);
-  const go=async()=>{const h=await sha(x.id+':'+inp.value.trim());if(h===x.ph){try{sessionStorage.setItem('treinFC-pin-'+x.id,'1');}catch(e){}res(true);}else{M.style.color='';M.textContent='Código não confere. Confira com a FC Consultoria.';inp.select();}};
+  const go=async()=>{const h=await sha(x.id+':'+inp.value.trim());if(h===x.ph){LSx.s('treinFC-pin-'+x.id,String(Date.now()));try{sessionStorage.setItem('treinFC-pin-'+x.id,'1');}catch(e){}res(true);}else{M.style.color='';M.textContent='Código não confere. Confira com a FC Consultoria.';inp.select();}};
   document.getElementById('pinOk').onclick=go;inp.onkeydown=e=>{if(e.key==='Enter')go();};
   document.getElementById('pinVolta').onclick=()=>{res(false);window.COLAB_DRAW&&COLAB_DRAW();};});}
 function escolherColab(uid,perfil){return new Promise(res=>{
@@ -133,8 +137,8 @@ function escolherColab(uid,perfil){return new Promise(res=>{
           const v=document.createElement('button');v.type='button';v.textContent='← Voltar';v.style.cssText='background:#fff;color:#1d3f57;border:1px solid #c9d3da';v.onclick=draw;L.append(p,v);return;}
         if(x.ph&&!pinOk(x.id)){const ok=await pedirPin(x);if(!ok)return;}
         if(!x.ini){b.disabled=true;await sb.from('trein_eventos').insert({user_id:uid,tipo:'colab_inicio',tipologia:null,detalhe:{cid:x.id,quem:x.nome}});x.fim=Date.now()+(x.horas||72)*3600e3;}
-        window.ALUNO_NOME=x.nome;window.ALUNO_CID=x.id;window.ALUNO_FIM=x.fim;window.ALUNO_INI=x.ini?Date.parse(x.ini):Date.now();try{sessionStorage.setItem('treinFC-cid',x.id);}catch(e){}
-        {let mys='';try{mys=sessionStorage.getItem('treinFC-s-'+x.id)||'';}catch(e){}
+        window.ALUNO_NOME=x.nome;window.ALUNO_CID=x.id;window.ALUNO_FIM=x.fim;window.ALUNO_INI=x.ini?Date.parse(x.ini):Date.now();marcaCid(x.id);
+        {let mys=LSx.g('treinFC-s-'+x.id)||'';if(!mys){try{mys=sessionStorage.getItem('treinFC-s-'+x.id)||'';}catch(e){}}
          const {data:ev}=await sb.from('trein_eventos').select('tipo,detalhe,criado_em').eq('user_id',uid).in('tipo',['colab_sessao','hb','tempo']).order('criado_em',{ascending:false}).limit(60);
          const sid=r=>{const d=r.detalhe||{};return r.tipo==='tempo'?d.ss:d.s;},u=(ev||[]).find(r=>(r.detalhe||{}).cid===x.id&&sid(r));
          if(u&&sid(u)!==mys&&Date.now()-Date.parse(u.criado_em)<120000){b.disabled=false;M.style.color='';
@@ -143,17 +147,17 @@ function escolherColab(uid,perfil){return new Promise(res=>{
            const txt=()=>'O nome '+x.nome+' está aberto em outro aparelho (usado há poucos instantes). Cada colaborador usa um aparelho por vez. Se for você, feche o outro aparelho: este aqui tenta entrar sozinho em '+falta+' s.';M.textContent=txt();
            window.COLAB_ESP=setInterval(()=>{falta--;const mm=document.getElementById('quemMsg');if(!document.body.contains(b)){clearInterval(window.COLAB_ESP);return;}if(falta<=0){clearInterval(window.COLAB_ESP);if(mm)mm.textContent='Tentando entrar…';b.click();}else if(mm)mm.textContent=txt();},1000);
            return;}
-         window.COLAB_S=mys||Math.random().toString(36).slice(2,10);try{sessionStorage.setItem('treinFC-s-'+x.id,window.COLAB_S);}catch(e){}}
+         window.COLAB_S=mys||Math.random().toString(36).slice(2,10);LSx.s('treinFC-s-'+x.id,window.COLAB_S);}
         await sb.from('trein_eventos').insert({user_id:uid,tipo:'colab_sessao',tipologia:null,detalhe:{cid:x.id,quem:x.nome,s:window.COLAB_S}});
         const tag=document.getElementById('quemTag');tag.textContent='👤 '+x.nome+' · trocar';tag.title='Quem está estudando agora. Toque para trocar de colaborador';tag.hidden=false;box.hidden=true;res(x);};
       L.appendChild(b);});
-    let last='';try{last=sessionStorage.getItem('treinFC-cid')||'';}catch(e){}
+    let last=ultCid();
     const lx=st.lst.find(x=>x.id===last&&x.ini&&x.resta>0);if(lx&&!window.ALUNO_CID){[...L.children][st.lst.indexOf(lx)].click();}}
   window.COLAB_DRAW=draw;draw();});}
 const trocouRecarrega=p=>p.then(x=>{if(x)location.reload();});
 function escolherColabAviso(uid,perfil,nome){trocouRecarrega(escolherColab(uid,perfil));setTimeout(()=>{const M=document.getElementById('quemMsg');M.style.color='';
   M.textContent='O nome '+nome+' foi aberto em outro aparelho, e este foi desconectado. Cada colaborador só pode usar um aparelho por vez. Para continuar aqui, toque no seu nome de novo.';},700);}
-function vigiaPrazo(uid,perfil){setInterval(()=>{if(window.ALUNO_CID&&window.COLAB_S&&document.visibilityState==='visible')sb.from('trein_eventos').insert({user_id:uid,tipo:'hb',tipologia:null,detalhe:{cid:window.ALUNO_CID,s:window.COLAB_S}});},60000);
+function vigiaPrazo(uid,perfil){setInterval(()=>{if(window.ALUNO_CID)marcaCid(window.ALUNO_CID);},60000);setInterval(()=>{if(window.ALUNO_CID&&window.COLAB_S&&document.visibilityState==='visible')sb.from('trein_eventos').insert({user_id:uid,tipo:'hb',tipologia:null,detalhe:{cid:window.ALUNO_CID,s:window.COLAB_S}});},60000);
   setInterval(async()=>{if(!window.ALUNO_CID||!window.COLAB_S)return;
     const {data}=await sb.from('trein_eventos').select('detalhe').eq('user_id',uid).eq('tipo','colab_sessao').order('criado_em',{ascending:false}).limit(30);
     const ult=(data||[]).map(r=>r.detalhe||{}).find(d=>d.cid===window.ALUNO_CID);
@@ -161,7 +165,7 @@ function vigiaPrazo(uid,perfil){setInterval(()=>{if(window.ALUNO_CID&&window.COL
       await escolherColabAviso(uid,perfil,nome);}},45000);
   setInterval(()=>{if(window.ALUNO_FIM&&Date.now()>window.ALUNO_FIM){window.ALUNO_FIM=null;window.ALUNO_CID=null;
     if(window.TRKFLUSH)TRKFLUSH();trocouRecarrega(escolherColab(uid,perfil));}},30000);
-  document.getElementById('quemTag').onclick=async()=>{const antes=window.ALUNO_CID;if(window.TRKFLUSH)await TRKFLUSH();window.ALUNO_CID=null;window.ALUNO_NOME=null;window.COLAB_S=null;try{sessionStorage.removeItem('treinFC-cid');}catch(e){}const x=await escolherColab(uid,perfil);if(x&&x.id!==antes)location.reload();};}
+  document.getElementById('quemTag').onclick=async()=>{const antes=window.ALUNO_CID;if(window.TRKFLUSH)await TRKFLUSH();window.ALUNO_CID=null;window.ALUNO_NOME=null;window.COLAB_S=null;LSx.r('treinFC-cid');const x=await escolherColab(uid,perfil);if(x&&x.id!==antes)location.reload();};}
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="auth.js"></script>
