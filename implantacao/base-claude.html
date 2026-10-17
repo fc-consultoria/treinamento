@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Base Claude · conferência</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<style>
+/* Conferência da base "Claude (site Vitrasul)": foto, código e preço do site lado a lado com o item do banco; alterar, excluir e gravar. */
+:root{--bg:#f3f5f8;--card:#fff;--line:#e2e7ee;--fg:#16212b;--muted:#5f6b78;--acc:#3b5bdb;--acc-d:#2f49b5;--ok:#1f8a4c;--ok-s:#e3f5ea;--warn:#a15c00;--warn-s:#fff4df;--bad:#b42318;--bad-s:#fde8e6;--claude:#c96442;--claude-s:#fbefe9}
+*{box-sizing:border-box}html,body{margin:0}
+body{background:var(--bg);color:var(--fg);font:400 14px/1.45 Inter,system-ui,sans-serif}
+header{background:#1b2430;color:#fff}
+.hin{max-width:1280px;margin:0 auto;padding:16px 20px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.hin h1{margin:0;font-size:20px;font-weight:700}
+.hin .tag{background:var(--claude);color:#fff;font-weight:700;font-size:12px;padding:3px 10px;border-radius:99px}
+.hin .sub{color:#b8c2cf;font-size:13px;flex-basis:100%}
+.hin a{color:#c9d6ff;font-weight:600;text-decoration:none;margin-left:auto}
+main{max-width:1280px;margin:0 auto;padding:16px 20px 60px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:12px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 14px;cursor:pointer}
+.kpi b{display:block;font-size:22px}.kpi span{color:var(--muted);font-size:12.5px}
+.kpi.on{border-color:var(--acc);box-shadow:0 0 0 2px #dbe4ff}
+.bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:12px;position:sticky;top:0;z-index:5}
+.bar input[type=search]{flex:1;min-width:220px;font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:8px}
+.bar label{display:flex;gap:6px;align-items:center;font-size:13px;color:var(--muted)}
+button{font:600 13px Inter,system-ui,sans-serif;border-radius:8px;padding:7px 12px;border:1px solid var(--line);background:#fff;color:var(--fg);cursor:pointer}
+button:hover{border-color:#b9c3d0}
+button.pri{background:var(--claude);border-color:var(--claude);color:#fff}
+button.pri:hover{background:#b3563a}
+button:disabled{opacity:.55;cursor:default}
+.lista{display:grid;gap:10px}
+.it{display:grid;grid-template-columns:96px minmax(0,1.1fr) minmax(0,1.3fr) 150px 120px;gap:14px;align-items:start;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px}
+.it.exc{opacity:.5;background:#f7f7f7}
+.it.alt{border-color:#9fb0f5}
+.foto{width:96px;height:96px;border-radius:10px;border:1px solid var(--line);background:#f6f7f9;display:grid;place-items:center;overflow:hidden}
+.foto img{width:100%;height:100%;object-fit:contain;cursor:zoom-in}
+.foto .sem{color:#9aa5b1;font-size:11px;text-align:center;padding:4px}
+.cod{font:600 14px ui-monospace,Menlo,Consolas,monospace}
+.lb{display:inline-block;font-size:11px;font-weight:600;color:var(--muted);background:#eef1f5;border-radius:6px;padding:1px 7px;margin:2px 4px 2px 0}
+.d{color:var(--muted);font-size:13px;margin-top:2px}
+.site .cod{color:var(--acc-d)}
+.st{display:inline-block;font-size:11.5px;font-weight:700;border-radius:99px;padding:2px 9px}
+.st.ok{background:var(--ok-s);color:var(--ok)}.st.parecido,.st.sem_preto{background:var(--warn-s);color:var(--warn)}.st.nao_encontrado{background:var(--bad-s);color:var(--bad)}
+.alerta{color:var(--bad);font-size:12px;font-weight:600;margin-top:4px}
+.vars{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.var{font:500 11.5px Inter,system-ui,sans-serif;padding:3px 8px;border-radius:7px;border:1px solid var(--line);background:#fafbfc;cursor:pointer}
+.var.sel{border-color:var(--claude);background:var(--claude-s);color:#8a3b22}
+.preco{font-size:12px;color:var(--muted)}
+.preco input{width:100%;font:600 15px Inter,system-ui,sans-serif;padding:7px 8px;border:1px solid var(--line);border-radius:8px;text-align:right}
+.preco .vt{margin-top:6px}
+.dif{font-weight:700}.dif.up{color:var(--bad)}.dif.dn{color:var(--ok)}
+.acoes{display:flex;flex-direction:column;gap:6px}
+.edit{grid-column:2 / -1;display:grid;grid-template-columns:160px 1fr auto;gap:8px;align-items:center;background:#f7f9ff;border:1px dashed #b9c6f5;border-radius:10px;padding:8px}
+.edit input{font:inherit;padding:7px 9px;border:1px solid var(--line);border-radius:8px}
+.vazio,.estado{text-align:center;color:var(--muted);padding:40px 10px}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:#1b2430;color:#fff;padding:10px 18px;border-radius:99px;font-weight:600;z-index:50}
+#zoom{position:fixed;inset:0;background:rgba(15,20,28,.75);display:none;align-items:center;justify-content:center;z-index:40;padding:20px}
+#zoom img{max-width:min(560px,92vw);max-height:86vh;background:#fff;border-radius:12px}
+@media (max-width:900px){.it{grid-template-columns:72px 1fr;}.foto{width:72px;height:72px}.it>.site,.it>.preco,.it>.acoes{grid-column:2}.edit{grid-column:1/-1;grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header><div class="hin">
+  <span class="tag">Claude</span><h1>Base Claude (site Vitrasul) · conferência</h1>
+  <a href="./">← Painel de Implantação</a>
+  <div class="sub">Preços pesquisados no site da Vitrasul, cor de referência <b>Preto</b>. Confira pela foto, altere o que precisar, exclua o que não for o mesmo produto e grave. A base atual da Vitrasul não é alterada.</div>
+</div></header>
+<main id="app"><div class="estado">Carregando…</div></main>
+<div id="zoom"><img alt=""></div>
+<script>
+const SUPABASE_URL='https://cpkjphodruyxfouirhpd.supabase.co';
+const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNwa2pwaG9kcnV5eGZvdWlyaHBkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3Mzg3NTQsImV4cCI6MjEwMjMxNDc1NH0.5OAmhWSe_4STLaCo-NfAwxGDRCGe3ICk-j5IEAMStKQ';
+const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{persistSession:true,autoRefreshToken:true}});
+const FORN='Claude (site Vitrasul)', LINHAS=['Suprema-Gold','L. Temperado'];
+const IMG_BASE='https://vprime-server.radocc.com:8443/midias/11083556000105/produtos/';
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const brl=v=>v==null||v===''||isNaN(v)?'—':Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+const img=s=>!s||/sem-imagem/.test(s)?'':(s.startsWith('~')?IMG_BASE+s.slice(1):s);
+const S={rows:[],itens:{},vit:{},filtro:'todos',busca:'',soPend:false,edit:null,forn:{}};
+const STL={ok:'✅ Encontrado',parecido:'⚠️ Parecido',sem_preto:'⚠️ Sem preto',nao_encontrado:'❌ Não encontrado'};
+function toast(t){const e=document.createElement('div');e.className='toast';e.textContent=t;document.body.appendChild(e);setTimeout(()=>e.remove(),2800);}
+
+// Descrição do site parece ser outro produto? (nenhuma palavra em comum, ignorando cores)
+const IGN=new Set(['PRETO','PRETA','BRANCO','BRANCA','BRONZE','CROMO','FOSCO','FOSCA','DOURADO','PARA','COM','SEM','PECA','PECAS']);
+const toks=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toUpperCase().replace(/[^A-Z0-9 ]/g,' ').split(/\s+/).filter(t=>t.length>=3&&!IGN.has(t));
+function parecidaDesc(a,b){const A=toks(a),B=toks(b);if(!A.length||!B.length)return true;return A.some(x=>B.some(y=>x.slice(0,4)===y.slice(0,4)||x.startsWith(y)||y.startsWith(x)));}
+
+async function carregar(){
+  const {data:{session}}=await sb.auth.getSession();
+  if(!session){$('#app').innerHTML='<div class="estado">Entre primeiro no <a href="./">Painel de Implantação</a> neste navegador e volte aqui.</div>';return;}
+  const [b,l]=await Promise.all([sb.from('impl_claude_base').select('*').eq('fornecedor',FORN),sb.from('impl_linhas').select('id,nome').in('nome',LINHAS)]);
+  if(b.error){$('#app').innerHTML=`<div class="estado">Não consegui ler a base (${esc(b.error.message)}). Confira se o SQL da base Claude foi rodado.</div>`;return;}
+  const linhas=l.data||[];const lid=linhas.map(x=>x.id);const nomeL=Object.fromEntries(linhas.map(x=>[x.id,x.nome]));
+  const [it,fo]=await Promise.all([sb.from('impl_itens').select('id,codigo,descricao,linha_id').in('linha_id',lid),sb.from('impl_fornecedores').select('id,nome,linha_id').in('linha_id',lid).in('nome',['Vitrasul',FORN])]);
+  S.itens={};(it.data||[]).forEach(x=>{(S.itens[x.codigo]=S.itens[x.codigo]||[]).push({id:x.id,desc:x.descricao,linha:nomeL[x.linha_id],linha_id:x.linha_id});});
+  S.forn={};(fo.data||[]).forEach(f=>{if(f.nome===FORN)S.forn[f.linha_id]=f.id;});
+  const vitIds=(fo.data||[]).filter(f=>f.nome==='Vitrasul').map(f=>f.id);
+  S.vit={};if(vitIds.length){const ids=(it.data||[]).map(x=>x.id);for(let i=0;i<ids.length;i+=300){const p=await sb.from('impl_precos').select('item_id,preco').in('fornecedor_id',vitIds).in('item_id',ids.slice(i,i+300));(p.data||[]).forEach(r=>S.vit[r.item_id]=Number(r.preco));}}
+  S.rows=(b.data||[]).sort((x,y)=>x.codigo.localeCompare(y.codigo,'pt-BR',{numeric:true}));
+  render();
+}
+function nossa(r){return (S.itens[r.codigo]||[])[0]||{desc:'',linha:''};}
+function vitAtual(r){const it=(S.itens[r.codigo]||[])[0];return it?S.vit[it.id]:null;}
+function descDif(r){return r.desc_site&&!parecidaDesc(nossa(r).desc,r.desc_site);}
+function visiveis(){const q=S.busca.trim().toUpperCase();return S.rows.filter(r=>{
+  if(S.filtro==='excluido'){if(!r.excluido)return false;}else if(S.filtro!=='todos'&&S.filtro!=='dif'&&r.status!==S.filtro)return false;
+  if(S.filtro==='dif'&&!descDif(r))return false;
+  if(S.soPend&&r.gravado_em)return false;
+  if(q){const t=(r.codigo+' '+(r.cod_site||'')+' '+(r.desc_site||'')+' '+nossa(r).desc).toUpperCase();if(!t.includes(q))return false;}
+  return true;});}
+function render(){
+  const cont=k=>k==='todos'?S.rows.length:k==='dif'?S.rows.filter(descDif).length:k==='excluido'?S.rows.filter(r=>r.excluido).length:S.rows.filter(r=>r.status===k).length;
+  const aGravar=S.rows.filter(r=>!r.excluido&&Number(r.preco)>0).length;
+  const V=visiveis();
+  $('#app').innerHTML=`
+  <div class="kpis">${[['todos','Todos'],['ok','✅ Encontrados'],['parecido','⚠️ Parecidos'],['sem_preto','⚠️ Sem preto'],['nao_encontrado','❌ Não encontrados'],['dif','🔎 Descrição diferente'],['excluido','🗑 Excluídos']].map(([k,t])=>`<div class="kpi ${S.filtro===k?'on':''}" data-f="${k}"><b>${cont(k)}</b><span>${t}</span></div>`).join('')}</div>
+  <div class="bar"><input type="search" id="q" placeholder="Buscar código ou descrição" value="${esc(S.busca)}">
+    <label><input type="checkbox" id="pend" ${S.soPend?'checked':''}> Só não gravados</label>
+    <span style="margin-left:auto;color:var(--muted);font-size:13px">${aGravar} com preço para gravar</span>
+    <button class="pri" id="gravar">💾 Gravar na base ${esc(FORN)}</button></div>
+  <div class="lista">${V.length?V.map(linha).join(''):'<div class="vazio">Nada com esse filtro.</div>'}</div>`;
+}
+function linha(r){
+  const n=nossa(r),vt=vitAtual(r),p=r.preco!=null?Number(r.preco):null,dif=(vt&&p)?Math.round((p/vt-1)*100):null;
+  const ls=(S.itens[r.codigo]||[]).map(x=>`<span class="lb">${esc(x.linha)}</span>`).join('');
+  const vars=(r.variantes||[]);
+  return `<div class="it ${r.excluido?'exc':''} ${r.alterado?'alt':''}" data-c="${esc(r.codigo)}">
+    <div class="foto">${img(r.img)?`<img src="${esc(img(r.img))}" alt="" loading="lazy" data-zoom>`:`<span class="sem">sem foto</span>`}</div>
+    <div><div class="cod">${esc(r.codigo)}</div>${ls}<div class="d">${esc(n.desc||'—')}</div></div>
+    <div class="site"><span class="st ${r.status}">${STL[r.status]||r.status}</span>${r.alterado?' <span class="lb">alterado</span>':''}${r.gravado_em?' <span class="lb">gravado</span>':''}
+      ${r.cod_site?`<div class="cod" style="margin-top:6px">${esc(r.cod_site)}</div><div class="d">${esc(r.desc_site||'')}${r.unidade?' · '+esc(r.unidade):''}</div>`:'<div class="d" style="margin-top:6px">Sem item escolhido no site.</div>'}
+      ${descDif(r)?'<div class="alerta">🔎 Descrição diferente: confira pela foto</div>':''}
+      ${vars.length?`<div class="vars">${vars.map((v,i)=>`<button type="button" class="var ${v.c===r.cod_site?'sel':''}" data-v="${i}" title="${esc(v.n)}">${esc(v.c)} · R$ ${brl(v.p)}</button>`).join('')}</div>`:''}</div>
+    <div class="preco">Preço Claude (R$)<input inputmode="decimal" value="${p!=null?brl(p):''}" data-preco placeholder="—">
+      <div class="vt">Vitrasul hoje: <b>${brl(vt)}</b>${dif!=null?` <span class="dif ${dif>0?'up':'dn'}">${dif>0?'+':''}${dif}%</span>`:''}</div></div>
+    <div class="acoes"><button type="button" data-ac="alterar">✏️ Alterar</button>${r.excluido?`<button type="button" data-ac="restaurar">↩ Restaurar</button>`:`<button type="button" data-ac="excluir">🗑 Excluir</button>`}</div>
+    ${S.edit===r.codigo?`<div class="edit"><input data-e="cod" value="${esc(r.cod_site||'')}" placeholder="Código no site"><input data-e="desc" value="${esc(r.desc_site||'')}" placeholder="Descrição no site"><button type="button" class="pri" data-ac="salvar">Salvar</button></div>`:''}
+  </div>`;
+}
+async function salvar(r,campos){Object.assign(r,campos,{alterado:true});const {error}=await sb.from('impl_claude_base').update({...campos,alterado:true,atualizado:new Date().toISOString()}).eq('fornecedor',FORN).eq('codigo',r.codigo);if(error){toast('Não salvou: '+error.message);return false;}return true;}
+document.addEventListener('click',async ev=>{
+  const k=ev.target.closest('[data-f]');if(k){S.filtro=k.dataset.f;render();return;}
+  if(ev.target.matches('[data-zoom]')){const z=$('#zoom');z.querySelector('img').src=ev.target.src;z.style.display='flex';return;}
+  if(ev.target.closest('#zoom')){$('#zoom').style.display='none';return;}
+  if(ev.target.id==='gravar'){gravar(ev.target);return;}
+  const box=ev.target.closest('.it');if(!box)return;const r=S.rows.find(x=>x.codigo===box.dataset.c);if(!r)return;
+  const v=ev.target.closest('[data-v]');if(v){const x=r.variantes[+v.dataset.v];if(await salvar(r,{cod_site:x.c,desc_site:x.n,preco:x.p,img:x.i||null,unidade:x.u||null,status:r.status==='nao_encontrado'?'parecido':r.status})){toast('Item escolhido: '+x.c);render();}return;}
+  const ac=ev.target.closest('[data-ac]');if(!ac)return;const a=ac.dataset.ac;
+  if(a==='alterar'){S.edit=S.edit===r.codigo?null:r.codigo;render();return;}
+  if(a==='salvar'){const c=box.querySelector('[data-e=cod]').value.trim(),d=box.querySelector('[data-e=desc]').value.trim();if(await salvar(r,{cod_site:c||null,desc_site:d||null})){S.edit=null;toast('Alterado');render();}return;}
+  if(a==='excluir'||a==='restaurar'){if(await salvar(r,{excluido:a==='excluir'})){toast(a==='excluir'?'Excluído: não vai para a base':'Restaurado');render();}return;}
+});
+document.addEventListener('change',async ev=>{
+  if(ev.target.id==='pend'){S.soPend=ev.target.checked;render();return;}
+  if(ev.target.matches('[data-preco]')){const box=ev.target.closest('.it');const r=S.rows.find(x=>x.codigo===box.dataset.c);const t=ev.target.value.trim();const v=t?Number(t.replace(/\./g,'').replace(',','.')):null;
+    if(t&&!(v>=0)){toast('Preço inválido');return;}if(await salvar(r,{preco:v})){toast('Preço salvo');render();}}
+});
+document.addEventListener('input',ev=>{if(ev.target.id==='q'){S.busca=ev.target.value;clearTimeout(S.t);S.t=setTimeout(()=>{render();const q=$('#q');q.focus();q.setSelectionRange(q.value.length,q.value.length);},250);}});
+
+// Grava os preços conferidos como fornecedor "Claude (site Vitrasul)" em cada linha do Banco de Preços
+async function gravar(btn){
+  const ok=S.rows.filter(r=>!r.excluido&&Number(r.preco)>0), tirar=S.rows.filter(r=>r.excluido&&r.gravado_em);
+  if(!ok.length&&!tirar.length){toast('Nada para gravar');return;}
+  if(!confirm(`Gravar ${ok.length} preço(s) na base "${FORN}"${tirar.length?` e tirar ${tirar.length} excluído(s)`:''}?\n\nA base atual da Vitrasul não é alterada.`))return;
+  btn.disabled=true;btn.textContent='Gravando…';
+  try{
+    const precisa=new Set();ok.forEach(r=>(S.itens[r.codigo]||[]).forEach(x=>precisa.add(x.linha_id)));
+    for(const lid of precisa){if(S.forn[lid])continue;const ins=await sb.from('impl_fornecedores').upsert({linha_id:lid,nome:FORN},{onConflict:'linha_id,nome'}).select('id').single();if(ins.error)throw ins.error;S.forn[lid]=ins.data.id;}
+    const linhasP=[];ok.forEach(r=>(S.itens[r.codigo]||[]).forEach(x=>linhasP.push({item_id:x.id,fornecedor_id:S.forn[x.linha_id],preco:Number(r.preco)})));
+    for(let i=0;i<linhasP.length;i+=200){const {error}=await sb.from('impl_precos').upsert(linhasP.slice(i,i+200),{onConflict:'item_id,fornecedor_id'});if(error)throw error;}
+    const del=[];tirar.forEach(r=>(S.itens[r.codigo]||[]).forEach(x=>{if(S.forn[x.linha_id])del.push([x.id,S.forn[x.linha_id]]);}));
+    for(const [it,fo] of del){await sb.from('impl_precos').delete().eq('item_id',it).eq('fornecedor_id',fo);}
+    const agora=new Date().toISOString(),cods=ok.map(r=>r.codigo);
+    for(let i=0;i<cods.length;i+=200){await sb.from('impl_claude_base').update({gravado_em:agora}).eq('fornecedor',FORN).in('codigo',cods.slice(i,i+200));}
+    if(tirar.length)await sb.from('impl_claude_base').update({gravado_em:null}).eq('fornecedor',FORN).in('codigo',tirar.map(r=>r.codigo));
+    ok.forEach(r=>r.gravado_em=agora);tirar.forEach(r=>r.gravado_em=null);
+    toast(`Gravado: ${linhasP.length} preço(s) na base ${FORN}`);
+  }catch(e){console.error(e);toast('Não gravou: '+(e.message||e));}
+  btn.disabled=false;render();
+}
+carregar();
+</script>
+</body>
+</html>
