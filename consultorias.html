@@ -164,6 +164,13 @@ body.pres-on #hdTop,body.pres-on #app>.top:first-child,body.pres-on #acbar a,bod
 .dgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(260px,100%),1fr));gap:12px}.dcard{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
 .dthumb{all:unset;box-sizing:border-box;cursor:zoom-in;display:grid;place-items:center;width:100%;aspect-ratio:16/10;background:#fff center/contain no-repeat;border-bottom:1px solid var(--line);font-size:34px}
 .dg-ov{position:fixed;inset:0;z-index:9500;background:#0a2f4a;display:flex;flex-direction:column}.dg-bar{display:flex;gap:10px;align-items:center;padding:8px 14px;color:#fff;flex-wrap:wrap}.dg-bar b{font:700 16px var(--f-d)}.dg-ov iframe{flex:1;border:0;width:100%;background:#fff}
+.div-ov{position:fixed;inset:0;z-index:9800;background:rgba(5,20,32,.72);display:grid;place-items:center;padding:16px;backdrop-filter:blur(3px)}
+.div-card{background:var(--surface);color:var(--fg);border-radius:18px;max-width:min(720px,100%);max-height:calc(100vh - 32px);overflow:auto;padding:18px;display:flex;flex-direction:column;gap:12px;box-shadow:0 24px 60px rgba(0,0,0,.4)}
+@media(prefers-reduced-motion:no-preference){.div-card{animation:sobe .35s ease both}}
+.div-hd{display:flex;gap:12px;align-items:center}.div-hd img{height:44px;border-radius:8px}.div-hd small{display:block;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}.div-hd b{font:700 19px var(--f-d)}
+.div-img{width:100%;max-height:62vh;object-fit:contain;border-radius:12px;background:var(--surface-2)}.div-card p{margin:0;font-size:15px;white-space:pre-wrap}
+.onl{display:inline-flex;gap:5px;align-items:center;font:600 12px var(--f-b);color:#1f7a45;background:#e2f3e8;border-radius:99px;padding:2px 9px}.onl::before{content:"";width:8px;height:8px;border-radius:50%;background:#22a05a;box-shadow:0 0 0 3px rgba(34,160,90,.25)}
+.ori-fr{width:100%;height:min(80vh,900px);border:0;display:block;background:#eef1f3}
 .stsel{font:600 12.5px var(--f-b);border:1px solid var(--line);border-radius:99px;padding:3px 8px;background:var(--surface);color:var(--fg)}
 .saving{position:fixed;right:16px;bottom:16px;background:var(--fg);color:var(--bg);padding:8px 14px;border-radius:9px;font-weight:600;font-size:14px;z-index:50}
 </style></head><body>
@@ -270,7 +277,7 @@ async function carregar(){const {data,error}=await sb.from('rotina_docs').select
   for(const k of Object.keys(E)){const a=E[k].acao;if(a&&!a._extra1){EXTRA.forEach(t=>{if(!a.temas.some(x=>x[0]===t[0]))a.temas.push(t.slice(0,1+a.cols.length));});a._extra1=true;await salvar(k);}}
   if(E.cb&&!E.cb.agenda){E.cb.agenda=[['2026-10-19','Visita técnica · dia 1 · Abertura e Revenda'],['2026-10-20','Visita técnica · dia 2 · Revenda e Fábrica'],['2026-10-21','Visita técnica · dia 3 · Sistema CEM e Treinamento'],['2026-10-22','Visita técnica · dia 4 · Fábrica e Encerramento (devolutiva 15:30)']].map(([d,t],i)=>({id:'cbv'+(i+1),data:d,hora:'08:00',fim:'17:30',tipo:'visita',titulo:t,local:'Casa Bandeirante',cli:true,anexos:[]}));await salvar('cb');}
   if(at&&!E[at])at=null;
-  await carregarPortais();await carregarPlan();await carregarSol();await carregarCat();const h=await sb.from('rotina_docs').select('data').eq('col','horas');HORAS=(h.data||[]).map(x=>x.data);render();}
+  await carregarPortais();await carregarPlan();await carregarSol();await carregarCat();await carregarAcessos();await carregarDivv();await carregarAlunos();setInterval(vigiarAcessos,60000);setInterval(()=>{if(at&&tab==='div')carregarDivv().then(()=>ficha());},90000);const h=await sb.from('rotina_docs').select('data').eq('col','horas');HORAS=(h.data||[]).map(x=>x.data);render();}
 const nrm=t=>String(t||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/s\b/g,'').trim();
 function horasDe(e){const k=nrm(e.nome.split('·')[0]),k2=nrm(e.apelido||'');const mes=new Date().toISOString().slice(0,7);
   return HORAS.filter(x=>{const c=nrm(x.cliente);return c&&(c.includes(k)||k.includes(c)||(k2&&c.includes(k2)))});}
@@ -321,7 +328,7 @@ function cards(){if(PUB)return;const ks0=Object.keys(E);const M={};ks0.forEach(k
      +kp('⏱','Horas no mês',hm(hn+he),he?`<span style="color:var(--bad)">${hm(he)} hora extra</span>`:'tudo em horário normal')
      +kp('✅','Plano de ação',(aTot?Math.round(aOk/aTot*100):0)+'%',`${aOk} de ${aTot} pontos resolvidos`)}</div>
    <div class="cx-grid ${foco?'one':''}"><div><div class="cx-h"><h3>${foco?'A consultoria em números':'Empresas'}</h3><span class="nota">${foco?'toque para ver o acompanhamento':'toque para abrir'}</span></div><div class="tiles">${ks.map(k=>{const e=E[k],m=M[k],F=FASES[m.fase];return `<button type="button" class="tile ${foco?'big':''}" style="--c:${e.c}" data-k="${k}">
-       <div class="tl-h"><span class="av" style="background:${e.c}">${sigla(e)}</span><div style="min-width:0;flex:1"><b>${esc(e.nome)}</b><small>${esc(e.cid||'')}</small></div>${m.sol&&!foco?`<span class="pill p-bad">📨 ${m.sol}</span>`:''}</div>
+       <div class="tl-h"><span class="av" style="background:${e.c}">${sigla(e)}</span><div style="min-width:0;flex:1"><b>${esc(e.nome)}</b><small>${esc(e.cid||'')}</small></div>${!foco&&onlineAgora(k)?'<span class="onl">no link agora</span>':''}${m.sol&&!foco?`<span class="pill p-bad">📨 ${m.sol}</span>`:''}</div>
        <div class="fase-chip">${F[0]} Fase ${m.fase+1} de 5 · <b>${F[1]}</b></div>
        <div class="mrs">${mring(m.fl,'Fluxo do processo',e.c)}${mring(m.ac,'Plano de ação',e.c)}${mring(m.ca,'Catálogo',e.c)}</div>
        <div class="tl-i">${m.prox&&(!foco||m.prox.cli)?`<span>🗓 ${dBR2(m.prox.data).slice(0,5)} · ${esc(m.prox.titulo)}</span>`:'<span class="muted">🗓 próxima agenda a combinar</span>'}${m.andP?`<span>▶ Agora: ${esc(m.andP.replace(/^(Revenda|F[áa]brica)\s*·\s*/,''))}</span>`:''}${m.pv&&!foco?`<span>💳 ${brl(m.pv)} a acertar</span>`:''}</div>
@@ -337,7 +344,7 @@ function cards(){if(PUB)return;const ks0=Object.keys(E);const M={};ks0.forEach(k
   const ps=document.getElementById('presSair');if(ps)ps.onclick=()=>{PRES=null;document.body.classList.remove('pres-on');cards();};
   const red=matchMedia('(prefers-reduced-motion: reduce)').matches;document.querySelectorAll('#emps [data-cnt]').forEach(el=>{const v=el.dataset.cnt;if(v===''){return;}const n=+v;if(red||!n){el.textContent=n;return;}let t0=null;const step=t=>{t0=t0||t;const p=Math.min(1,(t-t0)/700);el.textContent=Math.round(n*(1-Math.pow(1-p,3)));if(p<1)requestAnimationFrame(step);};requestAnimationFrame(step);});}
 function abrirEmpresa(k,t){at=k;openLane=null;OPEN={};if(t)tab=t;else tab='proc';render();window.scrollTo({top:0,behavior:'smooth'});}
-const ABAS=[['proc','Fluxo do processo'],['acao','Plano de ação'],['pla','📊 Planilhas'],['cat','📚 Catálogo'],['dia','🧩 Diagramas'],['sol','📨 Solicitações'],['age','🗓 Agenda'],['dsp','💳 Despesas'],['vis','Visitas'],['dem','Demandas e entregas'],['arq','Arquivos'],['hrs','Horas']];
+const ABAS=[['proc','Fluxo do processo'],['acao','Plano de ação'],['pla','📊 Planilhas'],['cat','📚 Catálogo'],['ori','🎓 Orientativo'],['dia','🧩 Diagramas'],['div','📣 Divulgação'],['sol','📨 Solicitações'],['age','🗓 Agenda'],['dsp','💳 Despesas'],['vis','Visitas'],['dem','Demandas e entregas'],['arq','Arquivos'],['hrs','Horas']];
 function ficha(){const e=E[at];let h='';
  if(tab==='proc'&&e.objetivo)h=`<details class="box obj"><summary><b>🎯 Objetivo da consultoria</b><span class="muted" style="font-size:13px"> · toque para ler</span></summary><p style="margin:8px 0 0">${esc(e.objetivo)}</p></details>`;
  if(tab==='proc'){const tot=e.frentes.reduce((n,f)=>n+f.p.length,0),ok=e.frentes.reduce((n,f)=>n+f.p.filter(p=>p[0]==='ok').length,0),pct=tot?Math.round(ok/tot*100):0;
@@ -374,6 +381,8 @@ function ficha(){const e=E[at];let h='';
  if(tab==='pla')h+=plTabHtml(e);
  if(tab==='age')h+=ageTabHtml(e,hero,nextc,sec);
  if(tab==='dia')h+=diaTabHtml(e,hero,nextc);
+ if(tab==='ori')h+=oriTabHtml(e);
+ if(tab==='div')h+=divTabHtml(e,hero,nextc);
  if(tab==='dsp')h+=dspTabHtml(e,hero,nextc,sec);
  if(tab==='cat'){if(OPEN.cat===undefined)OPEN.cat='cat';h+=catTabHtml(e,hero,nextc,sec);}
  if(tab==='sol')h+=solTabHtml(e);
@@ -408,7 +417,7 @@ function ficha(){const e=E[at];let h='';
      return sec(d,`${d.slice(8,10)}/${d.slice(5,7)}`,`${l.length} registro${l.length>1?'s':''}`,nn,nn+ee,`<span class="pill p-mut">${hm(nn+ee)}</span>${ee?`<span class="pill p-bad">${hm(ee)} extra</span>`:''}`,`<ol class="steps">${l.map(x=>`<li class="st2"><span class="tm mono">${esc(x.ini||'')}${x.fim?'–'+esc(x.fim):''}</span><span class="dotc ${+x.minExtra?'':'ok'}" style="${+x.minExtra?'border-color:var(--bad)':''}">${+x.minExtra?'':'✓'}</span><div class="sb"><div class="stt">${esc(x.titulo)}</div><div class="sm">${(x.itens||[]).map(esc).join(' · ')}</div></div></li>`).join('')}</ol>`)}).join('')}</div>`
      :'<div class="box"><p class="nota" style="margin:0">Ainda não há horas lançadas para esta empresa na Rotina FC.</p></div>';
    h+='<p class="nota"><b>🔒 Só para o seu controle:</b> o cliente não vê as horas nem quando a FC trabalhou na consultoria. Vem da Rotina FC: 07:00 às 18:00 é horário normal; 18:01 às 06:59 e fim de semana, hora extra. A barra de cada dia mostra a parte em horário normal.</p>';}
- const abas=(cli?ABAS.filter(a=>['proc','acao','age','pla','cat','dia','sol','dem'].includes(a[0])):ABAS).filter(a=>a[0]!=='acao'||e.acao); if(cli&&!abas.some(a=>a[0]===tab))tab='proc';
+ const abas=(cli?ABAS.filter(a=>['proc','acao','age','pla','cat','ori','dia','sol','dem'].includes(a[0])):ABAS).filter(a=>a[0]!=='acao'||e.acao); if(cli&&!abas.some(a=>a[0]===tab))tab='proc';
  $('#ficha').style.setProperty('--c',e.c);
  $('#ficha').innerHTML=`<div class="fh"><span class="sw"></span><div style="min-width:0;flex:1"><h2>${e.nome}</h2><div class="muted" style="font-size:14px">${e.cid} · ${e.mod}</div></div><span class="pill ${e.st[0]}">${e.st[1]}</span>${cli?'':`<button class="btn" type="button" id="lkTog">🔗 Link do cliente${PORT[at]&&PORT[at].ativo?' ✓':''}</button>`}</div>
   ${PUB?`<div style="padding:12px 18px 0"><div class="cliente-bar">Acompanhamento atualizado pela FC Consultoria. Dúvidas: (66) 9 9986-7984, de segunda a sexta, das 08:00 às 11:00 e das 13:00 às 17:00 (horário de Sinop/MT).</div></div>`:cli&&PRES?`<div style="padding:12px 18px 0"><div class="cliente-bar">📡 <b>Acompanhamento da consultoria</b> · tudo o que a FC faz aparece aqui e no link da empresa, em tempo real.</div></div>`:cli?`<div style="padding:12px 18px 0"><div class="cliente-bar">🔗 <b>Link do cliente</b> · ${e.nome} vê o fluxo, o plano de ação, as planilhas, o catálogo, as solicitações e as entregas. Horas, arquivos internos, checklist de visita e observações da FC ficam ocultos.</div></div>`:linkAberto?`<div style="padding:12px 18px 0">${linkBox(e)}</div>`:''}<div class="tabs" role="tablist">${abas.map(([k,l])=>`<button class="tab" role="tab" type="button" aria-selected="${k===tab}" data-t="${k}">${l}${k==='sol'&&!cli&&solNovas(at)?` <span class="pill p-bad">${solNovas(at)}</span>`:''}</button>`).join('')}</div><div class="body">${h}</div>`;
@@ -519,7 +528,7 @@ function wirePlSol(e){const q=(s,f)=>document.querySelectorAll(s).forEach(f);wir
   const cs=document.getElementById('catSel');if(cs)cs.onchange=()=>{if(!cs.value)return;e.catalogo=cs.value;salvar(at);ficha();};
   const cd=document.getElementById('catDesl');if(cd)cd.onclick=()=>{if(!confirm('Desligar o catálogo desta empresa? O catálogo continua existindo; só sai deste painel e do link.'))return;e.catalogo=null;salvar(at);ficha();};
   q('[data-cet]',b=>b.onclick=()=>{e.catEt=e.catEt||{};const k=b.dataset.cet,cur=catEtapas(e,CATS.find(x=>x.id===e.catalogo))[k]||'';e.catEt[k]=cur===''?'and':cur==='and'?'ok':'none';if(e.catEt[k]==='none')e.catEt[k]='';ficha();salvar(at);});
-  wireAgeDsp(e,q);wireDia(e,q);
+  wireAgeDsp(e,q);wireDia(e,q);wireDiv(e,q);wireOri(e);
   q('[data-plimp]',i=>i.onchange=()=>importarPlanilha(i.files[0],i.dataset.plimp));
   q('[data-pltr]',i=>i.onchange=()=>importarPlanilha(i.files[0],null,i.dataset.pltr));
   q('[data-plve]',b=>b.onclick=async()=>{const p=PLAN.find(x=>x.id===b.dataset.plve);await sb.from('cons_planilhas').update({cliente_ve:!p.cliente_ve}).eq('id',p.id);p.cliente_ve=!p.cliente_ve;ficha();});
@@ -677,6 +686,64 @@ function wireDia(e,q){const g=id=>document.getElementById(id);
   q('[data-dgrm]',b=>b.onclick=async()=>{const d=e.diag.find(x=>x.id===b.dataset.dgrm);if(!confirm('Remover o diagrama "'+d.nome+'"?'))return;if(d.png)await sb.storage.from(BK).remove([d.png]);e.diag=e.diag.filter(x=>x!==d);ficha();salvar(at);});}
 function wireDiaVer(e){document.querySelectorAll('[data-dgver]').forEach(b=>b.onclick=async()=>{const d=(e.diag||[]).find(x=>x.id===b.dataset.dgver);if(!d)return;let u=d.url;if(!u&&d.png&&!PUB){[u]=await urlsDe([d.png]);}if(u)window.open(u,'_blank','noopener');else if(!PUB&&!cli)abrirDrawio(e,d);});
   if(PUB||cli)document.querySelectorAll('.dthumb').forEach(b=>{const d=(e.diag||[]).find(x=>x.id===b.dataset.dgver);if(d&&d.url){b.style.backgroundImage=`url("${d.url}")`;b.removeAttribute('data-thumb');}});}
+/* ===== Divulgação na tela do cliente + aviso de acesso ===== */
+let ALUNOS=[];
+async function carregarAlunos(){const {data}=await sb.from('trein_alunos').select('user_id,login,nome,papel,ativo').neq('papel','admin').order('nome');ALUNOS=(data||[]).filter(a=>!/^gestor cat/i.test(a.nome||''));
+  const nn=t=>String(t||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]/g,'');const mud=[];
+  Object.entries(E).forEach(([k,e])=>{if(e.orientativo===undefined){const base=nn(e.nome.split('·')[0]),sig=nn((e.nome.split('·')[0]||'').trim().split(' ')[0]);const a=ALUNOS.find(a=>nn(a.nome)===base||nn(a.login)===base||nn(a.nome)===sig||nn(a.login).startsWith(base));if(a){e.orientativo=a.user_id;mud.push(k);}}});
+  for(const k of mud)await salvar(k);}
+const URL_EMP='empresa.html';
+function oriTabHtml(e){const adm=!PUB&&!cli;const id=e.orientativo;const a=ALUNOS.find(x=>x.user_id===id);
+  if(!id)return adm?`<div class="box"><h3>🎓 Orientativo FC 3D</h3><p class="nota">Ligue esta empresa ao login dela no Orientativo para o Painel do Gestor aparecer aqui e no link do cliente.</p><label class="nota" style="color:var(--fg);font-weight:600">Login do Orientativo<select class="inpx" id="oriSel"><option value="">— escolher —</option>${ALUNOS.map(x=>`<option value="${x.user_id}">${esc(x.nome||x.login)} · ${esc(x.login)}${x.ativo?'':' (encerrado)'}</option>`).join('')}</select></label><p class="nota">Ainda não tem login? Libere o Orientativo no <a href="painel.html" style="color:var(--accent)">Painel da Matriz → Empresas e logins</a>.</p></div>`
+    :'<div class="box"><p class="nota" style="margin:0">O Painel do Gestor do Orientativo FC 3D aparece aqui quando a FC liberar o acesso.</p></div>';
+  return `<div class="hero2"><div class="ring" style="--p:100"><span>🎓</span></div><div style="min-width:0;flex:1 1 240px"><div class="eyebrow">Orientativo FC 3D · Painel do Gestor</div><div class="big">${adm&&a?esc(a.nome||a.login):'Desempenho da equipe no treinamento'}</div>
+     <div class="nota">${adm?`Login da empresa: <b>${esc(a?a.login:'—')}</b>${a&&!a.ativo?' · <span style="color:var(--bad)">acesso encerrado</span>':''}. Você vê o mesmo painel que o gestor vê.`:'Quem acessou, tempo de estudo, desafios e estrelas de cada colaborador. Entre com o login do gestor.'}</div></div>
+     <div style="display:flex;gap:8px;flex-wrap:wrap"><a class="btn" href="${URL_EMP}${adm?'?e='+encodeURIComponent(id):''}" target="_blank" rel="noopener" style="text-decoration:none">↗ Abrir em tela cheia</a>${adm?'<button class="btn" type="button" id="oriTroca">Trocar login</button>':''}</div></div>
+   <div class="box" style="padding:0;overflow:hidden"><iframe class="ori-fr" src="${URL_EMP}${adm?'?e='+encodeURIComponent(id):''}" title="Painel do Gestor · Orientativo FC 3D" loading="lazy"></iframe></div>`;}
+function wireOri(e){const s1=document.getElementById('oriSel');if(s1)s1.onchange=()=>{if(!s1.value)return;e.orientativo=s1.value;salvar(at);ficha();};
+  const t=document.getElementById('oriTroca');if(t)t.onclick=()=>{if(!confirm('Desligar o login atual do Orientativo desta empresa e escolher outro?'))return;e.orientativo=null;salvar(at);ficha();};}
+let DIVV={},ACESS={},ultAcesso=null,divForm=false;
+async function carregarAcessos(){const {data}=await sb.from('cons_acessos').select('empresa_id,nome,em,ate').order('em',{ascending:false}).limit(200);ACESS={};(data||[]).forEach(x=>{(ACESS[x.empresa_id]=ACESS[x.empresa_id]||[]).push(x);});ultAcesso=(data&&data[0])?data[0].em:new Date().toISOString();}
+const onlineAgora=k=>(ACESS[k]||[]).some(x=>Date.now()-new Date(x.ate)<3*60e3);
+async function vigiarAcessos(){if(PUB||!ultAcesso)return;try{const {data}=await sb.from('cons_acessos').select('empresa_id,nome,em,ate').gt('em',ultAcesso).order('em');
+  if(data&&data.length){ultAcesso=data[data.length-1].em;data.forEach(x=>{(ACESS[x.empresa_id]=ACESS[x.empresa_id]||[]).unshift(x);const n=(E[x.empresa_id]||{}).nome||'Um cliente';const t=`👀 ${x.nome?x.nome+' · ':''}${n} abriu o link da consultoria agora`;
+    aviso(t);try{if('Notification' in window&&Notification.permission==='granted')new Notification('Consultorias FC',{body:t,tag:'cons-'+x.empresa_id});}catch(_){}});if(!at)cards();}
+  const {data:d2}=await sb.from('cons_acessos').select('empresa_id,nome,em,ate').gt('ate',new Date(Date.now()-5*60e3).toISOString());(d2||[]).forEach(x=>{const L=ACESS[x.empresa_id]=ACESS[x.empresa_id]||[];const i=L.findIndex(y=>y.em===x.em);if(i>=0)L[i]=x;});}catch(_){}}
+function aviso(t){let w=document.getElementById('avisoT');if(!w){w=document.createElement('div');w.id='avisoT';w.style.cssText='position:fixed;left:50%;top:16px;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;gap:8px;width:min(460px,92vw)';document.body.appendChild(w);}
+  const d=document.createElement('div');d.style.cssText='background:#0a2f4a;color:#fff;border-radius:14px;padding:12px 16px;font:600 15px var(--f-b);box-shadow:0 14px 34px rgba(0,0,0,.3);display:flex;gap:10px;align-items:center';d.innerHTML=`<span style="flex:1">${esc(t)}</span><button type="button" style="all:unset;cursor:pointer;font-size:18px">✕</button>`;d.querySelector('button').onclick=()=>d.remove();w.appendChild(d);setTimeout(()=>d.remove(),15000);
+  try{const a=new (window.AudioContext||window.webkitAudioContext)(),o=a.createOscillator(),g=a.createGain();o.frequency.value=880;g.gain.value=.08;o.connect(g);g.connect(a.destination);o.start();o.stop(a.currentTime+.18);}catch(_){}}
+function divTabHtml(e,hero,nextc){const L=(e.divs||[]).slice().sort((a,b)=>(b.em||'').localeCompare(a.em||''));const at1=L.filter(x=>x.ativo!==false);const vv=DIVV[at]||[];
+  let h=hero(at1.length?100:0,at1.length?`${at1.length} divulgação${at1.length>1?'ões':''} na tela do cliente`:'Nada sendo divulgado','📣 Divulgação na tela do cliente',nextc(onlineAgora(at)?'and':'',onlineAgora(at)?'🟢 Cliente com o link aberto agora':'Cliente fora do link agora',onlineAgora(at)?'Ao enviar, aparece na tela dele em até 1 minuto':'Aparece na tela assim que ele abrir o link'));
+  h=h.replace(/<span>\d+%<\/span>/,`<span>${at1.length}</span>`);
+  h+=divForm?`<div class="box"><h3>Nova divulgação</h3><div class="frm"><label class="full">Título<input class="inpx" id="dvT" maxlength="90" placeholder="Ex.: Lançamento da linha Gold · condição especial"></label><label class="full">Mensagem (opcional)<textarea class="inpx" id="dvX" rows="3" maxlength="600"></textarea></label>
+    <label class="full">Foto ou arquivo (imagem ou PDF)<input class="inpx" type="file" id="dvF" accept="image/*,.pdf"></label></div><div class="nota" id="dvP" style="margin-top:6px">Também dá para colar um print com Ctrl+V aqui.</div>
+    <div style="display:flex;gap:8px;margin-top:10px"><button class="btn pri" type="button" id="dvEnv">📣 Enviar para a tela do cliente</button><button class="btn" type="button" id="dvCanc">Cancelar</button></div></div>`:`<div><button class="btn pri" type="button" id="dvNovo">+ Nova divulgação</button></div>`;
+  h+=L.length?`<div class="dgrid">${L.map(x=>{const vs=vv.filter(v=>v.div_id===x.id);return `<div class="dcard"><div class="dthumb" ${/^image\//.test(x.tipo||'')?`data-thumb="${esc(x.path)}" data-img="1"`:''} style="cursor:default">${/^image\//.test(x.tipo||'')?'':'📄'}</div><div style="padding:10px 12px"><b>${esc(x.titulo||'Divulgação')}</b>${x.texto?`<div class="nota">${esc(x.texto)}</div>`:''}
+    <div class="sm" style="margin-top:4px">${x.ativo===false?'<span class="pill p-mut">Retirada</span>':'<span class="pill p-ok">Na tela do cliente</span>'}<span class="pill ${vs.length?'p-acc':'p-mut'}">👀 ${vs.length?`vista ${vs.length}x${vs[0].nome?' · '+esc(vs[0].nome):''}`:'ainda não vista'}</span></div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">${x.ativo===false?`<button class="mini on" type="button" data-dvre="${x.id}">↻ Enviar de novo</button>`:`<button class="mini" type="button" data-dvoff="${x.id}">Retirar da tela</button>`}<button class="mini" type="button" data-dvrm="${x.id}">✕</button></div></div></div>`}).join('')}</div>`:'';
+  h+='<p class="nota">A divulgação abre em destaque na tela do cliente: se ele estiver com o link aberto, aparece em até 1 minuto; se estiver fora, aparece assim que ele entrar. Cada pessoa vê uma vez. Você vê aqui se e quando foi vista.</p>';
+  return h;}
+async function carregarDivv(){const {data}=await sb.from('cons_div_vistos').select('empresa_id,div_id,nome,em').order('em',{ascending:false}).limit(500);DIVV={};(data||[]).forEach(x=>{(DIVV[x.empresa_id]=DIVV[x.empresa_id]||[]).push(x);});}
+function wireDiv(e,q){const g=id=>document.getElementById(id);let colado=null;
+  if(g('dvNovo'))g('dvNovo').onclick=()=>{divForm=true;ficha();};
+  if(g('dvCanc'))g('dvCanc').onclick=()=>{divForm=false;ficha();};
+  if(g('dvT')){document.onpaste=ev=>{if(!g('dvT'))return;const it=[...((ev.clipboardData||{}).items||[])].find(i=>i.type.startsWith('image/'));if(!it)return;const b=it.getAsFile();colado=new File([b],nomePrint(b.type),{type:b.type});g('dvP').textContent='✓ Print colado: '+colado.name;};}
+  if(g('dvEnv'))g('dvEnv').onclick=async()=>{const f=(g('dvF').files[0])||colado;if(!f){alert('Escolha a foto/arquivo ou cole um print.');return;}g('dvEnv').disabled=true;g('dvEnv').textContent='Enviando…';
+    const [u]=await subir([f],'divulgacao');if(!u){g('dvEnv').disabled=false;return;}let url='';try{url=await urlAssinada(u.path,60*60*24*365);}catch(_){}
+    e.divs=e.divs||[];e.divs.push({id:uidc(),titulo:g('dvT').value.trim(),texto:g('dvX').value.trim(),path:u.path,tipo:u.tipo,nome:u.nome,url,em:new Date().toISOString(),ativo:true});divForm=false;await salvar(at);ficha();aviso('📣 Divulgação enviada para a tela do cliente');};
+  q('[data-dvoff]',b=>b.onclick=()=>{const x=e.divs.find(d=>d.id===b.dataset.dvoff);x.ativo=false;ficha();salvar(at);});
+  q('[data-dvre]',b=>b.onclick=()=>{const x=e.divs.find(d=>d.id===b.dataset.dvre);x.ativo=true;x.id=uidc();x.em=new Date().toISOString();ficha();salvar(at);});
+  q('[data-dvrm]',b=>b.onclick=async()=>{const x=e.divs.find(d=>d.id===b.dataset.dvrm);if(!confirm('Apagar esta divulgação?'))return;await sb.storage.from(BK).remove([x.path]);e.divs=e.divs.filter(d=>d!==x);ficha();salvar(at);});}
+/* lado do cliente: mostra divulgações novas e avisa a FC que o link foi aberto */
+function nomeCli(){try{return localStorage.getItem('cons-nome')||''}catch(_){return ''}}
+const vistos=()=>{try{return JSON.parse(localStorage.getItem('cons-vistos-'+KEY.slice(0,10))||'[]')}catch(_){return []}};
+async function checarDivs(){if(!PUB||document.getElementById('divOv'))return;try{const {data}=await sb.rpc('cons_portal_divs',{p_chave:KEY});const v=vistos();const nova=(data||[]).find(x=>!v.includes(x.id));if(nova)mostrarDiv(nova);}catch(_){}}
+function mostrarDiv(x){const ov=document.createElement('div');ov.id='divOv';ov.className='div-ov';const img=/^image\//.test(x.tipo||'');
+  ov.innerHTML=`<div class="div-card" role="dialog" aria-label="Mensagem da FC Consultoria"><div class="div-hd"><img src="midia/logo-fc.png" alt=""><div><small>Mensagem da FC Consultoria</small><b>${esc(x.titulo||'Novidade para vocês')}</b></div></div>
+   ${img?`<img class="div-img" src="${esc(x.url)}" alt="${esc(x.titulo||'')}">`:`<a class="btn pri" href="${esc(x.url)}" target="_blank" rel="noopener" style="text-decoration:none;align-self:center;margin:18px 0">📄 Abrir o arquivo</a>`}
+   ${x.texto?`<p>${esc(x.texto)}</p>`:''}<div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap">${img?`<a class="btn" href="${esc(x.url)}" target="_blank" rel="noopener" style="text-decoration:none">Ver em tamanho real</a>`:''}<button class="btn pri" type="button" id="divOk">Entendi</button></div></div>`;
+  document.body.appendChild(ov);const fim=()=>{try{const v=vistos();v.push(x.id);localStorage.setItem('cons-vistos-'+KEY.slice(0,10),JSON.stringify(v.slice(-100)));}catch(_){}ov.remove();setTimeout(checarDivs,600);};
+  ov.querySelector('#divOk').onclick=fim;sb.rpc('cons_portal_div_visto',{p_chave:KEY,p_id:x.id,p_nome:nomeCli()}).then(()=>{},()=>{});}
 function render(){if(PUB){ficha();return;}
   const cen=!at;$('#emps').hidden=!cen;$('#ficha').hidden=cen;$('#acbar').hidden=cen;document.querySelector('#hdTop .seg').hidden=cen;$('#nova').hidden=true;
   $('#hdTit').innerHTML=cen?'<div class="eyebrow">Painel da Matriz · consultorias presenciais</div><h1>Central das consultorias</h1>':`<button type="button" class="crumb" id="crumb" style="font-size:15px">← Central das consultorias</button>`;
@@ -694,7 +761,9 @@ if(PUB){(async()=>{document.title='Acompanhamento da consultoria · FC Consultor
   const {data,error}=await sb.rpc('cons_portal_ver',{p_chave:KEY});
   if(error||!data){$('#pubT').textContent='Link indisponível';$('#ficha').innerHTML='<div class="body"><p style="margin:0">Este link não está ativo. Fale com a FC Consultoria: (66) 9 9986-7984.</p></div>';return;}
   const [pl,so]=await Promise.all([sb.rpc('cons_portal_planilhas',{p_chave:KEY}),sb.rpc('cons_portal_solicitacoes',{p_chave:KEY})]);PUBPL=pl.data||[];PUBSOL=(so.data||[]).map(x=>Object.assign(x,{criado_em:x.em}));
-  E={[data.id]:data};at=data.id;cli=true;$('#pubT').textContent='Acompanhamento da consultoria';ficha();})();}
+  E={[data.id]:data};at=data.id;cli=true;
+  const ping=()=>{if(!document.hidden)sb.rpc('cons_portal_ping',{p_chave:KEY,p_nome:nomeCli()}).then(()=>{},()=>{});};ping();setInterval(ping,120000);document.addEventListener('visibilitychange',()=>{if(!document.hidden){ping();checarDivs();}});
+  setTimeout(checarDivs,1200);setInterval(checarDivs,60000);$('#pubT').textContent='Acompanhamento da consultoria';ficha();})();}
 else{gateUI(()=>carregar(),{soMatriz:true});
   $('#acbar').hidden=false;
   $('#bVoltar').onclick=()=>{at=null;cli=false;openLane=null;$('#vFC').setAttribute('aria-pressed',true);$('#vCli').setAttribute('aria-pressed',false);render();window.scrollTo({top:0,behavior:'smooth'});};

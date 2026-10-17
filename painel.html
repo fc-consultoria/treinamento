@@ -934,6 +934,11 @@ function alertaGrande(o){let w=document.getElementById('bigAl');if(!w){w=documen
   try{if('Notification' in window&&Notification.permission==='granted'){const nt=new Notification(o.titulo,{body:o.texto?String(o.texto).slice(0,160):(o.sub||''),tag:'fc-'+k,requireInteraction:true,renotify:true});nt.onclick=()=>{window.focus();nt.close();fecha();try{o.fn&&o.fn();}catch(_){}};}}catch(_){}}
 {const st=document.createElement('style');st.textContent='@keyframes baIn{from{opacity:0;transform:translateY(-14px)}to{opacity:1;transform:none}}';document.head.appendChild(st);}
 window.alertaGrande=alertaGrande;
+/* Consultorias: avisa quando um cliente abre o link da consultoria */
+(function(){let ult=null;const nomes={};async function base(){try{const r=await sb.from('rotina_docs').select('id,data').eq('col','consultoria');(r.data||[]).forEach(x=>nomes[x.id]=(x.data||{}).nome);const a=await sb.from('cons_acessos').select('em').order('em',{ascending:false}).limit(1);ult=(a.data&&a.data[0])?a.data[0].em:new Date().toISOString();}catch(_){}}
+ async function vigia(){if(!ult)return base();try{const {data}=await sb.from('cons_acessos').select('empresa_id,nome,em').gt('em',ult).order('em');if(!data||!data.length)return;ult=data[data.length-1].em;
+   data.forEach(x=>{const t=`👀 ${x.nome?x.nome+' · ':''}${nomes[x.empresa_id]||'Cliente'} abriu o link da consultoria`;try{toast(t);}catch(_){}try{beep();}catch(_){}try{if('Notification' in window&&Notification.permission==='granted')new Notification('Consultorias FC',{body:t,tag:'cons-'+x.empresa_id});}catch(_){}});}catch(_){}}
+ setTimeout(base,5000);setInterval(vigia,60000);})();
 async function verAvisos(){const TPS=NOT_ON?['colab_sessao','pedido_tempo','sugestao','interesse','linha_interesse','logo_mapa']:['sugestao','logo_mapa','interesse'];const {data}=await sb.from('trein_eventos').select('user_id,tipo,detalhe,criado_em').in('tipo',TPS).gt('criado_em',NOT_T).order('criado_em');
   if(!data||!data.length)return;NOT_T=data[data.length-1].criado_em;
   data.forEach(e=>{const a=ALUNOS.find(x=>x.user_id===e.user_id)||{},emp=a.nome||a.login||'empresa',q=(e.detalhe||{}).quem||'Colaborador';
