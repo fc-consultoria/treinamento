@@ -135,6 +135,11 @@ table.tb tr.hi td{background:#e7f7ec;font-weight:700}
 .game{display:grid;gap:8px}.slot{display:grid;grid-template-columns:170px 1fr;gap:10px;align-items:center;border:1px dashed var(--ln);border-radius:10px;padding:7px 10px}.slot.ok{border-style:solid;border-color:#16a34a;background:#eefaf2}
 .slot b{font-size:14px}.pool{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}.pool button{border:1px solid var(--ln);background:#fff;border-radius:8px;padding:5px 10px;font:800 15px var(--f-d);cursor:pointer}.pool button.sel{background:var(--ink);color:#fff}.pool button.us{opacity:.3;pointer-events:none}
 .cmpl{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-start}.cmpd{border:1px solid var(--ln);border-radius:12px;background:#fff}.cmpd>summary{list-style:none;cursor:pointer;padding:9px 14px;font:600 14px var(--f-b);display:flex;gap:6px;align-items:center}.cmpd>summary::-webkit-details-marker{display:none}.cmpd>summary::before{content:'▸';color:var(--tl);transition:transform .2s}.cmpd[open]>summary::before{transform:rotate(90deg)}.cmpd>summary b{color:var(--tl)}.cmpd>summary span{color:var(--tm);font-weight:500}.cmpd[open]{flex-basis:100%}.cmpd[open] .pcw{max-width:420px;margin:0 14px 14px}
+#cmhost[data-ex]{position:fixed!important;left:0!important;top:0!important;width:100vw!important;height:100vh!important;z-index:80!important;border-radius:0!important;background:radial-gradient(ellipse at 50% 45%,rgba(255,255,255,.35),rgba(214,226,232,.82));backdrop-filter:blur(2px);animation:exIn .45s ease}
+@keyframes exIn{from{opacity:.4;transform:scale(.6)}to{opacity:1;transform:none}}
+#exBar{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);display:flex;gap:12px;align-items:center;background:#13232e;color:#fff;border-radius:99px;padding:8px 8px 8px 18px;font:600 14px var(--f-b);box-shadow:0 8px 24px rgba(0,0,0,.25);z-index:3;white-space:nowrap}
+#exBar button{border:0;border-radius:99px;background:#f2a51e;color:#2a1b00;font:700 14px var(--f-b);padding:9px 16px;cursor:pointer}
+@media(max-width:600px){#exBar span{display:none}}
 </style>
 </head>
 <body>
@@ -150,7 +155,7 @@ table.tb tr.hi td{background:#e7f7ec;font-weight:700}
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="../auth.js"></script>
-<script src="cm3d.js?v=8"></script>
+<script src="cm3d.js?v=9"></script>
 <script>
 /* Treinamento em Esquadrias 3D · FC Consultoria em Esquadria · Sinop-MT · todos os direitos reservados */
 const IMG='/perfis/img/',PERFIS='/perfis/';
@@ -269,7 +274,12 @@ function place3d(){try{placeCm();fsBar();}catch(e){console.warn(e);}let H=$('#e3
  if(!ph||$('#md').hidden===false&&false){H.style.display='none';return;}
  const t=ph.dataset.t;if(H.dataset.t!==t){H.dataset.t=t;H.querySelector('iframe').src='/treinamento/demo/index.html?previa&esq=1&t='+encodeURIComponent(t);}
  if(H.dataset.fs)return;const r=ph.getBoundingClientRect();Object.assign(H.style,{display:'block',left:(r.left+scrollX)+'px',top:(r.top+scrollY)+'px',width:r.width+'px',height:r.height+'px'});}
-function posHosts(){[['cmhost','.cm3'],['e3host','.e3']].forEach(([id,sel])=>{const H=document.getElementById(id),ph=document.querySelector(sel);if(!H||H.dataset.fs||!ph||H.style.display==='none')return;const r=ph.getBoundingClientRect(),L=(r.left+scrollX)+'px',T=(r.top+scrollY)+'px',W=r.width+'px',Hh=r.height+'px';if(H.style.left!==L||H.style.top!==T||H.style.width!==W||H.style.height!==Hh)Object.assign(H.style,{left:L,top:T,width:W,height:Hh});});}
+function exTela(on){const H=document.getElementById('cmhost');if(!H)return;on=on&&!H.dataset.fs;if(!!H.dataset.ex===on)return;
+ if(on){H.dataset.ex='1';const b=document.createElement('div');b.id='exBar';b.innerHTML='<span>💥 Janela desmontada · arraste para girar</span><button type="button" data-cmd="1">🔧 Montar a janela</button>';H.appendChild(b);}
+ else{delete H.dataset.ex;const b=document.getElementById('exBar');if(b)b.remove();posHosts();}
+ if(CMS&&CMS.sc)CMS.sc.background=on?null:new THREE.Color(0xe9eef1);}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&CMD&&document.getElementById('cmhost')?.dataset.ex){CMD=false;re();}});
+function posHosts(){[['cmhost','.cm3'],['e3host','.e3']].forEach(([id,sel])=>{const H=document.getElementById(id),ph=document.querySelector(sel);if(!H||H.dataset.fs||H.dataset.ex||!ph||H.style.display==='none')return;const r=ph.getBoundingClientRect(),L=(r.left+scrollX)+'px',T=(r.top+scrollY)+'px',W=r.width+'px',Hh=r.height+'px';if(H.style.left!==L||H.style.top!==T||H.style.width!==W||H.style.height!==Hh)Object.assign(H.style,{left:L,top:T,width:W,height:Hh});});}
 setInterval(posHosts,300);addEventListener('load',posHosts);document.fonts&&document.fonts.ready.then(posHosts);
 addEventListener('resize',()=>place3d());addEventListener('hashchange',()=>{const h=location.hash.slice(1);if(!ALUNO&&R[h]&&h!==AT)go(h);});try{new ResizeObserver(()=>place3d()).observe(document.body);}catch(_){}
 const b3d=(t,txt)=>`<button type="button" class="btn p" data-d3="${t}">🧊 ${esc(txt||'Ver em 3D: '+T3[t])}</button>`;
@@ -330,7 +340,7 @@ function placeCm(){const ph=document.querySelector('.cm3');let H=$('#cmhost');
   if(ALUNO){const cv=document.createElement('div');cv.style.cssText='position:absolute;inset:0;z-index:2;cursor:not-allowed';H.appendChild(cv);}}
  if(!H.dataset.fs){const r=ph.getBoundingClientRect();Object.assign(H.style,{display:'block',left:(r.left+scrollX)+'px',top:(r.top+scrollY)+'px',width:r.width+'px',height:r.height+'px'});}
  if(!CMS&&!placeCm.ld){placeCm.ld=1;CM3D.carregar().then(()=>{CMS=CM3D.cena(H);CM3D.reboco(CMS,CMR);CM3D.pintar(CMS,CMP2);CM3D.passo(CMS,CMK);placeCm.k=CMK;CM3D.janela(CMS,{cor:CMC,fol:CMF});angPad(H,AD.orbit(()=>CMS&&CMS.r?CMS:null,()=>{CMS.alvo=null;}));CM3D.cortar(CMS,CMX,CMK);if(!CM3D.__fotos){try{CM3D.__fotos=CM3D.fotos();if(AT==='cm')re();}catch(e){console.warn(e);}}quadrosPrep();}).catch(e=>{console.warn(e);ph.textContent='Não foi possível carregar o 3D.';});}
- else if(CMS){CM3D.reboco(CMS,CMR);CM3D.pintar(CMS,CMP2);if(placeCm.k!==CMK){CM3D.passo(CMS,CMK);placeCm.k=CMK;}CM3D.cortar(CMS,CMX,CMK);CM3D.janela(CMS,{cor:CMC,fol:CMF});if(CMS.exOn!==(CMD&&CMK===CMST.length-1))CM3D.desmontar(CMS,CMD&&CMK===CMST.length-1);}}
+ else if(CMS){CM3D.reboco(CMS,CMR);CM3D.pintar(CMS,CMP2);if(placeCm.k!==CMK){CM3D.passo(CMS,CMK);placeCm.k=CMK;}CM3D.cortar(CMS,CMX,CMK);CM3D.janela(CMS,{cor:CMC,fol:CMF});if(CMS.exOn!==(CMD&&CMK===CMST.length-1))CM3D.desmontar(CMS,CMD&&CMK===CMST.length-1);exTela(CMD&&CMK===CMST.length-1);}}
 /* --- 04 guarnições --- */
 /* desenhos de referência (guarnição EPDM e espuma PVC adesivada) */
 const GIMG={GUA007:['SW GUA 007','ED 084','Guarnição EPDM'],GUA053:['SW GUA 053','GUA 053','Guarnição EPDM'],GUA239:['SW GUA 239','GUA 239','Guarnição EPDM'],GUA256:['SW GUA 256','SD 626','Guarnição EPDM'],GUA259:['SW GUA 259','SD 631','Guarnição EPDM'],GUA283:['SW GUA 283','GUA 283','Guarnição EPDM'],GUA284:['SW GUA 284','GUA 283 / SD 2562N','Guarnição EPDM'],GUA412:['SW GUA 412','1087101','Guarnição EPDM'],

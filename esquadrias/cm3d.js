@@ -94,7 +94,7 @@
  /* ---------- cena da parede ---------- */
  const VW=1.2,VH=1.0,FOL=.02,PE=.14;/* vão, folga para argamassa, espessura da parede */
  function cena(el){const S={el};const W=el.clientWidth,H=el.clientHeight;
-  const r=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});r.setPixelRatio(Math.min(2,devicePixelRatio));r.setSize(W,H);r.shadowMap.enabled=true;r.localClippingEnabled=true;el.appendChild(r.domElement);
+  const r=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true,alpha:true});r.setPixelRatio(Math.min(2,devicePixelRatio));r.setSize(W,H);r.shadowMap.enabled=true;r.localClippingEnabled=true;el.appendChild(r.domElement);
   const sc=new THREE.Scene();sc.background=new THREE.Color(0xe9eef1);sc.environment=ambiente(r);const cam=new THREE.PerspectiveCamera(38,W/H,.01,50);cam.position.set(1.15,.55,2.2);
   const ctl=new THREE.OrbitControls(cam,r.domElement);ctl.enableDamping=true;ctl.target.set(0,0,0);ctl.minDistance=.25;ctl.maxDistance=5;
   sc.add(new THREE.HemisphereLight(0xffffff,0x8a8070,.35));const sol=new THREE.DirectionalLight(0xffffff,.6);sol.position.set(2.5,3,3);sol.castShadow=true;sol.shadow.mapSize.set(2048,2048);
