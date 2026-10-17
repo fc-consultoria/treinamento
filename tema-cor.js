@@ -33,7 +33,7 @@ html[data-fc-tema][data-fc-fundo="tingido"] .panel, html[data-fc-tema][data-fc-f
   function injetarCSS(){ if(document.getElementById('fc-tema-css')) return; const st=document.createElement('style'); st.id='fc-tema-css'; st.textContent=CSS; document.head.appendChild(st); }
   const FUNDOS = [{id:'claro', nome:'Suave'}, {id:'tingido', nome:'Vivo'}];
   function email(){
-    try{ for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); if(/^sb-.*-auth-token$/.test(k)){ const v=JSON.parse(localStorage.getItem(k)||'{}'); const e=(v.user&&v.user.email)||(v.currentSession&&v.currentSession.user&&v.currentSession.user.email); if(e) return String(e).toLowerCase(); } } }catch(_){ }
+    try{ for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); if(/^sb-.*-auth-token$/.test(k) || k==='trein-fc-auth'){ const v=JSON.parse(localStorage.getItem(k)||'{}'); const e=(v.user&&v.user.email)||(v.currentSession&&v.currentSession.user&&v.currentSession.user.email); if(e) return String(e).toLowerCase(); } } }catch(_){ }
     return 'anon';
   }
   const chave = ()=>'fc_tema_cor_'+email();
