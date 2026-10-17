@@ -111,6 +111,8 @@ h1{font-size:28px}h2{font-size:21px}h3{font-size:17px}
 .sp{all:unset;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;position:relative;z-index:1;padding:0 2px}.sp:disabled{cursor:default}.sp small{font-size:12px;color:var(--muted);line-height:1.25}.sp.cur small{color:var(--fg);font-weight:700}.sp:not(:disabled):hover .dotc{border-color:var(--accent)}
 @media(max-width:560px){.sp small{font-size:10.5px}}
 .st2.nt{grid-template-columns:26px minmax(0,1fr)}.st2.nt::before{left:12px}
+.plrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:9px 0;border-top:1px dashed var(--line)}.plrow:first-of-type{border-top:0}.plic{font-size:22px}
+.inpx{display:block;width:100%;margin-top:4px;font:15px var(--f-b);padding:9px 11px;border:1px solid var(--line);border-radius:9px;background:var(--surface);color:var(--fg)}
 .stsel{font:600 12.5px var(--f-b);border:1px solid var(--line);border-radius:99px;padding:3px 8px;background:var(--surface);color:var(--fg)}
 .saving{position:fixed;right:16px;bottom:16px;background:var(--fg);color:var(--bg);padding:8px 14px;border-radius:9px;font-weight:600;font-size:14px;z-index:50}
 </style></head><body>
@@ -134,6 +136,7 @@ h1{font-size:28px}h2{font-size:21px}h3{font-size:17px}
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="auth.js"></script>
+<script src="planilha.js?v=1"></script>
 <script>
 const SEED={
  gb:{nome:'Guaporé Vidros',cid:'Cuiabá e Sinop · MT',c:'var(--gb)',mod:'Consultoria contínua · cliente principal, muita demanda',st:['p-warn','Muitas demandas'],visita:'a definir',horas:'—',
@@ -215,19 +218,19 @@ async function carregar(){const {data,error}=await sb.from('rotina_docs').select
   const EXTRA=SEED.cb.acao.temas.slice(-2);
   for(const k of Object.keys(E)){const a=E[k].acao;if(a&&!a._extra1){EXTRA.forEach(t=>{if(!a.temas.some(x=>x[0]===t[0]))a.temas.push(t.slice(0,1+a.cols.length));});a._extra1=true;await salvar(k);}}
   if(!E[at])at=Object.keys(E)[0];
-  await carregarPortais();const h=await sb.from('rotina_docs').select('data').eq('col','horas');HORAS=(h.data||[]).map(x=>x.data);render();}
+  await carregarPortais();await carregarPlan();await carregarSol();const h=await sb.from('rotina_docs').select('data').eq('col','horas');HORAS=(h.data||[]).map(x=>x.data);render();}
 const nrm=t=>String(t||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/s\b/g,'').trim();
 function horasDe(e){const k=nrm(e.nome.split('·')[0]),k2=nrm(e.apelido||'');const mes=new Date().toISOString().slice(0,7);
   return HORAS.filter(x=>{const c=nrm(x.cliente);return c&&(c.includes(k)||k.includes(c)||(k2&&c.includes(k2)))});}
 const hm=m=>{m=Math.round(m||0);const h=Math.floor(m/60),r=m%60;return h?h+'h'+(r?String(r).padStart(2,'0'):''):r+'min'};
 const $=s=>document.querySelector(s);
 function cards(){ $('#emps').innerHTML=Object.entries(E).map(([k,e])=>`<button class="emp" type="button" style="--c:${e.c}" data-k="${k}" aria-pressed="${k===at}">
-  <div class="hd"><b>${e.nome}</b><span>${e.cid}</span></div><div class="mod">${e.mod}</div>
+  <div class="hd"><b>${e.nome}</b>${solNovas(k)?`<span class="pill p-bad" title="Solicitações novas do cliente">📨 ${solNovas(k)}</span>`:''}<span>${e.cid}</span></div><div class="mod">${e.mod}</div>
   <div><span class="pill ${e.st[0]}">${e.st[1]}</span></div>
   <div class="kv"><div><small>Próxima visita</small><b>${e.visita}</b></div><div><small>Demandas</small><b>${e.dem.length}</b></div><div><small>Horas no mês</small><b>${(l=>l.length?hm(l.reduce((s,x)=>s+(+x.minNormal||0)+(+x.minExtra||0),0)):'—')(horasDe(e).filter(x=>(x.data||'').slice(0,7)===new Date().toISOString().slice(0,7)))}</b></div></div>
   <div class="nx muted">Próximo passo: ${e.dem? e.dem[0][2]||e.dem[0][1] : '—'}</div></button>`).join('');
   document.querySelectorAll('.emp').forEach(b=>b.onclick=()=>{at=b.dataset.k;openLane=null;OPEN={};render()}); }
-const ABAS=[['proc','Fluxo do processo'],['acao','Plano de ação'],['vis','Visitas'],['dem','Demandas e entregas'],['arq','Arquivos'],['hrs','Horas']];
+const ABAS=[['proc','Fluxo do processo'],['acao','Plano de ação'],['pla','📊 Planilhas'],['sol','📨 Solicitações'],['vis','Visitas'],['dem','Demandas e entregas'],['arq','Arquivos'],['hrs','Horas']];
 function ficha(){const e=E[at];let h='';
  if(tab==='proc'&&e.objetivo)h=`<details class="box obj"><summary><b>🎯 Objetivo da consultoria</b><span class="muted" style="font-size:13px"> · toque para ler</span></summary><p style="margin:8px 0 0">${esc(e.objetivo)}</p></details>`;
  if(tab==='proc'){const tot=e.frentes.reduce((n,f)=>n+f.p.length,0),ok=e.frentes.reduce((n,f)=>n+f.p.filter(p=>p[0]==='ok').length,0),pct=tot?Math.round(ok/tot*100):0;
@@ -257,10 +260,12 @@ function ficha(){const e=E[at];let h='';
    h+=`<div class="lanes">${xs.map(o=>{const nA=((A.anx||{})[o.key]||[]).filter(z=>!cli||z.cli).length;
      const body=`<div style="padding:2px 16px 16px"><p style="margin:0 0 12px;font-size:14.5px">${esc(o.t[1+fr]||'')}</p>
        <div class="stp">${ST.map((z,zi)=>`<button type="button" class="sp ${zi<o.si?'done':''} ${zi===o.si?'cur':''}" ${cli?'disabled':''} data-stp="${esc(o.key)}" data-v="${z[0]}"><span class="dotc ${zi<o.si||o.x.s==='ok'&&zi===o.si?'ok':zi===o.si?'and':''}">${zi<o.si||o.x.s==='ok'&&zi===o.si?'✓':''}</span><small>${z[1]}</small></button>`).join('')}</div>
-       ${o.x.em?`<p class="nota" style="margin:10px 0 0">Situação atualizada em ${o.x.em.split('-').reverse().join('/')}</p>`:''}${o.x.ev?`<div class="nextc" style="margin-top:8px"><span class="dotc ok">✓</span><div><small>Como foi resolvido</small><b style="font-weight:500">${esc(o.x.ev)}</b></div></div>`:''}
-       <div style="margin-top:10px"><b style="font-size:13.5px">📎 Base de trabalho</b>${anxHtml(A,o.key)||'<p class="nota" style="margin:4px 0 0">Nenhum arquivo liberado ainda.</p>'}</div></div>`;
+       ${o.x.em&&!cli?`<p class="nota" style="margin:10px 0 0">Situação atualizada em ${o.x.em.split('-').reverse().join('/')}</p>`:''}${o.x.ev?`<div class="nextc" style="margin-top:8px"><span class="dotc ok">✓</span><div><small>Como foi resolvido</small><b style="font-weight:500">${esc(o.x.ev)}</b></div></div>`:''}
+       ${plTemaHtml(o.key)}<div style="margin-top:10px"><b style="font-size:13.5px">📎 Base de trabalho</b>${anxHtml(A,o.key)||'<p class="nota" style="margin:4px 0 0">Nenhum arquivo liberado ainda.</p>'}</div></div>`;
      return sec(o.key,esc(o.t[0]),'',o.si,4,`<span class="pill ${ST[o.si][2]}">${o.x.s==='ok'?'✓ ':''}${ST[o.si][1]}</span>${nA?`<span class="pill p-mut">📎 ${nA}</span>`:''}`,body);}).join('')}</div>`;
    h+=cli?'<p class="nota">Toque num tema para ver o que será feito, a situação e os arquivos de base. Verde = resolvido.</p>':'<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" type="button" id="addTema">+ Novo tema</button><button class="btn" type="button" id="delTema" style="color:var(--bad)">Remover um tema</button></div><p class="nota">Toque num tema e clique na etapa (Aguardando → Diagnóstico → Ação → Execução → Resolvido). Ao marcar Resolvido, registre como foi resolvido.</p>';}
+ if(tab==='pla')h+=plTabHtml(e);
+ if(tab==='sol')h+=solTabHtml(e);
  if(tab==='vis'){const v=e.vis;v.ok=v.ok||{};const G=[['a','Antes da visita','preparação',v.prep||[]],['d','Durante a visita','execução',v.dur||[]],['p','Depois da visita','fechamento',v.dep||[]]];
    const tot=G.reduce((n,g)=>n+g[3].length,0),ok=G.reduce((n,g)=>n+g[3].filter((_,i)=>v.ok[g[0]+i]).length,0),pct=tot?Math.round(ok/tot*100):0;
    const nx=(()=>{for(const g of G){const i=g[3].findIndex((_,j)=>!v.ok[g[0]+j]);if(i>=0)return {g,i};}return null})();
@@ -291,17 +296,17 @@ function ficha(){const e=E[at];let h='';
    h+=Lh.length?`<div class="lanes">${dias.map(d=>{const l=Lh.filter(x=>x.data===d),nn=l.reduce((s,x)=>s+(+x.minNormal||0),0),ee=l.reduce((s,x)=>s+(+x.minExtra||0),0);
      return sec(d,`${d.slice(8,10)}/${d.slice(5,7)}`,`${l.length} registro${l.length>1?'s':''}`,nn,nn+ee,`<span class="pill p-mut">${hm(nn+ee)}</span>${ee?`<span class="pill p-bad">${hm(ee)} extra</span>`:''}`,`<ol class="steps">${l.map(x=>`<li class="st2"><span class="tm mono">${esc(x.ini||'')}${x.fim?'–'+esc(x.fim):''}</span><span class="dotc ${+x.minExtra?'':'ok'}" style="${+x.minExtra?'border-color:var(--bad)':''}">${+x.minExtra?'':'✓'}</span><div class="sb"><div class="stt">${esc(x.titulo)}</div><div class="sm">${(x.itens||[]).map(esc).join(' · ')}</div></div></li>`).join('')}</ol>`)}).join('')}</div>`
      :'<div class="box"><p class="nota" style="margin:0">Ainda não há horas lançadas para esta empresa na Rotina FC.</p></div>';
-   h+='<p class="nota">Vem da Rotina FC: 07:00 às 18:00 é horário normal; 18:01 às 06:59 e fim de semana, hora extra. A barra de cada dia mostra a parte em horário normal.</p>';}
- const abas=(cli?ABAS.filter(a=>['proc','acao','dem'].includes(a[0])):ABAS).filter(a=>a[0]!=='acao'||e.acao); if(cli&&!abas.some(a=>a[0]===tab))tab='proc';
+   h+='<p class="nota"><b>🔒 Só para o seu controle:</b> o cliente não vê as horas nem quando a FC trabalhou na consultoria. Vem da Rotina FC: 07:00 às 18:00 é horário normal; 18:01 às 06:59 e fim de semana, hora extra. A barra de cada dia mostra a parte em horário normal.</p>';}
+ const abas=(cli?ABAS.filter(a=>['proc','acao','pla','sol','dem'].includes(a[0])):ABAS).filter(a=>a[0]!=='acao'||e.acao); if(cli&&!abas.some(a=>a[0]===tab))tab='proc';
  $('#ficha').style.setProperty('--c',e.c);
  $('#ficha').innerHTML=`<div class="fh"><span class="sw"></span><div style="min-width:0;flex:1"><h2>${e.nome}</h2><div class="muted" style="font-size:14px">${e.cid} · ${e.mod}</div></div><span class="pill ${e.st[0]}">${e.st[1]}</span>${cli?'':`<button class="btn" type="button" id="lkTog">🔗 Link do cliente${PORT[at]&&PORT[at].ativo?' ✓':''}</button>`}</div>
-  ${PUB?`<div style="padding:12px 18px 0"><div class="cliente-bar">Acompanhamento atualizado pela FC Consultoria. Dúvidas: (66) 9 9986-7984, de segunda a sexta, das 08:00 às 11:00 e das 13:00 às 17:00 (horário de Sinop/MT).</div></div>`:cli?`<div style="padding:12px 18px 0"><div class="cliente-bar">🔗 <b>Link do cliente</b> · ${e.nome} vê o fluxo, o plano de ação e as entregas. Horas, arquivos, checklist de visita e observações da FC ficam ocultos.</div></div>`:linkAberto?`<div style="padding:12px 18px 0">${linkBox(e)}</div>`:''}<div class="tabs" role="tablist">${abas.map(([k,l])=>`<button class="tab" role="tab" type="button" aria-selected="${k===tab}" data-t="${k}">${l}</button>`).join('')}</div><div class="body">${h}</div>`;
+  ${PUB?`<div style="padding:12px 18px 0"><div class="cliente-bar">Acompanhamento atualizado pela FC Consultoria. Dúvidas: (66) 9 9986-7984, de segunda a sexta, das 08:00 às 11:00 e das 13:00 às 17:00 (horário de Sinop/MT).</div></div>`:cli?`<div style="padding:12px 18px 0"><div class="cliente-bar">🔗 <b>Link do cliente</b> · ${e.nome} vê o fluxo, o plano de ação e as entregas. Horas, arquivos, checklist de visita e observações da FC ficam ocultos.</div></div>`:linkAberto?`<div style="padding:12px 18px 0">${linkBox(e)}</div>`:''}<div class="tabs" role="tablist">${abas.map(([k,l])=>`<button class="tab" role="tab" type="button" aria-selected="${k===tab}" data-t="${k}">${l}${k==='sol'&&!cli&&solNovas(at)?` <span class="pill p-bad">${solNovas(at)}</span>`:''}</button>`).join('')}</div><div class="body">${h}</div>`;
  document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{tab=b.dataset.t;ficha()});
  document.querySelectorAll('[data-lane]').forEach(b=>b.onclick=()=>{const v=+b.dataset.lane;openLane=openLane===v?-1:v;ficha();});
  document.querySelectorAll('[data-fr]').forEach(b=>b.onclick=()=>{fr=+b.dataset.fr;delete OPEN.acao;ficha();});
  document.querySelectorAll('[data-sec]').forEach(b=>b.onclick=()=>{OPEN[tab]=OPEN[tab]===b.dataset.sec?'':b.dataset.sec;ficha();});
  document.querySelectorAll('[data-ff]').forEach(b=>b.onclick=()=>{frFlow=+b.dataset.ff;ficha();});
- $('#ficha').classList.toggle('fc',!cli); if(cli)return;
+ $('#ficha').classList.toggle('fc',!cli); wirePlSol(e); if(cli)return;
  const g=id=>document.getElementById(id);
  if(g('lkTog'))g('lkTog').onclick=()=>{linkAberto=!linkAberto;ficha();};
  if(g('lkCriar'))g('lkCriar').onclick=async()=>{const r={empresa_id:at,chave:novaChave(),ativo:true};const {error}=await sb.from('cons_portal').insert(r);if(error){alert('Não foi possível criar: '+error.message);return;}PORT[at]=Object.assign({acessos:0},r);ficha();};
@@ -332,6 +337,65 @@ function ficha(){const e=E[at];let h='';
 function setAcao(key,v){const e=E[at];e.acao.st=e.acao.st||{};const o=e.acao.st[key]||{};const x={s:v,em:new Date().toISOString().slice(0,10)};
   if(v==='ok'){const ev=prompt('Como foi resolvido? Descreva a evidência (planilha em uso, print, foto…):',o.ev||'');if(ev===null)return;x.ev=ev;}else if(o.ev&&v!=='aguarda')x.ev=o.ev;
   e.acao.st[key]=x;ficha();salvar(at);}
+let PLAN=[],SOL=[],PUBPL=null,PUBSOL=null;
+async function carregarPlan(){const {data}=await sb.from('cons_planilhas').select('id,empresa_id,tema,nome,cliente_ve,cliente_edita,versao,atualizado,atualizado_por').order('criado_em');PLAN=data||[];}
+async function carregarSol(){const {data}=await sb.from('cons_solicitacoes').select('*').order('criado_em',{ascending:false});SOL=data||[];}
+const solNovas=k=>SOL.filter(x=>x.empresa_id===k&&x.status==='nova').length;
+const planDe=k=>PUB?(PUBPL||[]):PLAN.filter(p=>p.empresa_id===k);
+const temaNome=t=>{if(!t)return 'Geral';const [n,c]=t.split('|');const e=E[at];return n+(e&&e.acao&&c!=null?' · '+(e.acao.cols[+c]||''):'');};
+function plItem(p){const vis=!PUB&&!cli;
+  return `<div class="plrow"><span class="plic">📊</span><div style="flex:1;min-width:0"><b>${esc(p.nome)}</b><div class="nota">${esc(temaNome(p.tema))}${vis?` · ${p.cliente_ve?(p.cliente_edita?'cliente vê e preenche':'cliente só vê'):'só FC'}${p.atualizado_por?' · última alteração: '+esc(p.atualizado_por):''}`:(p.cliente_edita?' · você pode preencher':' · somente consulta')}</div></div>
+   <button class="btn pri" type="button" data-plab="${p.id}">Abrir</button>${vis?`<button class="mini ${p.cliente_ve?'on':''}" type="button" data-plve="${p.id}" title="Mostrar no link do cliente">${p.cliente_ve?'👁 no link':'🔒 só FC'}</button><button class="mini ${p.cliente_edita?'on':''}" type="button" data-pled="${p.id}" title="Cliente pode preencher (as fórmulas continuam travadas)">${p.cliente_edita?'✏ cliente preenche':'👁 só consulta'}</button><label class="mini" title="Trocar pelo arquivo novo">↻ Trocar arquivo<input type="file" hidden accept=".xlsx" data-pltr="${p.id}"></label><button class="mini" type="button" data-plrm="${p.id}">✕</button>`:''}</div>`;}
+function plTemaHtml(key){const L=planDe(at).filter(p=>p.tema===key);const adm=!PUB&&!cli;if(!L.length&&!adm)return '';
+  return `<div style="margin-top:12px"><b style="font-size:13.5px">📊 Planilha online</b>${L.map(plItem).join('')}${adm?`<label class="upl" style="margin-top:6px;display:inline-block">📥 Importar planilha (.xlsx)<input type="file" hidden accept=".xlsx" data-plimp="${esc(key)}"></label>`:''}</div>`;}
+function plTabHtml(e){const L=planDe(at);const adm=!PUB&&!cli;
+  return `<div class="hero2"><div class="ring" style="--p:${L.length?100:0}"><span>${L.length}</span></div><div style="min-width:0;flex:1 1 240px"><div class="eyebrow">Planilhas online</div><div class="big">${L.length?L.length+' planilha'+(L.length>1?'s':'')+' em uso':'Nenhuma planilha ainda'}</div><div class="nota">${adm?'A mesma planilha vale para o painel e para o link: o que for alterado em um lugar aparece no outro. As fórmulas só a FC altera.':'Abra a planilha, preencha as células liberadas e os cálculos se atualizam na hora. Tudo fica salvo e a FC acompanha.'}</div></div></div>
+   <div class="box">${L.length?L.map(plItem).join(''):'<p class="nota" style="margin:0">'+(adm?'Importe a planilha dentro do tema no Plano de ação (ex.: Precificação) ou aqui embaixo.':'Quando a FC liberar uma planilha, ela aparece aqui.')+'</p>'}
+   ${adm?`<label class="upl" style="margin-top:10px;display:inline-block">📥 Importar planilha geral (.xlsx)<input type="file" hidden accept=".xlsx" data-plimp=""></label>`:''}</div>`;}
+const SOL_T={fornecedor:'Indicação de fornecedor',orcamento:'Solicitação de orçamento',planilha:'Ajuste em planilha',duvida:'Dúvida',outro:'Outro assunto'};
+const SOL_S={nova:['Recebida','p-bad'],aceita:['Em andamento','p-acc'],resolvida:['Resolvida','p-ok'],recusada:['Não será feita','p-mut']};
+function solTabHtml(e){const adm=!PUB&&!cli;const L=PUB?(PUBSOL||[]):SOL.filter(x=>x.empresa_id===at);
+  const ab=L.filter(x=>x.status==='nova'||x.status==='aceita').length,ok=L.filter(x=>x.status==='resolvida').length;
+  let h=`<div class="hero2"><div class="ring" style="--p:${L.length?Math.round(ok/L.length*100):0}"><span>${L.length?Math.round(ok/L.length*100):0}%</span></div><div style="min-width:0;flex:1 1 240px"><div class="eyebrow">Solicitações ${adm?'do cliente':'para a FC'}</div><div class="big">${ab} em aberto · ${ok} resolvida${ok===1?'':'s'}</div><div class="nota">${adm?'Pedidos que a equipe ou a direção fazem pelo link: indicação de fornecedor, orçamento, ajuste em planilha…':'Precisa de uma indicação de fornecedor, um orçamento ou outro apoio? Peça aqui. A resposta aparece nesta página.'}</div></div></div>`;
+  if(!adm)h+=`<div class="box"><h3>Nova solicitação</h3><div style="display:grid;gap:10px"><label class="nota" style="color:var(--fg);font-weight:600">Seu nome<input id="soNome" class="inpx" maxlength="80"></label>
+    <label class="nota" style="color:var(--fg);font-weight:600">Assunto<select id="soTipo" class="inpx">${Object.entries(SOL_T).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select></label>
+    <label class="nota" style="color:var(--fg);font-weight:600">O que vocês precisam?<textarea id="soTxt" class="inpx" rows="4" maxlength="3000" placeholder="Ex.: indicação de fornecedor de vidro temperado 8 mm em Recife"></textarea></label>
+    <div><button class="btn pri" type="button" id="soEnv">Enviar solicitação</button> <span class="nota" id="soMsg"></span></div></div></div>`;
+  h+=`<div class="box">${L.length?L.map(x=>{const [r,c]=SOL_S[x.status]||SOL_S.nova;return `<div class="li"><span class="dt">${new Date(x.criado_em||x.em).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})}</span><div style="flex:1;min-width:0"><div style="font-weight:600">${esc(SOL_T[x.tipo]||x.tipo)}${x.nome?` <span class="nota">· ${esc(x.nome)}</span>`:''}</div><div style="white-space:pre-wrap;font-size:14px">${esc(x.texto)}</div>${x.resposta?`<div class="nextc" style="margin-top:6px"><span class="dotc ok">✓</span><div><small>Resposta da FC</small><b style="font-weight:500">${esc(x.resposta)}</b></div></div>`:''}
+    ${adm?`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">${x.status==='nova'?`<button class="mini on" type="button" data-sola="${x.id}">➜ Virar demanda</button>`:''}<button class="mini" type="button" data-solr="${x.id}">✍ Responder</button>${x.status!=='resolvida'?`<button class="mini" type="button" data-sols="${x.id}" data-v="resolvida">✓ Resolvida</button>`:''}${x.status==='nova'?`<button class="mini" type="button" data-sols="${x.id}" data-v="recusada">Não será feita</button>`:''}</div>`:''}</div><span class="pill ${c}">${r}</span></div>`}).join(''):'<p class="nota" style="margin:0">Nenhuma solicitação ainda.</p>'}</div>`;
+  return h;}
+async function abrirPlanilha(id){const p=planDe(at).find(x=>x.id===id);if(!p)return;const st=document.getElementById('sync');if(st)st.textContent='Abrindo planilha…';
+  if(PUB){const {data,error}=await sb.rpc('cons_portal_planilha',{p_chave:KEY,p_id:id});if(error||!data){alert('Não foi possível abrir a planilha.');return;}let ver=data.versao;
+    Planilha.abrir({model:data.dados,nome:data.nome,info:data.cliente_edita?'Preencha as células liberadas; os cálculos se atualizam sozinhos.':'Somente consulta',podeEditar:(a,c)=>data.cliente_edita&&!c.f,podeFormula:false,podeLinha:data.cliente_edita,
+      onSave:data.cliente_edita?async m=>{const nm=(()=>{try{return localStorage.getItem('cons-nome')||''}catch(_){return ''}})();const r=await sb.rpc('cons_portal_planilha_salvar',{p_chave:KEY,p_id:id,p_dados:m,p_versao:ver,p_nome:nm});if(r.error)throw new Error('Não salvou: '+r.error.message);if(r.data<0)throw new Error('A FC atualizou esta planilha agora. Feche e abra de novo.');ver=r.data;}:null});return;}
+  const {data,error}=await sb.from('cons_planilhas').select('dados,versao').eq('id',id).single();if(error){alert('Não abriu: '+error.message);return;}let ver=data.versao;if(st)st.textContent='';
+  Planilha.abrir({model:data.dados,nome:p.nome,info:'Visão FC · tudo liberado (inclusive fórmulas)',podeEditar:()=>true,podeFormula:true,podeLinha:true,onClose:()=>{carregarPlan().then(()=>ficha());},
+    onSave:async m=>{const {data:d2,error:e2}=await sb.from('cons_planilhas').update({dados:m,versao:ver+1,atualizado:new Date().toISOString(),atualizado_por:'FC'}).eq('id',id).eq('versao',ver).select('versao');if(e2)throw new Error('Não salvou: '+e2.message);if(!d2||!d2.length)throw new Error('O cliente salvou esta planilha agora. Feche e abra de novo.');ver=d2[0].versao;}});}
+async function importarPlanilha(file,tema,trocarId){if(!file)return;const st=document.getElementById('sync');st.textContent='Lendo '+file.name+'…';
+  try{const m=await Planilha.importar(await file.arrayBuffer());
+    if(trocarId){const p=PLAN.find(x=>x.id===trocarId);if(!confirm('Trocar "'+p.nome+'" pelo arquivo '+file.name+'?\n\nO que foi preenchido na planilha online será substituído pelo arquivo novo.'))return;
+      const {error}=await sb.from('cons_planilhas').update({dados:m,versao:p.versao+1,atualizado:new Date().toISOString(),atualizado_por:'FC (arquivo trocado)'}).eq('id',trocarId);if(error)throw error;}
+    else{const nome=prompt('Nome da planilha (aparece para o cliente):',file.name.replace(/\.xlsx$/i,'').replace(/_/g,' '));if(!nome)return;
+      const {error}=await sb.from('cons_planilhas').insert({empresa_id:at,tema:tema||null,nome,dados:m});if(error)throw error;}
+    await carregarPlan();st.textContent='✓ Planilha salva';ficha();}catch(err){alert('Não foi possível importar: '+(err.message||err));st.textContent='';}}
+function wirePlSol(e){const q=(s,f)=>document.querySelectorAll(s).forEach(f);
+  q('[data-plab]',b=>b.onclick=()=>abrirPlanilha(b.dataset.plab));
+  if(PUB||cli){const se=document.getElementById('soEnv');if(se){try{document.getElementById('soNome').value=localStorage.getItem('cons-nome')||''}catch(_){}
+    se.onclick=async()=>{const nome=document.getElementById('soNome').value.trim(),txt=document.getElementById('soTxt').value.trim(),m=document.getElementById('soMsg');if(!txt){m.textContent='Escreva o que vocês precisam.';return;}
+      if(!PUB){m.textContent='(Visão de exemplo: no link do cliente o envio funciona.)';return;}
+      try{localStorage.setItem('cons-nome',nome)}catch(_){}se.disabled=true;m.textContent='Enviando…';const r=await sb.rpc('cons_portal_solicitar',{p_chave:KEY,p_nome:nome,p_tipo:document.getElementById('soTipo').value,p_texto:txt});
+      se.disabled=false;if(r.error||!r.data){m.textContent='Não foi possível enviar. Tente de novo.';return;}const l=await sb.rpc('cons_portal_solicitacoes',{p_chave:KEY});PUBSOL=(l.data||[]).map(x=>Object.assign(x,{criado_em:x.em}));ficha();
+      setTimeout(()=>{const mm=document.getElementById('soMsg');if(mm)mm.textContent='✓ Solicitação enviada! A FC já recebeu.';},50);};}
+    return;}
+  q('[data-plimp]',i=>i.onchange=()=>importarPlanilha(i.files[0],i.dataset.plimp));
+  q('[data-pltr]',i=>i.onchange=()=>importarPlanilha(i.files[0],null,i.dataset.pltr));
+  q('[data-plve]',b=>b.onclick=async()=>{const p=PLAN.find(x=>x.id===b.dataset.plve);await sb.from('cons_planilhas').update({cliente_ve:!p.cliente_ve}).eq('id',p.id);p.cliente_ve=!p.cliente_ve;ficha();});
+  q('[data-pled]',b=>b.onclick=async()=>{const p=PLAN.find(x=>x.id===b.dataset.pled);await sb.from('cons_planilhas').update({cliente_edita:!p.cliente_edita}).eq('id',p.id);p.cliente_edita=!p.cliente_edita;ficha();});
+  q('[data-plrm]',b=>b.onclick=async()=>{const p=PLAN.find(x=>x.id===b.dataset.plrm);if(!confirm('Remover a planilha "'+p.nome+'"? Ela sai do painel e do link do cliente.'))return;await sb.from('cons_planilhas').delete().eq('id',p.id);await carregarPlan();ficha();});
+  q('[data-sola]',b=>b.onclick=async()=>{const x=SOL.find(y=>y.id===b.dataset.sola);e.dem=e.dem||[];e.dem.push(['—',(SOL_T[x.tipo]||'Solicitação')+': '+x.texto.slice(0,90),x.nome?'pedido por '+x.nome:'pedido pelo link','p-mut','A fazer']);
+    await sb.from('cons_solicitacoes').update({status:'aceita'}).eq('id',x.id);x.status='aceita';salvar(at);ficha();cards();});
+  q('[data-solr]',b=>b.onclick=async()=>{const x=SOL.find(y=>y.id===b.dataset.solr);const r=prompt('Resposta para o cliente (aparece no link):',x.resposta||'');if(r===null)return;await sb.from('cons_solicitacoes').update({resposta:r,respondido_em:new Date().toISOString(),status:x.status==='nova'?'aceita':x.status}).eq('id',x.id);x.resposta=r;if(x.status==='nova')x.status='aceita';ficha();cards();});
+  q('[data-sols]',b=>b.onclick=async()=>{const x=SOL.find(y=>y.id===b.dataset.sols);await sb.from('cons_solicitacoes').update({status:b.dataset.v}).eq('id',x.id);x.status=b.dataset.v;ficha();cards();});}
 function render(){cards();ficha()}
 function setCli(v){cli=v;$('#vFC').setAttribute('aria-pressed',!v);$('#vCli').setAttribute('aria-pressed',v);$('#emps').hidden=v;$('#nova').hidden=v;render();}
 $('#vFC').onclick=()=>setCli(false);$('#vCli').onclick=()=>setCli(true);
@@ -344,6 +408,7 @@ if(PUB){(async()=>{document.title='Acompanhamento da consultoria · FC Consultor
   $('#app').insertAdjacentHTML('afterbegin','<div class="top" style="align-items:center;gap:12px"><img src="midia/logo-fc.png" alt="FC Consultoria e Representação" style="height:44px;border-radius:8px"><div><div class="eyebrow">FC Consultoria · acompanhamento da consultoria</div><h1 id="pubT">Carregando…</h1></div></div>');
   const {data,error}=await sb.rpc('cons_portal_ver',{p_chave:KEY});
   if(error||!data){$('#pubT').textContent='Link indisponível';$('#ficha').innerHTML='<div class="body"><p style="margin:0">Este link não está ativo. Fale com a FC Consultoria: (66) 9 9986-7984.</p></div>';return;}
+  const [pl,so]=await Promise.all([sb.rpc('cons_portal_planilhas',{p_chave:KEY}),sb.rpc('cons_portal_solicitacoes',{p_chave:KEY})]);PUBPL=pl.data||[];PUBSOL=(so.data||[]).map(x=>Object.assign(x,{criado_em:x.em}));
   E={[data.id]:data};at=data.id;cli=true;$('#pubT').textContent='Acompanhamento da consultoria';ficha();})();}
 else{gateUI(()=>carregar(),{soMatriz:true});
   $('#acbar').hidden=false;
