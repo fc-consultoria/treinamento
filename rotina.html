@@ -669,6 +669,21 @@ async function save(col,id,obj){const o=JSON.parse(JSON.stringify(obj));delete o
   if(db){try{await db.collection(col).doc(id).set(o)}catch(e){toast(e.code==='quota_exceeded'?'Limite de armazenamento atingido':'Não salvou. Tente de novo.');throw e}}
   else{local[col][id]=o;persistLocal();applyLocal()}}
 async function del(col,id){if(db){await db.collection(col).doc(id).delete()}else{delete local[col][id];persistLocal();applyLocal()}}
+
+/* ===== Lembretes: demandas com "lembrete" aparecem na tela no início do dia (até 12h) e no fim do dia (a partir das 16h30) ===== */
+function checaLembretes(){if(document.getElementById('lbOv'))return;const L=(S.demandas||[]).filter(d=>d.lembrete&&d.status!=='concluido');if(!L.length)return;
+  const n=new Date(),hm=n.getHours()*60+n.getMinutes(),per=hm>=300&&hm<720?'m':hm>=990?'t':'';if(!per)return;
+  const k='rot-lemb-'+today()+'-'+per;try{if(localStorage.getItem(k))return;}catch(_){}
+  const e=t=>String(t||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const o=document.createElement('div');o.id='lbOv';o.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(8,20,30,.6);display:grid;place-items:center;padding:16px';
+  o.innerHTML=`<div role="dialog" aria-label="Lembretes" style="background:#fff;color:#13232e;border-radius:16px;max-width:520px;width:100%;max-height:88vh;overflow:auto;padding:20px;box-shadow:0 24px 60px rgba(0,0,0,.4);font-family:inherit">
+   <h3 style="margin:0 0 4px;font-size:20px">🔔 ${per==='m'?'Bom dia! Lembretes para hoje':'Antes de fechar o dia: lembretes'}</h3><p style="margin:0 0 12px;color:#5d6f7a;font-size:14px">${L.length} pendência${L.length>1?'s':''} marcada${L.length>1?'s':''} para lembrar.</p>
+   ${L.map(d=>`<div style="border:1px solid #e3e9ed;border-radius:12px;padding:10px 12px;margin-bottom:8px"><b>${e(d.titulo)}</b>${d.prazo?` <span style="font-size:12px;color:${d.prazo<today()?'#b23a32':'#9a4b00'};font-weight:700">· prazo ${d.prazo.split('-').reverse().join('/')}</span>`:''}
+     ${d.proximoPasso?`<div style="font-size:13.5px;margin-top:4px">➡️ ${e(d.proximoPasso)}</div>`:''}${d.obs?`<div style="font-size:13px;color:#5d6f7a;margin-top:4px;white-space:pre-line">${e(d.obs)}</div>`:''}
+     <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap"><button type="button" data-lbok="${d.id}" style="font:600 13px inherit;padding:6px 10px;border-radius:8px;border:1px solid #9fd4b4;background:#e3f4ea;color:#1f8a4c;cursor:pointer">✓ Já resolvi</button></div></div>`).join('')}
+   <div style="display:flex;justify-content:flex-end"><button type="button" id="lbX" style="font:700 14px inherit;padding:9px 16px;border-radius:9px;border:0;background:#0e5a86;color:#fff;cursor:pointer">Ok, lembrar ${per==='m'?'no fim do dia':'amanhã'}</button></div></div>`;
+  document.body.appendChild(o);const fim=()=>{try{localStorage.setItem(k,'1');}catch(_){}o.remove();};o.querySelector('#lbX').onclick=fim;
+  o.querySelectorAll('[data-lbok]').forEach(b=>b.onclick=async()=>{const d=S.demandas.find(x=>x.id===b.dataset.lbok);if(!d)return;b.disabled=true;b.textContent='Salvando…';await save('demandas',d.id,{...d,status:'concluido',lembrete:false,atualizadoEm:new Date().toISOString()});b.closest('div[style]').parentElement.remove();if(!o.querySelector('[data-lbok]'))fim();});}
 async function saveRotina(blocos){const b=JSON.parse(JSON.stringify(blocos));
   if(db){await db.doc('config/rotina').set({blocos:b})}else{local.rotina=b;persistLocal();applyLocal()}}
 function setSync(cls,txt){const e=$('#sync');e.className='sync '+cls;e.querySelector('span').textContent=txt}
@@ -1972,6 +1987,7 @@ document.addEventListener('focusout',e=>{if(e.target.classList&&e.target.classLi
   ['demandas','agenda','notas','clientes','contatos','realizado','prioridades','financeiro','banco','extratos','links','horas'].forEach(col=>db.collection(col).onSnapshot(s=>{S[col]=s.docs.map(x=>({...x.data(),id:x.id}));render();if(col==='links'&&M&&M._links)drawLinks()},fail));
   db.doc('config/bancos').onSnapshot(s=>{S.bancos=s.exists?(s.data().contas||null):null;render()},()=>{});
   db.doc('config/rotina').onSnapshot(s=>{S.rotina=s.exists&&Array.isArray(s.data().blocos)?s.data().blocos:null;render()},fail);
+  setTimeout(checaLembretes,4000);setInterval(checaLembretes,5*60000);
 })();
 </script>
 
