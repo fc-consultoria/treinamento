@@ -357,7 +357,7 @@ tbody tr:hover{background:var(--panel-2);}
       <button class="navitem" id="btn-logout"><i data-lucide="log-out"></i> Sair</button>
     </div>
     <div class="sidebar-foot">
-      Painel de implantação — dados salvos em banco de dados real (Supabase), acesso restrito à equipe.<br><b>Versão 17/10h — foto ampliada ao passar o mouse</b>
+      Painel de implantação — dados salvos em banco de dados real (Supabase), acesso restrito à equipe.<br><b>Versão 17/10i — fotos Alumiconte</b>
     </div>
   </nav>
   <div class="mobile-topbar">
@@ -2147,12 +2147,12 @@ const linhasForn = f => FORN_LINHAS.filter(x=>x.fornecedor_id===f.id).map(x=>x.l
 const CLAUDE_FORN = 'Claude (site Vitrasul)';
 // Fotos dos produtos (pesquisadas no site da Vitrasul): ficam numa coluna fixa nas tabelas de Componentes e Perfis
 let FOTOS_INFO = {}, FOTOS = {}, FOTOS_OK = false;
-const fotoRank = st => ({foto_cat:0, ok:1, foto:1, parecido:2, foto_sim:3})[st] ?? 2;
+const fotoRank = st => ({foto_cat:0, ok:1, foto:1, foto_tec:1.5, parecido:2, foto_sim:3})[st] ?? 2;
 async function carregarFotos(){
   try{ const {data, error} = await sb.from('impl_claude_base').select('codigo,img,variantes,excluido,status,cod_site,desc_site').limit(5000); if(error) return;
     const F = {}; FOTOS_INFO = {}; (data||[]).sort((a,b)=>fotoRank(a.status)-fotoRank(b.status)).forEach(r=>{ if(r.excluido) return; let im = r.img && !/sem-imagem/.test(r.img) ? r.img : null;
       if(!im) (r.variantes||[]).some(v=>{ if(v.i && !/sem-imagem/.test(v.i)){ im = v.i; return true; } return false; });
-      if(im){ const k = normalizeCodigo(r.codigo); if(k && !F[k]){ F[k] = im.startsWith('~') ? CLAUDE_IMG + im.slice(1) : im; FOTOS_INFO[k] = {sim: r.status==='foto_sim', cat: r.status==='foto_cat', cs: r.cod_site||'', ds: r.desc_site||''}; } } });
+      if(im){ const k = normalizeCodigo(r.codigo); if(k && !F[k]){ F[k] = im.startsWith('~') ? CLAUDE_IMG + im.slice(1) : im; FOTOS_INFO[k] = {sim: r.status==='foto_sim', cat: r.status==='foto_cat' || r.status==='foto_tec', cs: r.cod_site||'', ds: r.desc_site||''}; } } });
     FOTOS = F; FOTOS_OK = true; render(); }catch(_){}
 }
 function fotoCelula(codigo){
