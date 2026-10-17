@@ -132,11 +132,22 @@
   [[0,fh/2,fw,.035],[0,-fh/2,fw,.045],[fw/2,0,.03,fh],[-fw/2,0,.03,fh]].forEach(([x,y,w,h])=>{const b=new THREE.Mesh(new THREE.BoxGeometry(w,h,.07),mf);b.position.set(x,y,.0);b.castShadow=true;esd.add(b);});
   [-1,1].forEach((sx,k)=>{const lw=fw/2+.02,lh=fh-.06;const f=new THREE.Group();[[0,lh/2,lw,.04],[0,-lh/2,lw,.05],[lw/2,0,.04,lh],[-lw/2,0,.04,lh]].forEach(([x,y,w,h])=>{const b=new THREE.Mesh(new THREE.BoxGeometry(w,h,.03),mf);b.position.set(x,y,0);f.add(b);});
    const v=new THREE.Mesh(new THREE.BoxGeometry(lw-.06,lh-.07,.006),m.vidro);f.add(v);f.position.set(sx*(fw/4-.005),0,k?.012:-.012);f.userData.x0=f.position.x;f.userData.dx=-sx*(fw/2-.03);f.userData.k=0;esd.add(f);S.fol.push(f);});
+  /* vista explodida: cada peça sai do vão em direção à tela */
+  S.exK=0;S.exOn=false;S.exItems=[];
+  const exAdd=(o,z,spread)=>{o.userData.p0=o.position.clone();o.userData.ex=new THREE.Vector3(o.position.x*spread,o.position.y*spread,z);S.exItems.push(o);};
+  CM.children.forEach(g=>exAdd(g,.3,.7));cantos.children.forEach(c=>exAdd(c,.42,1.05));gr.children.forEach(g=>exAdd(g,.16,.45));
+  esd.children.forEach(o=>{if(S.fol.includes(o))return;exAdd(o,.62,.42);});
+  S.fol.forEach((f,i)=>{exAdd(f,.95+i*.22,0);f.userData.isFol=true;f.userData.ex.x=(i?1:-1)*.36;f.userData.ex.y=.06*(i?-1:1);});
+  const lab=(t,o,dx,dy)=>{const c=document.createElement('canvas');c.width=560;c.height=96;const k=c.getContext('2d');k.font='bold 44px system-ui';const w=Math.min(552,k.measureText(t).width+44);k.fillStyle='rgba(15,79,83,.92)';k.beginPath();k.roundRect?k.roundRect((560-w)/2,8,w,80,22):k.rect((560-w)/2,8,w,80);k.fill();k.fillStyle='#ffd58a';k.textAlign='center';k.fillText(t,280,64);const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),depthTest:false}));sp.renderOrder=10;sp.scale.set(.35,.06,1);sp.material.opacity=0;sp.material.transparent=true;G.add(sp);S.exLab.push({sp,o,dx,dy});};S.exLab=[];
+  lab('Contramarco CM-200',CM.children[0],0,.07);lab('Marco da janela',esd.children[0],0,.07);lab('Folha',S.fol[0],0,.5);lab('Folha',S.fol[1],0,.5);lab('Cantoneira CON063',cantos.children[2],.05,.07);
   S.parts={CM,cantos,esq,gr,cotas,ferr,arg,esd,reb};S.pm=pm;S.am=am;S.rm=rm;S.rebOn=false;S.folA=0;
   S.r=r;S.sc=sc;S.cam=cam;S.ctl=ctl;S.alvo=null;
   const loop=()=>{if(!S.r)return;S.raf=requestAnimationFrame(loop);
    if(S.alvo){const [p,t]=S.alvo;S.cam.position.lerp(p,.08);S.ctl.target.lerp(t,.08);if(S.cam.position.distanceTo(p)<.005)S.alvo=null;}
    S.fol.forEach((f,i)=>{const t=S.folA===i+1?1:0;f.userData.k+=(t-f.userData.k)*.1;f.position.x=f.userData.x0+f.userData.dx*f.userData.k;});
+   S.exK+=((S.exOn?1:0)-S.exK)*.06;if(S.exK<.0005)S.exK=0;const ek=S.exK*S.exK*(3-2*S.exK);
+   S.exLab.forEach(l=>{const wp=l.o.getWorldPosition(new THREE.Vector3());G.worldToLocal(wp);l.sp.position.set(wp.x+l.dx,wp.y+l.dy,wp.z+.02);l.sp.material.opacity=Math.max(0,(ek-.5)*2);l.sp.visible=ek>.5;});
+   S.exItems.forEach(o=>{const p0=o.userData.p0,e=o.userData.ex;if(o.userData.isFol){o.position.x+=e.x*ek;o.position.y=p0.y+e.y*ek;o.position.z=p0.z+e.z*ek;}else o.position.set(p0.x+e.x*ek,p0.y+e.y*ek,p0.z+e.z*ek);});
    S.ctl.update();Object.values(S.parts).forEach(g=>{const tgt=g.userData.on?1:0;g.userData.k=(g.userData.k??tgt)+(tgt-(g.userData.k??tgt))*.15;const k=g.userData.k;g.visible=k>.02;g.scale.setScalar(.6+.4*k);});r.render(sc,cam);};loop();
   const ro=new ResizeObserver(()=>{const w=el.clientWidth,h=el.clientHeight;if(!w||!h)return;r.setSize(w,h);cam.aspect=w/h;cam.updateProjectionMatrix();});ro.observe(el);S.ro=ro;
   return S;}
@@ -179,6 +190,7 @@
  function guaEspuma(k,w,h){GPECAS[k]=()=>{const o=espuma(w,h,.07);o.rotation.set(.4,-.6,0);return o;};}
  let TPINT=null;const TINTAS={reboco:null,branco:0xf3f1ea,amarelo:0xf2c230,azul:0x2f6db5,vermelho:0xc23a2c};
  function pintar(S,c){if(!S||!S.rm)return;const h=TINTAS[c];const m=S.rm;if(h==null){m.map=mats().reboco.map;m.color.setHex(0xffffff);}else{m.map=TPINT||(TPINT=texRuido('#ffffff',.035));m.color.setHex(h);}m.needsUpdate=true;}
+ function desmontar(S,on){if(!S)return;S.exOn=!!on;if(on){S.alvo=[new THREE.Vector3(1.25,.55,4.1),new THREE.Vector3(0,0,.5)];}else{S.alvo=[new THREE.Vector3(1.1,.45,2.1),new THREE.Vector3(0,0,0)];}}
  function reboco(S,on){if(!S)return;S.rebOn=!!on;S.parts.reb.userData.on=!!on;}
- window.CM3D={guaCarregar,guaEspuma,GPECAS,janela,reboco,pintar,carregar,cena,passo,cortar,camGet,camSet,destruir,pecaCena,fotos,quadros,QUADROS,QN,PECAS};
+ window.CM3D={desmontar,guaCarregar,guaEspuma,GPECAS,janela,reboco,pintar,carregar,cena,passo,cortar,camGet,camSet,destruir,pecaCena,fotos,quadros,QUADROS,QN,PECAS};
 })();
