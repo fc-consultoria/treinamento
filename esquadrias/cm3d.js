@@ -3,9 +3,11 @@
 (function(){
  const L3={three:'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js',orbit:'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js'};
  let carregando=null;
- function carregar(){if(window.THREE&&THREE.OrbitControls)return Promise.resolve();if(carregando)return carregando;
+ const BASE=(document.currentScript&&document.currentScript.src||'').replace(/[^/]*$/,'');let JSH=null;
+ function janCarregar(){if(JSH)return Promise.resolve(JSH);return fetch(BASE+'jan_shapes.json?v=1').then(r=>r.json()).then(j=>JSH=j).catch(()=>null);}
+ function carregar(){if(window.THREE&&THREE.OrbitControls)return janCarregar();if(carregando)return carregando;
   const sc=u=>new Promise((ok,er)=>{const s=document.createElement('script');s.src=u;s.onload=ok;s.onerror=er;document.head.appendChild(s);});
-  carregando=(window.THREE?Promise.resolve():sc(L3.three)).then(()=>THREE.OrbitControls?null:sc(L3.orbit));return carregando;}
+  carregando=(window.THREE?Promise.resolve():sc(L3.three)).then(()=>THREE.OrbitControls?null:sc(L3.orbit)).then(janCarregar);return carregando;}
  /* ---------- materiais ---------- */
  let M=null;
  function texTijolo(){const c=document.createElement('canvas');c.width=512;c.height=512;const x=c.getContext('2d');x.fillStyle='#b9b2a6';x.fillRect(0,0,512,512);
@@ -128,18 +130,52 @@
   /* argamassa na folga */
   const arg=new THREE.Group();G.add(arg);[[0,VH/2-FOL/2,VW,FOL],[0,-VH/2+FOL/2,VW,FOL],[VW/2-FOL/2,0,FOL,VH-2*FOL],[-VW/2+FOL/2,0,FOL,VH-2*FOL]].forEach(([x,y,w,h])=>{const ms=new THREE.Mesh(new THREE.BoxGeometry(w,h,PE*.98),am);ms.position.set(x,y,0);ms.receiveShadow=true;arg.add(ms);});
   /* esquadria final (janela de correr simples) */
-  const esd=new THREE.Group();G.add(esd);const fw=iw-.01,fh=ih-.01;const mf=m.alu.clone();S.mJan=mf;S.fol=[];
+  const esd=new THREE.Group();G.add(esd);const fw=iw-.01,fh=ih-.01;const mf=m.alu.clone();mf.side=THREE.DoubleSide;S.mJan=mf;S.fol=[];S.jPecas=[];
+  if(JSH&&JSH['SU-001']){/* Janela de correr 2 folhas Suprema (SUP JCR 200) montada com as seções reais dos perfis do catálogo, como no Orientativo 3D */
+   const jr=new THREE.Group();jr.rotation.y=Math.PI;esd.add(jr);/* +Z local = lado interno da janela (virado para o contramarco) */
+   const X=new THREE.Vector3(1,0,0),Y=new THREE.Vector3(0,1,0),Z=new THREE.Vector3(0,0,1),N=v=>v.clone().negate();
+   const PW=c=>JSH[c].w*.001,PH=c=>JSH[c].h*.001;
+   const pf=(par,c,len,ex,ey,ez,x,y,z,nm)=>{const d=JSH[c];const sh=d.s.map(o=>{const q=new THREE.Shape(o.o.map(([a,b])=>new THREE.Vector2(a*.001,b*.001)));o.h.forEach(h=>q.holes.push(new THREE.Path(h.map(([a,b])=>new THREE.Vector2(a*.001,b*.001)))));return q;});
+    const g=new THREE.ExtrudeGeometry(sh,{depth:len,bevelEnabled:false,curveSegments:1});g.translate(0,0,-len/2);g.applyMatrix4(new THREE.Matrix4().makeBasis(ex,ey,ez));g.computeVertexNormals();
+    const ms=new THREE.Mesh(g,mf);ms.position.set(x,y,z);ms.castShadow=true;ms.receiveShadow=true;ms.userData.code=c;ms.userData.nm=nm;par.add(ms);return ms;};
+   const W=fw,H=fh,FT=PH('SU-001'),FB=PH('SU-002'),FS=PH('SU-003'),TL=W-2*.013;
+   pf(jr,'SU-001',TL,Z,Y,X,0,H/2-FT/2,0,'Marco superior SU-001');
+   pf(jr,'SU-002',TL,Z,Y,X,0,-H/2+FB/2,0,'Trilho inferior SU-002');
+   pf(jr,'SU-003',H,Z,X,N(Y),-W/2+FS/2,0,0,'Marco lateral SU-003');
+   pf(jr,'SU-003',H,N(Z),N(X),N(Y),W/2-FS/2,0,0,'Marco lateral SU-003');
+   const EDGE=.0144,OV=.03,Wi=W-2*EDGE,sW=(Wi+OV)/2,step=sW-OV,sH=H-.05,SDs=.025,gwC=(W-.1432)/2;
+   const mz=c=>c==='SU-040'?SDs/2-PH(c)/2:c==='SU-041'?-SDs/2+PH(c)/2:0,exF=(c,t)=>c==='SU-041'?N(t):t;
+   const OB=JSH['SU-102'].off053||[2.98,18.02],oz=OB[0]/1000,inset=PH('SU-053')/2-OB[1]/1000;
+   [{z:.0175,L:'SU-039',R:'SU-040',nm:'Folha interna'},{z:-.0175,L:'SU-041',R:'SU-039',nm:'Folha externa'}].forEach((sd,i)=>{
+    const f=new THREE.Group(),Lc=sd.L,Rc=sd.R,RW=PH('SU-053');
+    const xL=-sW/2+PW(Lc),xR=sW/2-PW(Rc),xLc=-sW/2+PW(Lc)/2,xRc=sW/2-PW(Rc)/2,LFZ=i===0;
+    pf(f,Lc,sH,exF(Lc,X),LFZ?N(Z):Z,Y,xLc,0,LFZ?-mz(Lc):mz(Lc),'Montante '+Lc);
+    pf(f,Rc,sH,exF(Rc,N(X)),Z,Y,xRc,0,mz(Rc),(Rc==='SU-040'||Lc==='SU-041'&&Rc!=='SU-039'?'Mão de amigo ':'Montante ')+Rc);
+    const tl=xR-xL+.004,tx=(xL+xR)/2;
+    pf(f,'SU-053',tl,Z,N(Y),X,tx,sH/2-RW/2,0,'Travessa SU-053');pf(f,'SU-053',tl,Z,Y,X,tx,-sH/2+RW/2,0,'Travessa SU-053');
+    const yTi=sH/2-RW,yBi=-sH/2+RW,v=new THREE.Mesh(new THREE.BoxGeometry(gwC,yTi-yBi+.012,.006),m.vidro);v.position.set(tx,(yTi+yBi)/2,-.0035);v.userData.nm='Vidro';f.add(v);
+    const bxL=xL-inset,bxR=xR+inset,bl=bxR-bxL,yT=yTi+inset,yB=yBi-inset,bh=yT-yB,yc=(yT+yB)/2;
+    pf(f,'SU-102',bl,Z,N(Y),X,tx,yT,oz,'Baguete SU-102');pf(f,'SU-102',bl,Z,Y,X,tx,yB,oz,'Baguete SU-102');
+    pf(f,'SU-102',bh,Z,X,Y,bxL,yc,oz,'Baguete SU-102');pf(f,'SU-102',bh,Z,N(X),Y,bxR,yc,oz,'Baguete SU-102');
+    const x=-Wi/2+sW/2+i*(sW-OV);f.position.set(x,0,sd.z);f.userData.x0=x;f.userData.dx=(i?-1:1)*step;f.userData.k=0;f.userData.nm=sd.nm;jr.add(f);S.fol.push(f);});
+   S.jr=jr;}
+  else{
   [[0,fh/2,fw,.035],[0,-fh/2,fw,.045],[fw/2,0,.03,fh],[-fw/2,0,.03,fh]].forEach(([x,y,w,h])=>{const b=new THREE.Mesh(new THREE.BoxGeometry(w,h,.07),mf);b.position.set(x,y,.0);b.castShadow=true;esd.add(b);});
   [-1,1].forEach((sx,k)=>{const lw=fw/2+.02,lh=fh-.06;const f=new THREE.Group();[[0,lh/2,lw,.04],[0,-lh/2,lw,.05],[lw/2,0,.04,lh],[-lw/2,0,.04,lh]].forEach(([x,y,w,h])=>{const b=new THREE.Mesh(new THREE.BoxGeometry(w,h,.03),mf);b.position.set(x,y,0);f.add(b);});
-   const v=new THREE.Mesh(new THREE.BoxGeometry(lw-.06,lh-.07,.006),m.vidro);f.add(v);f.position.set(sx*(fw/4-.005),0,k?.012:-.012);f.userData.x0=f.position.x;f.userData.dx=-sx*(fw/2-.03);f.userData.k=0;esd.add(f);S.fol.push(f);});
+   const v=new THREE.Mesh(new THREE.BoxGeometry(lw-.06,lh-.07,.006),m.vidro);f.add(v);f.position.set(sx*(fw/4-.005),0,k?.012:-.012);f.userData.x0=f.position.x;f.userData.dx=-sx*(fw/2-.03);f.userData.k=0;esd.add(f);S.fol.push(f);});}
   /* vista explodida: cada peça sai do vão em direção à tela */
   S.exK=0;S.exOn=false;S.exItems=[];
   const exAdd=(o,z,spread)=>{o.userData.p0=o.position.clone();o.userData.ex=new THREE.Vector3(o.position.x*spread,o.position.y*spread,z);S.exItems.push(o);};
   CM.children.forEach(g=>exAdd(g,.3,.7));cantos.children.forEach(c=>exAdd(c,.42,1.05));gr.children.forEach(g=>exAdd(g,.16,.45));
+  if(S.jr){/* grupo girado 180°: o z local aponta para dentro da parede, então a saída para a tela é negativa */
+   S.jr.children.forEach(o=>{if(S.fol.includes(o))return;exAdd(o,-.62,.5);});
+   S.fol.forEach((f,i)=>{exAdd(f,-(1.0+(1-i)*.3),0);f.userData.isFol=true;f.userData.ex.x=(i?-1:1)*.42;f.userData.ex.y=.05*(i?-1:1);
+    f.children.forEach(c=>{exAdd(c,c.userData.nm==='Vidro'?-.0:-.06-(/Baguete/.test(c.userData.nm||'')?.06:0),c.userData.nm==='Vidro'?0:.7);});});}
+  else{
   esd.children.forEach(o=>{if(S.fol.includes(o))return;exAdd(o,.62,.42);});
-  S.fol.forEach((f,i)=>{exAdd(f,.95+i*.22,0);f.userData.isFol=true;f.userData.ex.x=(i?1:-1)*.36;f.userData.ex.y=.06*(i?-1:1);});
+  S.fol.forEach((f,i)=>{exAdd(f,.95+i*.22,0);f.userData.isFol=true;f.userData.ex.x=(i?1:-1)*.36;f.userData.ex.y=.06*(i?-1:1);});}
   const lab=(t,o,dx,dy)=>{const c=document.createElement('canvas');c.width=560;c.height=96;const k=c.getContext('2d');k.font='bold 44px system-ui';const w=Math.min(552,k.measureText(t).width+44);k.fillStyle='rgba(15,79,83,.92)';k.beginPath();k.roundRect?k.roundRect((560-w)/2,8,w,80,22):k.rect((560-w)/2,8,w,80);k.fill();k.fillStyle='#ffd58a';k.textAlign='center';k.fillText(t,280,64);const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),depthTest:false}));sp.renderOrder=10;sp.scale.set(.35,.06,1);sp.material.opacity=0;sp.material.transparent=true;G.add(sp);S.exLab.push({sp,o,dx,dy});};S.exLab=[];
-  lab('Contramarco CM-200',CM.children[0],0,.07);lab('Marco da janela',esd.children[0],0,.07);lab('Folha',S.fol[0],0,.5);lab('Folha',S.fol[1],0,.5);lab('Cantoneira CON063',cantos.children[2],.05,.07);
+  lab('Contramarco CM-200',CM.children[0],0,.07);if(S.jr){const J=S.jr.children;lab('Marco superior SU-001',J[0],0,.06);lab('Trilho SU-002',J[1],0,-.07);lab('Marco lateral SU-003',J[2],0,.36);lab('Folha interna',S.fol[0],0,.52);lab('Folha externa',S.fol[1],0,.52);lab('Montante SU-039',S.fol[0].children[0],0,-.3);lab('Mão de amigo SU-040',S.fol[0].children[1],0,-.38);lab('Baguete SU-102',S.fol[1].children[6],0,-.06);}else{lab('Marco da janela',esd.children[0],0,.07);lab('Folha',S.fol[0],0,.5);lab('Folha',S.fol[1],0,.5);}lab('Cantoneira CON063',cantos.children[2],.05,.07);
   S.parts={CM,cantos,esq,gr,cotas,ferr,arg,esd,reb};S.pm=pm;S.am=am;S.rm=rm;S.rebOn=false;S.folA=0;
   S.r=r;S.sc=sc;S.cam=cam;S.ctl=ctl;S.alvo=null;
   const loop=()=>{if(!S.r)return;S.raf=requestAnimationFrame(loop);
