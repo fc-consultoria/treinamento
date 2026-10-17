@@ -138,8 +138,11 @@ function escolherColab(uid,perfil){return new Promise(res=>{
          const {data:ev}=await sb.from('trein_eventos').select('tipo,detalhe,criado_em').eq('user_id',uid).in('tipo',['colab_sessao','hb','tempo']).order('criado_em',{ascending:false}).limit(60);
          const sid=r=>{const d=r.detalhe||{};return r.tipo==='tempo'?d.ss:d.s;},u=(ev||[]).find(r=>(r.detalhe||{}).cid===x.id&&sid(r));
          if(u&&sid(u)!==mys&&Date.now()-Date.parse(u.criado_em)<120000){b.disabled=false;M.style.color='';
-           M.textContent='O nome '+x.nome+' já está em uso em outro aparelho. Cada colaborador só pode usar um aparelho por vez. Se for você, feche o outro aparelho e tente de novo em 2 minutos.';
-           window.ALUNO_NOME=null;window.ALUNO_CID=null;return;}
+           window.ALUNO_NOME=null;window.ALUNO_CID=null;
+           let falta=Math.max(5,Math.ceil((120000-(Date.now()-Date.parse(u.criado_em)))/1000));clearInterval(window.COLAB_ESP);
+           const txt=()=>'O nome '+x.nome+' está aberto em outro aparelho (usado há poucos instantes). Cada colaborador usa um aparelho por vez. Se for você, feche o outro aparelho: este aqui tenta entrar sozinho em '+falta+' s.';M.textContent=txt();
+           window.COLAB_ESP=setInterval(()=>{falta--;const mm=document.getElementById('quemMsg');if(!document.body.contains(b)){clearInterval(window.COLAB_ESP);return;}if(falta<=0){clearInterval(window.COLAB_ESP);if(mm)mm.textContent='Tentando entrar…';b.click();}else if(mm)mm.textContent=txt();},1000);
+           return;}
          window.COLAB_S=mys||Math.random().toString(36).slice(2,10);try{sessionStorage.setItem('treinFC-s-'+x.id,window.COLAB_S);}catch(e){}}
         await sb.from('trein_eventos').insert({user_id:uid,tipo:'colab_sessao',tipologia:null,detalhe:{cid:x.id,quem:x.nome,s:window.COLAB_S}});
         const tag=document.getElementById('quemTag');tag.textContent='👤 '+x.nome+' · trocar';tag.title='Quem está estudando agora. Toque para trocar de colaborador';tag.hidden=false;box.hidden=true;res(x);};
