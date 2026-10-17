@@ -357,7 +357,7 @@ tbody tr:hover{background:var(--panel-2);}
       <button class="navitem" id="btn-logout"><i data-lucide="log-out"></i> Sair</button>
     </div>
     <div class="sidebar-foot">
-      Painel de implantação — dados salvos em banco de dados real (Supabase), acesso restrito à equipe.<br><b>Versão 17/10 — código sistema e Revisão de implantação</b>
+      Painel de implantação — dados salvos em banco de dados real (Supabase), acesso restrito à equipe.<br><b>Versão 17/10b — conferência da base Claude com fotos</b>
     </div>
   </nav>
   <div class="mobile-topbar">
@@ -2140,6 +2140,83 @@ async function carregarFornecedoresCad(){
 const fornBate = (f, nome) => (f.aliases||[]).concat([f.nome]).some(a=>chaveFornAjuste(a)===chaveFornAjuste(nome));
 const fornDeNome = nome => FORN_CAD.find(f=>fornBate(f, nome)) || null;
 const linhasForn = f => FORN_LINHAS.filter(x=>x.fornecedor_id===f.id).map(x=>x.linha);
+// ===== Base "Claude (site Vitrasul)": conferência com foto dentro da aba Preços do fornecedor =====
+const CLAUDE_FORN = 'Claude (site Vitrasul)';
+const CLAUDE_IMG = 'https://vprime-server.radocc.com:8443/midias/11083556000105/produtos/';
+let CLAUDE_BASE = null, CLAUDE_CARREGANDO = false;
+const claudeStatus = {ok:['✅ Encontrado','#e3f5ea','#1f8a4c'], parecido:['⚠️ Parecido','#fff4df','#a15c00'], sem_preto:['⚠️ Sem preto','#fff4df','#a15c00'], nao_encontrado:['❌ Não encontrado','#fde8e6','#b42318']};
+const claudeImg = s => !s || /sem-imagem/.test(s) ? '' : (s.startsWith('~') ? CLAUDE_IMG + s.slice(1) : s);
+const claudeIgn = new Set(['PRETO','PRETA','BRANCO','BRANCA','BRONZE','CROMO','FOSCO','FOSCA','DOURADO','PARA','COM','SEM','PECA','PECAS']);
+const claudeToks = s => String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/[^A-Z0-9 ]/g,' ').split(/\s+/).filter(t=>t.length>=3 && !claudeIgn.has(t));
+function claudeDescParecida(a, b){ const A = claudeToks(a), B = claudeToks(b); if(!A.length || !B.length) return true; return A.some(x=>B.some(y=>x.slice(0,4)===y.slice(0,4) || x.startsWith(y) || y.startsWith(x))); }
+async function carregarClaudeBase(){
+  if(CLAUDE_CARREGANDO) return; CLAUDE_CARREGANDO = true;
+  const {data, error} = await sb.from('impl_claude_base').select('*').eq('fornecedor', CLAUDE_FORN);
+  CLAUDE_CARREGANDO = false;
+  CLAUDE_BASE = error ? [] : (data||[]).sort((a,b)=>a.codigo.localeCompare(b.codigo,'pt-BR',{numeric:true}));
+  if(error) avisarErroSalvar(error);
+  render();
+}
+function claudeItens(codigo){ const L = []; Object.entries(PRICE_DB).forEach(([l,db])=>{ if(!(db.fornecedores||[]).includes(CLAUDE_FORN)) return; (db.itens||[]).forEach(it=>{ if(it.codigo===codigo) L.push({linha:l, db, it}); }); }); return L; }
+function claudeDescDif(r){ const it = claudeItens(r.codigo)[0]; return !!(r.desc_site && it && !claudeDescParecida(it.it.descricao, r.desc_site)); }
+async function claudeSalvarBase(r, campos){
+  Object.assign(r, campos, {alterado:true});
+  const {error} = await sb.from('impl_claude_base').update({...campos, alterado:true, atualizado:new Date().toISOString()}).eq('fornecedor', CLAUDE_FORN).eq('codigo', r.codigo);
+  if(error){ avisarErroSalvar(error); return false; } return true;
+}
+// Preço da base Claude vai direto para o Banco de Preços (coluna Claude), em todas as linhas onde o código existe
+async function claudeAplicarPreco(r){
+  const v = (!r.excluido && Number(r.preco)>0) ? Number(r.preco) : null;
+  for(const {db, it} of claudeItens(r.codigo)){
+    const fid = (db._fornecedorIds||{})[CLAUDE_FORN]; if(!fid || !it._id) continue;
+    if(v){ it.precos[CLAUDE_FORN] = v; await sb.from('impl_precos').upsert({item_id:it._id, fornecedor_id:fid, preco:v}, {onConflict:'item_id,fornecedor_id'}); }
+    else { delete it.precos[CLAUDE_FORN]; await sb.from('impl_precos').delete().eq('item_id', it._id).eq('fornecedor_id', fid); }
+  }
+  await sb.from('impl_claude_base').update({gravado_em: v ? new Date().toISOString() : null}).eq('fornecedor', CLAUDE_FORN).eq('codigo', r.codigo);
+  r.gravado_em = v ? new Date().toISOString() : null;
+}
+function renderConferenciaClaude(){
+  if(!CLAUDE_BASE){ carregarClaudeBase(); return `<div class="panel" style="padding:16px 18px"><div class="desc">Carregando a conferência…</div></div>`; }
+  const R = CLAUDE_BASE, filtro = STATE.claudeFiltro || 'todos', q = normalizeText(STATE.fornBusca||'');
+  const cont = k => k==='todos' ? R.length : k==='dif' ? R.filter(claudeDescDif).length : k==='excluido' ? R.filter(r=>r.excluido).length : k==='compreco' ? R.filter(r=>!r.excluido && Number(r.preco)>0).length : R.filter(r=>r.status===k).length;
+  const V = R.filter(r=>{
+    if(filtro==='excluido'){ if(!r.excluido) return false; }
+    else if(filtro==='dif'){ if(!claudeDescDif(r)) return false; }
+    else if(filtro==='compreco'){ if(r.excluido || !(Number(r.preco)>0)) return false; }
+    else if(filtro!=='todos' && r.status!==filtro) return false;
+    if(q){ const it = claudeItens(r.codigo)[0]; const t = normalizeText(r.codigo+' '+(r.cod_site||'')+' '+(r.desc_site||'')+' '+(it?it.it.descricao:'')); if(!t.includes(q)) return false; }
+    return true;
+  });
+  const MAX = 150, VV = V.slice(0, MAX);
+  const chip = (k,t) => `<button class="chip ${filtro===k?'active':''}" data-action="cl-filtro" data-f="${k}">${t} (${cont(k)})</button>`;
+  const linha = r => {
+    const its = claudeItens(r.codigo), it0 = its[0], vt = it0 ? Number((it0.it.precos||{})['Vitrasul'])||null : null, p = r.preco!=null ? Number(r.preco) : null;
+    const dif = (vt && p) ? Math.round((p/vt-1)*100) : null, st = claudeStatus[r.status] || [r.status,'#eef1f5','#5f6b78'], im = claudeImg(r.img);
+    return `<div class="cl-it" style="display:grid; grid-template-columns:92px minmax(0,1fr) minmax(0,1.3fr) 150px 112px; gap:14px; align-items:start; padding:12px 0; border-top:1px solid var(--border-2); ${r.excluido?'opacity:.5;':''}">
+      <div style="width:92px; height:92px; border:1px solid var(--border-2); border-radius:10px; background:#f6f7f9; display:grid; place-items:center; overflow:hidden;">${im ? `<a href="${escapeHtml(im)}" target="_blank" rel="noopener" title="Ampliar foto"><img src="${escapeHtml(im)}" alt="" loading="lazy" style="width:92px; height:92px; object-fit:contain;"></a>` : '<span class="desc" style="font-size:11px">sem foto</span>'}</div>
+      <div><div class="mono" style="font-weight:700">${escapeHtml(r.codigo)}</div>${its.map(x=>`<span class="badge badge-muted" style="margin:2px 4px 2px 0">${escapeHtml(x.linha)}</span>`).join('')}<div class="desc">${escapeHtml(it0 ? it0.it.descricao : '—')}</div></div>
+      <div><span style="display:inline-block; font-size:11.5px; font-weight:700; border-radius:99px; padding:2px 9px; background:${st[1]}; color:${st[2]}">${st[0]}</span>${r.alterado?' <span class="badge badge-muted">alterado</span>':''}
+        ${r.cod_site ? `<div class="mono" style="margin-top:6px; color:var(--accent-dark,#2f49b5); font-weight:700">${escapeHtml(r.cod_site)}</div><div class="desc">${escapeHtml(r.desc_site||'')}${r.unidade?' · '+escapeHtml(r.unidade):''}</div>` : '<div class="desc" style="margin-top:6px">Sem item escolhido no site.</div>'}
+        ${claudeDescDif(r) ? '<div style="color:#b42318; font-size:12px; font-weight:600; margin-top:4px">🔎 Descrição diferente: confira pela foto</div>' : ''}
+        ${(r.variantes||[]).length ? `<div style="display:flex; flex-wrap:wrap; gap:5px; margin-top:8px">${r.variantes.map((v,i)=>`<button type="button" class="btn btn-sm" style="padding:3px 8px; font-size:11.5px; ${v.c===r.cod_site?'border-color:#c96442; background:#fbefe9; color:#8a3b22':''}" data-action="cl-var" data-cod="${escapeHtml(r.codigo)}" data-i="${i}" title="${escapeHtml(v.n)}">${escapeHtml(v.c)} · R$ ${fmtMoney(v.p).replace('R$','').trim()}</button>`).join('')}</div>` : ''}
+        ${STATE.claudeEdit===r.codigo ? `<div style="display:grid; grid-template-columns:150px 1fr auto; gap:6px; margin-top:8px"><input class="editable-price" style="text-align:left" id="cl-ecod" value="${escapeHtml(r.cod_site||'')}" placeholder="Código no site"><input class="editable-price" style="text-align:left" id="cl-edesc" value="${escapeHtml(r.desc_site||'')}" placeholder="Descrição no site"><button class="btn btn-sm btn-primary" data-action="cl-salvar" data-cod="${escapeHtml(r.codigo)}">Salvar</button></div>` : ''}
+      </div>
+      <div class="desc">Preço Claude (R$)<input class="editable-price" style="width:100%; font-weight:700; font-size:15px" value="${p!=null ? String(p.toFixed(2)).replace('.',',') : ''}" placeholder="—" data-action="cl-preco" data-cod="${escapeHtml(r.codigo)}" ${r.excluido?'disabled':''}>
+        <div style="margin-top:6px">Vitrasul hoje: <b>${vt ? fmtMoney(vt) : '—'}</b>${dif!=null ? ` <b style="color:${dif>0?'#b42318':'#1f8a4c'}">${dif>0?'+':''}${dif}%</b>` : ''}</div></div>
+      <div style="display:flex; flex-direction:column; gap:6px"><button class="btn btn-sm" data-action="cl-alterar" data-cod="${escapeHtml(r.codigo)}">✏️ Alterar</button>${r.excluido ? `<button class="btn btn-sm" data-action="cl-excluir" data-v="0" data-cod="${escapeHtml(r.codigo)}">↩ Restaurar</button>` : `<button class="btn btn-sm btn-danger-ghost" data-action="cl-excluir" data-v="1" data-cod="${escapeHtml(r.codigo)}">🗑 Excluir</button>`}</div>
+    </div>`;
+  };
+  return `
+  <div class="exemplo-banner">${icon('info')}<div><b>Conferência da base ${CLAUDE_FORN}.</b> Preços pesquisados no site da Vitrasul (cor de referência <b>Preto</b>). Confira pela foto (clique para ampliar), escolha a variação certa, altere o preço ou exclua. Tudo salva na hora e já vale no Banco de Preços. A base da Vitrasul não é alterada.</div></div>
+  <div class="panel" style="padding:12px 18px">
+    <div class="chiprow">${chip('todos','Todos')}${chip('compreco','💲 Com preço')}${chip('ok','✅ Encontrados')}${chip('parecido','⚠️ Parecidos')}${chip('sem_preto','⚠️ Sem preto')}${chip('nao_encontrado','❌ Não encontrados')}${chip('dif','🔎 Descrição diferente')}${chip('excluido','🗑 Excluídos')}</div>
+    <div class="searchbox" style="max-width:420px; margin-top:10px">${icon('search')}<input placeholder="Buscar código ou descrição" value="${escapeHtml(STATE.fornBusca||'')}" data-action="forn-busca"></div>
+  </div>
+  <div class="panel" style="padding:4px 18px 10px">
+    ${VV.length ? VV.map(linha).join('') : '<div class="desc" style="padding:16px 0">Nada com esse filtro.</div>'}
+    ${V.length>VV.length ? `<div class="desc" style="padding:10px 0">Mostrando ${VV.length} de ${V.length}. Use os filtros ou a busca para ver os outros.</div>` : ''}
+  </div>`;
+}
 function precosCompForn(f, linha){ const db = PRICE_DB[linha]; if(!db) return []; const nome = (db.fornecedores||[]).find(n=>fornBate(f,n)); if(!nome) return [];
   return (db.itens||[]).filter(it=>Number((it.precos||{})[nome])>0).map(it=>({codigo:it.codigo, descricao:it.descricao, preco:Number(it.precos[nome])})); }
 function perfisForn(f){ const L=[]; ORC_ALUMINIO.filter(o=>fornBate(f,o.fornecedor)).forEach(o=>(o.itens||[]).forEach(it=>{ if(!(it.valorBarra>0) || /^totais$/i.test(it.codigo)) return; L.push({codigo:it.codigo, descricao:it.descricao, metro: it.valorBarra/(it.comprimentoBarra||6), orc:o}); })); return L; }
@@ -2171,7 +2248,8 @@ function renderFornecedores(){
       <div style="margin-top:14px"><label class="desc">Outros nomes deste fornecedor (como aparecem em planilhas e orçamentos, separados por vírgula)</label>
       <input type="text" data-action="forn-aliases" value="${escapeHtml((f.aliases||[]).join(', '))}" style="width:100%;padding:8px 10px;border:1px solid var(--border,#d6dee4);border-radius:8px;font:inherit;margin-top:4px"></div></div>`;
   }
-  if(tab==='precos'){
+  if(tab==='precos' && f.nome===CLAUDE_FORN){ corpo = renderConferenciaClaude(); }
+  else if(tab==='precos'){
     const blocos = ls.map(l=>{ const P = precosCompForn(f,l).filter(bate); const V = P.slice(0,200);
       return `<div class="panel" style="padding:14px 18px"><div style="display:flex;gap:8px;align-items:baseline"><b>${escapeHtml(l)}</b><span class="desc">${P.length} preço${P.length===1?'':'s'}${P.length>V.length?` · mostrando ${V.length}`:''}</span></div>
         ${V.length?`<div style="overflow-x:auto"><table class="table"><thead><tr><th>Código</th><th>Descrição</th><th class="tright">Preço</th></tr></thead><tbody>${V.map(it=>`<tr><td class="mono">${escapeHtml(it.codigo)}</td><td>${escapeHtml(it.descricao||'')}</td><td class="tright mono">${fmtMoney(it.preco)}</td></tr>`).join('')}</tbody></table></div>`:'<div class="desc">Nenhum preço nesta linha.</div>'}</div>`; }).join('');
@@ -6164,6 +6242,15 @@ function wireEvents(){
       };
       return;
     }
+    if(action==='cl-preco'){
+      el.onchange = async (e)=>{
+        const r = (CLAUDE_BASE||[]).find(x=>x.codigo===el.dataset.cod); if(!r) return;
+        const t = e.target.value.trim(), v = t ? Number(t.replace(/\./g,'').replace(',','.')) : null;
+        if(t && !(v>=0)){ alert('Preço inválido'); return; }
+        if(await claudeSalvarBase(r, {preco:v})){ await claudeAplicarPreco(r); toastSalvo('Preço salvo'); render(); }
+      };
+      return;
+    }
     if(action==='toggle-cotacao-categoria'){
       el.onchange = ()=>{
         const c = CLIENTS.find(x=>x.id===STATE.clientId);
@@ -7173,6 +7260,21 @@ function wireEvents(){
         render();
         excluirMetroItensDB(remover.filter(it=>it._id).map(it=>it._id));
         atualizarAlimentado.forEach(it=>{ if(it._id) salvarMetroItem(it._id, {alimentado:true}); });
+        return;
+      }
+      if(action==='cl-filtro'){ STATE.claudeFiltro = el.dataset.f; render(); return; }
+      if(action==='cl-alterar'){ STATE.claudeEdit = STATE.claudeEdit===el.dataset.cod ? null : el.dataset.cod; render(); return; }
+      if(action==='cl-salvar' || action==='cl-var' || action==='cl-excluir'){
+        const r = (CLAUDE_BASE||[]).find(x=>x.codigo===el.dataset.cod); if(!r) return;
+        (async()=>{
+          if(action==='cl-salvar'){ const c = (document.getElementById('cl-ecod')||{}).value||'', d = (document.getElementById('cl-edesc')||{}).value||'';
+            if(await claudeSalvarBase(r, {cod_site:c.trim()||null, desc_site:d.trim()||null})){ STATE.claudeEdit = null; toastSalvo('Alterado'); } }
+          if(action==='cl-var'){ const x = r.variantes[+el.dataset.i];
+            if(await claudeSalvarBase(r, {cod_site:x.c, desc_site:x.n, preco:x.p, img:x.i||null, unidade:x.u||null, status: r.status==='nao_encontrado' ? 'parecido' : r.status})){ await claudeAplicarPreco(r); toastSalvo('Variação escolhida: '+x.c); } }
+          if(action==='cl-excluir'){ const ex = el.dataset.v==='1';
+            if(await claudeSalvarBase(r, {excluido:ex})){ await claudeAplicarPreco(r); toastSalvo(ex ? 'Excluído da base Claude' : 'Restaurado'); } }
+          render();
+        })();
         return;
       }
       if(action==='revisao-selecionados-metro'){
