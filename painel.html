@@ -325,6 +325,7 @@ td.qd{cursor:help}td.qd:hover{background:#eef6f8;box-shadow:inset 0 -2px 0 #1f6f
    <div class="tw"><table><thead><tr><th>Cidade</th><th>UF</th><th>Atendimento</th><th>● Em andamento</th><th>✔ Finalizadas<br><small style="font-weight:400;text-transform:none;letter-spacing:0">sistema alimentado</small></th><th>Total</th><th></th></tr></thead><tbody id="mpTb"></tbody></table></div>
    <div id="vtAdm"></div><h3 class="dvt" style="margin:16px 0 8px">Como o aluno e o site veem</h3><div id="mpPrev"></div>
   </div></section>
+ <section class="card" id="opnCard" data-tab="sug" hidden><h2 style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">🏙 Opiniões do Monte sua Casa 3D <span class="note" id="opnN" style="font-weight:500;text-transform:none;letter-spacing:0"></span></h2><div id="opnList" style="padding:6px 16px 14px"></div></section>
  <section class="card" id="sugCard" data-tab="sug"><h2 style="display:flex;justify-content:space-between;align-items:center;gap:8px">💬 Dúvidas e sugestões dos alunos <span class="sgn" id="sugN" style="flex:1"></span><button type="button" id="sugTog" style="font-size:12px;padding:4px 10px">Mostrar</button></h2><div id="sugBody" hidden><p class="note" style="padding:0 16px">O aluno envia pelo botão “💬 Sugestão” na barra escura do orientativo. Escreva a resposta embaixo da mensagem e clique em Responder: ela aparece para o aluno no mesmo botão.</p><ul class="tl" id="sugList"></ul></div></section>
  <section class="card" data-tab="emp">
   <h2 style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">Empresas <button type="button" id="bSenTodas" style="margin-left:auto;font:600 13px var(--f-display);text-transform:none;letter-spacing:0;padding:7px 12px;border-radius:9px;cursor:pointer">🔐 Senhas fortes para as empresas</button></h2>
@@ -708,7 +709,7 @@ function render(){
   document.getElementById('k3').textContent=(h/3600).toFixed(1).replace('.',',');
   document.getElementById('k4').textContent=t;
   if(sel)detalhe();
-  domUI();pedUI();intUI();indUI();cmpUI();tabBadges();if(DCFG)divRender();else divCarregar();
+  domUI();pedUI();intUI();indUI();cmpUI();opnUI();tabBadges();if(DCFG)divRender();else divCarregar();
   const esc=v=>String(v||'').replace(/</g,'&lt;'),EXC=new Set(EV.filter(e=>e.tipo==='sug_excluida').map(e=>Date.parse((e.detalhe||{}).ref))),SG=EV.filter(e=>e.tipo==='sugestao'&&!EXC.has(Date.parse(e.criado_em)));
   const RS=EV.filter(e=>e.tipo==='resposta'),pend=SG.filter(e=>!RS.some(r=>(r.detalhe||{}).ref===e.criado_em)).length;
   document.getElementById('sugN').textContent=SG.length?`${SG.length} recebida${SG.length>1?'s':''}${pend?` · ${pend} sem resposta`:''}`:'';
@@ -1163,6 +1164,13 @@ function indUI(){const esc=v=>String(v==null?'':v).replace(/&/g,'&amp;').replace
     if(!col){alert0('O aluno que indicou não foi encontrado nesta empresa.');return;}b.disabled=true;
     const ok=await prorrogar(d.para,col,72);if(ok===false){b.disabled=false;return;}await ins('indicacao_status',{iid:d.iid,status:'aprovada',cid:d.cid,para:d.para});carregar();});
   document.querySelectorAll('#indList [data-ir]').forEach(b=>b.onclick=async()=>{const x=V[+b.dataset.ir];if(!confirm('Recusar esta indicação? O aluno não ganha as horas.'))return;b.disabled=true;await ins('indicacao_status',{iid:x.d.iid,status:'recusada',cid:x.d.cid,para:x.d.para});carregar();});}
+/* ===== Opiniões do Monte sua Casa 3D (nota, o que gostou e comentário de cada aluno) ===== */
+function opnUI(){const esc=v=>String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;');const L=EV.filter(e=>e.tipo==='opiniao_casa3d');const c=document.getElementById('opnCard');c.hidden=!L.length;if(!L.length)return;
+  const media=L.reduce((a,e)=>a+(+(e.detalhe||{}).nota||0),0)/L.length,usos=EV.filter(e=>e.tipo==='monte_casa').length,G={};L.forEach(e=>((e.detalhe||{}).gostou||[]).forEach(g=>G[g]=(G[g]||0)+1));
+  document.getElementById('opnN').textContent=`${L.length} opinião(ões) · média ${media.toFixed(1).replace('.',',')} ★ · ${usos} abertura(s)`;
+  const top=Object.entries(G).sort((a,b)=>b[1]-a[1]).slice(0,6).map(([g,n])=>`<span class="tag">${esc(g)} · ${n}</span>`).join(' ');
+  document.getElementById('opnList').innerHTML=(top?`<p class="note" style="margin:0 0 8px">Mais gostaram: ${top}</p>`:'')+L.slice(0,40).map(e=>{const d=e.detalhe||{},a=ALUNOS.find(y=>y.user_id===e.user_id)||{};
+    return `<div class="rowl"><span><b style="color:#e3a33b">${'★'.repeat(d.nota||0)}${'☆'.repeat(5-(d.nota||0))}</b> <b>${esc(d.quem||'colaborador')}</b> · ${esc(a.nome||a.login||'')} <span class="note">${fmtD(e.criado_em)}</span>${d.texto?`<br>“${esc(d.texto)}”`:''}${(d.gostou||[]).length?`<br><span class="note">Gostou: ${esc(d.gostou.join(', '))}</span>`:''}</span></div>`;}).join('');}
 /* ===== Possível login compartilhado: muitos aparelhos ou trocas para o mesmo colaborador (7 dias) ===== */
 function cmpUI(){const esc=v=>String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;'),lim=Date.now()-7*864e5,G={};
   EV.filter(e=>e.tipo==='colab_sessao'&&Date.parse(e.criado_em)>=lim).forEach(e=>{const d=e.detalhe||{},k=e.user_id+'|'+d.cid;(G[k]=G[k]||{uid:e.user_id,quem:d.quem,s:new Set(),n:0,seq:[]}).s.add(d.s);G[k].n++;G[k].seq.push(d.s);});
