@@ -179,7 +179,7 @@
    const dt=new THREE.Mesh(new THREE.SphereGeometry(.009,12,8),new THREE.MeshBasicMaterial({color:0xf2a51e,transparent:true,opacity:0,depthTest:false}));dt.renderOrder=9;G.add(dt);S.exLab.push({sp,o,dx,dy,ln,dt});};S.exLab=[];
   lab('Contramarco CM-200',CM.children[0],-.45,.32);if(S.jr){const J=S.jr.children;lab('Marco superior SU-001',J[0],.22,.3);lab('Trilho SU-002',J[1],.18,-.32);lab('Marco lateral SU-003',J[2],.42,.28);lab('Folha interna',S.fol[0],-.12,.62);lab('Folha externa',S.fol[1],.12,.66);lab('Montante SU-039',S.fol[0].children[0],-.42,-.22);lab('Mão de amigo SU-040',S.fol[0].children[1],.4,-.3);lab('Baguete SU-102',S.fol[1].children[6],.35,-.1);}else{lab('Marco da janela',esd.children[0],0,.07);lab('Folha',S.fol[0],0,.5);lab('Folha',S.fol[1],0,.5);}lab('Cantoneira CON063',cantos.children[2],-.25,.12);
   S.parts={CM,cantos,esq,gr,cotas,ferr,arg,esd,reb};S.pm=pm;S.am=am;S.rm=rm;S.rebOn=false;S.folA=0;
-  S.r=r;S.sc=sc;S.cam=cam;S.ctl=ctl;S.alvo=null;
+  S.r=r;S.sc=sc;S.cam=cam;S.ctl=ctl;S.alvo=null;el.__S=S;
   const loop=()=>{if(!S.r)return;S.raf=requestAnimationFrame(loop);
    if(S.alvo){const [p,t]=S.alvo;S.cam.position.lerp(p,.08);S.ctl.target.lerp(t,.08);if(S.cam.position.distanceTo(p)<.005)S.alvo=null;}
    S.fol.forEach((f,i)=>{const t=S.folA===i+1?1:0;f.userData.k+=(t-f.userData.k)*.1;f.position.x=f.userData.x0+f.userData.dx*f.userData.k;});
@@ -234,5 +234,14 @@
  function pintar(S,c){if(!S||!S.rm)return;const h=TINTAS[c];const m=S.rm;if(h==null){m.map=mats().reboco.map;m.color.setHex(0xffffff);}else{m.map=TPINT||(TPINT=texRuido('#ffffff',.035));m.color.setHex(h);}m.needsUpdate=true;}
  function desmontar(S,on){if(!S)return;S.exOn=!!on;if(on){S.alvo=[new THREE.Vector3(1.25,.55,4.1),new THREE.Vector3(0,0,.5)];}else{S.alvo=[new THREE.Vector3(1.1,.45,2.1),new THREE.Vector3(0,0,0)];}}
  function reboco(S,on){if(!S)return;S.rebOn=!!on;S.parts.reb.userData.on=!!on;}
- window.CM3D={perfilReg,desmontar,guaCarregar,guaEspuma,GPECAS,janela,reboco,pintar,carregar,cena,passo,cortar,camGet,camSet,destruir,pecaCena,fotos,quadros,QUADROS,QN,PECAS};
+
+ /* lupa de verdade: renderiza de novo só o pedaço sob o mouse, com mais detalhe (sem esticar pixels) */
+ function lupa(el,x,y,Z,out,semNomes){const S=el&&el.__S;if(!S||!S.r||!S.cam)return false;const r=S.r,cam=S.cam,W=el.clientWidth,H=el.clientHeight,N=out.width;
+  if(!S.lrt||S.lrt.width!==N){if(S.lrt)S.lrt.dispose();S.lrt=new THREE.WebGLRenderTarget(N,N,{samples:4});S.lpx=new Uint8Array(N*N*4);S.lim=null;}
+  const rw=(out.clientWidth||N/2)/Z;const esc=[];if(semNomes&&S.exLab)S.exLab.forEach(l=>[l.sp,l.ln,l.dt].forEach(o=>{if(o&&o.visible){esc.push(o);o.visible=false;}}));
+  cam.setViewOffset(W,H,x-rw/2,y-rw/2,rw,rw);
+  const pr=r.getPixelRatio();r.setRenderTarget(S.lrt);r.render(S.sc,cam);r.readRenderTargetPixels(S.lrt,0,0,N,N,S.lpx);r.setRenderTarget(null);
+  cam.clearViewOffset();esc.forEach(o=>o.visible=true);
+  const c=out.getContext('2d');if(!S.lim)S.lim=c.createImageData(N,N);const d=S.lim.data,px=S.lpx,row=N*4;for(let j=0;j<N;j++){d.set(px.subarray((N-1-j)*row,(N-j)*row),j*row);}c.putImageData(S.lim,0,0);return true;}
+ window.CM3D={lupa,perfilReg,desmontar,guaCarregar,guaEspuma,GPECAS,janela,reboco,pintar,carregar,cena,passo,cortar,camGet,camSet,destruir,pecaCena,fotos,quadros,QUADROS,QN,PECAS};
 })();

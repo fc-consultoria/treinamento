@@ -164,7 +164,7 @@ body.lupa-on #cmhost canvas{cursor:none}
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="../auth.js"></script>
-<script src="cm3d.js?v=11"></script>
+<script src="cm3d.js?v=12"></script>
 <script>
 /* Treinamento em Esquadrias 3D · FC Consultoria em Esquadria · Sinop-MT · todos os direitos reservados */
 const IMG='/perfis/img/',PERFIS='/perfis/';
@@ -299,13 +299,23 @@ let LUPA=false;
 function lupaSet(on){LUPA=on;let L=document.getElementById('lupa');if(!on){if(L)L.remove();document.body.classList.remove('lupa-on');}else{document.body.classList.add('lupa-on');}
  document.querySelectorAll('[data-lupa]').forEach(b=>{b.classList.toggle('p',on);if(b.textContent.includes('Lupa'))b.textContent=on?'🔍 Lupa ligada':'🔍 Lupa';});}
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-lupa]');if(!b)return;e.preventDefault();e.stopPropagation();lupaSet(!LUPA);},true);
+let LZ=3,LM=null;try{LZ=+localStorage.getItem('fc_lupa_z')||3;}catch(_){}
+function lupaDesenha(){const m=LM;if(!LUPA||!m)return;const H=document.getElementById('cmhost'),cv=H&&H.querySelector('canvas'),L=document.getElementById('lupa');if(!cv||!L||L.style.display==='none')return;
+ const r=cv.getBoundingClientRect(),x=m.x-r.left,y=m.y-r.top,c=L.getContext('2d'),N=L.width;
+ let ok=false;try{ok=window.CM3D&&CM3D.lupa&&CM3D.lupa(H,x,y,LZ,L,true);}catch(_){ok=false;}
+ if(!ok){const k=cv.width/r.width;c.fillStyle='#e9eef1';c.fillRect(0,0,N,N);try{const s2=(L.clientWidth/LZ)*k;c.drawImage(cv,x*k-s2/2,y*k-s2/2,s2,s2,0,0,N,N);}catch(_){}}
+ c.strokeStyle='rgba(15,79,83,.45)';c.lineWidth=2;c.beginPath();c.moveTo(N/2,N/2-18);c.lineTo(N/2,N/2+18);c.moveTo(N/2-18,N/2);c.lineTo(N/2+18,N/2);c.stroke();
+ c.fillStyle='rgba(15,79,83,.85)';c.beginPath();c.roundRect?c.roundRect(N/2-34,N-62,68,34,17):c.rect(N/2-34,N-62,68,34);c.fill();c.fillStyle='#fff';c.font='bold 20px system-ui';c.textAlign='center';c.fillText(LZ.toFixed(LZ%1?1:0)+'×',N/2,N-38);}
+let LRAF=0;function lupaLoop(){cancelAnimationFrame(LRAF);if(!LUPA)return;lupaDesenha();LRAF=requestAnimationFrame(lupaLoop);}
 document.addEventListener('mousemove',e=>{if(!LUPA)return;const H=document.getElementById('cmhost'),cv=H&&H.querySelector('canvas');let L=document.getElementById('lupa');
  if(!cv){if(L)L.style.display='none';return;}const r=cv.getBoundingClientRect();const dentro=e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom&&!e.target.closest('#fsBar,#exBar,.angw,.cmExp');
- if(!dentro){if(L)L.style.display='none';return;}
- if(!L){L=document.createElement('canvas');L.id='lupa';L.width=440;L.height=440;L.style.cssText='position:fixed;z-index:1000;width:220px;height:220px;border-radius:50%;border:4px solid #fff;box-shadow:0 0 0 2px #0f4f53,0 14px 30px rgba(0,0,0,.35);pointer-events:none;background:#e9eef1';document.body.appendChild(L);}
- L.style.display='block';L.style.left=(e.clientX-110)+'px';L.style.top=(e.clientY-110)+'px';
- const k=cv.width/r.width,Z=2.6,sw=440/Z,sx=(e.clientX-r.left)*k-sw/2,sy=(e.clientY-r.top)*k-sw/2,c=L.getContext('2d');c.fillStyle='#e9eef1';c.fillRect(0,0,440,440);try{c.drawImage(cv,sx,sy,sw,sw,0,0,440,440);}catch(_){}
- c.strokeStyle='rgba(15,79,83,.5)';c.lineWidth=2;c.beginPath();c.moveTo(220,200);c.lineTo(220,240);c.moveTo(200,220);c.lineTo(240,220);c.stroke();});
+ if(!dentro){if(L)L.style.display='none';LM=null;return;}
+ const T=Math.round(Math.min(380,Math.max(240,Math.min(r.width,r.height)*.5)));
+ if(!L){L=document.createElement('canvas');L.id='lupa';document.body.appendChild(L);}
+ if(L.width!==T*2){L.width=L.height=T*2;}
+ L.style.cssText=`position:fixed;z-index:1000;width:${T}px;height:${T}px;border-radius:50%;border:5px solid #fff;box-shadow:0 0 0 2px #0f4f53,0 18px 40px rgba(0,0,0,.4);pointer-events:none;background:#e9eef1;display:block;left:${e.clientX-T/2}px;top:${e.clientY-T/2}px`;
+ LM={x:e.clientX,y:e.clientY};if(!LRAF||true)lupaLoop();});
+document.addEventListener('wheel',e=>{if(!LUPA||!LM)return;const L=document.getElementById('lupa');if(!L||L.style.display==='none')return;e.preventDefault();e.stopPropagation();LZ=Math.max(1.5,Math.min(10,LZ*(e.deltaY<0?1.2:1/1.2)));try{localStorage.setItem('fc_lupa_z',String(LZ))}catch(_){}lupaDesenha();},{passive:false,capture:true});
 function posHosts(){[['cmhost','.cm3'],['e3host','.e3']].forEach(([id,sel])=>{const H=document.getElementById(id),ph=document.querySelector(sel);if(!H||H.dataset.fs||H.dataset.ex||!ph||H.style.display==='none')return;const r=ph.getBoundingClientRect(),L=(r.left+scrollX)+'px',T=(r.top+scrollY)+'px',W=r.width+'px',Hh=r.height+'px';if(H.style.left!==L||H.style.top!==T||H.style.width!==W||H.style.height!==Hh)Object.assign(H.style,{left:L,top:T,width:W,height:Hh});});}
 setInterval(posHosts,300);addEventListener('load',posHosts);document.fonts&&document.fonts.ready.then(posHosts);
 addEventListener('resize',()=>place3d());addEventListener('hashchange',()=>{const h=location.hash.slice(1);if(!ALUNO&&R[h]&&h!==AT)go(h);});try{new ResizeObserver(()=>place3d()).observe(document.body);}catch(_){}
@@ -345,7 +355,7 @@ const CMCORES=[['natural','Natural','linear-gradient(135deg,#eef0f2,#aeb4b8)'],[
 function cmOpc(fs){const B=(a,on,t)=>`<button type="button" class="btn ${on?'p':''}" ${a} style="${fs?'padding:6px 12px':''}">${t}</button>`;let h='';
  if(CMK>=4){h+=B('data-cmr="1"',CMR,CMR?'🧱 Parede rebocada':'🧱 Rebocar a parede');
   if(CMR)h+=`<span style="display:inline-flex;gap:6px;align-items:center"><span style="font:700 13px var(--f-b);${fs?'color:#cfe0e6':'color:var(--tm)'}">🎨 Pintar:</span>${CMTINTAS.map(([k,n,bg])=>`<button type="button" data-cmp2="${k}" title="${n}" aria-label="Pintar ${n}" style="width:${fs?26:30}px;height:${fs?26:30}px;border-radius:8px;cursor:pointer;background:${bg};border:${CMP2===k?'3px solid var(--or)':'2px solid #c5d0d5'}"></button>`).join('')}</span>`;}
- if(CMK===CMST.length-1){h+=`<button type="button" class="btn ${CMD?'p':''}" data-cmd="1" style="${fs?'padding:6px 12px;':''}background:${CMD?'#f2a51e':'#13232e'};color:${CMD?'#2a1b00':'#fff'};border-color:transparent;font-weight:800">${CMD?'🔧 Montar a janela':'💥 Desmontar a janela'}</button>`+`<button type="button" class="btn ${LUPA?'p':''}" data-lupa="1" style="${fs?'padding:6px 12px;':''}" title="Lupa móvel: passe o mouse sobre o 3D para ampliar">🔍 ${LUPA?'Lupa ligada':'Lupa'}</button>`+B('data-cmf="1"',CMF===1,'⇢ Abrir folha esquerda')+B('data-cmf="2"',CMF===2,'⇠ Abrir folha direita')+B('data-cmf="0"',CMF===0,'Fechar');
+ if(CMK===CMST.length-1){h+=`<button type="button" class="btn ${CMD?'p':''}" data-cmd="1" style="${fs?'padding:6px 12px;':''}background:${CMD?'#f2a51e':'#13232e'};color:${CMD?'#2a1b00':'#fff'};border-color:transparent;font-weight:800">${CMD?'🔧 Montar a janela':'💥 Desmontar a janela'}</button>`+`<button type="button" class="btn ${LUPA?'p':''}" data-lupa="1" style="${fs?'padding:6px 12px;':''}" title="Lupa móvel: passe o mouse sobre o 3D para ampliar · gire a rodinha do mouse para aumentar ou diminuir o zoom">🔍 ${LUPA?'Lupa ligada':'Lupa'}</button>`+B('data-cmf="1"',CMF===1,'⇢ Abrir folha esquerda')+B('data-cmf="2"',CMF===2,'⇠ Abrir folha direita')+B('data-cmf="0"',CMF===0,'Fechar');
   h+=`<span style="display:inline-flex;gap:6px;align-items:center;${fs?'':'margin-left:6px'}"><span style="font:700 13px var(--f-b);${fs?'color:#cfe0e6':'color:var(--tm)'}">Cor:</span>${CMCORES.map(([k,n,bg])=>`<button type="button" data-cmc="${k}" title="${n}" aria-label="Cor ${n}" style="width:${fs?28:34}px;height:${fs?28:34}px;border-radius:50%;cursor:pointer;background:${bg};border:${CMC===k?'3px solid var(--or)':'2px solid #c5d0d5'};box-shadow:${CMC===k?'0 0 0 2px #fff inset':'none'}"></button>`).join('')}${fs?'':`<b style="font:700 14px var(--f-b);color:var(--ink)">${CMCORES.find(c=>c[0]===CMC)[1]}</b>`}</span>`;}
  return h;}
 const CMP=[['CM-200','Perfil do contramarco','Alumínio natural. Forma o requadro que fica chumbado no vão.'],['CHU-787','Chumbador (grapa)','Chapa dobrada que fica presa na argamassa e segura o contramarco na parede.'],['ESQ160','Esquadro do contramarco','Mantém o requadro no esquadro durante a obra. Sai depois da cura.'],['CON063','Cantoneira de conexão','Une os perfis nos cantos do requadro.'],['CL-006','Cantoneira de PVC (barra de 6 m)','Perfil de PVC preto em L, que vai nas laterais do contramarco.'],['CL-011','Macho e cunha (barra de 6 m)','Perfil de PVC em barra. Confira a aplicação no catálogo do fornecedor.']];

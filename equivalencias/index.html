@@ -65,6 +65,21 @@ td .c{font:800 17px var(--f-d);color:var(--tl)}td .eq{display:flex;flex-directio
 .rgate button{background:#0f6b6e;color:#fff;border:0;border-radius:9px;padding:11px;font:700 15px system-ui;cursor:pointer}
 .nvb{border:1px dashed currentColor;cursor:pointer}.nvb:hover{filter:brightness(.95);box-shadow:0 0 0 3px rgba(0,0,0,.05)}
 .cli [data-f="baixa"],.cli .lgP,.cli .lgR,.cli .lgAt{display:none!important}.cli .lgA::after{content:' par conferido pela FC Consultoria';color:var(--tm)}
+
+.txchip{border-color:#0f6b70!important;color:#0f6b70!important}.txchip.on{background:#0f6b70!important;color:#fff!important}
+.txw{margin-top:16px}.txh{display:flex;gap:14px;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;margin-bottom:10px}.txh h2{margin:0;font:800 26px var(--f-d)}.txh p{margin:2px 0 0;color:var(--tm);font-size:14px;max-width:760px}
+#txq{padding:10px 14px;border:1px solid var(--ln);border-radius:12px;font:inherit;min-width:260px;text-transform:uppercase}
+.txl,.txs{margin:8px 0}.txl small,.txs small{opacity:.6;font-weight:500;margin-left:3px}.txs button{font-size:13px;padding:5px 10px;background:var(--tlc);border-color:#bfe0e0}.txs button.on{background:var(--tl);border-color:var(--tl)}
+.txn{color:var(--tm);font-size:13px;margin:6px 0}
+.txgr{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.txi{all:unset;box-sizing:border-box;cursor:pointer;background:#fff;border:1px solid var(--ln);border-radius:14px;padding:10px;display:flex;flex-direction:column;gap:2px;transition:transform .15s,box-shadow .15s}
+.txi:hover,.txi:focus-visible{transform:translateY(-2px);box-shadow:0 10px 22px rgba(15,40,50,.12);border-color:#9cc9c9}
+.txi .ti{height:110px;display:grid;place-items:center;background:#f7fafb;border-radius:9px;margin-bottom:6px;overflow:hidden}.txi .ti img{max-width:100%;max-height:104px;object-fit:contain}
+.txi b{font:800 17px var(--f-d)}.txi small{color:var(--tm);font-size:12.5px}.txi em{font-style:normal;font:700 12px var(--f-b);color:#0f6b70}
+.txmais{border:1px solid var(--ln);background:#fff;border-radius:99px;padding:8px 18px;font:700 14px var(--f-b);cursor:pointer}
+.txa{all:unset;cursor:pointer;align-self:flex-start;background:var(--tlc);color:var(--tl);border-radius:99px;padding:5px 12px;font:700 14px var(--f-b)}.txa:hover{background:#cfe9e9}
+.txd{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))!important}.txc.txg .im{height:300px}.txc .im img{max-width:100%;max-height:100%;object-fit:contain}
+.tx3{display:flex;align-items:center;gap:8px;color:var(--tm);font-size:12.5px}.tx3 img{width:70px;height:70px;object-fit:contain;border:1px solid var(--ln);border-radius:8px;cursor:zoom-in;background:#fff}
 </style>
 </head>
 <body>
@@ -156,9 +171,9 @@ function tela(){const x=Q?achar(Q):null;
  const cont={alta:0,media:0,baixa:0};D.perfis.forEach(r=>r.eq.forEach(e=>cont[OK[r.c+'|'+e.c]?'alta':e.n]++));
  $('#app').innerHTML=`<section class="busca"><h1>Digite o código do fornecedor ou da Alcoa</h1><p>Exemplos: <b>25C-001</b> (Texa), <b>EX-0747</b> (Selta), <b>FASU-0053</b> (FBK), <b>ESU-039</b> (Ecoalumi), <b>PLS-0130</b> (Perfileve), <b>SU-001</b> (Alcoa). Aparece o desenho 2D de cada um, lado a lado, para conferir.</p>
   <form class="sb" id="fb"><input id="q" value="${esc(Q)}" placeholder="Ex.: 25C-040" autocomplete="off" aria-label="Código do perfil"><button>Converter</button></form>
-  <div class="chips"><button type="button" data-f="todos" class="${FIL==='todos'?'on':''}">Todos os perfis (${D.perfis.length})</button><button type="button" data-f="baixa" class="${FIL==='baixa'?'on':''}">Para revisar (${cont.baixa})</button><button type="button" data-f="sem" class="${FIL==='sem'?'on':''}">Sem par</button>${Q?'<button type="button" data-limpa="1">✕ Limpar busca</button>':''}</div>
+  <div class="chips"><button type="button" data-f="todos" class="${FIL==='todos'?'on':''}">Todos os perfis (${D.perfis.length})</button><button type="button" data-f="baixa" class="${FIL==='baixa'?'on':''}">Para revisar (${cont.baixa})</button><button type="button" data-f="sem" class="${FIL==='sem'?'on':''}">Sem par</button>${ADM&&TX?`<button type="button" data-f="texa" class="${FIL==='texa'?'on':''} txchip">📚 Catálogo Texa completo (${TX.p.length.toLocaleString('pt-BR')})</button>`:''}${Q?'<button type="button" data-limpa="1">✕ Limpar busca</button>':''}</div>
   <div class="leg"><span class="lgA"><span class="nv alta">Confirmado</span> <span class="lgAt">mesmo código e peso (até 3% de diferença)</span></span><span class="lgP"><span class="nv media">Provável</span> mesmo código, peso difere de 3 a 10%, versão leve ou variante</span><span class="lgR"><span class="nv baixa">Revisar</span> peso difere mais de 10% ou o desenho parece diferente</span></div></section>
-  ${Q?(x?detalhe(x):`<div class="card" style="margin-top:16px"><b style="font:800 22px var(--f-d)">Código não encontrado: ${esc(Q)}</b><span class="ob">Confira se digitou certo. Nesta fase, a base tem só a linha Suprema (Alcoa, Texa e Selta).</span></div>`):lista()}
+  ${Q?(x?detalhe(x):(ADM&&TX&&(TX.by[norm(Q)]||(TX.alc[norm(Q)]||[])[0]||TX.rf[norm(Q)]))?(TX.by[norm(Q)]?txDetalhe(TX.by[norm(Q)]):(TX.alc[norm(Q)]||[])[0]?txAlc(Q):txDetalhe(TX.rf[norm(Q)])):`<div class="card" style="margin-top:16px"><b style="font:800 22px var(--f-d)">Código não encontrado: ${esc(Q)}</b><span class="ob">Confira se digitou certo. Nesta fase, a base tem só a linha Suprema (Alcoa, Texa e Selta).</span></div>`):(FIL==='texa'&&ADM&&TX?txTela():lista())}
   <p class="nota">Base: catálogo Suprema da Alcoa; Texa (City 2.5), Selta (19/09/2024), FBK (Construção Civil, linha FASU), Ecoalumi (Catálogo Técnico) e Perfileve (Catálogo Geral). Equivalências montadas pela FC a partir do código, do peso e do desenho de cada catálogo. Confira sempre o desenho antes de fechar a compra. © FC Consultoria em Esquadria.</p>`;
  $('#fb').onsubmit=ev=>{ev.preventDefault();Q=$('#q').value.trim();tela();history.replaceState(null,'','#'+encodeURIComponent(Q));};}
 document.addEventListener('click',async ev=>{const t=ev.target.closest('[data-q],[data-f],[data-limpa],[data-zoom],[data-ok],[data-ed],[data-novo]');if(!t)return;const d=t.dataset;
@@ -171,6 +186,40 @@ document.addEventListener('click',async ev=>{const t=ev.target.closest('[data-q]
  else if(d.ok&&ADM){const k=d.ok,on=!OK[k];OK[k]=on;tela();try{await sb.from('trein_eventos').insert({tipo:'equiv_ok',detalhe:{k,on}});}catch(_){}}});
 $('#zmX').onclick=()=>$('#zm').hidden=true;$('#zm').onclick=e=>{if(e.target.id==='zm')$('#zm').hidden=true;};addEventListener('keydown',e=>{if(e.key==='Escape')$('#zm').hidden=true;});
 function marca(t){const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="460" height="300"><g transform="rotate(-24 230 150)" font-family="Barlow,Arial,sans-serif" text-anchor="middle" fill="#0f4f53" fill-opacity=".04"><text x="230" y="150" font-size="24" font-weight="800">FC CONSULTORIA EM ESQUADRIA</text><text x="230" y="176" font-size="13">${t}</text></g></svg>`;const w=document.createElement('div');w.id='wm';w.style.backgroundImage=`url("data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}")`;document.body.appendChild(w);}
+/* ===== Catálogo Texa completo (FinderPro Texa) · só a FC ===== */
+let TX=null,TXL='',TXS='',TXQ='',TXN=120;
+async function txCarrega(){if(TX)return TX;try{TX=await fetch('texa.json?v=1',{cache:'no-cache'}).then(r=>r.json());TX.by={};TX.p.forEach(o=>TX.by[norm(o.c)]=o);TX.rf={};TX.alc={};TX.p.forEach(o=>{if(o.r&&!TX.rf[norm(o.r)])TX.rf[norm(o.r)]=o;if(o.a)(TX.alc[norm(o.a)]=TX.alc[norm(o.a)]||[]).push(o);});}catch(_){TX=null;}return TX;}
+const tx2d=o=>o.v?TX.cdn+'/'+o.v+'/'+encodeURIComponent(o.c)+'.svg':'';
+const tx3d=(o,w)=>o.g?TX.cdn+'/cdn-cgi/image/w='+(w||320)+',h='+(w||320)+',f=auto,fit=contain/'+o.g+'/'+encodeURIComponent(o.c)+'.png':'';
+const txImg=(o,w)=>tx2d(o)||tx3d(o,w);
+const n1=v=>v==null?'':String(v).replace('.',',');
+function txLinhas(o){return [...(o.l||[]).map(x=>TX.menu[x]||x),...(o.s||[]).map(x=>TX.sub[x]||x)].filter((v,i,a)=>a.indexOf(v)===i);}
+function txCard(o,grande){const im=txImg(o,grande?600:320),i3=tx3d(o,600);
+ return `<div class="card txc${grande?' txg':''}"><span class="fn">Texa · ${esc(txLinhas(o).join(' · ')||'catálogo')}</span>
+  <div class="im" data-zoom="${esc(grande?(tx2d(o)||i3):im)}" data-t="${esc('Texa '+o.c)}">${im?`<img src="${esc(im)}" alt="" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'sem desenho',style:'color:var(--tm)'}))">`:'<span style="color:var(--tm)">sem desenho</span>'}</div>
+  ${grande&&tx2d(o)&&i3?`<div class="tx3"><img src="${esc(tx3d(o,240))}" alt="" loading="lazy" data-zoom="${esc(i3)}" data-t="${esc('Texa '+o.c+' · 3D')}"><span>vista 3D</span></div>`:''}
+  <b class="cd">${esc(o.c)}</b><div class="kv">${o.p!=null?`<span>${kg(o.p)}</span>`:''}${o.M!=null?`<span>${n1(o.M)} × ${n1(o.m)} mm</span>`:''}${o.e!=null?`<span>esp. ${n1(o.e)} mm</span>`:''}<span>${o.tb?'Tubular':'Sólido'}</span></div>
+  ${o.a?`<button type="button" class="txa" data-q="${esc(o.a)}" title="Equivalente Alcoa Suprema informado pela Texa">≈ Alcoa <b>${esc(o.a)}</b></button>`:''}${o.r?`<span class="kv"><span title="Referência informada pela Texa">ref. ${esc(o.r)}</span></span>`:''}</div>`;}
+function txGrade(){const q=norm(TXQ);let L=TX.p;if(TXL)L=L.filter(o=>(o.l||[]).includes(TXL));if(TXS)L=L.filter(o=>(o.s||[]).includes(TXS));
+ if(q)L=L.filter(o=>norm(o.c).includes(q)||norm(o.a).includes(q)||norm(o.r).includes(q));
+ return `<p class="txn">${L.length.toLocaleString('pt-BR')} perfis${L.length>TXN?' · mostrando '+TXN:''}</p><div class="txgr">${L.slice(0,TXN).map(o=>`<button type="button" class="txi" data-q="${esc(o.c)}"><span class="ti">${txImg(o)?`<img src="${esc(txImg(o,240))}" alt="" loading="lazy">`:''}</span><b>${esc(o.c)}</b><small>${o.p!=null?kg(o.p):''}${o.M!=null?' · '+n1(o.M)+'×'+n1(o.m):''}</small>${o.a?`<em>≈ ${esc(o.a)}</em>`:''}</button>`).join('')}</div>${L.length>TXN?`<p style="text-align:center"><button type="button" class="txmais" data-txm="1">Mostrar mais</button></p>`:''}`;}
+function txTela(){const cnt={};TX.p.forEach(o=>(o.l||[]).forEach(l=>cnt[l]=(cnt[l]||0)+1));
+ const subs={};if(TXL)TX.p.filter(o=>(o.l||[]).includes(TXL)).forEach(o=>(o.s||[]).forEach(s=>subs[s]=(subs[s]||0)+1));
+ const ord=Object.keys(cnt).sort((a,b)=>(TX.menu[a]||a).localeCompare(TX.menu[b]||b,'pt'));
+ return `<section class="txw"><div class="txh"><div><h2>📚 Catálogo Texa completo</h2><p>${TX.p.length.toLocaleString('pt-BR')} perfis de todas as linhas da Texa, com peso, medidas e desenho. Onde a própria Texa informa, aparece o código Alcoa Suprema equivalente (≈) ou a referência antiga do perfil. Fonte: FinderPro Texa, ${esc(TX.gerado.split('-').reverse().join('/'))}.</p></div>
+  <input id="txq" value="${esc(TXQ)}" placeholder="Filtrar código" autocomplete="off" aria-label="Filtrar catálogo Texa"></div>
+  <div class="chips txl"><button type="button" data-txl="" class="${!TXL?'on':''}">Todas as linhas</button>${ord.map(l=>`<button type="button" data-txl="${esc(l)}" class="${TXL===l?'on':''}">${esc(TX.menu[l]||l)} <small>${cnt[l]}</small></button>`).join('')}</div>
+  ${TXL&&Object.keys(subs).length?`<div class="chips txs"><button type="button" data-txs="" class="${!TXS?'on':''}">Tudo de ${esc(TX.menu[TXL]||TXL)}</button>${Object.keys(subs).sort((a,b)=>(TX.sub[a]||a).localeCompare(TX.sub[b]||b,'pt')).map(s=>`<button type="button" data-txs="${esc(s)}" class="${TXS===s?'on':''}">${esc(TX.sub[s]||s)} <small>${subs[s]}</small></button>`).join('')}</div>`:''}
+  <div id="txg">${txGrade()}</div></section>`;}
+function txAlc(q){const L=TX.alc[norm(q)]||[];return `<div class="card" style="margin-top:16px"><b style="font:800 22px var(--f-d)">${esc(q.toUpperCase())} · Alcoa</b><span class="ob">Perfis da Texa que a própria Texa indica como equivalentes deste código da Alcoa:</span></div><div class="txgr" style="margin-top:12px">${L.map(o=>`<button type="button" class="txi" data-q="${esc(o.c)}"><span class="ti">${txImg(o)?`<img src="${esc(txImg(o,240))}" alt="" loading="lazy">`:''}</span><b>${esc(o.c)}</b><small>${o.p!=null?kg(o.p):''}</small></button>`).join('')}</div>`;}
+function txDetalhe(o){const al=o.a&&D.perfis.find(r=>norm(r.c)===norm(o.a));
+ return `<div class="det txd">${txCard(o,true)}${o.a?(al?`<div class="card alc"><span class="fn">Alcoa · referência informada pela Texa</span><div class="im" data-zoom="${img('alcoa',al.c)}" data-t="${esc('Alcoa '+al.c)}"><img src="${img('alcoa',al.c)}" alt=""></div><b class="cd">${esc(al.c)}</b><div class="kv"><span>${kg(al.p)}</span>${al.n?`<span>${esc(al.n)}</span>`:''}</div><button type="button" class="txa" data-q="${esc(al.c)}">Ver todos os equivalentes de ${esc(al.c)} →</button></div>`
+  :`<div class="card"><span class="fn">Alcoa</span><b style="font:800 26px var(--f-d)">≈ ${esc(o.a)}</b><span class="ob">Referência da Alcoa informada pela própria Texa. Este código ainda não está na base Suprema da FC, então não tem o desenho da Alcoa ao lado: confira pelo catálogo da Alcoa.</span></div>`)
+  :`<div class="card" style="background:var(--mdc);border-color:#f3d9a8"><b style="font:800 20px var(--f-d);color:var(--md)">Sem referência Alcoa</b><span class="ob">${o.r?'A Texa informa só a referência '+esc(o.r)+' para este perfil, sem código Alcoa.':'A Texa não informa equivalente da Alcoa para este perfil.'} Se você souber o par, cadastre pelo botão “＋ Adicionar par”.</span></div>`}</div>`;}
+document.addEventListener('click',async ev=>{const t=ev.target.closest('[data-txl],[data-txs],[data-txm]');if(!t)return;const d=t.dataset;
+ if(d.txl!=null){TXL=d.txl;TXS='';TXN=120;}else if(d.txs!=null){TXS=d.txs;TXN=120;}else if(d.txm){TXN+=240;const g=$('#txg');if(g){g.innerHTML=txGrade();return;}}tela();});
+document.addEventListener('input',ev=>{if(ev.target.id==='txq'){TXQ=ev.target.value;TXN=120;const g=$('#txg');if(g)g.innerHTML=txGrade();}});
+
 async function iniciar(){D=await fetch('dados.json?v=1',{cache:'no-cache'}).then(r=>r.json());
  if(ADM){try{const r=await sb.from('trein_eventos').select('detalhe,criado_em').eq('tipo','equiv_ok').order('criado_em');(r.data||[]).forEach(x=>{if(x.detalhe&&x.detalhe.k)OK[x.detalhe.k]=!!x.detalhe.on;});}catch(_){}}
  try{if(ADM){const r=await sb.from('trein_eventos').select('detalhe,criado_em').eq('tipo','equiv_edit').order('criado_em');aplicarEdits((r.data||[]).map(x=>x.detalhe));}
@@ -179,6 +228,7 @@ async function iniciar(){D=await fetch('dados.json?v=1',{cache:'no-cache'}).then
   try{const r=await sb.rpc('equiv_ok_lista',{p_chave:KEY});(r.data||[]).forEach(k=>OK[k]=true);}catch(_){}
   D.perfis.forEach(r=>{r.eq=r.eq.filter(e=>e.n==='alta'||OK[r.c+'|'+e.c]);r.eq.forEach(e=>{e.n='alta';});});
   Object.keys(D.semPar||{}).forEach(f=>D.semPar[f]=[]);document.body.classList.add('cli');}
+ if(ADM)await txCarrega();
  Q=decodeURIComponent(location.hash.slice(1)||'');tela();}
 (async()=>{if(KEY){let ok=false;try{const r=await sb.rpc('cons_portal_ver',{p_chave:KEY});ok=!r.error&&!!r.data;}catch(_){}
   if(!ok){$('#app').innerHTML='<p class="vazio">Link inválido ou expirado. Fale com a FC Consultoria.</p>';return;}marca('uso exclusivo do cliente');voltaBtn(false);iniciar();}
