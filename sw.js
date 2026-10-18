@@ -1,4 +1,4 @@
-/* ===== Orientativo FC 3D · funcionamento sem internet =====
+/* ===== FC Mostruário 3D · funcionamento sem internet =====
    Regra de ouro: COM internet tudo funciona igual a antes (sempre busca na rede primeiro).
    SEM internet: mostra a última versão guardada das telas e dos dados, e guarda os registros
    (tempo de estudo, opiniões, desafios) para enviar sozinho quando a internet voltar. */
@@ -40,7 +40,7 @@ self.addEventListener('fetch',e=>{const req=e.request,url=new URL(req.url);
   if(req.method!=='GET')return;
   // bibliotecas e fontes (versões fixas): usa a guardada primeiro
   if(CDN.test(req.url)){e.respondWith(caches.open(V).then(async c=>{const m=await c.match(req);if(m)return m;const r=await fetch(req);if(r.ok||r.type==='opaque')c.put(req,r.clone());return r;}));return;}
-  // páginas e arquivos do orientativo: rede primeiro; sem internet, a última versão guardada
+  // páginas e arquivos do Mostruário: rede primeiro; sem internet, a última versão guardada
   if(url.origin===self.location.origin&&url.pathname.startsWith('/treinamento/')){
     e.respondWith(caches.open(V).then(async c=>{try{const r=await fetch(req);if(r.ok)c.put(req,r.clone());return r;}
       catch(err){const m=await c.match(req)||await c.match(req,{ignoreSearch:true})||(req.mode==='navigate'&&/\/treinamento\/(index\.html)?$/.test(url.pathname)?await c.match('index.html'):null);if(m)return m;throw err;}}));}

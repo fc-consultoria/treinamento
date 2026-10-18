@@ -38,7 +38,7 @@
  </form>
 </div>
 <div class="gate" id="quemBox" hidden><div class="gcard" id="quemCard">
-  <div class="eb">Orientativo FC 3D</div><h1 id="quemTit">Quem está estudando agora?</h1>
+  <div class="eb">FC Mostruário 3D</div><h1 id="quemTit">Quem está estudando agora?</h1>
   <p id="quemTxt">Toque no seu nome. Cada colaborador tem 72 horas corridas a partir do primeiro acesso.</p>
   <div id="quemLista" style="display:flex;flex-direction:column;gap:8px"></div>
   <p class="gmsg" id="quemMsg" role="status"></p>
@@ -48,16 +48,16 @@
 .cbtn small{font:500 12px 'IBM Plex Mono',monospace;color:#5d6b76}.cbtn.exp{background:#fbeceb!important}.cbtn.exp small{color:#b4372f}
 .cped{background:#e0972e!important;color:#1b1206!important}.fcst.on{background:#e6f5ec!important;color:#1f6b3f!important}.ubar #sugBtn.fcon::after{content:"";display:inline-block;width:9px;height:9px;border-radius:50%;background:#2fbf63;margin-left:7px;box-shadow:0 0 0 3px rgba(47,191,99,.25)}</style>
 <div class="gate" id="sugBox" hidden><form class="gcard" id="sugForm" style="width:min(520px,100%);max-height:92vh;overflow:auto">
-  <div class="eb">Orientativo FC 3D</div><h1>Dúvidas e sugestões</h1>
+  <div class="eb">FC Mostruário 3D</div><h1>Dúvidas e sugestões</h1>
   <div class="fcst" style="font:400 14px/1.4 Barlow,sans-serif;padding:9px 11px;border-radius:8px;background:#f1f4f6;color:#41525c"></div>
   <div id="sugResp" style="display:flex;flex-direction:column;gap:8px;font-size:14px"></div>
   <label>Tipo<select name="tipo" id="sugTipo"><option>Dúvida</option><option>Sugestão de melhoria</option><option>Algo não funcionou</option><option>Elogio</option></select></label>
   <label>Sua mensagem<textarea name="txt" id="sugTxt" required minlength="3" maxlength="1000" rows="4" style="font:inherit;padding:10px;border:1px solid #c9d3da;border-radius:8px"></textarea></label>
-  <button type="submit">Enviar para a FC</button><button type="button" id="sugFechar" style="background:#fff;color:#1d3f57;border:1px solid #c9d3da">← Voltar ao orientativo</button><a id="sugPainel" href="painel.html" hidden style="text-align:center;font:600 14px Barlow,sans-serif;color:#1f6f9a">← Voltar ao Painel da Matriz</a>
+  <button type="submit">Enviar para a FC</button><button type="button" id="sugFechar" style="background:#fff;color:#1d3f57;border:1px solid #c9d3da">← Voltar ao Mostruário</button><a id="sugPainel" href="painel.html" hidden style="text-align:center;font:600 14px Barlow,sans-serif;color:#1f6f9a">← Voltar ao Painel da Matriz</a>
   <p class="gmsg" id="sugMsg" role="status" style="color:#2f9a55!important"></p>
  </form></div>
 <div class="gate" id="imgBox" hidden style="background:rgba(10,15,20,.85);z-index:120" onclick="this.hidden=true"><img id="imgBig" alt="Imagem enviada pela FC" style="max-width:96vw;max-height:92vh;border-radius:8px;background:#fff"></div>
-<div class="ubar" id="ubar" hidden><span id="uname"></span><button type="button" id="quemTag" hidden title="Trocar quem está estudando"></button><button type="button" id="sugBtn" title="Dúvidas e sugestões: fale com a FC">💬 Dúvidas e sugestões</button><a href="guia/" target="_blank" rel="noopener" style="background:#e0972e;border-color:#e0972e;color:#1b1206" title="Passo a passo de como usar o orientativo">❓ Guia do aluno</a><a href="catalogo3d.html" target="_blank" rel="noopener" style="background:#17606b;border-color:#17606b;color:#fff" title="Catálogo 3D de perfis: 3D, medidas e usinagem">📦 Catálogo 3D</a><a id="uSite" href="https://fc-consultoria.github.io/?o=app" target="_blank" rel="noopener" title="Site da FC Consultoria">🌐 Site da FC</a><a id="uInsta" href="https://www.instagram.com/fc__consultoria/" target="_blank" rel="noopener" title="Instagram da FC Consultoria">📷 Instagram</a><a id="upainel" href="painel.html" hidden>Painel da matriz</a><button type="button" class="usair" onclick="sair()" title="Sair do orientativo">⏻ Sair</button></div>
+<div class="ubar" id="ubar" hidden><span id="uname"></span><button type="button" id="quemTag" hidden title="Trocar quem está estudando"></button><button type="button" id="sugBtn" title="Dúvidas e sugestões: fale com a FC">💬 Dúvidas e sugestões</button><a href="guia/" target="_blank" rel="noopener" style="background:#e0972e;border-color:#e0972e;color:#1b1206" title="Passo a passo de como usar o Mostruário">❓ Guia de uso</a><a href="catalogo3d.html" target="_blank" rel="noopener" style="background:#17606b;border-color:#17606b;color:#fff" title="Catálogo 3D de perfis: 3D, medidas e usinagem">📦 Catálogo 3D</a><a id="uSite" href="https://fc-consultoria.github.io/?o=app" target="_blank" rel="noopener" title="Site da FC Consultoria">🌐 Site da FC</a><a id="uInsta" href="https://www.instagram.com/fc__consultoria/" target="_blank" rel="noopener" title="Instagram da FC Consultoria">📷 Instagram</a><a id="upainel" href="painel.html" hidden>Painel da matriz</a><button type="button" class="usair" onclick="sair()" title="Sair do Mostruário">⏻ Sair</button></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="auth.js"></script>
@@ -109,7 +109,7 @@ async function carregar(){const r=await sb.from('cat_clientes').select('*').orde
 const itemOf=(c,q)=>Object.assign({c:'',n:'',cores:null,sc:true,obs:false,txt:'',oc:false},(IT[c.id]||{})[q.c]||{});
 const linhasDo=c=>BASE.filter(l=>(c.linhas||[]).includes(l.id));
 /* ---------- MATRIZ ---------- */
-function lista(){const h=`<div class="ph"><div class="w"><div><small>Orientativo FC 3D · Painel da Matriz</small><h1>📚 Catálogos dos clientes</h1></div><div class="acts"><a class="btn" href="painel.html">← Painel da Matriz</a><button class="btn or" data-a="novo">＋ Novo catálogo de cliente</button></div></div></div>
+function lista(){const h=`<div class="ph"><div class="w"><div><small>FC Mostruário 3D · Painel da Matriz</small><h1>📚 Catálogos dos clientes</h1></div><div class="acts"><a class="btn" href="painel.html">← Painel da Matriz</a><button class="btn or" data-a="novo">＋ Novo catálogo de cliente</button></div></div></div>
  <main><div class="w"><div class="card"><h2>Clientes com catálogo virtual</h2><p class="note" style="margin:0 0 12px">Cada cliente tem um link próprio com a marca dele e um <b>gestor</b> que edita o catálogo. A bancada de montagem não aparece para os clientes.</p>
  <div class="grid2">${CL.length?CL.map(c=>{const L=linhasDo(c),n=L.reduce((s,l)=>s+l.p.length,0),I=Object.values(IT[c.id]||{}),oc=I.filter(x=>x.oc).length,nsc=I.filter(x=>x.sc===false).length;
   return `<div class="cli"><div class="hd"><div class="lg" style="background:${esc(c.cor)}">${esc(c.sigla||c.nome.slice(0,2))}</div><div><b>${esc(c.nome)}</b><div class="note">${esc(c.cidade||'')}${c.gestor_uid?' · gestor criado':' · <span style="color:#b4372f">sem gestor</span>'}</div></div><span style="margin-left:auto;display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end">${c.aviso?`<span class="tag" style="background:#fff4d6;color:#7a5200">${c.aviso==='manutencao'?'🔧 em manutenção':'🔄 em atualização'}</span>`:''}${licTag(c)}<span class="tag ${c.ativo?'ok':'gr'}">${c.ativo?'publicado':'desativado'}</span></span></div>

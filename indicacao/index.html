@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Indicação · Orientativo FC 3D</title>
-<meta name="description" content="Você foi indicado para conhecer o Orientativo FC 3D: treinamento em esquadrias de alumínio com 3D.">
+<title>Indicação · FC Mostruário 3D</title>
+<meta name="description" content="Você foi indicado para conhecer o FC Mostruário 3D: as esquadrias de alumínio em 3D para apresentar e vender.">
 <link rel="icon" href="https://fc-consultoria.github.io/img/logo-fc-160.jpg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap">
@@ -47,9 +47,9 @@ button:disabled{opacity:.6;cursor:default}
   <header><img src="https://fc-consultoria.github.io/img/logo-fc-160.jpg" alt="FC Consultoria"><div><b>FC Consultoria em Esquadria</b><small>Sinop · MT</small></div></header>
   <section>
     <span class="tag" id="quem" hidden></span>
-    <p class="eb">Orientativo FC 3D</p>
-    <h1>Aprenda esquadrias de alumínio vendo cada peça em 3D</h1>
-    <p class="lead">Treinamento online para vendedores, orçamentistas e equipe de produção de vidraçarias e serralherias.</p>
+    <p class="eb">FC Mostruário 3D</p>
+    <h1>Apresente e venda esquadrias de alumínio vendo cada peça em 3D</h1>
+    <p class="lead">Ferramenta on-line para a vidraçaria e a serralheria apresentarem as esquadrias ao cliente, e para vendedores e orçamentistas trabalharem com segurança.</p>
     <ul>
       <li><i>🧩</i><span>Tipologias das linhas Suprema e Gold em 3D: monte e desmonte cada esquadria.</span></li>
       <li><i>📐</i><span>Perfis, componentes, medidas e lista de corte explicados passo a passo.</span></li>
@@ -59,12 +59,12 @@ button:disabled{opacity:.6;cursor:default}
   </section>
   <section class="card" id="form">
     <h2>Quero conhecer</h2>
-    <p class="nt">Deixe seus dados e a FC Consultoria chama você no WhatsApp para apresentar o Orientativo.</p>
+    <p class="nt">Deixe seus dados e a FC Consultoria chama você no WhatsApp para apresentar o Mostruário.</p>
     <label>Seu nome<input id="fNome" autocomplete="name" maxlength="80" required></label>
     <label>Empresa<input id="fEmp" autocomplete="organization" maxlength="100"></label>
     <label>Cidade / UF<input id="fCid" autocomplete="address-level2" maxlength="80" placeholder="Ex.: Sinop / MT"></label>
     <label>WhatsApp com DDD<input id="fWa" type="tel" inputmode="tel" autocomplete="tel" maxlength="20" placeholder="(66) 9 9999-9999" required></label>
-    <label class="ck"><input type="checkbox" id="fOk"><span>Autorizo a FC Consultoria a entrar em contato comigo pelo WhatsApp sobre o Orientativo FC 3D.</span></label>
+    <label class="ck"><input type="checkbox" id="fOk"><span>Autorizo a FC Consultoria a entrar em contato comigo pelo WhatsApp sobre o FC Mostruário 3D.</span></label>
     <button type="button" id="fEnv">Enviar</button>
     <p class="msg" id="fMsg" role="alert"></p>
     <p class="nt">Atendimento de segunda a sexta, das 8h às 11h e das 13h às 17h (horário de Sinop/MT).</p>
@@ -92,7 +92,7 @@ $('#fEnv').onclick=async()=>{const m=$('#fMsg');m.textContent='';
   const b=$('#fEnv');b.disabled=true;b.textContent='Enviando…';
   try{const r=await rpc('trein_indicar',{p_cod:cod,p_nome:nome,p_empresa:emp,p_whats:wa,p_cidade:cid});
     const E={whats:'Confira o WhatsApp com DDD.',dados:'Confira os dados digitados.',codigo:'Este link de indicação não é válido. Peça o link de novo para quem indicou.',repetido:'Este WhatsApp já foi indicado antes. A FC Consultoria já tem o seu contato.',limite:'Muitos cadastros por este link hoje. Tente amanhã.'};
-    if(r==='ok'){$('#form').hidden=true;$('#pronto').hidden=false;$('#pronto').scrollIntoView({behavior:'smooth',block:'center'});$('#waNow').href='https://wa.me/5566999867984?text='+encodeURIComponent('Olá! Sou '+nome+(emp?' da '+emp:'')+(QUEM?', fui indicado por '+QUEM:'')+' e quero conhecer o Orientativo FC 3D.');}
+    if(r==='ok'){$('#form').hidden=true;$('#pronto').hidden=false;$('#pronto').scrollIntoView({behavior:'smooth',block:'center'});$('#waNow').href='https://wa.me/5566999867984?text='+encodeURIComponent('Olá! Sou '+nome+(emp?' da '+emp:'')+(QUEM?', fui indicado por '+QUEM:'')+' e quero conhecer o FC Mostruário 3D.');}
     else{m.textContent=E[r]||'Não foi possível enviar agora. Tente de novo em instantes.';}}
   catch(_){m.textContent='Sem conexão. Tente de novo em instantes.';}
   b.disabled=false;b.textContent='Enviar';};

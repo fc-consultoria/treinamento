@@ -1,4 +1,4 @@
-/* ===== Orientativo FC 3D · aviso de sem internet e registro do modo offline ===== */
+/* ===== FC Mostruário 3D · aviso de sem internet e registro do modo offline ===== */
 (function(){
   if('serviceWorker' in navigator){addEventListener('load',()=>{navigator.serviceWorker.register('sw.js',{scope:'./'}).catch(()=>{});});}
   const bar=document.createElement('div');bar.id='offBar';bar.setAttribute('role','status');

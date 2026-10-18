@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Catálogo 3D · Orientativo FC 3D</title><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#1b232a">
+<title>Catálogo 3D · FC Mostruário 3D</title><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#1b232a">
 <meta name="description" content="Catálogo de perfis de alumínio em 3D e em corte, organizados pela função na esquadria, com código e peso. Material de apoio técnico da FC Consultoria em Esquadria.">
 <meta property="og:title" content="Catálogo de perfis em 3D · FC Consultoria">
 <meta property="og:description" content="Trilhos, montantes, travessas e arremates em 3D, com código e peso. Baixe o catálogo em PDF.">
@@ -114,7 +114,7 @@ footer{background:var(--ink);color:#c7d6dd;padding:34px 0 90px;font-size:14.5px;
  </form>
 </div>
 <div class="gate" id="quemBox" hidden><div class="gcard" id="quemCard">
-  <div class="eb">Orientativo FC 3D</div><h1 id="quemTit">Quem está estudando agora?</h1>
+  <div class="eb">FC Mostruário 3D</div><h1 id="quemTit">Quem está estudando agora?</h1>
   <p id="quemTxt">Toque no seu nome. Cada colaborador tem 72 horas corridas a partir do primeiro acesso.</p>
   <div id="quemLista" style="display:flex;flex-direction:column;gap:8px"></div>
   <p class="gmsg" id="quemMsg" role="status"></p>
@@ -124,24 +124,24 @@ footer{background:var(--ink);color:#c7d6dd;padding:34px 0 90px;font-size:14.5px;
 .cbtn small{font:500 12px 'IBM Plex Mono',monospace;color:#5d6b76}.cbtn.exp{background:#fbeceb!important}.cbtn.exp small{color:#b4372f}
 .cped{background:#e0972e!important;color:#1b1206!important}.fcst.on{background:#e6f5ec!important;color:#1f6b3f!important}.ubar #sugBtn.fcon::after{content:"";display:inline-block;width:9px;height:9px;border-radius:50%;background:#2fbf63;margin-left:7px;box-shadow:0 0 0 3px rgba(47,191,99,.25)}</style>
 <div class="gate" id="sugBox" hidden><form class="gcard" id="sugForm" style="width:min(520px,100%);max-height:92vh;overflow:auto">
-  <div class="eb">Orientativo FC 3D</div><h1>Dúvidas e sugestões</h1>
+  <div class="eb">FC Mostruário 3D</div><h1>Dúvidas e sugestões</h1>
   <div class="fcst" style="font:400 14px/1.4 Barlow,sans-serif;padding:9px 11px;border-radius:8px;background:#f1f4f6;color:#41525c"></div>
   <div id="sugResp" style="display:flex;flex-direction:column;gap:8px;font-size:14px"></div>
   <label>Tipo<select name="tipo" id="sugTipo"><option>Dúvida</option><option>Sugestão de melhoria</option><option>Algo não funcionou</option><option>Elogio</option></select></label>
   <label>Sua mensagem<textarea name="txt" id="sugTxt" required minlength="3" maxlength="1000" rows="4" style="font:inherit;padding:10px;border:1px solid #c9d3da;border-radius:8px"></textarea></label>
-  <button type="submit">Enviar para a FC</button><button type="button" id="sugFechar" style="background:#fff;color:#1d3f57;border:1px solid #c9d3da">← Voltar ao orientativo</button><a id="sugPainel" href="painel.html" hidden style="text-align:center;font:600 14px Barlow,sans-serif;color:#1f6f9a">← Voltar ao Painel da Matriz</a>
+  <button type="submit">Enviar para a FC</button><button type="button" id="sugFechar" style="background:#fff;color:#1d3f57;border:1px solid #c9d3da">← Voltar ao Mostruário</button><a id="sugPainel" href="painel.html" hidden style="text-align:center;font:600 14px Barlow,sans-serif;color:#1f6f9a">← Voltar ao Painel da Matriz</a>
   <p class="gmsg" id="sugMsg" role="status" style="color:#2f9a55!important"></p>
  </form></div>
 <div class="gate" id="imgBox" hidden style="background:rgba(10,15,20,.85);z-index:120" onclick="this.hidden=true"><img id="imgBig" alt="Imagem enviada pela FC" style="max-width:96vw;max-height:92vh;border-radius:8px;background:#fff"></div>
-<div class="ubar" id="ubar" hidden><span id="uname"></span><button type="button" id="quemTag" hidden title="Trocar quem está estudando"></button><button type="button" id="sugBtn" title="Dúvidas e sugestões: fale com a FC">💬 Dúvidas e sugestões</button><a href="guia/" target="_blank" rel="noopener" style="background:#e0972e;border-color:#e0972e;color:#1b1206" title="Passo a passo de como usar o orientativo">❓ Guia do aluno</a><a href="catalogo3d.html" target="_blank" rel="noopener" style="background:#17606b;border-color:#17606b;color:#fff" title="Catálogo 3D de perfis: 3D, medidas e usinagem">📦 Catálogo 3D</a><a id="uSite" href="https://fc-consultoria.github.io/?o=app" target="_blank" rel="noopener" title="Site da FC Consultoria">🌐 Site da FC</a><a id="uInsta" href="https://www.instagram.com/fc__consultoria/" target="_blank" rel="noopener" title="Instagram da FC Consultoria">📷 Instagram</a><a id="upainel" href="painel.html" hidden>Painel da matriz</a><button type="button" class="usair" onclick="sair()" title="Sair do orientativo">⏻ Sair</button></div>
+<div class="ubar" id="ubar" hidden><span id="uname"></span><button type="button" id="quemTag" hidden title="Trocar quem está estudando"></button><button type="button" id="sugBtn" title="Dúvidas e sugestões: fale com a FC">💬 Dúvidas e sugestões</button><a href="guia/" target="_blank" rel="noopener" style="background:#e0972e;border-color:#e0972e;color:#1b1206" title="Passo a passo de como usar o Mostruário">❓ Guia de uso</a><a href="catalogo3d.html" target="_blank" rel="noopener" style="background:#17606b;border-color:#17606b;color:#fff" title="Catálogo 3D de perfis: 3D, medidas e usinagem">📦 Catálogo 3D</a><a id="uSite" href="https://fc-consultoria.github.io/?o=app" target="_blank" rel="noopener" title="Site da FC Consultoria">🌐 Site da FC</a><a id="uInsta" href="https://www.instagram.com/fc__consultoria/" target="_blank" rel="noopener" title="Instagram da FC Consultoria">📷 Instagram</a><a id="upainel" href="painel.html" hidden>Painel da matriz</a><button type="button" class="usair" onclick="sair()" title="Sair do Mostruário">⏻ Sair</button></div>
 <header class="top"><div class="w">
- <a class="brand" href="./" aria-label="Orientativo FC 3D"><img src="../img/logo-fc-160.jpg" alt=""><span><b>Orientativo FC 3D</b><small>Catálogo 3D de perfis</small></span></a>
- <nav><span id="who" class="who"></span><a class="btn b-gh" id="vOr" href="./">← Orientativo</a><button type="button" class="btn b-gh" onclick="sair()">Sair</button></nav>
+ <a class="brand" href="./" aria-label="FC Mostruário 3D"><img src="../img/logo-fc-160.jpg" alt=""><span><b>FC Mostruário 3D</b><small>Catálogo 3D de perfis</small></span></a>
+ <nav><span id="who" class="who"></span><a class="btn b-gh" id="vOr" href="./">← Mostruário</a><button type="button" class="btn b-gh" onclick="sair()">Sair</button></nav>
 </div></header>
 
 <section class="hero hs"><div class="w">
  <div>
-  <span class="eb">Módulo do Orientativo FC 3D</span>
+  <span class="eb">Módulo do FC Mostruário 3D</span>
   <h1>Catálogo <em>3D</em> de perfis</h1>
   <p>Monte o encaixe na bancada abaixo, ou toque num perfil da lista para girar em 3D, ver as 📐 medidas e os 🔧 desenhos de usinagem.</p>
   <div class="st" id="st"></div>
@@ -156,7 +156,7 @@ footer{background:var(--ink);color:#c7d6dd;padding:34px 0 90px;font-size:14.5px;
 <main class="w" id="lst"></main>
 <footer><div class="w">
  <div><b style="color:#fff">FC Consultoria em Esquadria</b> · Sinop-MT<br>WhatsApp <a href="https://wa.me/5566999867984" target="_blank" rel="noopener">(66) 9 9986-7984</a> · <a href="https://www.instagram.com/fc__consultoria/" target="_blank" rel="noopener">@fc__consultoria</a><small>FC Desenvolvimento de Projetos de Compra e Venda LTDA · CNPJ 52.985.682/0001-32. Material de apoio técnico: a FC não comercializa perfis de alumínio. Suprema, Gold e os códigos citados pertencem aos seus titulares. Imagens 3D ilustrativas geradas a partir dos desenhos dos perfis.</small></div>
- <div><a class="btn b-gh" href="./">← Voltar ao Orientativo</a></div>
+ <div><a class="btn b-gh" href="./">← Voltar ao Mostruário</a></div>
 </div></footer>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="auth.js"></script>
@@ -181,7 +181,7 @@ async function abrePack(){
  return null;}
 function trava(c){HITX('cat3d_trava',c);let o=document.getElementById('tv');if(o)o.remove();o=document.createElement('div');o.id='tv';o.setAttribute('role','dialog');
  const v=ACC.orient?'5,00 por usuário':'10,00 por usuário',quem=ACC.nome||'';
- o.innerHTML=`<div class="tb2"><button type="button" class="x" aria-label="Fechar">×</button><span class="eb2">🔒 Módulo Catálogo 3D</span><h3>Libere todos os perfis em 3D</h3><p>No demonstrativo, 6 perfis funcionam completos. Com o módulo liberado você gira <b>todos os perfis</b> da Suprema e da Gold em 3D, vê as <b>📐 medidas</b> e os <b>🔧 desenhos de usinagem</b>.</p><div class="pr"><b>R$ ${v} a cada 30 dias</b>${ACC.orient?' · valor para quem já usa o Orientativo FC 3D':''}.<br>Faça o PIX para a chave <b>CNPJ 52.985.682/0001-32</b> (FC Consultoria) e envie o comprovante pelo WhatsApp. A FC libera o acesso.</div><div class="fcst" style="margin-top:10px;font-size:13.5px;padding:8px 10px;border-radius:8px;background:#f1f4f6"></div><div class="cta2"><a class="btn b-or" target="_blank" rel="noopener" href="https://wa.me/5566999867984?text=${encodeURIComponent('Olá Fernando, quero liberar o módulo Catálogo 3D do Orientativo FC 3D'+(quem?' ('+quem+')':'')+'.')}">💬 Quero liberar</a><button type="button" class="btn b-ln x2">Agora não</button></div></div>`;
+ o.innerHTML=`<div class="tb2"><button type="button" class="x" aria-label="Fechar">×</button><span class="eb2">🔒 Módulo Catálogo 3D</span><h3>Libere todos os perfis em 3D</h3><p>No demonstrativo, 6 perfis funcionam completos. Com o módulo liberado você gira <b>todos os perfis</b> da Suprema e da Gold em 3D, vê as <b>📐 medidas</b> e os <b>🔧 desenhos de usinagem</b>.</p><div class="pr"><b>R$ ${v} a cada 30 dias</b>${ACC.orient?' · valor para quem já usa o FC Mostruário 3D':''}.<br>Faça o PIX para a chave <b>CNPJ 52.985.682/0001-32</b> (FC Consultoria) e envie o comprovante pelo WhatsApp. A FC libera o acesso.</div><div class="fcst" style="margin-top:10px;font-size:13.5px;padding:8px 10px;border-radius:8px;background:#f1f4f6"></div><div class="cta2"><a class="btn b-or" target="_blank" rel="noopener" href="https://wa.me/5566999867984?text=${encodeURIComponent('Olá Fernando, quero liberar o módulo Catálogo 3D do FC Mostruário 3D'+(quem?' ('+quem+')':'')+'.')}">💬 Quero liberar</a><button type="button" class="btn b-ln x2">Agora não</button></div></div>`;
  document.body.appendChild(o);if(window.fcStatusUI&&!ACC.adm)fcStatusUI();const fx=()=>o.remove();o.querySelector('.x').onclick=fx;o.querySelector('.x2').onclick=fx;o.addEventListener('click',e=>{if(e.target===o)fx();});}
 gateUI(async({session,perfil})=>{window.UID=session.user.id;const st=document.getElementById('st');st.textContent='Abrindo o catálogo…';
  ACC={adm:perfil.papel==='admin',nome:perfil.nome||perfil.login};document.getElementById('who').textContent=ACC.nome+(ACC.adm?' · matriz':'');

@@ -116,7 +116,7 @@ document.getElementById('cliSel').onchange=e=>{CID=e.target.value;draw();};
 function draw(){nav();const A=document.getElementById('app');A.innerHTML=V==='matriz'?matriz():V==='gestor'?gestor():cliente();bind();scrollTo(0,0);}
 /* ---------- MATRIZ ---------- */
 function matriz(){const tot=BASE.reduce((s,l)=>s+l.p.length,0);
- return `<div class="ph"><div class="w"><div><small>Orientativo FC 3D · Painel da Matriz</small><h1>📚 Catálogos dos clientes</h1></div><div class="acts"><button class="btn or" data-act="novo">＋ Novo catálogo de cliente</button></div></div></div>
+ return `<div class="ph"><div class="w"><div><small>FC Mostruário 3D · Painel da Matriz</small><h1>📚 Catálogos dos clientes</h1></div><div class="acts"><button class="btn or" data-act="novo">＋ Novo catálogo de cliente</button></div></div></div>
  <main><div class="w">
  <div class="card"><h2>Clientes com catálogo virtual</h2><p class="note" style="margin:0 0 12px">Cada cliente tem um link próprio, com a marca dele, e um <b>gestor</b> que edita o catálogo. A bancada de montagem não aparece para os clientes.</p>
  <div class="grid2">${ST.cli.map(c=>{const L=linhasDo(c),n=L.reduce((s,l)=>s+l.p.length,0),sc=L.reduce((s,l)=>s+l.p.filter(q=>ed(c.id,q).sc).length,0),oc=L.reduce((s,l)=>s+l.p.filter(q=>ed(c.id,q).oc).length,0);

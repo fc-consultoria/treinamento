@@ -131,7 +131,7 @@
   const arg=new THREE.Group();G.add(arg);[[0,VH/2-FOL/2,VW,FOL],[0,-VH/2+FOL/2,VW,FOL],[VW/2-FOL/2,0,FOL,VH-2*FOL],[-VW/2+FOL/2,0,FOL,VH-2*FOL]].forEach(([x,y,w,h])=>{const ms=new THREE.Mesh(new THREE.BoxGeometry(w,h,PE*.98),am);ms.position.set(x,y,0);ms.receiveShadow=true;arg.add(ms);});
   /* esquadria final (janela de correr simples) */
   const esd=new THREE.Group();G.add(esd);const fw=iw-.01,fh=ih-.01;const mf=m.alu.clone();mf.side=THREE.DoubleSide;S.mJan=mf;S.fol=[];S.jPecas=[];
-  if(JSH&&JSH['SU-001']){/* Janela de correr 2 folhas Suprema (SUP JCR 200) montada com as seções reais dos perfis do catálogo, como no Orientativo 3D */
+  if(JSH&&JSH['SU-001']){/* Janela de correr 2 folhas Suprema (SUP JCR 200) montada com as seções reais dos perfis do catálogo, como no Mostruário 3D */
    const jr=new THREE.Group();jr.rotation.y=Math.PI;esd.add(jr);/* +Z local = lado interno da janela (virado para o contramarco) */
    const X=new THREE.Vector3(1,0,0),Y=new THREE.Vector3(0,1,0),Z=new THREE.Vector3(0,0,1),N=v=>v.clone().negate();
    const PW=c=>JSH[c].w*.001,PH=c=>JSH[c].h*.001;

@@ -1,4 +1,4 @@
-/* ===== Dicas da FC (site, orientativo e painel) ===== */
+/* ===== Dicas da FC (site, Mostruário e painel) ===== */
 (function(){
 const SB='https://cpkjphodruyxfouirhpd.supabase.co',KEY='sb_publishable_d0HEeWsaqOeZIQKGftlF-Q_B8BUOWWg';
 const esc=v=>String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
