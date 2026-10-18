@@ -261,7 +261,7 @@ td.qd{cursor:help}td.qd:hover{background:#eef6f8;box-shadow:inset 0 -2px 0 #1f6f
   <p class="note" style="padding:10px 16px 0">Acesso exclusivo e sem custo para os clientes da consultoria durante a implantação da precificação. Cada cliente tem o próprio login e vê só a própria equipe. Quando a data acaba, o acesso bloqueia sozinho e o cliente vê a oferta da licença. Estes acessos não aparecem na lista de Empresas nem nos números de contrato.</p>
   <div class="tw"><table><thead><tr><th>Cliente</th><th>Login</th><th>Senha</th><th>Válido até</th><th>Equipe</th><th>Último acesso</th><th>Tempo</th><th></th></tr></thead><tbody id="implTb"></tbody></table></div></section>
  <section class="card" id="pedVazio" data-tab="ped"><p class="note" style="padding:14px 16px">Nenhum pedido de mais tempo e nenhum interessado aguardando. 👍</p></section>
- <section class="card dom" id="domCard" data-tab="emp" hidden><h2>Domingo · liberar a próxima semana?</h2><p class="note" style="padding:10px 16px 0">O acesso das empresas vale de segunda a sábado. Escolha quem continua na semana que vem (até sábado <b id="domSab"></b>). Quem não for liberado fica sem acesso a partir de segunda.</p><div style="padding:8px 16px"><button class="ok" type="button" id="domTodas">Liberar todas</button></div><div id="domList"></div></section>
+ <section class="card dom" id="domCard" data-tab="emp" hidden><h2>Domingo · liberar a próxima semana?</h2><p class="note" style="padding:10px 16px 0">O acesso das empresas vale de domingo a domingo (suporte só de segunda a sexta). Escolha quem continua na semana que vem (até domingo <b id="domSab"></b>). Quem não for liberado fica sem acesso a partir de segunda.</p><div style="padding:8px 16px"><button class="ok" type="button" id="domTodas">Liberar todas</button></div><div id="domList"></div></section>
  <section class="card ped" id="pedCard" data-tab="ped" hidden><h2>⏱ Pedidos de mais tempo <span class="sgn" id="pedN"></span></h2><div id="pedList"></div></section>
  <section class="card" id="cvCard" data-tab="ped"><h2 style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">💬 Conversas pelo site · orçamentos e dúvidas <span class="sgn" id="cvN"></span><button type="button" id="cvRe" style="margin-left:auto;font-size:13px">🔄 Atualizar</button></h2>
   <div style="padding:10px 16px 16px"><p class="note" style="margin:0 0 10px">Quem escreve pela conversa no site da FC ou nas páginas Engefitas e Nopla aparece aqui, com aviso grande na hora. Responda por aqui: a resposta aparece na conversa da pessoa na página. Se ela deixou o WhatsApp, você também pode chamar por lá.</p><div id="cvBox"><p class="note">Carregando…</p></div></div></section>
@@ -804,12 +804,13 @@ function detalhe(){
     const qn=(d.quem||'').replace(/</g,'');return `<li><time>${fmtD(e.criado_em)}</time><span>${qn&&e.tipo!=='quem'?'<b style="color:#0e6b62">'+qn+'</b> · ':''}${ROT[e.tipo]} ${(e.tipo==='quem'||e.tipo==='colab_inicio'||e.tipo==='pedido_tempo'||e.tipo==='colab_sessao')?'<strong>'+qn+'</strong>':x?'<strong>'+x+'</strong>':''} <span class="note">${TIPOS[e.tipologia]||''}</span></span></li>`;}).join('')||'<li><span class="note">Sem atividades.</span></li>';
 }
 const HOJE=()=>new Date(Date.now()-4*3600e3).toISOString().slice(0,10),DOW=()=>new Date(Date.now()-4*3600e3).getUTCDay();
-const SAB=()=>{const d=new Date(Date.now()-4*3600e3);d.setUTCDate(d.getUTCDate()+6-d.getUTCDay());return d.toISOString().slice(0,10);};
+/* fim da semana de acesso: domingo (semana de domingo a domingo). No domingo, libera até o próximo domingo. */
+const SAB=()=>{const d=new Date(Date.now()-4*3600e3);d.setUTCDate(d.getUTCDate()+(7-d.getUTCDay()));return d.toISOString().slice(0,10);};
 const ONTEM=()=>new Date(Date.now()-28*3600e3).toISOString().slice(0,10),fDia=v=>v?v.slice(8,10)+'/'+v.slice(5,7):'';
 const fmtR=ms=>{const h=Math.floor(ms/3600e3),m=Math.floor(ms%3600e3/60e3);return h>=1?h+' h '+String(m).padStart(2,'0'):m+' min';};
 const libAte=uid=>{const r=EV.find(e=>e.tipo==='liberacao'&&(e.detalhe||{}).para===uid);return r?r.detalhe.ate:null;};
 const libOk=uid=>{const a=libAte(uid);return !!a&&a>=HOJE();};
-function semTag(uid){const cf=ctrFim(uid);if(cf&&cf>=HOJE())return `<span class="sem tag">contrato · ${fDia(cf)}</span>`;const a=libAte(uid);return a&&a>=HOJE()?`<span class="sem tag">até sáb ${fDia(a)}</span>`:'<span class="sem tag off">encerrada</span>';}
+function semTag(uid){const cf=ctrFim(uid);if(cf&&cf>=HOJE())return `<span class="sem tag">contrato · ${fDia(cf)}</span>`;const a=libAte(uid);return a&&a>=HOJE()?`<span class="sem tag">até dom ${fDia(a)}</span>`:'<span class="sem tag off">encerrada</span>';}
 function colabs(uid,todos){const C={};
   for(let i=EV.length-1;i>=0;i--){const e=EV[i],d=e.detalhe||{};
     if(e.tipo==='colab'&&d.para===uid)C[d.id]=Object.assign({},C[d.id]||{},d,{alt:e.criado_em});
@@ -927,7 +928,7 @@ function colabUI(a){const L=colabs(a.user_id),esc=v=>String(v||'').replace(/</g,
    document.getElementById('bEmp').onclick=()=>window.open('empresa.html?e='+a.user_id,'_blank');}
   {const URL0='https://fc-consultoria.github.io/treinamento/',sen=senhaLoc(a.user_id)||'[SENHA]',pins=locGet('treinFC-pins'),gp=locGet('treinFC-gestor')[a.user_id]||'[SENHA DO GESTOR]',nm=a.nome||a.login;
    const IM=implDe(a.user_id),CF=ctrFim(a.user_id),CTA=CF&&CF>=HOJE()?CF:null;
-   const REGRA=IM?`📅 Acesso exclusivo da implantação até ${brD(IM.ate)} · todos os dias`:CTA?`📅 Acesso liberado pelo contrato até ${brD(CTA)} · todos os dias`:'⏱️ 72 h a partir do 1º acesso · segunda a sábado';
+   const REGRA=IM?`📅 Acesso exclusivo da implantação até ${brD(IM.ate)} · todos os dias`:CTA?`📅 Acesso liberado pelo contrato até ${brD(CTA)} · todos os dias`:'⏱️ 72 h a partir do 1º acesso · domingo a domingo';
    document.getElementById('wmA').value=`*Orientativo FC 3D · ${nm}* 🪟\n\n🔗 ${URL0}\n👤 Login: ${a.login}\n🔑 Senha: ${sen}\n\nDepois de entrar, toque no seu nome e digite seu código:\n${L.map(x=>`• ${x.nome} · ${pins[x.id]||'[CÓDIGO]'}`).join('\n')}\n\n${REGRA}\n💻 Um aparelho por vez · código pessoal, não compartilhe\n📘 Guia do aluno: ${URL0}guia/\n\nDúvidas: FC Consultoria · (66) 9 9986-7984`;
    document.getElementById('wmG').value=`*Orientativo FC 3D · Acesso do gestor · ${nm}* 📊\n\n🔗 Painel da Empresa: ${URL0}empresa.html\n👤 Login: ${a.login}\n🔑 Senha: ${sen}\n🛡 Senha do gestor: ${gp}\n\nNo painel você acompanha cada colaborador: ${IM||CTA?'':'prazo de 72 h, '}horas de estudo, tipologias, nível no Monte a esquadria, resultados e pontos a melhorar. Também dá para baixar o relatório em PDF.${IM?`\n\n📅 Acesso exclusivo da implantação até ${brD(IM.ate)}.`:CTA?`\n\n📅 Contrato até ${brD(CTA)}.`:''}\n\n⚠️ A senha do gestor é só sua. Não compartilhe com a equipe.\n\nFC Consultoria · (66) 9 9986-7984`;
    document.querySelectorAll('.wam [data-w]').forEach(b=>b.onclick=async()=>{const t=document.getElementById(b.dataset.w);try{await navigator.clipboard.writeText(t.value);}catch(e){t.select();document.execCommand('copy');}b.textContent='✔ Copiado';setTimeout(()=>b.textContent='📋 Copiar',1800);});
@@ -935,7 +936,7 @@ function colabUI(a){const L=colabs(a.user_id),esc=v=>String(v||'').replace(/</g,
   document.getElementById('bZer').onclick=async()=>{if(!confirm('Zerar o histórico de '+(a.nome||a.login)+'? As 72 h dos colaboradores também recomeçam.'))return;await ins('zerar',{para:a.user_id});carregar();};
   document.getElementById('bRel').onclick=()=>window.open('relatorio.html?e='+a.user_id,'_blank');
   document.getElementById('bExc').onclick=()=>excluirCliente(a);
-  const bl=document.getElementById('bLib'),ok=libOk(a.user_id);bl.textContent=ok?'Encerrar acesso da semana':'Liberar até sábado '+fDia(SAB());bl.className=ok?'no':'ok';
+  const bl=document.getElementById('bLib'),ok=libOk(a.user_id);bl.textContent=ok?'Encerrar acesso da semana':'Liberar até domingo '+fDia(SAB());bl.className=ok?'no':'ok';
   bl.onclick=async()=>{await liberar(a.user_id,!ok);carregar();};}
 function domUI(){const c=document.getElementById('domCard');c.hidden=DOW()!==0;if(c.hidden)return;const esc=v=>String(v||'').replace(/</g,'&lt;');
   document.getElementById('domSab').textContent=fDia(SAB());const A=ALUNOS.filter(a=>a.ativo&&!implDe(a.user_id)&&!livre(a));
