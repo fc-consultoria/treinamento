@@ -461,6 +461,7 @@ function nucleo(M){
   if(M.gourmet){const [gx,gz]=M.gourmet;box(CASA,2.6,.9,.6,mBorda,gx+1.3-c[0],.45,gz-c[1]);box(CASA,2.62,.05,.64,new THREE.MeshStandardMaterial({color:0x2b2b2b,roughness:.3}),gx+1.3-c[0],.92,gz-c[1]);}
   if(M.carro)carro(CASA,M.carro[0],M.carro[1],c);(M.carros||[]).forEach((q,i)=>carro(CASA,q[0],q[1],c,i));
   M.arv.forEach(([a,b],i)=>arvore(CASA,a,b,c,.9+(i%3)*.2));
+  [[.5,.5],[LW-.5,.5],[.5,LD*.55],[LW-.5,LD-1.2]].forEach(([a,b])=>{box(CASA,.09,3.6,.09,mCol,a-c[0],1.8,b-c[1]);LAMP.push(box(CASA,.32,.32,.32,mLamp,a-c[0],3.75,b-c[1],false));const pl=new THREE.PointLight(0xffe0b0,0,16,1.3);pl.position.set(a-c[0],3.6,b-c[1]);addLuz(pl,1.1);});
   // paredes com os vãos
   const dentro=(x,z)=>M.casa.some(q=>x>q[0]&&x<q[2]&&z>q[1]&&z<q[3]);
   if(!LEVE)VG={};
@@ -514,7 +515,8 @@ function montarBairro(){limparCena();sombra(70);
   // postes no canteiro e árvores
   for(let x=X0+4;x<X1;x+=12)poste(x,0,true);for(let x=X0+10;x<X1;x+=12)arvore(CASA,x,0,[0,0],.7);
   for(let x=X0+6;x<X1;x+=16)[-1,1].forEach(s=>poste(x,s*9.6,false));
-  for(let x=X0+4;x<X1;x+=24){const pl=new THREE.PointLight(0xffd59a,0,30,1.6);pl.position.set(x,6.6,0);addLuz(pl,1.4);}
+  for(let x=X0+4;x<X1;x+=12){const pl=new THREE.PointLight(0xffd59a,0,34,1.2);pl.position.set(x,6.6,0);addLuz(pl,1.6);}
+  [[-46,-28],[-33,-30],[-18,-32],[-6,40],[19,-28],[-3,-24]].forEach(([x,z])=>{const pl=new THREE.PointLight(0xffe0b0,0,30,1.2);pl.position.set(x,6,z);addLuz(pl,1.2);});
   // as 4 obras nos lotes (versão leve)
   ORDEM.forEach(k=>{const i=MODELOS.findIndex(m=>m.k===k),M=MODELOS[i],P=LOTE_POS[k],[LW,LD]=M.lote;const g=new THREE.Group();
     g.position.set(P.x,0,P.lado<0?-10-LD/2:10+LD/2);if(P.lado>0)g.rotation.y=Math.PI;CASA.add(g);
@@ -683,9 +685,9 @@ function aplicaAbertura(inst){abAlvo=ST.aberto?1:0;if(inst)abK=abAlvo;}
 function animaAbertura(){abK+=(abAlvo-abK)*.08;ESQ.forEach(({r})=>r.fol.forEach(f=>{const u=f.userData;if(u.giro)f.rotation.y=-abK*1.2;else if(u.maxim)f.rotation.x=-abK*.45;else if(u.x0!=null)f.position.x=u.x0+u.dx*abK;}));}
 
 /* ---------- dia / noite ---------- */
-function aplicaNoite(){const n=ST.noite;SC.background=new THREE.Color(n?0x0b1622:0xcfdbe6);SC.fog=new THREE.Fog(n?0x0b1622:0xcfdbe6,45,140);
-  hemi.intensity=n?.12:.55;hemi.color.set(n?0x6f86b0:0xf4f6fb);sol.intensity=n?.08:.7;sol.color.set(n?0x8fa6d6:0xfff3e2);
-  LUZES.forEach(l=>l.intensity=n?l.userData.noite:0);mAgua.emissiveIntensity=n?.9:.25;mLamp.emissiveIntensity=n?2.2:0;
+function aplicaNoite(){const n=ST.noite;SC.background=new THREE.Color(n?0x1b2c44:0xcfdbe6);SC.fog=new THREE.Fog(n?0x1b2c44:0xcfdbe6,n?80:45,n?220:140);
+  hemi.intensity=n?.46:.55;hemi.color.set(n?0x9fb2d8:0xf4f6fb);hemi.groundColor.set(n?0x4a4a52:0x7d806f);sol.intensity=n?.26:.7;sol.color.set(n?0xb4c4e6:0xfff3e2);
+  LUZES.forEach(l=>l.intensity=n?l.userData.noite:0);mAgua.emissiveIntensity=n?.9:.25;mLamp.emissiveIntensity=n?2.6:0;
   SINAIS.forEach(m=>{if(m.userData.vidro)m.emissiveIntensity=n?.9:0;else m.emissiveIntensity=n?.75:.05;});mVidro.emissive=new THREE.Color(n?0x5a3a12:0x000000);
   $('#bNoite').textContent=n?'☀️ Dia':'🌙 Noite';$('#bNoite').classList.toggle('on',n);}
 
