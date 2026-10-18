@@ -12,9 +12,20 @@
   function linkify(t){ return esc(t).replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank" rel="noopener">$1</a>').replace(/\n/g,'<br>'); }
 
   let btn, box, lista, txt, prev, fileInp;
+  const tam = ()=>{ try{ return JSON.parse(localStorage.getItem('fc_chat_tam')||'{}'); }catch(_){ return {}; } };
+  const salvaTam = o=>{ try{ localStorage.setItem('fc_chat_tam', JSON.stringify(o)); }catch(_){ } };
+  function aplicaTam(){ if(!box) return; const t=tam(); if(t.g){ box.style.width='min(760px,calc(100vw - 28px))'; box.style.height='calc(100vh - 140px)'; } else if(t.w){ box.style.width=Math.min(t.w,innerWidth-28)+'px'; box.style.height=Math.min(t.h,innerHeight-130)+'px'; } else { box.style.width=''; box.style.height=''; } }
+  let aba=null;
+  function ocultar(on){ try{ localStorage.setItem('fc_chat_oculto', on?'1':''); }catch(_){ }
+    if(on){ if(btn) btn.style.display='none'; if(!aba){ aba=document.createElement('button'); aba.type='button'; aba.className='fcchat-aba'; aba.title='Mostrar a conversa da equipe'; aba.innerHTML='💬<span class="fcchat-badge" style="display:none"></span>'; aba.onclick=()=>ocultar(false); document.body.appendChild(aba); } aba.style.display='block'; }
+    else { if(aba) aba.style.display='none'; if(btn) btn.style.display=''; } }
+
   function montar(){
     if(btn) return;
     const st = document.createElement('style'); st.textContent = `
+      .fcchat-grip{position:absolute;left:0;top:0;width:18px;height:18px;cursor:nwse-resize;z-index:2;background:linear-gradient(135deg,rgba(255,255,255,.85) 0 2px,transparent 2px 5px,rgba(255,255,255,.85) 5px 7px,transparent 7px)}
+      .fcchat-aba{position:fixed;right:0;bottom:120px;z-index:9998;width:30px;height:44px;border:0;border-radius:10px 0 0 10px;cursor:pointer;color:#fff;font-size:15px;background:linear-gradient(135deg,var(--g1,var(--accent,#3452eb)),var(--g2,var(--accent,#3452eb)));box-shadow:0 6px 16px -6px rgba(0,0,0,.45)}
+      .fcchat-aba .fcchat-badge{top:-6px;right:auto;left:-8px}
       .fcchat-btn{position:fixed;right:14px;bottom:60px;z-index:9998;width:46px;height:46px;border-radius:50%;border:0;cursor:pointer;color:#fff;font-size:21px;
         background:linear-gradient(135deg,var(--g1,var(--accent,#3452eb)),var(--g2,var(--accent,#3452eb)));box-shadow:0 8px 22px -8px rgba(0,0,0,.45);}
       .fcchat-badge{position:absolute;top:-4px;right:-4px;min-width:19px;height:19px;padding:0 5px;border-radius:10px;background:#e11d48;color:#fff;font:700 11px/19px system-ui;text-align:center;border:2px solid #fff}
@@ -39,11 +50,11 @@
     document.head.appendChild(st);
     btn = document.createElement('button'); btn.type='button'; btn.className='fcchat-btn'; btn.title='Conversa da equipe'; btn.innerHTML='💬<span class="fcchat-badge" style="display:none"></span>';
     box = document.createElement('div'); box.className='fcchat-box';
-    box.innerHTML = `<div class="fcchat-head"><div style="font-size:20px">💬</div><div style="flex:1"><div style="font-weight:700">Conversa da equipe</div><div style="font-size:12px;opacity:.9">Matriz e equipe · texto e imagem</div></div>${/\/implantacao\//.test(location.pathname)?'':'<button type="button" data-atu title="Mandar para a equipe o aviso de atualizar o Painel de Implantação" style="background:rgba(255,255,255,.2);border:0;color:#fff;height:30px;border-radius:15px;padding:0 10px;cursor:pointer;font:700 12px system-ui;white-space:nowrap">📣 Pedir atualização</button>'}<button type="button" data-x style="background:rgba(255,255,255,.2);border:0;color:#fff;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:16px">✕</button></div>
+    box.innerHTML = `<div class="fcchat-head"><div style="font-size:20px">💬</div><div style="flex:1"><div style="font-weight:700">Conversa da equipe</div><div style="font-size:12px;opacity:.9">Matriz e equipe · texto e imagem</div></div>${/\/implantacao\//.test(location.pathname)?'':'<button type="button" data-atu title="Mandar para a equipe o aviso de atualizar o Painel de Implantação" style="background:rgba(255,255,255,.2);border:0;color:#fff;height:30px;border-radius:15px;padding:0 10px;cursor:pointer;font:700 12px system-ui;white-space:nowrap">📣 Pedir atualização</button>'}<button type="button" data-max title="Aumentar / diminuir a conversa" style="background:rgba(255,255,255,.2);border:0;color:#fff;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:15px">⤢</button><button type="button" data-ocultar title="Ocultar a conversa (fica só uma aba no canto da tela)" style="background:rgba(255,255,255,.2);border:0;color:#fff;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:15px">▁</button><button type="button" data-x style="background:rgba(255,255,255,.2);border:0;color:#fff;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:16px">✕</button></div><div class="fcchat-grip" title="Arraste para aumentar ou diminuir"></div>
       <div class="fcchat-list"></div>
       <div class="fcchat-prev"><img style="width:44px;height:44px;object-fit:cover;border-radius:8px"><span style="flex:1">Imagem pronta para enviar</span><button type="button" data-tirar style="border:0;background:none;cursor:pointer;color:#b42318;font-weight:600">remover</button></div>
       <div class="fcchat-emojis" style="display:none;flex-wrap:wrap;gap:2px;padding:8px;border-top:1px solid #e6e9ee;background:#fff;max-height:150px;overflow:auto"></div><div class="fcchat-foot"><button type="button" class="fcchat-ico" data-anexo title="Anexar imagem">📎</button><button type="button" class="fcchat-ico" data-emoji title="Emoji">😊</button><input type="file" accept="image/*" hidden><textarea rows="1" placeholder="Escreva uma mensagem…" title="Enter envia · Shift+Enter quebra linha · Ctrl+V cola print"></textarea><button type="button" class="fcchat-ico fcchat-send" data-enviar title="Enviar">➤</button></div>`;
-    document.body.appendChild(box); document.body.appendChild(btn);
+    document.body.appendChild(box);aplicaTam(); document.body.appendChild(btn); try{ if(localStorage.getItem('fc_chat_oculto')) ocultar(true); }catch(_){ }
     lista = box.querySelector('.fcchat-list'); txt = box.querySelector('textarea'); prev = box.querySelector('.fcchat-prev'); fileInp = box.querySelector('input[type=file]');
     btn.onclick = ()=>{ S.aberto = !S.aberto; box.style.display = S.aberto?'flex':'none'; if(S.aberto){ desenhar(true); marcarLido(); setTimeout(()=>txt.focus(),50); } };
     const ba = box.querySelector('[data-atu]'); if(ba) ba.onclick = async ()=>{
@@ -53,6 +64,12 @@
       if(typeof toast==='function') toast(msg); else alert(msg);
     };
     box.querySelector('[data-x]').onclick = ()=>{ S.aberto=false; box.style.display='none'; };
+    box.querySelector('[data-max]').onclick = ()=>{ const t=tam(); const g=!t.g; salvaTam(g?{g:true,w:t.w,h:t.h}:{w:t.w,h:t.h}); aplicaTam(); };
+    box.querySelector('[data-ocultar]').onclick = ()=>{ S.aberto=false; box.style.display='none'; ocultar(true); };
+    const grip=box.querySelector('.fcchat-grip');
+    grip.onpointerdown = e=>{ e.preventDefault(); grip.setPointerCapture(e.pointerId); const r=box.getBoundingClientRect(),x0=e.clientX,y0=e.clientY;
+      grip.onpointermove = ev=>{ const w=Math.max(300,Math.min(innerWidth-28,r.width+(x0-ev.clientX))),h=Math.max(320,Math.min(innerHeight-130,r.height+(y0-ev.clientY))); box.style.width=w+'px'; box.style.height=h+'px'; };
+      grip.onpointerup = ()=>{ grip.onpointermove=null; const r2=box.getBoundingClientRect(); salvaTam({w:Math.round(r2.width),h:Math.round(r2.height)}); }; };
     box.querySelector('[data-anexo]').onclick = ()=>fileInp.click();
     fileInp.onchange = ()=>{ const f=fileInp.files&&fileInp.files[0]; fileInp.value=''; if(f) prepararImagem(f); };
     box.querySelector('[data-tirar]').onclick = ()=>{ S.img=null; prev.style.display='none'; };
@@ -94,10 +111,11 @@
   }
   function badge(){
     if(!btn) return; const l = lido(); const n = S.msgs.filter(m=>m.id>l && String(m.autor_email||'').toLowerCase()!==S.eu).length;
-    const b = btn.querySelector('.fcchat-badge'); b.style.display = n?'block':'none'; b.textContent = n>9?'9+':n;
+    const b = btn.querySelector('.fcchat-badge'); b.style.display = n?'block':'none'; b.textContent = n>9?'9+':n; if(aba){ const b2=aba.querySelector('.fcchat-badge'); b2.style.display=n?'block':'none'; b2.textContent=n>9?'9+':n; }
     document.querySelectorAll('.fcchat-count').forEach(e=>{ e.style.display = n?'inline-block':'none'; e.textContent = n>9?'9+':n; });
   }
   function avisar(m){
+    try{ const k='fc_chat_avisado'; if(Number(localStorage.getItem(k)||0)>=m.id){ return; } localStorage.setItem(k,String(m.id)); }catch(_){ }
     try{ if(typeof toast==='function' && !S.aberto) toast('💬 '+(m.autor_nome||'Equipe')+': '+(m.texto? String(m.texto).slice(0,80) : '📷 imagem')); }catch(_){ }
     try{ const c=new (window.AudioContext||window.webkitAudioContext)(), o=c.createOscillator(), g=c.createGain(); o.frequency.value=880; g.gain.value=.06; o.connect(g); g.connect(c.destination); o.start(); setTimeout(()=>{o.frequency.value=1175;},120); setTimeout(()=>{o.stop(); c.close();},260); }catch(_){ }
     try{ if('Notification' in window && Notification.permission==='granted' && (document.hidden || !document.hasFocus() || !S.aberto)){
@@ -141,12 +159,13 @@
     const {data:{session}} = await sb.auth.getSession();
     if(!session){ setTimeout(iniciar, 4000); return; }
     S.eu = String(session.user.email||'').toLowerCase();
-    // A matriz conversa só pelo Painel da Matriz (não abre a conversa no Painel de Implantação, para não avisar em dobro)
-    if(/\/implantacao\//.test(location.pathname)){
-      if(typeof MEU_ACESSO==='undefined' || !MEU_ACESSO || MEU_ACESSO.admin===undefined){ setTimeout(iniciar, 2000); return; }
-      if(MEU_ACESSO.admin) return;
+    // Só equipe FC: nunca em link de cliente (?k=) ou de aluno
+    const qs=new URLSearchParams(location.search);
+    if(qs.get('k')||qs.get('aluno')||qs.get('sala')||(typeof ALUNO!=='undefined'&&ALUNO)||(typeof PUB!=='undefined'&&PUB)||(typeof KEY!=='undefined'&&KEY)) return;
+    if(!/painel\.html$|\/implantacao\//.test(location.pathname)){
+      try{ const r=await sb.from('impl_acesso').select('nome').eq('email', S.eu).maybeSingle(); if(!r.data) return; if(r.data.nome) S.nome=r.data.nome; }catch(_){ return; }
     }
-    S.nome = (typeof MEU_ACESSO!=='undefined' && MEU_ACESSO && MEU_ACESSO.nome) || S.eu.split('@')[0];
+    S.nome = (typeof MEU_ACESSO!=='undefined' && MEU_ACESSO && MEU_ACESSO.nome) || S.nome || S.eu.split('@')[0];
     if(typeof MEU_ACESSO==='undefined' || !MEU_ACESSO){ try{ const r=await sb.from('impl_acesso').select('nome').eq('email', S.eu).maybeSingle(); if(r.data && r.data.nome) S.nome=r.data.nome; }catch(_){ } }
     montar(); await carregar();
     if(!S.ok) return;
