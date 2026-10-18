@@ -148,6 +148,7 @@ table.tb tr.hi td{background:#e7f7ec;font-weight:700}
 .dn-n{font-size:14px}.dn-v{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;font:600 13px var(--f-b);font-variant-numeric:tabular-nums}.dn-v small{flex-basis:100%;color:var(--tm);font-weight:500}
 .gdim{display:block;margin-top:3px;font:600 12px var(--f-b);color:var(--tl)}
 .cmExp{position:absolute;left:12px;top:12px;z-index:4;border:0;border-radius:99px;padding:9px 15px;font:700 14px var(--f-b);background:#13232e;color:#fff;cursor:pointer;box-shadow:0 6px 16px rgba(0,0,0,.25)}.cmExp:hover{background:#0f6b6e}#cmhost[data-fs] .cmExp,#cmhost[data-ex] .cmExp{display:none}
+body.lupa-on #cmhost canvas{cursor:none}
 </style>
 </head>
 <body>
@@ -163,7 +164,7 @@ table.tb tr.hi td{background:#e7f7ec;font-weight:700}
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="../auth.js"></script>
-<script src="cm3d.js?v=10"></script>
+<script src="cm3d.js?v=11"></script>
 <script>
 /* Treinamento em Esquadrias 3D · FC Consultoria em Esquadria · Sinop-MT · todos os direitos reservados */
 const IMG='/perfis/img/',PERFIS='/perfis/';
@@ -285,7 +286,7 @@ function place3d(){try{placeCm();fsBar();}catch(e){console.warn(e);}let H=$('#e3
  const t=ph.dataset.t;if(H.dataset.t!==t){H.dataset.t=t;H.querySelector('iframe').src='/treinamento/demo/index.html?previa&esq=1&t='+encodeURIComponent(t);}
  if(H.dataset.fs)return;const r=ph.getBoundingClientRect();Object.assign(H.style,{display:'block',left:(r.left+scrollX)+'px',top:(r.top+scrollY)+'px',width:r.width+'px',height:r.height+'px'});}
 function exTela(on){const H=document.getElementById('cmhost');if(!H)return;on=on&&!H.dataset.fs;if(!!H.dataset.ex===on)return;
- if(on){H.dataset.ex='1';const b=document.createElement('div');b.id='exBar';b.innerHTML='<span>💥 Janela desmontada · arraste para girar</span><button type="button" data-cmd="1">🔧 Montar a janela</button>';H.appendChild(b);}
+ if(on){H.dataset.ex='1';const b=document.createElement('div');b.id='exBar';b.innerHTML='<span>💥 Janela desmontada · arraste para girar</span><button type="button" data-lupa="1" style="background:#fff;color:#13232e">🔍 Lupa</button><button type="button" data-cmd="1">🔧 Montar a janela</button>';H.appendChild(b);}
  else{delete H.dataset.ex;const b=document.getElementById('exBar');if(b)b.remove();posHosts();}
  if(CMS&&CMS.sc)CMS.sc.background=on?null:new THREE.Color(0xe9eef1);}
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&CMD&&document.getElementById('cmhost')?.dataset.ex){CMD=false;re();}});
@@ -293,6 +294,18 @@ function voltaUrl(adm){if(adm)return '/treinamento/painel.html';let u='';try{u=l
  const k=new URLSearchParams(location.search).get('k');if(k)u='/treinamento/consultorias.html?k='+encodeURIComponent(k);return u||'/treinamento/';}
 function voltaBtn(adm){if(window.top!==window)return;let b=document.getElementById('bVolta');if(!b){b=document.createElement('a');b.id='bVolta';const h=document.querySelector('header.top .w');if(!h)return;h.appendChild(b);}
  b.href=voltaUrl(adm);b.textContent=adm?'← Painel matriz':'← Painel inicial';b.title=adm?'Voltar para o painel matriz da FC':'Voltar para o painel inicial da empresa';}
+/* Lupa móvel: amplia a região do 3D embaixo do mouse */
+let LUPA=false;
+function lupaSet(on){LUPA=on;let L=document.getElementById('lupa');if(!on){if(L)L.remove();document.body.classList.remove('lupa-on');}else{document.body.classList.add('lupa-on');}
+ document.querySelectorAll('[data-lupa]').forEach(b=>{b.classList.toggle('p',on);if(b.textContent.includes('Lupa'))b.textContent=on?'🔍 Lupa ligada':'🔍 Lupa';});}
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-lupa]');if(!b)return;e.preventDefault();e.stopPropagation();lupaSet(!LUPA);},true);
+document.addEventListener('mousemove',e=>{if(!LUPA)return;const H=document.getElementById('cmhost'),cv=H&&H.querySelector('canvas');let L=document.getElementById('lupa');
+ if(!cv){if(L)L.style.display='none';return;}const r=cv.getBoundingClientRect();const dentro=e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom&&!e.target.closest('#fsBar,#exBar,.angw,.cmExp');
+ if(!dentro){if(L)L.style.display='none';return;}
+ if(!L){L=document.createElement('canvas');L.id='lupa';L.width=440;L.height=440;L.style.cssText='position:fixed;z-index:1000;width:220px;height:220px;border-radius:50%;border:4px solid #fff;box-shadow:0 0 0 2px #0f4f53,0 14px 30px rgba(0,0,0,.35);pointer-events:none;background:#e9eef1';document.body.appendChild(L);}
+ L.style.display='block';L.style.left=(e.clientX-110)+'px';L.style.top=(e.clientY-110)+'px';
+ const k=cv.width/r.width,Z=2.6,sw=440/Z,sx=(e.clientX-r.left)*k-sw/2,sy=(e.clientY-r.top)*k-sw/2,c=L.getContext('2d');c.fillStyle='#e9eef1';c.fillRect(0,0,440,440);try{c.drawImage(cv,sx,sy,sw,sw,0,0,440,440);}catch(_){}
+ c.strokeStyle='rgba(15,79,83,.5)';c.lineWidth=2;c.beginPath();c.moveTo(220,200);c.lineTo(220,240);c.moveTo(200,220);c.lineTo(240,220);c.stroke();});
 function posHosts(){[['cmhost','.cm3'],['e3host','.e3']].forEach(([id,sel])=>{const H=document.getElementById(id),ph=document.querySelector(sel);if(!H||H.dataset.fs||H.dataset.ex||!ph||H.style.display==='none')return;const r=ph.getBoundingClientRect(),L=(r.left+scrollX)+'px',T=(r.top+scrollY)+'px',W=r.width+'px',Hh=r.height+'px';if(H.style.left!==L||H.style.top!==T||H.style.width!==W||H.style.height!==Hh)Object.assign(H.style,{left:L,top:T,width:W,height:Hh});});}
 setInterval(posHosts,300);addEventListener('load',posHosts);document.fonts&&document.fonts.ready.then(posHosts);
 addEventListener('resize',()=>place3d());addEventListener('hashchange',()=>{const h=location.hash.slice(1);if(!ALUNO&&R[h]&&h!==AT)go(h);});try{new ResizeObserver(()=>place3d()).observe(document.body);}catch(_){}
@@ -332,7 +345,7 @@ const CMCORES=[['natural','Natural','linear-gradient(135deg,#eef0f2,#aeb4b8)'],[
 function cmOpc(fs){const B=(a,on,t)=>`<button type="button" class="btn ${on?'p':''}" ${a} style="${fs?'padding:6px 12px':''}">${t}</button>`;let h='';
  if(CMK>=4){h+=B('data-cmr="1"',CMR,CMR?'🧱 Parede rebocada':'🧱 Rebocar a parede');
   if(CMR)h+=`<span style="display:inline-flex;gap:6px;align-items:center"><span style="font:700 13px var(--f-b);${fs?'color:#cfe0e6':'color:var(--tm)'}">🎨 Pintar:</span>${CMTINTAS.map(([k,n,bg])=>`<button type="button" data-cmp2="${k}" title="${n}" aria-label="Pintar ${n}" style="width:${fs?26:30}px;height:${fs?26:30}px;border-radius:8px;cursor:pointer;background:${bg};border:${CMP2===k?'3px solid var(--or)':'2px solid #c5d0d5'}"></button>`).join('')}</span>`;}
- if(CMK===CMST.length-1){h+=`<button type="button" class="btn ${CMD?'p':''}" data-cmd="1" style="${fs?'padding:6px 12px;':''}background:${CMD?'#f2a51e':'#13232e'};color:${CMD?'#2a1b00':'#fff'};border-color:transparent;font-weight:800">${CMD?'🔧 Montar a janela':'💥 Desmontar a janela'}</button>`+B('data-cmf="1"',CMF===1,'⇢ Abrir folha esquerda')+B('data-cmf="2"',CMF===2,'⇠ Abrir folha direita')+B('data-cmf="0"',CMF===0,'Fechar');
+ if(CMK===CMST.length-1){h+=`<button type="button" class="btn ${CMD?'p':''}" data-cmd="1" style="${fs?'padding:6px 12px;':''}background:${CMD?'#f2a51e':'#13232e'};color:${CMD?'#2a1b00':'#fff'};border-color:transparent;font-weight:800">${CMD?'🔧 Montar a janela':'💥 Desmontar a janela'}</button>`+`<button type="button" class="btn ${LUPA?'p':''}" data-lupa="1" style="${fs?'padding:6px 12px;':''}" title="Lupa móvel: passe o mouse sobre o 3D para ampliar">🔍 ${LUPA?'Lupa ligada':'Lupa'}</button>`+B('data-cmf="1"',CMF===1,'⇢ Abrir folha esquerda')+B('data-cmf="2"',CMF===2,'⇠ Abrir folha direita')+B('data-cmf="0"',CMF===0,'Fechar');
   h+=`<span style="display:inline-flex;gap:6px;align-items:center;${fs?'':'margin-left:6px'}"><span style="font:700 13px var(--f-b);${fs?'color:#cfe0e6':'color:var(--tm)'}">Cor:</span>${CMCORES.map(([k,n,bg])=>`<button type="button" data-cmc="${k}" title="${n}" aria-label="Cor ${n}" style="width:${fs?28:34}px;height:${fs?28:34}px;border-radius:50%;cursor:pointer;background:${bg};border:${CMC===k?'3px solid var(--or)':'2px solid #c5d0d5'};box-shadow:${CMC===k?'0 0 0 2px #fff inset':'none'}"></button>`).join('')}${fs?'':`<b style="font:700 14px var(--f-b);color:var(--ink)">${CMCORES.find(c=>c[0]===CMC)[1]}</b>`}</span>`;}
  return h;}
 const CMP=[['CM-200','Perfil do contramarco','Alumínio natural. Forma o requadro que fica chumbado no vão.'],['CHU-787','Chumbador (grapa)','Chapa dobrada que fica presa na argamassa e segura o contramarco na parede.'],['ESQ160','Esquadro do contramarco','Mantém o requadro no esquadro durante a obra. Sai depois da cura.'],['CON063','Cantoneira de conexão','Une os perfis nos cantos do requadro.'],['CL-006','Cantoneira de PVC (barra de 6 m)','Perfil de PVC preto em L, que vai nas laterais do contramarco.'],['CL-011','Macho e cunha (barra de 6 m)','Perfil de PVC em barra. Confira a aplicação no catálogo do fornecedor.']];
@@ -514,7 +527,7 @@ let MD=null,PEC=null;function fecha(){$('#md').classList.remove('fs');$('#mdFs')
 addEventListener('message',e=>{if(e.origin===location.origin&&e.data&&e.data.fc3d==='fechou')fecha();});
 $('#mdX').onclick=fecha;$('#mdFs').onclick=e=>{e.stopPropagation();const m=$('#md'),on=m.classList.toggle('fs');$('#mdFs').textContent=on?'↙ Sair da tela cheia':'⛶ Tela cheia';setTimeout(()=>dispatchEvent(new Event('resize')),50);};$('#md').onclick=e=>{if(e.target.id==='md')fecha();};addEventListener('keydown',e=>{if(e.key==='Escape')fecha();});
 $('#bHome').onclick=()=>go(null);$('#bAtu').onclick=async()=>{await Promise.all(['./','index.html','perfis.json?v=1','../demo/index.html','../auth.js'].map(u=>fetch(u,{cache:'reload'}).catch(()=>{})));const q=new URLSearchParams(location.search);q.set('v',Date.now());location.replace(location.pathname+'?'+q+location.hash);};
-document.addEventListener('click',e=>{if(ALUNO&&!e.target.closest('.q [data-o],#qzRe,#mdX,#md,#alN,.lvp,#alGo,#alTr,[data-fs],#fsX')){if(e.target.closest('#fsBar')){e.preventDefault();e.stopImmediatePropagation();LIVE.aviso();return;}if(e.target.closest('[data-go],[data-feito],[data-pf],[data-d3],[data-cmp],[data-gua3d],[data-zgua],[data-cmx],[data-cmr],[data-cmf],[data-cmc],[data-cmp2],[data-cmd],[data-cmt],[data-catl],[data-catg],[data-tipf],[data-tip],[data-cmk],[data-gl],[data-gi],[data-ge],[data-mxl],[data-mxv],[data-crk],[data-gml],[data-pool],[data-slot],#bHome')){e.preventDefault();e.stopImmediatePropagation();LIVE.aviso();}return;}const t=e.target.closest('[data-fs],[data-go],[data-feito],[data-pf],[data-d3],[data-cmp],[data-gua3d],[data-cmx],[data-cmr],[data-cmf],[data-cmc],[data-cmp2],[data-cmd],[data-cmt],[data-catl],[data-catg],[data-tipf],[data-tip],[data-cmk],[data-gl],[data-gi],[data-ge],[data-mxl],[data-mxv],[data-crk],[data-gml],[data-pool],[data-slot],.q [data-o],#bRes');if(!t)return;const d=t.dataset;
+document.addEventListener('click',e=>{if(ALUNO&&!e.target.closest('.q [data-o],#qzRe,[data-lupa],#mdX,#md,#alN,.lvp,#alGo,#alTr,[data-fs],#fsX')){if(e.target.closest('#fsBar')){e.preventDefault();e.stopImmediatePropagation();LIVE.aviso();return;}if(e.target.closest('[data-go],[data-feito],[data-pf],[data-d3],[data-cmp],[data-gua3d],[data-zgua],[data-cmx],[data-cmr],[data-cmf],[data-cmc],[data-cmp2],[data-cmd],[data-cmt],[data-catl],[data-catg],[data-tipf],[data-tip],[data-cmk],[data-gl],[data-gi],[data-ge],[data-mxl],[data-mxv],[data-crk],[data-gml],[data-pool],[data-slot],#bHome')){e.preventDefault();e.stopImmediatePropagation();LIVE.aviso();}return;}const t=e.target.closest('[data-fs],[data-go],[data-feito],[data-pf],[data-d3],[data-cmp],[data-gua3d],[data-cmx],[data-cmr],[data-cmf],[data-cmc],[data-cmp2],[data-cmd],[data-cmt],[data-catl],[data-catg],[data-tipf],[data-tip],[data-cmk],[data-gl],[data-gi],[data-ge],[data-mxl],[data-mxv],[data-crk],[data-gml],[data-pool],[data-slot],.q [data-o],#bRes');if(!t)return;const d=t.dataset;
  if(d.fs)return telaCheia(d.fs);
  if(d.go!==undefined)return go(d.go);
  if(d.feito){FEITO.has(d.feito)?FEITO.delete(d.feito):FEITO.add(d.feito);LS.s('fc_esq_feito',[...FEITO]);return re();}
