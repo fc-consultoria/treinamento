@@ -188,7 +188,7 @@ $('#zmX').onclick=()=>$('#zm').hidden=true;$('#zm').onclick=e=>{if(e.target.id==
 function marca(t){const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="460" height="300"><g transform="rotate(-24 230 150)" font-family="Barlow,Arial,sans-serif" text-anchor="middle" fill="#0f4f53" fill-opacity=".04"><text x="230" y="150" font-size="24" font-weight="800">FC CONSULTORIA EM ESQUADRIA</text><text x="230" y="176" font-size="13">${t}</text></g></svg>`;const w=document.createElement('div');w.id='wm';w.style.backgroundImage=`url("data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}")`;document.body.appendChild(w);}
 /* ===== Catálogo Texa completo (FinderPro Texa) · FC e cliente ===== */
 let TX=null,TXL='',TXS='',TXQ='',TXN=120;
-async function txCarrega(){if(TX)return TX;try{TX=await fetch('texa.json?v=1',{cache:'no-cache'}).then(r=>r.json());TX.by={};TX.p.forEach(o=>TX.by[norm(o.c)]=o);TX.rf={};TX.alc={};TX.p.forEach(o=>{if(o.r&&!TX.rf[norm(o.r)])TX.rf[norm(o.r)]=o;if(o.a)(TX.alc[norm(o.a)]=TX.alc[norm(o.a)]||[]).push(o);});}catch(_){TX=null;}return TX;}
+async function txCarrega(){if(TX)return TX;try{TX=await fetch('texa.json?v=2',{cache:'no-cache'}).then(r=>r.json());TX.by={};TX.p.forEach(o=>TX.by[norm(o.c)]=o);TX.rf={};TX.alc={};TX.p.forEach(o=>{if(o.r&&!TX.rf[norm(o.r)])TX.rf[norm(o.r)]=o;if(o.a)(TX.alc[norm(o.a)]=TX.alc[norm(o.a)]||[]).push(o);});}catch(_){TX=null;}return TX;}
 const tx2d=o=>o.v?TX.cdn+'/'+o.v+'/'+encodeURIComponent(o.c)+'.svg':'';
 const tx3d=(o,w)=>o.g?TX.cdn+'/cdn-cgi/image/w='+(w||320)+',h='+(w||320)+',f=auto,fit=contain/'+o.g+'/'+encodeURIComponent(o.c)+'.png':'';
 const txImg=(o,w)=>tx2d(o)||tx3d(o,w);
