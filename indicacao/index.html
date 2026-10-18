@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Indicação · Orientativo FC 3D</title>
+<meta name="description" content="Você foi indicado para conhecer o Orientativo FC 3D: treinamento em esquadrias de alumínio com 3D.">
+<link rel="icon" href="https://fc-consultoria.github.io/img/logo-fc-160.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap">
+<style>
+/* Página de indicação: quem recebe o link de um aluno deixa nome e WhatsApp; a FC entra em contato */
+:root{--bg:#f1f5f3;--panel:#fff;--fg:#14231f;--muted:#56675f;--line:#d6e2dd;--teal:#0e6b62;--teal-soft:#e2f0ec;--amber:#d98a1f;--amber-soft:#fbecd5;--bad:#a8382c;
+  --f-display:'Space Grotesk',ui-sans-serif,system-ui,sans-serif;--f-body:'Inter',ui-sans-serif,system-ui,sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1916;--panel:#16241f;--fg:#e9f2ee;--muted:#9fb3ab;--line:#28403a;--teal:#46b8a8;--teal-soft:#183530;--amber:#f0a947;--amber-soft:#33260f;--bad:#ff8a7a;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0f1916;--panel:#16241f;--fg:#e9f2ee;--muted:#9fb3ab;--line:#28403a;--teal:#46b8a8;--teal-soft:#183530;--amber:#f0a947;--amber-soft:#33260f;--bad:#ff8a7a;color-scheme:dark}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--fg);font:400 16px/1.6 var(--f-body)}
+.wrap{max-width:980px;margin:0 auto;padding:24px 16px 56px;display:grid;grid-template-columns:1.1fr 1fr;gap:32px;align-items:start}
+header{grid-column:1/-1;display:flex;align-items:center;gap:12px}
+header img{width:46px;height:46px;border-radius:10px}
+header b{font:700 18px var(--f-display)}header small{display:block;color:var(--muted);font-size:13px}
+h1{font:700 clamp(28px,4.6vw,42px)/1.12 var(--f-display);margin:0 0 12px;text-wrap:balance}
+.eb{font:600 12px ui-monospace,Menlo,monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--teal);margin-bottom:10px}
+p{margin:0}.lead{font-size:17px;color:var(--muted)}
+ul{margin:18px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:10px}
+li{display:flex;gap:10px;align-items:flex-start}li i{font-style:normal;flex:none;width:28px;height:28px;border-radius:8px;background:var(--teal-soft);display:grid;place-items:center}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:22px;display:flex;flex-direction:column;gap:14px;box-shadow:0 14px 40px rgba(0,0,0,.06)}
+.card h2{font:700 22px var(--f-display);margin:0}
+label{display:flex;flex-direction:column;gap:5px;font:600 13px var(--f-body);color:var(--muted)}
+input{font:500 16px var(--f-body);padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--fg)}
+input:focus-visible{outline:2px solid var(--teal);outline-offset:1px}
+.ck{flex-direction:row;align-items:flex-start;gap:10px;font-weight:500;color:var(--fg)}.ck input{margin-top:4px;width:18px;height:18px}
+button,.bt{all:unset;cursor:pointer;text-align:center;background:var(--teal);color:#fff;font:700 16px var(--f-display);padding:13px 16px;border-radius:12px}
+.bt.wa{background:#1f9d55}
+button:disabled{opacity:.6;cursor:default}
+.msg{font-size:14px;color:var(--bad)}
+.ok{display:flex;flex-direction:column;gap:12px}
+.ok b{font:700 22px var(--f-display)}
+.nt{font-size:13px;color:var(--muted)}
+.tag{display:inline-block;background:var(--amber-soft);color:var(--fg);border-radius:99px;padding:4px 12px;font:600 13px var(--f-body);margin-bottom:12px}
+@media (max-width:820px){.wrap{grid-template-columns:1fr;gap:22px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header><img src="https://fc-consultoria.github.io/img/logo-fc-160.jpg" alt="FC Consultoria"><div><b>FC Consultoria em Esquadria</b><small>Sinop · MT</small></div></header>
+  <section>
+    <span class="tag" id="quem" hidden></span>
+    <p class="eb">Orientativo FC 3D</p>
+    <h1>Aprenda esquadrias de alumínio vendo cada peça em 3D</h1>
+    <p class="lead">Treinamento online para vendedores, orçamentistas e equipe de produção de vidraçarias e serralherias.</p>
+    <ul>
+      <li><i>🧩</i><span>Tipologias das linhas Suprema e Gold em 3D: monte e desmonte cada esquadria.</span></li>
+      <li><i>📐</i><span>Perfis, componentes, medidas e lista de corte explicados passo a passo.</span></li>
+      <li><i>🏠</i><span>Casa em 3D com a instalação real na obra, do contramarco ao acabamento.</span></li>
+      <li><i>📱</i><span>Funciona no celular e no computador, todos os dias.</span></li>
+    </ul>
+  </section>
+  <section class="card" id="form">
+    <h2>Quero conhecer</h2>
+    <p class="nt">Deixe seus dados e a FC Consultoria chama você no WhatsApp para apresentar o Orientativo.</p>
+    <label>Seu nome<input id="fNome" autocomplete="name" maxlength="80" required></label>
+    <label>Empresa<input id="fEmp" autocomplete="organization" maxlength="100"></label>
+    <label>Cidade / UF<input id="fCid" autocomplete="address-level2" maxlength="80" placeholder="Ex.: Sinop / MT"></label>
+    <label>WhatsApp com DDD<input id="fWa" type="tel" inputmode="tel" autocomplete="tel" maxlength="20" placeholder="(66) 9 9999-9999" required></label>
+    <label class="ck"><input type="checkbox" id="fOk"><span>Autorizo a FC Consultoria a entrar em contato comigo pelo WhatsApp sobre o Orientativo FC 3D.</span></label>
+    <button type="button" id="fEnv">Enviar</button>
+    <p class="msg" id="fMsg" role="alert"></p>
+    <p class="nt">Atendimento de segunda a sexta, das 8h às 11h e das 13h às 17h (horário de Sinop/MT).</p>
+  </section>
+  <section class="card ok" id="pronto" hidden>
+    <b>Pronto, recebemos! 🎉</b>
+    <p>A FC Consultoria vai chamar você no WhatsApp no próximo horário de atendimento (segunda a sexta).</p>
+    <a class="bt wa" id="waNow" target="_blank" rel="noopener">Falar com a FC agora no WhatsApp</a>
+    <p class="nt">Seus dados são usados só para este contato.</p>
+  </section>
+</div>
+<script>
+(function(){
+const SB='https://cpkjphodruyxfouirhpd.supabase.co',KEY='sb_publishable_d0HEeWsaqOeZIQKGftlF-Q_B8BUOWWg';
+const $=s=>document.querySelector(s);const cod=(new URLSearchParams(location.search).get('c')||'').replace(/[^a-z0-9]/gi,'').slice(0,20);
+const rpc=(fn,body)=>fetch(SB+'/rest/v1/rpc/'+fn,{method:'POST',headers:{apikey:KEY,Authorization:'Bearer '+KEY,'Content-Type':'application/json'},body:JSON.stringify(body)}).then(r=>r.json());
+let QUEM='';
+if(cod)rpc('trein_indica_quem',{p_cod:cod}).then(n=>{if(typeof n==='string'&&n){QUEM=n;const t=$('#quem');t.textContent='👋 Indicação de '+n;t.hidden=false;}}).catch(()=>{});
+$('#fEnv').onclick=async()=>{const m=$('#fMsg');m.textContent='';
+  const nome=$('#fNome').value.trim(),emp=$('#fEmp').value.trim(),cid=$('#fCid').value.trim(),wa=$('#fWa').value.replace(/\D/g,'');
+  if(nome.length<2){m.textContent='Digite o seu nome.';return;}
+  if(wa.length<10||wa.length>13){m.textContent='Digite o WhatsApp com DDD.';return;}
+  if(!$('#fOk').checked){m.textContent='Marque a autorização de contato para continuar.';return;}
+  if(!cod){m.textContent='Este link de indicação está incompleto. Peça o link de novo para quem indicou.';return;}
+  const b=$('#fEnv');b.disabled=true;b.textContent='Enviando…';
+  try{const r=await rpc('trein_indicar',{p_cod:cod,p_nome:nome,p_empresa:emp,p_whats:wa,p_cidade:cid});
+    const E={whats:'Confira o WhatsApp com DDD.',dados:'Confira os dados digitados.',codigo:'Este link de indicação não é válido. Peça o link de novo para quem indicou.',repetido:'Este WhatsApp já foi indicado antes. A FC Consultoria já tem o seu contato.',limite:'Muitos cadastros por este link hoje. Tente amanhã.'};
+    if(r==='ok'){$('#form').hidden=true;$('#pronto').hidden=false;$('#pronto').scrollIntoView({behavior:'smooth',block:'center'});$('#waNow').href='https://wa.me/5566999867984?text='+encodeURIComponent('Olá! Sou '+nome+(emp?' da '+emp:'')+(QUEM?', fui indicado por '+QUEM:'')+' e quero conhecer o Orientativo FC 3D.');}
+    else{m.textContent=E[r]||'Não foi possível enviar agora. Tente de novo em instantes.';}}
+  catch(_){m.textContent='Sem conexão. Tente de novo em instantes.';}
+  b.disabled=false;b.textContent='Enviar';};
+})();
+</script>
+</body>
+</html>

@@ -261,10 +261,11 @@ td.qd{cursor:help}td.qd:hover{background:#eef6f8;box-shadow:inset 0 -2px 0 #1f6f
   <p class="note" style="padding:10px 16px 0">Acesso exclusivo e sem custo para os clientes da consultoria durante a implantação da precificação. Cada cliente tem o próprio login e vê só a própria equipe. Quando a data acaba, o acesso bloqueia sozinho e o cliente vê a oferta da licença. Estes acessos não aparecem na lista de Empresas nem nos números de contrato.</p>
   <div class="tw"><table><thead><tr><th>Cliente</th><th>Login</th><th>Senha</th><th>Válido até</th><th>Equipe</th><th>Último acesso</th><th>Tempo</th><th></th></tr></thead><tbody id="implTb"></tbody></table></div></section>
  <section class="card" id="pedVazio" data-tab="ped"><p class="note" style="padding:14px 16px">Nenhum pedido de mais tempo e nenhum interessado aguardando. 👍</p></section>
- <section class="card dom" id="domCard" data-tab="emp" hidden><h2>Domingo · liberar a próxima semana?</h2><p class="note" style="padding:10px 16px 0">O acesso das empresas vale de domingo a domingo (suporte só de segunda a sexta). Escolha quem continua na semana que vem (até domingo <b id="domSab"></b>). Quem não for liberado fica sem acesso a partir de segunda.</p><div style="padding:8px 16px"><button class="ok" type="button" id="domTodas">Liberar todas</button></div><div id="domList"></div></section>
+ <section class="card dom" id="domCard" data-tab="emp" hidden><h2>Empresas ativas sem acesso liberado</h2><p class="note" style="padding:10px 16px 0">As empresas ficam liberadas <b id="domSab"></b> (só para a FC: a empresa não vê o prazo). Quem conta tempo é cada colaborador: 72 h a partir do 1º acesso. Estas empresas estão ativas, mas sem acesso liberado.</p><div style="padding:8px 16px"><button class="ok" type="button" id="domTodas">Liberar todas</button></div><div id="domList"></div></section>
  <section class="card ped" id="pedCard" data-tab="ped" hidden><h2>⏱ Pedidos de mais tempo <span class="sgn" id="pedN"></span></h2><div id="pedList"></div></section>
  <section class="card" id="cvCard" data-tab="ped"><h2 style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">💬 Conversas pelo site · orçamentos e dúvidas <span class="sgn" id="cvN"></span><button type="button" id="cvRe" style="margin-left:auto;font-size:13px">🔄 Atualizar</button></h2>
   <div style="padding:10px 16px 16px"><p class="note" style="margin:0 0 10px">Quem escreve pela conversa no site da FC ou nas páginas Engefitas e Nopla aparece aqui, com aviso grande na hora. Responda por aqui: a resposta aparece na conversa da pessoa na página. Se ela deixou o WhatsApp, você também pode chamar por lá.</p><div id="cvBox"><p class="note">Carregando…</p></div></div></section>
+ <section class="card" id="indCard" data-tab="ped" hidden><h2>🎁 Indicações dos alunos <span class="sgn" id="indN"></span></h2><p class="note" style="padding:10px 16px 0">Pessoas que se cadastraram pelo link de indicação de um aluno. Chame no WhatsApp; quando a pessoa entrar de verdade, aprove: <b>só o aluno que indicou</b> ganha +72 h. Limite sugerido: 3 bônus por aluno por mês.</p><div id="indList"></div></section>
  <section class="card" id="intCard" data-tab="ped" hidden><h2>🤝 Interessados <span class="sgn" id="intN"></span></h2><p class="note" style="padding:10px 16px 0">Quem tocou em “Tenho interesse” (alunos) ou em “Quero para minha empresa” (link demonstrativo). O interesse fica registrado na hora do toque, mesmo que a pessoa não mande mensagem no WhatsApp. Entre em contato e marque como atendido.</p><div class="tw"><table><thead><tr><th>Quando</th><th>Empresa</th><th>Colaborador</th><th>Arte / novidade</th><th></th></tr></thead><tbody id="intList"></tbody></table></div></section>
  <section class="card" id="dvCard" data-tab="div"><h2 style="display:flex;justify-content:space-between;align-items:center;gap:8px">📣 Divulgação e Novidades <span class="sgn" id="dvN" style="flex:1"></span><button type="button" id="dvTog" style="font-size:12px;padding:4px 10px">Mostrar</button></h2>
   <div id="dvBody" hidden style="padding:12px 16px 16px">
@@ -335,6 +336,7 @@ td.qd{cursor:help}td.qd:hover{background:#eef6f8;box-shadow:inset 0 -2px 0 #1f6f
    <tbody id="tb"></tbody>
   </table></div>
  </section>
+ <section class="card" id="cmpCard" data-tab="emp" hidden><h2>🔐 Possível login compartilhado <span class="note" style="font-weight:500;text-transform:none;letter-spacing:0">últimos 7 dias</span></h2><p class="note" style="padding:10px 16px 0">O orientativo já deixa só um aparelho por vez: quando o colaborador entra em outro aparelho, o anterior sai. Aqui aparecem os nomes com muitos aparelhos ou muitas trocas. Não bloqueia ninguém: serve para você conversar com a empresa ou oferecer o plano para mais pessoas.</p><div id="cmpList"></div></section>
  <section class="card" id="concCard" data-tab="emp"><h2>🎓 Conclusões do orientativo <span class="note" style="font-weight:500;text-transform:none;letter-spacing:0">· parabéns a quem conclui e aviso a quem usou pouco</span></h2><div id="concBody"><p class="note" style="padding:12px 16px">Carregando…</p></div></section>
  <section class="card" id="detCard" data-tab="emp" hidden>
   <h2 style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span id="detTit">Aluno</span><span style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap"><button type="button" id="gvTog" style="font:600 14px var(--f-display);text-transform:none;letter-spacing:0;background:#1f6f9a;color:#fff;border:0;padding:8px 14px;border-radius:9px;cursor:pointer">👁 Ver como o gestor vê</button></span></h2>
@@ -706,7 +708,7 @@ function render(){
   document.getElementById('k3').textContent=(h/3600).toFixed(1).replace('.',',');
   document.getElementById('k4').textContent=t;
   if(sel)detalhe();
-  domUI();pedUI();intUI();tabBadges();if(DCFG)divRender();else divCarregar();
+  domUI();pedUI();intUI();indUI();cmpUI();tabBadges();if(DCFG)divRender();else divCarregar();
   const esc=v=>String(v||'').replace(/</g,'&lt;'),EXC=new Set(EV.filter(e=>e.tipo==='sug_excluida').map(e=>Date.parse((e.detalhe||{}).ref))),SG=EV.filter(e=>e.tipo==='sugestao'&&!EXC.has(Date.parse(e.criado_em)));
   const RS=EV.filter(e=>e.tipo==='resposta'),pend=SG.filter(e=>!RS.some(r=>(r.detalhe||{}).ref===e.criado_em)).length;
   document.getElementById('sugN').textContent=SG.length?`${SG.length} recebida${SG.length>1?'s':''}${pend?` · ${pend} sem resposta`:''}`:'';
@@ -810,7 +812,7 @@ const ONTEM=()=>new Date(Date.now()-28*3600e3).toISOString().slice(0,10),fDia=v=
 const fmtR=ms=>{const h=Math.floor(ms/3600e3),m=Math.floor(ms%3600e3/60e3);return h>=1?h+' h '+String(m).padStart(2,'0'):m+' min';};
 const libAte=uid=>{const r=EV.find(e=>e.tipo==='liberacao'&&(e.detalhe||{}).para===uid);return r?r.detalhe.ate:null;};
 const libOk=uid=>{const a=libAte(uid);return !!a&&a>=HOJE();};
-function semTag(uid){const cf=ctrFim(uid);if(cf&&cf>=HOJE())return `<span class="sem tag">contrato · ${fDia(cf)}</span>`;const a=libAte(uid);return a&&a>=HOJE()?`<span class="sem tag">até dom ${fDia(a)}</span>`:'<span class="sem tag off">encerrada</span>';}
+function semTag(uid){const cf=ctrFim(uid);if(cf&&cf>=HOJE())return `<span class="sem tag">contrato · ${fDia(cf)}</span>`;const a=libAte(uid);return a&&a>='2099'?'<span class="sem tag">liberada · sem prazo</span>':a&&a>=HOJE()?`<span class="sem tag">até dom ${fDia(a)}</span>`:'<span class="sem tag off">encerrada</span>';}
 function colabs(uid,todos){const C={};
   for(let i=EV.length-1;i>=0;i--){const e=EV[i],d=e.detalhe||{};
     if(e.tipo==='colab'&&d.para===uid)C[d.id]=Object.assign({},C[d.id]||{},d,{alt:e.criado_em});
@@ -822,7 +824,7 @@ async function prorrogar(uid,x,n){const h=x.ini&&x.resta<=0?Math.ceil((Date.now(
   if(n>0&&!confirm('Liberar +'+n+' h para '+x.nome+'?\n\nO limite passa de '+(x.horas||72)+' h para '+h+' h.'))return false;
   if(!n&&!confirm('Voltar o limite de '+x.nome+' para 72 h?'))return false;
   const ext=n>0?(x.ext||[]).concat([{n,em:new Date().toISOString().slice(0,10)}]):[];await ins('colab',{para:uid,id:x.id,nome:x.nome,horas:n>0?h:72,ext});carregar();return true;}
-async function liberar(uid,sim){const cf=ctrFim(uid),im=implDe(uid);if(im){if(sim&&im.ate>=HOJE()){await ins('liberacao',{para:uid,ate:im.ate,contrato:true,impl:true});return;}if(!sim&&!confirm('Este é um acesso de implantação até '+brD(im.ate)+'. Encerrar agora?'))return false;}if(sim&&cf&&cf>=HOJE()){await ins('liberacao',{para:uid,ate:cf>SAB()?cf:SAB(),contrato:true});return;}if(!sim&&cf&&cf>=HOJE()&&!confirm('Esta empresa tem contrato pago ativo até '+cf.split('-').reverse().join('/')+'.\n\nEncerrar o acesso agora bloqueia a empresa antes do fim do contrato. Tem certeza?'))return false;await ins('liberacao',sim?{para:uid,ate:SAB()}:{para:uid,ate:ONTEM(),enc:true});}
+async function liberar(uid,sim){const cf=ctrFim(uid),im=implDe(uid);if(im){if(sim&&im.ate>=HOJE()){await ins('liberacao',{para:uid,ate:im.ate,contrato:true,impl:true});return;}if(!sim&&!confirm('Este é um acesso de implantação até '+brD(im.ate)+'. Encerrar agora?'))return false;}if(sim&&cf&&cf>=HOJE()){await ins('liberacao',{para:uid,ate:cf>SAB()?cf:SAB(),contrato:true});return;}if(!sim&&cf&&cf>=HOJE()&&!confirm('Esta empresa tem contrato pago ativo até '+cf.split('-').reverse().join('/')+'.\n\nEncerrar o acesso agora bloqueia a empresa antes do fim do contrato. Tem certeza?'))return false;await ins('liberacao',sim?{para:uid,ate:'2099-12-31',livre:true}:{para:uid,ate:ONTEM(),enc:true});}
 /* ===== Oferta promocional (só aparece no link demonstrativo quando ligada) ===== */
 const promoAtual=()=>{const e=EV.find(x=>x.tipo==='promo');return e?Object.assign({t:e.criado_em},e.detalhe):null;};
 function promoUsadas(p){if(!p)return 0;let n=0;EV.forEach(e=>{if(e.tipo==='contrato'&&e.detalhe&&e.detalhe.promo&&e.criado_em>=p.t)n+=e.detalhe.cancelado?-1:1;});return Math.max(0,n);}
@@ -928,7 +930,7 @@ function colabUI(a){const L=colabs(a.user_id),esc=v=>String(v||'').replace(/</g,
    document.getElementById('bEmp').onclick=()=>window.open('empresa.html?e='+a.user_id,'_blank');}
   {const URL0='https://fc-consultoria.github.io/treinamento/',sen=senhaLoc(a.user_id)||'[SENHA]',pins=locGet('treinFC-pins'),gp=locGet('treinFC-gestor')[a.user_id]||'[SENHA DO GESTOR]',nm=a.nome||a.login;
    const IM=implDe(a.user_id),CF=ctrFim(a.user_id),CTA=CF&&CF>=HOJE()?CF:null;
-   const REGRA=IM?`📅 Acesso exclusivo da implantação até ${brD(IM.ate)} · todos os dias`:CTA?`📅 Acesso liberado pelo contrato até ${brD(CTA)} · todos os dias`:'⏱️ 72 h a partir do 1º acesso · domingo a domingo';
+   const REGRA=IM?`📅 Acesso exclusivo da implantação até ${brD(IM.ate)} · todos os dias`:CTA?`📅 Acesso liberado pelo contrato até ${brD(CTA)} · todos os dias`:'⏱️ Empresa liberada sem prazo · cada colaborador tem 72 h a partir do 1º acesso · todos os dias';
    document.getElementById('wmA').value=`*Orientativo FC 3D · ${nm}* 🪟\n\n🔗 ${URL0}\n👤 Login: ${a.login}\n🔑 Senha: ${sen}\n\nDepois de entrar, toque no seu nome e digite seu código:\n${L.map(x=>`• ${x.nome} · ${pins[x.id]||'[CÓDIGO]'}`).join('\n')}\n\n${REGRA}\n💻 Um aparelho por vez · código pessoal, não compartilhe\n📘 Guia do aluno: ${URL0}guia/\n\nDúvidas: FC Consultoria · (66) 9 9986-7984`;
    document.getElementById('wmG').value=`*Orientativo FC 3D · Acesso do gestor · ${nm}* 📊\n\n🔗 Painel da Empresa: ${URL0}empresa.html\n👤 Login: ${a.login}\n🔑 Senha: ${sen}\n🛡 Senha do gestor: ${gp}\n\nNo painel você acompanha cada colaborador: ${IM||CTA?'':'prazo de 72 h, '}horas de estudo, tipologias, nível no Monte a esquadria, resultados e pontos a melhorar. Também dá para baixar o relatório em PDF.${IM?`\n\n📅 Acesso exclusivo da implantação até ${brD(IM.ate)}.`:CTA?`\n\n📅 Contrato até ${brD(CTA)}.`:''}\n\n⚠️ A senha do gestor é só sua. Não compartilhe com a equipe.\n\nFC Consultoria · (66) 9 9986-7984`;
    document.querySelectorAll('.wam [data-w]').forEach(b=>b.onclick=async()=>{const t=document.getElementById(b.dataset.w);try{await navigator.clipboard.writeText(t.value);}catch(e){t.select();document.execCommand('copy');}b.textContent='✔ Copiado';setTimeout(()=>b.textContent='📋 Copiar',1800);});
@@ -936,10 +938,10 @@ function colabUI(a){const L=colabs(a.user_id),esc=v=>String(v||'').replace(/</g,
   document.getElementById('bZer').onclick=async()=>{if(!confirm('Zerar o histórico de '+(a.nome||a.login)+'? As 72 h dos colaboradores também recomeçam.'))return;await ins('zerar',{para:a.user_id});carregar();};
   document.getElementById('bRel').onclick=()=>window.open('relatorio.html?e='+a.user_id,'_blank');
   document.getElementById('bExc').onclick=()=>excluirCliente(a);
-  const bl=document.getElementById('bLib'),ok=libOk(a.user_id);bl.textContent=ok?'Encerrar acesso da semana':'Liberar até domingo '+fDia(SAB());bl.className=ok?'no':'ok';
+  const bl=document.getElementById('bLib'),ok=libOk(a.user_id);bl.textContent=ok?'Encerrar acesso da empresa':'Liberar acesso (sem prazo)';bl.className=ok?'no':'ok';
   bl.onclick=async()=>{await liberar(a.user_id,!ok);carregar();};}
-function domUI(){const c=document.getElementById('domCard');c.hidden=DOW()!==0;if(c.hidden)return;const esc=v=>String(v||'').replace(/</g,'&lt;');
-  document.getElementById('domSab').textContent=fDia(SAB());const A=ALUNOS.filter(a=>a.ativo&&!implDe(a.user_id)&&!livre(a));
+function domUI(){const c=document.getElementById('domCard');const esc=v=>String(v||'').replace(/</g,'&lt;');
+  document.getElementById('domSab').textContent='sem prazo';const A=ALUNOS.filter(a=>a.ativo&&!implDe(a.user_id)&&!livre(a)&&!libOk(a.user_id)&&!(ctrFim(a.user_id)>=HOJE()));c.hidden=DOW()!==0||!A.length;if(c.hidden)return;
   document.getElementById('domList').innerHTML=A.map((a,i)=>{const at=libAte(a.user_id),lr=EV.find(e=>e.tipo==='liberacao'&&(e.detalhe||{}).para===a.user_id),dec=at&&at>=SAB()?'<span class="tag">liberada</span>':lr&&lr.detalhe.enc&&Date.now()-Date.parse(lr.criado_em)<864e5?'<span class="tag off">encerrada</span>':'<span class="tag na">aguardando</span>';
     return `<div class="rowl"><span><b>${esc(a.nome||a.login)}</b> <span class="note">(${esc(a.login)}) · ${colabs(a.user_id).length} colab.</span> ${dec}</span><span class="bt"><button type="button" class="ok" data-i="${i}" data-s="1">Liberar</button><button type="button" class="no" data-i="${i}">Encerrar</button></span></div>`;}).join('');
   document.querySelectorAll('#domList button').forEach(b=>b.onclick=async()=>{b.disabled=true;await liberar(A[+b.dataset.i].user_id,!!b.dataset.s);carregar();});
@@ -1145,6 +1147,28 @@ function cvEnviar(code,nome){let o=document.getElementById('cvOv');if(o)o.remove
   document.getElementById('cvOk').onclick=async()=>{const b=document.getElementById('cvOk');b.disabled=true;await sb.from('trein_demo_ev').insert({code,tipo:'convite',detalhe:{msg:document.getElementById('cvTx').value.trim()}});o.remove();if(window.DEMO_RELOAD)await DEMO_RELOAD();try{toast('📨 Convite enviado para '+(nome||code));}catch(_){}};}
 function localDe(uid){let r={};EV.forEach(e=>{if(e.tipo==='empresa_local'&&(e.detalhe||{}).para===uid&&(!r.t||e.criado_em>r.t))r=Object.assign({t:e.criado_em},e.detalhe);});return r;}
 const ufDe=c=>{const m=String(c||'').toUpperCase().match(/(?:^|[^A-Z])([A-Z]{2})\s*$/);return m?m[1]:'';};
+/* ===== Indicações: cadastro pelo link do aluno; só quem indicou ganha +72 h ===== */
+function indUI(){const esc=v=>String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+  const ST={};EV.filter(e=>e.tipo==='indicacao_status').slice().reverse().forEach(e=>{ST[(e.detalhe||{}).iid]=e.detalhe;});
+  const L=EV.filter(e=>e.tipo==='indicado').map(e=>({e,d:e.detalhe||{},st:(ST[(e.detalhe||{}).iid]||{}).status||'novo'}));
+  const mes=new Date(Date.now()-4*3600e3).toISOString().slice(0,7),aprovMes=cid=>EV.filter(e=>e.tipo==='indicacao_status'&&(e.detalhe||{}).status==='aprovada'&&(e.detalhe||{}).cid===cid&&e.criado_em.slice(0,7)===mes).length;
+  const novos=L.filter(x=>x.st==='novo');window.IND_NOVOS=novos.length;
+  const c=document.getElementById('indCard');c.hidden=!L.length;document.getElementById('indN').textContent=novos.length?novos.length+' para atender':'';
+  const V=L.filter(x=>x.st==='novo').concat(L.filter(x=>x.st!=='novo').slice(0,15));
+  document.getElementById('indList').innerHTML=V.map((x,i)=>{const d=x.d,a=ALUNOS.find(y=>y.user_id===d.para)||{},am=aprovMes(d.cid),wa='https://wa.me/'+(String(d.whats).length<=11?'55':'')+d.whats+'?text='+encodeURIComponent('Olá '+String(d.nome||'').split(' ')[0]+'! Aqui é o Fernando, da FC Consultoria. Você foi indicado por '+(d.quem||'um aluno')+' para conhecer o Orientativo FC 3D.');
+    const tag=x.st==='aprovada'?'<span class="tag">aprovada · +72 h</span>':x.st==='recusada'?'<span class="tag off">recusada</span>':'<span class="tag na">novo</span>';
+    return `<div class="rowl"><span><b>${esc(d.nome)}</b>${d.empresa?' · '+esc(d.empresa):''} ${tag}<br><span class="note">${esc(d.cidade||'cidade não informada')} · WhatsApp ${esc(d.whats)} · ${fmtD(x.e.criado_em)}</span><br><span class="note">Indicado por <b>${esc(d.quem||'?')}</b> (${esc(a.nome||a.login||'empresa')})${am?` · ${am} bônus aprovado(s) neste mês`:''}${am>=3?' · <b style="color:#a33">limite de 3 no mês</b>':''}</span></span>
+      <span class="bt"><a class="ok" href="${wa}" target="_blank" rel="noopener" style="text-decoration:none;display:inline-block">WhatsApp</a>${x.st==='novo'?`<button type="button" class="ok" data-ia="${i}">Aprovar +72 h para ${esc(String(d.quem||'aluno').split(' ')[0])}</button><button type="button" class="no" data-ir="${i}">Recusar</button>`:''}</span></div>`;}).join('');
+  document.querySelectorAll('#indList [data-ia]').forEach(b=>b.onclick=async()=>{const x=V[+b.dataset.ia],d=x.d,col=colabs(d.para,true).find(y=>y.id===d.cid);
+    if(!col){alert0('O aluno que indicou não foi encontrado nesta empresa.');return;}b.disabled=true;
+    const ok=await prorrogar(d.para,col,72);if(ok===false){b.disabled=false;return;}await ins('indicacao_status',{iid:d.iid,status:'aprovada',cid:d.cid,para:d.para});carregar();});
+  document.querySelectorAll('#indList [data-ir]').forEach(b=>b.onclick=async()=>{const x=V[+b.dataset.ir];if(!confirm('Recusar esta indicação? O aluno não ganha as horas.'))return;b.disabled=true;await ins('indicacao_status',{iid:x.d.iid,status:'recusada',cid:x.d.cid,para:x.d.para});carregar();});}
+/* ===== Possível login compartilhado: muitos aparelhos ou trocas para o mesmo colaborador (7 dias) ===== */
+function cmpUI(){const esc=v=>String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;'),lim=Date.now()-7*864e5,G={};
+  EV.filter(e=>e.tipo==='colab_sessao'&&Date.parse(e.criado_em)>=lim).forEach(e=>{const d=e.detalhe||{},k=e.user_id+'|'+d.cid;(G[k]=G[k]||{uid:e.user_id,quem:d.quem,s:new Set(),n:0,seq:[]}).s.add(d.s);G[k].n++;G[k].seq.push(d.s);});
+  const L=Object.values(G).map(g=>{let tr=0;const q=g.seq.slice().reverse();for(let i=1;i<q.length;i++)if(q[i]!==q[i-1])tr++;return {...g,ap:g.s.size,tr};}).filter(g=>g.ap>=3||g.tr>=6).sort((a,b)=>b.ap-a.ap||b.tr-a.tr);
+  const c=document.getElementById('cmpCard');c.hidden=!L.length;
+  document.getElementById('cmpList').innerHTML=L.map(g=>{const a=ALUNOS.find(y=>y.user_id===g.uid)||{};return `<div class="rowl"><span><b>${esc(g.quem||'colaborador')}</b> · ${esc(a.nome||a.login||'empresa')}<br><span class="note">${g.ap} aparelhos diferentes · ${g.tr} trocas de aparelho em 7 dias</span></span></div>`;}).join('');}
 function intUI(){const OK=new Set(EV.filter(e=>e.tipo==='interesse_ok').map(e=>Date.parse((e.detalhe||{}).ref)+'|'+(e.detalhe||{}).u)),EXA=new Set(EV.filter(e=>e.tipo==='interesse_ok'&&(e.detalhe||{}).excl).map(e=>Date.parse((e.detalhe||{}).ref)+'|'+(e.detalhe||{}).u));
   const A=EV.filter(e=>e.tipo==='interesse'||e.tipo==='linha_interesse').map(e=>{const d=e.detalhe||{},a=ALUNOS.find(x=>x.user_id===e.user_id)||{},lc=localDe(e.user_id);
     return {k:'a',quando:e.criado_em,quem:a.nome||a.login||'empresa',sub:d.quem||'',oque:e.tipo==='linha_interesse'?'🔔 Avisar da Linha '+(d.n||d.l)+' (em breve)':(d.t||''),cidade:lc.cidade||'',uf:lc.uf||'',fone:'',ok:OK.has(Date.parse(e.criado_em)+'|'+e.user_id),e};}).filter(x=>!EXA.has(Date.parse(x.e.criado_em)+'|'+x.e.user_id));
@@ -1184,8 +1208,8 @@ function divBind(){const C=()=>DCFG;
 divBind();
 
 function tabBadges(){const ped=!document.getElementById('pedCard').hidden?document.querySelectorAll('#pedList > *').length:0,intn=(document.getElementById('intN').textContent.match(/^(\d+)/)||[0,0])[1]*1,sg=(document.getElementById('sugN').textContent.match(/(\d+) sem resposta/)||[0,0])[1]*1;
-  document.getElementById('tbPed').textContent=(ped+intn)||'';document.getElementById('tbSug').textContent=sg||'';
-  document.getElementById('pedVazio').hidden=!(document.getElementById('pedCard').hidden&&document.getElementById('intCard').hidden);ptab(PTAB,true);}
+  document.getElementById('tbPed').textContent=(ped+intn+(window.IND_NOVOS||0))||'';document.getElementById('tbSug').textContent=sg||'';
+  document.getElementById('pedVazio').hidden=!(document.getElementById('pedCard').hidden&&document.getElementById('intCard').hidden&&document.getElementById('indCard').hidden);ptab(PTAB,true);}
 let PTAB='home';try{PTAB=localStorage.getItem('treinFC-ptab')||'home';}catch(e){}
 function ptab(t,silent){PTAB=t;try{localStorage.setItem('treinFC-ptab',t);}catch(e){}
   document.querySelectorAll('#ptabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===t));
