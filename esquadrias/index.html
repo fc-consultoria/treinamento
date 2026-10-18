@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex">
-<meta name="generator" content="Treinamento em Esquadrias 3D · FC Consultoria em Esquadria">
-<title>Treinamento em Esquadrias 3D · FC Consultoria</title>
+<meta name="generator" content="Esquadrias 3D · Passo a passo · FC Consultoria em Esquadria">
+<title>Esquadrias 3D · Passo a passo · FC Consultoria</title>
 <link rel="icon" href="/img/logo-fc-160.jpg">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600;700&display=swap">
 <style>
@@ -153,12 +153,12 @@ body.lupa-on #cmhost canvas{cursor:none}
 </style>
 </head>
 <body>
-<div class="rgate" id="gate" hidden><form id="gateForm"><small>FC Consultoria · Matriz</small><h1>🎓 Treinamento em Esquadrias</h1>
+<div class="rgate" id="gate" hidden><form id="gateForm"><small>FC Consultoria · Matriz</small><h1>🪟 Esquadrias 3D · Passo a passo</h1>
 <label>Login<input name="login" autocomplete="username" required placeholder="matriz"></label>
 <label>Senha<input name="senha" type="password" autocomplete="current-password" required></label>
 <button type="submit">Entrar</button><p id="gateMsg" role="alert"></p></form></div>
 
-<header class="top"><div class="w"><img src="/img/logo-fc-160.jpg" alt=""><div><small>FC Consultoria · Gold x Suprema</small><b>Treinamento em Esquadrias 3D</b></div><span class="sp"></span>
+<header class="top"><div class="w"><img src="/img/logo-fc-160.jpg" alt=""><div><small>FC Consultoria · Gold x Suprema</small><b>Esquadrias 3D · Passo a passo</b></div><span class="sp"></span>
  <div class="prog" title="Módulos estudados"><i><s id="pgB" style="width:0"></s></i><span id="pgT">0/9</span></div><button type="button" id="bGrav" title="Gravar a aula (tela + sua voz) para virar conteúdo gravado" hidden>⏺ Gravar aula</button><button type="button" id="bAtu" title="Baixar a versão mais nova">🔄</button><button type="button" id="bHome">☰ Início</button></div></header>
 <div class="lay"><nav class="nav" id="nav"></nav><main id="main"><p style="padding:30px">Carregando…</p></main></div>
 <div class="md" id="md" hidden><div><div class="mt"><b id="mdC"></b><span id="mdN"></span><button class="btn" type="button" id="mdFs" style="margin-left:auto;padding:6px 12px">⛶ Tela cheia</button><button class="mx" type="button" id="mdX" aria-label="Fechar">✕</button></div><div id="mdB" style="flex:1;display:flex"></div></div></div>
@@ -167,7 +167,7 @@ body.lupa-on #cmhost canvas{cursor:none}
 <script src="../auth.js"></script>
 <script src="cm3d.js?v=12"></script>
 <script>
-/* Treinamento em Esquadrias 3D · FC Consultoria em Esquadria · Sinop-MT · todos os direitos reservados */
+/* Esquadrias 3D · Passo a passo · FC Consultoria em Esquadria · Sinop-MT · todos os direitos reservados */
 const IMG='/perfis/img/',PERFIS='/perfis/';
 let CMPO=null;let P={},IDX={};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -237,7 +237,7 @@ const MOD=[
 const LS={g(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch(_){return d}},s(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(_){}}};
 let FEITO=new Set(LS.g('fc_esq_feito',[])),AT=null;
 const $=s=>document.querySelector(s);
-function navUI(){$('#nav').innerHTML='<div class="nh">Sequência do treinamento</div>'+MOD.map((m,k)=>`<a data-go="${m.id}" class="${AT===m.id?'on':''}"><span class="n">${String(k+1).padStart(2,'0')}</span>${esc(m.n)}${FEITO.has(m.id)?'<span class="ck">✓</span>':''}</a>`).join('')+`<a data-go="quiz" class="${AT==='quiz'?'on':''}"><span class="n" style="background:var(--tl)">✓</span>Prova final</a>`;
+function navUI(){$('#nav').innerHTML='<div class="nh">Sequência do passo a passo</div>'+MOD.map((m,k)=>`<a data-go="${m.id}" class="${AT===m.id?'on':''}"><span class="n">${String(k+1).padStart(2,'0')}</span>${esc(m.n)}${FEITO.has(m.id)?'<span class="ck">✓</span>':''}</a>`).join('')+`<a data-go="quiz" class="${AT==='quiz'?'on':''}"><span class="n" style="background:var(--tl)">✓</span>Prova final</a>`;
  $('#pgB').style.width=(FEITO.size/9*100)+'%';$('#pgT').textContent=FEITO.size+'/9';}
 function head(k,sub,tags){const m=MOD[k];return `<div class="mh"><div class="ey">Módulo ${String(k+1).padStart(2,'0')} · ${esc(m.n)}</div><h1>${esc(sub||m.n)}</h1><p>${esc(m.d)}</p>${tags?`<div style="margin-top:8px">${tags}</div>`:''}</div>`;}
 function foot(k){const a=MOD[k-1],b=MOD[k+1];return `<div class="foot">${a?`<button class="btn" data-go="${a.id}">← ${esc(a.n)}</button>`:'<span></span>'}<button class="btn ${FEITO.has(MOD[k].id)?'':'o'}" data-feito="${MOD[k].id}">${FEITO.has(MOD[k].id)?'✓ Módulo estudado':'✔ Marcar como estudado'}</button>${b?`<button class="btn p" data-go="${b.id}">${esc(b.n)} →</button>`:`<button class="btn p" data-go="quiz">Prova final →</button>`}</div>`;}
@@ -323,7 +323,7 @@ setInterval(posHosts,300);addEventListener('load',posHosts);document.fonts&&docu
 addEventListener('resize',()=>place3d());addEventListener('hashchange',()=>{const h=location.hash.slice(1);if(!ALUNO&&R[h]&&h!==AT)go(h);});try{new ResizeObserver(()=>place3d()).observe(document.body);}catch(_){}
 const b3d=(t,txt)=>`<button type="button" class="btn p" data-d3="${t}">🧊 ${esc(txt||'Ver em 3D: '+T3[t])}</button>`;
 function mTip(){const fam=TIPF==='3d'?MODELOS.map(([f,ms])=>[f,ms.filter(m=>t3De(m))]).filter(x=>x[1].length):MODELOS.filter(([f])=>!TIPF||f===TIPF);const N3=MODELOS.reduce((a,m)=>a+m[1].filter(x=>t3De(x)).length,0);const sel=TIPS||MODELOS[1][1][0];const t=parseModelo(sel);
- return head(1,'Tipologias · os modelos')+`<div class="sec"><h2>🪟 Lista de modelos com desenho</h2><p class="nt">Os ${MODELOS.reduce((a,m)=>a+m[1].length,0)} modelos do treinamento. Toque no desenho para ver o modelo grande e o que ele tem.</p>
+ return head(1,'Tipologias · os modelos')+`<div class="sec"><h2>🪟 Lista de modelos com desenho</h2><p class="nt">Os ${MODELOS.reduce((a,m)=>a+m[1].length,0)} modelos do passo a passo. Toque no desenho para ver o modelo grande e o que ele tem.</p>
  <div class="chips">${[['','Todos'],['3d','🧊 Só com 3D ('+N3+')'],...MODELOS.map(m=>[m[0],m[0]])].map(([f,n])=>`<button class="${TIPF===f?'on':''}" data-tipf="${esc(f)}">${esc(n)}</button>`).join('')}</div>
  <div class="sec" style="margin:0 0 14px;border-color:var(--tl)"><div style="display:grid;grid-template-columns:minmax(220px,1fr) 2.2fr;gap:16px;align-items:start" class="tsel"><div><h2 style="margin:0 0 6px">${esc(sel)}</h2><div style="max-width:260px">${desenho(t)}</div>
   <ul class="pl">${t.k==='correr'?`<li><b>${t.n} folhas</b> de correr${t.set.some(x=>x)?' · as setas mostram as folhas que correm':''}</li>`:t.k==='maxim'?`<li><b>${t.n} folha${t.n>1?'s':''}</b> maxim-ar: abre projetando para fora, presa em cima pelos braços</li>`:`<li>Porta de giro de <b>${t.n} folha${t.n>1?'s':''}</b>: abre girando nas dobradiças</li>`}
@@ -408,7 +408,7 @@ function mGua(){const L=GUA[GL],it=L[Math.min(GI,L.length-1)],es=Object.keys(it.
   <div class="call">Perfil <b>${esc(it.p)}</b>${it.b?` com baguete <b>${esc(it.b)}</b>`:''} e vidro de <b>${e} mm</b>: guarnição interna <b>${esc(g[0])}</b>${g[1]?` e externa <b>${esc(g[1])}</b>`:' (sem guarnição externa)'}.</div>
   <div class="gcs">${gcard(g[0],'Interna')}${g[1]?gcard(g[1],'Externa'):''}</div></div>
   <div>${card(it.p,'Perfil escolhido',GL==='gold'?'g':'s')}<table class="tb" style="margin-top:10px"><tr><th>Vidro</th><th>Interna</th><th>Externa</th></tr>${es.map(n=>{const th=c=>{const f=gfile(c);return f?`<img src="${f}" alt="" style="height:26px;max-width:60px;object-fit:contain;vertical-align:middle;margin-right:6px">`:''};return `<tr class="${n===e?'hi':''}"><td>${n} mm</td><td>${th(it.v[n][0])}${esc(it.v[n][0])}</td><td>${it.v[n][1]?th(it.v[n][1])+esc(it.v[n][1]):'—'}</td></tr>`;}).join('')}</table></div></div></div>`+
-`<div class="sec"><h2>🧵 Guarnições e espumas do treinamento</h2><p class="nt">Desenhos de referência, com o código equivalente no mercado. Toque na peça para ver em 3D.</p><div class="gcs">${Object.keys(GIMG).map(k=>gcard('GUA-'+k.slice(3))).join('')}</div></div>`+
+`<div class="sec"><h2>🧵 Guarnições e espumas</h2><p class="nt">Desenhos de referência, com o código equivalente no mercado. Toque na peça para ver em 3D.</p><div class="gcs">${Object.keys(GIMG).map(k=>gcard('GUA-'+k.slice(3))).join('')}</div></div>`+
  quiz([['Na Suprema, perfil SU-200 com vidro de 6 mm: qual a guarnição interna?',['GUA-259','GUA-256','GUA-283'],0,'Com 6 mm a interna passa a ser a GUA-259; até 5 mm é a GUA-256.'],['O que muda quando o vidro fica mais grosso?',['A guarnição precisa ser trocada','Nada muda','Só o perfil muda'],0,'Cada espessura de vidro pede a guarnição do tamanho certo para travar o vidro.']])+foot(3);}
 
 /* --- 05 maxim-ar --- */
@@ -474,7 +474,7 @@ function mPad(){return head(6,'Perfis e Componentes Padrão')+`<div class="sec">
 /* --- 08 giro --- */
 let GA=35;
 function mGiro(){const mods=[['Suprema','Porta de giro 1 folha c/ vidro superior e veneziana inferior','vid-ven'],['Suprema','Porta de giro 1 folha c/ veneziana','veneziana'],['Suprema','Porta de giro 1 folha c/ vidro superior e lambri inferior','vid-lam'],['Suprema','Porta de giro 1 folha c/ lambri','lambri'],['Gold','Porta de giro 1 folha','vidro'],['Gold','Porta de giro 1 folha c/ lambri','lambri'],['Gold','Porta de giro 1 folha c/ veneziana','veneziana'],['Gold','Porta de giro 1 folha c/ vidro superior e lambri inferior','vid-lam']];
- return head(7,'Porta de Giro')+`<div class="sec"><h2>🚪 Como a porta de giro abre</h2>${e3('pgr100',620)}<div><div class="call t">A porta de giro abre girando nas <b>dobradiças</b>. O treinamento mostra as duas montagens: <b>90°</b> (corte reto) e <b>45°</b> (meia-esquadria), que mudam alguns componentes, como a cunha e a cantoneira.</div></div></div>
+ return head(7,'Porta de Giro')+`<div class="sec"><h2>🚪 Como a porta de giro abre</h2>${e3('pgr100',620)}<div><div class="call t">A porta de giro abre girando nas <b>dobradiças</b>. O passo a passo mostra as duas montagens: <b>90°</b> (corte reto) e <b>45°</b> (meia-esquadria), que mudam alguns componentes, como a cunha e a cantoneira.</div></div></div>
  <div class="sec"><h2>Modelos</h2><div class="dg">${mods.map(([l,n,m])=>`<div class="dw" style="cursor:default">${desenho({k:'giro',n:1,mio:m})}<span><span class="tag ${l==='Gold'?'tg':'ts'}">${l}</span><br>${esc(n)}</span></div>`).join('')}</div></div>
  <div class="sec"><h2>Perfis</h2>${cmpGS([['Marco','LG-056'],['Marco','LG-056'],['Montante da folha','LG-043'],['Batente interno','LG-016'],['Montante sup. folha','LG-058'],['Travessa central folha','LG-055'],['Veneziana ventilada','US-622'],['Baguete','BG-057'],['Baguete','LG-026']],[['Marco','SU-279'],['Marco','SU-279'],['Montante da folha','SU-111'],['Batente interno','25-548'],['Montante sup. folha','SU-110'],['Montante central folha','SU-227'],['Veneziana ventilada','US-294'],['Baguete','SU-102'],['Baguete','SU-102']])}</div>
  <div class="sec"><h2>Componentes</h2><div class="cmp"><div class="G"><h3>GOLD</h3>${comp([['🔩','DOB-828','Dobradiça'],['🔑','FRA-990','Fechadura'],['🔒','CON-386','Contrafecho'],['🔩','PAR-428','Parafuso · usar na porta 90°'],['⚪','Tapa furo','Usar na porta 90°'],['🧽','GUA-157 / GUA-258','Espuma adesiva'],['🪥','FIT-212','Escovinha'],['🪵','CL-011','Cunha · usar na porta 45°'],['📐','CL-006','Cantoneira · usar na porta 45°']])}</div>
@@ -499,13 +499,13 @@ function mQuiz(){const Q=[['Qual linha é mais robusta e pesada?',['Gold','Supre
  return `<div class="mh"><div class="ey">Encerramento</div><h1>✓ Prova final</h1><p>10 perguntas sobre Gold x Suprema.${r?` Último resultado: <b>${r.a}/10</b> em ${new Date(r.em).toLocaleDateString('pt-BR')}.`:''}</p></div>`+quiz(Q).replace('Teste rápido','Prova final')+`<div class="foot"><button class="btn" data-go="div">← Perfis Diversos</button><button class="btn p" id="bRes">Ver meu resultado</button><span></span></div>`;}
 
 /* ---------- navegação ---------- */
-function home(){const G=LS.g('fc_esq_prova',null);return `<div class="hero"><div class="ey">FC Consultoria · Passo a passo</div><h1>Treinamento em<br>Esquadrias 3D</h1><div class="bar"></div><p>Linhas Suprema e Gold: catálogo de perfis em 3D com peso e medidas, tipologias, contramarco, guarnições, maxim-ar, correr, perfis padrão, porta de giro e perfis diversos. A mesma ordem do treinamento presencial, agora em 3D e com testes.</p>
- <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px"><button class="btn o" data-go="${(MOD.find(m=>!FEITO.has(m.id))||MOD[0]).id}">${FEITO.size?'▶ Continuar':'▶ Começar o treinamento'}</button><button class="btn" data-go="quiz" style="background:transparent;color:#fff;border-color:rgba(255,255,255,.5)">✓ Prova final${G?' · '+G.a+'/10':''}</button></div></div>
+function home(){const G=LS.g('fc_esq_prova',null);return `<div class="hero"><div class="ey">FC Consultoria · Passo a passo</div><h1>Esquadrias 3D<br>Passo a passo</h1><div class="bar"></div><p>Linhas Suprema e Gold: catálogo de perfis em 3D com peso e medidas, tipologias, contramarco, guarnições, maxim-ar, correr, perfis padrão, porta de giro e perfis diversos. A mesma ordem da apresentação presencial, agora em 3D e com testes.</p>
+ <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px"><button class="btn o" data-go="${(MOD.find(m=>!FEITO.has(m.id))||MOD[0]).id}">${FEITO.size?'▶ Continuar':'▶ Começar'}</button><button class="btn" data-go="quiz" style="background:transparent;color:#fff;border-color:rgba(255,255,255,.5)">✓ Prova final${G?' · '+G.a+'/10':''}</button></div></div>
  <div class="mg">${MOD.map((m,k)=>`<button class="mc ${FEITO.has(m.id)?'ok':''}" data-go="${m.id}"><span class="n">${FEITO.has(m.id)?'✓':String(k+1).padStart(2,'0')}</span><div><b>${esc(m.n)}</b><small>${esc(m.d)}</small></div></button>`).join('')}</div>`;}
 const R={cat:mCat,tip:mTip,cm:mCm,gua:mGua,max:mMax,cor:mCor,pad:mPad,giro:mGiro,div:mDiv,quiz:mQuiz};
 function go(id,keep){AT=id&&R[id]?id:null;$('#main').innerHTML=AT?R[AT]():home();navUI();setTimeout(place3d,0);if(!keep)scrollTo({top:0,behavior:'smooth'});try{if(!ALUNO)history.replaceState(null,'',(location.search||'')+(AT?'#'+AT:''));}catch(_){}LIVE.push();}
 function re(){const y=scrollY;go(AT,true);scrollTo(0,y);}
-/* ===== Controle de ângulo (o mesmo direcionador do Mostruário) em todo 3D do treinamento ===== */
+/* ===== Controle de ângulo (o mesmo direcionador do Mostruário) em todo 3D do passo a passo ===== */
 const QA={};function angTx(c){const Q=window.CM3D&&CM3D.QUADROS[c];return Q?`↻ ${(QA[c]||0)*15}°`:'↻ preparando…';}
 document.addEventListener('toggle',e=>{const d=e.target;if(!d.classList||!d.classList.contains('cmpd'))return;if(d.open){CMPO=d.dataset.cmpo;document.querySelectorAll('details.cmpd[open]').forEach(x=>{if(x!==d)x.open=false;});}else if(CMPO===d.dataset.cmpo)CMPO=null;},true);
 document.addEventListener('click',e=>{const b=e.target.closest('[data-qd]');if(!b)return;e.preventDefault();e.stopPropagation();const c=b.dataset.q,Q=CM3D.QUADROS[c];if(!Q)return;
@@ -522,11 +522,11 @@ function angPad(host,ad,opt){if(ALUNO||!host)return;opt=opt||{};let w=host.query
  w.querySelectorAll('button').forEach(b=>b.addEventListener('click',ev=>{ev.stopPropagation();const c=ad.cur();if(!c)return;const k=b.dataset.k,az=Math.round(c.az/15)*15,el=Math.round(c.el/10)*10;
   if(k==='l')go(az-15,c.el);if(k==='r')go(az+15,c.el);if(k==='u')go(c.az,el+10);if(k==='d')go(c.az,el-10);if(k==='c')go(0,opt.frontEl||0);}));
  let last='';(function lp(){if(!document.body.contains(w))return;const c=ad.cur();if(c){const t=`↻ ${Math.round(c.az)>0?'+':''}${Math.round(c.az)}°  ↕ ${Math.round(c.el)}°`;if(t!==last){last=t;rd.textContent=t;}}requestAnimationFrame(lp);})();}
-/* ===== Marca d'água da FC em todo o treinamento (inclusive 3D e tela cheia) ===== */
+/* ===== Marca d'água da FC em todo o passo a passo (inclusive 3D e tela cheia) ===== */
 function marca(){let el=$('#wm');if(!el){el=document.createElement('div');el.id='wm';el.setAttribute('aria-hidden','true');document.body.appendChild(el);}
  let q='';try{const o=JSON.parse(localStorage.getItem('fc_esq_aluno')||'{}');if(ALUNO&&o.n)q=o.n+(o.e?' · '+o.e:'');}catch(_){}
  const d=new Date().toLocaleDateString('pt-BR'),x=v=>String(v).replace(/[<>&"]/g,'');
- const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="460" height="300"><g transform="rotate(-24 230 150)" font-family="Barlow,Arial,sans-serif" text-anchor="middle" fill="#0f4f53" fill-opacity=".045"><text x="230" y="140" font-size="26" font-weight="800">FC CONSULTORIA EM ESQUADRIA</text><text x="230" y="168" font-size="14" font-weight="600">Treinamento exclusivo · ${x(q||'uso interno')} · ${d}</text></g></svg>`;
+ const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="460" height="300"><g transform="rotate(-24 230 150)" font-family="Barlow,Arial,sans-serif" text-anchor="middle" fill="#0f4f53" fill-opacity=".045"><text x="230" y="140" font-size="26" font-weight="800">FC CONSULTORIA EM ESQUADRIA</text><text x="230" y="168" font-size="14" font-weight="600">Uso exclusivo · ${x(q||'uso interno')} · ${d}</text></g></svg>`;
  el.style.backgroundImage=`url("data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}")`;}
 function guaPrep(){if(!window.CM3D)return Promise.reject();Object.entries(GIMG).forEach(([k,g])=>{const m=/(\d+)x(\d+)/.exec(g[0]);if(m)CM3D.guaEspuma(k,+m[1],+m[2]);});return CM3D.guaCarregar('gua/shapes.json?v=1');}
 function abre3d(c){if(String(c).startsWith('G:')){const k=c.slice(2),g=GIMG[k]||['','',''];$('#mdC').textContent='GUA-'+k.slice(3);$('#mdN').textContent=g[2]+' · '+gref(g,k);
@@ -644,14 +644,14 @@ function grvParar(){if(!GRV.on)return;GRV.on=false;clearInterval(GRV.tm);try{GRV
 function grvSalvar(){const dur=Math.round((Date.now()-GRV.t0)/1000),d=new Date(GRV.t0),p2=n=>String(n).padStart(2,'0'),nm=`aula-esquadrias-${d.getFullYear()}${p2(d.getMonth()+1)}${p2(d.getDate())}-${p2(d.getHours())}${p2(d.getMinutes())}`;
  const baixa=(blob,f)=>{const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=f;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},4000);};
  baixa(new Blob(GRV.parts,{type:'video/webm'}),nm+'.webm');
- const txt=`ROTEIRO DA AULA · Treinamento em Esquadrias 3D · FC Consultoria em Esquadria\nData: ${d.toLocaleString('pt-BR')} · Duração: ${mmss(dur)}\nVídeo: ${nm}.webm\n\n`+GRV.rot.map(x=>`[${mmss(x.s)}] ${x.r}`).join('\n')+`\n\nUse este roteiro junto com o vídeo para montar o conteúdo gravado: cada linha marca quando a tela mudou.\n© FC Consultoria em Esquadria · uso exclusivo`;
+ const txt=`ROTEIRO DA APRESENTAÇÃO · Esquadrias 3D · Passo a passo · FC Consultoria em Esquadria\nData: ${d.toLocaleString('pt-BR')} · Duração: ${mmss(dur)}\nVídeo: ${nm}.webm\n\n`+GRV.rot.map(x=>`[${mmss(x.s)}] ${x.r}`).join('\n')+`\n\nUse este roteiro junto com o vídeo para montar o conteúdo gravado: cada linha marca quando a tela mudou.\n© FC Consultoria em Esquadria · uso exclusivo`;
  try{sb.from('trein_eventos').insert({tipo:'aula_gravada',detalhe:{arquivo:nm,dur,sala:LIVE.on?(APRES||null):null,rot:GRV.rot.slice(0,400)}}).then(()=>{});}catch(_){}
  const m=document.createElement('div');m.style.cssText='position:fixed;left:50%;top:14px;transform:translateX(-50%);z-index:970;background:#13232e;color:#fff;border-radius:14px;padding:12px 16px;font:600 15px var(--f-b);box-shadow:0 8px 20px rgba(0,0,0,.35);max-width:92vw';m.innerHTML=`<div style="margin-bottom:8px">✅ Aula gravada (${mmss(dur)}). O vídeo <b>${nm}.webm</b> foi para a pasta Downloads.</div><div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" id="grvR" style="border:0;border-radius:9px;padding:8px 12px;font:700 14px var(--f-b);cursor:pointer;background:#f2a51e;color:#2a1b00">📄 Baixar o roteiro da aula</button><button type="button" id="grvF" style="border:1px solid rgba(255,255,255,.4);border-radius:9px;padding:8px 12px;font:700 14px var(--f-b);cursor:pointer;background:transparent;color:#fff">Fechar</button></div>`;document.body.appendChild(m);
  $('#grvR').onclick=()=>baixa(new Blob([txt],{type:'text/plain;charset=utf-8'}),nm+'-roteiro.txt');$('#grvF').onclick=()=>m.remove();}
 document.addEventListener('click',e=>{if(e.target.closest('#bGrav')){e.preventDefault();gravar();}});
 function apresentar(c){/* FC conduzindo: tela, microfone, chat e mãos levantadas */
  lvStyle();LIVE.ch=sb.channel('esq-'+c,{config:{broadcast:{self:false},presence:{key:'fc'}}});const ch=LIVE.ch;
- const u=salaLink(c),msg=`Olá! Aqui é o Fernando, da FC Consultoria. Vamos começar o Treinamento em Esquadrias (Gold x Suprema) ao vivo. Abra este link, coloque o seu nome e ligue o som: ${u}`;
+ const u=salaLink(c),msg=`Olá! Aqui é o Fernando, da FC Consultoria. Vamos começar o passo a passo de Esquadrias 3D (Gold x Suprema) ao vivo. Abra este link, coloque o seu nome e ligue o som: ${u}`;
  const S={mic:null,pcs:{},maos:{},chat:[],ps:[]};
  const box=document.createElement('div');box.className='lvp';box.id='lvBox';document.body.appendChild(box);
  const draw=()=>{const n=S.ps.length;box.innerHTML=`<div class="hd"><span class="dot"></span><b>AO VIVO · você conduz</b><button class="x" data-lv="min">–</button></div><div class="bd">
@@ -670,7 +670,7 @@ function apresentar(c){/* FC conduzindo: tela, microfone, chat e mãos levantada
   if(a==='mic'){if(S.mic){S.mic.getTracks().forEach(t=>t.stop());S.mic=null;Object.values(S.pcs).forEach(p=>p.close());S.pcs={};ch.send({type:'broadcast',event:'mic',payload:{on:false}});draw();return;}
    try{S.mic=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true}});}catch(e){alert('Não foi possível ligar o microfone. Permita o microfone no navegador e tente de novo.');return;}
    S.ps.forEach(p=>ligar(p.key));ch.send({type:'broadcast',event:'mic',payload:{on:true}});draw();}
-  if(a==='fim'){if(!confirm('Encerrar o treinamento ao vivo para todos?'))return;try{await ch.send({type:'broadcast',event:'fim',payload:{}});if(S.mic)S.mic.getTracks().forEach(t=>t.stop());Object.values(S.pcs).forEach(p=>p.close());await ch.untrack();sb.removeChannel(ch);}catch(_){}LIVE.on=false;box.remove();try{localStorage.removeItem('fc_esq_sala')}catch(_){}history.replaceState(null,'',location.pathname+(AT?'#'+AT:''));}};
+  if(a==='fim'){if(!confirm('Encerrar a apresentação ao vivo para todos?'))return;try{await ch.send({type:'broadcast',event:'fim',payload:{}});if(S.mic)S.mic.getTracks().forEach(t=>t.stop());Object.values(S.pcs).forEach(p=>p.close());await ch.untrack();sb.removeChannel(ch);}catch(_){}LIVE.on=false;box.remove();try{localStorage.removeItem('fc_esq_sala')}catch(_){}history.replaceState(null,'',location.pathname+(AT?'#'+AT:''));}};
  async function ligar(k){if(!S.mic)return;if(S.pcs[k])S.pcs[k].close();const pc=new RTCPeerConnection(ICE);S.pcs[k]=pc;S.mic.getTracks().forEach(t=>pc.addTrack(t,S.mic));
   pc.onicecandidate=e=>{if(e.candidate)ch.send({type:'broadcast',event:'rtc',payload:{to:k,ice:e.candidate.toJSON()}});};
   const of=await pc.createOffer();await pc.setLocalDescription(of);ch.send({type:'broadcast',event:'rtc',payload:{to:k,sdp:pc.localDescription.toJSON()}});}
@@ -685,9 +685,9 @@ function apresentar(c){/* FC conduzindo: tela, microfone, chat e mãos levantada
  addEventListener('scroll',()=>LIVE.push(),{passive:true});let u3='';setInterval(()=>{if(LIVE.on&&AT==='cm'&&CMS){const v=JSON.stringify(CM3D.camGet(CMS));if(v!==LIVE.ucm){LIVE.ucm=v;LIVE.push();}}const H=$('#e3host');if(!LIVE.on||!H||H.style.display==='none')return;try{const f=$('#d3f'),v=f&&f.contentWindow.ESQ_SNAP?JSON.stringify(f.contentWindow.ESQ_SNAP()):'';if(v&&v!==u3){u3=v;LIVE.push();}}catch(_){}},400);draw();}
 function participar(){/* cliente / funcionário acompanhando: ouve o Fernando, chat e mão levantada */
  lvStyle();document.body.classList.add('aluno');const st=document.createElement('style');st.textContent='.aluno .nav,.aluno #bHome,.aluno .foot,.aluno [data-feito]{display:none!important}.aluno .lay{grid-template-columns:1fr}.aluno .top .prog{display:none}';document.head.appendChild(st);const sm=document.querySelector('.top small');if(sm)sm.textContent='🔴 Ao vivo com a FC Consultoria';
- const wait=t=>{$('#main').innerHTML=`<div class="hero" style="text-align:center"><div class="ey">FC Consultoria · ao vivo</div><h1 style="font-size:36px">Treinamento em Esquadrias 3D</h1><div class="bar" style="margin:12px auto"></div><p style="margin:0 auto">${t}</p></div>`;};
+ const wait=t=>{$('#main').innerHTML=`<div class="hero" style="text-align:center"><div class="ey">FC Consultoria · ao vivo</div><h1 style="font-size:36px">Esquadrias 3D · Passo a passo</h1><div class="bar" style="margin:12px auto"></div><p style="margin:0 auto">${t}</p></div>`;};
  let nome='',emp='';try{const o=JSON.parse(localStorage.getItem('fc_esq_aluno')||'{}');nome=o.n||'';emp=o.e||'';}catch(_){}
- const entrar=()=>{wait('⏳ Aguardando o Fernando iniciar o treinamento…');
+ const entrar=()=>{wait('⏳ Aguardando o Fernando iniciar a apresentação…');
   const KEY='al-'+Math.random().toString(36).slice(2,9),T0=Date.now();const audio=new Audio();audio.autoplay=true;audio.playsInline=true;
   const ch=sb.channel('esq-'+SALA,{config:{broadcast:{self:false},presence:{key:KEY}}});let fc=false,pc=null,mic=false,mao=false,chat=[],aberto=false,cheia=false,novo=0;
   const bar=document.createElement('div');bar.className='lvp';bar.style.width='min(320px,calc(100vw - 28px))';document.body.appendChild(bar);
@@ -703,7 +703,7 @@ function participar(){/* cliente / funcionário acompanhando: ouve o Fernando, c
   const fimPc=()=>{if(pc){pc.close();pc=null;}};
   addEventListener('message',ev=>{if(ev.origin===location.origin&&ev.data&&ev.data.esq3d==='pronto'&&fc)ch.send({type:'broadcast',event:'oi',payload:{key:KEY}});});
   ch.on('broadcast',{event:'st'},({payload})=>{if(fc&&!cheia)aplica(payload);})
-   .on('broadcast',{event:'fim'},()=>{fc=false;fimPc();fecha();bar.remove();wait('✅ Treinamento encerrado. Obrigado por participar!<br><br>FC Consultoria · WhatsApp (66) 9 9986-7984');})
+   .on('broadcast',{event:'fim'},()=>{fc=false;fimPc();fecha();bar.remove();wait('✅ Apresentação encerrada. Obrigado por participar!<br><br>FC Consultoria · WhatsApp (66) 9 9986-7984');})
    .on('broadcast',{event:'mic'},({payload})=>{mic=!!(payload&&payload.on);if(!mic)fimPc();draw();})
    .on('broadcast',{event:'mao'},({payload})=>{if(payload.key===KEY){mao=!!payload.up;draw();}})
    .on('broadcast',{event:'chat'},({payload:m})=>{chat.push(m);if(!aberto)novo++;draw();})
@@ -716,10 +716,10 @@ function participar(){/* cliente / funcionário acompanhando: ouve o Fernando, c
      if(als.findIndex(x=>x.k===KEY)>=MAXAL&&!cheia){cheia=true;ch.untrack();bar.remove();wait('🚫 A sala está cheia ('+MAXAL+' pessoas). Fale com o Fernando: WhatsApp (66) 9 9986-7984.');return;}
      const tem=!!ps.fc;if(tem&&!fc){fc=true;ch.send({type:'broadcast',event:'oi',payload:{key:KEY}});draw();}else if(!tem&&fc){fc=false;fimPc();mic=false;fecha();aplica.ult='';draw();wait('⏸ O Fernando saiu por um instante. A tela volta sozinha quando ele voltar.');}})
    .subscribe(async s=>{if(s==='SUBSCRIBED')await ch.track({n:nome,e:emp,t:T0});});draw();};
- if(nome){$('#main').innerHTML=`<div class="hero" style="text-align:center"><div class="ey">FC Consultoria · ao vivo</div><h1 style="font-size:36px">Olá, ${esc(nome)}!</h1><div class="bar" style="margin:12px auto"></div><p style="margin:0 auto 14px">Toque para entrar e ouvir o Fernando.</p><button class="btn o" id="alGo" style="font-size:17px">🔊 Entrar no treinamento</button> <button class="btn" id="alTr" style="background:transparent;color:#fff;border-color:rgba(255,255,255,.5)">Não sou ${esc(nome)}</button></div>`;
+ if(nome){$('#main').innerHTML=`<div class="hero" style="text-align:center"><div class="ey">FC Consultoria · ao vivo</div><h1 style="font-size:36px">Olá, ${esc(nome)}!</h1><div class="bar" style="margin:12px auto"></div><p style="margin:0 auto 14px">Toque para entrar e ouvir o Fernando.</p><button class="btn o" id="alGo" style="font-size:17px">🔊 Entrar na apresentação</button> <button class="btn" id="alTr" style="background:transparent;color:#fff;border-color:rgba(255,255,255,.5)">Não sou ${esc(nome)}</button></div>`;
   $('#alGo').onclick=entrar;$('#alTr').onclick=()=>{try{localStorage.removeItem('fc_esq_aluno')}catch(_){}participar();};return;}
- $('#main').innerHTML=`<div class="hero"><div class="ey">FC Consultoria · ao vivo</div><h1 style="font-size:36px">Treinamento em Esquadrias 3D</h1><div class="bar"></div><p>O Fernando vai conduzir o treinamento e a sua tela acompanha sozinha. Ligue o som do aparelho para ouvir. Se tiver dúvida, use o ✋ ou o 💬 chat.</p>
-  <form id="alN" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px"><input name="n" required placeholder="Seu nome" style="flex:1;min-width:180px;font:600 16px var(--f-b);padding:10px 12px;border-radius:10px;border:0"><input name="e" placeholder="Empresa" style="flex:1;min-width:160px;font:600 16px var(--f-b);padding:10px 12px;border-radius:10px;border:0"><button class="btn o" style="font-size:16px">🔊 Entrar no treinamento</button></form></div>`;
+ $('#main').innerHTML=`<div class="hero"><div class="ey">FC Consultoria · ao vivo</div><h1 style="font-size:36px">Esquadrias 3D · Passo a passo</h1><div class="bar"></div><p>O Fernando vai conduzir a apresentação e a sua tela acompanha sozinha. Ligue o som do aparelho para ouvir. Se tiver dúvida, use o ✋ ou o 💬 chat.</p>
+  <form id="alN" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px"><input name="n" required placeholder="Seu nome" style="flex:1;min-width:180px;font:600 16px var(--f-b);padding:10px 12px;border-radius:10px;border:0"><input name="e" placeholder="Empresa" style="flex:1;min-width:160px;font:600 16px var(--f-b);padding:10px 12px;border-radius:10px;border:0"><button class="btn o" style="font-size:16px">🔊 Entrar na apresentação</button></form></div>`;
  $('#alN').onsubmit=ev=>{ev.preventDefault();nome=ev.target.n.value.trim().slice(0,40);emp=ev.target.e.value.trim().slice(0,40);if(!nome)return;try{localStorage.setItem('fc_esq_aluno',JSON.stringify({n:nome,e:emp}))}catch(_){}marca();entrar();};}
 async function iniciar(){try{const j=await fetch('perfis.json?v=1',{cache:'no-cache'}).then(r=>r.json());const raw=j.P;P={};IDX={};
   Object.entries(raw).forEach(([k,v])=>{const o=Object.assign({k},v);P[k]=o;IDX[k]=o;k.split(' / ').forEach(c=>IDX[c.trim()]=o);});}catch(e){console.warn(e);}

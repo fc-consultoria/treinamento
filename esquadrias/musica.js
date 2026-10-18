@@ -1,4 +1,4 @@
-/* ===== 🎧 Som para estudar · Treinamento em Esquadrias 3D =====
+/* ===== 🎧 Som para estudar · Esquadrias 3D · Passo a passo =====
    Sons de foco gerados no próprio navegador (sem anúncio, sem internet extra) e playlists escolhidas pela FC
    (Spotify, YouTube ou Deezer), tocando dentro do link do treinamento. As playlists ficam em musica.json. */
 (function(){

@@ -1,4 +1,4 @@
-/* Treinamento em Esquadrias 3D · Contramarco em 3D (parede, contramarco CM-200 e componentes)
+/* Esquadrias 3D · Passo a passo · Contramarco em 3D (parede, contramarco CM-200 e componentes)
    FC Consultoria em Esquadria · peças ilustrativas, sem escala de fabricação */
 (function(){
  const L3={three:'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js',orbit:'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js'};

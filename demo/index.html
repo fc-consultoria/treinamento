@@ -2899,7 +2899,7 @@ function demo2Init(){
     try{espelho();}catch(e){console.warn(e);}
   }
   /* ===== Espelho: o instrutor da FC acompanha o demonstrativo (só visualização) ===== */
-  function espelho(){if(new URLSearchParams(location.search).has('esq')&&window.top!==window&&/\/treinamento\//.test(document.referrer||'')){/* dentro do Treinamento em Esquadrias da FC */
+  function espelho(){if(new URLSearchParams(location.search).has('esq')&&window.top!==window&&/\/treinamento\//.test(document.referrer||'')){/* dentro do Esquadrias 3D · Passo a passo da FC */
       const r3=v=>Math.round(v*1000)/1000,modo=s=>s.dia?'dia':s.cem?'cem':s.wv?'wv':s.m;
       const st=document.createElement('style');st.textContent='.d2bar,#d2Prev,#d2ChB,#d2ChP,#d2Esp,#d2Vid,#d2Cv,body>header,.wrap>header,header .hdr-r,.guiabtn{display:none!important}.wrap{padding-top:8px!important}';document.head.appendChild(st);
       const tb=()=>{const p=document.getElementById('d2Prev');if(p)p.remove();document.querySelectorAll('.d2bar').forEach(x=>x.remove());};tb();setTimeout(tb,800);

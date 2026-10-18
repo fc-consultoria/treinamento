@@ -142,6 +142,10 @@ td.c{font:600 12px var(--f-m);white-space:nowrap}
   </aside>
 </div>
 
+<div id="mcDica" hidden role="dialog" aria-modal="true" aria-labelledby="mcDicaT"><div class="c"><h3 id="mcDicaT">Como jogar em 3 passos</h3>
+<ol><li><b>Toque num lote</b> do bairro (ou em “Montar” no painel) para entrar na obra.</li><li><b>Escolha a esquadria</b> e toque no vão da parede onde ela vai: a obra monta em câmera lenta.</li><li><b>Passeie</b>: gire com o dedo ou o mouse, use o boneco para andar na rua e troque dia e noite.</li></ol>
+<button type="button" id="mcDicaOk">Entendi, vamos montar</button></div></div>
+<style>#mcDica{position:fixed;inset:0;z-index:60;background:rgba(6,20,26,.66);display:grid;place-items:center;padding:14px}#mcDica[hidden]{display:none}#mcDica .c{background:#fff;color:#14231f;border-radius:16px;max-width:420px;width:100%;padding:20px;display:flex;flex-direction:column;gap:12px;font:400 15px/1.5 system-ui,sans-serif;box-shadow:0 20px 50px rgba(0,0,0,.35)}#mcDica h3{margin:0;font:700 20px system-ui,sans-serif;text-transform:none;letter-spacing:0;color:#14231f}#mcDica ol{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:8px}#mcDica button{all:unset;cursor:pointer;text-align:center;background:#e8912d;color:#fff;font:700 16px system-ui,sans-serif;padding:12px;border-radius:11px}#mcDica button:focus-visible{outline:3px solid #1fb3c9;outline-offset:2px}</style>
 <div class="md" id="md" hidden role="dialog" aria-modal="true" aria-labelledby="mdT">
   <div class="mdc">
     <h2 id="mdT">Gostou de montar a sua casa?</h2>
@@ -350,7 +354,8 @@ const TEL=[['plat','Platibanda'],['2ag','2 águas'],['4ag','4 águas']];
 
 /* ================= ESTADO ================= */
 let ST={vista:'bairro',carreira:false,selos:[],obras:{},m:0,linha:'sup',tel:'plat',corTel:COR.tel[0][1],corPar:COR.par[0][1],corDet:COR.det[0][1],corPerf:COR.perf[0][1],noite:false,aberto:false,sel:null,tab:'planta',vaos:null};
-const KEY='fc_montecasa_v1';
+const DEMO=/[?&]demo=1/.test(location.search);
+const KEY=DEMO?'fc_montecasa_demo':'fc_montecasa_v1';
 try{const o=JSON.parse(localStorage.getItem(KEY)||'null');if(o&&MODELOS[o.m])ST={...ST,...o,aberto:false,sel:null};}catch(_){}
 const cmDe=n=>{n=(n||'').toLowerCase();return /entrada/.test(n)?'Entrada':/(quarto|su[ií]te)/.test(n)?'Quarto':/(sala|living)/.test(n)?'Sala':/cozinha/.test(n)?'Cozinha':/banh/.test(n)?'Banheiro':'Outros';};
 MODELOS.forEach(m=>m.vaos.forEach(v=>{if(v.t!=='passagem'&&!v.cm)v.cm=cmDe(v.nome);}));
@@ -557,8 +562,10 @@ function montarBairro(){limparCena();sombra(70);
   // casas vizinhas (volumes simples) para completar a rua
   [[-58,-1],[40,-1]].forEach(([x,s])=>{box(CASA,9,6.2,10,mPar,x,3.1,s*20);box(CASA,9.4,.3,10.4,mDet,x,6.3,s*20);peleVidro(x-3,x+3,s*14.95,1.2,1.4,1.5);rectColis(x-4.5,Math.min(s*15,s*25),x+4.5,Math.max(s*15,s*25));});
   avatarNaCena(true);aplicaNoite();chip();}
-const bloqueada=k=>ST.carreira&&ORDEM.indexOf(k)>0&&!ST.selos.includes(ORDEM[ORDEM.indexOf(k)-1]);
-function entrarObra(k){setTimeout(botoes,0);const i=MODELOS.findIndex(m=>m.k===k);if(i<0)return;if(bloqueada(k)){dica('🔒 Termine a obra anterior para liberar esta.');return;}
+const SO_ORIENT=['emL','predio'];
+const bloqueada=k=>(DEMO&&SO_ORIENT.includes(k))||ST.carreira&&ORDEM.indexOf(k)>0&&!ST.selos.includes(ORDEM[ORDEM.indexOf(k)-1]);
+const motivo=k=>DEMO&&SO_ORIENT.includes(k)?'disponível no FC Mostruário 3D completo':'termine a obra anterior';
+function entrarObra(k){setTimeout(botoes,0);const i=MODELOS.findIndex(m=>m.k===k);if(i<0)return;if(bloqueada(k)){dica('🔒 Esta obra: '+motivo(k)+'.');return;}
   clearInterval(FILA_T);FILA_T=null;FILA=[];DETALHE.clear();andarOff();ST.vista='obra';ST.m=i;ST.vaos=ST.obras[k];ST.sel=null;ST.tab=MODELOS[i].predio||ST.carreira?'esq':'planta';montar();painel();vista('rua');salvar();}
 function irBairro(){setTimeout(botoes,0);clearInterval(FILA_T);FILA_T=null;FILA=[];andarOff();ST.vista='bairro';ST.sel=null;montar();painel();vistaBairro();salvar();}
 function vistaBairro(){voar([-20,46,62],[-8,0,0]);}
@@ -592,7 +599,7 @@ function passoAvatar(){const t=performance.now(),dt=Math.min(.05,(t-tAnt)/1000);
   const alvoC=new THREE.Vector3(AV.p.x-Math.sin(AV.yaw)*5.2,2.7,AV.p.z-Math.cos(AV.yaw)*5.2);cam.position.lerp(alvoC,.08);ctl.target.lerp(new THREE.Vector3(AV.p.x,1.5,AV.p.z),.15);cam.lookAt(ctl.target);
   // perto do portão de uma obra?
   let perto=null;LOTES.forEach(l=>{if(Math.hypot(l.porta.x-AV.p.x,l.porta.z-AV.p.z)<4.5)perto=l;});const be=$('#bEntrar');
-  if(perto){const M=MODELOS[perto.i];be.hidden=false;be.textContent=bloqueada(perto.k)?'🔒 '+M.n.split(' · ')[0]+' · termine a anterior':'Entrar: '+M.n.split(' · ')[0]+' →';be.dataset.k=perto.k;}else be.hidden=true;}
+  if(perto){const M=MODELOS[perto.i];be.hidden=false;be.textContent=bloqueada(perto.k)?'🔒 '+M.n.split(' · ')[0]+' · '+motivo(perto.k):'Entrar: '+M.n.split(' · ')[0]+' →';be.dataset.k=perto.k;}else be.hidden=true;}
 
 /* ---------- esquadria de cada vão (vazio = alvo laranja; prédio = desenho leve; casa = perfis reais) ---------- */
 const mAlvo=new THREE.MeshBasicMaterial({color:0xe3a33b,transparent:true,opacity:.42,side:THREE.DoubleSide,depthWrite:false});
@@ -730,11 +737,12 @@ function miniPlanta(cvs,M){const g=cvs.getContext('2d'),W=cvs.width=184,H=cvs.he
   g.strokeStyle='#8a8f93';g.lineWidth=1;g.strokeRect(ox,oy,LW*k,LD*k);}
 function painelBairro(){$('#tabs').innerHTML='<button type="button" role="tab" class="on" aria-selected="true">Bairro</button>';
   let h=`<div><h2>Bairro FC</h2><p class="nt">Uma avenida com praça, mercado, farmácia, posto e 4 obras para você fechar com esquadrias. Toque num lote ou passeie a pé pela rua.</p></div>
-  <div><h3>Modo de jogo</h3><div class="seg"><button type="button" data-modo="livre" class="${!ST.carreira?'on':''}">Livre</button><button type="button" data-modo="carreira" class="${ST.carreira?'on':''}">Carreira</button></div>
+  ${DEMO?`<div class="box"><h3>Demonstração</h3><p>Monte a <b>Compacta</b> e a <b>Térrea</b>. A Casa em L, o prédio de 12 apartamentos, o modo Carreira e a conta dos perfis da obra estão no <b>FC Mostruário 3D</b> completo.</p><a class="cta" href="${CTA()}" target="_blank" rel="noopener" style="display:block;margin-top:10px">Quero o Mostruário completo</a></div>`:''}
+  <div ${DEMO?'hidden':''}><h3>Modo de jogo</h3><div class="seg"><button type="button" data-modo="livre" class="${!ST.carreira?'on':''}">Livre</button><button type="button" data-modo="carreira" class="${ST.carreira?'on':''}">Carreira</button></div>
   <p class="nt" style="margin-top:6px">${ST.carreira?'Comece pela Compacta. Cada obra fechada vira um selo 🏅 e libera a próxima, até o prédio.':'Escolha qualquer obra, na ordem que quiser.'}</p></div>
   <div class="lt">${ORDEM.map(k=>{const i=MODELOS.findIndex(m=>m.k===k),m=MODELOS[i],L=ST.obras[k].filter(v=>v.t!=='passagem'),f=L.filter(v=>v.t).length,bl=bloqueada(k),ok=ST.selos.includes(k);
     return `<div class="mod ${bl?'':''}" style="cursor:default"><canvas data-mini="${i}"></canvas><span><b>${ok?'🏅 ':bl?'🔒 ':''}${esc(m.n)}</b><small>${esc(m.d)}</small><small>${f} de ${L.length} vãos com esquadria</small><div class="bar"><i style="width:${L.length?f/L.length*100:0}%"></i></div>
-      <div class="row2" style="margin-top:8px"><button type="button" class="cta" data-entrar="${k}" ${bl?'disabled style="opacity:.5"':''}>${bl?'Bloqueada':'Montar'}</button><button type="button" class="cta alt" data-irlote="${k}">Ir até lá</button></div></span></div>`;}).join('')}</div>
+      <div class="row2" style="margin-top:8px"><button type="button" class="cta" data-entrar="${k}" ${bl?'disabled style="opacity:.5"':''}>${bl?(DEMO&&SO_ORIENT.includes(k)?'Na versão completa':'Bloqueada'):'Montar'}</button><button type="button" class="cta alt" data-irlote="${k}">Ir até lá</button></div></span></div>`;}).join('')}</div>
   <div class="box"><h3>Selos</h3><p>${ST.selos.length} de ${ORDEM.length} obras concluídas ${'🏅'.repeat(ST.selos.length)}</p></div>
   ${ST.carreira?'<button type="button" class="cta alt" id="bRecomecar">Recomeçar a carreira</button>':''}`;
   $('#pn').innerHTML=h;document.querySelectorAll('[data-mini]').forEach(c=>miniPlanta(c,MODELOS[+c.dataset.mini]));}
@@ -767,7 +775,8 @@ function painel(){if(ST.vista==='bairro'){painelBairro();return;}abas();let h=''
       <label class="f">Altura<select id="sH">${hs.map(x=>`<option value="${x}" ${Math.abs(s.h-x)<.01?'selected':''}>${fmt(x)} m</option>`).join('')}</select></label></div>
       <div class="row2" style="margin-top:10px"><button type="button" class="cta alt" id="bPerto">Ver de perto</button><button type="button" class="cta alt" data-tab="perfis">Ver os perfis</button></div></div>`;}
     h+=`<div class="vl">${lista.map(v=>`<button type="button" class="vi ${ST.sel===v.k?'on':''}" data-vi="${v.k}"><i>${ICO[v.t].replace('<svg','<svg width="22" height="18"')}</i><span><b>${esc(v.nome)}</b><small>${TIPOS[v.t].n} · ${fmt(v.w)} × ${fmt(v.h)} m</small></span></button>`).join('')}</div>`;}
-  if(ST.tab==='perfis'){const kS=kgObra('sup'),kG=kgObra('gold');
+  if(ST.tab==='perfis'&&DEMO){h+=`<div><h2>Perfis da obra</h2><p class="nt">Peso de alumínio, perfis e cortes de cada esquadria.</p></div><div class="box"><p>No <b>FC Mostruário 3D</b> completo você vê, para cada esquadria da obra, o código do perfil, a peça, a quantidade e o corte, e compara o peso da obra inteira em <b>Suprema</b> e <b>Gold</b>.</p><a class="cta" href="${CTA()}" target="_blank" rel="noopener" style="display:block;margin-top:10px">Quero o Mostruário completo</a></div><p class="nt">Medidas e pesos são demonstrativos: confirme sempre com o seu fornecedor.</p>`;}
+  else if(ST.tab==='perfis'){const kS=kgObra('sup'),kG=kgObra('gold');
     h+=`<div><h2>Perfis da obra</h2><p class="nt">Peso de alumínio das esquadrias desta obra (sem contramarco).</p></div>
     <div class="cmp"><div><span>Suprema</span><b>${fmt(kS,1)} kg</b></div><div><span>Gold</span><b>${fmt(kG,1)} kg</b></div><div><span>Diferença</span><b>${kS?'+'+Math.round((kG/kS-1)*100)+'%':'—'}</b></div></div>`;
     if(M.predio){const Q={};ST.vaos.forEach(v=>{if(v.t&&v.t!=='passagem'){const k=v.t+'|'+v.w+'|'+v.h;(Q[k]=Q[k]||{t:v.t,w:v.w,h:v.h,n:0,cm:new Set()}).n++;Q[k].cm.add(v.cm);}});const L=Object.values(Q).sort((a,b)=>b.n-a.n),tot=L.reduce((a,b)=>a+b.n,0);
@@ -783,7 +792,7 @@ let INTER=0,T0=Date.now();const conta=()=>{INTER++;checaOpiniao();};
 $('#tabs').addEventListener('click',e=>{const b=e.target.closest('[data-tab]');if(!b)return;ST.tab=b.dataset.tab;painel();});
 $('#pn').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const d=b.dataset;
   if(d.tab){ST.tab=d.tab;painel();return;}
-  if(d.mod!=null){const k=MODELOS[+d.mod].k;if(bloqueada(k)){dica('🔒 Termine a obra anterior para liberar esta.');return;}clearInterval(FILA_T);FILA_T=null;FILA=[];DETALHE.clear();ST.m=+d.mod;ST.vaos=ST.obras[k];ST.sel=null;montar();painel();vista('rua');conta();salvar();return;}
+  if(d.mod!=null){const k=MODELOS[+d.mod].k;if(bloqueada(k)){dica('🔒 Esta obra: '+motivo(k)+'.');return;}clearInterval(FILA_T);FILA_T=null;FILA=[];DETALHE.clear();ST.m=+d.mod;ST.vaos=ST.obras[k];ST.sel=null;montar();painel();vista('rua');conta();salvar();return;}
   if(d.linha){ST.linha=d.linha;montar();painel();conta();salvar();return;}
   if(d.tel){ST.tel=d.tel;montar();painel();conta();salvar();return;}
   if(d.cor){ST[d.cor]=d.v;aplicaCores();if(d.cor==='corTel'&&ST.tel==='plat')montar();painel();conta();salvar();return;}
@@ -818,7 +827,7 @@ const ray=new THREE.Raycaster(),pt=new THREE.Vector2();let down=null;
 cv.addEventListener('pointerdown',e=>{down=[e.clientX,e.clientY];if(!AV.on)ALVO=null;});
 cv.addEventListener('pointerup',e=>{if(!down)return;const mv=Math.hypot(e.clientX-down[0],e.clientY-down[1]);down=null;if(mv>6)return;
   const r=cv.getBoundingClientRect();pt.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);ray.setFromCamera(pt,cam);
-  if(ST.vista==='bairro'){if(AV.on)return;const h=ray.intersectObjects(LOTES.map(l=>l.hit),false)[0];if(h){const k=h.object.userData.lote,m=MODELOS.find(x=>x.k===k);dica(bloqueada(k)?'🔒 '+m.n+': termine a obra anterior.':m.n+' · toque em “Montar” no painel ou chegue no portão passeando.');}return;}
+  if(ST.vista==='bairro'){if(AV.on)return;const h=ray.intersectObjects(LOTES.map(l=>l.hit),false)[0];if(h){const k=h.object.userData.lote,m=MODELOS.find(x=>x.k===k);dica(bloqueada(k)?'🔒 '+m.n+': '+motivo(k)+'.':m.n+' · toque em “Montar” no painel ou chegue no portão passeando.');}return;}
   const objs=[];ESQ.forEach(q=>q.r.root.traverse(o=>{if(o.isMesh&&o.visible)objs.push(o);}));const hit=ray.intersectObjects(objs,false)[0];
   if(hit){ST.sel=hit.object.userData.vi;ST.tab='esq';selVisual();painel();conta();dica('Esquadria selecionada: troque a tipologia ou a medida no painel.');}});
 let dT=null;function dica(t){const el=$('#tip');el.textContent=t;el.hidden=false;clearTimeout(dT);dT=setTimeout(()=>{el.hidden=true;},2600);}
@@ -828,9 +837,13 @@ const KOP='fc_montecasa_opiniao';let NOTA=0,GOST=new Set();
 const GOSTOS=['A casa em 3D','Trocar as cores','Ver os perfis','Abrir as esquadrias','Comparar Suprema e Gold','Modo noite'];
 function abrirOp(){$('#stars').innerHTML=[1,2,3,4,5].map(n=>`<button type="button" data-n="${n}" aria-label="${n} estrela(s)" class="${n<=NOTA?'on':''}">★</button>`).join('');
   $('#chips').innerHTML=GOSTOS.map(g=>`<button type="button" class="${GOST.has(g)?'on':''}">${g}</button>`).join('');$('#opMsg').hidden=true;$('#md').hidden=false;}
-function checaOpiniao(){let ja=false;try{ja=!!localStorage.getItem(KOP);}catch(_){}if(ja||!$('#md').hidden)return;if(INTER>=6&&Date.now()-T0>60000){try{localStorage.setItem(KOP,'perguntado');}catch(_){}abrirOp();}}
+function checaOpiniao(){if(DEMO)return;let ja=false;try{ja=!!localStorage.getItem(KOP);}catch(_){}if(ja||!$('#md').hidden)return;if(INTER>=6&&Date.now()-T0>60000){try{localStorage.setItem(KOP,'perguntado');}catch(_){}abrirOp();}}
 setInterval(checaOpiniao,15000);
-$('#bOp').onclick=abrirOp;
+function CTA(){return 'https://wa.me/5566999867984?text='+encodeURIComponent('Olá! Testei o Monte sua Casa 3D no site da FC e quero conhecer o FC Mostruário 3D para a minha vidraçaria.');}
+if(DEMO){const b=$('#bOp');b.textContent='Quero o Mostruário 3D';b.onclick=()=>{try{parent!==window&&parent.postMessage({fc:'cta'},'*');}catch(_){}window.open(CTA(),'_blank','noopener');};
+  $('.top .lg small').textContent='Demonstração grátis · FC Consultoria em Esquadria';
+  setTimeout(()=>{if(INTER>=4)dica('Gostou? A versão completa está no FC Mostruário 3D: toque em “Quero o Mostruário 3D”.');},90000);}
+else $('#bOp').onclick=abrirOp;
 $('#stars').addEventListener('click',e=>{const b=e.target.closest('[data-n]');if(!b)return;NOTA=+b.dataset.n;document.querySelectorAll('#stars button').forEach(x=>x.classList.toggle('on',+x.dataset.n<=NOTA));});
 $('#chips').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const t=b.textContent;GOST.has(t)?GOST.delete(t):GOST.add(t);b.classList.toggle('on');});
 $('#opDepois').onclick=()=>{$('#md').hidden=true;};
@@ -847,6 +860,8 @@ function loop(){requestAnimationFrame(loop);passoAvatar();if(!AV.on){passoVoo();
 aplicaCores();tamanho();montar();painel();
 if(ST.vista==='bairro'){cam.position.set(-20,46,62);ctl.target.set(-8,0,0);}else{const M=MODELOS[ST.m],[LW,LD]=M.lote;cam.position.set(-LW*.35,4.2,LD/2+9);ctl.target.set(0,1.6,LD*.12);vista('rua');}
 botoes();
+(function(){const K='fc_montecasa_dica1';let ja=false;try{ja=!!localStorage.getItem(K);}catch(_){}if(ja)return;const d=$('#mcDica');d.hidden=false;const b=$('#mcDicaOk');setTimeout(()=>b.focus(),50);
+  const fecha=()=>{d.hidden=true;try{localStorage.setItem(K,'1');}catch(_){}};b.onclick=fecha;d.addEventListener('click',e=>{if(e.target===d)fecha();});document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!d.hidden)fecha();});})();
 loop();
 window.MC={ST,montar,painel,cam,ctl,AV,entrarObra,irBairro,andarOn,TECLAS,get ALVO(){return ALVO;}};
 })();
