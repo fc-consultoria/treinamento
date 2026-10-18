@@ -200,6 +200,41 @@ body.pres-on #hdTop,body.pres-on #app>.top:first-child,body.pres-on #acbar a,bod
 .stsel{font:600 12.5px var(--f-b);border:1px solid var(--line);border-radius:99px;padding:3px 8px;background:var(--surface);color:var(--fg)}
 .saving{position:fixed;right:16px;bottom:16px;background:var(--fg);color:var(--bg);padding:8px 14px;border-radius:9px;font-weight:600;font-size:14px;z-index:50}
 .accb{display:inline-flex;align-items:center;gap:6px;align-self:flex-start;border:1px solid var(--line);border-radius:99px;padding:5px 12px;font:600 13px var(--f-b);background:var(--surface-2);color:var(--fg);cursor:pointer}.accb:hover{border-color:currentColor}
+
+:root{--cx1:#0f4c81;--cx2:#1a9fb0}
+.cn-hero{border-radius:22px;padding:22px 24px;color:#fff;background:radial-gradient(120% 140% at 0% 0%,color-mix(in srgb,var(--cx2) 70%,#fff 0%) 0%,var(--cx1) 55%,color-mix(in srgb,var(--cx1) 70%,#000) 100%);box-shadow:0 18px 40px -14px color-mix(in srgb,var(--cx1) 70%,transparent);display:flex;flex-direction:column;gap:18px;position:relative}
+.cn-hrow{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:flex-start}
+.cn-ht{min-width:0;flex:1 1 360px}.cn-eye{font:700 12px var(--f-b);letter-spacing:2px;text-transform:uppercase;opacity:.8}
+.cn-ht h2{margin:4px 0 6px;font:800 clamp(26px,3.4vw,36px)/1.05 var(--f-d,inherit);color:#fff}.cn-ht p{margin:0;max-width:62ch;opacity:.9;line-height:1.45}
+.cn-acts{display:flex;gap:8px;flex-wrap:wrap}
+.cn-bt2{border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.12);color:#fff;border-radius:11px;padding:9px 14px;font:700 14px var(--f-b);cursor:pointer;backdrop-filter:blur(4px)}.cn-bt2:hover{background:rgba(255,255,255,.22)}.cn-bt2.pri{background:#fff;color:var(--cx1);border-color:#fff}
+.cn-pop{position:absolute;right:24px;top:70px;z-index:20;background:var(--surface);color:var(--fg);border:1px solid var(--line);border-radius:16px;padding:14px;box-shadow:0 18px 40px rgba(0,0,0,.25);display:flex;flex-direction:column;gap:10px;width:min(340px,calc(100vw - 48px))}
+.cn-sw{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.cn-sw button,.cn-md button{border:2px solid var(--line);background:var(--surface-2);color:var(--fg);border-radius:12px;padding:6px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;font:600 12.5px var(--f-b)}
+.cn-sw i{display:block;width:100%;height:28px;border-radius:8px}.cn-sw .on,.cn-md .on{border-color:var(--cx2);box-shadow:0 0 0 2px color-mix(in srgb,var(--cx2) 30%,transparent)}
+.cn-md{display:flex;gap:6px}.cn-md button{flex:1;flex-direction:row;justify-content:center;padding:8px}
+.cn-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.cn-stat{all:unset;box-sizing:border-box;display:flex;flex-direction:column;gap:2px;padding:12px 14px;border-radius:14px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:#fff;cursor:default}
+button.cn-stat[data-ok]{cursor:pointer}button.cn-stat[data-ok]:hover{background:rgba(255,255,255,.2)}
+.cn-stat span{font:600 12.5px var(--f-b);opacity:.85}.cn-stat b{font:800 24px var(--f-m,monospace);font-variant-numeric:tabular-nums}.cn-stat small{opacity:.8;font-size:12.5px}.cn-stat.al{background:rgba(255,120,100,.28)}
+.cn-met{background:rgba(0,0,0,.14);border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;gap:10px}.cn-mt{display:flex;flex-direction:column;gap:2px}.cn-mt small{opacity:.8}
+.cn-help{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 16px}.cn-help summary{cursor:pointer;font-weight:700}
+.cn-hg{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:10px}.cn-hg div{display:flex;flex-direction:column;gap:3px;border-left:3px solid var(--cx2);padding-left:10px}.cn-hg span{color:var(--muted);font-size:13.5px}
+.cn-grid{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:18px;align-items:start}
+.cn-sec{display:flex;align-items:baseline;gap:10px;margin-bottom:10px}.cn-sec h3{margin:0;font-size:20px}.cn-sec span{color:var(--muted);font-size:13px}
+.cn-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
+.cn-card{all:unset;box-sizing:border-box;cursor:pointer;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:14px;position:relative;overflow:hidden;transition:transform .15s,box-shadow .15s;border-top:5px solid var(--c)}
+.cn-card:hover{transform:translateY(-2px);box-shadow:0 14px 30px -12px color-mix(in srgb,var(--c) 45%,transparent)}.cn-card:focus-visible{outline:3px solid var(--cx2);outline-offset:2px}
+.cn-ch{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.cn-ch .av{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;color:#fff;font-weight:800}.cn-cn{min-width:0;flex:1}.cn-cn b{display:block;font-size:17px}.cn-cn small{color:var(--muted)}
+.cn-fz{display:flex;flex-direction:column;gap:6px;font-size:13.5px}.cn-dots{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}.cn-dots span{height:7px;border-radius:99px;background:var(--surface-2);border:1px solid var(--line)}.cn-dots .ok{background:color-mix(in srgb,var(--c) 55%,var(--surface));border-color:transparent}.cn-dots .cur{background:var(--c);border-color:transparent;box-shadow:0 0 0 2px color-mix(in srgb,var(--c) 25%,transparent)}
+.cn-bars{display:flex;flex-direction:column;gap:9px}.cn-bl{display:flex;justify-content:space-between;font-size:13px;color:var(--muted)}.cn-bl b{color:var(--fg);font-variant-numeric:tabular-nums}.cn-bt{height:8px;border-radius:99px;background:var(--surface-2);overflow:hidden}.cn-bt i{display:block;height:100%;border-radius:99px;transition:width .6s}
+.cn-now{display:flex;flex-direction:column;gap:6px;background:var(--surface-2);border-radius:12px;padding:10px 12px}.cn-now div{display:flex;flex-direction:column;gap:1px}.cn-now span{font:700 11.5px var(--f-b);letter-spacing:1px;text-transform:uppercase;color:var(--muted)}.cn-now b{font-size:14px;font-weight:600}.cn-now em{color:var(--muted);font-style:normal;font-weight:500}
+.cn-ft{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}.cn-go{font-weight:700;color:var(--c)}
+.cn-side{display:flex;flex-direction:column;gap:14px}.cn-box h3{margin:0 0 10px}
+.cn-ag{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}.cn-ag li{display:grid;grid-template-columns:58px minmax(0,1fr);gap:10px;align-items:center}
+.cn-dt{display:flex;flex-direction:column;align-items:center;border-radius:10px;padding:5px 0;background:color-mix(in srgb,var(--c) 14%,var(--surface));font:600 12px var(--f-m,monospace);color:var(--fg)}.cn-dt b{font-size:14px}
+.cn-ag button{all:unset;cursor:pointer;display:flex;flex-direction:column;min-width:0}.cn-ag button b{font-size:13.5px;line-height:1.3}.cn-ag button small{color:var(--muted);font-size:12px}.cn-ag button:hover b{text-decoration:underline}
+@media(max-width:1000px){.cn-grid{grid-template-columns:1fr}.cn-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:520px){.cn-cards{grid-template-columns:1fr}.cn-pop{right:12px;left:12px;width:auto}}
 </style></head><body>
 <div class="rgate" id="gate" hidden><form id="gateForm"><small>FC Consultoria · Matriz</small><h1>Consultorias presenciais</h1>
 <label>Login<input name="login" autocomplete="username" required placeholder="matriz"></label>
@@ -352,6 +387,49 @@ let PRES=null;
 const sigla=e=>esc(e.nome.split(/\s|·/).filter(Boolean).slice(0,2).map(w=>w[0]).join('').toUpperCase());
 function trilha(ks,M,foco){return `<div class="trilha">${FASES.map(([ic,t,d],i)=>{const aqui=ks.filter(k=>M[k].fase===i);return `<div class="fz ${foco&&M[foco].fase>i?'pass':''} ${foco&&M[foco].fase===i?'cur':''}"><div class="fz-n"><span>${ic}</span><i>${i+1}</i></div><b>${t}</b><small>${d}</small>
    <div class="fz-cl">${aqui.map(k=>`<button type="button" class="chipc" style="--c:${E[k].c}" data-k="${k}" title="${esc(E[k].nome)}"><span>${sigla(E[k])}</span>${foco?'Você está aqui':esc(E[k].nome.split(' · ')[0])}</button>`).join('')}</div></div>`;}).join('')}</div>`;}
+/* ===== Central das consultorias · visual novo (didático) e cor da tela ===== */
+const CX_TEMAS=[['oceano','Oceano','#0f4c81','#1a9fb0'],['esmeralda','Esmeralda','#0f6b4f','#3fae6a'],['uva','Uva','#4c2a85','#b04a9b'],['por-do-sol','Pôr do sol','#9a3412','#e0832a'],['rubi','Rubi','#8f1d2c','#d9503f'],['grafite','Grafite','#1f2a37','#4b5f73']];
+const CX_MODOS=[['','Automático'],['light','Claro'],['dark','Escuro']];
+function cxTema(){let t={};try{t=JSON.parse(localStorage.getItem('fc_cx_tema')||'{}')}catch(_){}const T=CX_TEMAS.find(x=>x[0]===t.cor)||CX_TEMAS[0];
+ const r=document.documentElement;r.style.setProperty('--cx1',T[2]);r.style.setProperty('--cx2',T[3]);if(t.modo)r.setAttribute('data-theme',t.modo);else r.removeAttribute('data-theme');return {cor:T[0],modo:t.modo||''};}
+function cxSalvaTema(o){let t={};try{t=JSON.parse(localStorage.getItem('fc_cx_tema')||'{}')}catch(_){}Object.assign(t,o);try{localStorage.setItem('fc_cx_tema',JSON.stringify(t))}catch(_){}cxTema();}
+cxTema();
+function centralNovo({ks,M,ag,prox,sol,pend,saud,hoje,dias,hs}){const t=cxTema();
+ const bar=(lab,v,dica,cor)=>`<div class="cn-bar" title="${dica}"><div class="cn-bl"><span>${lab}</span><b>${v==null?'não iniciado':v+'%'}</b></div><div class="cn-bt"><i style="width:${v||0}%;background:${cor}"></i></div></div>`;
+ const totFl=ks.length?Math.round(ks.reduce((s,k)=>s+(M[k].fl||0),0)/ks.length):0;
+ return `<section class="cn-hero">
+  <div class="cn-hrow"><div class="cn-ht"><span class="cn-eye">${hoje.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'})}</span><h2>${saud}, Fernando</h2>
+   <p>${ks.length} consultoria${ks.length>1?'s':''} em andamento. Aqui você vê em que fase cada cliente está, o que está acontecendo agora e o que precisa da sua atenção.</p></div>
+   <div class="cn-acts"><button type="button" class="cn-bt2" id="cxCor" aria-expanded="false">🎨 Cor da tela</button><button class="cn-bt2" type="button" id="presAbrir">🎬 Apresentar ao cliente</button><button class="cn-bt2 pri" type="button" id="nova2">+ Nova empresa</button></div></div>
+  <div class="cn-pop" id="cxPop" hidden><b>Cor da tela</b><div class="cn-sw">${CX_TEMAS.map(([id,n,a,b])=>`<button type="button" data-cxcor="${id}" class="${t.cor===id?'on':''}" title="${n}"><i style="background:linear-gradient(135deg,${a},${b})"></i><span>${n}</span></button>`).join('')}</div>
+   <b>Fundo</b><div class="cn-md">${CX_MODOS.map(([id,n])=>`<button type="button" data-cxmodo="${id}" class="${t.modo===id?'on':''}">${id==='dark'?'🌙 ':id==='light'?'☀️ ':'🖥 '}${n}</button>`).join('')}</div><small>Fica guardado neste navegador.</small></div>
+  <div class="cn-stats">
+   <button type="button" class="cn-stat" ${prox?`data-ok="${prox.k}" data-ot="age"`:''}><span>🗓 Próxima agenda</span><b>${prox?dBR2(prox.a.data).slice(0,5)+(prox.a.hora?' · '+esc(prox.a.hora):''):'—'}</b><small>${prox?esc(E[prox.k].nome.split(' · ')[0])+' · '+dias(prox.a.data):'nada nos próximos 14 dias'}</small></button>
+   <div class="cn-stat"><span>📈 Fluxo médio</span><b>${totFl}%</b><small>das etapas concluídas, somando os clientes</small></div>
+   <button type="button" class="cn-stat ${sol?'al':''}" ${sol?`data-ok="${ks.find(k=>M[k].sol)}" data-ot="sol"`:''}><span>📨 Pedidos de clientes</span><b>${sol}</b><small>${sol?'aguardando sua resposta':'nada novo'}</small></button>
+   <div class="cn-stat"><span>📌 Pendências</span><b>${pend.length}</b><small>${pend.length?'listadas ao lado':'tudo em dia'}</small></div></div>
+  <div class="cn-met"><div class="cn-mt"><b>Método FC · onde cada cliente está</b><small>Cada consultoria passa pelas 5 fases. O nome do cliente aparece na fase em que ele está hoje.</small></div>${trilha(ks,M,null)}</div>
+ </section>
+ <div id="presPick" class="box" hidden><h3>🎬 Qual cliente está na sua frente?</h3><p class="nota" style="margin:0 0 10px">A tela mostra só a consultoria dele: sem valores, horas ou dados de outros clientes.</p><div style="display:flex;gap:8px;flex-wrap:wrap">${Object.keys(E).map(k=>`<button class="btn" type="button" data-pres="${k}"><span class="av" style="background:${E[k].c};width:26px;height:26px;border-radius:8px;font-size:11px;display:inline-grid;vertical-align:middle;margin-right:6px">${sigla(E[k])}</span>${esc(E[k].nome)}</button>`).join('')}</div></div>
+ <details class="cn-help"><summary>❔ Como ler este painel</summary><div class="cn-hg">
+  <div><b>Fase</b><span>Os 5 pontos mostram em que etapa do Método FC o cliente está. O ponto cheio é a fase atual.</span></div>
+  <div><b>Barras</b><span><i>Fluxo do processo</i>: etapas do processo concluídas. <i>Plano de ação</i>: pontos resolvidos. <i>Catálogo</i>: etapas do catálogo virtual prontas.</span></div>
+  <div><b>Agora</b><span>A etapa em andamento e a próxima agenda com o cliente.</span></div>
+  <div><b>🔐 Acesso do cliente</b><span>Quantos painéis o cliente vê no link. Toque para liberar ou bloquear.</span></div></div></details>
+ <div class="cn-grid"><div class="cn-main"><div class="cn-sec"><h3>Empresas</h3><span>toque no cartão para abrir a consultoria</span></div><div class="cn-cards">${ks.map(k=>{const e=E[k],m=M[k],F=FASES[m.fase],st=e.st||[];
+  return `<button type="button" class="cn-card" style="--c:${e.c}" data-k="${k}">
+   <div class="cn-ch"><span class="av" style="background:${e.c}">${sigla(e)}</span><div class="cn-cn"><b>${esc(e.nome)}</b><small>${esc(e.cid||'')}</small></div>${onlineAgora(k)?'<span class="onl">● no link agora</span>':''}${st[1]?`<span class="pill ${esc(st[0]||'')}">${esc(st[1])}</span>`:''}${m.sol?`<span class="pill p-bad">📨 ${m.sol}</span>`:''}</div>
+   <div class="cn-fz"><div class="cn-dots">${FASES.map((f,i)=>`<span class="${i<m.fase?'ok':i===m.fase?'cur':''}" title="${f[1]}"></span>`).join('')}</div><span>${F[0]} Fase ${m.fase+1} de 5 · <b>${F[1]}</b></span></div>
+   <div class="cn-bars">${bar('Fluxo do processo',m.fl,'Etapas do processo concluídas',e.c)}${bar('Plano de ação',m.ac,'Pontos do plano de ação resolvidos',e.c)}${bar('Catálogo',m.ca,'Etapas do catálogo virtual prontas',e.c)}</div>
+   <div class="cn-now">${m.andP?`<div><span>▶ Agora</span><b>${esc(m.andP.replace(/^(Revenda|F[áa]brica)\s*·\s*/,''))}</b></div>`:''}<div><span>🗓 Próxima agenda</span><b>${m.prox?dBR2(m.prox.data).slice(0,5)+' · '+esc(m.prox.titulo)+' <em>('+dias(m.prox.data)+')</em>':'a combinar'}</b></div></div>
+   <div class="cn-ft"><span role="button" tabindex="0" class="accb" data-acc="${k}" title="Escolher os painéis que este cliente vê no link">🔐 Acesso do cliente · <b>${abasLib(e).filter(x=>x!=='acao'||e.acao).length}</b> de ${CLI_ABAS.filter(x=>x!=='acao'||e.acao).length}</span><span class="cn-go">Abrir consultoria →</span></div></button>`;}).join('')}</div></div>
+  <aside class="cn-side"><div class="box cn-box"><h3>🗓 Próximos 14 dias</h3>${ag.length?`<ol class="cn-ag">${ag.slice(0,8).map(({k,a})=>`<li><span class="cn-dt" style="--c:${E[k].c}"><b>${dBR2(a.data).slice(0,5)}</b>${a.hora?esc(a.hora):''}</span><button type="button" data-ok="${k}" data-ot="age"><b>${esc(a.titulo)}</b><small>${esc(E[k].nome.split(' · ')[0])} · ${dias(a.data)}</small></button></li>`).join('')}</ol>`:'<p class="nota" style="margin:0">Nada marcado.</p>'}</div>
+   <div class="box cn-box"><h3>📌 Precisa da sua atenção</h3>${pend.length?pend.slice(0,8).map(([k,tp,ic,tx,n])=>`<button type="button" class="pd" data-ok="${k}" data-ot="${tp}"><span>${ic}</span><div style="min-width:0;flex:1"><b>${esc(tx)}</b><small>${esc(n)}</small></div><span class="muted">›</span></button>`).join(''):'<p class="nota" style="margin:0">Tudo em dia. ✓</p>'}</div></aside></div>`;}
+document.addEventListener('click',ev=>{const t=ev.target;if(!t.closest)return;
+ if(t.closest('#cxCor')){const p=document.getElementById('cxPop');if(p){p.hidden=!p.hidden;t.closest('#cxCor').setAttribute('aria-expanded',!p.hidden);}return;}
+ const c=t.closest('[data-cxcor]');if(c){cxSalvaTema({cor:c.dataset.cxcor});document.querySelectorAll('[data-cxcor]').forEach(b=>b.classList.toggle('on',b===c));return;}
+ const m=t.closest('[data-cxmodo]');if(m){cxSalvaTema({modo:m.dataset.cxmodo});document.querySelectorAll('[data-cxmodo]').forEach(b=>b.classList.toggle('on',b===m));return;}
+ const p=document.getElementById('cxPop');if(p&&!p.hidden&&!t.closest('#cxPop'))p.hidden=true;});
 function cards(){if(PUB)return;const ks0=Object.keys(E);const M={};ks0.forEach(k=>{M[k]=metricas(k,E[k]);M[k].fase=faseDe(E[k]);});const foco=PRES&&E[PRES]?PRES:null;const ks=foco?[foco]:ks0;
   const hoje=new Date(),hs=hoje.toISOString().slice(0,10),em14=new Date(Date.now()+14*864e5).toISOString().slice(0,10);
   const ag=ks.flatMap(k=>(E[k].agenda||[]).filter(a=>a.data>=hs&&a.data<=em14&&!a.feito&&(!foco||a.cli)).map(a=>({k,a}))).sort((x,y)=>(x.a.data+(x.a.hora||'')).localeCompare(y.a.data+(y.a.hora||'')));
@@ -365,7 +443,7 @@ function cards(){if(PUB)return;const ks0=Object.keys(E);const M={};ks0.forEach(k
     (e.dem||[]).filter(d=>d[3]==='p-acc').slice(0,2).forEach(d=>pend.push([k,'dem','🔵',d[1],e.nome]));});
   const kp=(ic,lab,val,sub,cls,attrs)=>`<button type="button" class="kp ${cls||''}" ${attrs||''}><span class="kpi-ic">${ic}</span><span>${lab}</span><b data-cnt="${typeof val==='number'?val:''}">${typeof val==='number'?0:val}</b><small>${sub}</small></button>`;
   $('#emps').className='central'+(foco?' pres':'');
-  $('#emps').innerHTML=`<section class="cx-hero">
+  $('#emps').innerHTML=!foco?centralNovo({ks,M,ag,prox,sol,pend,saud,hoje,dias,hs}):`<section class="cx-hero">
      <div class="cx-top"><div><div class="eyebrow">${foco?'FC Consultoria · método de consultoria presencial':hoje.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'})}</div>
        <h2>${foco?`Consultoria ${esc(fe.nome.split(' · ')[0])}`:`${saud}, Fernando`}</h2>
        <p>${foco?'Do diagnóstico ao resultado: cada etapa registrada, com plano de ação, planilhas próprias, catálogo virtual e acompanhamento online em tempo real.':`${ks.length} consultoria${ks.length>1?'s':''} em andamento${prox?` · próxima agenda <b>${dias(prox.a.data)}</b> com <b>${esc(E[prox.k].nome.split(' · ')[0])}</b>`:''}${sol?` · <b>${sol}</b> pedido${sol>1?'s':''} novo${sol>1?'s':''} de cliente`:''}.`}</p></div>
