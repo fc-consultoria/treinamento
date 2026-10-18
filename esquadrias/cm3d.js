@@ -223,10 +223,13 @@
   const ad=new THREE.Mesh(new THREE.BoxGeometry(W,.0008,comp*.72),new THREE.MeshStandardMaterial({color:0xf3f3ef,roughness:.5}));ad.position.set(0,-H/2-.0004,-comp*.14);g.add(ad);
   const lv=new THREE.Mesh(new THREE.BoxGeometry(W,.0008,comp*.3),new THREE.MeshStandardMaterial({color:0xf3f3ef,roughness:.5,side:THREE.DoubleSide}));lv.geometry.translate(0,0,comp*.15);lv.position.set(0,-H/2-.0004,comp*.22);lv.rotation.x=.45;g.add(lv);return g;}
  function guaCarregar(url){if(GSH)return Promise.resolve(GSH);return fetch(url).then(r=>r.json()).then(j=>{GSH=j;Object.keys(j).forEach(k=>{GPECAS[k]=()=>{const o=perfilGua(j[k],.06);o.rotation.set(.3,-.55,0);return o;};});return j;});}
+ function perfilReg(code,d){if(GPECAS[code])return;GPECAS[code]=()=>{const g=new THREE.Group(),K=.01,L=Math.max(d.w,d.h)*K*1.0,mt=mats().alu.clone();mt.side=THREE.DoubleSide;
+  d.s.forEach(o=>{const S=new THREE.Shape(o.o.map(([x,y])=>new THREE.Vector2(x*K,y*K)));o.h.forEach(h=>S.holes.push(new THREE.Path(h.map(([x,y])=>new THREE.Vector2(x*K,y*K)))));const ge=new THREE.ExtrudeGeometry(S,{depth:L,bevelEnabled:false,curveSegments:2});ge.translate(0,0,-L/2);ge.computeVertexNormals();const m=new THREE.Mesh(ge,mt);m.castShadow=true;g.add(m);});
+  g.rotation.set(.25,.6,0);return g;};}
  function guaEspuma(k,w,h){GPECAS[k]=()=>{const o=espuma(w,h,.07);o.rotation.set(.4,-.6,0);return o;};}
  let TPINT=null;const TINTAS={reboco:null,branco:0xf3f1ea,amarelo:0xf2c230,azul:0x2f6db5,vermelho:0xc23a2c};
  function pintar(S,c){if(!S||!S.rm)return;const h=TINTAS[c];const m=S.rm;if(h==null){m.map=mats().reboco.map;m.color.setHex(0xffffff);}else{m.map=TPINT||(TPINT=texRuido('#ffffff',.035));m.color.setHex(h);}m.needsUpdate=true;}
  function desmontar(S,on){if(!S)return;S.exOn=!!on;if(on){S.alvo=[new THREE.Vector3(1.25,.55,4.1),new THREE.Vector3(0,0,.5)];}else{S.alvo=[new THREE.Vector3(1.1,.45,2.1),new THREE.Vector3(0,0,0)];}}
  function reboco(S,on){if(!S)return;S.rebOn=!!on;S.parts.reb.userData.on=!!on;}
- window.CM3D={desmontar,guaCarregar,guaEspuma,GPECAS,janela,reboco,pintar,carregar,cena,passo,cortar,camGet,camSet,destruir,pecaCena,fotos,quadros,QUADROS,QN,PECAS};
+ window.CM3D={perfilReg,desmontar,guaCarregar,guaEspuma,GPECAS,janela,reboco,pintar,carregar,cena,passo,cortar,camGet,camSet,destruir,pecaCena,fotos,quadros,QUADROS,QN,PECAS};
 })();

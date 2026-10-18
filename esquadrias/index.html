@@ -163,7 +163,7 @@ table.tb tr.hi td{background:#e7f7ec;font-weight:700}
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="../auth.js"></script>
-<script src="cm3d.js?v=9"></script>
+<script src="cm3d.js?v=10"></script>
 <script>
 /* Treinamento em Esquadrias 3D · FC Consultoria em Esquadria · Sinop-MT · todos os direitos reservados */
 const IMG='/perfis/img/',PERFIS='/perfis/';
@@ -174,7 +174,7 @@ const kg=n=>n==null?'':n.toLocaleString('pt-BR',{minimumFractionDigits:3,maximum
 const mm=n=>Number(n).toLocaleString('pt-BR',{maximumFractionDigits:1});
 /* perfil pelo código (aceita códigos com alternativa "LG-047 / LG-159") */
 function F(c){return IDX[c]||null;}
-function pfInfo(c){const p=F(c);if(!p)return {c,ok:false};return {c,ok:true,k:p.k,n:p.n,peso:num(p.p),d:p.d,d3:p.d3,i:p.i,l:p.l,img:IMG+(p.d3?p.i:'c'+p.i)+'.webp'};}
+function pfInfo(c){const p=F(c);if(!p)return {c,ok:false};return {c,ok:true,k:p.k,n:p.n,peso:num(p.p),d:p.d,d3:p.d3,i:p.i,l:p.l,sh:p.sh,fonte:p.fonte,img:p.img||IMG+(p.d3?p.i:'c'+p.i)+'.webp'};}
 /* cartão grande */
 function card(c,fn,lin){const x=pfInfo(c),cl=lin||(c.startsWith('LG')||c.startsWith('BG')||c==='US-622'?'g':'s');
  if(!x.ok)return `<div class="pc nx ${cl}"><div class="im"><div style="position:absolute;inset:0;display:grid;place-items:center;color:#9aa8b0;font:700 13px var(--f-b);text-align:center;padding:10px">Perfil fora do<br>catálogo 3D</div></div><div class="tx">${fn?`<span class="fn">${esc(fn)}</span>`:''}<b>${esc(c)}</b><span>Medidas e peso: confira no catálogo do fabricante</span></div></div>`;
@@ -182,7 +182,7 @@ function card(c,fn,lin){const x=pfInfo(c),cl=lin||(c.startsWith('LG')||c.startsW
 /* linha de lista (função + código) */
 function row(fn,c){const alt=c.split(' ou ').map(s=>s.trim());const x=pfInfo(alt[0]);const cods=alt.join(' ou ');
  if(!x.ok)return `<div class="row nx"><div class="ph">fora do<br>catálogo 3D</div><div><small>${esc(fn)}</small><b>${esc(cods)}</b></div><div class="w"><small>peso: catálogo<br>do fabricante</small></div></div>`;
- return `<button type="button" class="row" data-pf="${esc(alt[0])}"><img loading="lazy" src="${x.img}" alt=""><div><small>${esc(fn)}</small><b>${esc(cods)}</b>${x.d?`<small>📐 ${mm(x.d[0])} × ${mm(x.d[1])} mm</small>`:''}</div><div class="w">${x.peso!=null?kg(x.peso)+'<small> kg/m</small>':''}${x.d3?'<br><small>↻ 3D</small>':''}</div></button>`;}
+ return `<button type="button" class="row" data-pf="${esc(alt[0])}"><img loading="lazy" src="${x.img}" alt=""><div><small>${esc(fn)}</small><b>${esc(cods)}</b>${x.d?`<small>📐 ${mm(x.d[0])} × ${mm(x.d[1])} mm</small>`:''}</div><div class="w">${x.peso!=null?kg(x.peso)+'<small> kg/m</small>':'<small>peso: catálogo<br>do fabricante</small>'}${x.d3?'<br><small>↻ 3D</small>':''}</div></button>`;}
 function lista(arr){return `<div class="rows">${arr.map(([f,c])=>row(f,c)).join('')}</div>`;}
 function soma(arr){let s=0,n=0,f=0;arr.forEach(([_,c])=>{const x=pfInfo(c.split(' ou ')[0].trim());if(x.ok&&x.peso!=null){s+=x.peso;n++;}else f++;});return {s,n,f};}
 function sumLine(arr){const r=soma(arr);return `<div class="sum">⚖ Soma dos pesos por metro: <b>${kg(r.s)} kg/m</b> <span style="color:var(--tm);font-weight:500">(${r.n} perfis${r.f?`; ${r.f} fora do catálogo não entram na soma`:''})</span></div>`;}
@@ -507,6 +507,8 @@ if(String(c).startsWith('P:')){const k=c.slice(2),it=CMP.find(x=>x[0]===k)||[k,'
  if(String(c).startsWith('D:')){const t=c.slice(2);$('#mdC').textContent='🧊 '+(T3[t]||'Esquadria em 3D');$('#mdN').textContent='Gire, abra as folhas, desmonte e veja os cortes';
   $('#mdB').innerHTML=`<div style="position:relative;flex:1;display:flex"><iframe id="d3f" src="/treinamento/demo/index.html?previa&esq=1&t=${encodeURIComponent(t)}" title="Esquadria em 3D" allow="fullscreen"></iframe>${ALUNO?'<div style="position:absolute;inset:0;cursor:not-allowed" title="O Fernando está conduzindo"></div>':''}</div>`;$('#md').hidden=false;MD=c;LIVE.push();return;}
  const x=pfInfo(c);if(!x.ok)return;$('#mdC').textContent=c;$('#mdN').textContent=(x.n||'')+(x.peso!=null?' · '+kg(x.peso)+' kg/m':'')+(x.d?' · '+mm(x.d[0])+' × '+mm(x.d[1])+' mm':'');
+ if(x.sh){$('#mdB').innerHTML='<div style="position:relative;flex:1;display:flex"><div id="pc3" style="flex:1;background:radial-gradient(circle at 50% 40%,#fff,#dfe7eb)"></div><p style="position:absolute;left:12px;bottom:8px;margin:0;font:600 12.5px var(--f-b);color:var(--tm)">'+(x.fonte?esc(x.fonte):'Seção do Orientativo FC 3D')+'</p></div>';$('#md').hidden=false;MD=c;LIVE.push();
+  CM3D.carregar().then(()=>{if(MD!==c)return;CM3D.perfilReg('X:'+c,x.sh);PEC=CM3D.pecaCena('X:'+c,$('#pc3'),true);const P2=PEC;angPad($('#pc3').parentNode,AD.orbit(()=>P2.r?P2:null),{elMin:-80});});return;}
  $('#mdB').innerHTML=x.d3?`<div style="position:relative;flex:1;display:flex"><iframe id="pf3f" src="${PERFIS}?ver=${encodeURIComponent(x.k.split(' / ')[0])}&embed=1" title="Perfil ${esc(c)} em 3D" allow="fullscreen"></iframe></div>`:`<div class="alt"><div><img src="${x.img}" alt=""><p>Este perfil não tem modelo 3D: veja o corte.</p></div></div>`;$('#md').hidden=false;MD=c;LIVE.push();const f=$('#pf3f');if(f)angPad(f.parentNode,AD.frame(f),{elMin:-80});}
 let MD=null,PEC=null;function fecha(){$('#md').classList.remove('fs');$('#mdFs').textContent='⛶ Tela cheia';if(PEC){PEC.fim();PEC=null;}$('#md').hidden=true;$('#mdB').innerHTML='';if(MD){MD=null;if(!ALUNO)LIVE.push();}}
 addEventListener('message',e=>{if(e.origin===location.origin&&e.data&&e.data.fc3d==='fechou')fecha();});
@@ -692,6 +694,7 @@ function participar(){/* cliente / funcionário acompanhando: ouve o Fernando, c
  $('#alN').onsubmit=ev=>{ev.preventDefault();nome=ev.target.n.value.trim().slice(0,40);emp=ev.target.e.value.trim().slice(0,40);if(!nome)return;try{localStorage.setItem('fc_esq_aluno',JSON.stringify({n:nome,e:emp}))}catch(_){}marca();entrar();};}
 async function iniciar(){try{const j=await fetch('perfis.json?v=1',{cache:'no-cache'}).then(r=>r.json());const raw=j.P;P={};IDX={};
   Object.entries(raw).forEach(([k,v])=>{const o=Object.assign({k},v);P[k]=o;IDX[k]=o;k.split(' / ').forEach(c=>IDX[c.trim()]=o);});}catch(e){console.warn(e);}
+ try{const x=await fetch('perfis_extra.json?v=1',{cache:'no-cache'}).then(r=>r.json());Object.entries(x).forEach(([k,v])=>{if(IDX[k])return;const o=Object.assign({k},v);P[k]=o;IDX[k]=o;});}catch(e){console.warn(e);}
  if(ALUNO){participar();return;}const h=location.hash.slice(1);go(R[h]?h:null);if(APRES.length>=10){try{localStorage.setItem('fc_esq_sala',APRES)}catch(_){}apresentar(APRES);}}
 marca();if(!ALUNO){const g=$('#bGrav');if(g)g.hidden=false;}voltaBtn(!ALUNO);if(ALUNO)iniciar();else gateUI(()=>{try{localStorage.setItem('fc_eu','1')}catch(_){}iniciar();},{soMatriz:true});
 </script>
