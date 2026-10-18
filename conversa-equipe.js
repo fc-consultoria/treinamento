@@ -157,7 +157,7 @@
   }
   async function iniciar(){
     const {data:{session}} = await sb.auth.getSession();
-    if(!session){ setTimeout(iniciar, 4000); return; }
+    if(!session||!session.user){ setTimeout(iniciar, 4000); return; }
     S.eu = String(session.user.email||'').toLowerCase();
     // Só equipe FC: nunca em link de cliente (?k=) ou de aluno
     const qs=new URLSearchParams(location.search);

@@ -184,6 +184,6 @@ async function iniciar(){D=await fetch('dados.json?v=1',{cache:'no-cache'}).then
   if(!ok){$('#app').innerHTML='<p class="vazio">Link inválido ou expirado. Fale com a FC Consultoria.</p>';return;}marca('uso exclusivo do cliente');voltaBtn(false);iniciar();}
  else gateUI(async()=>{try{const r=await sb.rpc('trein_is_admin');ADM=!!r.data;}catch(_){}marca('uso interno');voltaBtn(true);iniciar();});})();
 </script>
-<script src="../conversa-equipe.js?v=9"></script>
+<script src="../conversa-equipe.js?v=10"></script>
 </body>
 </html>
