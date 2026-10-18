@@ -147,6 +147,7 @@ table.tb tr.hi td{background:#e7f7ec;font-weight:700}
 .dn-c{width:118px;height:118px;border-radius:50%;display:grid;place-items:center}.dn-c>div{width:76px;height:76px;border-radius:50%;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center}.dn-c b{font:800 22px var(--f-d)}.dn-c small{font-size:11.5px;color:var(--tm)}
 .dn-n{font-size:14px}.dn-v{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;font:600 13px var(--f-b);font-variant-numeric:tabular-nums}.dn-v small{flex-basis:100%;color:var(--tm);font-weight:500}
 .gdim{display:block;margin-top:3px;font:600 12px var(--f-b);color:var(--tl)}
+.cmExp{position:absolute;left:12px;top:12px;z-index:4;border:0;border-radius:99px;padding:9px 15px;font:700 14px var(--f-b);background:#13232e;color:#fff;cursor:pointer;box-shadow:0 6px 16px rgba(0,0,0,.25)}.cmExp:hover{background:#0f6b6e}#cmhost[data-fs] .cmExp,#cmhost[data-ex] .cmExp{display:none}
 </style>
 </head>
 <body>
@@ -349,7 +350,7 @@ function mCm(){const F=window.CM3D&&CM3D.__fotos||{};
  quiz([['Quando a esquadria de alumínio é instalada?',['Depois que o contramarco está chumbado e a obra pronta','Antes de chumbar o contramarco','Junto com o reboco'],0,'O contramarco é chumbado primeiro; a esquadria entra depois, com a obra acabada.'],['Qual a distância da primeira grapa até o canto, no desenho do treinamento?',['150 mm','450 mm','50 mm'],0,'Primeira grapa a 150 mm do canto; as demais a cada 450 mm.'],['Para que serve o esquadro ESQ160?',['Manter o requadro no esquadro durante a obra','Fixar o vidro','Vedar a água'],0,'Ele trava os cantos em 90° e sai depois da cura da argamassa.']])+foot(2);}
 function placeCm(){const ph=document.querySelector('.cm3');let H=$('#cmhost');
  if(!ph){if(H)H.style.display='none';return;}
- if(!H){H=document.createElement('div');H.id='cmhost';H.style.cssText='position:absolute;z-index:5;border-radius:14px;overflow:hidden;box-shadow:0 10px 30px rgba(10,40,50,.18)';document.body.appendChild(H);
+ if(!H){H=document.createElement('div');H.id='cmhost';{const bx=document.createElement('button');bx.type='button';bx.className='cmExp';bx.dataset.fs='cmhost';bx.textContent='⤢ Ver em tela inteira';H.appendChild(bx);}H.style.cssText='position:absolute;z-index:5;border-radius:14px;overflow:hidden;box-shadow:0 10px 30px rgba(10,40,50,.18)';document.body.appendChild(H);
   if(ALUNO){const cv=document.createElement('div');cv.style.cssText='position:absolute;inset:0;z-index:2;cursor:not-allowed';H.appendChild(cv);}}
  if(!H.dataset.fs){const r=ph.getBoundingClientRect();Object.assign(H.style,{display:'block',left:(r.left+scrollX)+'px',top:(r.top+scrollY)+'px',width:r.width+'px',height:r.height+'px'});}
  if(!CMS&&!placeCm.ld){placeCm.ld=1;CM3D.carregar().then(()=>{CMS=CM3D.cena(H);CM3D.reboco(CMS,CMR);CM3D.pintar(CMS,CMP2);CM3D.passo(CMS,CMK);placeCm.k=CMK;CM3D.janela(CMS,{cor:CMC,fol:CMF});angPad(H,AD.orbit(()=>CMS&&CMS.r?CMS:null,()=>{CMS.alvo=null;}));CM3D.cortar(CMS,CMX,CMK);if(!CM3D.__fotos){try{CM3D.__fotos=CM3D.fotos();if(AT==='cm')re();}catch(e){console.warn(e);}}quadrosPrep();}).catch(e=>{console.warn(e);ph.textContent='Não foi possível carregar o 3D.';});}
@@ -529,7 +530,7 @@ document.addEventListener('click',e=>{if(ALUNO&&!e.target.closest('.q [data-o],#
  if(d.cmt){CMT=d.cmt;return re();}
  if(d.catl){CATL=d.catl;CATG='';return re();}if(d.catg!==undefined){CATG=d.catg;return re();}
  if(d.tipf!==undefined){TIPF=d.tipf;return re();}if(d.tip){TIPS=d.tip;return re();}
- if(d.cmk!==undefined){CMK=+d.cmk;return re();}
+ if(d.cmk!==undefined){CMK=+d.cmk;{const H=$('#cmhost');if(H&&!H.dataset.fs&&!ALUNO&&!t.closest('#fsBar'))telaCheia('cmhost');}return re();}
  if(d.gl){GL=d.gl;GI=0;GE=null;return re();}if(d.gi!==undefined){GI=+d.gi;GE=null;return re();}if(d.ge){GE=+d.ge;return re();}
  if(d.mxl){MXL=d.mxl;return re();}if(d.mxv){MXV=d.mxv;return re();}
  if(d.crk){CRK=d.crk;CRA=0;return re();}
