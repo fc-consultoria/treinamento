@@ -149,6 +149,7 @@ table.tb tr.hi td{background:#e7f7ec;font-weight:700}
 .gdim{display:block;margin-top:3px;font:600 12px var(--f-b);color:var(--tl)}
 .cmExp{position:absolute;left:12px;top:12px;z-index:4;border:0;border-radius:99px;padding:9px 15px;font:700 14px var(--f-b);background:#13232e;color:#fff;cursor:pointer;box-shadow:0 6px 16px rgba(0,0,0,.25)}.cmExp:hover{background:#0f6b6e}#cmhost[data-fs] .cmExp,#cmhost[data-ex] .cmExp{display:none}
 body.lupa-on #cmhost canvas{cursor:none}
+.ob3{position:relative;border:1px solid var(--ln,#d8e2e6);border-radius:14px;overflow:hidden;height:min(82vh,760px);background:#eef2f1}.ob3 iframe{border:0;width:100%;height:100%;display:block}
 </style>
 </head>
 <body>
@@ -307,6 +308,7 @@ function lupaDesenha(){const m=LM;if(!LUPA||!m)return;const H=document.getElemen
  c.strokeStyle='rgba(15,79,83,.45)';c.lineWidth=2;c.beginPath();c.moveTo(N/2,N/2-18);c.lineTo(N/2,N/2+18);c.moveTo(N/2-18,N/2);c.lineTo(N/2+18,N/2);c.stroke();
  c.fillStyle='rgba(15,79,83,.85)';c.beginPath();c.roundRect?c.roundRect(N/2-34,N-62,68,34,17):c.rect(N/2-34,N-62,68,34);c.fill();c.fillStyle='#fff';c.font='bold 20px system-ui';c.textAlign='center';c.fillText(LZ.toFixed(LZ%1?1:0)+'×',N/2,N-38);}
 let LRAF=0;function lupaLoop(){cancelAnimationFrame(LRAF);if(!LUPA)return;lupaDesenha();LRAF=requestAnimationFrame(lupaLoop);}
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-ob3fs]');if(!b)return;const f=document.querySelector('#obra3d iframe');if(f&&f.requestFullscreen)f.requestFullscreen().catch(()=>{});},true);
 document.addEventListener('mousemove',e=>{if(!LUPA)return;const H=document.getElementById('cmhost'),cv=H&&H.querySelector('canvas');let L=document.getElementById('lupa');
  if(!cv){if(L)L.style.display='none';return;}const r=cv.getBoundingClientRect();const dentro=e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom&&!e.target.closest('#fsBar,#exBar,.angw,.cmExp');
  if(!dentro){if(L)L.style.display='none';LM=null;return;}
@@ -370,6 +372,9 @@ function mCm(){const F=window.CM3D&&CM3D.__fotos||{};
   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-top:12px">${CMST.map((x,k)=>`<button type="button" data-cmk="${k}" style="text-align:left;border:1px solid ${k===CMK?'var(--tl)':'var(--ln)'};background:${k===CMK?'var(--tl)':'#fff'};color:${k===CMK?'#fff':'var(--ink)'};border-radius:10px;padding:8px 10px;cursor:pointer;font:700 14px var(--f-b)"><span style="opacity:.7">${k+1}.</span> ${esc(x[0])}</button>`).join('')}</div>
   <div class="call t" style="margin-top:10px"><b>Passo ${CMK+1} · ${esc(CMST[CMK][0])}:</b> ${esc(CMST[CMK][1])}</div>
  ${CMK===CMST.length-1?`<div style="margin-top:14px"><h3 style="margin:0 0 8px;font:800 20px var(--f-d)">🪟 Escolha a esquadria que vai no contramarco</h3><div class="chips">${Object.entries(T3).map(([k,n])=>`<button class="${k===CMT?'on':''}" data-cmt="${k}">${esc(n)}</button>`).join('')}</div>${e3(CMT,560)}</div>`:''}</div>`+
+ `<div class="sec" id="obra3d"><h2>🏠 Passo a passo da instalação na obra · Casa 3D</h2><p class="nt">A obra completa, na ordem real: medir o vão no tijolo, produzir e chumbar o contramarco, rebocar, conferir o vão com o contramarco, instalar a esquadria e o acabamento com alisar MP-347 (opcional). Escolha Suprema ou Gold, o trilho da porta de correr (convencional ou macarrão com soleira de pedra) e veja a lista de material com o peso.</p>
+  <div class="ob3"><iframe src="casa3d.html?v=1" title="Casa 3D: instalação das esquadrias na obra" loading="lazy" allow="fullscreen"></iframe></div>
+  <div class="chips" style="margin-top:8px"><button type="button" data-ob3fs="1">⤢ Abrir em tela inteira</button></div></div>`+
  quiz([['Quando a esquadria de alumínio é instalada?',['Depois que o contramarco está chumbado e a obra pronta','Antes de chumbar o contramarco','Junto com o reboco'],0,'O contramarco é chumbado primeiro; a esquadria entra depois, com a obra acabada.'],['Qual a distância da primeira grapa até o canto, no desenho do treinamento?',['150 mm','450 mm','50 mm'],0,'Primeira grapa a 150 mm do canto; as demais a cada 450 mm.'],['Para que serve o esquadro ESQ160?',['Manter o requadro no esquadro durante a obra','Fixar o vidro','Vedar a água'],0,'Ele trava os cantos em 90° e sai depois da cura da argamassa.']])+foot(2);}
 function placeCm(){const ph=document.querySelector('.cm3');let H=$('#cmhost');
  if(!ph){if(H)H.style.display='none';return;}
