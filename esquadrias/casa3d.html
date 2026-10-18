@@ -78,6 +78,16 @@ td code{font:600 12.5px var(--f-m);color:var(--tl)}
   aside{border-left:0;border-top:1px solid var(--line);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
   .brand h1{font-size:21px}
 }
+/* tela cheia (funciona também no celular, mesmo sem a tela cheia do navegador) */
+body.fs .stage{position:fixed;inset:0;height:auto!important;z-index:40}
+body.fs aside{position:fixed;left:0;right:0;bottom:0;z-index:45;max-height:62vh;border:0;border-top:1px solid var(--line);border-radius:18px 18px 0 0;box-shadow:0 -12px 30px rgba(0,0,0,.25);transform:translateY(105%);transition:transform .25s;padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+body.fs.sheet aside{transform:none}
+body.fs .brand{display:none}
+body.fs .hint{bottom:calc(76px + env(safe-area-inset-bottom,0px))}
+.fsbar{position:absolute;left:0;right:0;bottom:0;z-index:46;display:flex;gap:6px;align-items:center;padding:10px max(12px,env(safe-area-inset-left,0px)) calc(10px + env(safe-area-inset-bottom,0px));background:color-mix(in srgb,var(--panel) 94%,transparent);border-top:1px solid var(--line);backdrop-filter:blur(8px)}
+body.fs .fsbar{position:fixed;z-index:60}
+.fsbar span{flex:1;min-width:0;font:700 14px var(--f-b);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fsbar .tb{flex:none}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 
@@ -92,8 +102,10 @@ td code{font:600 12.5px var(--f-m);color:var(--tl)}
         <button class="tb" id="tCorte" type="button">Ver por dentro</button>
         <button class="tb" id="tFrente" type="button">Frente</button>
         <button class="tb" id="tFundos" type="button">Fundos</button>
+        <button class="tb fsb" id="tFull" type="button" aria-pressed="false">⤢ Tela cheia</button>
       </div>
     </div>
+    <div class="fsbar" id="fsbar" hidden><button type="button" class="tb" id="fsPainel">☰ Painel</button><span id="fsPasso">Escolha a esquadria no painel</span><button type="button" class="tb" id="fsVolta">◀</button><button type="button" class="tb on" id="fsProx">Próximo ▶</button></div>
     <div class="hint" id="hint">1. Escolha uma esquadria no catálogo ao lado</div>
   </div>
 
@@ -380,7 +392,7 @@ function medUI(v,n,qual){const q2=qual===2;const el=document.getElementById(q2?'
   if(n>=M.length){const lw=Math.min(M[0].mm,M[1].mm,M[2].mm),lh=Math.min(M[3].mm,M[4].mm,M[5].mm),dd=Math.abs(M[6].mm-M[7].mm),dw=Math.max(M[0].mm,M[1].mm,M[2].mm)-lw,dh=Math.max(M[3].mm,M[4].mm,M[5].mm)-lh;
     res=`<div class="medR"><b>${q2?'Dentro do contramarco':'Vão no tijolo'}: ${f(lw)} × ${f(lh)} mm</b> (a menor de cada)<br>Diferença na largura ${dw} mm · na altura ${dh} mm · entre diagonais ${dd} mm → ${dd<=3&&dw<=5&&dh<=5?'<span class="okk">vão no esquadro, pode seguir</span>':'<span class="nok">corrigir o vão antes</span>'}<br>${q2?`<b>Produzir a esquadria: ${f(lw-6)} × ${f(lh-(v.mont&&v.mont.mac?3:6))} mm</b> (3 mm de folga por lado)`:`Produzir o contramarco: ${f(lw-30)} × ${f(lh-(v.mont&&v.mont.mac?15:30))} mm`}</div>`;}
   el.innerHTML=`<table class="medt">${rows||'<tr><td colspan="2">A trena está medindo…</td></tr>'}</table>${res}`;}
-function stepsUI(){$('#steps').innerHTML=passos().map((p,i)=>{const tx=ATUAL&&ATUAL.mont&&ATUAL.mont.mac&&TXTMAC[i]?TXTMAC[i]:i===7&&ATUAL&&TXT6[ATUAL.t]?TXT6[ATUAL.t]:p.x;return `<li class="${i<PASSO?'ok':i===PASSO?'at':''}"><div><b>${p.t}</b>${i===PASSO?`<small>${tx}</small><span class="fz">${p.f.map(f=>`<i>${f}</i>`).join('')}</span><em class="dc">⚠ ${p.d}</em>${i===0?'<div id="medT"></div>':i===5?'<div id="medT2"></div>':''}`:''}</div></li>`;}).join('');
+function stepsUI(){setTimeout(()=>{try{fsUI();}catch(_){}} ,0);$('#steps').innerHTML=passos().map((p,i)=>{const tx=ATUAL&&ATUAL.mont&&ATUAL.mont.mac&&TXTMAC[i]?TXTMAC[i]:i===7&&ATUAL&&TXT6[ATUAL.t]?TXT6[ATUAL.t]:p.x;return `<li class="${i<PASSO?'ok':i===PASSO?'at':''}"><div><b>${p.t}</b>${i===PASSO?`<small>${tx}</small><span class="fz">${p.f.map(f=>`<i>${f}</i>`).join('')}</span><em class="dc">⚠ ${p.d}</em>${i===0?'<div id="medT"></div>':i===5?'<div id="medT2"></div>':''}`:''}</div></li>`;}).join('');
   if((PASSO===0||PASSO===5)&&ATUAL&&ATUAL.mont){const q=PASSO===5?2:1,U=ATUAL.mont.F[q===2?'trena2':'trena'].userData;setTimeout(()=>medUI(ATUAL,Math.max(0,U.feitos||0),q),0);}
   $('#bProx').disabled=!ATUAL;$('#bDes').disabled=!(ATUAL||ULT);$('#bVolta').disabled=!ATUAL||PASSO<=0;$('#bProx').textContent=PASSO>=passos().length-1?'Concluir instalação':'Próximo passo';}
 function vaoUI(){const v=ATUAL;$('#vao').innerHTML=v?`${v.nome}<br>Vão: ${(v.w*1000).toFixed(0)} × ${(v.h*1000).toFixed(0)} mm · peitoril ${(v.s*1000).toFixed(0)} mm<br>Contramarco: ${(v.w*1000-30).toFixed(0)} × ${(v.h*1000-(v.mont&&v.mont.mac?15:30)).toFixed(0)} mm${v.mont&&v.mont.mac?' (3 lados)':''} (contramarco 15 mm menor por lado)<br>Linha ${LIN[v.mont?v.mont.linha:LINHA].nome} · profundidade do marco ${({sup:{correr2:71,correr4:141,giro:41,maximar:29},gold:{correr2:103,correr4:192,giro:40,maximar:37}})[v.mont?v.mont.linha:LINHA][v.t]} mm${v.mont&&v.mont.mac?' · trilho macarrão na soleira de pedra':''}`:'Nenhum vão escolhido. Depois de escolher a esquadria, toque num vão laranja da casa.';}
@@ -454,6 +466,17 @@ function passoExplodir(v,k){if(!v||!v.mont)return;const E=v.mont.etapas;
   LAB.forEach(l=>{l.o.getWorldPosition(tw);const d=tw.clone().sub(cen);d.y*=1.4;if(d.lengthSq()<1e-4)d.set(0,1,0);d.normalize();const off=d.multiplyScalar(.45).add(up.clone().multiplyScalar(.12+(l.i%3)*.09));
     const p=tw.clone().add(off.multiplyScalar(k));l.sp.position.copy(p);l.sp.material.opacity=k;l.ln.material.opacity=k;const a=l.ln.geometry.attributes.position;a.setXYZ(0,tw.x,tw.y,tw.z);a.setXYZ(1,p.x,p.y-.035,p.z);a.needsUpdate=true;});}
 
+/* tela cheia */
+document.body.appendChild($('#fsbar'));const tF=$('#tFull');function telaCheia(on){document.body.classList.toggle('fs',on);document.body.classList.remove('sheet');$('#fsbar').hidden=!on;tF.classList.toggle('on',on);tF.setAttribute('aria-pressed',String(on));tF.textContent=on?'✕ Sair da tela cheia':'⤢ Tela cheia';
+  try{if(on&&document.documentElement.requestFullscreen&&!document.fullscreenElement)document.documentElement.requestFullscreen().catch(()=>{});else if(!on&&document.fullscreenElement)document.exitFullscreen().catch(()=>{});}catch(_){}fsUI();setTimeout(tamanho,60);}
+tF.onclick=()=>telaCheia(!document.body.classList.contains('fs'));
+document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement&&document.body.classList.contains('fs'))telaCheia(false);});
+$('#fsPainel').onclick=()=>document.body.classList.toggle('sheet');
+$('#fsProx').onclick=()=>{if(ATUAL)$('#bProx').click();else document.body.classList.add('sheet');};
+$('#fsVolta').onclick=()=>$('#bVolta').click();
+cv.addEventListener('pointerdown',()=>document.body.classList.remove('sheet'));
+$('#cat').addEventListener('click',()=>{if(document.body.classList.contains('fs'))setTimeout(()=>document.body.classList.remove('sheet'),250);});
+function fsUI(){const ps=passos();if(document.body.classList.contains('fs')&&!ATUAL&&!TIPO)hint('1. Toque em ☰ Painel e escolha a esquadria');$('#fsPasso').textContent=ATUAL&&PASSO>=0?(PASSO+1)+'/'+ps.length+' · '+ps[PASSO].t:(TIPO?'Toque num vão laranja':'☰ Painel: escolha a esquadria');$('#fsProx').textContent=ATUAL&&PASSO>=ps.length-1?'Concluir ✓':'Próximo ▶';$('#fsVolta').disabled=!ATUAL||PASSO<=0;}
 /* ferramentas de vista */
 const tT=$('#tTelhado'),tC=$('#tCorte');
 tT.onclick=()=>{telhado.visible=!telhado.visible;tT.classList.toggle('on',telhado.visible);};
