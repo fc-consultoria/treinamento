@@ -86,6 +86,7 @@ body.fs .brand{display:none}
 body.fs .hint{bottom:calc(76px + env(safe-area-inset-bottom,0px))}
 .fsbar{position:absolute;left:0;right:0;bottom:0;z-index:46;display:flex;gap:6px;align-items:center;padding:10px max(12px,env(safe-area-inset-left,0px)) calc(10px + env(safe-area-inset-bottom,0px));background:color-mix(in srgb,var(--panel) 94%,transparent);border-top:1px solid var(--line);backdrop-filter:blur(8px)}
 body.fs .fsbar{position:fixed;z-index:60}
+.fsbar[hidden]{display:none!important}
 .fsbar span{flex:1;min-width:0;font:700 14px var(--f-b);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .fsbar .tb{flex:none}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
