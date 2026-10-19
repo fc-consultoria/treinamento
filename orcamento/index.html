@@ -100,7 +100,7 @@ const fotoUrl=f=>!f?'':/^https?:/.test(f)?f:'../'+f;
 const FX=()=>Object.assign({verm:0,lar:6,verde:8,dias:15},(D&&D.cab&&D.cab.estFx)||{});
 function estDe(id){const i=D&&D.itens.find(x=>x.id===id);return i&&i.est!=null?i.est:null;}
 function estB(q){if(q==null||q==='')return '';const f=FX(),v=+q;const [bg,fc,t]=v<f.verm?['','#dc2626','sem estoque']:v<f.lar?['','#f97316','estoque baixo']:v>f.verde?['','#16a34a','estoque bom']:['','#eab308','estoque no limite'];
-  return `<span class="est" title="${t[0].toUpperCase()+t.slice(1)}${ADM?' ('+String(v).replace('.',',')+' barras)':''}" style="background:${fc}"></span>`;}
+  return `<span class="est" title="${t[0].toUpperCase()+t.slice(1)}${ADM?' (saldo '+String(v).replace('.',',')+')':''}" style="background:${fc}"></span>`;}
 function toast(t){const d=document.createElement('div');d.className='toast';d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),2800);}
 const ST={aberto:'Em aberto',enviado:'Enviado ao cliente',aprovado:'Aprovado',perdido:'Perdido',cancelado:'Cancelado'};
 const PAG_PADRAO=['PIX','Dinheiro','Cartão de débito','Cartão de crédito','Boleto','Transferência','Cheque'];
@@ -253,7 +253,7 @@ function telaCfg(){if(!CF){carregaCfg().then(tela);return '<p class="vazio">Carr
    <div class="row" style="margin-top:10px"><input class="inp" id="vN" placeholder="Nome do vendedor" style="max-width:240px"><input class="inp" id="vT" placeholder="Telefone / WhatsApp (opcional)" style="max-width:220px"><button class="btn pri" type="button" id="vAdd">＋ Cadastrar vendedor</button></div>
    <p class="nota">Cada vendedor recebe um link próprio. Ele só vê o preço de venda da tabela: não vê custo, fornecedor nem as planilhas. <b>Desativar</b> bloqueia o link na hora e guarda os orçamentos; <b>Excluir</b> apaga o vendedor, mas os orçamentos dele continuam na lista com o nome.</p></div>
   <div class="box"><h3>📊 Itens da precificação (${CF.itens.length}) ${CF.itens_em?`<span class="nota" style="font-weight:500">· atualizados em ${new Date(CF.itens_em).toLocaleString('pt-BR')}</span>`:''}</h3>
-   <div class="row"><select class="inp" id="plSel" style="max-width:420px"><option value="">— escolher a planilha de precificação —</option>${PLS.map(p=>`<option value="${p.id}" ${CF.planilha_id===p.id?'selected':''}>${esc(p.nome)}</option>`).join('')}</select>
+   <div class="row"><div id="plSel" style="display:flex;flex-direction:column;gap:4px;min-width:280px">${PLS.length?PLS.map(p=>`<label style="display:flex;gap:8px;align-items:center;font-weight:600"><input type="checkbox" value="${p.id}" ${((CF.cab&&CF.cab.plIds)||[CF.planilha_id]).includes(p.id)?'checked':''}> ${esc(p.nome)}</label>`).join(''):'<span class="nota">Nenhuma planilha ainda.</span>'}<span class="nota">Marque as planilhas que entram no orçamento (ex.: perfis CDA + acessórios Udinese).</span></div>
     <button class="btn pri" type="button" id="plSync">🔄 Atualizar itens da precificação</button>${FC?`<label class="btn or" style="cursor:pointer">📥 Importar planilha nova (.xlsx)<input type="file" accept=".xlsx" id="plImp" hidden></label>`:''}<span class="nota" id="plMsg"></span></div>
    <p class="nota">Lê as abas que têm a coluna de preço de venda ("Preço de Venda Barra" ou "Valor da Vara c/ 6 metros") e traz código, descrição, cor, peso e preço de venda. As fotos já colocadas são mantidas. ${semFoto?`<b>${semFoto} itens sem foto.</b>`:''}</p>
    ${CF.itens.length?`<div class="row" style="margin:8px 0"><input class="inp" id="iF" placeholder="Filtrar itens" value="${esc(IF)}" style="max-width:320px"><button class="btn" type="button" id="fAuto">🖼 Buscar fotos automáticas</button></div>
@@ -287,43 +287,47 @@ async function salvaCfg(msg){const r=!FC?await sb.rpc('orc_g_cfg_salvar',{p_chav
 async function carregaFAuto(){if(FAUTO)return FAUTO;FAUTO=await fetch('fotos-auto.json?v=1').then(r=>r.json()).catch(()=>({}));return FAUTO;}
 function fotoAutoDe(i,F){const toks=[...String(i.ref||'').split(/[|\/,;]+/),...String(i.cod||'').split(/[|\/,;]+/),...(String(i.desc).toUpperCase().match(/\b[A-Z]{1,5}-?\d{2,6}[A-Z]?\b/g)||[])];for(const t of toks){const k=nk(t);if(k.length>=3&&F[k])return F[k];}return '';}
 const COR_RX=[['BRANCO','Branco'],['PRETO','Preto'],['NATURAL','Natural'],['FOSCO','Fosco'],['BRONZE','Bronze'],['CHAMPANHE','Champanhe'],['AMADEIRADO','Amadeirado'],['CEREJEIRA','Cerejeira'],['ANODIZADO','Anodizado'],['BRILHANTE','Brilhante']];
-const corDe=t=>{const u=sem(t).toUpperCase();const k=COR_RX.find(x=>u.includes(x[0]));return k?k[1]:'';};
+const corDe=t=>{const u=sem(t).toUpperCase();const k=COR_RX.find(x=>u.includes(x[0]));if(k)return k[1];if(/\bBCO\b/.test(u))return 'Branco';if(/\b(PRT|PTO|PTF)\b/.test(u))return 'Preto';if(/\bNAT\b/.test(u))return 'Natural';return '';};
 function lerAba(sh,mt){const keys=Object.keys(sh.c),rows={};keys.forEach(a=>{const mm=a.match(/^([A-Z]+)(\d+)$/);if(mm)(rows[+mm[2]]=rows[+mm[2]]||[]).push(mm[1]);});
   const R=Object.keys(rows).map(Number).sort((a,b)=>a-b),txt=(c,r)=>{const v=mt.val(sh,c+r);return v==null?'':String(v).trim();};
-  const PRC=h=>h==='preco de venda barra'||h.startsWith('valor da vara')||h==='preco de venda';
+  const PRC=h=>h==='preco de venda barra'||h.startsWith('valor da vara')||h==='preco de venda'||h.startsWith('valores unitario')||h.startsWith('valor unitario')||h.startsWith('valores do pacote');
   let col=null,linha='',cor='',forn='',lastH=-9;const out=[];
   for(const r of R){const cs=rows[r];const H={};cs.forEach(c=>{const v=mt.val(sh,c+r);if(typeof v==='string')H[c]=sem(v).replace(/\s+/g,' ').trim();});
-    const fm=Object.values(H).map(h=>h.match(/fornecedor\s*:\s*([a-z0-9-]+)/)).find(Boolean);if(fm)forn=fm[1].toUpperCase();
+    const fm=Object.values(H).map(h=>h.match(/(?:fornecedor|provedor)\s*:\s*([a-z0-9-]+)/)).find(Boolean);if(fm)forn=fm[1].toUpperCase();
     const pcs=Object.keys(H).filter(c=>PRC(H[c])).sort((a,b)=>(H[b]==='preco de venda barra')-(H[a]==='preco de venda barra')||a.length-b.length||a.localeCompare(b)),pc=pcs[0];
-    if(pc&&lastH===r-1&&col){const t=col.d?String(mt.val(sh,col.d+r)??'').trim():'';if(t&&!PRC(sem(t))){cor=corDe(t)||t;}lastH=r;continue;}
+    if(pc&&lastH===r-1&&col){const t=col.d?String(mt.val(sh,col.d+r)??'').trim():'';if(t&&!PRC(sem(t))&&!/^descri/.test(sem(t))){cor=corDe(t)||t;}lastH=r;continue;}
     if(pc){lastH=r;const f=(t)=>Object.keys(H).filter(c=>t(H[c])).sort((a,b)=>a.length-b.length||a.localeCompare(b))[0];
       const cod=f(h=>h==='codigo revenda'||h==='codigo'),des=f(h=>h==='codigo fornecedor'||h.startsWith('descricao'));
       let dc=des;if(!dc&&cod){const nx=String.fromCharCode(cod.charCodeAt(cod.length-1)+1);dc=cod.slice(0,-1)+nx;}
-      col={p:pc,cod,d:dc,cor:f(h=>h==='cor'),forn:f(h=>h==='nome fornecedor'),peso:f(h=>h==='peso barra'||h.startsWith('peso (p')),ref:f(h=>h.includes('sistema')||h==='cod. cem'||h==='cem')};
-      linha=(!des&&dc&&mt.val(sh,dc+r))?String(mt.val(sh,dc+r)).replace(/\s{2,}.*$/,'').trim():'';cor='';continue;}
-    if(!col)continue;const g=c=>c?mt.val(sh,c+r):null;const desc=String(g(col.d)??'').replace(/\s+/g,' ').trim(),pr=g(col.p),codv=String(g(col.cod)??'').trim();
+      col={p:pc,ac:/unitari|pacote/.test(H[pc]),pp:Object.keys(H).find(c=>H[c].startsWith('valores do pacote')&&c!==pc),cod,d:dc,cor:f(h=>h==='cor'),forn:f(h=>h==='nome fornecedor'),peso:f(h=>h==='peso barra'||h.startsWith('peso (p')),ref:f(h=>h.includes('sistema')||h==='cod. cem'||h==='cem')};
+      linha=(!des&&dc&&mt.val(sh,dc+r))?String(mt.val(sh,dc+r)).replace(/\s{2,}.*$/,'').replace(/^COMPONENTES P\/ ALUM[IÍ]NIO\s*-\s*/i,'Acessórios · ').trim():'';cor='';continue;}
+    if(!col)continue;const g=c=>c?mt.val(sh,c+r):null;const desc=String(g(col.d)??'').replace(/\s+/g,' ').trim(),codv=String(g(col.cod)??'').trim();let pr=g(col.p),un='BR';
+    if(/^descri/i.test(sem(desc))&&!codv)continue;
+    if(col.ac){un='UN';if(!(typeof pr==='number'&&pr>0)&&col.pp){const q=g(col.pp);if(typeof q==='number'&&q>0){pr=q;un=/rolo/i.test(desc)?'RL':'PCT';}}}
     if(!(typeof pr==='number'&&pr>0&&isFinite(pr))){if(desc&&!codv&&desc.length<40){const c2=corDe(desc);cor=c2||desc;}continue;}
     if(!desc)continue;let cod=codv;if(!cod||cod==='*'){const t=desc.toUpperCase().match(/\b[A-Z]{1,5}[- ]?\d{2,6}[A-Z]?\b/);cod=t?t[0]:'—';}
     let cr=String(g(col.cor)??'').trim();cr=cr?cr.charAt(0).toUpperCase()+cr.slice(1).toLowerCase():(cor||corDe(desc));
     const ref=String(g(col.ref)??'').trim();const pe=g(col.peso);
-    out.push({cod,desc,cor:cr,linha,forn:String(g(col.forn)??'').trim()||forn,ref:ref&&ref!=='-'?ref:'',un:'BR',peso:typeof pe==='number'?Math.round(pe*1000)/1000:null,preco:Math.round(pr*100)/100});}
+    out.push({cod,desc,cor:cr,linha,forn:String(g(col.forn)??'').trim()||forn,ref:ref&&ref!=='-'?ref:'',un,peso:typeof pe==='number'?Math.round(pe*1000)/1000:null,preco:Math.round(pr*100)/100});}
   return out;}
-async function sincronizar(){const pid=$('#plSel').value,m=$('#plMsg');if(!pid){m.textContent='Escolha a planilha.';return;}m.textContent='Lendo a planilha…';
-  const r=FC?await sb.from('cons_planilhas').select('dados').eq('id',pid).maybeSingle():await sb.rpc('cons_portal_planilha',{p_chave:VKEY,p_id:pid});if(r.error||!r.data){m.textContent='Não consegui abrir a planilha.';return;}
-  const model=r.data.dados,mt=new Planilha.Motor(model),F=await carregaFAuto(),antes=Object.fromEntries((CF.itens||[]).map(i=>[i.id,i]));
+async function sincronizar(){const ids=[...document.querySelectorAll('#plSel input:checked')].map(x=>x.value),m=$('#plMsg');if(!ids.length){m.textContent='Marque ao menos uma planilha.';return;}m.textContent='Lendo as planilhas…';
+  const F=await carregaFAuto(),antes=Object.fromEntries((CF.itens||[]).map(i=>[i.id,i]));
   const out=[],vistos=new Set();let dup=0,abas=[];
+  for(const pid of ids){
+  const r=FC?await sb.from('cons_planilhas').select('dados').eq('id',pid).maybeSingle():await sb.rpc('cons_portal_planilha',{p_chave:VKEY,p_id:pid});if(r.error||!r.data){m.textContent='Não consegui abrir uma das planilhas.';return;}
+  const model=r.data.dados,mt=new Planilha.Motor(model);
   for(const sh of model.sheets){const L=lerAba(sh,mt);if(!L.length)continue;abas.push(sh.n);
     for(const it of L){const id=(nk(it.cod)+'_'+nk(it.desc).slice(0,48)+'_'+nk(it.cor)).slice(0,90);if(vistos.has(id)){dup++;continue;}vistos.add(id);it.id=id;
-      const a=antes[id];it.foto=a&&a.foto?a.foto:fotoAutoDe(it,F);if(a&&a.fotoManual)it.fotoManual=1;if(a&&a.est!=null)it.est=a.est;out.push(it);}}
+      const a=antes[id];it.foto=a&&a.foto?a.foto:fotoAutoDe(it,F);if(a&&a.fotoManual)it.fotoManual=1;if(a&&a.est!=null)it.est=a.est;out.push(it);}}}
   if(!out.length){m.textContent='Nenhum item com preço de venda encontrado nesta planilha.';return;}
-  CF.itens=out;CF.planilha_id=pid;CF.itens_em=new Date().toISOString();const ok=await salvaCfg();
+  CF.itens=out;CF.planilha_id=ids[0];CF.cab=CF.cab||{};CF.cab.plIds=ids;CF.itens_em=new Date().toISOString();const ok=await salvaCfg();
   if(ok){m.textContent=`✓ ${out.length} itens das abas: ${abas.join(', ')}${dup?` · ${dup} repetidos ignorados`:''} · ${out.filter(i=>i.foto).length} com foto`;tela();}}
 function wireCfg(){if(!CF)return;const q=s=>document.getElementById(s);
   if(q('plSync'))q('plSync').onclick=sincronizar;
   if(q('plImp'))q('plImp').onchange=async e=>{const f=e.target.files[0];if(!f)return;const m=q('plMsg');const nome=prompt('Nome da planilha:',f.name.replace(/\.xlsx$/i,'').replace(/_/g,' '));if(!nome){e.target.value='';return;}
     m.textContent='Lendo '+f.name+'…';try{const md=await Planilha.importar(await f.arrayBuffer());
       const r=await sb.from('cons_planilhas').insert({empresa_id:EMP,nome:nome.trim().slice(0,120),dados:md,atualizado_por:'FC'}).select('id,nome,atualizado').single();if(r.error)throw r.error;
-      PLS.push(r.data);CF.planilha_id=r.data.id;tela();const s2=q('plSel');s2.value=r.data.id;await sincronizar();}catch(err){m.textContent='Não foi possível importar: '+(err.message||err);}};
+      PLS.push(r.data);CF.cab=CF.cab||{};CF.cab.plIds=[...new Set([...(CF.cab.plIds||[CF.planilha_id].filter(Boolean)),r.data.id])];tela();await sincronizar();}catch(err){m.textContent='Não foi possível importar: '+(err.message||err);}};
   if(q('iF'))q('iF').oninput=e=>{IF=e.target.value;const p=e.target.selectionStart;tela();const n=q('iF');n.focus();n.setSelectionRange(p,p);};
   if(q('fAuto'))q('fAuto').onclick=async()=>{const F=await carregaFAuto();let n=0;CF.itens.forEach(i=>{if(!i.foto){const f=fotoAutoDe(i,F);if(f){i.foto=f;n++;}}});if(await salvaCfg())toast(n+' fotos encontradas');tela();};
   $$('[data-up]').forEach(inp=>inp.onchange=async()=>{const f=inp.files[0];if(!f)return;const it=CF.itens.find(i=>i.id===inp.dataset.up);const b=await reduz(f);
