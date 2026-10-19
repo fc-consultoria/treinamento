@@ -84,7 +84,7 @@ table.it input.pz{width:92px;padding:6px;border:1px solid #f2a51e;border-radius:
 <script src="../planilha.js?v=2"></script>
 <script>
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)],esc=t=>String(t??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const Q=new URLSearchParams(location.search),VKEY=Q.get('v')||'';
+const Q=new URLSearchParams(location.search),VKEY=Q.get('v')||Q.get('k')||'',GESTOR=!Q.get('v')&&!!Q.get('k');
 const BASE='https://fc-consultoria.github.io/treinamento/';
 const nk=s=>String(s||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
 const sem=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
@@ -99,15 +99,15 @@ function toast(t){const d=document.createElement('div');d.className='toast';d.te
 const ST={aberto:'Em aberto',enviado:'Enviado ao cliente',aprovado:'Aprovado',perdido:'Perdido',cancelado:'Cancelado'};
 const PAG_PADRAO=['PIX','Dinheiro','Cartão de débito','Cartão de crédito','Boleto','Transferência','Cheque'];
 
-let ADM=false,EMP='',EMPS=[],D=null,ABA='novo',O=null,BQ='',SUGI=0;
+let FC=false,ADM=false,EMP='',EMPS=[],D=null,ABA='novo',O=null,BQ='',SUGI=0;
 const novoOrc=()=>({id:null,cliente:{},itens:[],pagamento:{forma:'',cond:'avista',parcelas:1,prazos:'',entrada:0,obs:''},desconto:0,descTipo:'rs',frete:0,validade:maisDias(D&&D.validade_dias||7),obs:D&&D.obs||'',status:'aberto'});
 
-async function rpcDados(){const r=await sb.rpc('orc_dados',{p_chave:ADM?null:VKEY,p_emp:ADM?EMP:null});
+async function rpcDados(){const r=await sb.rpc('orc_dados',{p_chave:FC?null:VKEY,p_emp:FC?EMP:null});
   if(r.error){if(/function|does not exist|schema cache/i.test(r.error.message||''))return 'sql';return null;}return r.data;}
 async function carregar(){const d=await rpcDados();
   if(d==='sql'){$('#app').innerHTML='<div class="box"><h2 class="t">Falta rodar o SQL</h2><p class="nota">Rode o arquivo orcamentos.sql no Supabase para ativar o painel de orçamentos.</p></div>';return false;}
   if(!d){$('#app').innerHTML='<p class="vazio">Link inválido ou desativado. Fale com o gestor da empresa ou com a FC Consultoria.</p>';return false;}
-  D=d;EMP=d.emp;const c=d.cab||{};$('#hd').textContent='Orçamentos · '+(c.nome||d.nome||'');$('#hdSub').textContent=ADM?'FC Consultoria · painel da matriz':'Vendedor: '+((d.vend&&d.vend.nome)||'');
+  D=d;EMP=d.emp;if(!FC)ADM=!!d.adm;const c=d.cab||{};$('#hd').textContent='Orçamentos · '+(c.nome||d.nome||'');$('#hdSub').textContent=FC?'FC Consultoria · painel da matriz':GESTOR?'Gestor da empresa':'Vendedor: '+((d.vend&&d.vend.nome)||'');
   if(c.logo)$('#hdLogo').src=fotoUrl(c.logo);
   if(!O)O=novoOrc();return true;}
 
@@ -191,7 +191,7 @@ async function salvar(){const m=$('#msg'),k=calc();if(!String(O.cliente.nome||''
   $('#salvar').disabled=true;m.textContent='Salvando…';
   const p={id:O.id,cliente:O.cliente,itens:O.itens.map(i=>({id:i.id,qtd:num(i.qtd),preco:ADM?num(i.preco):undefined,cod:i.cod,desc:i.desc,un:i.un,foto:i.foto})),pagamento:Object.assign({},O.pagamento,{resumo:parcelasTxt(k.tot)}),
    desconto:Math.min(k.dsc,k.sub),frete:k.fr,validade:O.validade,obs:O.obs,status:O.status};
-  const r=await sb.rpc('orc_salvar',{p_chave:ADM?null:VKEY,p_orc:p,p_emp:ADM?EMP:null});$('#salvar').disabled=false;
+  const r=await sb.rpc('orc_salvar',{p_chave:FC?null:VKEY,p_orc:p,p_emp:FC?EMP:null});$('#salvar').disabled=false;
   if(r.error||!r.data){m.textContent='Não foi possível salvar: '+((r.error&&r.error.message)||'tente de novo');return;}
   const id=r.data.id,nn=r.data.numero;await carregar();const s=D.orcs.find(x=>x.id===id);if(s)abrirOrc(s,true);toast('Orçamento nº '+nn+' salvo');}
 function abrirOrc(s,ficar){O={id:s.id,numero:s.numero,cliente:Object.assign({},s.cliente),itens:(s.itens||[]).map(i=>Object.assign({},i)),pagamento:Object.assign({forma:'',cond:'avista',parcelas:1,prazos:'',entrada:0,obs:''},s.pagamento||{}),
@@ -211,7 +211,7 @@ function wireLista(){const lf=$('#lf');lf.oninput=()=>{LF=lf.value;const p=lf.se
   $$('[data-pr]').forEach(b=>b.onclick=()=>{const s=D.orcs.find(o=>o.id===b.dataset.pr);imprimir(Object.assign({},s,{descTipo:'rs'}));});
   $$('[data-dup]').forEach(b=>b.onclick=()=>{const s=D.orcs.find(o=>o.id===b.dataset.dup);abrirOrc(s);O.id=null;O.numero=null;O.status='aberto';O.validade=maisDias(D.validade_dias||7);
     O.itens.forEach(i=>{const a=D.itens.find(x=>x.id===i.id);if(a){i.preco=a.preco;i.foto=a.foto||i.foto;}});tela();toast('Cópia criada com os preços atuais. Salve para gerar o número.');});
-  $$('[data-st]').forEach(s=>s.onchange=async()=>{const r=await sb.rpc('orc_status',{p_chave:ADM?null:VKEY,p_id:s.dataset.st,p_status:s.value,p_emp:ADM?EMP:null});if(r.error||!r.data){toast('Não foi possível mudar.');return;}const o=D.orcs.find(x=>x.id===s.dataset.st);o.status=s.value;toast('Situação: '+ST[s.value]);});}
+  $$('[data-st]').forEach(s=>s.onchange=async()=>{const r=await sb.rpc('orc_status',{p_chave:FC?null:VKEY,p_id:s.dataset.st,p_status:s.value,p_emp:FC?EMP:null});if(r.error||!r.data){toast('Não foi possível mudar.');return;}const o=D.orcs.find(x=>x.id===s.dataset.st);o.status=s.value;toast('Situação: '+ST[s.value]);});}
 
 /* ---------- impressão ---------- */
 function imprimir(o){const c=D.cab||{},cl=o.cliente||{},p=o.pagamento||{},it=o.itens||[];
@@ -231,28 +231,33 @@ function imprimir(o){const c=D.cab||{},cl=o.cliente||{},p=o.pagamento||{},it=o.i
 
 /* ---------- configuração (FC) ---------- */
 let PLS=null,FAUTO=null,CF=null,VEND=null,IF='';
-async function carregaCfg(){const [a,b,v]=await Promise.all([sb.from('orc_cfg').select('*').eq('empresa_id',EMP).maybeSingle(),sb.from('cons_planilhas').select('id,nome,atualizado').eq('empresa_id',EMP),sb.from('orc_vend').select('*').eq('empresa_id',EMP).order('criado_em')]);
+async function carregaCfg(){if(!FC){const [g,pl]=await Promise.all([sb.rpc('orc_g_cfg',{p_chave:VKEY}),sb.rpc('cons_portal_planilhas',{p_chave:VKEY})]);const G=g.data||{};
+  CF=G.cfg||{empresa_id:EMP,itens:[],cab:{nome:D.nome},pag:PAG_PADRAO.slice(),desc_max:5,validade_dias:7,obs:'',planilha_id:null};if(!CF.pag||!CF.pag.length)CF.pag=PAG_PADRAO.slice();PLS=(pl.data||[]);VEND=G.vend||[];return;}
+  const [a,b,v]=await Promise.all([sb.from('orc_cfg').select('*').eq('empresa_id',EMP).maybeSingle(),sb.from('cons_planilhas').select('id,nome,atualizado').eq('empresa_id',EMP),sb.from('orc_vend').select('*').eq('empresa_id',EMP).order('criado_em')]);
   CF=a.data||{empresa_id:EMP,itens:[],cab:{nome:D.nome},pag:PAG_PADRAO.slice(),desc_max:5,validade_dias:7,obs:'',planilha_id:null};if(!CF.pag||!CF.pag.length)CF.pag=PAG_PADRAO.slice();PLS=b.data||[];VEND=v.data||[];}
 function telaCfg(){if(!CF){carregaCfg().then(tela);return '<p class="vazio">Carregando configuração…</p>';}
   const c=CF.cab||{},f=sem(IF),L=CF.itens.filter(i=>!f||sem(i.cod+' '+i.desc+' '+(i.cor||'')+' '+(i.forn||'')).includes(f)),semFoto=CF.itens.filter(i=>!i.foto).length;
   const link=k=>BASE+'orcamento/?v='+k;
-  return `<div class="box"><h3>🧑‍💼 Vendedores · cada um tem o seu link</h3>
-   ${VEND.length?`<table class="it"><tbody>${VEND.map(v=>`<tr style="${v.ativo?'':'opacity:.5'}"><td><b>${esc(v.nome)}</b><br><span class="nota">${esc(v.telefone||'')}</span></td><td style="font-size:12.5px;word-break:break-all">${esc(link(v.chave))}</td>
-    <td style="white-space:nowrap"><button class="btn mini" type="button" data-cp="${esc(link(v.chave))}">📋 Copiar</button> ${v.telefone?`<a class="btn mini" target="_blank" rel="noopener" href="https://wa.me/55${esc(String(v.telefone).replace(/\D/g,'').replace(/^55/,''))}?text=${encodeURIComponent('Olá '+v.nome+'! Este é o seu link para montar os orçamentos da '+(c.nome||D.nome||'')+': '+link(v.chave))}">💬</a>`:''} <button class="btn mini" type="button" data-va="${v.id}">${v.ativo?'Desativar':'Ativar'}</button></td></tr>`).join('')}</tbody></table>`:'<p class="nota">Nenhum vendedor cadastrado.</p>'}
-   <div class="row" style="margin-top:8px"><input class="inp" id="vN" placeholder="Nome do vendedor" style="max-width:240px"><input class="inp" id="vT" placeholder="Telefone (opcional)" style="max-width:180px"><button class="btn pri" type="button" id="vAdd">＋ Criar link do vendedor</button></div>
-   <p class="nota">O vendedor só vê o preço de venda da tabela. Não vê custo, fornecedor nem as planilhas. Você envia o link para ele.</p></div>
+  return `${!FC?`<div class="box" style="border-color:var(--or);background:var(--orc);display:flex;gap:12px;align-items:center;flex-wrap:wrap"><div style="flex:1;min-width:240px"><b>Precisa de ajuda ou de um ajuste que não está aqui?</b><p class="nota" style="margin:2px 0 0">Trocar a planilha, colocar fotos dos itens, logo ou qualquer outra mudança: chame o suporte da FC Consultoria.</p></div><button class="btn pri" type="button" id="supBtn">🆘 Chamar suporte da FC</button></div>`:''}<div class="box"><h3>🧑‍💼 Painel dos vendedores (${VEND.length})</h3>
+   ${VEND.length?`<div style="overflow-x:auto"><table class="it"><thead><tr><th>Vendedor</th><th class="n">Orçamentos</th><th class="n">Aprovados</th><th class="n">Valor aprovado</th><th>Situação</th><th>Link</th><th></th></tr></thead><tbody>${VEND.map(v=>{const os=D.orcs.filter(o=>o.vend_id===v.id),ap=os.filter(o=>o.status==='aprovado');
+    return `<tr style="${v.ativo?'':'opacity:.55'}"><td><b>${esc(v.nome)}</b><br><span class="nota">${esc(v.telefone||'sem telefone')}</span></td><td class="n">${os.length}</td><td class="n">${ap.length}</td><td class="n">${rs(ap.reduce((a,o)=>a+(+o.total||0),0))}</td>
+    <td>${v.ativo?'<span class="pill s-aprovado">Ativo</span>':'<span class="pill s-perdido">Desativado</span>'}</td>
+    <td style="white-space:nowrap"><button class="btn mini" type="button" data-cp="${esc(link(v.chave))}" title="${esc(link(v.chave))}">📋 Copiar link</button> ${v.telefone?`<a class="btn mini" target="_blank" rel="noopener" title="Enviar o link pelo WhatsApp" href="https://wa.me/55${esc(String(v.telefone).replace(/\D/g,'').replace(/^55/,''))}?text=${encodeURIComponent('Olá '+v.nome+'! Este é o seu link para montar os orçamentos da '+(c.nome||D.nome||'')+': '+link(v.chave))}">💬</a>`:''}</td>
+    <td style="white-space:nowrap"><button class="btn mini" type="button" data-ved="${v.id}">✏️ Editar</button> <button class="btn mini" type="button" data-va="${v.id}">${v.ativo?'⏸ Desativar':'▶ Ativar'}</button> <button class="btn mini" type="button" data-vx="${v.id}" style="color:var(--bx)">🗑 Excluir</button></td></tr>`;}).join('')}</tbody></table></div>`:'<p class="nota">Nenhum vendedor cadastrado.</p>'}
+   <div class="row" style="margin-top:10px"><input class="inp" id="vN" placeholder="Nome do vendedor" style="max-width:240px"><input class="inp" id="vT" placeholder="Telefone / WhatsApp (opcional)" style="max-width:220px"><button class="btn pri" type="button" id="vAdd">＋ Cadastrar vendedor</button></div>
+   <p class="nota">Cada vendedor recebe um link próprio. Ele só vê o preço de venda da tabela: não vê custo, fornecedor nem as planilhas. <b>Desativar</b> bloqueia o link na hora e guarda os orçamentos; <b>Excluir</b> apaga o vendedor, mas os orçamentos dele continuam na lista com o nome.</p></div>
   <div class="box"><h3>📊 Itens da precificação (${CF.itens.length}) ${CF.itens_em?`<span class="nota" style="font-weight:500">· atualizados em ${new Date(CF.itens_em).toLocaleString('pt-BR')}</span>`:''}</h3>
    <div class="row"><select class="inp" id="plSel" style="max-width:420px"><option value="">— escolher a planilha de precificação —</option>${PLS.map(p=>`<option value="${p.id}" ${CF.planilha_id===p.id?'selected':''}>${esc(p.nome)}</option>`).join('')}</select>
-    <button class="btn pri" type="button" id="plSync">🔄 Atualizar itens da precificação</button><label class="btn or" style="cursor:pointer">📥 Importar planilha nova (.xlsx)<input type="file" accept=".xlsx" id="plImp" hidden></label><span class="nota" id="plMsg"></span></div>
+    <button class="btn pri" type="button" id="plSync">🔄 Atualizar itens da precificação</button>${FC?`<label class="btn or" style="cursor:pointer">📥 Importar planilha nova (.xlsx)<input type="file" accept=".xlsx" id="plImp" hidden></label>`:''}<span class="nota" id="plMsg"></span></div>
    <p class="nota">Lê as abas que têm a coluna de preço de venda ("Preço de Venda Barra" ou "Valor da Vara c/ 6 metros") e traz código, descrição, cor, peso e preço de venda. As fotos já colocadas são mantidas. ${semFoto?`<b>${semFoto} itens sem foto.</b>`:''}</p>
    ${CF.itens.length?`<div class="row" style="margin:8px 0"><input class="inp" id="iF" placeholder="Filtrar itens" value="${esc(IF)}" style="max-width:320px"><button class="btn" type="button" id="fAuto">🖼 Buscar fotos automáticas</button></div>
    <div style="max-height:520px;overflow:auto"><table class="it"><thead><tr><th>Foto</th><th>Código</th><th>Descrição</th><th>Cor</th><th>Linha / forn.</th><th class="n">Peso barra</th><th class="n">Preço venda</th><th></th></tr></thead><tbody>
-   ${L.slice(0,400).map(i=>`<tr><td><label style="cursor:pointer" title="Trocar foto"><div class="th" style="${i.foto?`background-image:url('${esc(fotoUrl(i.foto))}')`:''}">${i.foto?'':'＋'}</div><input type="file" accept="image/*" data-up="${esc(i.id)}" hidden></label></td><td><b>${esc(i.cod)}</b></td><td>${esc(i.desc)}</td><td>${esc(i.cor||'')}</td><td>${esc([i.linha,i.forn].filter(Boolean).join(' · '))}</td><td class="n">${i.peso?n2(i.peso):''}</td><td class="n"><b>${rs(i.preco)}</b></td><td>${i.foto?`<button class="btn mini" type="button" data-fx="${esc(i.id)}" title="Tirar foto">✕</button>`:''}</td></tr>`).join('')}</tbody></table></div>`:''}</div>
+   ${L.slice(0,400).map(i=>`<tr><td><label style="cursor:${FC?'pointer':'default'}" title="${FC?'Trocar foto':''}"><div class="th" style="${i.foto?`background-image:url('${esc(fotoUrl(i.foto))}')`:''}">${i.foto?'':'＋'}</div>${FC?`<input type="file" accept="image/*" data-up="${esc(i.id)}" hidden>`:''}</label></td><td><b>${esc(i.cod)}</b></td><td>${esc(i.desc)}</td><td>${esc(i.cor||'')}</td><td>${esc([i.linha,i.forn].filter(Boolean).join(' · '))}</td><td class="n">${i.peso?n2(i.peso):''}</td><td class="n"><b>${rs(i.preco)}</b></td><td>${i.foto&&FC?`<button class="btn mini" type="button" data-fx="${esc(i.id)}" title="Tirar foto">✕</button>`:''}</td></tr>`).join('')}</tbody></table></div>`:''}</div>
   <div class="box"><h3>🏢 Cabeçalho do orçamento</h3><div class="grid">
    <label class="f">Nome da empresa<input data-cb="nome" value="${esc(c.nome)}"></label><label class="f">CNPJ<input data-cb="cnpj" value="${esc(c.cnpj)}"></label>
    <label class="f">Endereço<input data-cb="end" value="${esc(c.end)}"></label><label class="f">Cidade / UF<input data-cb="cidade" value="${esc(c.cidade)}"></label>
    <label class="f">Telefone<input data-cb="fone" value="${esc(c.fone)}"></label><label class="f">E-mail<input data-cb="email" value="${esc(c.email)}"></label>
-   <label class="f">Logo<span class="row">${c.logo?`<img src="${esc(fotoUrl(c.logo))}" style="height:40px;max-width:120px;object-fit:contain;border:1px solid var(--ln);border-radius:6px">`:''}<input type="file" accept="image/*" id="lgUp"></span></label>
+   <label class="f">Logo<span class="row">${c.logo?`<img src="${esc(fotoUrl(c.logo))}" style="height:40px;max-width:120px;object-fit:contain;border:1px solid var(--ln);border-radius:6px">`:''}${FC?'<input type="file" accept="image/*" id="lgUp">':'<span class="nota">a logo é colocada pela FC</span>'}</span></label>
    <label class="f" style="grid-column:1/-1">Texto do rodapé (aparece em todo orçamento)<textarea data-cb="rodape">${esc(c.rodape)}</textarea></label></div></div>
   <div class="box"><h3>💳 Pagamento, desconto e validade</h3><div class="grid">
    <label class="f" style="grid-column:span 2">Formas de pagamento (uma por linha)<textarea id="cPag" rows="5">${esc((CF.pag||[]).join('\n'))}</textarea></label>
@@ -260,8 +265,8 @@ function telaCfg(){if(!CF){carregaCfg().then(tela);return '<p class="vazio">Carr
    <label class="f">Validade padrão (dias)<input id="cVd" value="${esc(CF.validade_dias)}" inputmode="numeric"></label>
    <label class="f" style="grid-column:1/-1">Observação padrão do orçamento<textarea id="cObs">${esc(CF.obs||'')}</textarea></label></div>
    <div class="row" style="margin-top:10px"><button class="btn pri" type="button" id="cSalva">💾 Salvar configuração</button><span class="nota" id="cMsg"></span></div></div>`;}
-async function salvaCfg(msg){const r=await sb.from('orc_cfg').upsert({empresa_id:EMP,itens:CF.itens,cab:CF.cab||{},pag:CF.pag,desc_max:num(CF.desc_max),validade_dias:parseInt(CF.validade_dias)||7,obs:CF.obs||null,planilha_id:CF.planilha_id||null,itens_em:CF.itens_em||null,atualizado_em:new Date().toISOString()});
-  if(r.error){toast('Não salvou: '+r.error.message);return false;}await carregar();if(msg)toast(msg);return true;}
+async function salvaCfg(msg){const r=!FC?await sb.rpc('orc_g_cfg_salvar',{p_chave:VKEY,p_cfg:{itens:CF.itens,cab:CF.cab||{},pag:CF.pag,desc_max:num(CF.desc_max),validade_dias:parseInt(CF.validade_dias)||7,obs:CF.obs||null,planilha_id:CF.planilha_id||null,itens_em:CF.itens_em||null}}):await sb.from('orc_cfg').upsert({empresa_id:EMP,itens:CF.itens,cab:CF.cab||{},pag:CF.pag,desc_max:num(CF.desc_max),validade_dias:parseInt(CF.validade_dias)||7,obs:CF.obs||null,planilha_id:CF.planilha_id||null,itens_em:CF.itens_em||null,atualizado_em:new Date().toISOString()});
+  if(r.error||r.data===false){toast('Não salvou: '+((r.error&&r.error.message)||'sem acesso'));return false;}await carregar();if(msg)toast(msg);return true;}
 async function carregaFAuto(){if(FAUTO)return FAUTO;FAUTO=await fetch('fotos-auto.json?v=1').then(r=>r.json()).catch(()=>({}));return FAUTO;}
 function fotoAutoDe(i,F){const toks=[...String(i.ref||'').split(/[|\/,;]+/),...String(i.cod||'').split(/[|\/,;]+/),...(String(i.desc).toUpperCase().match(/\b[A-Z]{1,5}-?\d{2,6}[A-Z]?\b/g)||[])];for(const t of toks){const k=nk(t);if(k.length>=3&&F[k])return F[k];}return '';}
 const COR_RX=[['BRANCO','Branco'],['PRETO','Preto'],['NATURAL','Natural'],['FOSCO','Fosco'],['BRONZE','Bronze'],['CHAMPANHE','Champanhe'],['AMADEIRADO','Amadeirado'],['CEREJEIRA','Cerejeira'],['ANODIZADO','Anodizado'],['BRILHANTE','Brilhante']];
@@ -287,7 +292,7 @@ function lerAba(sh,mt){const keys=Object.keys(sh.c),rows={};keys.forEach(a=>{con
     out.push({cod,desc,cor:cr,linha,forn:String(g(col.forn)??'').trim()||forn,ref:ref&&ref!=='-'?ref:'',un:'BR',peso:typeof pe==='number'?Math.round(pe*1000)/1000:null,preco:Math.round(pr*100)/100});}
   return out;}
 async function sincronizar(){const pid=$('#plSel').value,m=$('#plMsg');if(!pid){m.textContent='Escolha a planilha.';return;}m.textContent='Lendo a planilha…';
-  const r=await sb.from('cons_planilhas').select('dados').eq('id',pid).maybeSingle();if(r.error||!r.data){m.textContent='Não consegui abrir a planilha.';return;}
+  const r=FC?await sb.from('cons_planilhas').select('dados').eq('id',pid).maybeSingle():await sb.rpc('cons_portal_planilha',{p_chave:VKEY,p_id:pid});if(r.error||!r.data){m.textContent='Não consegui abrir a planilha.';return;}
   const model=r.data.dados,mt=new Planilha.Motor(model),F=await carregaFAuto(),antes=Object.fromEntries((CF.itens||[]).map(i=>[i.id,i]));
   const out=[],vistos=new Set();let dup=0,abas=[];
   for(const sh of model.sheets){const L=lerAba(sh,mt);if(!L.length)continue;abas.push(sh.n);
@@ -314,16 +319,25 @@ function wireCfg(){if(!CF)return;const q=s=>document.getElementById(s);
   q('cSalva').onclick=async()=>{CF.pag=q('cPag').value.split('\n').map(s=>s.trim()).filter(Boolean);CF.desc_max=num(q('cDm').value);CF.validade_dias=parseInt(q('cVd').value)||7;CF.obs=q('cObs').value;
     if(await salvaCfg())q('cMsg').textContent='✓ Salvo';};
   $$('[data-cp]').forEach(b=>b.onclick=()=>{navigator.clipboard&&navigator.clipboard.writeText(b.dataset.cp);b.textContent='✓ Copiado';});
-  $$('[data-va]').forEach(b=>b.onclick=async()=>{const v=VEND.find(x=>x.id===b.dataset.va);await sb.from('orc_vend').update({ativo:!v.ativo}).eq('id',v.id);v.ativo=!v.ativo;tela();});
+  $$('[data-va]').forEach(b=>b.onclick=async()=>{const v=VEND.find(x=>x.id===b.dataset.va);const r=FC?await sb.from('orc_vend').update({ativo:!v.ativo}).eq('id',v.id):await sb.rpc('orc_g_vend',{p_chave:VKEY,p_acao:v.ativo?'desativar':'ativar',p_id:v.id,p_nome:null,p_tel:null});if(r.error){toast(r.error.message);return;}v.ativo=!v.ativo;tela();});
   q('vAdd').onclick=async()=>{const n=q('vN').value.trim();if(!n){toast('Coloque o nome do vendedor.');return;}const A='abcdefghjkmnpqrstuvwxyz23456789';let k='';crypto.getRandomValues(new Uint8Array(32)).forEach(x=>k+=A[x%A.length]);
-    const r=await sb.from('orc_vend').insert({empresa_id:EMP,nome:n.slice(0,80),telefone:q('vT').value.trim().slice(0,30)||null,chave:k}).select('*').single();if(r.error){toast(r.error.message);return;}VEND.push(r.data);tela();};}
+    const r=FC?await sb.from('orc_vend').insert({empresa_id:EMP,nome:n.slice(0,80),telefone:q('vT').value.trim().slice(0,30)||null,chave:k}).select('*').single():await sb.rpc('orc_g_vend',{p_chave:VKEY,p_acao:'criar',p_id:null,p_nome:n,p_tel:q('vT').value.trim()});if(r.error||!r.data){toast((r.error&&r.error.message)||'Não criou');return;}VEND.push(r.data);tela();};
+  const vreq=(acao,v,n,t)=>FC?(acao==='editar'?sb.from('orc_vend').update({nome:n,telefone:t||null}).eq('id',v.id).select('*').single():sb.from('orc_vend').delete().eq('id',v.id).select('*').single()):sb.rpc('orc_g_vend',{p_chave:VKEY,p_acao:acao,p_id:v.id,p_nome:n,p_tel:t});
+  $$('[data-ved]').forEach(b=>b.onclick=async()=>{const v=VEND.find(x=>x.id===b.dataset.ved);const n=prompt('Nome do vendedor:',v.nome);if(n===null||!n.trim())return;const t=prompt('Telefone / WhatsApp:',v.telefone||'');if(t===null)return;
+    const r=await vreq('editar',v,n.trim().slice(0,80),t.trim().slice(0,30));if(r.error||!r.data){toast('Não salvou: '+((r.error&&r.error.message)||''));return;}Object.assign(v,{nome:n.trim(),telefone:t.trim()||null});tela();toast('Vendedor atualizado');});
+  $$('[data-vx]').forEach(b=>b.onclick=async()=>{const v=VEND.find(x=>x.id===b.dataset.vx);if(!confirm('Excluir o vendedor "'+v.nome+'"?\n\nO link dele para de funcionar. Os orçamentos que ele fez continuam na lista.'))return;
+    const r=await vreq('excluir',v);if(r.error||!r.data){toast('Não excluiu: '+((r.error&&r.error.message)||''));return;}VEND=VEND.filter(x=>x.id!==v.id);tela();toast('Vendedor excluído');});
+  if(q('supBtn'))q('supBtn').onclick=suporte;}
 function reduz(file,max=900){return new Promise(ok=>{const im=new Image();im.onload=()=>{const s=Math.min(1,max/Math.max(im.width,im.height));const c=document.createElement('canvas');c.width=Math.round(im.width*s);c.height=Math.round(im.height*s);const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(im,0,0,c.width,c.height);c.toBlob(b=>ok(b),'image/jpeg',.85);};im.src=URL.createObjectURL(file);});}
 
+async function suporte(){const t=prompt('Descreva o que você precisa no painel de orçamentos (a FC recebe na hora):');if(!t||!t.trim())return;
+  let nm='';try{nm=localStorage.getItem('cons-nome')||'';}catch(_){}if(!nm){nm=prompt('Seu nome:')||'';try{localStorage.setItem('cons-nome',nm);}catch(_){}}
+  const r=await sb.rpc('cons_portal_solicitar',{p_chave:VKEY,p_nome:nm,p_tipo:'outro',p_texto:'[Painel de orçamentos] '+t.trim()});toast(r.error||!r.data?'Não foi possível enviar. Tente de novo.':'✓ Pedido enviado para a FC');}
 /* ---------- início ---------- */
 async function trocaEmp(id){EMP=id;try{localStorage.setItem('fc_orc_emp',id);}catch(_){}D=null;O=null;CF=null;if(await carregar())tela();}
-(async()=>{if(VKEY){if(await carregar())tela();return;}
+(async()=>{if(VKEY){if(GESTOR&&Q.get('aba'))ABA=Q.get('aba');if(await carregar())tela();return;}
   gateUI(async()=>{try{const r=await sb.rpc('trein_is_admin');ADM=!!r.data;}catch(_){}
-    if(!ADM){$('#app').innerHTML='<p class="vazio">Esta área é da FC Consultoria. O vendedor entra pelo link que recebeu.</p>';return;}
+    if(!ADM){$('#app').innerHTML='<p class="vazio">Esta área é da FC Consultoria. O vendedor entra pelo link que recebeu.</p>';return;}FC=true;
     const a=document.createElement('a');a.className='vt';a.href='/treinamento/painel.html';a.textContent='← Painel matriz';$('header.top .w').appendChild(a);
     const r=await sb.from('rotina_docs').select('id,data').eq('col','consultoria');EMPS=(r.data||[]).map(x=>({id:x.id,nome:(x.data&&x.data.nome)||x.id})).sort((a,b)=>a.nome.localeCompare(b.nome,'pt'));
     const s=$('#selEmp');s.hidden=false;s.innerHTML=EMPS.map(e=>`<option value="${esc(e.id)}">${esc(e.nome)}</option>`).join('');
