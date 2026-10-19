@@ -154,7 +154,7 @@ const nomeQ=()=>{let n=ls.get('cons-nome-v','');if(!n){try{n=localStorage.getIte
 
 /* ===== índice de todas as linhas ===== */
 async function carregaIndice(){
-  IDX=await fetch('indice.json?v=2',{cache:'no-cache'}).then(r=>r.json());
+  IDX=await fetch('indice.json?v=3',{cache:'no-cache'}).then(r=>r.json());
   /* edições de pares feitas pela FC na Conversão de códigos */
   let ed=[];
   try{if(ADM){const r=await sb.from('trein_eventos').select('detalhe,criado_em').eq('tipo','equiv_edit').order('criado_em');ed=(r.data||[]).map(x=>x.detalhe);}
