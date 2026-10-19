@@ -132,6 +132,16 @@
       rel.textContent = d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
       const nome = (window.MEU_NOME || 'Fernando');
       ola.textContent = (hr<12?'Bom dia':hr<18?'Boa tarde':'Boa noite')+', '+nome+' · '+d.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'}); };
+    // horários dos estados (fusos do Brasil)
+    const FZ=[['🏠 MT · MS · RO · RR · AM','America/Cuiaba','Seu horário (Mato Grosso). Também: Mato Grosso do Sul, Rondônia, Roraima e Amazonas (Manaus).'],
+      ['🏛 Brasília','America/Sao_Paulo','Horário de Brasília: DF, GO, TO, SP, RJ, MG, ES, PR, SC, RS, BA, todo o Nordeste, PA e AP.'],
+      ['🌳 Acre','America/Rio_Branco','Acre e o oeste do Amazonas.'],['🏝 Noronha','America/Noronha','Fernando de Noronha.']];
+    const fz=document.createElement('div');fz.className='mxfz';fz.style.cssText='display:flex;gap:6px;flex-wrap:wrap;margin-top:8px';
+    const hm=(tz,d)=>{const p=new Intl.DateTimeFormat('pt-BR',{timeZone:tz,hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(d);const H=+p.find(x=>x.type==='hour').value,M=+p.find(x=>x.type==='minute').value;return [H,M];};
+    const fzTick=()=>{const d=new Date(),[h0,m0]=hm('America/Cuiaba',d);
+      fz.innerHTML=FZ.map(([n,tz,t])=>{const [h,m]=hm(tz,d);let df=(h*60+m-(h0*60+m0))/60;if(df>12)df-=24;if(df<-12)df+=24;const ab=h>=8&&h<18;
+        return `<span title="${t} ${ab?'Em horário comercial (8h às 18h).':'Fora do horário comercial.'}" style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:99px;padding:4px 11px;font:600 13px var(--f-display,system-ui);white-space:nowrap"><i style="width:8px;height:8px;border-radius:50%;background:${ab?'#4ade80':'#f87171'};display:inline-block"></i>${n} <b style="font-size:15px">${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}</b>${df?`<small style="opacity:.85">${df>0?'+':''}${df}h</small>`:''}</span>`;}).join('');};
+    fzTick();setInterval(fzTick,20000);inn.appendChild(fz);
     tick(); setInterval(tick, 20000);
     // KPIs com ícone
     const ic = ['🏢','🚪','⏱️','🏆']; document.querySelectorAll('.kpis .kpi').forEach((k,i)=>k.dataset.ic=ic[i]||'📌');
