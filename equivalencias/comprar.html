@@ -92,6 +92,7 @@ details.cores{border:1px dashed var(--ln);border-radius:12px;padding:8px 10px}de
 table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:7px 9px;border-bottom:1px solid var(--ln);text-align:left;vertical-align:top}
 th{font:700 11.5px var(--f-b);letter-spacing:.08em;text-transform:uppercase;color:var(--tm);background:#f7fafb}
 td.n{text-align:right;white-space:nowrap}tr.best td{background:#effaf2;font-weight:700}
+.rit table{min-width:640px}
 .rit{margin-top:14px;border:1px solid var(--ln);border-radius:14px;overflow:auto;background:#fff}
 .rit h3{margin:0;padding:10px 12px;font:800 20px var(--f-d);display:flex;justify-content:space-between;gap:8px;align-items:center;background:#f7fafb;border-bottom:1px solid var(--ln)}
 .rit h3 small{font:600 13px var(--f-b);color:var(--tm)}
@@ -148,7 +149,7 @@ let ABA='busca',Q='',COR='natural',MODO='barra',SEL=null;
 const st=ls.get('fc_compra_pref',{});if(st.cor)COR=st.cor;if(st.modo)MODO=st.modo;
 const salvaPref=()=>ls.set('fc_compra_pref',{cor:COR,modo:MODO});
 const RKEY=()=>'fc_compra_rel_'+(EMP||'x');
-let REL=[];
+let REL=[],SIM=[];const SKEY=()=>'fc_compra_sim_'+(EMP||'x');
 const nomeQ=()=>{let n=ls.get('cons-nome-v','');if(!n){try{n=localStorage.getItem('cons-nome')||'';}catch(_){}}return n;};
 
 /* ===== índice de todas as linhas ===== */
@@ -213,12 +214,12 @@ function frase(o,r,b){
   return `${partes[0]}${contra?', mas':' e'} ${prc}: ${fim}.`;}
 
 /* ===== telas ===== */
-function abas(){const n=REL.length;const A=[['busca','🔎 Pesquisar'],['precos','💲 Preços dos fornecedores'],['rel','📄 Relatório'+(n?` <span class="ct">${n}</span>`:'')]];
+function abas(){const n=REL.length;const A=[['busca','🔎 Pesquisar'],['precos','💲 Preços dos fornecedores'],['sim','🧮 Simular pedido'+(SIM.length?` <span class="ct">${SIM.length}</span>`:'')],['rel','📄 Relatório'+(n?` <span class="ct">${n}</span>`:'')]];
   if(ADM)A.push(['abc','📊 Curva ABC'],['uso','👀 Acompanhamento']);
   return `<nav class="abas noprint">${A.map(([k,t])=>`<button type="button" data-aba="${k}" class="${ABA===k?'on':''}">${t}</button>`).join('')}</nav>`;}
 function tela(){const a=$('#app');
   const demo=LOCAL?`<div class="aviso noprint">🧪 <b>Modo demonstração.</b> Os preços ficam guardados só neste aparelho até a FC ativar o banco de dados desta ferramenta.</div>`:'';
-  let h='';if(ABA==='busca')h=telaBusca();else if(ABA==='precos')h=telaPrecos();else if(ABA==='rel')h=telaRel();else if(ABA==='abc')h=telaAbc();else if(ABA==='uso')h='<div class="box"><p class="vazio">Carregando o acompanhamento…</p></div>';
+  let h='';if(ABA==='busca')h=telaBusca();else if(ABA==='precos')h=telaPrecos();else if(ABA==='rel')h=telaRel();else if(ABA==='sim')h=telaSim();else if(ABA==='abc')h=telaAbc();else if(ABA==='uso')h='<div class="box"><p class="vazio">Carregando o acompanhamento…</p></div>';
   a.innerHTML=abas()+demo+h;if(ABA==='uso')telaUso();if(ABA==='busca'){const i=$('#q');if(i&&!Q)i.focus();}}
 function semPrecos(){return !FORN.some(f=>DADOS.forn[f]&&DADOS.forn[f].natural!=null);}
 function telaBusca(){
@@ -259,7 +260,7 @@ function resultado(r){
   return `<div class="res">${outras}
   <div class="box cab"><div class="im" data-zoom="${esc(ref.img)}" data-t="${esc(IDX.forn[ref.f]+' '+ref.c)}">${ref.img?`<img src="${esc(ref.img)}" alt="" onerror="this.replaceWith(document.createTextNode('sem desenho'))">`:'<small>sem desenho</small>'}</div>
    <div><div class="cd">${esc(Q.toUpperCase())}</div><div class="nm">${esc(g.n||(IDX.forn[ref.f]+' '+ref.c))}</div><div class="ln">${esc(IDX.linhas[g.l].n)} · ${R.L.length} ${R.L.length===1?'código':'códigos equivalentes'} · ${esc(CORN[COR])}</div>
-   <div class="acoes noprint" style="margin-top:8px"><button type="button" class="bt ${naRel?'':'p'}" data-addrel ${naRel?'disabled':''}>${naRel?'✓ Está no relatório':'＋ Adicionar ao relatório'}</button></div></div>${abcB}</div>
+   <div class="acoes noprint" style="margin-top:8px"><button type="button" class="bt ${naRel?'':'p'}" data-addrel ${naRel?'disabled':''}>${naRel?'✓ Está no relatório':'＋ Adicionar ao relatório'}</button><button type="button" class="bt" data-addsim>🧮 Levar para a simulação</button></div></div>${abcB}</div>
   ${mel}${R.L.length===1?`<div class="aviso">Este código ainda não tem equivalente ${ADM?'':'confirmado pela FC '}nos outros fornecedores.</div>`:''}
   ${linhas}
   <p class="sub" style="font-size:13px">Barra de ${BARRA} m. Compra mínima por item em kg, arredondada para barras inteiras. ${COR!=='natural'?'Preço com acabamento = natural + acréscimo da cor por kg. ':''}Os pares vêm da Conversão de códigos da FC: confira o desenho antes de fechar a compra.${meta?' '+esc(meta):''}</p></div>`;}
@@ -312,6 +313,72 @@ function csv(){const I=relItens();const L=[['Código pesquisado','Linha','Classe
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'text/csv;charset=utf-8'}));a.download='onde-comprar-'+(EMP||'fc')+'-'+new Date().toISOString().slice(0,10)+'.csv';a.click();
   registrar('relatorio',{itens:I.length,cor:COR,modo:MODO,formato:'excel'});}
 
+
+/* ===== simulação de pedido ===== */
+function simGrupo(x){let g=x.g?IDX.g.find(y=>y.l+'|'+y.k===x.g):null;if(!g){const r=buscar(x.q);g=r[0]||null;}return g;}
+function opcao(o,q){/* custo de levar q barras deste código, respeitando a compra mínima por item */
+  const br=Math.max(q,o.bars||1);return {o,br,kg:br*o.kgb,v:br*o.kgb*o.kg,forc:br>q};}
+function simular(){
+  const itens=SIM.map((x,i)=>{const g=simGrupo(x);if(!g)return {x,i,nf:1};const L=g.m.filter(m=>visivel(g,m)).map(m=>calc(g,m)).filter(o=>!o.sem);
+    return {x,i,g,cl:classe(g,x.q),ops:L.map(o=>opcao(o,x.b)).sort((a,b)=>a.v-b.v)};});
+  const val=itens.filter(t=>!t.nf);
+  const fs=[...new Set(val.flatMap(t=>t.ops.map(p=>p.o.f)))];
+  const minP=f=>{const P=DADOS.forn[f];return P&&P.min_pedido!=null?+P.min_pedido:0;};
+  const resumo=esc=>{const por={};esc.forEach(e=>{if(!e.p)return;const f=e.p.o.f;por[f]=por[f]||{kg:0,v:0,n:0};por[f].kg+=e.p.kg;por[f].v+=e.p.v;por[f].n++;});
+    Object.entries(por).forEach(([f,r])=>{r.min=minP(f);r.falta=Math.max(0,r.min-r.kg);});return por;};
+  /* 1) um fornecedor só */
+  const unicos=fs.map(f=>{const esc=val.map(t=>({t,p:t.ops.filter(p=>p.o.f===f).sort((a,b)=>a.v-b.v)[0]||null}));
+    const por=resumo(esc);const r=por[f]||{kg:0,v:0,n:0,min:minP(f),falta:minP(f)};
+    return {f,esc,cob:esc.filter(e=>e.p).length,kg:r.kg,v:r.v,min:r.min,falta:r.falta};}).sort((a,b)=>(b.cob-a.cob)||(a.v-b.v));
+  /* 2) melhor combinação: cada item no mais barato; quem não fecha o pedido mínimo tenta passar os itens para outro fornecedor já usado */
+  let esc=val.map(t=>({t,p:t.ops[0]||null}));
+  for(let k=0;k<20;k++){const por=resumo(esc);const ruim=Object.entries(por).filter(([,r])=>r.falta>0).sort((a,b)=>a[1].kg-b[1].kg)[0];if(!ruim)break;
+    const f=ruim[0];const ok=Object.keys(por).filter(x=>x!==f);let mudou=false;
+    const novo=esc.map(e=>{if(!e.p||e.p.o.f!==f)return e;const alt=e.t.ops.find(p=>ok.includes(p.o.f));if(!alt)return e;mudou=true;return {...e,p:alt,mov:f};});
+    if(!mudou)break;
+    /* só aceita a troca se fechar sem faltar mínimo em quem recebeu ou se for mais barato que completar o mínimo */
+    const pn=resumo(novo);const custoNovo=Object.values(pn).reduce((a,r)=>a+r.v,0);
+    const custoAtual=Object.values(por).reduce((a,r)=>a+r.v,0)+ruim[1].falta*(esc.find(e=>e.p&&e.p.o.f===f).p.o.kg);
+    if(custoNovo<=custoAtual)esc=novo;else break;}
+  const porC=resumo(esc);
+  return {itens,val,unicos,esc,porC,totC:Object.values(porC).reduce((a,r)=>a+r.v,0),kgC:Object.values(porC).reduce((a,r)=>a+r.kg,0)};}
+function telaSim(){
+  const S=SIM.length?simular():null;
+  const lista=`<section class="box"><h1 class="t">Simular pedido</h1><p class="sub">Lance os perfis e a quantidade de barras de 6 m. A ferramenta mostra quanto sai o pedido inteiro em cada fornecedor e a melhor combinação, conferindo o <b>pedido mínimo</b> e a <b>compra mínima por item</b> (em kg) de cada um. Acabamento: <b>${esc(CORN[COR])}</b> (troque na aba Pesquisar).</p>
+   <form id="fSim" class="sb" style="flex-wrap:wrap"><input name="c" placeholder="Código (qualquer fornecedor)" autocomplete="off" style="flex:2 1 220px"><input name="b" inputmode="numeric" placeholder="Barras" style="flex:0 1 120px;text-transform:none"><button>＋ Incluir</button></form>
+   <details style="margin-top:8px"><summary style="cursor:pointer;font-weight:700;color:var(--tl)">Colar uma lista (código;barras)</summary><form id="fSimL" style="display:flex;flex-direction:column;gap:6px;margin-top:6px"><textarea name="t" rows="5" placeholder="SU-001;20&#10;SU-005;12&#10;TBX028;4" style="border:1px solid #c4ccd2;border-radius:10px;padding:10px;font:600 15px var(--f-b)"></textarea><button class="bt p" style="align-self:flex-start">Incluir lista</button></form></details>
+   ${SIM.length?`<div style="overflow:auto;margin-top:12px"><table><thead><tr><th>Código</th><th>Perfil</th><th class="n">Barras</th><th></th></tr></thead><tbody>${S.itens.map(t=>`<tr><td><b>${esc(t.x.q)}</b></td><td>${t.nf?'<span style="color:var(--bx)">não encontrado</span>':esc((t.g.n||'')+' · '+IDX.linhas[t.g.l].n)+(t.cl?' · Classe '+t.cl:'')+(t.ops&&!t.ops.length?' · <span style="color:var(--md)">sem preço em nenhum fornecedor</span>':'')}</td><td class="n"><input data-simq="${t.i}" value="${t.x.b}" inputmode="numeric" style="width:70px;padding:4px 6px;border:1px solid #c4ccd2;border-radius:7px;font:600 15px var(--f-b);text-align:right"></td><td><button type="button" class="bt r" data-simrm="${t.i}" style="padding:2px 9px">Tirar</button></td></tr>`).join('')}</tbody></table></div>
+   <div class="acoes noprint" style="margin-top:10px"><button type="button" class="bt p" data-simprint>🖨️ Imprimir / PDF</button><button type="button" class="bt" data-simcsv>⬇️ Baixar Excel</button><button type="button" class="bt r" data-simlimpa>Limpar simulação</button></div>`:''}</section>`;
+  if(!S)return lista+`<div class="box" style="margin-top:14px"><p class="vazio">Inclua os perfis do pedido para simular. Também dá para levar um código direto da aba Pesquisar (botão “🧮 Levar para a simulação”).</p></div>`;
+  if(semPrecos())return lista+`<div class="aviso">Preencha os preços na aba <button type="button" class="bt" data-aba="precos" style="padding:3px 10px">💲 Preços dos fornecedores</button> para simular.</div>`;
+  const N=S.val.length;
+  const melhorU=S.unicos.find(u=>u.cob===N&&u.falta<=0)||S.unicos.find(u=>u.cob===N);
+  const eco=melhorU?melhorU.v-S.totC:null;
+  const combo=`<div class="melhor" style="margin-top:14px"><div class="tr">🏆</div><div><small>Melhor combinação · ${esc(CORN[COR])}</small><b>${Object.keys(S.porC).map(f=>esc(IDX.forn[f])).join(' + ')||'—'}</b>
+    <p>${eco!=null&&eco>0.005?`Economia de ${rs(eco)} em relação a comprar tudo na ${esc(IDX.forn[melhorU.f])}.`:melhorU?`Comprar tudo na ${esc(IDX.forn[melhorU.f])} já é a melhor opção.`:'Nenhum fornecedor tem todos os itens: a combinação é o único jeito de fechar o pedido.'}</p></div>
+    <div class="vl"><small>Total do pedido</small>${rs(S.totC)}<small>${n2(S.kgC)} kg</small></div></div>`;
+  const porF=Object.entries(S.porC).map(([f,r])=>`<div class="fc" style="gap:4px"><h3 style="font-size:22px">${esc(IDX.forn[f])} <span class="st ${r.falta>0?'vl':'ok'}">${r.falta>0?'faltam '+n2(r.falta)+' kg':'pedido mínimo ok'}</span></h3><div class="kv" style="display:flex;gap:6px;flex-wrap:wrap"><span class="abc" style="padding:3px 9px;font-size:14px">${r.n} ${r.n===1?'item':'itens'}</span><span class="abc" style="padding:3px 9px;font-size:14px">${n2(r.kg)} kg${r.min?' de '+n2(r.min).replace(',00','')+' kg mín.':''}</span><span class="abc" style="padding:3px 9px;font-size:14px">${rs(r.v)}</span></div>
+    ${r.falta>0?`<small style="color:var(--md)">Para fechar este pedido precisa completar ${n2(r.falta)} kg (≈ ${rs(r.falta*S.esc.find(e=>e.p&&e.p.o.f===f).p.o.kg)}) ou passar estes itens para outro fornecedor.</small>`:''}</div>`).join('');
+  const tab=`<div class="rit"><h3>Itens na melhor combinação <small>barras de 6 m</small></h3><table><thead><tr><th>Pedido</th><th class="n">Barras</th><th>Comprar em</th><th>Código</th><th class="n">Barras compradas</th><th class="n">kg</th><th class="n">R$/kg</th><th class="n">Total</th></tr></thead><tbody>
+    ${S.esc.map(e=>e.p?`<tr><td><b>${esc(e.t.x.q)}</b>${e.t.cl?` <small>· ${e.t.cl}</small>`:''}</td><td class="n">${e.t.x.b}</td><td>${esc(IDX.forn[e.p.o.f])}<br><small>${esc(e.p.o.lin)}</small>${e.mov?`<br><small style="color:var(--md)">passou da ${esc(IDX.forn[e.mov])} para fechar o mínimo</small>`:''}</td><td>${esc(e.p.o.c)}${ADM&&(e.p.o.lvl==='media'||e.p.o.lvl==='baixa')?`<span class="nvl ${e.p.o.lvl}">${e.p.o.lvl==='media'?'provável':'revisar'}</span>`:''}</td><td class="n">${e.p.br}${e.p.forc?`<br><small style="color:var(--md)">mínimo por item</small>`:''}</td><td class="n">${n2(e.p.kg)}</td><td class="n">${n2(e.p.o.kg)}</td><td class="n"><b>${n2(e.p.v)}</b></td></tr>`:`<tr><td><b>${esc(e.t.x.q)}</b></td><td class="n">${e.t.x.b}</td><td colspan="6" style="color:var(--md)">sem preço em nenhum fornecedor</td></tr>`).join('')}
+    <tr><td colspan="5"><b>Total</b></td><td class="n"><b>${n2(S.kgC)}</b></td><td></td><td class="n"><b>${n2(S.totC)}</b></td></tr></tbody></table></div>`;
+  const forc=S.esc.filter(e=>e.p&&e.p.forc&&e.t.cl==='C');
+  const alC=forc.length?`<div class="aviso bx">⚠️ ${forc.length} ${forc.length===1?'item de giro baixo (classe C) obriga':'itens de giro baixo (classe C) obrigam'} a comprar mais barras que o pedido por causa da compra mínima: ${forc.map(e=>`${esc(e.t.x.q)} (${e.t.x.b} → ${e.p.br} barras)`).join(', ')}.</div>`:'';
+  const uni=`<div class="rit"><h3>Comprar tudo num fornecedor só</h3><table><thead><tr><th>Fornecedor</th><th class="n">Itens que tem</th><th class="n">kg</th><th>Pedido mínimo</th><th class="n">Total</th><th class="n">vs melhor combinação</th></tr></thead><tbody>
+    ${S.unicos.map(u=>`<tr class="${u===melhorU?'best':''}"><td>${u===melhorU?'✅ ':''}${esc(IDX.forn[u.f])}</td><td class="n">${u.cob}/${N}${u.cob<N?'<br><small style="color:var(--md)">faltam '+(N-u.cob)+'</small>':''}</td><td class="n">${n2(u.kg)}</td><td>${u.min?(u.falta>0?`<span style="color:var(--md)">faltam ${n2(u.falta)} kg</span>`:'ok'):'—'}</td><td class="n">${rs(u.v)}${u.cob<N?'<br><small>só dos itens que tem</small>':''}</td><td class="n">${u.cob===N?(u.v-S.totC>0.005?'+'+rs(u.v-S.totC):'igual'):'—'}</td></tr>`).join('')}</tbody></table></div>`;
+  const head=`<div class="prt"><b style="font:800 26px var(--f-d)">FC Consultoria · Simulação de pedido</b><br>${esc(DADOS.nome||'')} · ${new Date().toLocaleDateString('pt-BR')} · ${esc(CORN[COR])} · barra de ${BARRA} m</div>`;
+  return head+lista+combo+alC+`<div class="fgrid">${porF}</div>`+tab+uni+`<p class="sub" style="font-size:13px;margin-top:10px">Cada item vai para o fornecedor mais barato. Se um fornecedor não fecha o pedido mínimo, a simulação tenta passar os itens dele para outro fornecedor já usado, quando isso sai mais barato do que completar o mínimo. Só entram pares que você vê na pesquisa.</p>`;}
+function simCsv(){const S=simular();const f=v=>v==null||isNaN(v)?'':String(Math.round(v*100)/100).replace('.',',');
+  const L=[['Código pedido','Barras pedidas','Classe','Fornecedor','Código','Barras compradas','kg','R$/kg','Total R$']];
+  S.esc.forEach(e=>L.push(e.p?[e.t.x.q,e.t.x.b,e.t.cl||'',IDX.forn[e.p.o.f],e.p.o.c,e.p.br,f(e.p.kg),f(e.p.o.kg),f(e.p.v)]:[e.t.x.q,e.t.x.b,e.t.cl||'','sem preço','','','','','']));
+  L.push(['Total','','','','','',f(S.kgC),'',f(S.totC)]);L.push([]);L.push(['Fornecedor único','Itens','kg','Falta p/ mínimo kg','Total R$']);
+  S.unicos.forEach(u=>L.push([IDX.forn[u.f],u.cob+'/'+S.val.length,f(u.kg),f(u.falta),f(u.v)]));
+  const t='﻿'+L.map(r=>r.map(c=>{c=String(c);return /[;"\n]/.test(c)?'"'+c.replace(/"/g,'""')+'"':c;}).join(';')).join('\r\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'text/csv;charset=utf-8'}));a.download='simulacao-pedido-'+(EMP||'fc')+'-'+new Date().toISOString().slice(0,10)+'.csv';a.click();
+  registrar('simulacao',{itens:SIM.length,total:Math.round(S.totC),cor:COR,formato:'excel'});}
+function simAdd(q,b,g){b=Math.max(1,Math.round(+String(b).replace(',','.')||0));if(!q||!b)return false;const i=SIM.findIndex(x=>norm(x.q)===norm(q));
+  if(i>=0)SIM[i].b+=b;else SIM.push({q:q.toUpperCase(),b,g:g||null});ls.set(SKEY(),SIM);return true;}
+
 /* ===== curva ABC (FC) ===== */
 function telaAbc(){const A=DADOS.abc||{};const M=DADOS.meta||{};const cs=Object.entries(A).sort((a,b)=>a[1].localeCompare(b[1])||a[0].localeCompare(b[0]));
   const cnt={A:0,B:0,C:0};cs.forEach(([,c])=>cnt[c]++);
@@ -344,9 +411,9 @@ async function telaUso(){const box=$('#app .box:last-child');let L=[],P=[],F=[];
     const vel=f.length?Math.max(...f.map(x=>dias(x.atualizado_em))):null;
     return `<div class="box"><h2 class="t" style="display:flex;justify-content:space-between;gap:8px">${esc(e.nome)} ${p&&p.ativo?'':'<span class="st vz" style="font:700 12px var(--f-b)">sem link ativo</span>'}</h2>
      ${parado?`<div class="aviso bx" style="margin:0 0 8px">${ult?'Sem uso há '+dias(ult)+' dias.':'Ainda não usou a ferramenta.'} Vale cobrar o cliente.</div>`:''}
-     <div class="kp"><div><b>${b.filter(x=>+new Date(x.criado_em)>d7).length}</b><span>pesquisas em 7 dias</span></div><div><b>${b.filter(x=>+new Date(x.criado_em)>d30).length}</b><span>pesquisas em 30 dias</span></div><div><b>${l.filter(x=>x.tipo==='relatorio').length}</b><span>relatórios tirados</span></div><div><b>${f.length}/6</b><span>fornecedores com preço${vel!=null?' · mais antigo '+vel+' d':''}</span></div></div>
+     <div class="kp"><div><b>${b.filter(x=>+new Date(x.criado_em)>d7).length}</b><span>pesquisas em 7 dias</span></div><div><b>${b.filter(x=>+new Date(x.criado_em)>d30).length}</b><span>pesquisas em 30 dias</span></div><div><b>${l.filter(x=>x.tipo==='relatorio').length}</b><span>relatórios tirados</span></div><div><b>${l.filter(x=>x.tipo==='simulacao').length}</b><span>simulações de pedido</span></div><div><b>${f.length}/6</b><span>fornecedores com preço${vel!=null?' · mais antigo '+vel+' d':''}</span></div></div>
      <b style="font-size:14px">Códigos mais pesquisados</b><div class="chips" style="margin:6px 0 10px">${tp.length?tp.map(([q,n])=>`<button type="button" data-ir="${esc(q)}" data-emp="${esc(e.id)}">${esc(q)} <small>${n}×</small></button>`).join(''):'<small style="color:var(--tm)">nenhum ainda</small>'}</div>
-     <b style="font-size:14px">Últimos movimentos</b><div class="lg">${l.slice(0,40).map(x=>`<div><small>${new Date(x.criado_em).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})}</small> · ${esc(x.nome||'—')} · ${x.tipo==='busca'?'pesquisou <b>'+esc((x.detalhe&&x.detalhe.q||'').toUpperCase())+'</b>'+(x.detalhe&&x.detalhe.achou===false?' <small>(não achou)</small>':''):x.tipo==='relatorio'?'tirou relatório ('+((x.detalhe&&x.detalhe.itens)||0)+' itens)':x.tipo==='precos'?'atualizou preço da <b>'+esc(IDX.forn[x.detalhe&&x.detalhe.forn]||'')+'</b>':esc(x.tipo)}</div>`).join('')||'<small style="color:var(--tm)">nada registrado</small>'}</div>
+     <b style="font-size:14px">Últimos movimentos</b><div class="lg">${l.slice(0,40).map(x=>`<div><small>${new Date(x.criado_em).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})}</small> · ${esc(x.nome||'—')} · ${x.tipo==='busca'?'pesquisou <b>'+esc((x.detalhe&&x.detalhe.q||'').toUpperCase())+'</b>'+(x.detalhe&&x.detalhe.achou===false?' <small>(não achou)</small>':''):x.tipo==='relatorio'?'tirou relatório ('+((x.detalhe&&x.detalhe.itens)||0)+' itens)':x.tipo==='simulacao'?'simulou pedido ('+((x.detalhe&&x.detalhe.itens)||0)+' itens'+(x.detalhe&&x.detalhe.total?', R$ '+Number(x.detalhe.total).toLocaleString('pt-BR'):'')+')':x.tipo==='precos'?'atualizou preço da <b>'+esc(IDX.forn[x.detalhe&&x.detalhe.forn]||'')+'</b>':esc(x.tipo)}</div>`).join('')||'<small style="color:var(--tm)">nada registrado</small>'}</div>
      ${p?`<p class="sub" style="font-size:13px;margin-top:8px">Portal: ${p.acessos||0} acessos · último ${p.ultimo_acesso?dt(p.ultimo_acesso):'—'}</p>`:''}</div>`;}).join('');
   $('#app').innerHTML=abas()+`<section class="box"><h1 class="t">Acompanhamento</h1><p class="sub">O que cada cliente está pesquisando e se está usando a ferramenta.</p></section><div class="cli2">${html}</div>`;}
 
@@ -359,6 +426,8 @@ function regBusca(){const q=Q.trim().toUpperCase();if(!q||q===regU)return;clearT
 document.addEventListener('submit',async ev=>{const f=ev.target;
   if(f.id==='fb'){ev.preventDefault();Q=$('#q').value.trim();SEL=null;history.replaceState(null,'','#'+encodeURIComponent(Q));tela();regBusca();}
   else if(f.classList.contains('fc')){ev.preventDefault();salvarForn(f);}
+  else if(f.id==='fSim'){ev.preventDefault();const q=f.c.value.trim();if(!q){f.c.focus();return;}if(!buscar(q).length){toast('Não achei '+q.toUpperCase()+'.');return;}if(!simAdd(q,f.b.value||1))return;tela();setTimeout(()=>{const c=$('#fSim [name=c]');if(c)c.focus();},50);}
+  else if(f.id==='fSimL'){ev.preventDefault();let n=0,nf=[];f.t.value.split(/\n/).map(x=>x.trim()).filter(Boolean).forEach(l=>{const p=l.split(/[;\t]/).map(x=>x.trim());if(!p[0])return;if(!buscar(p[0]).length)nf.push(p[0]);if(simAdd(p[0],p[1]||1))n++;});toast(n+' itens incluídos.'+(nf.length?' Não achei: '+nf.join(', '):''));tela();}
   else if(f.id==='fAbc'){ev.preventDefault();const m=f.querySelector('.msg');const it=[],bad=[];
     f.t.value.split(/\n/).map(s=>s.trim()).filter(Boolean).forEach(s=>{const p=s.split(/[;\t,]/).map(x=>x.trim());const c=(p[0]||'').toUpperCase(),k=(p[1]||'').toUpperCase();if(c&&['A','B','C'].includes(k))it.push([c,k]);else bad.push(s);});
     if(!it.length){m.textContent='Nada para salvar. Use o formato código;classe (A, B ou C).';return;}
@@ -368,12 +437,17 @@ document.addEventListener('submit',async ev=>{const f=ev.target;
     const r=await sb.from('compra_abc_meta').upsert({empresa_id:EMP,data_reuniao:meta.data,participantes:meta.part,obs:meta.obs,atualizado_em:new Date().toISOString()});
     if(r.error){if(/relation|does not exist|schema cache/i.test(r.error.message)){LOCAL=true;DADOS.meta=meta;ls.set('fc_compra_meta_'+EMP,meta);toast('Reunião salva (modo demonstração).');tela();return;}toast('Não salvou: '+r.error.message);return;}
     DADOS.meta=meta;toast('Reunião salva.');tela();}});
-document.addEventListener('click',async ev=>{const t=ev.target.closest('[data-aba],[data-cor],[data-modo],[data-g],[data-addrel],[data-rmrel],[data-print],[data-csv],[data-limpa],[data-setabc],[data-rmabc],[data-ir],[data-zoom]');if(!t)return;const d=t.dataset;
+document.addEventListener('click',async ev=>{const t=ev.target.closest('[data-addsim],[data-simrm],[data-simprint],[data-simcsv],[data-simlimpa],[data-aba],[data-cor],[data-modo],[data-g],[data-addrel],[data-rmrel],[data-print],[data-csv],[data-limpa],[data-setabc],[data-rmabc],[data-ir],[data-zoom]');if(!t)return;const d=t.dataset;
   if(d.aba){ABA=d.aba;tela();window.scrollTo(0,0);}
   else if(d.cor){COR=d.cor;salvaPref();tela();}
   else if(d.modo){MODO=d.modo;salvaPref();tela();}
   else if(d.g!=null){SEL=IDX.g[+d.g];tela();}
   else if(d.addrel!=null)addRel();
+  else if(d.addsim!=null){const v=prompt('Quantas barras de 6 m de '+Q.toUpperCase()+'?','1');if(v==null)return;if(simAdd(Q,v,SEL?SEL.l+'|'+SEL.k:null)){toast('Incluído na simulação.');tela();}}
+  else if(d.simrm!=null){SIM.splice(+d.simrm,1);ls.set(SKEY(),SIM);tela();}
+  else if(d.simprint!=null){const S=simular();registrar('simulacao',{itens:SIM.length,total:Math.round(S.totC),cor:COR,formato:'pdf'});window.print();}
+  else if(d.simcsv!=null)simCsv();
+  else if(d.simlimpa!=null){if(confirm('Limpar a simulação?')){SIM=[];ls.set(SKEY(),SIM);tela();}}
   else if(d.rmrel!=null){REL.splice(+d.rmrel,1);ls.set(RKEY(),REL);tela();}
   else if(d.print!=null){registrar('relatorio',{itens:REL.length,cor:COR,modo:MODO,formato:'pdf'});window.print();}
   else if(d.csv!=null)csv();
@@ -384,6 +458,7 @@ document.addEventListener('click',async ev=>{const t=ev.target.closest('[data-ab
   else if(d.zoom!=null){if(!d.zoom)return;$('#zmI').src=d.zoom;$('#zmT').textContent=d.t||'';$('#zm').hidden=false;}});
 $('#zmX').onclick=()=>$('#zm').hidden=true;$('#zm').onclick=e=>{if(e.target.id==='zm')$('#zm').hidden=true;};
 document.addEventListener('keydown',e=>{if(e.key==='Escape')$('#zm').hidden=true;});
+document.addEventListener('change',e=>{const t=e.target;if(t.dataset&&t.dataset.simq!=null){const v=Math.max(1,Math.round(+t.value.replace(',','.')||1));SIM[+t.dataset.simq].b=v;ls.set(SKEY(),SIM);tela();}});
 
 /* ===== início ===== */
 async function carregaDados(){
@@ -392,7 +467,7 @@ async function carregaDados(){
     DADOS={forn:ls.get('fc_compra_local_'+EMP,{}),abc:ls.get('fc_compra_abc_'+EMP,{}),meta:ls.get('fc_compra_meta_'+EMP,null),nome:(EMPS.find(e=>e.id===EMP)||{}).nome||''};return true;}
   if(!r||r.error||!r.data)return false;
   LOCAL=false;DADOS={forn:r.data.forn||{},abc:r.data.abc||{},meta:r.data.meta||null,nome:r.data.nome||''};EMP=r.data.emp;return true;}
-async function trocaEmp(id){EMP=id;ls.set('fc_compra_emp',id);REL=ls.get(RKEY(),[]);await carregaDados();$('#hd').textContent='Onde comprar · '+(DADOS.nome||id);}
+async function trocaEmp(id){EMP=id;ls.set('fc_compra_emp',id);REL=ls.get(RKEY(),[]);SIM=ls.get(SKEY(),[]);await carregaDados();$('#hd').textContent='Onde comprar · '+(DADOS.nome||id);}
 async function iniciar(){
   await carregaIndice();
   if(ADM){const r=await sb.from('rotina_docs').select('id,data').eq('col','consultoria');EMPS=(r.data||[]).map(x=>({id:x.id,nome:(x.data&&x.data.nome)||x.id})).sort((a,b)=>a.nome.localeCompare(b.nome,'pt'));
@@ -401,7 +476,7 @@ async function iniciar(){
     await trocaEmp(e0);}
   else{const ok=await carregaDados();if(!ok&&!LOCAL){$('#app').innerHTML='<p class="vazio">Link inválido ou expirado. Fale com a FC Consultoria.</p>';return;}
     if(LOCAL){const v=await sb.rpc('cons_portal_ver',{p_chave:KEY}).catch(()=>({}));if(!v||v.error||!v.data){$('#app').innerHTML='<p class="vazio">Link inválido ou expirado. Fale com a FC Consultoria.</p>';return;}EMP=v.data.id;DADOS.nome=v.data.nome||'';DADOS.forn=ls.get('fc_compra_local_'+EMP,{});}
-    REL=ls.get(RKEY(),[]);$('#hd').textContent='Onde comprar · '+(DADOS.nome||'');registrar('acesso',{});}
+    REL=ls.get(RKEY(),[]);SIM=ls.get(SKEY(),[]);$('#hd').textContent='Onde comprar · '+(DADOS.nome||'');registrar('acesso',{});}
   Q=decodeURIComponent(location.hash.slice(1)||'');tela();if(Q)regBusca();}
 (async()=>{if(KEY){marca('uso exclusivo do cliente');iniciar();}
   else gateUI(async()=>{try{const r=await sb.rpc('trein_is_admin');ADM=!!r.data;}catch(_){}
