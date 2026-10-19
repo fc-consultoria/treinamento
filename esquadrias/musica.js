@@ -57,7 +57,7 @@
 
   /* ---------- playlists (Spotify, YouTube, Deezer) ---------- */
   function embed(u){u=String(u||'').trim();let m;
-    if((m=u.match(/open\.spotify\.com\/(?:intl-[a-z]+\/)?(playlist|album|track|show)\/([A-Za-z0-9]+)/)))return {src:`https://open.spotify.com/embed/${m[1]}/${m[2]}?utm_source=generator&theme=0`,h:352,f:'Spotify'};
+    if((m=u.match(/open\.spotify\.com\/(?:intl-[a-z]+\/)?(playlist|album|track|show|artist)\/([A-Za-z0-9]+)/)))return {src:`https://open.spotify.com/embed/${m[1]}/${m[2]}?utm_source=generator&theme=0`,h:352,f:'Spotify'};
     if((m=u.match(/[?&]list=([A-Za-z0-9_-]+)/)))return {src:`https://www.youtube-nocookie.com/embed/videoseries?list=${m[1]}`,h:203,f:'YouTube'};
     if((m=u.match(/(?:youtu\.be\/|v=|embed\/)([A-Za-z0-9_-]{11})/)))return {src:`https://www.youtube-nocookie.com/embed/${m[1]}`,h:203,f:'YouTube'};
     if((m=u.match(/deezer\.com\/(?:[a-z]{2}\/)?(playlist|album)\/(\d+)/)))return {src:`https://widget.deezer.com/widget/auto/${m[1]}/${m[2]}`,h:300,f:'Deezer'};
