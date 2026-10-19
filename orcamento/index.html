@@ -49,6 +49,7 @@ table.it input.pz{width:92px;padding:6px;border:1px solid #f2a51e;border-radius:
 .tot{display:grid;grid-template-columns:1fr auto;gap:6px 18px;max-width:460px;align-items:center;margin-left:auto;font-size:15px}.tot b{text-align:right}.tot .g{font:800 24px var(--f-d);color:#0f4f53}
 .pill{display:inline-block;border-radius:99px;padding:2px 9px;font-size:12px;font-weight:700;background:#eef2f4}
 .s-aberto{background:#e8f0ff;color:#1d4ed8}.s-enviado{background:var(--orc);color:#92400e}.s-aprovado{background:var(--okc);color:var(--ok)}.s-perdido,.s-cancelado{background:var(--bxc);color:var(--bx)}
+.est{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:7px;vertical-align:-1px;box-shadow:0 0 0 2px #fff,0 0 0 3px rgba(0,0,0,.12)}
 .vazio{color:var(--tm);text-align:center;padding:30px}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#13232e;color:#fff;padding:10px 18px;border-radius:12px;z-index:9000;font-weight:600}
 .parc{background:var(--tlc);border-radius:10px;padding:8px 12px;font-size:14px;margin-top:8px}
@@ -95,6 +96,11 @@ const hoje=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth(
 const maisDias=n=>{const d=new Date();d.setDate(d.getDate()+(+n||0));return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
 const dBR=s=>s?String(s).slice(0,10).split('-').reverse().join('/'):'';
 const fotoUrl=f=>!f?'':/^https?:/.test(f)?f:'../'+f;
+/* ---------- estoque (importado do sistema da empresa) ---------- */
+const FX=()=>Object.assign({verm:0,lar:6,verde:8,dias:15},(D&&D.cab&&D.cab.estFx)||{});
+function estDe(id){const i=D&&D.itens.find(x=>x.id===id);return i&&i.est!=null?i.est:null;}
+function estB(q){if(q==null||q==='')return '';const f=FX(),v=+q;const [bg,fc,t]=v<f.verm?['','#dc2626','sem estoque']:v<f.lar?['','#f97316','estoque baixo']:v>f.verde?['','#16a34a','estoque bom']:['','#eab308','estoque no limite'];
+  return `<span class="est" title="${t[0].toUpperCase()+t.slice(1)}${ADM?' ('+String(v).replace('.',',')+' barras)':''}" style="background:${fc}"></span>`;}
 function toast(t){const d=document.createElement('div');d.className='toast';d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),2800);}
 const ST={aberto:'Em aberto',enviado:'Enviado ao cliente',aprovado:'Aprovado',perdido:'Perdido',cancelado:'Cancelado'};
 const PAG_PADRAO=['PIX','Dinheiro','Cartão de débito','Cartão de crédito','Boleto','Transferência','Cheque'];
@@ -137,7 +143,7 @@ function telaNovo(){const c=O.cliente,p=O.pagamento,k=calc(),pag=(D.pag&&D.pag.l
    <p class="nota">Os preços vêm da tabela de precificação da empresa. ${ADM?'Na FC você pode ajustar o preço de uma linha (campo laranja) e incluir item avulso.':''}</p>
    ${ADM?`<details style="margin:6px 0"><summary class="nota" style="cursor:pointer">＋ Item avulso (só FC)</summary><div class="row" style="margin-top:6px"><input class="inp" id="avC" placeholder="Código" style="max-width:130px"><input class="inp" id="avD" placeholder="Descrição" style="flex:1;min-width:200px"><input class="inp" id="avU" placeholder="Un" value="UN" style="max-width:70px"><input class="inp" id="avP" placeholder="Preço R$" style="max-width:110px"><button class="btn" type="button" id="avAdd">Incluir</button></div></details>`:''}
    ${O.itens.length?`<div style="overflow-x:auto"><table class="it"><thead><tr><th></th><th>Código</th><th>Produto</th><th class="hm">Un</th><th class="n">Qtde</th><th class="n">Vlr unit.</th>${k.pf>0?'<th class="n">Vlr c/ desconto</th>':''}<th class="n">Total</th><th></th></tr></thead><tbody>
-    ${O.itens.map((i,x)=>`<tr><td><div class="th" style="${i.foto?`background-image:url('${esc(fotoUrl(i.foto))}')`:''}">${i.foto?'':'▭'}</div></td><td><b>${esc(i.cod)}</b></td><td>${esc(i.desc)}${i.cor?` <span class="pill">${esc(i.cor)}</span>`:''}</td><td class="hm">${esc(i.un||'BR')}</td>
+    ${O.itens.map((i,x)=>`<tr><td><div class="th" style="${i.foto?`background-image:url('${esc(fotoUrl(i.foto))}')`:''}">${i.foto?'':'▭'}</div></td><td style="white-space:nowrap">${estB(estDe(i.id))}<b>${esc(i.cod)}</b></td><td>${esc(i.desc)}${i.cor?` <span class="pill">${esc(i.cor)}</span>`:''}</td><td class="hm">${esc(i.un||'BR')}</td>
      <td class="n"><input class="q" data-q="${x}" value="${esc(String(i.qtd).replace('.',','))}" inputmode="decimal"></td>
      <td class="n">${ADM?`<input class="pz" data-pz="${x}" value="${n2(i.preco)}" inputmode="decimal">`:rs(i.preco)}</td>${k.pf>0?`<td class="n" style="color:var(--ok);font-weight:700">${rs(num(i.preco)*(1-k.pf))}</td>`:''}<td class="n"><b>${rs(num(i.preco)*(1-k.pf)*num(i.qtd))}</b></td><td><button class="btn mini" type="button" data-rm="${x}" title="Tirar">✕</button></td></tr>`).join('')}
    </tbody></table></div>`:'<p class="vazio" style="padding:14px">Nenhum item ainda. Pesquise acima e toque no item para incluir.</p>'}
@@ -169,7 +175,7 @@ function addItem(i){const ja=O.itens.find(x=>x.id===i.id);if(ja)ja.qtd=num(ja.qt
   BQ='';tela();setTimeout(()=>{const q=$('#bq');if(q)q.focus();},30);toast('Incluído: '+i.cod);}
 function wireNovo(){const bq=$('#bq'),sug=$('#sug');let L=[];
   const pinta=()=>{L=filtrar(bq.value);BQ=bq.value;if(!bq.value.trim()){sug.hidden=true;return;}sug.hidden=false;SUGI=Math.min(SUGI,Math.max(0,L.length-1));
-   sug.innerHTML=L.length?L.map((i,x)=>`<button type="button" data-si="${x}" class="${x===SUGI?'on':''}"><span class="th" style="${i.foto?`background-image:url('${esc(fotoUrl(i.foto))}')`:''}">${i.foto?'':'▭'}</span><span class="d"><b>${esc(i.cod)}</b> · ${esc(i.desc)}<small>${esc([i.cor,i.linha].filter(Boolean).join(' · '))}${i.peso?' · '+n2(i.peso)+' kg/barra':''}</small></span><span class="p">${rs(i.preco)}</span></button>`).join(''):'<p class="nota" style="padding:10px">Nenhum item encontrado.</p>';
+   sug.innerHTML=L.length?L.map((i,x)=>`<button type="button" data-si="${x}" class="${x===SUGI?'on':''}"><span class="th" style="${i.foto?`background-image:url('${esc(fotoUrl(i.foto))}')`:''}">${i.foto?'':'▭'}</span><span class="d">${estB(i.est)}<b>${esc(i.cod)}</b> · ${esc(i.desc)}<small>${esc([i.cor,i.linha].filter(Boolean).join(' · '))}${i.peso?' · '+n2(i.peso)+' kg/barra':''}</small></span><span class="p">${rs(i.preco)}</span></button>`).join(''):'<p class="nota" style="padding:10px">Nenhum item encontrado.</p>';
    sug.querySelectorAll('[data-si]').forEach(b=>b.onclick=()=>addItem(L[+b.dataset.si]));};
   bq.oninput=()=>{SUGI=0;pinta();};bq.onkeydown=e=>{if(e.key==='ArrowDown'){SUGI++;pinta();e.preventDefault();}else if(e.key==='ArrowUp'){SUGI=Math.max(0,SUGI-1);pinta();e.preventDefault();}else if(e.key==='Enter'&&L[SUGI]){addItem(L[SUGI]);e.preventDefault();}else if(e.key==='Escape'){sug.hidden=true;}};
   if(BQ)pinta();
@@ -252,13 +258,24 @@ function telaCfg(){if(!CF){carregaCfg().then(tela);return '<p class="vazio">Carr
    <p class="nota">Lê as abas que têm a coluna de preço de venda ("Preço de Venda Barra" ou "Valor da Vara c/ 6 metros") e traz código, descrição, cor, peso e preço de venda. As fotos já colocadas são mantidas. ${semFoto?`<b>${semFoto} itens sem foto.</b>`:''}</p>
    ${CF.itens.length?`<div class="row" style="margin:8px 0"><input class="inp" id="iF" placeholder="Filtrar itens" value="${esc(IF)}" style="max-width:320px"><button class="btn" type="button" id="fAuto">🖼 Buscar fotos automáticas</button></div>
    <div style="max-height:520px;overflow:auto"><table class="it"><thead><tr><th>Foto</th><th>Código</th><th>Descrição</th><th>Cor</th><th>Linha / forn.</th><th class="n">Peso barra</th><th class="n">Preço venda</th><th></th></tr></thead><tbody>
-   ${L.slice(0,400).map(i=>`<tr><td><label style="cursor:${FC?'pointer':'default'}" title="${FC?'Trocar foto':''}"><div class="th" style="${i.foto?`background-image:url('${esc(fotoUrl(i.foto))}')`:''}">${i.foto?'':'＋'}</div>${FC?`<input type="file" accept="image/*" data-up="${esc(i.id)}" hidden>`:''}</label></td><td><b>${esc(i.cod)}</b></td><td>${esc(i.desc)}</td><td>${esc(i.cor||'')}</td><td>${esc([i.linha,i.forn].filter(Boolean).join(' · '))}</td><td class="n">${i.peso?n2(i.peso):''}</td><td class="n"><b>${rs(i.preco)}</b></td><td>${i.foto&&FC?`<button class="btn mini" type="button" data-fx="${esc(i.id)}" title="Tirar foto">✕</button>`:''}</td></tr>`).join('')}</tbody></table></div>`:''}</div>
+   ${L.slice(0,400).map(i=>`<tr><td><label style="cursor:${FC?'pointer':'default'}" title="${FC?'Trocar foto':''}"><div class="th" style="${i.foto?`background-image:url('${esc(fotoUrl(i.foto))}')`:''}">${i.foto?'':'＋'}</div>${FC?`<input type="file" accept="image/*" data-up="${esc(i.id)}" hidden>`:''}</label></td><td style="white-space:nowrap">${estB(i.est)}<b>${esc(i.cod)}</b></td><td>${esc(i.desc)}</td><td>${esc(i.cor||'')}</td><td>${esc([i.linha,i.forn].filter(Boolean).join(' · '))}</td><td class="n">${i.peso?n2(i.peso):''}</td><td class="n"><b>${rs(i.preco)}</b></td><td>${i.foto&&FC?`<button class="btn mini" type="button" data-fx="${esc(i.id)}" title="Tirar foto">✕</button>`:''}</td></tr>`).join('')}</tbody></table></div>`:''}</div>
   <div class="box"><h3>🏢 Cabeçalho do orçamento</h3><div class="grid">
    <label class="f">Nome da empresa<input data-cb="nome" value="${esc(c.nome)}"></label><label class="f">CNPJ<input data-cb="cnpj" value="${esc(c.cnpj)}"></label>
    <label class="f">Endereço<input data-cb="end" value="${esc(c.end)}"></label><label class="f">Cidade / UF<input data-cb="cidade" value="${esc(c.cidade)}"></label>
    <label class="f">Telefone<input data-cb="fone" value="${esc(c.fone)}"></label><label class="f">E-mail<input data-cb="email" value="${esc(c.email)}"></label>
    <label class="f">Logo<span class="row">${c.logo?`<img src="${esc(fotoUrl(c.logo))}" style="height:40px;max-width:120px;object-fit:contain;border:1px solid var(--ln);border-radius:6px">`:''}${FC?'<input type="file" accept="image/*" id="lgUp">':'<span class="nota">a logo é colocada pela FC</span>'}</span></label>
    <label class="f" style="grid-column:1/-1">Texto do rodapé (aparece em todo orçamento)<textarea data-cb="rodape">${esc(c.rodape)}</textarea></label></div></div>
+  ${(()=>{const f=Object.assign({verm:0,lar:6,verde:8,dias:15},c.estFx||{}),em=c.estEm?new Date(c.estEm):null,dd=em?Math.floor((Date.now()-em)/864e5):null,venc=dd!=null&&dd>=f.dias,ni=CF.itens.filter(i=>i.est!=null).length;
+   return `<div class="box" style="${venc||!em?'border-color:var(--or);':''}"><h3>📦 Estoque · importação a cada ${f.dias} dias</h3>
+   <p class="nota">Importe a planilha de estoque que o sistema da empresa gera (colunas de <b>código</b> e <b>quantidade/saldo</b>). Na frente do código aparece só uma bolinha colorida (a quantidade não aparece para o vendedor).</p>
+   <p style="margin:6px 0">${em?`Última importação: <b>${em.toLocaleDateString('pt-BR')}</b> (${dd===0?'hoje':dd+' dia'+(dd>1?'s':'')+' atrás'}) · ${ni} itens com saldo · próxima até <b>${new Date(em.getTime()+f.dias*864e5).toLocaleDateString('pt-BR')}</b>${venc?' · <b style="color:var(--bx)">⚠ importação vencida</b>':''}`:'<b>Ainda não foi importado.</b>'}</p>
+   <div class="row"><label class="btn pri" style="cursor:pointer">📥 Importar estoque (.xlsx ou .csv)<input type="file" accept=".xlsx,.csv" id="estImp" hidden></label><span class="nota" id="estMsg"></span></div>
+   <div class="row" style="margin-top:10px;gap:14px">
+    <label class="f">🔴 Vermelho abaixo de<input id="fxV" value="${f.verm}" inputmode="decimal" style="width:90px"></label>
+    <label class="f">🟠 Laranja abaixo de<input id="fxL" value="${f.lar}" inputmode="decimal" style="width:90px"></label>
+    <label class="f">🟢 Verde acima de<input id="fxG" value="${f.verde}" inputmode="decimal" style="width:90px"></label>
+    <label class="f">Importar a cada (dias)<input id="fxD" value="${f.dias}" inputmode="numeric" style="width:90px"></label>
+    <span class="nota" style="align-self:end">Entre laranja e verde fica 🟡 amarelo. Exemplo: ${estB(-2)}sem estoque ${estB(3)}baixo ${estB(7)}no limite ${estB(12)}bom</span></div></div>`;})()}
   <div class="box"><h3>💳 Pagamento, desconto e validade</h3><div class="grid">
    <label class="f" style="grid-column:span 2">Formas de pagamento (uma por linha)<textarea id="cPag" rows="5">${esc((CF.pag||[]).join('\n'))}</textarea></label>
    <label class="f">Desconto máximo do vendedor (%)<input id="cDm" value="${esc(CF.desc_max)}" inputmode="decimal"></label>
@@ -297,7 +314,7 @@ async function sincronizar(){const pid=$('#plSel').value,m=$('#plMsg');if(!pid){
   const out=[],vistos=new Set();let dup=0,abas=[];
   for(const sh of model.sheets){const L=lerAba(sh,mt);if(!L.length)continue;abas.push(sh.n);
     for(const it of L){const id=(nk(it.cod)+'_'+nk(it.desc).slice(0,48)+'_'+nk(it.cor)).slice(0,90);if(vistos.has(id)){dup++;continue;}vistos.add(id);it.id=id;
-      const a=antes[id];it.foto=a&&a.foto?a.foto:fotoAutoDe(it,F);if(a&&a.fotoManual)it.fotoManual=1;out.push(it);}}
+      const a=antes[id];it.foto=a&&a.foto?a.foto:fotoAutoDe(it,F);if(a&&a.fotoManual)it.fotoManual=1;if(a&&a.est!=null)it.est=a.est;out.push(it);}}
   if(!out.length){m.textContent='Nenhum item com preço de venda encontrado nesta planilha.';return;}
   CF.itens=out;CF.planilha_id=pid;CF.itens_em=new Date().toISOString();const ok=await salvaCfg();
   if(ok){m.textContent=`✓ ${out.length} itens das abas: ${abas.join(', ')}${dup?` · ${dup} repetidos ignorados`:''} · ${out.filter(i=>i.foto).length} com foto`;tela();}}
@@ -316,7 +333,7 @@ function wireCfg(){if(!CF)return;const q=s=>document.getElementById(s);
   $$('[data-cb]').forEach(i=>i.oninput=()=>{CF.cab=CF.cab||{};CF.cab[i.dataset.cb]=i.value;});
   if(q('lgUp'))q('lgUp').onchange=async e=>{const f=e.target.files[0];if(!f)return;const b=await reduz(f,600);const path='orcamento/'+EMP+'/logo-'+Date.now()+'.jpg';
     const up=await sb.storage.from('fc-anexos').upload(path,b,{contentType:'image/jpeg',upsert:true});if(up.error){toast(up.error.message);return;}CF.cab=CF.cab||{};CF.cab.logo=sb.storage.from('fc-anexos').getPublicUrl(path).data.publicUrl;await salvaCfg('Logo salva');tela();};
-  q('cSalva').onclick=async()=>{CF.pag=q('cPag').value.split('\n').map(s=>s.trim()).filter(Boolean);CF.desc_max=num(q('cDm').value);CF.validade_dias=parseInt(q('cVd').value)||7;CF.obs=q('cObs').value;
+  q('cSalva').onclick=async()=>{CF.cab=CF.cab||{};CF.cab.estFx={verm:num(q('fxV').value),lar:num(q('fxL').value),verde:num(q('fxG').value),dias:parseInt(q('fxD').value)||15};CF.pag=q('cPag').value.split('\n').map(s=>s.trim()).filter(Boolean);CF.desc_max=num(q('cDm').value);CF.validade_dias=parseInt(q('cVd').value)||7;CF.obs=q('cObs').value;
     if(await salvaCfg())q('cMsg').textContent='✓ Salvo';};
   $$('[data-cp]').forEach(b=>b.onclick=()=>{navigator.clipboard&&navigator.clipboard.writeText(b.dataset.cp);b.textContent='✓ Copiado';});
   $$('[data-va]').forEach(b=>b.onclick=async()=>{const v=VEND.find(x=>x.id===b.dataset.va);const r=FC?await sb.from('orc_vend').update({ativo:!v.ativo}).eq('id',v.id):await sb.rpc('orc_g_vend',{p_chave:VKEY,p_acao:v.ativo?'desativar':'ativar',p_id:v.id,p_nome:null,p_tel:null});if(r.error){toast(r.error.message);return;}v.ativo=!v.ativo;tela();});
@@ -327,7 +344,19 @@ function wireCfg(){if(!CF)return;const q=s=>document.getElementById(s);
     const r=await vreq('editar',v,n.trim().slice(0,80),t.trim().slice(0,30));if(r.error||!r.data){toast('Não salvou: '+((r.error&&r.error.message)||''));return;}Object.assign(v,{nome:n.trim(),telefone:t.trim()||null});tela();toast('Vendedor atualizado');});
   $$('[data-vx]').forEach(b=>b.onclick=async()=>{const v=VEND.find(x=>x.id===b.dataset.vx);if(!confirm('Excluir o vendedor "'+v.nome+'"?\n\nO link dele para de funcionar. Os orçamentos que ele fez continuam na lista.'))return;
     const r=await vreq('excluir',v);if(r.error||!r.data){toast('Não excluiu: '+((r.error&&r.error.message)||''));return;}VEND=VEND.filter(x=>x.id!==v.id);tela();toast('Vendedor excluído');});
-  if(q('supBtn'))q('supBtn').onclick=suporte;}
+  if(q('supBtn'))q('supBtn').onclick=suporte;
+  if(q('estImp'))q('estImp').onchange=async e=>{const f=e.target.files[0];if(!f)return;const m=q('estMsg');m.textContent='Lendo '+f.name+'…';
+    try{let rows=[];
+      if(/\.csv$/i.test(f.name)){const t=await f.text();const sep=(t.split('\n')[0].match(/;/g)||[]).length>=(t.split('\n')[0].match(/,/g)||[]).length?';':',';rows=t.split(/\r?\n/).map(l=>l.split(sep).map(x=>x.replace(/^"|"$/g,'').trim()));}
+      else{const md=await Planilha.importar(await f.arrayBuffer()),mt=new Planilha.Motor(md),sh=md.sheets[0];const mr=Math.max(...Object.keys(sh.c).map(a=>+(a.match(/\d+$/)||[0])[0]));const mc=Math.max(...Object.keys(sh.c).map(a=>{const x=a.match(/^[A-Z]+/)[0];let n=0;for(const ch of x)n=n*26+ch.charCodeAt(0)-64;return n;}));
+        const CL=n=>{let s='';while(n>0){const r=(n-1)%26;s=String.fromCharCode(65+r)+s;n=Math.floor((n-1)/26);}return s;};
+        for(let r=1;r<=mr;r++){const row=[];for(let c=1;c<=mc;c++){const v=mt.val(sh,CL(c)+r);row.push(v==null?'':v);}rows.push(row);}}
+      let hi=-1,cc=-1,qc=-1;for(let r=0;r<Math.min(rows.length,15)&&hi<0;r++){const h=rows[r].map(x=>sem(String(x)));const a=h.findIndex(x=>/^cod|codigo|referencia|^ref/.test(x)),b=h.findIndex(x=>/saldo|quant|qtd|qtde|estoque|disponivel/.test(x));if(a>=0&&b>=0){hi=r;cc=a;qc=b;}}
+      if(hi<0){m.textContent='Não achei as colunas de código e quantidade/saldo no cabeçalho.';return;}
+      const S={};rows.slice(hi+1).forEach(r=>{const k=nk(r[cc]);if(!k)return;const v=typeof r[qc]==='number'?r[qc]:num(r[qc]);S[k]=(S[k]||0)+v;});
+      let ok=0;CF.itens.forEach(i=>{const ks=[nk(i.cod),...String(i.cod).split(/[|\/]/).map(nk)].filter(Boolean);const k=ks.find(x=>x in S);if(k!=null){i.est=S[k];ok++;}else delete i.est;});
+      CF.cab=CF.cab||{};CF.cab.estEm=new Date().toISOString();if(await salvaCfg())m.textContent=`✓ ${ok} de ${CF.itens.length} itens com saldo · ${Object.keys(S).length} códigos na planilha`;tela();}
+    catch(err){m.textContent='Não foi possível ler: '+(err.message||err);}};}
 function reduz(file,max=900){return new Promise(ok=>{const im=new Image();im.onload=()=>{const s=Math.min(1,max/Math.max(im.width,im.height));const c=document.createElement('canvas');c.width=Math.round(im.width*s);c.height=Math.round(im.height*s);const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(im,0,0,c.width,c.height);c.toBlob(b=>ok(b),'image/jpeg',.85);};im.src=URL.createObjectURL(file);});}
 
 async function suporte(){const t=prompt('Descreva o que você precisa no painel de orçamentos (a FC recebe na hora):');if(!t||!t.trim())return;
