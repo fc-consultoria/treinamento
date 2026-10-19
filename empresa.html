@@ -74,6 +74,19 @@ async function gestorOk(uid){
   return new Promise(res=>{f.onsubmit=async e=>{e.preventDefault();const h=await sha(uid+':'+document.getElementById('gsIn').value.trim());
     if(h===g.ph){try{sessionStorage.setItem('treinFC-gestor',h);}catch(_){}gate.hidden=true;res(true);}else document.getElementById('gsMsg').textContent='Senha do gestor não confere.';};
     setTimeout(()=>document.getElementById('gsIn').focus(),50);});}
+/* Enquete dos alunos (Mostruário 3D): o gestor vê as respostas da equipe dele */
+async function enqueteCard(emp,perfil){
+  let r;try{r=await sb.rpc('enquete_minha',{p_emp:perfil.papel==='admin'?emp:null});}catch(_){return;}
+  if(!r||r.error)return;const L=r.data||[];
+  const e=t=>String(t??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const ult={};L.forEach(v=>{const k=(v.nome||'').trim().toLowerCase();if(k&&!ult[k])ult[k]=v;});const U=Object.values(ult);
+  const n=f=>U.filter(f).length;
+  const b=document.createElement('section');b.id='enqG';
+  b.style.cssText='margin:0 0 14px;padding:14px 16px;border-radius:14px;border:2px solid #0f6b70;background:#fff;font:500 15px system-ui,sans-serif;color:#13232e';
+  b.innerHTML=`<div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap"><span style="font-size:30px">📊</span><div style="flex:1;min-width:220px"><b style="font-size:18px">Enquete da equipe · Mostruário 3D</b><div style="color:#5a6b75;font-size:14px">"Já entrou no link?" e "Gostou ou não?". Respostas de cada colaborador (vale a última de cada pessoa).</div></div></div>
+   <div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0">${[[U.length,'responderam'],[n(v=>v.entrou==='sim'),'👍 já entraram'],[n(v=>v.entrou&&v.entrou!=='sim'),'⏳ ainda não'],[n(v=>v.gostou==='gostei'),'👍 gostaram'],[n(v=>v.gostou==='nao_gostei'),'👎 não gostaram']].map(([q,t])=>`<span style="background:#f2f6f7;border-radius:10px;padding:6px 12px"><b style="font-size:20px">${q}</b> ${t}</span>`).join('')}</div>
+   ${U.length?`<div style="overflow:auto"><table style="width:100%;border-collapse:collapse;font-size:14px"><tr style="text-align:left;color:#5a6b75"><th style="padding:5px 4px">Colaborador</th><th>Entrou?</th><th>Gostou?</th><th>Por quê</th><th>Quando</th></tr>${U.map(v=>`<tr style="border-top:1px solid #dde6e9"><td style="padding:6px 4px"><b>${e(v.nome)}</b></td><td>${v.entrou==='sim'?'👍 Entrou':'⏳ Ainda não'}</td><td>${v.gostou==='gostei'?'👍 Gostou':v.gostou==='nao_gostei'?'👎 Não gostou':''}</td><td style="color:#5a6b75">${e(v.porque||'')}</td><td style="color:#5a6b75;white-space:nowrap">${new Date(v.criado_em).toLocaleDateString('pt-BR')}</td></tr>`).join('')}</table></div>`:'<p style="color:#5a6b75;margin:4px 0 0">Ninguém da equipe respondeu ainda.</p>'}`;
+  const top=document.querySelector('#pg .top');if(top)top.after(b);}
 /* Acompanhamento do gestor + limite de 4 aparelhos ao mesmo tempo */
 async function gestorBV(emp,ate,nome,impl){try{
   const [c,v]=await Promise.all([sb.from('trein_eventos').select('tipo,detalhe').in('tipo',['divulga','div_art']).order('criado_em'),sb.from('trein_eventos').select('detalhe').eq('user_id',emp).eq('tipo','div_visto')]);
@@ -156,6 +169,7 @@ gateUI(async({session,perfil})=>{
   if(perfil.papel!=='admin'&&!(await gestorOk(emp)))return;
   if(perfil.papel!=='admin'){gestorTrack(emp);gestorChat(emp);}
   setTimeout(()=>{try{logoCard(emp,perfil);}catch(_){}},1500);
+  setTimeout(()=>{try{enqueteCard(emp,perfil);}catch(_){}},1200);
   sb.from('trein_eventos').select('detalhe,criado_em').eq('tipo','liberacao').order('criado_em',{ascending:false}).limit(20).then(({data})=>{const d=((data||[]).find(r=>(r.detalhe||{}).para===emp)||{}).detalhe||{};if(d.impl){const fim=Date.parse(d.ate+'T23:59:59-04:00'),dias=Math.ceil((fim-Date.now())/864e5),dt=d.ate.split('-').reverse().join('/');
       const b=document.createElement('div');b.style.cssText='margin:0 0 14px;padding:12px 16px;border-radius:12px;border:2px solid #e8912d;background:#fff7e8;display:flex;gap:12px;align-items:center;flex-wrap:wrap;font:500 15px system-ui,sans-serif;color:#5a3d0c';
       b.innerHTML='<span style="font-size:22px">🛠</span><span><b>'+(dias<0?'A implantação terminou em '+dt:'Acesso exclusivo da implantação da precificação · válido até '+dt+' · restam '+dias+' dia'+(dias===1?'':'s'))+'</b><br><span>Para manter o FC Mostruário 3D depois da implantação, contrate a licença do link: planos a partir de R$ 50,00 por mês (1 acesso R$ 50 · até 3 pessoas R$ 70 · até 6 pessoas R$ 100).</span></span><a href="https://wa.me/5566999867984?text='+encodeURIComponent('Olá Fernando, quero contratar a licença do FC Mostruário 3D depois da implantação.')+'" target="_blank" rel="noopener" style="margin-left:auto;background:#e8912d;color:#fff;text-decoration:none;font-weight:700;padding:9px 14px;border-radius:9px">💳 Contratar a licença</a>';
