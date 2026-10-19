@@ -133,7 +133,7 @@ td.c{font:600 12px var(--f-m);white-space:nowrap}
     <div class="tip" id="tip" hidden></div>
     <button type="button" class="tb ent" id="bEntrar" hidden></button>
     <div class="joy" id="joy" hidden aria-label="Controle para andar"><i id="joyK"></i></div>
-    <div class="aj" id="aj" hidden>Setas ou W A S D para andar · no celular, use o controle</div>
+    <div class="aj" id="aj" hidden>Segure o mouse e aponte para onde andar · ou setas / W A S D · no celular, use o controle</div>
     <div class="selo" id="selo" hidden role="status"><b id="seloT"></b><span id="seloS"></span><button type="button" class="cta" id="seloOk">Continuar</button></div>
   </div>
   <aside>
@@ -582,16 +582,19 @@ const AV={g:null,p:new THREE.Vector3(-30,0,-8.6),yaw:Math.PI/2,v:0,on:false,fase
 function avatarNaCena(on){if(AV.g.parent)AV.g.parent.remove(AV.g);if(on)SC.add(AV.g);AV.g.position.copy(AV.p);AV.g.rotation.y=AV.yaw;}
 const TECLAS={};addEventListener('keydown',e=>{if(!AV.on)return;const k=e.key.toLowerCase();if(['arrowup','arrowdown','arrowleft','arrowright','w','a','s','d'].includes(k)){TECLAS[k]=1;e.preventDefault();}});
 addEventListener('keyup',e=>{delete TECLAS[e.key.toLowerCase()];});
-let JOY={x:0,y:0};
+let JOY={x:0,y:0};const MOU={on:false,id:null,x:0,z:0};
 (function(){const j=$('#joy'),k=$('#joyK');let id=null;const mv=e=>{const r=j.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;let dx=e.clientX-cx,dy=e.clientY-cy;const R=r.width/2-12,d=Math.hypot(dx,dy);if(d>R){dx*=R/d;dy*=R/d;}k.style.transform=`translate(${dx}px,${dy}px)`;JOY={x:dx/R,y:dy/R};};
   j.addEventListener('pointerdown',e=>{id=e.pointerId;j.setPointerCapture(id);mv(e);e.preventDefault();});j.addEventListener('pointermove',e=>{if(e.pointerId===id)mv(e);});
   const up=()=>{id=null;k.style.transform='';JOY={x:0,y:0};};j.addEventListener('pointerup',up);j.addEventListener('pointercancel',up);})();
-function andarOn(){if(ST.vista!=='bairro')return;AV.on=true;ctl.enabled=false;$('#joy').hidden=false;$('#aj').hidden=false;$('#chip').parentNode.hidden=true;$('#bAndar').classList.add('on');$('#bAndar').textContent='🛑 Parar';dica('Ande pela rua: setas ou W A S D. No celular, use o controle.');conta();}
-function andarOff(){AV.on=false;ctl.enabled=true;$('#chip').parentNode.hidden=false;$('#joy').hidden=true;$('#aj').hidden=true;$('#bEntrar').hidden=true;$('#bAndar').classList.remove('on');$('#bAndar').textContent='🚶 Passear';}
+function andarOn(){if(ST.vista!=='bairro')return;AV.on=true;ctl.enabled=false;$('#joy').hidden=false;$('#aj').hidden=false;$('#chip').parentNode.hidden=true;$('#bAndar').classList.add('on');$('#bAndar').textContent='🛑 Parar';dica('Ande pela rua: segure o botão do mouse e aponte para onde ir, ou use as setas / W A S D. No celular, use o controle.');conta();}
+function andarOff(){AV.on=false;MOU.on=false;cv.style.cursor='';ctl.enabled=true;$('#chip').parentNode.hidden=false;$('#joy').hidden=true;$('#aj').hidden=true;$('#bEntrar').hidden=true;$('#bAndar').classList.remove('on');$('#bAndar').textContent='🚶 Passear';}
 function colide(p){const r=.35;for(const [a,b,c2,d] of COLIS){const dx=c2-a,dz=d-b,L2=dx*dx+dz*dz||1;let t=((p.x-a)*dx+(p.z-b)*dz)/L2;t=Math.max(0,Math.min(1,t));const qx=a+dx*t,qz=b+dz*t,ex=p.x-qx,ez=p.z-qz,dd=Math.hypot(ex,ez);if(dd<r&&dd>1e-6){p.x=qx+ex/dd*r;p.z=qz+ez/dd*r;}}}
 let tAnt=performance.now();
 function passoAvatar(){const t=performance.now(),dt=Math.min(.05,(t-tAnt)/1000);tAnt=t;if(!AV.on||ST.vista!=='bairro')return;
-  const fw=(TECLAS.w||TECLAS.arrowup?1:0)-(TECLAS.s||TECLAS.arrowdown?1:0)-JOY.y,tr=(TECLAS.a||TECLAS.arrowleft?1:0)-(TECLAS.d||TECLAS.arrowright?1:0)-JOY.x;
+  let fw=(TECLAS.w||TECLAS.arrowup?1:0)-(TECLAS.s||TECLAS.arrowdown?1:0)-JOY.y,tr=(TECLAS.a||TECLAS.arrowleft?1:0)-(TECLAS.d||TECLAS.arrowright?1:0)-JOY.x;
+  if(MOU.on){/* segurando o mouse: o personagem vira e anda para onde o mouse aponta */
+    const dx=MOU.x-AV.p.x,dz=MOU.z-AV.p.z,dist=Math.hypot(dx,dz);let df=Math.atan2(dx,dz)-AV.yaw;df=Math.atan2(Math.sin(df),Math.cos(df));
+    AV.yaw+=Math.max(-1,Math.min(1,df*3))*3.2*dt;tr=0;fw=dist>.7?Math.min(1,dist/2.5)*Math.max(0,Math.cos(df)):0;}
   AV.yaw+=tr*1.9*dt;const sp=Math.max(-1,Math.min(1,fw))*4.2;AV.v+=(sp-AV.v)*.18;
   AV.p.x+=Math.sin(AV.yaw)*AV.v*dt;AV.p.z+=Math.cos(AV.yaw)*AV.v*dt;AV.p.x=Math.max(-64,Math.min(48,AV.p.x));AV.p.z=Math.max(-40,Math.min(48,AV.p.z));colide(AV.p);
   AV.fase+=Math.abs(AV.v)*dt*2.4;const sw=Math.sin(AV.fase)*Math.min(1,Math.abs(AV.v)/3)*.6;AV.pernas[0].rotation.x=sw;AV.pernas[1].rotation.x=-sw;AV.bracos[0].rotation.x=-sw*.8;AV.bracos[1].rotation.x=sw*.8;
@@ -825,6 +828,14 @@ $('#seloOk').onclick=()=>{$('#selo').hidden=true;if(ST.carreira){irBairro();boto
 // toque na esquadria
 const ray=new THREE.Raycaster(),pt=new THREE.Vector2();let down=null;
 cv.addEventListener('pointerdown',e=>{down=[e.clientX,e.clientY];if(!AV.on)ALVO=null;});
+/* andar com o mouse: segure o botão na cena e aponte para onde o personagem deve ir */
+const chaoAndar=new THREE.Plane(new THREE.Vector3(0,1,0),0),pAndar=new THREE.Vector3();
+function mouseAlvo(e){const r=cv.getBoundingClientRect();pt.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);ray.setFromCamera(pt,cam);
+  if(ray.ray.intersectPlane(chaoAndar,pAndar)){MOU.x=pAndar.x;MOU.z=pAndar.z;}else{/* acima do horizonte: segue em frente */MOU.x=AV.p.x+Math.sin(AV.yaw)*30;MOU.z=AV.p.z+Math.cos(AV.yaw)*30;}}
+cv.addEventListener('pointerdown',e=>{if(!AV.on||ST.vista!=='bairro'||e.button!==0||e.pointerType==='touch')return;MOU.on=true;MOU.id=e.pointerId;try{cv.setPointerCapture(e.pointerId);}catch(_){}mouseAlvo(e);cv.style.cursor='grabbing';});
+cv.addEventListener('pointermove',e=>{if(AV.on&&ST.vista==='bairro'&&e.pointerType!=='touch')cv.style.cursor=MOU.on?'grabbing':'pointer';if(MOU.on&&e.pointerId===MOU.id)mouseAlvo(e);});
+const mouSolta=e=>{if(!MOU.on||(e&&e.pointerId!==MOU.id))return;MOU.on=false;MOU.id=null;cv.style.cursor=AV.on?'pointer':'';};
+cv.addEventListener('pointerup',mouSolta);cv.addEventListener('pointercancel',mouSolta);cv.addEventListener('lostpointercapture',mouSolta);
 cv.addEventListener('pointerup',e=>{if(!down)return;const mv=Math.hypot(e.clientX-down[0],e.clientY-down[1]);down=null;if(mv>6)return;
   const r=cv.getBoundingClientRect();pt.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);ray.setFromCamera(pt,cam);
   if(ST.vista==='bairro'){if(AV.on)return;const h=ray.intersectObjects(LOTES.map(l=>l.hit),false)[0];if(h){const k=h.object.userData.lote,m=MODELOS.find(x=>x.k===k);dica(bloqueada(k)?'🔒 '+m.n+': '+motivo(k)+'.':m.n+' · toque em “Montar” no painel ou chegue no portão passeando.');}return;}
