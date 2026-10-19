@@ -256,7 +256,7 @@ button.cn-stat[data-ok]{cursor:pointer}button.cn-stat[data-ok]:hover{background:
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="auth.js"></script>
-<script src="planilha.js?v=1"></script>
+<script src="planilha.js?v=2"></script>
 <script>
 const SEED={
  gb:{nome:'Guaporé Vidros',cid:'Cuiabá e Sinop · MT',c:'var(--gb)',mod:'Consultoria contínua · cliente principal, muita demanda',st:['p-warn','Muitas demandas'],visita:'a definir',horas:'—',
@@ -364,7 +364,7 @@ async function carregar(){const {data,error}=await sb.from('rotina_docs').select
   for(const k of Object.keys(E)){const a=E[k].acao;if(a&&!a._extra1){EXTRA.forEach(t=>{if(!a.temas.some(x=>x[0]===t[0]))a.temas.push(t.slice(0,1+a.cols.length));});a._extra1=true;await salvar(k);}}
   if(E.cb&&!E.cb.agenda){E.cb.agenda=[['2026-10-19','Visita técnica · dia 1 · Abertura e Revenda'],['2026-10-20','Visita técnica · dia 2 · Revenda e Fábrica'],['2026-10-21','Visita técnica · dia 3 · Sistema CEM e Treinamento'],['2026-10-22','Visita técnica · dia 4 · Fábrica e Encerramento (devolutiva 15:30)']].map(([d,t],i)=>({id:'cbv'+(i+1),data:d,hora:'08:00',fim:'17:30',tipo:'visita',titulo:t,local:'Casa Bandeirante',cli:true,anexos:[]}));await salvar('cb');}
   if(at&&!E[at])at=null;
-  await carregarPortais();await carregarPlan();await carregarSol();await carregarCat();await carregarAcessos();await carregarDivv();await carregarAlunos();setInterval(vigiarAcessos,60000);setInterval(()=>{if(at&&tab==='div')carregarDivv().then(()=>ficha());},90000);const h=await sb.from('rotina_docs').select('data').eq('col','horas');HORAS=(h.data||[]).map(x=>x.data);{const hk=(location.hash||'').slice(1);if(hk&&E[hk]&&!at){abrirEmpresa(hk,'proc');history.replaceState(null,'',location.pathname+location.search);return;}}render();}
+  await carregarPortais();await carregarPlan();await carregarSol();await carregarCat();await carregarAcessos();await carregarDivv();await carregarAlunos();setInterval(vigiarAcessos,60000);setInterval(()=>{if(at&&tab==='div')carregarDivv().then(()=>ficha());},90000);const h=await sb.from('rotina_docs').select('data').eq('col','horas');HORAS=(h.data||[]).map(x=>x.data);{const hs=(location.hash||'').slice(1),[hk,hp]=hs.split('/pl=');if(hk&&E[hk]&&!at){abrirEmpresa(hk,hp?'pla':'proc');history.replaceState(null,'',location.pathname+location.search);if(hp)setTimeout(()=>abrirPlanilha(hp),300);return;}}render();}
 const nrm=t=>String(t||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/s\b/g,'').trim();
 function horasDe(e){const k=nrm(e.nome.split('·')[0]),k2=nrm(e.apelido||'');const mes=new Date().toISOString().slice(0,7);
   return HORAS.filter(x=>{const c=nrm(x.cliente);return c&&(c.includes(k)||k.includes(c)||(k2&&c.includes(k2)))});}
@@ -708,10 +708,10 @@ function solTabHtml(e){const adm=!PUB&&!cli;const L=PUB?(PUBSOL||[]):SOL.filter(
 async function abrirPlanilha(id){const p=planDe(at).find(x=>x.id===id);if(!p)return;const st=document.getElementById('sync');if(st)st.textContent='Abrindo planilha…';
   if(PUB){const {data,error}=await sb.rpc('cons_portal_planilha',{p_chave:KEY,p_id:id});if(error||!data){alert('Não foi possível abrir a planilha.');return;}let ver=data.versao;
     const tudo=!!(data.dados&&data.dados.tudoEditavel);
-    Planilha.abrir({model:data.dados,nome:data.nome,info:data.cliente_edita?(tudo?'Planilha liberada para ajuste: todas as células podem ser editadas, inclusive as fórmulas.':'Preencha as células liberadas; os cálculos se atualizam sozinhos.'):'Somente consulta',podeEditar:(a,c)=>data.cliente_edita&&(tudo||!c.f),podeFormula:data.cliente_edita&&tudo,podeLinha:data.cliente_edita,
+    Planilha.abrir({model:data.dados,nome:data.nome,info:data.cliente_edita?(tudo?'Planilha liberada para ajuste: todas as células podem ser editadas, inclusive as fórmulas.':'Preencha as células liberadas; os cálculos se atualizam sozinhos.'):'Somente consulta',podeEditar:(a,c)=>data.cliente_edita&&(tudo||!c.f),podeFormula:data.cliente_edita&&tudo,botoes:[{txt:'🏠 Voltar ao painel',title:'Fecha a planilha e volta ao painel da empresa',fechar:true},{txt:'↗ Nova aba',title:'Abre esta planilha numa aba nova do navegador',href:location.pathname+location.search+'#pl='+id,nova:true}],podeLinha:data.cliente_edita,
       onSave:data.cliente_edita?async m=>{const nm=(()=>{try{return localStorage.getItem('cons-nome')||''}catch(_){return ''}})();const r=await sb.rpc('cons_portal_planilha_salvar',{p_chave:KEY,p_id:id,p_dados:m,p_versao:ver,p_nome:nm});if(r.error)throw new Error('Não salvou: '+r.error.message);if(r.data<0)throw new Error('A FC atualizou esta planilha agora. Feche e abra de novo.');ver=r.data;}:null});return;}
   const {data,error}=await sb.from('cons_planilhas').select('dados,versao').eq('id',id).single();if(error){alert('Não abriu: '+error.message);return;}let ver=data.versao;if(st)st.textContent='';
-  Planilha.abrir({model:data.dados,nome:p.nome,info:'Visão FC · tudo liberado (inclusive fórmulas)',podeEditar:()=>true,podeFormula:true,podeLinha:true,onClose:()=>{carregarPlan().then(()=>ficha());},
+  Planilha.abrir({model:data.dados,nome:p.nome,info:'Visão FC · tudo liberado (inclusive fórmulas)',podeEditar:()=>true,podeFormula:true,podeLinha:true,botoes:[{txt:'🏠 Painel do cliente',title:'Fecha a planilha e volta ao painel de '+(E[at]?E[at].nome:'cliente'),fechar:true},{txt:'↗ Nova aba',title:'Abre esta planilha numa aba nova do navegador, sem sair daqui',href:location.pathname+'#'+at+'/pl='+id,nova:true},{txt:'🧭 Painel matriz',title:'Vai para o Painel da Matriz',href:'painel.html'}],onClose:()=>{carregarPlan().then(()=>ficha());},
     onSave:async m=>{const {data:d2,error:e2}=await sb.from('cons_planilhas').update({dados:m,versao:ver+1,atualizado:new Date().toISOString(),atualizado_por:'FC'}).eq('id',id).eq('versao',ver).select('versao');if(e2)throw new Error('Não salvou: '+e2.message);if(!d2||!d2.length)throw new Error('O cliente salvou esta planilha agora. Feche e abra de novo.');ver=d2[0].versao;}});}
 async function importarPlanilha(file,tema,trocarId){if(!file)return;const st=document.getElementById('sync');st.textContent='Lendo '+file.name+'…';
   try{const m=await Planilha.importar(await file.arrayBuffer());
@@ -1172,7 +1172,7 @@ if(PUB){(async()=>{document.title='Acompanhamento da consultoria · FC Consultor
   const [pl,so]=await Promise.all([sb.rpc('cons_portal_planilhas',{p_chave:KEY}),sb.rpc('cons_portal_solicitacoes',{p_chave:KEY})]);PUBPL=pl.data||[];PUBSOL=(so.data||[]).map(x=>Object.assign(x,{criado_em:x.em}));
   E={[data.id]:data};at=data.id;cli=true;
   const ping=()=>{if(!document.hidden)sb.rpc('cons_portal_ping',{p_chave:KEY,p_nome:nomeCli()}).then(()=>{},()=>{});};ping();setInterval(ping,120000);document.addEventListener('visibilitychange',()=>{if(!document.hidden){ping();checarDivs();}});
-  setTimeout(saudacaoDoDia,1000);setInterval(checarDivs,60000);$('#pubT').textContent='Acompanhamento da consultoria';ficha();})();}
+  setTimeout(saudacaoDoDia,1000);setInterval(checarDivs,60000);$('#pubT').textContent='Acompanhamento da consultoria';ficha();{const m=(location.hash||'').match(/pl=([\w-]+)/);if(m){tab='pla';ficha();history.replaceState(null,'',location.pathname+location.search);setTimeout(()=>abrirPlanilha(m[1]),300);}}})();}
 else{gateUI(()=>carregar(),{soMatriz:true});
   $('#acbar').hidden=false;
   $('#bVoltar').onclick=()=>{at=null;cli=false;openLane=null;$('#vFC').setAttribute('aria-pressed',true);$('#vCli').setAttribute('aria-pressed',false);render();window.scrollTo({top:0,behavior:'smooth'});};

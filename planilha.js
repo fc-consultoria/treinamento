@@ -178,7 +178,7 @@ function abrir(opts){/* opts: {model,nome,podeEditar(addr,cell)->bool, podeFormu
   </style>
   <div class="pl-top"><b>📊 ${esc(opts.nome)}</b><span class="pl-st" id="plSt">${esc(opts.info||'')}</span><span class="sp"></span>
    ${opts.podeLinha?'<button class="pl-btn" type="button" id="plLinha" title="Copia a linha selecionada, com as fórmulas, para o fim da tabela">+ Linha</button>':''}
-   <button class="pl-btn" type="button" id="plBaixar">⬇ Baixar .xlsx</button>${opts.onSave?'<button class="pl-btn pri" type="button" id="plSalvar">💾 Salvar</button>':''}<button class="pl-btn" type="button" id="plFechar">✕ Fechar</button></div>
+   <button class="pl-btn" type="button" id="plBaixar">⬇ Baixar .xlsx</button>${opts.onSave?'<button class="pl-btn pri" type="button" id="plSalvar">💾 Salvar</button>':''}${(opts.botoes||[]).map((b,i)=>b.href?`<a class="pl-btn" href="${esc(b.href)}" ${b.nova?'target="_blank" rel="noopener"':''} title="${esc(b.title||'')}" style="text-decoration:none">${esc(b.txt)}</a>`:`<button class="pl-btn" type="button" data-plx="${i}" title="${esc(b.title||'')}">${esc(b.txt)}</button>`).join('')}<button class="pl-btn" type="button" id="plFechar">✕ Fechar</button></div>
   <div class="pl-fx"><span class="ad" id="plAd">—</span><span class="fxl">fx</span><input id="plIn" autocomplete="off" spellcheck="false" placeholder="Selecione uma célula"></div>
   <div class="pl-msg" id="plMsg" hidden></div>
   <div class="pl-wrap" id="plWrap"></div><div class="pl-tabs" id="plTabs"></div>`;
@@ -237,6 +237,8 @@ function abrir(opts){/* opts: {model,nome,podeEditar(addr,cell)->bool, podeFormu
     else if((k==='Delete'||k==='Backspace')&&sel&&!inp.disabled){ev.preventDefault();inp.value='';gravar();}
     else if(k.length===1&&!ev.ctrlKey&&!ev.metaKey&&sel&&!inp.disabled){inp.value='';inp.focus();}});
   $('plFechar').onclick=async()=>{if(dirty)await salvar();ov.remove();document.body.style.overflow='';opts.onClose&&opts.onClose();};
+  ov.querySelectorAll('[data-plx]').forEach(b=>b.onclick=()=>{const x=(opts.botoes||[])[+b.dataset.plx];if(x&&x.fechar)$('plFechar').click();});
+  ov.querySelectorAll('a.pl-btn').forEach(a=>a.addEventListener('click',async e=>{if(dirty&&!a.target){e.preventDefault();await salvar();location.href=a.href;}}));
   $('plBaixar').onclick=()=>exportar(model,opts.nome).catch(err=>alert(err.message));
   if($('plSalvar'))$('plSalvar').onclick=()=>{dirty=true;salvar();};
   if($('plLinha'))$('plLinha').onclick=()=>{const s=sh();if(!sel){alert('Clique numa linha de produto para copiar.');return;}const r0=splitA(sel)[1];const [mr]=dims(s);let last=mr;
