@@ -267,7 +267,7 @@ function telaCfg(){if(!CF){carregaCfg().then(tela);return '<p class="vazio">Carr
    <label class="f" style="grid-column:1/-1">Texto do rodapé (aparece em todo orçamento)<textarea data-cb="rodape">${esc(c.rodape)}</textarea></label></div></div>
   ${(()=>{const f=Object.assign({verm:0,lar:6,verde:8,dias:15},c.estFx||{}),em=c.estEm?new Date(c.estEm):null,dd=em?Math.floor((Date.now()-em)/864e5):null,venc=dd!=null&&dd>=f.dias,ni=CF.itens.filter(i=>i.est!=null).length;
    return `<div class="box" style="${venc||!em?'border-color:var(--or);':''}"><h3>📦 Estoque · importação a cada ${f.dias} dias</h3>
-   <p class="nota">Importe a planilha de estoque que o sistema da empresa gera (colunas de <b>código</b> e <b>quantidade/saldo</b>). Na frente do código aparece só uma bolinha colorida (a quantidade não aparece para o vendedor).</p>
+   <p class="nota">Importe a planilha de estoque que o sistema da empresa gera (colunas de <b>código</b> e <b>quantidade/saldo</b>). Só entram os itens que estão na tabela de preços; os outros códigos são ignorados. Na frente do código aparece só uma bolinha colorida (a quantidade não aparece para o vendedor).</p>
    <p style="margin:6px 0">${em?`Última importação: <b>${em.toLocaleDateString('pt-BR')}</b> (${dd===0?'hoje':dd+' dia'+(dd>1?'s':'')+' atrás'}) · ${ni} itens com saldo · próxima até <b>${new Date(em.getTime()+f.dias*864e5).toLocaleDateString('pt-BR')}</b>${venc?' · <b style="color:var(--bx)">⚠ importação vencida</b>':''}`:'<b>Ainda não foi importado.</b>'}</p>
    <div class="row"><label class="btn pri" style="cursor:pointer">📥 Importar estoque (.xlsx ou .csv)<input type="file" accept=".xlsx,.csv" id="estImp" hidden></label><span class="nota" id="estMsg"></span></div>
    <div class="row" style="margin-top:10px;gap:14px">
@@ -355,7 +355,7 @@ function wireCfg(){if(!CF)return;const q=s=>document.getElementById(s);
       if(hi<0){m.textContent='Não achei as colunas de código e quantidade/saldo no cabeçalho.';return;}
       const S={};rows.slice(hi+1).forEach(r=>{const k=nk(r[cc]);if(!k)return;const v=typeof r[qc]==='number'?r[qc]:num(r[qc]);S[k]=(S[k]||0)+v;});
       let ok=0;CF.itens.forEach(i=>{const ks=[nk(i.cod),...String(i.cod).split(/[|\/]/).map(nk)].filter(Boolean);const k=ks.find(x=>x in S);if(k!=null){i.est=S[k];ok++;}else delete i.est;});
-      CF.cab=CF.cab||{};CF.cab.estEm=new Date().toISOString();if(await salvaCfg())m.textContent=`✓ ${ok} de ${CF.itens.length} itens com saldo · ${Object.keys(S).length} códigos na planilha`;tela();}
+      CF.cab=CF.cab||{};CF.cab.estEm=new Date().toISOString();if(await salvaCfg()){const usados=new Set();CF.itens.forEach(i=>[nk(i.cod),...String(i.cod).split(/[|\/]/).map(nk)].forEach(k=>usados.add(k)));const fora=Object.keys(S).filter(k=>!usados.has(k)).length;m.textContent=`✓ ${ok} de ${CF.itens.length} itens da tabela de preços com saldo`+(fora?` · ${fora} códigos fora da tabela de preços foram ignorados`:'');}tela();}
     catch(err){m.textContent='Não foi possível ler: '+(err.message||err);}};}
 function reduz(file,max=900){return new Promise(ok=>{const im=new Image();im.onload=()=>{const s=Math.min(1,max/Math.max(im.width,im.height));const c=document.createElement('canvas');c.width=Math.round(im.width*s);c.height=Math.round(im.height*s);const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(im,0,0,c.width,c.height);c.toBlob(b=>ok(b),'image/jpeg',.85);};im.src=URL.createObjectURL(file);});}
 
