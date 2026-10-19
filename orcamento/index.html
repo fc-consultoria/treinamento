@@ -231,7 +231,7 @@ function imprimir(o){const c=D.cab||{},cl=o.cliente||{},p=o.pagamento||{},it=o.i
 
 /* ---------- configuração (FC) ---------- */
 let PLS=null,FAUTO=null,CF=null,VEND=null,IF='';
-async function carregaCfg(){const [a,b,v]=await Promise.all([sb.from('orc_cfg').select('*').eq('empresa_id',EMP).maybeSingle(),sb.from('cons_planilhas').select('id,nome,atualizado_em').eq('empresa_id',EMP),sb.from('orc_vend').select('*').eq('empresa_id',EMP).order('criado_em')]);
+async function carregaCfg(){const [a,b,v]=await Promise.all([sb.from('orc_cfg').select('*').eq('empresa_id',EMP).maybeSingle(),sb.from('cons_planilhas').select('id,nome,atualizado').eq('empresa_id',EMP),sb.from('orc_vend').select('*').eq('empresa_id',EMP).order('criado_em')]);
   CF=a.data||{empresa_id:EMP,itens:[],cab:{nome:D.nome},pag:PAG_PADRAO.slice(),desc_max:5,validade_dias:7,obs:'',planilha_id:null};if(!CF.pag||!CF.pag.length)CF.pag=PAG_PADRAO.slice();PLS=b.data||[];VEND=v.data||[];}
 function telaCfg(){if(!CF){carregaCfg().then(tela);return '<p class="vazio">Carregando configuração…</p>';}
   const c=CF.cab||{},f=sem(IF),L=CF.itens.filter(i=>!f||sem(i.cod+' '+i.desc+' '+(i.cor||'')+' '+(i.forn||'')).includes(f)),semFoto=CF.itens.filter(i=>!i.foto).length;
@@ -243,7 +243,7 @@ function telaCfg(){if(!CF){carregaCfg().then(tela);return '<p class="vazio">Carr
    <p class="nota">O vendedor só vê o preço de venda da tabela. Não vê custo, fornecedor nem as planilhas. Você envia o link para ele.</p></div>
   <div class="box"><h3>📊 Itens da precificação (${CF.itens.length}) ${CF.itens_em?`<span class="nota" style="font-weight:500">· atualizados em ${new Date(CF.itens_em).toLocaleString('pt-BR')}</span>`:''}</h3>
    <div class="row"><select class="inp" id="plSel" style="max-width:420px"><option value="">— escolher a planilha de precificação —</option>${PLS.map(p=>`<option value="${p.id}" ${CF.planilha_id===p.id?'selected':''}>${esc(p.nome)}</option>`).join('')}</select>
-    <button class="btn pri" type="button" id="plSync">🔄 Atualizar itens da precificação</button><span class="nota" id="plMsg"></span></div>
+    <button class="btn pri" type="button" id="plSync">🔄 Atualizar itens da precificação</button><label class="btn or" style="cursor:pointer">📥 Importar planilha nova (.xlsx)<input type="file" accept=".xlsx" id="plImp" hidden></label><span class="nota" id="plMsg"></span></div>
    <p class="nota">Lê as abas que têm a coluna de preço de venda ("Preço de Venda Barra" ou "Valor da Vara c/ 6 metros") e traz código, descrição, cor, peso e preço de venda. As fotos já colocadas são mantidas. ${semFoto?`<b>${semFoto} itens sem foto.</b>`:''}</p>
    ${CF.itens.length?`<div class="row" style="margin:8px 0"><input class="inp" id="iF" placeholder="Filtrar itens" value="${esc(IF)}" style="max-width:320px"><button class="btn" type="button" id="fAuto">🖼 Buscar fotos automáticas</button></div>
    <div style="max-height:520px;overflow:auto"><table class="it"><thead><tr><th>Foto</th><th>Código</th><th>Descrição</th><th>Cor</th><th>Linha / forn.</th><th class="n">Peso barra</th><th class="n">Preço venda</th><th></th></tr></thead><tbody>
@@ -298,6 +298,10 @@ async function sincronizar(){const pid=$('#plSel').value,m=$('#plMsg');if(!pid){
   if(ok){m.textContent=`✓ ${out.length} itens das abas: ${abas.join(', ')}${dup?` · ${dup} repetidos ignorados`:''} · ${out.filter(i=>i.foto).length} com foto`;tela();}}
 function wireCfg(){if(!CF)return;const q=s=>document.getElementById(s);
   if(q('plSync'))q('plSync').onclick=sincronizar;
+  if(q('plImp'))q('plImp').onchange=async e=>{const f=e.target.files[0];if(!f)return;const m=q('plMsg');const nome=prompt('Nome da planilha:',f.name.replace(/\.xlsx$/i,'').replace(/_/g,' '));if(!nome){e.target.value='';return;}
+    m.textContent='Lendo '+f.name+'…';try{const md=await Planilha.importar(await f.arrayBuffer());
+      const r=await sb.from('cons_planilhas').insert({empresa_id:EMP,nome:nome.trim().slice(0,120),dados:md,atualizado_por:'FC'}).select('id,nome,atualizado').single();if(r.error)throw r.error;
+      PLS.push(r.data);CF.planilha_id=r.data.id;tela();const s2=q('plSel');s2.value=r.data.id;await sincronizar();}catch(err){m.textContent='Não foi possível importar: '+(err.message||err);}};
   if(q('iF'))q('iF').oninput=e=>{IF=e.target.value;const p=e.target.selectionStart;tela();const n=q('iF');n.focus();n.setSelectionRange(p,p);};
   if(q('fAuto'))q('fAuto').onclick=async()=>{const F=await carregaFAuto();let n=0;CF.itens.forEach(i=>{if(!i.foto){const f=fotoAutoDe(i,F);if(f){i.foto=f;n++;}}});if(await salvaCfg())toast(n+' fotos encontradas');tela();};
   $$('[data-up]').forEach(inp=>inp.onchange=async()=>{const f=inp.files[0];if(!f)return;const it=CF.itens.find(i=>i.id===inp.dataset.up);const b=await reduz(f);
