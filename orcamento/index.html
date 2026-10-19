@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Orçamentos · FC Consultoria</title>
+<link rel="icon" href="/img/logo-fc-160.jpg">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600;700&display=swap">
+<style>
+:root{--tl:#0f6b70;--tl2:#13878d;--tlc:#e5f2f2;--or:#f2a51e;--orc:#fff4dc;--ink:#13232e;--tm:#5a6b75;--ln:#d8e2e6;--bg:#f2f6f7;--ok:#15803d;--okc:#e7f6ec;--bx:#b42318;--bxc:#fdecea;--f-d:'Barlow Condensed',system-ui,sans-serif;--f-b:'Barlow',system-ui,sans-serif}
+*{box-sizing:border-box}html,body{margin:0}body{background:var(--bg);color:var(--ink);font:400 16px/1.5 var(--f-b)}
+button,input,select,textarea{font-family:inherit;font-size:15px}
+.rgate{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;background:#e9f0f0;padding:16px}.rgate[hidden]{display:none}
+.rgate form{width:min(360px,100%);background:#fff;border:1px solid #d6e1e1;border-radius:14px;padding:26px 22px;display:flex;flex-direction:column;gap:12px}
+.rgate h1{margin:0;font:800 28px var(--f-d)}.rgate small{color:#5a6e72;font-size:12px;letter-spacing:.06em;text-transform:uppercase}
+.rgate label{display:flex;flex-direction:column;gap:5px;font-weight:600;font-size:14px}.rgate input{padding:9px 10px;border:1px solid #c4ccd2;border-radius:8px}
+.rgate button{background:var(--tl);color:#fff;border:0;border-radius:9px;padding:11px;font-weight:700;cursor:pointer}
+.top{background:var(--tl);color:#fff;box-shadow:0 2px 0 var(--or)}
+.top .w{max-width:1240px;margin:0 auto;padding:10px 18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.top img{width:40px;height:40px;border-radius:9px;object-fit:cover;background:#fff}.top b{font:800 22px/1 var(--f-d)}.top small{display:block;font:600 11.5px var(--f-b);letter-spacing:.12em;text-transform:uppercase;color:#ffd58a}
+.top .sp{flex:1}.top select,.top a.vt{border:1px solid rgba(255,255,255,.5);background:rgba(255,255,255,.12);color:#fff;border-radius:9px;padding:7px 10px;font-weight:700;text-decoration:none;font-size:14px}
+.top select option{color:var(--ink)}
+main{max-width:1240px;margin:0 auto;padding:16px 16px 80px}
+.abas{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.abas button{border:1px solid var(--ln);background:#fff;border-radius:12px;padding:9px 14px;font-weight:700;cursor:pointer;color:var(--ink)}
+.abas button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.box{background:#fff;border:1px solid var(--ln);border-radius:16px;padding:16px 18px;margin-bottom:14px}
+h2.t{margin:0 0 10px;font:800 24px/1.1 var(--f-d);color:#0f4f53}h3{margin:0 0 8px;font:800 19px var(--f-d);color:#0f4f53}
+.nota{color:var(--tm);font-size:14px;margin:4px 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:13px;font-weight:700;color:var(--tm)}
+label.f input,label.f select,label.f textarea,.inp{padding:9px 10px;border:1px solid #c4ccd2;border-radius:9px;background:#fff;color:var(--ink);font-weight:500;width:100%}
+textarea{resize:vertical;min-height:60px}
+.btn{border:1px solid var(--ln);background:#fff;border-radius:10px;padding:9px 14px;font-weight:700;cursor:pointer;color:var(--ink);text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.btn.pri{background:var(--tl);border-color:var(--tl);color:#fff}.btn.or{background:var(--or);border-color:var(--or)}.btn.ok{background:var(--ok);border-color:var(--ok);color:#fff}
+.btn.mini{padding:4px 9px;font-size:13px;border-radius:8px}.btn:disabled{opacity:.5;cursor:default}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.busca{position:relative}.busca input{font:600 18px var(--f-b);padding:11px 14px;border:2px solid var(--tl);border-radius:12px;width:100%}
+.sug{position:absolute;left:0;right:0;top:100%;margin-top:4px;background:#fff;border:1px solid var(--ln);border-radius:12px;box-shadow:0 12px 30px rgba(0,0,0,.12);max-height:420px;overflow:auto;z-index:20}
+.sug button{display:flex;gap:10px;align-items:center;width:100%;text-align:left;border:0;border-bottom:1px solid #eef2f4;background:#fff;padding:7px 10px;cursor:pointer}
+.sug button:hover,.sug button.on{background:var(--tlc)}
+.th{width:58px;height:42px;flex:none;border:1px solid #e3e9ec;border-radius:7px;background:#fff center/contain no-repeat;display:grid;place-items:center;color:#b6c1c7;font-size:18px}
+.sug .d{flex:1;min-width:0}.sug .d b{font-size:14px}.sug .d small{display:block;color:var(--tm);font-size:12.5px}.sug .p{font-weight:800;white-space:nowrap}
+table.it{width:100%;border-collapse:collapse;font-size:14px}table.it th{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--tm);text-align:left;padding:6px;border-bottom:2px solid var(--ln)}
+table.it td{padding:6px;border-bottom:1px solid #eef2f4;vertical-align:middle}table.it td.n,table.it th.n{text-align:right;white-space:nowrap}
+table.it input.q{width:72px;padding:6px;border:1px solid #c4ccd2;border-radius:8px;text-align:right}
+table.it input.pz{width:92px;padding:6px;border:1px solid #f2a51e;border-radius:8px;text-align:right}
+.tot{display:grid;grid-template-columns:1fr auto;gap:6px 18px;max-width:460px;align-items:center;margin-left:auto;font-size:15px}.tot b{text-align:right}.tot .g{font:800 24px var(--f-d);color:#0f4f53}
+.pill{display:inline-block;border-radius:99px;padding:2px 9px;font-size:12px;font-weight:700;background:#eef2f4}
+.s-aberto{background:#e8f0ff;color:#1d4ed8}.s-enviado{background:var(--orc);color:#92400e}.s-aprovado{background:var(--okc);color:var(--ok)}.s-perdido,.s-cancelado{background:var(--bxc);color:var(--bx)}
+.vazio{color:var(--tm);text-align:center;padding:30px}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#13232e;color:#fff;padding:10px 18px;border-radius:12px;z-index:9000;font-weight:600}
+.parc{background:var(--tlc);border-radius:10px;padding:8px 12px;font-size:14px;margin-top:8px}
+/* impressão */
+#imp{display:none}
+@media print{body{background:#fff}.top,main,.toast,#impOv{display:none!important}#imp{display:block!important}@page{size:A4;margin:10mm}}
+#impOv{position:fixed;inset:0;background:rgba(10,20,28,.6);z-index:5000;overflow:auto;padding:20px 10px}
+#impOv .bar{max-width:820px;margin:0 auto 10px;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.folha{max-width:820px;margin:0 auto;background:#fff;color:#111;padding:26px 28px;font:13px/1.35 Arial,Helvetica,sans-serif;box-shadow:0 10px 40px rgba(0,0,0,.3)}
+.folha .cab{display:flex;gap:16px;align-items:center;border-bottom:2px solid #0f6b70;padding-bottom:10px}
+.folha .cab img{max-width:150px;max-height:70px;object-fit:contain}.folha .cab .e{flex:1;text-align:center}.folha .cab .e b{font-size:17px;display:block}
+.folha .tt{display:flex;justify-content:space-between;align-items:baseline;margin:10px 0 6px}.folha .tt b{font-size:20px;color:#0f6b70}
+.folha .cli{display:grid;grid-template-columns:1fr 1fr;gap:2px 18px;border:1px solid #cfd8dc;border-radius:6px;padding:8px 10px;font-size:12.5px}
+.folha table{width:100%;border-collapse:collapse;margin-top:10px;font-size:12px}.folha th{background:#eef4f5;text-align:left;padding:5px;border-bottom:1px solid #9fb3b8;font-size:11px}
+.folha td{padding:5px;border-bottom:1px solid #e3e9ec;vertical-align:middle}.folha td.n,.folha th.n{text-align:right;white-space:nowrap}
+.folha td.ft img{width:78px;height:52px;object-fit:contain;display:block}
+.folha .rod{display:flex;gap:20px;justify-content:space-between;margin-top:12px;align-items:flex-start}
+.folha .rod .tt2{min-width:260px}.folha .rod .tt2 div{display:flex;justify-content:space-between;padding:2px 0}.folha .rod .tt2 .g{gap:14px;font-size:16px;font-weight:800;border-top:2px solid #0f6b70;margin-top:4px;padding-top:4px}
+.folha .ob{font-size:11.5px;color:#333;white-space:pre-wrap}
+@media print{.folha{box-shadow:none;padding:0;max-width:none}.folha tr{break-inside:avoid}}
+@media(max-width:700px){.folha .cli{grid-template-columns:1fr}table.it .hm{display:none}}
+</style>
+</head>
+<body>
+<div class="rgate" id="gate" hidden><form id="gateForm"><small>FC Consultoria · Matriz</small><h1>🧾 Orçamentos</h1>
+<label>Login<input name="login" autocomplete="username" required></label><label>Senha<input name="senha" type="password" autocomplete="current-password" required></label>
+<button type="submit">Entrar</button><p id="gateMsg" role="alert"></p></form></div>
+<header class="top"><div class="w"><img id="hdLogo" src="/img/logo-fc-160.jpg" alt=""><div><small id="hdSub">Painel de orçamentos</small><b id="hd">Orçamentos</b></div><span class="sp"></span><select id="selEmp" hidden aria-label="Cliente"></select></div></header>
+<main id="app"><p class="vazio">Carregando…</p></main>
+<div id="imp"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="../auth.js"></script>
+<script src="../planilha.js?v=2"></script>
+<script>
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)],esc=t=>String(t??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const Q=new URLSearchParams(location.search),VKEY=Q.get('v')||'';
+const BASE='https://fc-consultoria.github.io/treinamento/';
+const nk=s=>String(s||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+const sem=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+const n2=v=>(+v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+const rs=v=>'R$ '+n2(v);
+const num=s=>{s=String(s??'').trim().replace(/\s/g,'').replace(/^R\$/,'');if(!s)return 0;if(s.includes(','))s=s.replace(/\./g,'').replace(',','.');const v=+s;return isNaN(v)?0:v;};
+const hoje=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
+const maisDias=n=>{const d=new Date();d.setDate(d.getDate()+(+n||0));return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
+const dBR=s=>s?String(s).slice(0,10).split('-').reverse().join('/'):'';
+const fotoUrl=f=>!f?'':/^https?:/.test(f)?f:'../'+f;
+function toast(t){const d=document.createElement('div');d.className='toast';d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),2800);}
+const ST={aberto:'Em aberto',enviado:'Enviado ao cliente',aprovado:'Aprovado',perdido:'Perdido',cancelado:'Cancelado'};
+const PAG_PADRAO=['PIX','Dinheiro','Cartão de débito','Cartão de crédito','Boleto','Transferência','Cheque'];
+
+let ADM=false,EMP='',EMPS=[],D=null,ABA='novo',O=null,BQ='',SUGI=0;
+const novoOrc=()=>({id:null,cliente:{},itens:[],pagamento:{forma:'',cond:'avista',parcelas:1,prazos:'',entrada:0,obs:''},desconto:0,descTipo:'rs',frete:0,validade:maisDias(D&&D.validade_dias||7),obs:D&&D.obs||'',status:'aberto'});
+
+async function rpcDados(){const r=await sb.rpc('orc_dados',{p_chave:ADM?null:VKEY,p_emp:ADM?EMP:null});
+  if(r.error){if(/function|does not exist|schema cache/i.test(r.error.message||''))return 'sql';return null;}return r.data;}
+async function carregar(){const d=await rpcDados();
+  if(d==='sql'){$('#app').innerHTML='<div class="box"><h2 class="t">Falta rodar o SQL</h2><p class="nota">Rode o arquivo orcamentos.sql no Supabase para ativar o painel de orçamentos.</p></div>';return false;}
+  if(!d){$('#app').innerHTML='<p class="vazio">Link inválido ou desativado. Fale com o gestor da empresa ou com a FC Consultoria.</p>';return false;}
+  D=d;EMP=d.emp;const c=d.cab||{};$('#hd').textContent='Orçamentos · '+(c.nome||d.nome||'');$('#hdSub').textContent=ADM?'FC Consultoria · painel da matriz':'Vendedor: '+((d.vend&&d.vend.nome)||'');
+  if(c.logo)$('#hdLogo').src=fotoUrl(c.logo);
+  if(!O)O=novoOrc();return true;}
+
+/* ================= TELA ================= */
+function tela(){if(!D)return;const ab=[['novo',O&&O.id?'✏️ Orçamento nº '+(O.numero||''):'🧾 Novo orçamento'],['lista','📂 Orçamentos ('+D.orcs.length+')']];if(ADM)ab.push(['cfg','⚙️ Configurar']);
+  let h=`<div class="abas">${ab.map(([k,t])=>`<button type="button" data-ab="${k}" class="${ABA===k?'on':''}">${esc(t)}</button>`).join('')}</div>`;
+  if(!D.itens.length&&ABA!=='cfg')h+=`<div class="box" style="border-color:var(--or);background:var(--orc)"><b>Ainda não há itens liberados para orçamento.</b><p class="nota" style="margin:2px 0 0">${ADM?'Vá em ⚙️ Configurar e clique em "Atualizar itens da precificação".':'A FC Consultoria está preparando a lista de itens. Volte mais tarde.'}</p></div>`;
+  if(ABA==='novo')h+=telaNovo();else if(ABA==='lista')h+=telaLista();else h+=telaCfg();
+  $('#app').innerHTML=h;$$('[data-ab]').forEach(b=>b.onclick=()=>{ABA=b.dataset.ab;tela();});
+  if(ABA==='novo')wireNovo();else if(ABA==='lista')wireLista();else wireCfg();}
+
+/* ---------- novo / editar ---------- */
+function calc(){const sub=O.itens.reduce((a,i)=>a+Math.round(num(i.preco)*num(i.qtd)*100)/100,0);let dsc=O.descTipo==='pc'?Math.round(sub*num(O.descPc)/100*100)/100:num(O.desconto);
+  const max=Math.round(sub*(+D.desc_max||0)/100*100)/100;const acima=!ADM&&dsc>max+0.001;const fr=num(O.frete);return {sub,dsc,max,acima,fr,tot:Math.max(0,sub-Math.min(dsc,sub)+fr)};}
+function parcelasTxt(t){const p=O.pagamento;if(p.cond!=='parcelado')return '';const ent=num(p.entrada),n=Math.max(1,parseInt(p.parcelas)||1),rest=Math.max(0,t-ent),v=Math.round(rest/n*100)/100;
+  const pz=String(p.prazos||'').split(/[\/;, ]+/).filter(Boolean);return (ent>0?`Entrada ${rs(ent)} + `:'')+`${n}x de ${rs(v)}`+(pz.length?` (${pz.join('/')} dias)`:'');}
+function telaNovo(){const c=O.cliente,p=O.pagamento,k=calc(),pag=(D.pag&&D.pag.length?D.pag:PAG_PADRAO);
+  return `<div class="box"><h3>👤 Cliente</h3><div class="grid">
+   <label class="f">Nome / Razão social *<input data-c="nome" value="${esc(c.nome)}" maxlength="120"></label>
+   <label class="f">CPF / CNPJ<input data-c="doc" value="${esc(c.doc)}" maxlength="30"></label>
+   <label class="f">Telefone / WhatsApp<input data-c="fone" value="${esc(c.fone)}" maxlength="30" inputmode="tel"></label>
+   <label class="f">E-mail<input data-c="email" value="${esc(c.email)}" maxlength="80"></label>
+   <label class="f">Endereço<input data-c="end" value="${esc(c.end)}" maxlength="150"></label>
+   <label class="f">Cidade / UF<input data-c="cidade" value="${esc(c.cidade)}" maxlength="60"></label></div></div>
+  <div class="box"><h3>📦 Itens do orçamento</h3>
+   <div class="busca"><input id="bq" placeholder="Digite o código ou o nome do item (ex.: trilho, SU-001, TBX028)" autocomplete="off" value="${esc(BQ)}"><div class="sug" id="sug" hidden></div></div>
+   <p class="nota">Os preços vêm da tabela de precificação da empresa. ${ADM?'Na FC você pode ajustar o preço de uma linha (campo laranja) e incluir item avulso.':''}</p>
+   ${ADM?`<details style="margin:6px 0"><summary class="nota" style="cursor:pointer">＋ Item avulso (só FC)</summary><div class="row" style="margin-top:6px"><input class="inp" id="avC" placeholder="Código" style="max-width:130px"><input class="inp" id="avD" placeholder="Descrição" style="flex:1;min-width:200px"><input class="inp" id="avU" placeholder="Un" value="UN" style="max-width:70px"><input class="inp" id="avP" placeholder="Preço R$" style="max-width:110px"><button class="btn" type="button" id="avAdd">Incluir</button></div></details>`:''}
+   ${O.itens.length?`<div style="overflow-x:auto"><table class="it"><thead><tr><th></th><th>Código</th><th>Produto</th><th class="hm">Un</th><th class="n">Qtde</th><th class="n">Vlr unit.</th><th class="n">Total</th><th></th></tr></thead><tbody>
+    ${O.itens.map((i,x)=>`<tr><td><div class="th" style="${i.foto?`background-image:url('${esc(fotoUrl(i.foto))}')`:''}">${i.foto?'':'▭'}</div></td><td><b>${esc(i.cod)}</b></td><td>${esc(i.desc)}${i.cor?` <span class="pill">${esc(i.cor)}</span>`:''}</td><td class="hm">${esc(i.un||'BR')}</td>
+     <td class="n"><input class="q" data-q="${x}" value="${esc(String(i.qtd).replace('.',','))}" inputmode="decimal"></td>
+     <td class="n">${ADM?`<input class="pz" data-pz="${x}" value="${n2(i.preco)}" inputmode="decimal">`:rs(i.preco)}</td><td class="n"><b>${rs(num(i.preco)*num(i.qtd))}</b></td><td><button class="btn mini" type="button" data-rm="${x}" title="Tirar">✕</button></td></tr>`).join('')}
+   </tbody></table></div>`:'<p class="vazio" style="padding:14px">Nenhum item ainda. Pesquise acima e toque no item para incluir.</p>'}
+   <div class="tot" style="margin-top:12px"><span>Subtotal</span><b>${rs(k.sub)}</b>
+    <span>Desconto <select id="dTp" class="inp" style="width:auto;padding:3px 6px;display:inline-block"><option value="rs" ${O.descTipo!=='pc'?'selected':''}>R$</option><option value="pc" ${O.descTipo==='pc'?'selected':''}>%</option></select>
+     <input id="dV" class="inp" style="width:100px;padding:4px 8px;display:inline-block" value="${O.descTipo==='pc'?esc(O.descPc||''):(O.desconto?n2(O.desconto):'')}" inputmode="decimal"></span><b>- ${rs(Math.min(k.dsc,k.sub))}</b>
+    <span>Frete <input id="fV" class="inp" style="width:100px;padding:4px 8px;display:inline-block" value="${O.frete?n2(O.frete):''}" inputmode="decimal"></span><b>${rs(k.fr)}</b>
+    <span class="g">Total</span><b class="g">${rs(k.tot)}</b></div>
+   ${!ADM?`<p class="nota" style="text-align:right">Desconto máximo permitido: ${n2(D.desc_max)}% (${rs(k.max)})</p>`:''}
+   ${k.acima?`<p style="color:var(--bx);font-weight:700;text-align:right">⚠ Desconto acima do limite. Fale com o gestor.</p>`:''}</div>
+  <div class="box"><h3>💳 Forma de pagamento</h3><div class="grid">
+   <label class="f">Forma<select data-p="forma"><option value="">— escolher —</option>${pag.map(f=>`<option ${p.forma===f?'selected':''}>${esc(f)}</option>`).join('')}</select></label>
+   <label class="f">Condição<select data-p="cond"><option value="avista" ${p.cond!=='parcelado'?'selected':''}>À vista</option><option value="parcelado" ${p.cond==='parcelado'?'selected':''}>Parcelado</option></select></label>
+   ${p.cond==='parcelado'?`<label class="f">Nº de parcelas<input data-p="parcelas" value="${esc(p.parcelas)}" inputmode="numeric"></label>
+   <label class="f">Prazos (dias)<input data-p="prazos" value="${esc(p.prazos)}" placeholder="ex.: 30/60/90"></label>
+   <label class="f">Entrada R$<input data-p="entrada" value="${p.entrada?n2(p.entrada):''}" inputmode="decimal"></label>`:''}
+   <label class="f" style="grid-column:1/-1">Observação do pagamento<input data-p="obs" value="${esc(p.obs)}" maxlength="200" placeholder="ex.: 50% no pedido e 50% na entrega"></label></div>
+   ${p.cond==='parcelado'&&k.tot>0?`<div class="parc">${esc(parcelasTxt(k.tot))}</div>`:''}</div>
+  <div class="box"><div class="grid"><label class="f">Validade do orçamento<input type="date" id="val" value="${esc(O.validade||'')}"></label>
+   <label class="f" style="grid-column:span 2">Observações<textarea id="obs" maxlength="2000">${esc(O.obs)}</textarea></label></div>
+   <div class="row" style="margin-top:12px"><button class="btn pri" type="button" id="salvar">💾 Salvar orçamento</button><button class="btn" type="button" id="impr" ${O.id?'':'disabled'}>🖨 Imprimir / PDF</button>
+    ${O.id&&O.cliente.fone?`<a class="btn ok" id="wa" target="_blank" rel="noopener" href="${esc(waLink())}">💬 WhatsApp do cliente</a>`:''}
+    <button class="btn" type="button" id="limpa">＋ Começar outro</button><span class="nota" id="msg"></span></div></div>`;}
+function waLink(){const c=O.cliente,k=calc(),f=String(c.fone||'').replace(/\D/g,'');const t=`Olá ${c.nome||''}! Segue o orçamento nº ${O.numero||''} da ${(D.cab&&D.cab.nome)||D.nome||''}: total ${rs(k.tot)}${O.pagamento.forma?' · '+O.pagamento.forma:''}. Validade ${dBR(O.validade)}. Qualquer dúvida estou à disposição. ${(D.vend&&D.vend.nome)||''}`;
+  return 'https://wa.me/'+(f.length<=11?'55':'')+f+'?text='+encodeURIComponent(t);}
+function filtrar(q){const w=sem(q).split(/\s+/).filter(Boolean),k=nk(q);if(!w.length)return [];
+  return D.itens.map(i=>{const t=sem(i.cod+' '+i.desc+' '+(i.cor||'')+' '+(i.linha||'')+' '+(i.ref||''));let s=0;if(k&&nk(i.cod)===k)s+=100;else if(k&&nk(i.cod).startsWith(k))s+=40;if(k.length>=3&&nk(i.desc).includes(k))s+=20;if(w.every(x=>t.includes(x)))s+=10;return [s,i];}).filter(x=>x[0]>0).sort((a,b)=>b[0]-a[0]).slice(0,40).map(x=>x[1]);}
+function addItem(i){const ja=O.itens.find(x=>x.id===i.id);if(ja)ja.qtd=num(ja.qtd)+1;else O.itens.push({id:i.id,cod:i.cod,desc:i.desc,cor:i.cor||'',un:i.un||'BR',peso:i.peso,foto:i.foto||'',preco:i.preco,qtd:1});
+  BQ='';tela();setTimeout(()=>{const q=$('#bq');if(q)q.focus();},30);toast('Incluído: '+i.cod);}
+function wireNovo(){const bq=$('#bq'),sug=$('#sug');let L=[];
+  const pinta=()=>{L=filtrar(bq.value);BQ=bq.value;if(!bq.value.trim()){sug.hidden=true;return;}sug.hidden=false;SUGI=Math.min(SUGI,Math.max(0,L.length-1));
+   sug.innerHTML=L.length?L.map((i,x)=>`<button type="button" data-si="${x}" class="${x===SUGI?'on':''}"><span class="th" style="${i.foto?`background-image:url('${esc(fotoUrl(i.foto))}')`:''}">${i.foto?'':'▭'}</span><span class="d"><b>${esc(i.cod)}</b> · ${esc(i.desc)}<small>${esc([i.cor,i.linha].filter(Boolean).join(' · '))}${i.peso?' · '+n2(i.peso)+' kg/barra':''}</small></span><span class="p">${rs(i.preco)}</span></button>`).join(''):'<p class="nota" style="padding:10px">Nenhum item encontrado.</p>';
+   sug.querySelectorAll('[data-si]').forEach(b=>b.onclick=()=>addItem(L[+b.dataset.si]));};
+  bq.oninput=()=>{SUGI=0;pinta();};bq.onkeydown=e=>{if(e.key==='ArrowDown'){SUGI++;pinta();e.preventDefault();}else if(e.key==='ArrowUp'){SUGI=Math.max(0,SUGI-1);pinta();e.preventDefault();}else if(e.key==='Enter'&&L[SUGI]){addItem(L[SUGI]);e.preventDefault();}else if(e.key==='Escape'){sug.hidden=true;}};
+  if(BQ)pinta();
+  $$('[data-c]').forEach(i=>i.oninput=()=>{O.cliente[i.dataset.c]=i.value;});
+  $$('[data-q]').forEach(i=>i.onchange=()=>{const v=num(i.value);if(v>0)O.itens[+i.dataset.q].qtd=v;tela();});
+  $$('[data-pz]').forEach(i=>i.onchange=()=>{O.itens[+i.dataset.pz].preco=num(i.value);tela();});
+  $$('[data-rm]').forEach(b=>b.onclick=()=>{O.itens.splice(+b.dataset.rm,1);tela();});
+  $('#dTp').onchange=e=>{O.descTipo=e.target.value;O.desconto=0;O.descPc='';tela();};
+  $('#dV').onchange=e=>{if(O.descTipo==='pc')O.descPc=String(num(e.target.value));else O.desconto=num(e.target.value);tela();};
+  $('#fV').onchange=e=>{O.frete=num(e.target.value);tela();};
+  $$('[data-p]').forEach(i=>{const f=()=>{const k=i.dataset.p;O.pagamento[k]=k==='entrada'?num(i.value):i.value;};i.oninput=f;if(i.tagName==='SELECT'||i.dataset.p==='parcelas'||i.dataset.p==='entrada'||i.dataset.p==='prazos')i.onchange=()=>{f();tela();};});
+  $('#val').onchange=e=>{O.validade=e.target.value;};$('#obs').oninput=e=>{O.obs=e.target.value;};
+  if($('#avAdd'))$('#avAdd').onclick=()=>{const d=$('#avD').value.trim();if(!d)return;O.itens.push({id:'av_'+Date.now(),cod:$('#avC').value.trim()||'—',desc:d,un:$('#avU').value.trim()||'UN',preco:num($('#avP').value),qtd:1,foto:''});tela();};
+  $('#limpa').onclick=()=>{if(O.itens.length&&!O.id&&!confirm('Começar outro orçamento? O que não foi salvo será perdido.'))return;O=novoOrc();BQ='';tela();};
+  $('#impr').onclick=()=>imprimir(O);
+  $('#salvar').onclick=salvar;}
+async function salvar(){const m=$('#msg'),k=calc();if(!String(O.cliente.nome||'').trim()){m.textContent='Coloque o nome do cliente.';return;}if(!O.itens.length){m.textContent='Inclua ao menos um item.';return;}
+  if(k.acima){m.textContent='Desconto acima do limite.';return;}
+  $('#salvar').disabled=true;m.textContent='Salvando…';
+  const p={id:O.id,cliente:O.cliente,itens:O.itens.map(i=>({id:i.id,qtd:num(i.qtd),preco:ADM?num(i.preco):undefined,cod:i.cod,desc:i.desc,un:i.un,foto:i.foto})),pagamento:Object.assign({},O.pagamento,{resumo:parcelasTxt(k.tot)}),
+   desconto:Math.min(k.dsc,k.sub),frete:k.fr,validade:O.validade,obs:O.obs,status:O.status};
+  const r=await sb.rpc('orc_salvar',{p_chave:ADM?null:VKEY,p_orc:p,p_emp:ADM?EMP:null});$('#salvar').disabled=false;
+  if(r.error||!r.data){m.textContent='Não foi possível salvar: '+((r.error&&r.error.message)||'tente de novo');return;}
+  const id=r.data.id,nn=r.data.numero;await carregar();const s=D.orcs.find(x=>x.id===id);if(s)abrirOrc(s,true);toast('Orçamento nº '+nn+' salvo');}
+function abrirOrc(s,ficar){O={id:s.id,numero:s.numero,cliente:Object.assign({},s.cliente),itens:(s.itens||[]).map(i=>Object.assign({},i)),pagamento:Object.assign({forma:'',cond:'avista',parcelas:1,prazos:'',entrada:0,obs:''},s.pagamento||{}),
+  desconto:+s.desconto||0,descTipo:'rs',frete:+s.frete||0,validade:s.validade||'',obs:s.obs||'',status:s.status,vend_nome:s.vend_nome,criado_em:s.criado_em,total:s.total,subtotal:s.subtotal};ABA='novo';tela();}
+
+/* ---------- lista ---------- */
+let LF='';
+function telaLista(){const f=sem(LF);const L=D.orcs.filter(o=>!f||sem(o.numero+' '+(o.cliente&&o.cliente.nome)+' '+(o.vend_nome||'')).includes(f));
+  return `<div class="box"><div class="row" style="margin-bottom:10px"><h3 style="margin:0;flex:1">📂 ${ADM?'Todos os orçamentos':'Meus orçamentos'}</h3><input class="inp" id="lf" placeholder="Filtrar por nº, cliente${ADM?' ou vendedor':''}" value="${esc(LF)}" style="max-width:320px"></div>
+  ${L.length?`<div style="overflow-x:auto"><table class="it"><thead><tr><th>Nº</th><th>Data</th><th>Cliente</th>${ADM?'<th>Vendedor</th>':''}<th class="n">Total</th><th>Situação</th><th></th></tr></thead><tbody>
+  ${L.map(o=>`<tr><td><b>${o.numero}</b></td><td>${dBR(o.criado_em)}</td><td>${esc(o.cliente&&o.cliente.nome)}</td>${ADM?`<td>${esc(o.vend_nome||'')}</td>`:''}<td class="n"><b>${rs(o.total)}</b></td>
+   <td><select class="inp" data-st="${o.id}" style="padding:4px 6px;width:auto">${Object.entries(ST).map(([k,t])=>`<option value="${k}" ${o.status===k?'selected':''}>${t}</option>`).join('')}</select></td>
+   <td style="white-space:nowrap"><button class="btn mini" type="button" data-ab2="${o.id}">✏️ Abrir</button> <button class="btn mini" type="button" data-pr="${o.id}">🖨</button> <button class="btn mini" type="button" data-dup="${o.id}" title="Duplicar">⧉</button></td></tr>`).join('')}
+  </tbody></table></div>`:'<p class="vazio">Nenhum orçamento ainda.</p>'}</div>`;}
+function wireLista(){const lf=$('#lf');lf.oninput=()=>{LF=lf.value;const p=lf.selectionStart;tela();const n=$('#lf');n.focus();n.setSelectionRange(p,p);};
+  $$('[data-ab2]').forEach(b=>b.onclick=()=>abrirOrc(D.orcs.find(o=>o.id===b.dataset.ab2)));
+  $$('[data-pr]').forEach(b=>b.onclick=()=>{const s=D.orcs.find(o=>o.id===b.dataset.pr);imprimir(Object.assign({},s,{descTipo:'rs'}));});
+  $$('[data-dup]').forEach(b=>b.onclick=()=>{const s=D.orcs.find(o=>o.id===b.dataset.dup);abrirOrc(s);O.id=null;O.numero=null;O.status='aberto';O.validade=maisDias(D.validade_dias||7);
+    O.itens.forEach(i=>{const a=D.itens.find(x=>x.id===i.id);if(a){i.preco=a.preco;i.foto=a.foto||i.foto;}});tela();toast('Cópia criada com os preços atuais. Salve para gerar o número.');});
+  $$('[data-st]').forEach(s=>s.onchange=async()=>{const r=await sb.rpc('orc_status',{p_chave:ADM?null:VKEY,p_id:s.dataset.st,p_status:s.value,p_emp:ADM?EMP:null});if(r.error||!r.data){toast('Não foi possível mudar.');return;}const o=D.orcs.find(x=>x.id===s.dataset.st);o.status=s.value;toast('Situação: '+ST[s.value]);});}
+
+/* ---------- impressão ---------- */
+function imprimir(o){const c=D.cab||{},cl=o.cliente||{},p=o.pagamento||{},it=o.itens||[];
+  const sub=it.reduce((a,i)=>a+num(i.preco)*num(i.qtd),0),dsc=num(o.desconto),fr=num(o.frete),tot=Math.max(0,sub-dsc+fr);const peso=it.reduce((a,i)=>a+(num(i.peso)*num(i.qtd)),0);
+  const html=`<div class="folha"><div class="cab">${c.logo?`<img src="${esc(fotoUrl(c.logo))}" alt="">`:''}<div class="e"><b>${esc(c.nome||D.nome||'')}</b>${c.cnpj?`CNPJ: ${esc(c.cnpj)}<br>`:''}${esc(c.end||'')}${c.cidade?' · '+esc(c.cidade):''}<br>${c.fone?'Fone: '+esc(c.fone):''}${c.email?' · '+esc(c.email):''}</div></div>
+   <div class="tt"><span>Data: ${dBR(o.criado_em||hoje())}</span><b>ORÇAMENTO ${o.numero?'Nº '+o.numero:'(rascunho)'}</b><span>Validade: ${dBR(o.validade)}</span></div>
+   <div class="cli"><div><b>Cliente:</b> ${esc(cl.nome||'')}</div><div><b>CPF/CNPJ:</b> ${esc(cl.doc||'')}</div><div><b>Endereço:</b> ${esc(cl.end||'')}</div><div><b>Cidade:</b> ${esc(cl.cidade||'')}</div>
+    <div><b>Fone:</b> ${esc(cl.fone||'')}</div><div><b>E-mail:</b> ${esc(cl.email||'')}</div><div><b>Vendedor:</b> ${esc(o.vend_nome||(D.vend&&D.vend.nome)||'')}</div><div><b>Pagamento:</b> ${esc([p.forma,p.cond==='parcelado'?(p.resumo||parcelasTxt(tot)):'à vista'].filter(Boolean).join(' · '))}</div></div>
+   <table><thead><tr><th></th><th>Código</th><th>Produto</th><th>Un.</th><th class="n">Peso</th><th class="n">Qtde.</th><th class="n">Vlr unitário</th><th class="n">Valor total</th></tr></thead><tbody>
+   ${it.map(i=>`<tr><td class="ft">${i.foto?`<img src="${esc(fotoUrl(i.foto))}" alt="">`:''}</td><td><b>${esc(i.cod)}</b></td><td>${esc(i.desc)}${i.cor&&!sem(i.desc).includes(sem(i.cor))?' '+esc(i.cor):''}</td><td>${esc(i.un||'BR')}</td><td class="n">${i.peso?n2(i.peso):''}</td><td class="n">${esc(String(i.qtd).replace('.',','))}</td><td class="n">${n2(i.preco)}</td><td class="n">${n2(num(i.preco)*num(i.qtd))}</td></tr>`).join('')}
+   </tbody></table>
+   <div class="rod"><div class="ob">${peso?`<b>Peso total:</b> ${n2(peso)} kg\n`:''}${p.obs?`<b>Pagamento:</b> ${esc(p.obs)}\n`:''}${o.obs?esc(o.obs)+'\n':''}${c.rodape?esc(c.rodape)+'\n':''}<span style="color:#777">Imagens ilustrativas.</span></div>
+    <div class="tt2"><div><span>Total dos produtos</span><b>${n2(sub)}</b></div>${dsc?`<div><span>Desconto</span><b>- ${n2(dsc)}</b></div>`:''}${fr?`<div><span>Frete</span><b>${n2(fr)}</b></div>`:''}<div class="g"><span>TOTAL DO ORÇAMENTO</span><span>R$ ${n2(tot)}</span></div></div></div></div>`;
+  $('#imp').innerHTML=html;let ov=document.getElementById('impOv');if(ov)ov.remove();ov=document.createElement('div');ov.id='impOv';
+  ov.innerHTML=`<div class="bar"><button class="btn or" type="button" id="ip">🖨 Imprimir / salvar PDF</button><button class="btn" type="button" id="ix">✕ Fechar</button></div>${html}`;document.body.appendChild(ov);
+  ov.querySelector('#ix').onclick=()=>ov.remove();ov.querySelector('#ip').onclick=()=>window.print();}
+
+/* ---------- configuração (FC) ---------- */
+let PLS=null,FAUTO=null,CF=null,VEND=null,IF='';
+async function carregaCfg(){const [a,b,v]=await Promise.all([sb.from('orc_cfg').select('*').eq('empresa_id',EMP).maybeSingle(),sb.from('cons_planilhas').select('id,nome,atualizado_em').eq('empresa_id',EMP),sb.from('orc_vend').select('*').eq('empresa_id',EMP).order('criado_em')]);
+  CF=a.data||{empresa_id:EMP,itens:[],cab:{nome:D.nome},pag:PAG_PADRAO.slice(),desc_max:5,validade_dias:7,obs:'',planilha_id:null};if(!CF.pag||!CF.pag.length)CF.pag=PAG_PADRAO.slice();PLS=b.data||[];VEND=v.data||[];}
+function telaCfg(){if(!CF){carregaCfg().then(tela);return '<p class="vazio">Carregando configuração…</p>';}
+  const c=CF.cab||{},f=sem(IF),L=CF.itens.filter(i=>!f||sem(i.cod+' '+i.desc+' '+(i.cor||'')+' '+(i.forn||'')).includes(f)),semFoto=CF.itens.filter(i=>!i.foto).length;
+  const link=k=>BASE+'orcamento/?v='+k;
+  return `<div class="box"><h3>🧑‍💼 Vendedores · cada um tem o seu link</h3>
+   ${VEND.length?`<table class="it"><tbody>${VEND.map(v=>`<tr style="${v.ativo?'':'opacity:.5'}"><td><b>${esc(v.nome)}</b><br><span class="nota">${esc(v.telefone||'')}</span></td><td style="font-size:12.5px;word-break:break-all">${esc(link(v.chave))}</td>
+    <td style="white-space:nowrap"><button class="btn mini" type="button" data-cp="${esc(link(v.chave))}">📋 Copiar</button> ${v.telefone?`<a class="btn mini" target="_blank" rel="noopener" href="https://wa.me/55${esc(String(v.telefone).replace(/\D/g,'').replace(/^55/,''))}?text=${encodeURIComponent('Olá '+v.nome+'! Este é o seu link para montar os orçamentos da '+(c.nome||D.nome||'')+': '+link(v.chave))}">💬</a>`:''} <button class="btn mini" type="button" data-va="${v.id}">${v.ativo?'Desativar':'Ativar'}</button></td></tr>`).join('')}</tbody></table>`:'<p class="nota">Nenhum vendedor cadastrado.</p>'}
+   <div class="row" style="margin-top:8px"><input class="inp" id="vN" placeholder="Nome do vendedor" style="max-width:240px"><input class="inp" id="vT" placeholder="Telefone (opcional)" style="max-width:180px"><button class="btn pri" type="button" id="vAdd">＋ Criar link do vendedor</button></div>
+   <p class="nota">O vendedor só vê o preço de venda da tabela. Não vê custo, fornecedor nem as planilhas. Você envia o link para ele.</p></div>
+  <div class="box"><h3>📊 Itens da precificação (${CF.itens.length}) ${CF.itens_em?`<span class="nota" style="font-weight:500">· atualizados em ${new Date(CF.itens_em).toLocaleString('pt-BR')}</span>`:''}</h3>
+   <div class="row"><select class="inp" id="plSel" style="max-width:420px"><option value="">— escolher a planilha de precificação —</option>${PLS.map(p=>`<option value="${p.id}" ${CF.planilha_id===p.id?'selected':''}>${esc(p.nome)}</option>`).join('')}</select>
+    <button class="btn pri" type="button" id="plSync">🔄 Atualizar itens da precificação</button><span class="nota" id="plMsg"></span></div>
+   <p class="nota">Lê as abas que têm a coluna de preço de venda ("Preço de Venda Barra" ou "Valor da Vara c/ 6 metros") e traz código, descrição, cor, peso e preço de venda. As fotos já colocadas são mantidas. ${semFoto?`<b>${semFoto} itens sem foto.</b>`:''}</p>
+   ${CF.itens.length?`<div class="row" style="margin:8px 0"><input class="inp" id="iF" placeholder="Filtrar itens" value="${esc(IF)}" style="max-width:320px"><button class="btn" type="button" id="fAuto">🖼 Buscar fotos automáticas</button></div>
+   <div style="max-height:520px;overflow:auto"><table class="it"><thead><tr><th>Foto</th><th>Código</th><th>Descrição</th><th>Cor</th><th>Linha / forn.</th><th class="n">Peso barra</th><th class="n">Preço venda</th><th></th></tr></thead><tbody>
+   ${L.slice(0,400).map(i=>`<tr><td><label style="cursor:pointer" title="Trocar foto"><div class="th" style="${i.foto?`background-image:url('${esc(fotoUrl(i.foto))}')`:''}">${i.foto?'':'＋'}</div><input type="file" accept="image/*" data-up="${esc(i.id)}" hidden></label></td><td><b>${esc(i.cod)}</b></td><td>${esc(i.desc)}</td><td>${esc(i.cor||'')}</td><td>${esc([i.linha,i.forn].filter(Boolean).join(' · '))}</td><td class="n">${i.peso?n2(i.peso):''}</td><td class="n"><b>${rs(i.preco)}</b></td><td>${i.foto?`<button class="btn mini" type="button" data-fx="${esc(i.id)}" title="Tirar foto">✕</button>`:''}</td></tr>`).join('')}</tbody></table></div>`:''}</div>
+  <div class="box"><h3>🏢 Cabeçalho do orçamento</h3><div class="grid">
+   <label class="f">Nome da empresa<input data-cb="nome" value="${esc(c.nome)}"></label><label class="f">CNPJ<input data-cb="cnpj" value="${esc(c.cnpj)}"></label>
+   <label class="f">Endereço<input data-cb="end" value="${esc(c.end)}"></label><label class="f">Cidade / UF<input data-cb="cidade" value="${esc(c.cidade)}"></label>
+   <label class="f">Telefone<input data-cb="fone" value="${esc(c.fone)}"></label><label class="f">E-mail<input data-cb="email" value="${esc(c.email)}"></label>
+   <label class="f">Logo<span class="row">${c.logo?`<img src="${esc(fotoUrl(c.logo))}" style="height:40px;max-width:120px;object-fit:contain;border:1px solid var(--ln);border-radius:6px">`:''}<input type="file" accept="image/*" id="lgUp"></span></label>
+   <label class="f" style="grid-column:1/-1">Texto do rodapé (aparece em todo orçamento)<textarea data-cb="rodape">${esc(c.rodape)}</textarea></label></div></div>
+  <div class="box"><h3>💳 Pagamento, desconto e validade</h3><div class="grid">
+   <label class="f" style="grid-column:span 2">Formas de pagamento (uma por linha)<textarea id="cPag" rows="5">${esc((CF.pag||[]).join('\n'))}</textarea></label>
+   <label class="f">Desconto máximo do vendedor (%)<input id="cDm" value="${esc(CF.desc_max)}" inputmode="decimal"></label>
+   <label class="f">Validade padrão (dias)<input id="cVd" value="${esc(CF.validade_dias)}" inputmode="numeric"></label>
+   <label class="f" style="grid-column:1/-1">Observação padrão do orçamento<textarea id="cObs">${esc(CF.obs||'')}</textarea></label></div>
+   <div class="row" style="margin-top:10px"><button class="btn pri" type="button" id="cSalva">💾 Salvar configuração</button><span class="nota" id="cMsg"></span></div></div>`;}
+async function salvaCfg(msg){const r=await sb.from('orc_cfg').upsert({empresa_id:EMP,itens:CF.itens,cab:CF.cab||{},pag:CF.pag,desc_max:num(CF.desc_max),validade_dias:parseInt(CF.validade_dias)||7,obs:CF.obs||null,planilha_id:CF.planilha_id||null,itens_em:CF.itens_em||null,atualizado_em:new Date().toISOString()});
+  if(r.error){toast('Não salvou: '+r.error.message);return false;}await carregar();if(msg)toast(msg);return true;}
+async function carregaFAuto(){if(FAUTO)return FAUTO;FAUTO=await fetch('fotos-auto.json?v=1').then(r=>r.json()).catch(()=>({}));return FAUTO;}
+function fotoAutoDe(i,F){const toks=[...String(i.ref||'').split(/[|\/,;]+/),...String(i.cod||'').split(/[|\/,;]+/),...(String(i.desc).toUpperCase().match(/\b[A-Z]{1,5}-?\d{2,6}[A-Z]?\b/g)||[])];for(const t of toks){const k=nk(t);if(k.length>=3&&F[k])return F[k];}return '';}
+const COR_RX=[['BRANCO','Branco'],['PRETO','Preto'],['NATURAL','Natural'],['FOSCO','Fosco'],['BRONZE','Bronze'],['CHAMPANHE','Champanhe'],['AMADEIRADO','Amadeirado'],['CEREJEIRA','Cerejeira'],['ANODIZADO','Anodizado'],['BRILHANTE','Brilhante']];
+const corDe=t=>{const u=sem(t).toUpperCase();const k=COR_RX.find(x=>u.includes(x[0]));return k?k[1]:'';};
+function lerAba(sh,mt){const keys=Object.keys(sh.c),rows={};keys.forEach(a=>{const mm=a.match(/^([A-Z]+)(\d+)$/);if(mm)(rows[+mm[2]]=rows[+mm[2]]||[]).push(mm[1]);});
+  const R=Object.keys(rows).map(Number).sort((a,b)=>a-b),txt=(c,r)=>{const v=mt.val(sh,c+r);return v==null?'':String(v).trim();};
+  const PRC=h=>h==='preco de venda barra'||h.startsWith('valor da vara')||h==='preco de venda';
+  let col=null,linha='',cor='',forn='',lastH=-9;const out=[];
+  for(const r of R){const cs=rows[r];const H={};cs.forEach(c=>{const v=mt.val(sh,c+r);if(typeof v==='string')H[c]=sem(v).replace(/\s+/g,' ').trim();});
+    const fm=Object.values(H).map(h=>h.match(/fornecedor\s*:\s*([a-z0-9-]+)/)).find(Boolean);if(fm)forn=fm[1].toUpperCase();
+    const pcs=Object.keys(H).filter(c=>PRC(H[c])).sort((a,b)=>(H[b]==='preco de venda barra')-(H[a]==='preco de venda barra')||a.length-b.length||a.localeCompare(b)),pc=pcs[0];
+    if(pc&&lastH===r-1&&col){const t=col.d?String(mt.val(sh,col.d+r)??'').trim():'';if(t&&!PRC(sem(t))){cor=corDe(t)||t;}lastH=r;continue;}
+    if(pc){lastH=r;const f=(t)=>Object.keys(H).filter(c=>t(H[c])).sort((a,b)=>a.length-b.length||a.localeCompare(b))[0];
+      const cod=f(h=>h==='codigo revenda'||h==='codigo'),des=f(h=>h==='codigo fornecedor'||h.startsWith('descricao'));
+      let dc=des;if(!dc&&cod){const nx=String.fromCharCode(cod.charCodeAt(cod.length-1)+1);dc=cod.slice(0,-1)+nx;}
+      col={p:pc,cod,d:dc,cor:f(h=>h==='cor'),forn:f(h=>h==='nome fornecedor'),peso:f(h=>h==='peso barra'||h.startsWith('peso (p')),ref:f(h=>h.includes('sistema')||h==='cod. cem'||h==='cem')};
+      linha=(!des&&dc&&mt.val(sh,dc+r))?String(mt.val(sh,dc+r)).replace(/\s{2,}.*$/,'').trim():'';cor='';continue;}
+    if(!col)continue;const g=c=>c?mt.val(sh,c+r):null;const desc=String(g(col.d)??'').replace(/\s+/g,' ').trim(),pr=g(col.p),codv=String(g(col.cod)??'').trim();
+    if(!(typeof pr==='number'&&pr>0&&isFinite(pr))){if(desc&&!codv&&desc.length<40){const c2=corDe(desc);cor=c2||desc;}continue;}
+    if(!desc)continue;let cod=codv;if(!cod||cod==='*'){const t=desc.toUpperCase().match(/\b[A-Z]{1,5}[- ]?\d{2,6}[A-Z]?\b/);cod=t?t[0]:'—';}
+    let cr=String(g(col.cor)??'').trim();cr=cr?cr.charAt(0).toUpperCase()+cr.slice(1).toLowerCase():(cor||corDe(desc));
+    const ref=String(g(col.ref)??'').trim();const pe=g(col.peso);
+    out.push({cod,desc,cor:cr,linha,forn:String(g(col.forn)??'').trim()||forn,ref:ref&&ref!=='-'?ref:'',un:'BR',peso:typeof pe==='number'?Math.round(pe*1000)/1000:null,preco:Math.round(pr*100)/100});}
+  return out;}
+async function sincronizar(){const pid=$('#plSel').value,m=$('#plMsg');if(!pid){m.textContent='Escolha a planilha.';return;}m.textContent='Lendo a planilha…';
+  const r=await sb.from('cons_planilhas').select('dados').eq('id',pid).maybeSingle();if(r.error||!r.data){m.textContent='Não consegui abrir a planilha.';return;}
+  const model=r.data.dados,mt=new Planilha.Motor(model),F=await carregaFAuto(),antes=Object.fromEntries((CF.itens||[]).map(i=>[i.id,i]));
+  const out=[],vistos=new Set();let dup=0,abas=[];
+  for(const sh of model.sheets){const L=lerAba(sh,mt);if(!L.length)continue;abas.push(sh.n);
+    for(const it of L){const id=(nk(it.cod)+'_'+nk(it.desc).slice(0,48)+'_'+nk(it.cor)).slice(0,90);if(vistos.has(id)){dup++;continue;}vistos.add(id);it.id=id;
+      const a=antes[id];it.foto=a&&a.foto?a.foto:fotoAutoDe(it,F);if(a&&a.fotoManual)it.fotoManual=1;out.push(it);}}
+  if(!out.length){m.textContent='Nenhum item com preço de venda encontrado nesta planilha.';return;}
+  CF.itens=out;CF.planilha_id=pid;CF.itens_em=new Date().toISOString();const ok=await salvaCfg();
+  if(ok){m.textContent=`✓ ${out.length} itens das abas: ${abas.join(', ')}${dup?` · ${dup} repetidos ignorados`:''} · ${out.filter(i=>i.foto).length} com foto`;tela();}}
+function wireCfg(){if(!CF)return;const q=s=>document.getElementById(s);
+  if(q('plSync'))q('plSync').onclick=sincronizar;
+  if(q('iF'))q('iF').oninput=e=>{IF=e.target.value;const p=e.target.selectionStart;tela();const n=q('iF');n.focus();n.setSelectionRange(p,p);};
+  if(q('fAuto'))q('fAuto').onclick=async()=>{const F=await carregaFAuto();let n=0;CF.itens.forEach(i=>{if(!i.foto){const f=fotoAutoDe(i,F);if(f){i.foto=f;n++;}}});if(await salvaCfg())toast(n+' fotos encontradas');tela();};
+  $$('[data-up]').forEach(inp=>inp.onchange=async()=>{const f=inp.files[0];if(!f)return;const it=CF.itens.find(i=>i.id===inp.dataset.up);const b=await reduz(f);
+    const path='orcamento/'+EMP+'/'+it.id.slice(0,60)+'-'+Date.now()+'.jpg';const up=await sb.storage.from('fc-anexos').upload(path,b,{contentType:'image/jpeg',upsert:true});
+    if(up.error){toast('Não subiu a foto: '+up.error.message);return;}it.foto=sb.storage.from('fc-anexos').getPublicUrl(path).data.publicUrl;it.fotoManual=1;await salvaCfg('Foto salva');tela();});
+  $$('[data-fx]').forEach(b=>b.onclick=async()=>{const it=CF.itens.find(i=>i.id===b.dataset.fx);it.foto='';delete it.fotoManual;await salvaCfg();tela();});
+  $$('[data-cb]').forEach(i=>i.oninput=()=>{CF.cab=CF.cab||{};CF.cab[i.dataset.cb]=i.value;});
+  if(q('lgUp'))q('lgUp').onchange=async e=>{const f=e.target.files[0];if(!f)return;const b=await reduz(f,600);const path='orcamento/'+EMP+'/logo-'+Date.now()+'.jpg';
+    const up=await sb.storage.from('fc-anexos').upload(path,b,{contentType:'image/jpeg',upsert:true});if(up.error){toast(up.error.message);return;}CF.cab=CF.cab||{};CF.cab.logo=sb.storage.from('fc-anexos').getPublicUrl(path).data.publicUrl;await salvaCfg('Logo salva');tela();};
+  q('cSalva').onclick=async()=>{CF.pag=q('cPag').value.split('\n').map(s=>s.trim()).filter(Boolean);CF.desc_max=num(q('cDm').value);CF.validade_dias=parseInt(q('cVd').value)||7;CF.obs=q('cObs').value;
+    if(await salvaCfg())q('cMsg').textContent='✓ Salvo';};
+  $$('[data-cp]').forEach(b=>b.onclick=()=>{navigator.clipboard&&navigator.clipboard.writeText(b.dataset.cp);b.textContent='✓ Copiado';});
+  $$('[data-va]').forEach(b=>b.onclick=async()=>{const v=VEND.find(x=>x.id===b.dataset.va);await sb.from('orc_vend').update({ativo:!v.ativo}).eq('id',v.id);v.ativo=!v.ativo;tela();});
+  q('vAdd').onclick=async()=>{const n=q('vN').value.trim();if(!n){toast('Coloque o nome do vendedor.');return;}const A='abcdefghjkmnpqrstuvwxyz23456789';let k='';crypto.getRandomValues(new Uint8Array(32)).forEach(x=>k+=A[x%A.length]);
+    const r=await sb.from('orc_vend').insert({empresa_id:EMP,nome:n.slice(0,80),telefone:q('vT').value.trim().slice(0,30)||null,chave:k}).select('*').single();if(r.error){toast(r.error.message);return;}VEND.push(r.data);tela();};}
+function reduz(file,max=900){return new Promise(ok=>{const im=new Image();im.onload=()=>{const s=Math.min(1,max/Math.max(im.width,im.height));const c=document.createElement('canvas');c.width=Math.round(im.width*s);c.height=Math.round(im.height*s);const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(im,0,0,c.width,c.height);c.toBlob(b=>ok(b),'image/jpeg',.85);};im.src=URL.createObjectURL(file);});}
+
+/* ---------- início ---------- */
+async function trocaEmp(id){EMP=id;try{localStorage.setItem('fc_orc_emp',id);}catch(_){}D=null;O=null;CF=null;if(await carregar())tela();}
+(async()=>{if(VKEY){if(await carregar())tela();return;}
+  gateUI(async()=>{try{const r=await sb.rpc('trein_is_admin');ADM=!!r.data;}catch(_){}
+    if(!ADM){$('#app').innerHTML='<p class="vazio">Esta área é da FC Consultoria. O vendedor entra pelo link que recebeu.</p>';return;}
+    const a=document.createElement('a');a.className='vt';a.href='/treinamento/painel.html';a.textContent='← Painel matriz';$('header.top .w').appendChild(a);
+    const r=await sb.from('rotina_docs').select('id,data').eq('col','consultoria');EMPS=(r.data||[]).map(x=>({id:x.id,nome:(x.data&&x.data.nome)||x.id})).sort((a,b)=>a.nome.localeCompare(b.nome,'pt'));
+    const s=$('#selEmp');s.hidden=false;s.innerHTML=EMPS.map(e=>`<option value="${esc(e.id)}">${esc(e.nome)}</option>`).join('');
+    let e0=Q.get('e')||(()=>{try{return localStorage.getItem('fc_orc_emp');}catch(_){return '';}})()||'cb';if(!EMPS.some(e=>e.id===e0))e0=(EMPS.find(e=>e.id==='cb')||EMPS[0]||{}).id;s.value=e0;s.onchange=()=>trocaEmp(s.value);
+    if(Q.get('aba'))ABA=Q.get('aba');await trocaEmp(e0);});})();
+</script>
+</body>
+</html>
