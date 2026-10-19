@@ -229,7 +229,7 @@ function telaBusca(){
   <div class="opc"><div class="g"><span>Acabamento</span><div class="chips">${CORES.map(([k,t,c])=>`<button type="button" data-cor="${k}" class="${COR===k?'on':''}"><span class="dot" style="background:${c}"></span>${t}</button>`).join('')}</div></div>
   <div class="g"><span>Ordenar por</span><div class="chips"><button type="button" data-modo="barra" class="${MODO==='barra'?'on':''}">Melhor preço por barra</button><button type="button" data-modo="min" class="${MODO==='min'?'on':''}">Melhor compra mínima</button></div></div></div>
   ${semPrecos()?`<div class="aviso">Nenhum preço cadastrado ainda. A comparação de peso já funciona; para comparar valores, preencha a aba <button type="button" class="bt" data-aba="precos" style="padding:3px 10px">💲 Preços dos fornecedores</button></div>`:''}
-  </section>${Q?resultado(r):''}`;}
+  </section><div id="resBox">${Q?(r.length?resultado(r):sugestoes(Q)):''}</div>`;}
 function resultado(r){
   if(!r.length)return `<div class="box" style="margin-top:16px"><p class="vazio">Não achei <b>${esc(Q.toUpperCase())}</b> em nenhuma linha da Conversão de códigos. Confira o código ou fale com a FC para cadastrar.</p></div>`;
   const g=SEL;const R=linhasDe(g,Q);const ref=R.ref;const cl=classe(g,Q);
@@ -264,6 +264,17 @@ function resultado(r){
   ${mel}${R.L.length===1?`<div class="aviso">Este código ainda não tem equivalente ${ADM?'':'confirmado pela FC '}nos outros fornecedores.</div>`:''}
   ${linhas}
   <p class="sub" style="font-size:13px">Barra de ${BARRA} m. Compra mínima por item em kg, arredondada para barras inteiras. ${COR!=='natural'?'Preço com acabamento = natural + acréscimo da cor por kg. ':''}Os pares vêm da Conversão de códigos da FC: confira o desenho antes de fechar a compra.${meta?' '+esc(meta):''}</p></div>`;}
+
+/* ===== filtro enquanto digita ===== */
+let SUG=null;
+function sugIdx(){if(SUG)return SUG;const m=new Map();IDX.g.forEach(g=>{g.m.forEach(x=>{if(visivel(g,x)){const k=norm(x[1]);if(!m.has(k))m.set(k,{c:x[1],f:x[0],l:g.l});}});if(g.mc&&g.l!=='tc'){const k=norm(g.k);if(!m.has(k))m.set(k,{c:g.k,f:'',l:g.l});}});SUG=[...m.entries()];return SUG;}
+function sugestoes(q){const k=norm(q);if(k.length<2)return '';
+  const L=sugIdx().filter(([c])=>c.startsWith(k)).slice(0,30).concat(sugIdx().filter(([c])=>!c.startsWith(k)&&c.includes(k)).slice(0,10)).slice(0,30);
+  if(!L.length)return resultado([]);
+  return `<div class="box" style="margin-top:16px"><b style="font-size:15px">Códigos que começam com ${esc(q.toUpperCase())}:</b><div class="chips" style="margin-top:8px">${L.map(([,o])=>`<button type="button" data-sug="${esc(o.c)}">${esc(o.c)} <small style="opacity:.6">${o.f?esc(IDX.forn[o.f])+' · ':''}${esc(IDX.linhas[o.l].n)}</small></button>`).join('')}</div></div>`;}
+let digT=null;
+function aoDigitar(v){clearTimeout(digT);digT=setTimeout(()=>{Q=v.trim();SEL=null;history.replaceState(null,'','#'+encodeURIComponent(Q));const r=Q?buscar(Q):[];if(r.length)SEL=r[0];const b=$('#resBox');if(b)b.innerHTML=Q?(r.length?resultado(r):sugestoes(Q)):'';if(r.length)regBusca();},250);}
+document.addEventListener('input',e=>{if(e.target.id==='q')aoDigitar(e.target.value);});
 
 /* ===== preços ===== */
 function telaPrecos(){
@@ -437,8 +448,9 @@ document.addEventListener('submit',async ev=>{const f=ev.target;
     const r=await sb.from('compra_abc_meta').upsert({empresa_id:EMP,data_reuniao:meta.data,participantes:meta.part,obs:meta.obs,atualizado_em:new Date().toISOString()});
     if(r.error){if(/relation|does not exist|schema cache/i.test(r.error.message)){LOCAL=true;DADOS.meta=meta;ls.set('fc_compra_meta_'+EMP,meta);toast('Reunião salva (modo demonstração).');tela();return;}toast('Não salvou: '+r.error.message);return;}
     DADOS.meta=meta;toast('Reunião salva.');tela();}});
-document.addEventListener('click',async ev=>{const t=ev.target.closest('[data-addsim],[data-simrm],[data-simprint],[data-simcsv],[data-simlimpa],[data-aba],[data-cor],[data-modo],[data-g],[data-addrel],[data-rmrel],[data-print],[data-csv],[data-limpa],[data-setabc],[data-rmabc],[data-ir],[data-zoom]');if(!t)return;const d=t.dataset;
-  if(d.aba){ABA=d.aba;tela();window.scrollTo(0,0);}
+document.addEventListener('click',async ev=>{const t=ev.target.closest('[data-sug],[data-addsim],[data-simrm],[data-simprint],[data-simcsv],[data-simlimpa],[data-aba],[data-cor],[data-modo],[data-g],[data-addrel],[data-rmrel],[data-print],[data-csv],[data-limpa],[data-setabc],[data-rmabc],[data-ir],[data-zoom]');if(!t)return;const d=t.dataset;
+  if(d.sug){Q=d.sug;SEL=null;tela();regBusca();}
+  else if(d.aba){ABA=d.aba;tela();window.scrollTo(0,0);}
   else if(d.cor){COR=d.cor;salvaPref();tela();}
   else if(d.modo){MODO=d.modo;salvaPref();tela();}
   else if(d.g!=null){SEL=IDX.g[+d.g];tela();}

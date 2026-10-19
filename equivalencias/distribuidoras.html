@@ -85,7 +85,7 @@ function tela(){const r=Q?busca(Q):[];const tot={};D.g.forEach(g=>g.m.forEach(m=
   <form class="sb" id="fb"><input id="q" value="${esc(Q)}" placeholder="Ex.: SU-001, CM-151, 25-506, LG-017" autocomplete="off" aria-label="Código"><button>Procurar</button></form>
   <div class="kp"><div><b>${Object.keys(D.dist).length}</b><span>distribuidoras na base</span></div><div><b>${D.g.reduce((a,g)=>a+g.m.length,0).toLocaleString('pt-BR')}</b><span>códigos lidos dos catálogos</span></div><div><b>${multi.toLocaleString('pt-BR')}</b><span>perfis em 2 ou mais distribuidoras</span></div></div>
   <div class="chips">${Object.entries(D.dist).map(([k,n])=>`<button type="button" data-df="${k}" class="${DF===k?'on':''}">${esc(n)}<small>${tot[k]||0}</small></button>`).join('')}</div></section>`;
-  if(Q)h+=resultado(r);else if(DF)h+=lista(DF);
+  h+=`<div id="resBox">${Q?(r.length?resultado(r):sugestoes(Q)):(DF?lista(DF):'')}</div>`;
   $('#app').innerHTML=h;}
 function resultado(r){
   if(!r.length)return `<div class="box" style="margin-top:16px"><p class="vazio">Não achei <b>${esc(Q.toUpperCase())}</b> nos catálogos das distribuidoras.</p></div>`;
@@ -102,6 +102,15 @@ function resultado(r){
 function lista(df){const T=D.g.flatMap(g=>g.m.filter(m=>m[0]===df).map(m=>({g,m})));T.sort((a,b)=>new Set(b.g.m.map(x=>x[0])).size-new Set(a.g.m.map(x=>x[0])).size);const L=T.slice(0,600);
   return `<section class="box" style="margin-top:14px"><h2 class="t">${esc(D.dist[df])} · ${T.length} códigos${T.length>L.length?' <small style="font:600 14px var(--f-b);color:var(--tm)">(mostrando os '+L.length+' que mais aparecem em outras distribuidoras; use a busca para os demais)</small>':''}</h2><p class="sub" style="font-size:14px">Clique num código para ver as outras distribuidoras com o mesmo perfil.</p>
   <div class="lst">${L.map(({g,m})=>{const n=new Set(g.m.map(x=>x[0])).size;return `<button type="button" data-q="${esc(m[1])}"><span class="ti">${m[4]?`<img src="${esc(imgD(m[0],m[1]))}" alt="" loading="lazy">`:''}</span><b>${esc(m[1])}</b><small>${g.mk&&nk(g.mk)!==nk(m[1])?'= '+esc(g.mk)+' · ':''}${n>1?n+' distribuidoras':'só nesta'}</small></button>`;}).join('')}</div></section>`;}
+let SUG=null;
+function sugIdx(){if(SUG)return SUG;const m=new Map();D.g.forEach(g=>{g.m.forEach(x=>{const k=norm(x[1]);if(!m.has(k))m.set(k,{c:x[1],d:x[0]});});if(g.mk){const k=norm(g.mk);if(!m.has(k))m.set(k,{c:g.mk,d:''});}});
+  if(IDX)IDX.g.forEach(g=>g.m.forEach(x=>{const k=norm(x[1]);if(!m.has(k)&&BY[nk(x[1])])m.set(k,{c:x[1],d:'',f:x[0]});}));SUG=[...m.entries()];return SUG;}
+function sugestoes(q){const k=norm(q);if(k.length<2)return '';
+  const L=sugIdx().filter(([c])=>c.startsWith(k)).slice(0,30).concat(sugIdx().filter(([c])=>!c.startsWith(k)&&c.includes(k)).slice(0,10)).slice(0,30);
+  if(!L.length)return resultado([]);
+  return `<div class="box" style="margin-top:16px"><b style="font-size:15px">Códigos que começam com ${esc(q.toUpperCase())}:</b><div class="chips">${L.map(([,o])=>`<button type="button" data-q="${esc(o.c)}">${esc(o.c)} <small>${o.d?esc(D.dist[o.d]):o.f&&IDX?esc(IDX.forn[o.f])+' (extrusora)':'mercado'}</small></button>`).join('')}</div></div>`;}
+let digT=null;
+document.addEventListener('input',e=>{if(e.target.id!=='q')return;clearTimeout(digT);const v=e.target.value;digT=setTimeout(()=>{Q=v.trim();history.replaceState(null,'','#'+encodeURIComponent(Q));const r=Q?busca(Q):[];const b=$('#resBox');if(b)b.innerHTML=Q?(r.length?resultado(r):sugestoes(Q)):(DF?lista(DF):'');},250);});
 document.addEventListener('submit',e=>{if(e.target.id==='fb'){e.preventDefault();Q=$('#q').value.trim();history.replaceState(null,'','#'+encodeURIComponent(Q));tela();}});
 document.addEventListener('click',e=>{const t=e.target.closest('[data-df],[data-q],[data-zoom]');if(!t)return;const d=t.dataset;
   if(d.df){DF=DF===d.df?'':d.df;Q='';tela();}else if(d.q){Q=d.q;tela();window.scrollTo(0,0);}else if(d.zoom){$('#zmI').src=d.zoom;$('#zmT').textContent=d.t||'';$('#zm').hidden=false;}});
