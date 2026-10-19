@@ -128,7 +128,7 @@ const $=s=>document.querySelector(s),esc=t=>String(t??'').replace(/[&<>"]/g,c=>(
 const KEY=new URLSearchParams(location.search).get('k')||'';
 const norm=s=>String(s||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
 const BARRA=6;
-const FORN=['alcoa','texa','selta','fbk','ecoalumi','perfileve'];
+const FORN=['alcoa','texa','selta','fbk','ecoalumi','perfileve','cda'];
 const CORES=[['natural','Sem acabamento','#d9dee1'],['fosco','Fosco','#9aa3a8'],['branco','Branco','#ffffff'],['preto','Preto','#1c1c1c'],['bronze','Bronze','#6b4a2b'],['brilhante','Brilhante','#e8edf0'],['cerejeira','Cerejeira real','#8a3b26']];
 const CORN=Object.fromEntries(CORES.map(c=>[c[0],c[1]]));
 const PART=['Comercial','Estoque','Produção'];
@@ -154,7 +154,7 @@ const nomeQ=()=>{let n=ls.get('cons-nome-v','');if(!n){try{n=localStorage.getIte
 
 /* ===== índice de todas as linhas ===== */
 async function carregaIndice(){
-  IDX=await fetch('indice.json?v=1',{cache:'no-cache'}).then(r=>r.json());
+  IDX=await fetch('indice.json?v=2',{cache:'no-cache'}).then(r=>r.json());
   /* edições de pares feitas pela FC na Conversão de códigos */
   let ed=[];
   try{if(ADM){const r=await sb.from('trein_eventos').select('detalhe,criado_em').eq('tipo','equiv_edit').order('criado_em');ed=(r.data||[]).map(x=>x.detalhe);}
