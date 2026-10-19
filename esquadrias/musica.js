@@ -2,6 +2,7 @@
    Sons de foco gerados no próprio navegador (sem anúncio, sem internet extra) e playlists escolhidas pela FC
    (Spotify, YouTube ou Deezer), tocando dentro do link do treinamento. As playlists ficam em musica.json. */
 (function(){
+  const BASE=(document.currentScript&&document.currentScript.src)?new URL('.',document.currentScript.src).href:'';
   const $=s=>document.querySelector(s);
   const ler=(k,d)=>{try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v);}catch(_){return d;}};
   const grava=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));}catch(_){}};
@@ -62,10 +63,10 @@
     if((m=u.match(/(?:youtu\.be\/|v=|embed\/)([A-Za-z0-9_-]{11})/)))return {src:`https://www.youtube-nocookie.com/embed/${m[1]}`,h:203,f:'YouTube'};
     if((m=u.match(/deezer\.com\/(?:[a-z]{2}\/)?(playlist|album)\/(\d+)/)))return {src:`https://widget.deezer.com/widget/auto/${m[1]}/${m[2]}`,h:300,f:'Deezer'};
     return null;}
-  let PLS=[],tocando=null;
+  let PLS=[],tocando=null,MODO='estudo';
   const ALUNO=()=>/[?&]sala=/.test(location.search);
   function minhas(){return ler('fcm_pl',[]);}
-  async function carregar(){if(window.FCM_SO_SONS){PLS=[];return;}try{const r=await fetch('musica.json?v='+Date.now());const j=await r.json();PLS=(j.playlists||[]).filter(p=>embed(p.url));}catch(_){PLS=[];}}
+  async function carregar(){if(window.FCM_SO_SONS){PLS=[];return;}try{const r=await fetch(BASE+'musica.json?v='+Date.now());const j=await r.json();PLS=(j.playlists||[]).filter(p=>embed(p.url));}catch(_){PLS=[];}}
 
   /* ---------- tela ---------- */
   const btn=document.createElement('button');btn.type='button';btn.className='fcm-btn';btn.setAttribute('aria-label','Som para estudar');btn.innerHTML='<span class="eq"><i></i><i></i><i></i></span>🎧 Música';
@@ -76,8 +77,11 @@
     box.innerHTML=`<button type="button" class="fcm-x" aria-label="Fechar">×</button><h3>🎧 Som para estudar</h3>
      <div><h4>Sons de foco</h4><div class="fcm-sons">${Object.entries(SONS).map(([k,s])=>`<button type="button" data-som="${k}" class="${atual===k?'on':''}">${atual===k?'⏸ ':'▶ '}${s.n}<small>${s.d}</small></button>`).join('')}</div></div>
      <div class="fcm-vol"><span>🔈</span><input type="range" min="0" max="1" step=".05" value="${ler('fcm_vol',.5)}" aria-label="Volume dos sons de foco"><span>🔊</span></div>
-     <div><h4>Playlists da FC</h4><div class="fcm-pl">${L.length?L.map((p,i)=>`<div class="it"><button type="button" class="p${tocando===i?' on':''}" data-pl="${i}">${tocando===i?'⏸':'▶'} ${esc(p.nome||embed(p.url).f)}<small style="display:block;font-weight:400;color:#5a6b75">${esc(embed(p.url).f)}${p.loc?' · só neste aparelho':''}</small></button>${p.loc?`<button type="button" class="x" data-del="${i-PLS.length}" aria-label="Tirar playlist">✕</button>`:''}</div>`).join(''):(window.FCM_SO_SONS?'<p class="fcm-nt">Nesta prévia só os sons de foco tocam. As playlists do Spotify, YouTube e Deezer aparecem dentro do link do treinamento.</p>':'<p class="fcm-nt">A FC ainda vai escolher as playlists do treinamento. Enquanto isso, use os sons de foco acima.</p>')}</div>
-      <div class="fcm-emb" id="fcmEmb">${tocando!=null&&L[tocando]?(()=>{const e=embed(L[tocando].url);return `<iframe src="${esc(e.src)}" height="${e.h}" loading="lazy" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" title="Playlist"></iframe>`;})():''}</div></div>
+     ${(()=>{const it=(p,i)=>`<div class="it"><button type="button" class="p${tocando===i?' on':''}" data-pl="${i}">${tocando===i?'⏸':'▶'} ${esc(p.nome||embed(p.url).f)}<small style="display:block;font-weight:400;color:#5a6b75">${esc(embed(p.url).f)}${p.loc?' · só neste aparelho':''}</small></button>${p.loc?`<button type="button" class="x" data-del="${i-PLS.length}" aria-label="Tirar playlist">✕</button>`:''}</div>`;
+       if(!L.length)return `<div><h4>Playlists da FC</h4><div class="fcm-pl">${window.FCM_SO_SONS?'<p class="fcm-nt">Nesta prévia só os sons de foco tocam. As playlists aparecem dentro do link.</p>':'<p class="fcm-nt">A FC ainda vai escolher as playlists. Enquanto isso, use os sons de foco acima.</p>'}</div></div>`;
+       const grp=[['abertura','🎉 Abertura do treinamento','Para tocar enquanto o pessoal vai entrando.'],['estudo','📚 Para estudar','Sem pressa, volume baixo, só de fundo.']];const ord=MODO==='abertura'?grp:[grp[1],grp[0]];
+       return `<div>${ord.map(([g,t,dd])=>{const xs=L.map((p,i)=>[p,i]).filter(([p])=>(p.g||'estudo')===g);return xs.length?`<h4>${t}</h4><p class="fcm-nt" style="margin:-4px 0 6px">${dd}</p><div class="fcm-pl" style="margin-bottom:10px">${xs.map(([p,i])=>it(p,i)).join('')}</div>`:'';}).join('')}
+      <div class="fcm-emb" id="fcmEmb">${tocando!=null&&L[tocando]?(()=>{const e=embed(L[tocando].url);return `<iframe src="${esc(e.src)}" height="${e.h}" loading="lazy" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" title="Playlist"></iframe>`;})():''}</div></div>`;})()}
      ${ALUNO()||window.FCM_SO_SONS?'':`<div><h4>Adicionar playlist</h4><form class="fcm-add"><input id="fcmUrl" placeholder="Cole o link do Spotify, YouTube ou Deezer" autocomplete="off" aria-label="Link da playlist"><button>＋</button></form><p class="fcm-nt" id="fcmMsg">Fica salva neste aparelho. Para aparecer para todos os alunos, mande o link para incluir na lista oficial.</p></div>`}
      <p class="fcm-nt">Dica: volume baixo, só de fundo. Os sons de foco funcionam até sem internet.</p>`;}
   box.addEventListener('click',e=>{const t=e.target.closest('button');if(!t)return;
@@ -88,6 +92,7 @@
   box.addEventListener('input',e=>{if(e.target.type==='range'){const v=+e.target.value;grava('fcm_vol',v);if(MS)MS.gain.value=v;}});
   box.addEventListener('submit',e=>{e.preventDefault();const u=$('#fcmUrl').value,em=embed(u);if(!em){$('#fcmMsg').textContent='Esse link não é de playlist do Spotify, YouTube ou Deezer. Copie o link pelo botão Compartilhar da playlist.';return;}
     const L=minhas();L.push({nome:em.f+' '+(L.length+1),url:u.trim()});grava('fcm_pl',L);tocando=PLS.length+L.length-1;parar();btn.classList.add('on');desenhar();});
+  window.FCM={async abertura(){MODO='abertura';await carregar();desenhar();box.hidden=false;},parar(){parar();tocando=null;btn.classList.remove('on');MODO='estudo';if(!box.hidden){desenhar();box.hidden=true;}}};
   btn.onclick=async()=>{if(box.hidden){await carregar();desenhar();}box.hidden=!box.hidden;};
   document.addEventListener('keydown',e=>{if(e.key==='Escape')box.hidden=true;});
 })();
