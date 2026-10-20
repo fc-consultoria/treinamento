@@ -97,7 +97,7 @@ const maisDias=n=>{const d=new Date();d.setDate(d.getDate()+(+n||0));return d.ge
 const dBR=s=>s?String(s).slice(0,10).split('-').reverse().join('/'):'';
 const fotoUrl=f=>!f?'':/^https?:/.test(f)?f:'../'+f;
 /* ---------- estoque (importado do sistema da empresa) ---------- */
-const FX=()=>Object.assign({verm:0,lar:6,verde:8,dias:15},(D&&D.cab&&D.cab.estFx)||{});
+const FX=()=>Object.assign({verm:0,lar:6,verde:8,dias:7},(D&&D.cab&&D.cab.estFx)||{});
 const COR_EST={v:['#dc2626','sem estoque'],l:['#f97316','estoque baixo'],a:['#eab308','estoque no limite'],g:['#16a34a','estoque bom']};
 function estDe(id){const i=D&&D.itens.find(x=>x.id===id);return i||null;}
 function estI(i){return i?estB(i.est,i.estCor):'';}
@@ -267,16 +267,17 @@ function telaCfg(){if(!CF){carregaCfg().then(tela);return '<p class="vazio">Carr
    <label class="f">Telefone<input data-cb="fone" value="${esc(c.fone)}"></label><label class="f">E-mail<input data-cb="email" value="${esc(c.email)}"></label>
    <label class="f">Logo<span class="row">${c.logo?`<img src="${esc(fotoUrl(c.logo))}" style="height:40px;max-width:120px;object-fit:contain;border:1px solid var(--ln);border-radius:6px">`:''}${FC?'<input type="file" accept="image/*" id="lgUp">':'<span class="nota">a logo é colocada pela FC</span>'}</span></label>
    <label class="f" style="grid-column:1/-1">Texto do rodapé (aparece em todo orçamento)<textarea data-cb="rodape">${esc(c.rodape)}</textarea></label></div></div>
-  ${(()=>{const f=Object.assign({verm:0,lar:6,verde:8,dias:15},c.estFx||{}),em=c.estEm?new Date(c.estEm):null,dd=em?Math.floor((Date.now()-em)/864e5):null,venc=dd!=null&&dd>=f.dias,ni=CF.itens.filter(i=>i.est!=null).length;
-   return `<div class="box" style="${venc||!em?'border-color:var(--or);':''}"><h3>📦 Estoque · importação a cada ${f.dias} dias</h3>
+  ${(()=>{const f=Object.assign({verm:0,lar:6,verde:8,dias:7},c.estFx||{}),em=c.estEm?new Date(c.estEm):null,dd=em?Math.floor((Date.now()-em)/864e5):null,venc=dd!=null&&dd>=f.dias,ni=CF.itens.filter(i=>i.est!=null).length;
+   const pz=(()=>{const h=new Date();h.setHours(0,0,0,0);h.setDate(h.getDate()+(8-h.getDay())%7);return h;})(),okS=em&&em>=new Date(pz.getTime()-6*864e5);
+   return `<div class="box" id="estBox" style="${!okS?'border-color:var(--or);':''}"><h3>📦 Estoque · importar toda semana até segunda-feira</h3>
    <p class="nota">Importe a planilha de estoque que o sistema da empresa gera (colunas de <b>código</b> e <b>quantidade/saldo</b>). Só entram os itens que estão na tabela de preços; os outros códigos são ignorados. Na frente do código aparece só uma bolinha colorida (a quantidade não aparece para o vendedor). Na lista de itens dá para trocar a cor de qualquer item à mão; a escolha manual vale até você voltar para Automático.</p>
-   <p style="margin:6px 0">${em?`Última importação: <b>${em.toLocaleDateString('pt-BR')}</b> (${dd===0?'hoje':dd+' dia'+(dd>1?'s':'')+' atrás'}) · ${ni} itens com saldo · próxima até <b>${new Date(em.getTime()+f.dias*864e5).toLocaleDateString('pt-BR')}</b>${venc?' · <b style="color:var(--bx)">⚠ importação vencida</b>':''}`:'<b>Ainda não foi importado.</b>'}</p>
+   <p style="margin:6px 0">${em?`Última importação: <b>${em.toLocaleDateString('pt-BR')}</b> (${dd===0?'hoje':dd+' dia'+(dd>1?'s':'')+' atrás'}) · ${ni} itens com saldo · ${okS?'✅ estoque desta semana em dia':'⚠ importar até <b>'+pz.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'2-digit'})+'</b>'}`:'<b>Ainda não foi importado.</b> Importar até <b>'+pz.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'2-digit'})+'</b>'}</p>
    <div class="row"><label class="btn pri" style="cursor:pointer">📥 Importar estoque (.xlsx ou .csv)<input type="file" accept=".xlsx,.csv" id="estImp" hidden></label><span class="nota" id="estMsg">${esc(c.estMsg||'')}</span></div>
    <div class="row" style="margin-top:10px;gap:14px">
     <label class="f">🔴 Vermelho abaixo de<input id="fxV" value="${f.verm}" inputmode="decimal" style="width:90px"></label>
     <label class="f">🟠 Laranja abaixo de<input id="fxL" value="${f.lar}" inputmode="decimal" style="width:90px"></label>
     <label class="f">🟢 Verde acima de<input id="fxG" value="${f.verde}" inputmode="decimal" style="width:90px"></label>
-    <label class="f">Importar a cada (dias)<input id="fxD" value="${f.dias}" inputmode="numeric" style="width:90px"></label>
+    <input id="fxD" type="hidden" value="7">
     <span class="nota" style="align-self:end">Entre laranja e verde fica 🟡 amarelo. Exemplo: ${estB(-2)}sem estoque ${estB(3)}baixo ${estB(7)}no limite ${estB(12)}bom</span></div></div>`;})()}
   <div class="box"><h3>💳 Pagamento, desconto e validade</h3><div class="grid">
    <label class="f" style="grid-column:span 2">Formas de pagamento (uma por linha)<textarea id="cPag" rows="5">${esc((CF.pag||[]).join('\n'))}</textarea></label>
@@ -371,6 +372,7 @@ async function suporte(){const t=prompt('Descreva o que você precisa no painel 
   const r=await sb.rpc('cons_portal_solicitar',{p_chave:VKEY,p_nome:nm,p_tipo:'outro',p_texto:'[Painel de orçamentos] '+t.trim()});toast(r.error||!r.data?'Não foi possível enviar. Tente de novo.':'✓ Pedido enviado para a FC');}
 /* ---------- início ---------- */
 async function trocaEmp(id){EMP=id;try{localStorage.setItem('fc_orc_emp',id);}catch(_){}D=null;O=null;CF=null;if(await carregar())tela();}
+if(Q.get('est')){let _t=0;const _iv=setInterval(()=>{const b=document.getElementById('estBox');if(b){b.scrollIntoView({block:'center'});b.style.boxShadow='0 0 0 4px rgba(239,125,0,.45)';clearInterval(_iv);}else if(++_t>40)clearInterval(_iv);},300);}
 (async()=>{if(VKEY){if(GESTOR&&Q.get('aba'))ABA=Q.get('aba');if(await carregar())tela();return;}
   gateUI(async()=>{try{const r=await sb.rpc('trein_is_admin');ADM=!!r.data;}catch(_){}
     if(!ADM){$('#app').innerHTML='<p class="vazio">Esta área é da FC Consultoria. O vendedor entra pelo link que recebeu.</p>';return;}FC=true;
