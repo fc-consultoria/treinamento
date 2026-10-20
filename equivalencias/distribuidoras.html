@@ -72,7 +72,7 @@ function nk(c){c=norm(c);const m=c.match(/^([A-Z]*)(\d+)([A-Z]?)$/);if(!m)return
 const kg=v=>v==null?'peso não informado':v.toLocaleString('pt-BR',{minimumFractionDigits:3,maximumFractionDigits:3})+' kg/m';
 function marca(t){const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="460" height="300"><g transform="rotate(-24 230 150)" font-family="Barlow,Arial,sans-serif" text-anchor="middle" fill="#13232e" fill-opacity=".04"><text x="230" y="150" font-size="24" font-weight="800">FC CONSULTORIA EM ESQUADRIA</text><text x="230" y="176" font-size="13">${t}</text></g></svg>`;const w=document.createElement('div');w.id='wm';w.style.backgroundImage=`url("data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}")`;document.body.appendChild(w);}
 let D=null,IDX=null,BY={},ADM=false,Q='',DF='';
-const imgD=(d,c)=>'distribuidoras/img/'+d+'/'+encodeURIComponent(c.replace(/[^A-Z0-9-]/gi,'').toUpperCase())+'.webp?v=1';
+const imgD=(d,c)=>'distribuidoras/img/'+d+'/'+encodeURIComponent(c.replace(/[^A-Z0-9-]/gi,'').toUpperCase())+'.webp?v=2';
 function imgA(g){if(!g.alc||!IDX)return '';const L=IDX.linhas[g.l];return L&&L.img?L.img+'alcoa/'+encodeURIComponent(g.alc[0])+'.webp?v=2':'';}
 async function carrega(){D=await fetch('distribuidoras/dados.json?v=2',{cache:'no-cache'}).then(r=>r.json());try{IDX=await fetch('indice.json?v=3',{cache:'no-cache'}).then(r=>r.json());}catch(_){}
   D.g.forEach((g,i)=>{g.i=i;const ks=new Set([g.k]);g.m.forEach(m=>{ks.add(nk(m[1]));if(m[6])ks.add(nk(m[6]));});if(g.mk)ks.add(nk(g.mk));ks.forEach(k=>(BY[k]=BY[k]||[]).push(i));});
