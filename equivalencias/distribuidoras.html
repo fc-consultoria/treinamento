@@ -64,7 +64,7 @@ h2.t{margin:4px 0 0;font:800 22px var(--f-d)}
 <div class="zm" id="zm" hidden><div><button type="button" id="zmX">✕ Fechar</button><img id="zmI" alt=""><b id="zmT"></b></div></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="../auth.js"></script>
-<script src="foto-busca.js?v=1"></script>
+<script src="foto-busca.js?v=2"></script>
 <script>
 const $=s=>document.querySelector(s),esc=t=>String(t??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const KEY=new URLSearchParams(location.search).get('k')||'';
@@ -75,7 +75,7 @@ function marca(t){const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="460"
 let D=null,IDX=null,BY={},ADM=false,Q='',DF='';
 const imgD=(d,c)=>'distribuidoras/img/'+d+'/'+encodeURIComponent(c.replace(/[^A-Z0-9-]/gi,'').toUpperCase())+'.webp?v=2';
 function imgA(g){if(!g.alc||!IDX)return '';const L=IDX.linhas[g.l];return L&&L.img?L.img+'alcoa/'+encodeURIComponent(g.alc[0])+'.webp?v=2':'';}
-async function carrega(){D=await fetch('distribuidoras/dados.json?v=2',{cache:'no-cache'}).then(r=>r.json());try{IDX=await fetch('indice.json?v=3',{cache:'no-cache'}).then(r=>r.json());}catch(_){}
+async function carrega(){D=await fetch('distribuidoras/dados.json?v=2',{cache:'no-cache'}).then(r=>r.json());try{IDX=await fetch('indice.json?v=4',{cache:'no-cache'}).then(r=>r.json());}catch(_){}
   D.g.forEach((g,i)=>{g.i=i;const ks=new Set([g.k]);g.m.forEach(m=>{ks.add(nk(m[1]));if(m[6])ks.add(nk(m[6]));});if(g.mk)ks.add(nk(g.mk));ks.forEach(k=>(BY[k]=BY[k]||[]).push(i));});
   /* código de extrusora (Texa, FBK, Ecoalumi…) leva ao grupo de mercado da Conversão de códigos */
   if(IDX)IDX.g.forEach(x=>{const gs=D.g.filter(g=>g.l===x.l&&g.gk===x.k);if(!gs.length)return;x.m.forEach(m=>{const k=nk(m[1]);gs.forEach(g=>{if(!(BY[k]||[]).includes(g.i))(BY[k]=BY[k]||[]).push(g.i);});});});}

@@ -77,7 +77,7 @@
     big.width=Math.round(cv.width*k);big.height=Math.round(cv.height*k);big.getContext('2d').drawImage(cv,0,0,big.width,big.height);
     const r=await Tesseract.recognize(big,'eng');return (r&&r.data&&r.data.text)||'';}
   /* ---------- 2) forma ---------- */
-  async function indice(){if(IDX)return IDX;const r=await fetch(CFG.idx+'?v=1');IDX=await r.json();IDX.d.forEach(x=>{const v=new Uint8Array(G*G);for(let i=0;i<G*G;i++)v[i]=parseInt(x[5][i],16);x.v=v;});return IDX;}
+  async function indice(){if(IDX)return IDX;const r=await fetch(CFG.idx+'?v=2');IDX=await r.json();IDX.d.forEach(x=>{const v=new Uint8Array(G*G);for(let i=0;i<G*G;i++)v[i]=parseInt(x[5][i],16);x.v=v;});return IDX;}
   function desc(cv){const w=cv.width,h=cv.height,s=400/Math.max(w,h),W=Math.max(1,Math.round(w*s)),H=Math.max(1,Math.round(h*s));
     const c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');x.imageSmoothingEnabled=true;x.fillStyle='#fff';x.fillRect(0,0,W,H);x.drawImage(cv,0,0,W,H);
     const p=x.getImageData(0,0,W,H).data;const m=new Uint8Array(W*H);for(let i=0;i<W*H;i++){const L=p[i*4]*.299+p[i*4+1]*.587+p[i*4+2]*.114;m[i]=L<128?1:0;}
