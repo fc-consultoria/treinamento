@@ -30,8 +30,8 @@
     md.innerHTML='<div class="c"><p>Gerando o seu link…</p></div>';md.hidden=false;
     let cod;try{cod=await meuCodigo(uid,cid,quem);}catch(e){md.innerHTML='<div class="c"><h3>Indique e ganhe</h3><p>Não foi possível gerar o link agora. Tente de novo em instantes.</p><button type="button" class="alt" data-x>Fechar</button></div>';md.querySelector('[data-x]').onclick=()=>md.hidden=true;return;}
     const link=URLI+cod,msg='Estou estudando esquadrias de alumínio no FC Mostruário 3D, com as tipologias em 3D. Vale a pena conhecer: '+link;
-    md.innerHTML=`<div class="c"><h3>🎁 Gostou? Indique e ganhe +72 horas</h3>
-      <ol><li>Envie o seu link para um colega de outra empresa, vidraçaria ou serralheria.</li><li>Ele preenche o nome e o WhatsApp.</li><li>Quando a FC confirmar que ele entrou de verdade, <b>você ganha +72 horas</b> de estudo.</li></ol>
+    md.innerHTML=`<div class="c"><h3>🎁 Gostou? Indique e ganhe +3 dias de acesso</h3>
+      <ol><li>Envie o seu link para um colega de outra empresa, vidraçaria ou serralheria.</li><li>Ele preenche o nome e o WhatsApp.</li><li>Quando a FC confirmar que ele entrou de verdade, <b>você ganha +3 dias</b> de acesso.</li></ol>
       <div class="lk"><input readonly value="${esc(link)}" aria-label="Seu link de indicação"><button type="button" data-cp>Copiar</button></div>
       <a class="b wa" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(msg)}">Enviar pelo WhatsApp</a>
       <p class="nt">O bônus é só para você, que indicou (${esc(quem||'')}). Até 3 bônus por mês. Não vale indicar a si mesmo nem repetir o mesmo WhatsApp.</p>
@@ -39,11 +39,11 @@
       <button type="button" class="alt" data-x>Fechar</button></div>`;
     md.querySelector('[data-x]').onclick=()=>md.hidden=true;
     md.querySelector('[data-cp]').onclick=e=>{const i=md.querySelector('input');i.select();(navigator.clipboard?navigator.clipboard.writeText(link):Promise.reject()).then(()=>{e.target.textContent='Copiado';}).catch(()=>{try{document.execCommand('copy');e.target.textContent='Copiado';}catch(_){}});};
-    try{const {data}=await sb.rpc('trein_minhas_indicacoes',{p_cid:cid});const L=data||[];const T={novo:'aguardando a FC',aprovada:'✅ aprovada · +72 h',recusada:'não aprovada'};
+    try{const {data}=await sb.rpc('trein_minhas_indicacoes',{p_cid:cid});const L=data||[];const T={novo:'aguardando a FC',aprovada:'✅ aprovada · +3 dias',recusada:'não aprovada'};
       md.querySelector('[data-ls]').innerHTML=L.length?'<ul>'+L.map(x=>`<li>${esc(x.nome)} · <span class="nt">${new Date(x.em).toLocaleDateString('pt-BR')} · ${T[x.status]||x.status}</span></li>`).join('')+'</ul>':'<span class="nt">Nenhuma indicação ainda.</span>';}
     catch(_){md.querySelector('[data-ls]').innerHTML='<span class="nt">Não foi possível carregar agora.</span>';}}
   function poe(){const ub=document.getElementById('ubar'),sug=document.getElementById('sugBtn');if(!ub||!sug||document.getElementById('indBtn'))return !!document.getElementById('indBtn');
-    const b=document.createElement('button');b.type='button';b.id='indBtn';b.textContent='🎁 Indique e ganhe';b.title='Indique o Mostruário e ganhe +72 horas';b.hidden=true;b.onclick=abrir;ub.insertBefore(b,sug);return true;}
+    const b=document.createElement('button');b.type='button';b.id='indBtn';b.textContent='🎁 Indique e ganhe';b.title='Indique o Mostruário e ganhe +3 dias de acesso';b.hidden=true;b.onclick=abrir;ub.insertBefore(b,sug);return true;}
   // aparece só para colaborador (não para a matriz) depois de escolher o nome
   setInterval(()=>{if(!poe())return;const b=document.getElementById('indBtn');b.hidden=!window.ALUNO_CID;},1500);
 })();

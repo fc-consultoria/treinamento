@@ -46,7 +46,7 @@
 </div>
 <div class="gate" id="quemBox" hidden><div class="gcard" id="quemCard">
   <div class="eb">FC Mostruário 3D</div><h1 id="quemTit">Quem está estudando agora?</h1>
-  <p id="quemTxt">Toque no seu nome. Cada colaborador tem 72 horas corridas a partir do primeiro acesso.</p>
+  <p id="quemTxt">Toque no seu nome. Seu acesso fica disponível por 3 dias a partir do primeiro acesso. Depois desse prazo o acesso é suspenso: para liberar de novo, peça ao gerente comercial da sua empresa.</p>
   <div id="quemLista" style="display:flex;flex-direction:column;gap:8px"></div>
   <p class="gmsg" id="quemMsg" role="status"></p>
   <button type="button" id="quemSair" style="background:#fff;color:#1d3f57;border:1px solid #c9d3da">Sair</button>
@@ -89,7 +89,7 @@ function sugInit(){const box=document.getElementById('sugBox'),f=document.getEle
     const tipo=document.getElementById('sugTipo').value;if(window.TRK){TRK('sugestao',{tipo,txt,t:(typeof S!=='undefined'?S.typo:'')});if(window.TRKFLUSH)await TRKFLUSH();}
     m.textContent='Enviado! A resposta da FC aparece aqui e no botão “Dúvidas”.';document.getElementById('sugTxt').value='';await load();draw();};}
 const HOJE=()=>new Date(Date.now()-4*3600e3).toISOString().slice(0,10),DOW=()=>new Date(Date.now()-4*3600e3).getUTCDay();
-const fmtR=ms=>{const h=Math.floor(ms/3600e3),m=Math.floor(ms%3600e3/60e3);return h>=1?h+' h '+String(m).padStart(2,'0'):m+' min';};
+const fmtR=ms=>{const h=Math.floor(ms/3600e3),m=Math.floor(ms%3600e3/60e3),d=Math.floor(h/24);return d>=1?d+(d>1?' dias':' dia')+(h%24?' e '+(h%24)+' h':''):h>=1?h+' h '+String(m).padStart(2,'0'):m+' min';};
 const pzL=(ev,uid)=>ev.filter(e=>e.tipo==='pausa'&&(e.detalhe||{}).para===uid).map(e=>({on:!!(e.detalhe||{}).on,t:Date.parse(e.criado_em)})).sort((a,b)=>a.t-b.t),pzOn=P=>!!P.length&&P[P.length-1].on,pzMs=(P,ini)=>{let s=0,st=null;for(const p of P){if(p.on&&st==null)st=p.t;else if(!p.on&&st!=null){s+=Math.max(0,p.t-Math.max(st,ini));st=null;}}if(st!=null)s+=Math.max(0,Date.now()-Math.max(st,ini));return s;};
 async function estadoEmpresa(uid){
   const [c,e,l,zr,pz]=await Promise.all([sb.from('trein_eventos').select('detalhe,criado_em').eq('tipo','colab').order('criado_em'),
@@ -132,13 +132,13 @@ function escolherColab(uid,perfil){return new Promise(res=>{
       X.textContent='O acesso desta empresa não foi liberado para esta semana. Fale com a FC Consultoria: WhatsApp (66) 9 9986-7984 (atendimento de segunda a sexta).';L.innerHTML='';return;}
     if(window.PAUSADO){T.textContent='⏸ Acesso pausado';X.textContent='O acesso desta empresa está pausado pela FC Consultoria. As horas de cada colaborador estão paradas e continuam de onde pararam quando o acesso voltar. Dúvidas: WhatsApp (66) 9 9986-7984.';L.innerHTML='';return;}
     if(window.IMPL_ATE){let tries=0;const put=()=>{if(document.getElementById('implBar'))return true;const wr=document.querySelector('.wrap');if(!wr)return false;const ib=document.createElement('div');ib.id='implBar';ib.style.cssText='margin:0 0 12px;padding:9px 14px;border-radius:10px;background:#fff7e8;border:1px solid #f0c48a;color:#5a3d0c;font:600 14px Barlow,system-ui,sans-serif;display:flex;gap:8px;align-items:center;flex-wrap:wrap';ib.innerHTML='🛠 <span>Acesso exclusivo durante a implantação da precificação · válido até <b>'+window.IMPL_ATE.split('-').reverse().join('/')+'</b></span>';wr.insertBefore(ib,wr.firstChild);return true;};if(!put()){const t=setInterval(()=>{if(put()||++tries>120)clearInterval(t);},500);}}
-    T.textContent='Quem está estudando agora?';X.textContent=window.IMPL_ATE?'Toque no seu nome. Acesso exclusivo da implantação até '+window.IMPL_ATE.split('-').reverse().join('/')+'.':window.CONTRATO_FIM?'Toque no seu nome. Acesso liberado pelo contrato até '+new Date(window.CONTRATO_FIM).toLocaleDateString('pt-BR')+'.':'Toque no seu nome. Cada colaborador tem 72 horas corridas a partir do primeiro acesso.';
+    T.textContent='Quem está estudando agora?';X.textContent=window.IMPL_ATE?'Toque no seu nome. Acesso exclusivo da implantação até '+window.IMPL_ATE.split('-').reverse().join('/')+'.':window.CONTRATO_FIM?'Toque no seu nome. Acesso liberado pelo contrato até '+new Date(window.CONTRATO_FIM).toLocaleDateString('pt-BR')+'.':'Toque no seu nome. Seu acesso fica disponível por 3 dias a partir do primeiro acesso. Depois desse prazo o acesso é suspenso: para liberar de novo, peça ao gerente comercial da sua empresa.';
     X.textContent+=' O Mostruário fica aberto todos os dias, de domingo a domingo. O suporte da FC atende somente de segunda a sexta, das 8h às 11h e das 13h às 17h (horário de Sinop/MT).';
     if(!st.lst.length){L.innerHTML='<p>Nenhum colaborador cadastrado para '+esc(perfil.nome||perfil.login)+'. Peça à FC Consultoria para cadastrar os nomes.</p>';return;}
     L.innerHTML='';st.lst.forEach(x=>{const exp=x.resta!=null&&x.resta<=0,b=document.createElement('button');b.type='button';b.className='cbtn'+(exp?' exp':'');
-      b.innerHTML=`<span>${esc(x.nome)}</span><small>${window.IMPL_ATE?'implantação até '+window.IMPL_ATE.split('-').reverse().join('/'):window.CONTRATO_FIM?'contrato até '+new Date(window.CONTRATO_FIM).toLocaleDateString('pt-BR'):x.resta==null?'72 h · ainda não começou':exp?(x.pend?'prazo encerrado · pedido enviado':'prazo encerrado'):'restam '+fmtR(x.resta)}</small>`;
-      b.onclick=async()=>{if(exp){T.textContent=x.nome+': prazo encerrado';X.textContent='As '+(x.horas||72)+' horas deste colaborador terminaram. Peça mais tempo para a FC Consultoria.';L.innerHTML='';
-          const p=document.createElement('button');p.type='button';p.className='cped';p.textContent=x.pend?'Pedido já enviado · enviar de novo':'Solicitar mais tempo';p.onclick=()=>pedir(x);
+      b.innerHTML=`<span>${esc(x.nome)}</span><small>${window.IMPL_ATE?'implantação até '+window.IMPL_ATE.split('-').reverse().join('/'):window.CONTRATO_FIM?'contrato até '+new Date(window.CONTRATO_FIM).toLocaleDateString('pt-BR'):x.resta==null?'3 dias · ainda não começou':exp?(x.pend?'acesso suspenso · pedido enviado':'acesso suspenso'):'restam '+fmtR(x.resta)}</small>`;
+      b.onclick=async()=>{if(exp){T.textContent=x.nome+': acesso suspenso';X.textContent='Os dias de acesso de '+x.nome+' terminaram e o acesso foi suspenso. Peça ao gerente comercial da sua empresa para solicitar a liberação à FC Consultoria.';L.innerHTML='';
+          const p=document.createElement('button');p.type='button';p.className='cped';p.textContent=x.pend?'Pedido já enviado · enviar de novo':'Solicitar liberação';p.onclick=()=>pedir(x);
           const v=document.createElement('button');v.type='button';v.textContent='← Voltar';v.style.cssText='background:#fff;color:#1d3f57;border:1px solid #c9d3da';v.onclick=draw;L.append(p,v);return;}
         if(x.ph&&!pinOk(x.id)){const ok=await pedirPin(x);if(!ok)return;}
         if(!x.ini){b.disabled=true;await sb.from('trein_eventos').insert({user_id:uid,tipo:'colab_inicio',tipologia:null,detalhe:{cid:x.id,quem:x.nome}});x.fim=Date.now()+(x.horas||72)*3600e3;}
