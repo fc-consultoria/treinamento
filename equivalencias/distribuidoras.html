@@ -64,6 +64,7 @@ h2.t{margin:4px 0 0;font:800 22px var(--f-d)}
 <div class="zm" id="zm" hidden><div><button type="button" id="zmX">✕ Fechar</button><img id="zmI" alt=""><b id="zmT"></b></div></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="../auth.js"></script>
+<script src="foto-busca.js?v=1"></script>
 <script>
 const $=s=>document.querySelector(s),esc=t=>String(t??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const KEY=new URLSearchParams(location.search).get('k')||'';
@@ -120,7 +121,8 @@ async function iniciar(){await carrega();Q=decodeURIComponent(location.hash.slic
   if(!ok){$('#app').innerHTML='<p class="vazio">Link inválido ou expirado. Fale com a FC Consultoria.</p>';return;}marca('uso exclusivo do cliente');iniciar();}
  else gateUI(async()=>{try{const r=await sb.rpc('trein_is_admin');ADM=!!r.data;}catch(_){}
   if(!ADM){$('#app').innerHTML='<p class="vazio">Esta área é da FC Consultoria. O cliente entra pelo link do portal.</p>';return;}
-  marca('uso interno');const a=document.createElement('a');a.className='vt';a.href='/treinamento/painel.html';a.textContent='← Painel matriz';if(window.top===window.self)$('header.top .w').appendChild(a);iniciar();});})();
+  marca('uso interno');const a=document.createElement('a');a.className='vt';a.href='/treinamento/painel.html';a.textContent='← Painel matriz';if(window.top===window.self)$('header.top .w').appendChild(a);
+  if(window.FCFoto)FCFoto.ligar({idx:'foto-dist.json',tem:c=>!!BY[nk(c)],ir:c=>{$('#q').value=c;$('#fb').requestSubmit();},forn:f=>(D&&D.dist&&D.dist[f])||f});iniciar();});})();
 </script>
 </body>
 </html>

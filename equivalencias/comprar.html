@@ -123,6 +123,7 @@ td.n{text-align:right;white-space:nowrap}tr.best td{background:#effaf2;font-weig
 <div class="zm" id="zm" hidden><div><button type="button" id="zmX">✕ Fechar</button><img id="zmI" alt=""><b id="zmT"></b></div></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="../auth.js"></script>
+<script src="foto-busca.js?v=1"></script>
 <script>
 const $=s=>document.querySelector(s),esc=t=>String(t??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const KEY=new URLSearchParams(location.search).get('k')||'';
@@ -237,7 +238,8 @@ function resultado(r){
   const outras=r.length>1?`<div class="box" style="padding:10px 14px"><b style="font-size:14px">Este código aparece em ${r.length} lugares. Escolha:</b><div class="esc chips">${r.map(x=>`<button type="button" data-g="${x.i}" class="${x===g?'on':''}">${esc(IDX.linhas[x.l].n)} · ${esc(x.k)}</button>`).join('')}</div></div>`:'';
   const meta=DADOS.meta&&DADOS.meta.data?`Curva definida em ${dt(DADOS.meta.data+'T12:00')}${DADOS.meta.part&&DADOS.meta.part.length?' com '+DADOS.meta.part.join(', '):''}.`:'';
   const abcB=`<div><div class="abc ${cl||''}" title="${esc(meta)}"><i>${cl||'?'}</i><span>${cl?{A:'Classe A · alto giro',B:'Classe B · médio giro',C:'Classe C · giro baixo'}[cl]:'Curva não definida'}</span></div>
-   ${ADM?`<div class="abcset noprint">${['A','B','C'].map(c=>`<button type="button" data-setabc="${c}" class="${cl===c?'on':''}">${c}</button>`).join('')}<button type="button" data-setabc="" title="Tirar a classe">✕</button></div>`:''}</div>`;
+   ${ADM?`<div class="abcset noprint">${['A','B','C'].map(c=>`<button type="button" data-setabc="${c}" class="${cl===c?'on':''}">${c}</button>`).join('')}<button type="button" data-setabc="" title="Tirar a classe">✕</button></div>
+   <div class="abcset noprint" title="Grava a mesma classe em todos os clientes de uma vez. Depois, se algum cliente for diferente, é só trocar nele."><small style="align-self:center;font-weight:700;color:var(--mu,#5d6b76);margin-right:2px">🌐 Todos os clientes:</small>${['A','B','C'].map(c=>`<button type="button" data-abctodos="${c}">${c}</button>`).join('')}<button type="button" data-abctodos="" title="Tirar a classe de todos os clientes">✕</button></div>`:''}</div>`;
   const b=R.best;
   const pior=R.com.length?R.com[R.com.length-1]:null;
   const mel=b?`<div class="melhor"><div class="tr">🏆</div><div><small>Melhor ${MODO==='min'?'compra mínima':'preço por barra'} · ${esc(CORN[COR])}</small><b>${esc(IDX.forn[b.f])} · ${esc(b.c)}</b>
@@ -405,6 +407,11 @@ function telaAbc(){const A=DADOS.abc||{};const M=DADOS.meta||{};const cs=Object.
   <section class="box" style="margin-top:14px"><h2 class="t">Lançar classes</h2><p class="sub">Cole uma linha por perfil: <b>código;classe</b> (pode copiar duas colunas do Excel). Também dá para marcar A, B ou C direto no resultado da pesquisa.</p>
    <form id="fAbc" style="display:flex;flex-direction:column;gap:8px;margin-top:8px"><textarea name="t" rows="6" placeholder="SU-001;A&#10;SU-005;B&#10;TBX028;C" style="border:1px solid #c4ccd2;border-radius:10px;padding:10px;font:600 15px var(--f-b)"></textarea><div class="acoes"><button class="bt p">Salvar classes</button><span class="msg" style="font-size:14px"></span></div></form></section>
   <section class="box" style="margin-top:14px"><h2 class="t">Perfis com classe (${cs.length})</h2>${cs.length?`<div style="overflow:auto"><table><thead><tr><th>Código</th><th>Classe</th><th></th></tr></thead><tbody>${cs.map(([c,k])=>`<tr><td><b>${esc(c)}</b></td><td><span class="abc ${k}" style="padding:2px 8px"><i style="width:24px;height:24px;font-size:17px">${k}</i></span></td><td><button type="button" class="bt r" data-rmabc="${esc(c)}" style="padding:2px 9px">Tirar</button></td></tr>`).join('')}</tbody></table></div>`:'<p class="vazio">Nenhuma classe lançada ainda.</p>'}</section>`;}
+async function salvaAbcTodos(c,k){/* mesma classe para todos os clientes */
+  const ids=EMPS.map(e=>e.id);if(!ids.length)return false;
+  if(k){const r=await sb.from('compra_abc').upsert(ids.map(id=>({empresa_id:id,codigo:c,classe:k,atualizado_em:new Date().toISOString()})));if(r.error){toast('Não salvou: '+r.error.message);return false;}DADOS.abc[c]=k;}
+  else{const r=await sb.from('compra_abc').delete().in('empresa_id',ids).eq('codigo',c);if(r.error){toast('Não salvou: '+r.error.message);return false;}delete DADOS.abc[c];}
+  return true;}
 async function salvaAbc(itens){/* itens: [[codigo,classe|null]] */
   if(LOCAL){itens.forEach(([c,k])=>{if(k)DADOS.abc[c]=k;else delete DADOS.abc[c];});ls.set('fc_compra_abc_'+EMP,DADOS.abc);return true;}
   const up=itens.filter(x=>x[1]).map(([c,k])=>({empresa_id:EMP,codigo:c,classe:k,atualizado_em:new Date().toISOString()}));
@@ -452,7 +459,7 @@ document.addEventListener('submit',async ev=>{const f=ev.target;
     const r=await sb.from('compra_abc_meta').upsert({empresa_id:EMP,data_reuniao:meta.data,participantes:meta.part,obs:meta.obs,atualizado_em:new Date().toISOString()});
     if(r.error){if(/relation|does not exist|schema cache/i.test(r.error.message)){LOCAL=true;DADOS.meta=meta;ls.set('fc_compra_meta_'+EMP,meta);toast('Reunião salva (modo demonstração).');tela();return;}toast('Não salvou: '+r.error.message);return;}
     DADOS.meta=meta;toast('Reunião salva.');tela();}});
-document.addEventListener('click',async ev=>{const t=ev.target.closest('[data-sug],[data-addsim],[data-simrm],[data-simprint],[data-simcsv],[data-simlimpa],[data-aba],[data-cor],[data-modo],[data-g],[data-addrel],[data-rmrel],[data-print],[data-csv],[data-limpa],[data-setabc],[data-rmabc],[data-ir],[data-zoom]');if(!t)return;const d=t.dataset;
+document.addEventListener('click',async ev=>{const t=ev.target.closest('[data-sug],[data-addsim],[data-simrm],[data-simprint],[data-simcsv],[data-simlimpa],[data-aba],[data-cor],[data-modo],[data-g],[data-addrel],[data-rmrel],[data-print],[data-csv],[data-limpa],[data-setabc],[data-abctodos],[data-rmabc],[data-ir],[data-zoom]');if(!t)return;const d=t.dataset;
   if(d.sug){Q=d.sug;SEL=null;tela();regBusca();}
   else if(d.aba){ABA=d.aba;tela();window.scrollTo(0,0);}
   else if(d.cor){COR=d.cor;salvaPref();tela();}
@@ -469,6 +476,9 @@ document.addEventListener('click',async ev=>{const t=ev.target.closest('[data-su
   else if(d.csv!=null)csv();
   else if(d.limpa!=null){if(confirm('Limpar todos os itens do relatório?')){REL=[];ls.set(RKEY(),REL);tela();}}
   else if(d.setabc!=null){const g=SEL;if(!g)return;const c=Q.trim().toUpperCase();if(await salvaAbc([[c,d.setabc||null]])){toast(d.setabc?c+' agora é classe '+d.setabc+'.':'Classe tirada.');tela();}}
+  else if(d.abctodos!=null){if(!SEL)return;const c=Q.trim().toUpperCase();const k=d.abctodos;
+    if(!confirm(k?`Marcar ${c} como classe ${k} em TODOS os ${EMPS.length} clientes?`:`Tirar a classe de ${c} em TODOS os clientes?`))return;
+    if(await salvaAbcTodos(c,k||null)){toast(k?`${c} agora é classe ${k} em todos os clientes.`:`Classe de ${c} tirada de todos os clientes.`);tela();}}
   else if(d.rmabc){if(await salvaAbc([[d.rmabc,null]]))tela();}
   else if(d.ir){if(d.emp&&d.emp!==EMP){$('#selEmp').value=d.emp;await trocaEmp(d.emp);}ABA='busca';Q=d.ir;SEL=null;tela();}
   else if(d.zoom!=null){if(!d.zoom)return;$('#zmI').src=d.zoom;$('#zmT').textContent=d.t||'';$('#zm').hidden=false;}});
@@ -497,7 +507,8 @@ async function iniciar(){
 (async()=>{if(KEY){marca('uso exclusivo do cliente');iniciar();}
   else gateUI(async()=>{try{const r=await sb.rpc('trein_is_admin');ADM=!!r.data;}catch(_){}
     if(!ADM){$('#app').innerHTML='<p class="vazio">Esta área é da FC Consultoria. O cliente entra pelo link do portal.</p>';return;}
-    marca('uso interno');const a=document.createElement('a');a.className='vt';a.href='/treinamento/painel.html';a.textContent='← Painel matriz';if(window.top===window.self)$('header.top .w').appendChild(a);iniciar();});})();
+    marca('uso interno');const a=document.createElement('a');a.className='vt';a.href='/treinamento/painel.html';a.textContent='← Painel matriz';if(window.top===window.self)$('header.top .w').appendChild(a);
+    if(window.FCFoto)FCFoto.ligar({idx:'foto-ext.json',tem:c=>!!BY[norm(c)],ir:c=>{$('#q').value=c;$('#fb').requestSubmit();},forn:f=>IDX&&IDX.forn[f]});iniciar();});})();
 document.addEventListener('click',async e=>{const b=e.target.closest&&e.target.closest('#libSalva');if(!b)return;const L=[...document.querySelectorAll('[data-lib]:checked')].map(x=>x.dataset.lib);const m=document.getElementById('libMsg');
   if(!L.length){m.textContent='Marque pelo menos um fornecedor.';return;}b.disabled=true;m.textContent='Salvando…';
   const r=await sb.rpc('compra_forn_lib',{p_emp:EMP,p_lista:L.length===FORN.length?[]:L});b.disabled=false;
