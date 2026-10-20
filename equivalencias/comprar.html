@@ -129,6 +129,7 @@ const KEY=new URLSearchParams(location.search).get('k')||'';
 const norm=s=>String(s||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
 const BARRA=6;
 const FORN=['alcoa','texa','selta','fbk','ecoalumi','perfileve','cda'];
+const LIB=()=>Array.isArray(DADOS.lib)&&DADOS.lib.length?DADOS.lib:null;const FL=()=>ADM?FORN:(LIB()?FORN.filter(f=>LIB().includes(f)):FORN);
 const CORES=[['natural','Sem acabamento','#d9dee1'],['fosco','Fosco','#9aa3a8'],['branco','Branco','#ffffff'],['preto','Preto','#1c1c1c'],['bronze','Bronze','#6b4a2b'],['brilhante','Brilhante','#e8edf0'],['cerejeira','Cerejeira real','#8a3b26']];
 const CORN=Object.fromEntries(CORES.map(c=>[c[0],c[1]]));
 const PART=['Comercial','Estoque','Produção'];
@@ -166,7 +167,7 @@ async function carregaIndice(){
   if(!ADM){try{const r=await sb.rpc('equiv_ok_lista',{p_chave:KEY});(r.data||[]).forEach(k=>OK[k]=true);}catch(_){}}
   BY={};IDX.g.forEach((g,i)=>{g.i=i;g.m.forEach(m=>{(BY[norm(m[1])]=BY[norm(m[1])]||[]).push(i);});if(g.mc)(BY[norm(g.k)]=BY[norm(g.k)]||[]).push(i);});
 }
-const visivel=(g,m)=>ADM||m[3]==='base'||m[3]==='alta'||OK[g.k+'|'+m[1]];
+const visivel=(g,m)=>{if(!ADM&&LIB()&&m[3]!=='base'&&!LIB().includes(m[0]))return false;return ADM||m[3]==='base'||m[3]==='alta'||OK[g.k+'|'+m[1]];};
 function imgDe(g,m){if(m[4])return m[4];if(g.l==='tc')return '';const L=IDX.linhas[g.l];const pasta=(m[3]==='base'&&!g.sp)?'alcoa':m[0];return L.img+pasta+'/'+encodeURIComponent(m[1])+'.webp?v=2';}
 const linhaF=(g,f)=>((IDX.lnf[g.l]||{})[f])||IDX.linhas[g.l].n;
 function buscar(q){const k=norm(q);if(!k)return [];
@@ -178,7 +179,7 @@ function buscar(q){const k=norm(q);if(!k)return [];
   return ids.map(i=>IDX.g[i]).filter(g=>g.m.some(m=>visivel(g,m)));}
 
 /* ===== preço ===== */
-function preco(f){const P=DADOS.forn[f];if(!P||P.natural==null)return {sem:'sem preço informado'};
+function preco(f){if(!ADM&&LIB()&&!LIB().includes(f))return {sem:'fornecedor não liberado'};const P=DADOS.forn[f];if(!P||P.natural==null)return {sem:'sem preço informado'};
   let v=+P.natural;if(COR!=='natural'){const s=P.cores&&P.cores[COR];if(s==null)return {sem:'sem preço de '+CORN[COR].toLowerCase()+' informado'};v+= +s;}
   return {kg:v,minItem:P.min_item!=null?+P.min_item:null,minPed:P.min_pedido!=null?+P.min_pedido:null};}
 function calc(g,m){const pr=preco(m[0]);const kgb=m[2]*BARRA;const o={f:m[0],c:m[1],p:m[2],lvl:m[3],kgb,img:imgDe(g,m),lin:linhaF(g,m[0]),pg:m[5]};
@@ -221,7 +222,7 @@ function tela(){const a=$('#app');
   const demo=LOCAL?`<div class="aviso noprint">🧪 <b>Modo demonstração.</b> Os preços ficam guardados só neste aparelho até a FC ativar o banco de dados desta ferramenta.</div>`:'';
   let h='';if(ABA==='busca')h=telaBusca();else if(ABA==='precos')h=telaPrecos();else if(ABA==='rel')h=telaRel();else if(ABA==='sim')h=telaSim();else if(ABA==='abc')h=telaAbc();else if(ABA==='uso')h='<div class="box"><p class="vazio">Carregando o acompanhamento…</p></div>';
   a.innerHTML=abas()+demo+h;if(ABA==='uso')telaUso();if(ABA==='busca'){const i=$('#q');if(i&&!Q)i.focus();}}
-function semPrecos(){return !FORN.some(f=>DADOS.forn[f]&&DADOS.forn[f].natural!=null);}
+function semPrecos(){return !FL().some(f=>DADOS.forn[f]&&DADOS.forn[f].natural!=null);}
 function telaBusca(){
   const r=Q?buscar(Q):[];if(r.length&&(!SEL||!r.includes(SEL)))SEL=r[0];
   return `<section class="box"><h1 class="t">Onde comprar</h1><p class="sub">Digite o código de qualquer fornecedor (Alcoa, Texa, Selta, FBK, Ecoalumi ou Perfileve), o código de mercado ou a medida do tubo (ex.: 25,4 x 1,58). A ferramenta junta os equivalentes e mostra onde a barra de 6 m sai mais barata.</p>
@@ -279,7 +280,10 @@ document.addEventListener('input',e=>{if(e.target.id==='q')aoDigitar(e.target.va
 /* ===== preços ===== */
 function telaPrecos(){
   return `<section class="box"><h1 class="t">Preços dos fornecedores</h1><p class="sub">Preencha o custo que cada fornecedor passa para ${esc(DADOS.nome||'a empresa')}. Só o <b>preço natural</b> é obrigatório. A pintura é opcional: informe o <b>acréscimo por kg</b> de cada cor (ex.: natural R$ 30,00 + preto R$ 5,20 = R$ 35,20/kg). Os mínimos são sempre em kg.</p></section>
-  <div class="fgrid">${FORN.map(f=>{const P=DADOS.forn[f]||{};const d=dias(P.em);
+  ${ADM?`<section class="box" style="border:2px solid #f2a51e"><h2 class="t" style="margin-top:0">🏭 Fornecedores liberados para ${esc(DADOS.nome||EMP)}</h2><p class="sub">Marque as extrusoras que este cliente pode comparar e comprar. Sem nenhuma marcada, o cliente vê todas.</p>
+   <div style="display:flex;gap:10px;flex-wrap:wrap;margin:8px 0">${FORN.map(f=>`<label style="display:inline-flex;gap:6px;align-items:center;border:1px solid #d6dee4;border-radius:10px;padding:8px 12px;font-weight:700;cursor:pointer;background:#fff"><input type="checkbox" data-lib="${f}" ${!LIB()||LIB().includes(f)?'checked':''}> ${esc(IDX.forn[f])}</label>`).join('')}</div>
+   <button type="button" class="btn" id="libSalva" style="background:#0f6b70;color:#fff;border:0;border-radius:10px;padding:9px 16px;font-weight:700;cursor:pointer">💾 Salvar fornecedores do cliente</button> <span id="libMsg" style="color:#5d6f7a"></span></section>`:''}
+  <div class="fgrid">${FL().map(f=>{const P=DADOS.forn[f]||{};const d=dias(P.em);
     const stt=P.natural==null?'<span class="st vz">sem preço</span>':d>30?`<span class="st vl">atualizar · ${d} dias</span>`:'<span class="st ok">em dia</span>';
     const v=x=>x==null?'':String(x).replace('.',',');
     return `<form class="fc" data-forn="${f}"><h3>${esc(IDX.forn[f])} ${stt}</h3>
@@ -478,7 +482,7 @@ async function carregaDados(){
   if(r&&r.error&&/function|does not exist|schema cache/i.test(r.error.message||'')){LOCAL=true;
     DADOS={forn:ls.get('fc_compra_local_'+EMP,{}),abc:ls.get('fc_compra_abc_'+EMP,{}),meta:ls.get('fc_compra_meta_'+EMP,null),nome:(EMPS.find(e=>e.id===EMP)||{}).nome||''};return true;}
   if(!r||r.error||!r.data)return false;
-  LOCAL=false;DADOS={forn:r.data.forn||{},abc:r.data.abc||{},meta:r.data.meta||null,nome:r.data.nome||''};EMP=r.data.emp;return true;}
+  LOCAL=false;DADOS={forn:r.data.forn||{},abc:r.data.abc||{},meta:r.data.meta||null,nome:r.data.nome||'',lib:r.data.lib||null};EMP=r.data.emp;return true;}
 async function trocaEmp(id){EMP=id;ls.set('fc_compra_emp',id);REL=ls.get(RKEY(),[]);SIM=ls.get(SKEY(),[]);await carregaDados();$('#hd').textContent='Onde comprar · '+(DADOS.nome||id);}
 async function iniciar(){
   await carregaIndice();
@@ -494,6 +498,10 @@ async function iniciar(){
   else gateUI(async()=>{try{const r=await sb.rpc('trein_is_admin');ADM=!!r.data;}catch(_){}
     if(!ADM){$('#app').innerHTML='<p class="vazio">Esta área é da FC Consultoria. O cliente entra pelo link do portal.</p>';return;}
     marca('uso interno');const a=document.createElement('a');a.className='vt';a.href='/treinamento/painel.html';a.textContent='← Painel matriz';if(window.top===window.self)$('header.top .w').appendChild(a);iniciar();});})();
+document.addEventListener('click',async e=>{const b=e.target.closest&&e.target.closest('#libSalva');if(!b)return;const L=[...document.querySelectorAll('[data-lib]:checked')].map(x=>x.dataset.lib);const m=document.getElementById('libMsg');
+  if(!L.length){m.textContent='Marque pelo menos um fornecedor.';return;}b.disabled=true;m.textContent='Salvando…';
+  const r=await sb.rpc('compra_forn_lib',{p_emp:EMP,p_lista:L.length===FORN.length?[]:L});b.disabled=false;
+  if(r.error||!r.data){m.textContent='Não salvou: '+((r.error&&r.error.message)||'sem acesso');return;}DADOS.lib=L.length===FORN.length?[]:L;m.textContent='✓ Salvo: o cliente vê '+(L.length===FORN.length?'todos os fornecedores':L.map(f=>IDX.forn[f]).join(', '));});
 </script>
 </body>
 </html>
