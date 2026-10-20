@@ -440,6 +440,7 @@ function wireCfg(){if(!CF)return;const q=s=>document.getElementById(s);
   if(q('supBtn'))q('supBtn').onclick=suporte;
   $$('[data-ec]').forEach(sel=>sel.onchange=async()=>{const it=CF.itens.find(i=>i.id===sel.dataset.ec);if(sel.value)it.estCor=sel.value;else delete it.estCor;if(await salvaCfg())toast(sel.value?'Situação definida manualmente':'Situação automática pelo saldo');tela();});
 }
+const nk0=x=>{const k=nk(x);return /^\d+$/.test(k)?k.replace(/^0+(?=\d)/,''):k;};
 function wireEstImp(q){if(q('estImp'))q('estImp').onchange=async e=>{const f=e.target.files[0];if(!f)return;const m=q('estMsg');m.textContent='Lendo '+f.name+'…';
     try{let rows=[];
       if(/\.csv$/i.test(f.name)){const t=await f.text();const sep=(t.split('\n')[0].match(/;/g)||[]).length>=(t.split('\n')[0].match(/,/g)||[]).length?';':',';rows=t.split(/\r?\n/).map(l=>l.split(sep).map(x=>x.replace(/^"|"$/g,'').trim()));}
@@ -448,9 +449,9 @@ function wireEstImp(q){if(q('estImp'))q('estImp').onchange=async e=>{const f=e.t
         for(let r=1;r<=mr;r++){const row=[];for(let c=1;c<=mc;c++){const v=mt.val(sh,CL(c)+r);row.push(v==null?'':v);}rows.push(row);}}
       let hi=-1,cc=-1,qc=-1;for(let r=0;r<Math.min(rows.length,15)&&hi<0;r++){const h=rows[r].map(x=>sem(String(x)));const a=h.findIndex(x=>/^cod|codigo|referencia|^ref/.test(x)),b=h.findIndex(x=>/saldo|quant|qtd|qtde|estoque|disponivel/.test(x));if(a>=0&&b>=0){hi=r;cc=a;qc=b;}}
       if(hi<0){m.textContent='Não achei as colunas de código e quantidade/saldo no cabeçalho.';return;}
-      const S={};rows.slice(hi+1).forEach(r=>{const k=nk(r[cc]);if(!k)return;const v=typeof r[qc]==='number'?r[qc]:num(r[qc]);S[k]=(S[k]||0)+v;});
-      let ok=0;CF.itens.forEach(i=>{const ks=[nk(i.cod),...String(i.cod).split(/[|\/]/).map(nk)].filter(Boolean);const k=ks.find(x=>x in S);if(k!=null){i.est=S[k];ok++;}else delete i.est;});
-      CF.cab=CF.cab||{};CF.cab.estEm=new Date().toISOString();if(await salvaCfg()){const usados=new Set();CF.itens.forEach(i=>[nk(i.cod),...String(i.cod).split(/[|\/]/).map(nk)].forEach(k=>usados.add(k)));const fora=Object.keys(S).filter(k=>!usados.has(k)).length;const tx=`✓ ${ok} de ${CF.itens.length} itens da tabela de preços com saldo`+(fora?` · ${fora} códigos fora da tabela de preços foram ignorados`:'');CF.cab.estMsg=tx;toast(tx);}tela();}
+      const S={};rows.slice(hi+1).forEach(r=>{const k=nk0(r[cc]);if(!k)return;const v=typeof r[qc]==='number'?r[qc]:num(r[qc]);S[k]=(S[k]||0)+v;});
+      let ok=0;CF.itens.forEach(i=>{const ks=[nk0(i.cod),...String(i.cod).split(/[|\/]/).map(nk0)].filter(Boolean);const k=ks.find(x=>x in S);if(k!=null){i.est=S[k];ok++;}else delete i.est;});
+      CF.cab=CF.cab||{};CF.cab.estEm=new Date().toISOString();if(await salvaCfg()){const usados=new Set();CF.itens.forEach(i=>[nk0(i.cod),...String(i.cod).split(/[|\/]/).map(nk0)].forEach(k=>usados.add(k)));const fora=Object.keys(S).filter(k=>!usados.has(k)).length;const tx=`✓ ${ok} de ${CF.itens.length} itens da tabela de preços com saldo`+(fora?` · ${fora} códigos fora da tabela de preços foram ignorados`:'');CF.cab.estMsg=tx;toast(tx);}tela();}
     catch(err){m.textContent='Não foi possível ler: '+(err.message||err);}};}
 
 /* ---------- 📦 Consulta de estoque (para vender) ---------- */
