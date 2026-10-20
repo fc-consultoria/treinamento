@@ -56,6 +56,7 @@ table.it input.pz{width:92px;padding:6px;border:1px solid #f2a51e;border-radius:
 .chips{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 10px}.chips button{border:1px solid var(--ln);background:#fff;border-radius:99px;padding:5px 12px;font-weight:700;font-size:13px;cursor:pointer;color:var(--ink)}.chips button.on{background:var(--tl);border-color:var(--tl);color:#fff}
 .kp{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-bottom:14px}.kp div{background:#fff;border:1px solid var(--ln);border-radius:14px;padding:12px 14px}.kp small{display:block;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--tm)}.kp b{font:800 24px var(--f-d);color:#0f4f53}.kp em{display:block;font-style:normal;font-size:12.5px;color:var(--tm)}
 #mdl{position:fixed;inset:0;background:rgba(10,20,28,.55);z-index:6000;display:flex;align-items:center;justify-content:center;padding:16px}#mdl .c{background:#fff;border-radius:16px;padding:18px 20px;max-width:440px;width:100%}
+html.so .top{display:none}html.so main{padding-top:6px}
 /* impressão */
 #imp{display:none}
 @media print{body{background:#fff}.top,main,.toast,#impOv{display:none!important}#imp{display:block!important}@page{size:A4;margin:10mm}}
@@ -86,6 +87,7 @@ table.it input.pz{width:92px;padding:6px;border:1px solid #f2a51e;border-radius:
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="../auth.js"></script>
 <script src="../planilha.js?v=2"></script>
+<script src="../estoque-aviso.js?v=2"></script>
 <script>
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)],esc=t=>String(t??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const Q=new URLSearchParams(location.search),VKEY=Q.get('v')||Q.get('k')||'',GESTOR=!Q.get('v')&&!!Q.get('k');
@@ -128,7 +130,7 @@ async function mudaSt(id,novo){if(DEMO){toast('Demonstração: na tela do vended
   if(r.error||!r.data){toast(/function|p_info/i.test((r.error&&r.error.message)||'')?'Falta rodar o SQL do Painel do Comercial.':'Não foi possível mudar.');return false;}
   await carregar();toast(ST[novo]);return true;}
 
-const DEMO=Q.get('ver')==='vend';
+const DEMO=Q.get('ver')==='vend',SO=Q.get('so')==='1';if(SO)document.documentElement.classList.add('so');
 let FC=false,ADM=false,EMP='',EMPS=[],D=null,ABA='novo',O=null,BQ='',SUGI=0;
 const novoOrc=()=>({id:null,cliente:{},itens:[],pagamento:{forma:'',cond:'avista',parcelas:1,prazos:'',entrada:0,obs:''},desconto:0,descTipo:'rs',frete:0,validade:maisDias(D&&D.validade_dias||7),obs:D&&D.obs||'',status:'aberto'});
 
@@ -142,13 +144,13 @@ async function carregar(){const d=await rpcDados();
   if(!O)O=novoOrc();if(!EQ||EQ.emp!==EMP||EQ.n!==D.itens.length){EQ=null;carregaEQ().then(e=>{e.emp=EMP;e.n=D.itens.length;if(ABA==='novo'&&O.itens.length&&document.activeElement&&document.activeElement.id!=='bq')tela();});}return true;}
 
 /* ================= TELA ================= */
-function tela(){if(!D)return;const ab=[['novo',O&&O.id?'✏️ Orçamento nº '+(O.numero||''):'🧾 Novo orçamento'],['lista',(ADM?'📂 Orçamentos e pedidos (':'📂 Meus orçamentos e pedidos (')+D.orcs.length+')']];if(ADM){const ag=D.orcs.filter(o=>o.status==='aguardando').length;ab.unshift(['com','📊 Painel do Comercial'+(ag?' · '+ag+' aguardando':'')]);ab.push(['cfg','⚙️ Configurar']);}
-  let h=`<div class="abas">${ab.map(([k,t])=>`<button type="button" data-ab="${k}" class="${ABA===k?'on':''}">${esc(t)}</button>`).join('')}</div>`;
+function tela(){if(!D)return;const ab=[['novo',O&&O.id?'✏️ Orçamento nº '+(O.numero||''):'🧾 Novo orçamento'],['lista',(ADM?'📂 Orçamentos e pedidos (':'📂 Meus orçamentos e pedidos (')+D.orcs.length+')']];if(ADM){const ag=D.orcs.filter(o=>o.status==='aguardando').length;ab.unshift(['com','📊 Painel do Comercial'+(ag?' · '+ag+' aguardando':'')]);ab.push(['est','📦 Estoque']);ab.push(['cfg','⚙️ Configurar']);}
+  let h=SO?'':`<div class="abas">${ab.map(([k,t])=>`<button type="button" data-ab="${k}" class="${ABA===k?'on':''}">${esc(t)}</button>`).join('')}</div>`;
   if(DEMO)h=`<div class="box" style="border-color:#e0b100;background:#fff8dc"><b>👁 Demonstração: é assim que o vendedor vê.</b> <span class="nota">Ele só tem estas duas abas, não vê custo nem planilha e abre só no computador. Nesta demonstração nada é salvo.</span></div>`+h;
   if(!D.itens.length&&ABA!=='cfg')h+=`<div class="box" style="border-color:var(--or);background:var(--orc)"><b>Ainda não há itens liberados para orçamento.</b><p class="nota" style="margin:2px 0 0">${ADM?'Vá em ⚙️ Configurar e clique em "Atualizar itens da precificação".':'A FC Consultoria está preparando a lista de itens. Volte mais tarde.'}</p></div>`;
-  if((ABA==='com'||ABA==='cfg')&&!ADM)ABA='novo';if(ABA==='novo')h+=telaNovo();else if(ABA==='lista')h+=telaLista();else if(ABA==='com')h+=telaCom();else h+=telaCfg();
+  if((ABA==='com'||ABA==='cfg'||ABA==='est')&&!ADM)ABA='novo';if(ABA==='novo')h+=telaNovo();else if(ABA==='lista')h+=telaLista();else if(ABA==='com')h+=telaCom();else if(ABA==='est')h+=telaEst();else h+=telaCfg();
   $('#app').innerHTML=h;$$('[data-ab]').forEach(b=>b.onclick=()=>{ABA=b.dataset.ab;tela();});
-  if(ABA==='novo')wireNovo();else if(ABA==='lista')wireLista();else if(ABA==='com')wireCom();else wireCfg();}
+  if(ABA==='novo')wireNovo();else if(ABA==='lista')wireLista();else if(ABA==='com')wireCom();else if(ABA==='est')wireEst();else wireCfg();}
 
 /* ---------- novo / editar ---------- */
 function calc(){const sub=O.itens.reduce((a,i)=>a+Math.round(num(i.preco)*num(i.qtd)*100)/100,0);let dsc=O.descTipo==='pc'?Math.round(sub*num(O.descPc)/100*100)/100:num(O.desconto);
@@ -354,18 +356,7 @@ function telaCfg(){if(!CF){carregaCfg().then(tela);return '<p class="vazio">Carr
    <label class="f">Telefone<input data-cb="fone" value="${esc(c.fone)}"></label><label class="f">E-mail<input data-cb="email" value="${esc(c.email)}"></label>
    <label class="f">Logo<span class="row">${c.logo?`<img src="${esc(fotoUrl(c.logo))}" style="height:40px;max-width:120px;object-fit:contain;border:1px solid var(--ln);border-radius:6px">`:''}${FC?'<input type="file" accept="image/*" id="lgUp">':'<span class="nota">a logo é colocada pela FC</span>'}</span></label>
    <label class="f" style="grid-column:1/-1">Texto do rodapé (aparece em todo orçamento)<textarea data-cb="rodape">${esc(c.rodape)}</textarea></label></div></div>
-  ${(()=>{const f=Object.assign({verm:0,lar:6,verde:8,dias:7},c.estFx||{}),em=c.estEm?new Date(c.estEm):null,dd=em?Math.floor((Date.now()-em)/864e5):null,venc=dd!=null&&dd>=f.dias,ni=CF.itens.filter(i=>i.est!=null).length;
-   const pz=(()=>{const h=new Date();h.setHours(0,0,0,0);h.setDate(h.getDate()+(8-h.getDay())%7);return h;})(),okS=em&&em>=new Date(pz.getTime()-6*864e5);
-   return `<div class="box" id="estBox" style="${!okS?'border-color:var(--or);':''}"><h3>📦 Estoque · importar toda semana até segunda-feira</h3>
-   <p class="nota">Importe a planilha de estoque que o sistema da empresa gera (colunas de <b>código</b> e <b>quantidade/saldo</b>). Só entram os itens que estão na tabela de preços; os outros códigos são ignorados. Na frente do código aparece só uma bolinha colorida (a quantidade não aparece para o vendedor). Na lista de itens dá para trocar a cor de qualquer item à mão; a escolha manual vale até você voltar para Automático.</p>
-   <p style="margin:6px 0">${em?`Última importação: <b>${em.toLocaleDateString('pt-BR')}</b> (${dd===0?'hoje':dd+' dia'+(dd>1?'s':'')+' atrás'}) · ${ni} itens com saldo · ${okS?'✅ estoque desta semana em dia':'⚠ importar até <b>'+pz.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'2-digit'})+'</b>'}`:'<b>Ainda não foi importado.</b> Importar até <b>'+pz.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'2-digit'})+'</b>'}</p>
-   <div class="row"><label class="btn pri" style="cursor:pointer">📥 Importar estoque (.xlsx ou .csv)<input type="file" accept=".xlsx,.csv" id="estImp" hidden></label><span class="nota" id="estMsg">${esc(c.estMsg||'')}</span></div>
-   <div class="row" style="margin-top:10px;gap:14px">
-    <label class="f">🔴 Vermelho abaixo de<input id="fxV" value="${f.verm}" inputmode="decimal" style="width:90px"></label>
-    <label class="f">🟠 Laranja abaixo de<input id="fxL" value="${f.lar}" inputmode="decimal" style="width:90px"></label>
-    <label class="f">🟢 Verde acima de<input id="fxG" value="${f.verde}" inputmode="decimal" style="width:90px"></label>
-    <input id="fxD" type="hidden" value="7">
-    <span class="nota" style="align-self:end">Entre laranja e verde fica 🟡 amarelo. Exemplo: ${estB(-2)}sem estoque ${estB(3)}baixo ${estB(7)}no limite ${estB(12)}bom</span></div></div>`;})()}
+  <div class="box"><h3>📦 Estoque</h3><p class="nota" style="margin:0 0 8px">A importação da planilha de estoque, as cores e a rotina ficam na aba própria.</p><button class="btn pri" type="button" data-ab="est">📦 Abrir o painel do estoque</button></div>
   <div class="box"><h3>💳 Pagamento, desconto e validade</h3><div class="grid">
    <label class="f" style="grid-column:span 2">Formas de pagamento (uma por linha)<textarea id="cPag" rows="5">${esc((CF.pag||[]).join('\n'))}</textarea></label>
    <label class="f">Desconto máximo do vendedor (%)<input id="cDm" value="${esc(CF.desc_max)}" inputmode="decimal"></label>
@@ -427,7 +418,7 @@ function wireCfg(){if(!CF)return;const q=s=>document.getElementById(s);
   $$('[data-cb]').forEach(i=>i.oninput=()=>{CF.cab=CF.cab||{};CF.cab[i.dataset.cb]=i.value;});
   if(q('lgUp'))q('lgUp').onchange=async e=>{const f=e.target.files[0];if(!f)return;const b=await reduz(f,600);const path='orcamento/'+EMP+'/logo-'+Date.now()+'.jpg';
     const up=await sb.storage.from('fc-anexos').upload(path,b,{contentType:'image/jpeg',upsert:true});if(up.error){toast(up.error.message);return;}CF.cab=CF.cab||{};CF.cab.logo=sb.storage.from('fc-anexos').getPublicUrl(path).data.publicUrl;await salvaCfg('Logo salva');tela();};
-  q('cSalva').onclick=async()=>{CF.cab=CF.cab||{};CF.cab.estFx={verm:num(q('fxV').value),lar:num(q('fxL').value),verde:num(q('fxG').value),dias:parseInt(q('fxD').value)||15};CF.pag=q('cPag').value.split('\n').map(s=>s.trim()).filter(Boolean);CF.desc_max=num(q('cDm').value);CF.validade_dias=parseInt(q('cVd').value)||7;CF.obs=q('cObs').value;
+  q('cSalva').onclick=async()=>{CF.cab=CF.cab||{};CF.pag=q('cPag').value.split('\n').map(s=>s.trim()).filter(Boolean);CF.desc_max=num(q('cDm').value);CF.validade_dias=parseInt(q('cVd').value)||7;CF.obs=q('cObs').value;
     if(await salvaCfg())q('cMsg').textContent='✓ Salvo';};
   $$('[data-cp]').forEach(b=>b.onclick=()=>{navigator.clipboard&&navigator.clipboard.writeText(b.dataset.cp);b.textContent='✓ Copiado';});
   $$('[data-va]').forEach(b=>b.onclick=async()=>{const v=VEND.find(x=>x.id===b.dataset.va);const r=FC?await sb.from('orc_vend').update({ativo:!v.ativo}).eq('id',v.id):await sb.rpc('orc_g_vend',{p_chave:VKEY,p_acao:v.ativo?'desativar':'ativar',p_id:v.id,p_nome:null,p_tel:null});if(r.error){toast(r.error.message);return;}v.ativo=!v.ativo;tela();});
@@ -440,7 +431,8 @@ function wireCfg(){if(!CF)return;const q=s=>document.getElementById(s);
     const r=await vreq('excluir',v);if(r.error||!r.data){toast('Não excluiu: '+((r.error&&r.error.message)||''));return;}VEND=VEND.filter(x=>x.id!==v.id);tela();toast('Vendedor excluído');});
   if(q('supBtn'))q('supBtn').onclick=suporte;
   $$('[data-ec]').forEach(sel=>sel.onchange=async()=>{const it=CF.itens.find(i=>i.id===sel.dataset.ec);if(sel.value)it.estCor=sel.value;else delete it.estCor;if(await salvaCfg())toast(sel.value?'Situação definida manualmente':'Situação automática pelo saldo');tela();});
-  if(q('estImp'))q('estImp').onchange=async e=>{const f=e.target.files[0];if(!f)return;const m=q('estMsg');m.textContent='Lendo '+f.name+'…';
+}
+function wireEstImp(q){if(q('estImp'))q('estImp').onchange=async e=>{const f=e.target.files[0];if(!f)return;const m=q('estMsg');m.textContent='Lendo '+f.name+'…';
     try{let rows=[];
       if(/\.csv$/i.test(f.name)){const t=await f.text();const sep=(t.split('\n')[0].match(/;/g)||[]).length>=(t.split('\n')[0].match(/,/g)||[]).length?';':',';rows=t.split(/\r?\n/).map(l=>l.split(sep).map(x=>x.replace(/^"|"$/g,'').trim()));}
       else{const md=await Planilha.importar(await f.arrayBuffer()),mt=new Planilha.Motor(md),sh=md.sheets[0];const mr=Math.max(...Object.keys(sh.c).map(a=>+(a.match(/\d+$/)||[0])[0]));const mc=Math.max(...Object.keys(sh.c).map(a=>{const x=a.match(/^[A-Z]+/)[0];let n=0;for(const ch of x)n=n*26+ch.charCodeAt(0)-64;return n;}));
@@ -452,6 +444,45 @@ function wireCfg(){if(!CF)return;const q=s=>document.getElementById(s);
       let ok=0;CF.itens.forEach(i=>{const ks=[nk(i.cod),...String(i.cod).split(/[|\/]/).map(nk)].filter(Boolean);const k=ks.find(x=>x in S);if(k!=null){i.est=S[k];ok++;}else delete i.est;});
       CF.cab=CF.cab||{};CF.cab.estEm=new Date().toISOString();if(await salvaCfg()){const usados=new Set();CF.itens.forEach(i=>[nk(i.cod),...String(i.cod).split(/[|\/]/).map(nk)].forEach(k=>usados.add(k)));const fora=Object.keys(S).filter(k=>!usados.has(k)).length;const tx=`✓ ${ok} de ${CF.itens.length} itens da tabela de preços com saldo`+(fora?` · ${fora} códigos fora da tabela de preços foram ignorados`:'');CF.cab.estMsg=tx;toast(tx);}tela();}
     catch(err){m.textContent='Não foi possível ler: '+(err.message||err);}};}
+
+/* ---------- 📦 Estoque (importação, rotina e situação) ---------- */
+let EF='';
+const CIC=fx=>window.FCEstAviso?FCEstAviso.ciclo(fx):{prazo:new Date(),ini:new Date(),N:7};
+const dLong=d=>d.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'2-digit',year:'numeric'});
+function telaEst(){if(!CF){carregaCfg().then(tela);return '<p class="vazio">Carregando estoque…</p>';}
+  const c=CF.cab||{},f=Object.assign({verm:0,lar:6,verde:8,dias:7,ini:''},c.estFx||{}),em=c.estEm?new Date(c.estEm):null,cc=CIC(f);
+  const ok=em&&em>=cc.ini,h0=new Date();h0.setHours(0,0,0,0);const falta=Math.round((cc.prazo-h0)/864e5);
+  const nv=i=>estNv(i)||'x',L=CF.itens,cnt={g:0,a:0,l:0,v:0,x:0};L.forEach(i=>cnt[nv(i)]++);
+  const prox=[0,1,2].map(n=>{const d=new Date(cc.prazo);d.setDate(d.getDate()+n*cc.N);return d.toLocaleDateString('pt-BR');});
+  const LB={g:['#16a34a','Em estoque'],a:['#eab308','No limite'],l:['#f97316','Estoque baixo'],v:['#dc2626','Sem estoque'],x:['#94a3b8','Sem informação']};
+  const F=L.filter(i=>(!EF||nv(i)===EF)).sort((a,b)=>'vlagx'.indexOf(nv(a))-'vlagx'.indexOf(nv(b))||String(a.cod).localeCompare(String(b.cod)));
+  return `<div class="box" style="border-color:${ok?'var(--ok)':'var(--or)'}"><div class="row" style="align-items:flex-start;gap:18px">
+   <div style="flex:1;min-width:260px"><h3>📦 Estoque · ${esc(c.nome||D.nome||'')}</h3>
+    <p style="margin:2px 0;font-size:16px">${ok?'✅ <b>Estoque em dia</b> para o prazo de '+cc.prazo.toLocaleDateString('pt-BR'):'⚠️ <b>Importar até '+dLong(cc.prazo)+'</b>'+(falta===0?' · <b style="color:var(--bx)">é hoje</b>':falta>0?' · faltam '+falta+' dia'+(falta>1?'s':''):'')}</p>
+    <p class="nota" style="margin:2px 0">${em?'Última importação: <b>'+em.toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})+'</b>':'O estoque ainda não foi importado.'}${c.estMsg?' · '+esc(c.estMsg):''}</p>
+    <p class="nota" style="margin:2px 0">O Painel do Comercial mostra ao vendedor só a situação de cada item (Em estoque, No limite, Estoque baixo, Sem estoque). O saldo não aparece para ele.</p></div>
+   <div><label class="btn pri" style="cursor:pointer;font-size:16px;padding:12px 18px">📥 Importar planilha de estoque<input type="file" accept=".xlsx,.csv" id="estImp" hidden></label><p class="nota" id="estMsg" style="max-width:320px">Arquivo .xlsx ou .csv do sistema, com as colunas de <b>código</b> e <b>quantidade/saldo</b>.</p></div></div></div>
+  <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(330px,1fr))">
+   <div class="box"><h3>🗓 Rotina de importação</h3>
+    <div class="grid"><label class="f">Importar a cada<select class="inp" id="fxD">${[[7,'7 dias (toda semana)'],[15,'15 dias'],[30,'30 dias (todo mês)']].map(([v,t])=>`<option value="${v}" ${+f.dias===v?'selected':''}>${t}</option>`).join('')}</select></label>
+     <label class="f">Data do 1º prazo (início da rotina)<input type="date" class="inp" id="fxI" value="${esc(f.ini||'')}"></label></div>
+    <p class="nota">Próximos prazos: <b>${prox.join(' · ')}</b>${f.ini?'':' (sem data definida, o prazo é toda segunda-feira)'}</p>
+    <p class="nota">Até a planilha ser importada, aparece um aviso todo dia às 10:00 no link do cliente e no painel da matriz.</p></div>
+   <div class="box"><h3>🎨 Regras das cores</h3><div class="row" style="gap:12px">
+    <label class="f">🔴 Sem estoque até<input id="fxV" value="${f.verm}" inputmode="decimal" style="width:90px"></label>
+    <label class="f">🟠 Baixo abaixo de<input id="fxL" value="${f.lar}" inputmode="decimal" style="width:90px"></label>
+    <label class="f">🟢 Em estoque acima de<input id="fxG" value="${f.verde}" inputmode="decimal" style="width:90px"></label></div>
+    <p class="nota">Saldo zero ou negativo é sempre <b>Sem estoque</b>. Entre o laranja e o verde fica 🟡 <b>No limite</b>. Na lista abaixo dá para trocar a situação de um item à mão.</p></div></div>
+  <div class="row" style="margin:-4px 0 14px"><button class="btn pri" type="button" id="fxSalva">💾 Salvar rotina e regras</button><span class="nota" id="fxMsg"></span></div>
+  <div class="box"><h3>📋 Situação dos itens (${L.length})</h3>
+   <div class="chips"><button type="button" data-ef="" class="${!EF?'on':''}">Todos (${L.length})</button>${'vlagx'.split('').map(k=>`<button type="button" data-ef="${k}" class="${EF===k?'on':''}"><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${LB[k][0]};margin-right:5px"></span>${LB[k][1]} (${cnt[k]})</button>`).join('')}</div>
+   ${F.length?`<div style="max-height:560px;overflow:auto"><table class="it"><thead><tr><th>Código</th><th>Descrição</th><th>Cor</th><th class="n">Saldo</th><th>Situação</th></tr></thead><tbody>
+   ${F.slice(0,600).map(i=>`<tr><td><b>${esc(i.cod)}</b></td><td>${esc(i.desc)}</td><td>${corTag(i.cor)}</td><td class="n">${i.est!=null?String(i.est).replace('.',','):'—'}</td>
+    <td>${estTag(i)||'<span class="nota">sem informação</span>'} <select class="inp" data-ec2="${esc(i.id)}" title="Trocar a situação à mão" style="padding:2px 4px;font-size:12px;width:auto;margin-left:4px"><option value="">Automático</option>${Object.entries(COR_EST).map(([k,[,t]])=>`<option value="${k}" ${i.estCor===k?'selected':''}>${t[0].toUpperCase()+t.slice(1)}</option>`).join('')}</select></td></tr>`).join('')}</tbody></table></div>`:'<p class="vazio">Nenhum item nesta situação.</p>'}</div>`;}
+function wireEst(){if(!CF)return;const q=s=>document.getElementById(s);wireEstImp(q);
+  $$('[data-ef]').forEach(b=>b.onclick=()=>{EF=b.dataset.ef;tela();});
+  $$('[data-ec2]').forEach(s=>s.onchange=async()=>{const i=CF.itens.find(x=>x.id===s.dataset.ec2);if(!i)return;if(s.value)i.estCor=s.value;else delete i.estCor;if(await salvaCfg('Situação atualizada'))tela();});
+  q('fxSalva').onclick=async()=>{CF.cab=CF.cab||{};CF.cab.estFx={verm:num(q('fxV').value),lar:num(q('fxL').value),verde:num(q('fxG').value),dias:parseInt(q('fxD').value)||7,ini:q('fxI').value||''};if(await salvaCfg('Rotina e regras salvas'))tela();};}
 function reduz(file,max=900){return new Promise(ok=>{const im=new Image();im.onload=()=>{const s=Math.min(1,max/Math.max(im.width,im.height));const c=document.createElement('canvas');c.width=Math.round(im.width*s);c.height=Math.round(im.height*s);const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(im,0,0,c.width,c.height);c.toBlob(b=>ok(b),'image/jpeg',.85);};im.src=URL.createObjectURL(file);});}
 
 async function suporte(){const t=prompt('Descreva o que você precisa no painel de orçamentos (a FC recebe na hora):');if(!t||!t.trim())return;
@@ -459,18 +490,18 @@ async function suporte(){const t=prompt('Descreva o que você precisa no painel 
   const r=await sb.rpc('cons_portal_solicitar',{p_chave:VKEY,p_nome:nm,p_tipo:'outro',p_texto:'[Painel de orçamentos] '+t.trim()});toast(r.error||!r.data?'Não foi possível enviar. Tente de novo.':'✓ Pedido enviado para a FC');}
 /* ---------- início ---------- */
 async function trocaEmp(id){EMP=id;try{localStorage.setItem('fc_orc_emp',id);}catch(_){}D=null;O=null;CF=null;if(await carregar())tela();}
-if(Q.get('est')){let _t=0;const _iv=setInterval(()=>{const b=document.getElementById('estBox');if(b){b.scrollIntoView({block:'center'});b.style.boxShadow='0 0 0 4px rgba(239,125,0,.45)';clearInterval(_iv);}else if(++_t>40)clearInterval(_iv);},300);}
+const ABA0=Q.get('est')?'est':Q.get('aba');
 /* Vendedor: montar orçamento só no computador (20/10) */
 const MOVEL=/Android|iPhone|iPad|iPod|Mobile|Tablet/i.test(navigator.userAgent)||(/Macintosh/.test(navigator.userAgent)&&navigator.maxTouchPoints>1)||(matchMedia('(pointer:coarse)').matches&&Math.min(screen.width,screen.height)<900);
 if(VKEY&&!GESTOR&&MOVEL){const L=location.href;document.body.innerHTML=`<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:#0f1a22;font:400 16px/1.5 system-ui,sans-serif"><div style="max-width:420px;background:#fff;border-radius:16px;padding:24px;text-align:center;color:#1d2a33"><div style="font-size:46px">💻</div><h2 style="margin:6px 0 8px">Abra no computador</h2><p style="margin:0 0 14px;color:#4b5b66">O painel de orçamentos funciona só no computador. Abra este mesmo link no computador da loja para montar os orçamentos.</p><button type="button" id="mvCp" style="background:#0f6b70;color:#fff;border:0;border-radius:10px;padding:11px 16px;font-weight:700;font-size:15px;cursor:pointer;width:100%">📋 Copiar o link</button><p id="mvMsg" style="margin:10px 0 0;font-size:13px;color:#1f8a4c;min-height:18px"></p><p style="margin:8px 0 0;font-size:12px;color:#7a8a95">FC Consultoria · (66) 9 9986-7984</p></div></div>`;document.getElementById('mvCp').onclick=async()=>{try{await navigator.clipboard.writeText(L);document.getElementById('mvMsg').textContent='Link copiado. Cole no navegador do computador.';}catch(_){prompt('Copie o link:',L);}};throw new Error('vendedor no celular');}
-(async()=>{if(VKEY){if(GESTOR)ABA=Q.get('aba')||'com';if(await carregar())tela();return;}
+(async()=>{if(VKEY){if(GESTOR)ABA=ABA0||'com';if(await carregar())tela();return;}
   gateUI(async()=>{try{const r=await sb.rpc('trein_is_admin');ADM=!!r.data;}catch(_){}
     if(!ADM){$('#app').innerHTML='<p class="vazio">Esta área é da FC Consultoria. O vendedor entra pelo link que recebeu.</p>';return;}FC=true;
     const a=document.createElement('a');a.className='vt';a.href='/treinamento/painel.html';a.textContent='← Painel matriz';$('header.top .w').appendChild(a);
     const r=await sb.from('rotina_docs').select('id,data').eq('col','consultoria');EMPS=(r.data||[]).map(x=>({id:x.id,nome:(x.data&&x.data.nome)||x.id})).sort((a,b)=>a.nome.localeCompare(b.nome,'pt'));
     const s=$('#selEmp');s.hidden=false;s.innerHTML=EMPS.map(e=>`<option value="${esc(e.id)}">${esc(e.nome)}</option>`).join('');
     let e0=Q.get('e')||(()=>{try{return localStorage.getItem('fc_orc_emp');}catch(_){return '';}})()||'cb';if(!EMPS.some(e=>e.id===e0))e0=(EMPS.find(e=>e.id==='cb')||EMPS[0]||{}).id;s.value=e0;s.onchange=()=>trocaEmp(s.value);
-    if(Q.get('aba'))ABA=Q.get('aba');await trocaEmp(e0);});})();
+    if(ABA0)ABA=ABA0;await trocaEmp(e0);});})();
 </script>
 </body>
 </html>
