@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="pt-BR">
 <head>
+<script src="../cda-codigos.js?v=1"></script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex">
@@ -285,7 +286,7 @@ addEventListener('keydown',e=>{if(e.key==='Escape'){const H=document.querySelect
 function place3d(){try{placeCm();fsBar();}catch(e){console.warn(e);}let H=$('#e3host');const ph=document.querySelector('.e3');
  if(!H){H=document.createElement('div');H.id='e3host';H.style.cssText='position:absolute;z-index:5;display:none;border-radius:14px;overflow:hidden;box-shadow:0 10px 30px rgba(10,40,50,.18);background:#fff';H.innerHTML=`<iframe id="d3f" title="Esquadria em 3D" allow="fullscreen" style="border:0;width:100%;height:100%;display:block"></iframe>${ALUNO?'<div style="position:absolute;inset:0;cursor:not-allowed" title="O Fernando está conduzindo"></div>':''}`;document.body.appendChild(H);}
  if(!ph||$('#md').hidden===false&&false){H.style.display='none';return;}
- const t=ph.dataset.t;if(H.dataset.t!==t){H.dataset.t=t;H.querySelector('iframe').src='/treinamento/demo/index.html?previa&esq=1&t='+encodeURIComponent(t);}
+ const t=ph.dataset.t;if(H.dataset.t!==t){H.dataset.t=t;H.querySelector('iframe').src='/treinamento/demo/index.html?previa&esq=1'+(window.FC_CDA?'&cda=1':'')+'&t='+encodeURIComponent(t);}
  if(H.dataset.fs)return;const r=ph.getBoundingClientRect();Object.assign(H.style,{display:'block',left:(r.left+scrollX)+'px',top:(r.top+scrollY)+'px',width:r.width+'px',height:r.height+'px'});}
 function exTela(on){const H=document.getElementById('cmhost');if(!H)return;on=on&&!H.dataset.fs;if(!!H.dataset.ex===on)return;
  if(on){H.dataset.ex='1';const b=document.createElement('div');b.id='exBar';b.innerHTML='<span>💥 Janela desmontada · arraste para girar</span><button type="button" data-lupa="1" style="background:#fff;color:#13232e">🔍 Lupa</button><button type="button" data-cmd="1">🔧 Montar a janela</button>';H.appendChild(b);}
@@ -547,7 +548,7 @@ function abre3d(c){if(String(c).startsWith('G:')){const k=c.slice(2),g=GIMG[k]||
   CM3D.carregar().then(guaPrep).then(()=>{if(MD===c){PEC=CM3D.pecaCena(k,$('#pc3'),true);const P=PEC;angPad($('#pc3').parentNode,AD.orbit(()=>P.r?P:null),{elMin:-80});}}).catch(e=>console.warn(e));return;}
 if(String(c).startsWith('P:')){const k=c.slice(2),it=CMP.find(x=>x[0]===k)||[k,'',''];$('#mdC').textContent=k;$('#mdN').textContent=it[1]+' · '+it[2];$('#mdB').innerHTML='<div style="position:relative;flex:1;display:flex"><div id="pc3" style="flex:1;background:radial-gradient(circle at 50% 40%,#fff,#dfe7eb)"></div></div>';$('#md').hidden=false;MD=c;LIVE.push();CM3D.carregar().then(()=>{if(MD===c){PEC=CM3D.pecaCena(k,$('#pc3'),true);const P=PEC;angPad($('#pc3').parentNode,AD.orbit(()=>P.r?P:null),{elMin:-80});}});return;}
  if(String(c).startsWith('D:')){const t=c.slice(2);$('#mdC').textContent='🧊 '+(T3[t]||'Esquadria em 3D');$('#mdN').textContent='Gire, abra as folhas, desmonte e veja os cortes';
-  $('#mdB').innerHTML=`<div style="position:relative;flex:1;display:flex"><iframe id="d3f" src="/treinamento/demo/index.html?previa&esq=1&t=${encodeURIComponent(t)}" title="Esquadria em 3D" allow="fullscreen"></iframe>${ALUNO?'<div style="position:absolute;inset:0;cursor:not-allowed" title="O Fernando está conduzindo"></div>':''}</div>`;$('#md').hidden=false;MD=c;LIVE.push();return;}
+  $('#mdB').innerHTML=`<div style="position:relative;flex:1;display:flex"><iframe id="d3f" src="/treinamento/demo/index.html?previa&esq=1${window.FC_CDA?'&cda=1':''}&t=${encodeURIComponent(t)}" title="Esquadria em 3D" allow="fullscreen"></iframe>${ALUNO?'<div style="position:absolute;inset:0;cursor:not-allowed" title="O Fernando está conduzindo"></div>':''}</div>`;$('#md').hidden=false;MD=c;LIVE.push();return;}
  const x=pfInfo(c);if(!x.ok)return;$('#mdC').textContent=c;$('#mdN').textContent=(x.n||'')+(x.peso!=null?' · '+kg(x.peso)+' kg/m':'')+(x.d?' · '+mm(x.d[0])+' × '+mm(x.d[1])+' mm':'');
  if(x.sh){$('#mdB').innerHTML='<div style="position:relative;flex:1;display:flex"><div id="pc3" style="flex:1;background:radial-gradient(circle at 50% 40%,#fff,#dfe7eb)"></div><p style="position:absolute;left:12px;bottom:8px;margin:0;font:600 12.5px var(--f-b);color:var(--tm)">'+(x.fonte?esc(x.fonte):'Seção do FC Mostruário 3D')+'</p></div>';$('#md').hidden=false;MD=c;LIVE.push();
   CM3D.carregar().then(()=>{if(MD!==c)return;CM3D.perfilReg('X:'+c,x.sh);PEC=CM3D.pecaCena('X:'+c,$('#pc3'),true);const P2=PEC;angPad($('#pc3').parentNode,AD.orbit(()=>P2.r?P2:null),{elMin:-80});});return;}
