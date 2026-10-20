@@ -116,7 +116,7 @@ function pede(tit,txt,campos){return new Promise(res=>{const m=document.createEl
   <div class="row" style="margin-top:14px;justify-content:flex-end"><button class="btn" type="button" data-x>Cancelar</button><button class="btn pri" type="button" data-ok>Confirmar</button></div></div>`;
   document.body.appendChild(m);const fim=v=>{m.remove();res(v);};m.querySelector('[data-x]').onclick=()=>fim(null);
   m.querySelector('[data-ok]').onclick=()=>{const o={};m.querySelectorAll('[data-k]').forEach(e=>o[e.dataset.k]=e.value.trim());for(const c of campos)if(c.req&&!o[c.k]){alert('Preencha: '+c.l);return;}fim(o);};});}
-async function mudaSt(id,novo){const o=D.orcs.find(x=>x.id===id);if(!o)return false;let info={};
+async function mudaSt(id,novo){if(DEMO){toast('Demonstração: na tela do vendedor a situação muda aqui. Nada foi salvo.');return false;}const o=D.orcs.find(x=>x.id===id);if(!o)return false;let info={};
   if(novo==='aguardando'){const r=await pede('✅ Fechar pedido nº '+o.numero,'O pedido vai para a aprovação do financeiro. Depois de enviado, o vendedor não consegue mais alterar.',[{k:'entrega',l:'Data de entrega combinada',t:'date'},{k:'sinal',l:'Sinal / entrada recebida (R$)',im:1,ph:'0,00'},{k:'obs',l:'Observação para o financeiro',area:1}]);if(!r)return false;info={entrega:r.entrega||null,sinal:num(r.sinal),obs:r.obs,fechado_em:new Date().toISOString()};}
   else if(novo==='perdido'){const r=await pede('❌ Orçamento nº '+o.numero+' perdido','Por que o cliente não fechou? Isso ajuda o gestor a entender as vendas perdidas.',[{k:'motivo',l:'Motivo',op:MOTIVOS},{k:'obs',l:'Detalhe (opcional)',area:1}]);if(!r)return false;info={motivo:r.motivo,obs:r.obs};}
   else if(novo==='negociando'&&o.status==='aguardando'&&ADM){const r=await pede('↩ Devolver pedido nº '+o.numero+' ao vendedor','O pedido volta para "Em negociação" e o vendedor pode corrigir.',[{k:'obs',l:'O que precisa corrigir',area:1,req:1}]);if(!r)return false;info={devolvido:r.obs,obs:r.obs};}
@@ -125,6 +125,7 @@ async function mudaSt(id,novo){const o=D.orcs.find(x=>x.id===id);if(!o)return fa
   if(r.error||!r.data){toast(/function|p_info/i.test((r.error&&r.error.message)||'')?'Falta rodar o SQL do Painel do Comercial.':'Não foi possível mudar.');return false;}
   await carregar();toast(ST[novo]);return true;}
 
+const DEMO=Q.get('ver')==='vend';
 let FC=false,ADM=false,EMP='',EMPS=[],D=null,ABA='novo',O=null,BQ='',SUGI=0;
 const novoOrc=()=>({id:null,cliente:{},itens:[],pagamento:{forma:'',cond:'avista',parcelas:1,prazos:'',entrada:0,obs:''},desconto:0,descTipo:'rs',frete:0,validade:maisDias(D&&D.validade_dias||7),obs:D&&D.obs||'',status:'aberto'});
 
@@ -133,15 +134,16 @@ async function rpcDados(){const r=await sb.rpc('orc_dados',{p_chave:FC?null:VKEY
 async function carregar(){const d=await rpcDados();
   if(d==='sql'){$('#app').innerHTML='<div class="box"><h2 class="t">Falta rodar o SQL</h2><p class="nota">Rode o arquivo orcamentos.sql no Supabase para ativar o painel de orçamentos.</p></div>';return false;}
   if(!d){$('#app').innerHTML='<p class="vazio">Link inválido ou desativado. Fale com o gestor da empresa ou com a FC Consultoria.</p>';return false;}
-  D=d;EMP=d.emp;if(!FC)ADM=!!d.adm;const c=d.cab||{};$('#hd').textContent='Orçamentos · '+(c.nome||d.nome||'');$('#hdSub').textContent=FC?'FC Consultoria · painel da matriz':GESTOR?'Gestor da empresa':'Vendedor: '+((d.vend&&d.vend.nome)||'');
+  D=d;EMP=d.emp;if(!FC)ADM=!!d.adm;if(DEMO)ADM=false;const c=d.cab||{};$('#hd').textContent='Orçamentos · '+(c.nome||d.nome||'');$('#hdSub').textContent=DEMO?'Demonstração · tela do vendedor':FC?'FC Consultoria · painel da matriz':GESTOR?'Gestor da empresa':'Vendedor: '+((d.vend&&d.vend.nome)||'');
   if(c.logo)$('#hdLogo').src=fotoUrl(c.logo);
   if(!O)O=novoOrc();if(!EQ||EQ.emp!==EMP||EQ.n!==D.itens.length){EQ=null;carregaEQ().then(e=>{e.emp=EMP;e.n=D.itens.length;if(ABA==='novo'&&O.itens.length&&document.activeElement&&document.activeElement.id!=='bq')tela();});}return true;}
 
 /* ================= TELA ================= */
 function tela(){if(!D)return;const ab=[['novo',O&&O.id?'✏️ Orçamento nº '+(O.numero||''):'🧾 Novo orçamento'],['lista',(ADM?'📂 Orçamentos e pedidos (':'📂 Meus orçamentos e pedidos (')+D.orcs.length+')']];if(ADM){const ag=D.orcs.filter(o=>o.status==='aguardando').length;ab.unshift(['com','📊 Painel do Comercial'+(ag?' · '+ag+' aguardando':'')]);ab.push(['cfg','⚙️ Configurar']);}
   let h=`<div class="abas">${ab.map(([k,t])=>`<button type="button" data-ab="${k}" class="${ABA===k?'on':''}">${esc(t)}</button>`).join('')}</div>`;
+  if(DEMO)h=`<div class="box" style="border-color:#e0b100;background:#fff8dc"><b>👁 Demonstração: é assim que o vendedor vê.</b> <span class="nota">Ele só tem estas duas abas, não vê custo nem planilha e abre só no computador. Nesta demonstração nada é salvo.</span></div>`+h;
   if(!D.itens.length&&ABA!=='cfg')h+=`<div class="box" style="border-color:var(--or);background:var(--orc)"><b>Ainda não há itens liberados para orçamento.</b><p class="nota" style="margin:2px 0 0">${ADM?'Vá em ⚙️ Configurar e clique em "Atualizar itens da precificação".':'A FC Consultoria está preparando a lista de itens. Volte mais tarde.'}</p></div>`;
-  if(ABA==='com'&&!ADM)ABA='novo';if(ABA==='novo')h+=telaNovo();else if(ABA==='lista')h+=telaLista();else if(ABA==='com')h+=telaCom();else h+=telaCfg();
+  if((ABA==='com'||ABA==='cfg')&&!ADM)ABA='novo';if(ABA==='novo')h+=telaNovo();else if(ABA==='lista')h+=telaLista();else if(ABA==='com')h+=telaCom();else h+=telaCfg();
   $('#app').innerHTML=h;$$('[data-ab]').forEach(b=>b.onclick=()=>{ABA=b.dataset.ab;tela();});
   if(ABA==='novo')wireNovo();else if(ABA==='lista')wireLista();else if(ABA==='com')wireCom();else wireCfg();}
 
@@ -226,7 +228,7 @@ function wireNovo(){const bq=$('#bq'),sug=$('#sug');let L=[];
   $('#limpa').onclick=()=>{if(O.itens.length&&!O.id&&!confirm('Começar outro orçamento? O que não foi salvo será perdido.'))return;O=novoOrc();BQ='';tela();};
   $('#impr').onclick=()=>imprimir(O);
   $('#salvar').onclick=salvar;}
-async function salvar(){const m=$('#msg'),k=calc();if(!ADM&&O.id&&TRAVA(O.status)){m.textContent='Este pedido já foi para o financeiro e não pode ser alterado.';return;}if(!String(O.cliente.nome||'').trim()){m.textContent='Coloque o nome do cliente.';return;}if(!O.itens.length){m.textContent='Inclua ao menos um item.';return;}
+async function salvar(){const m=$('#msg'),k=calc();if(DEMO){m.textContent='Demonstração: aqui o vendedor salva o orçamento e ele ganha um número. Nada foi salvo.';return;}if(!ADM&&O.id&&TRAVA(O.status)){m.textContent='Este pedido já foi para o financeiro e não pode ser alterado.';return;}if(!String(O.cliente.nome||'').trim()){m.textContent='Coloque o nome do cliente.';return;}if(!O.itens.length){m.textContent='Inclua ao menos um item.';return;}
   if(k.acima){m.textContent='Desconto acima do limite.';return;}
   $('#salvar').disabled=true;m.textContent='Salvando…';
   const p={id:O.id,cliente:O.cliente,itens:O.itens.map(i=>({id:i.id,cref:crefDe(i)||undefined,qtd:num(i.qtd),preco:ADM?num(i.preco):undefined,cod:i.cod,desc:i.desc,un:i.un,foto:i.foto})),pagamento:Object.assign({},O.pagamento,{resumo:parcelasTxt(k.tot)}),

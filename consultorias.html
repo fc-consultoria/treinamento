@@ -629,16 +629,21 @@ function catTabHtml(e,hero,nextc,sec){const adm=!PUB&&!cli;const c=PUB?e.cat:CAT
   return h;}
 /* ---------- CRIAÇÃO DE ORÇAMENTO (painel dos vendedores) ---------- */
 const ORCL={};
+function orcBotoes(u){return `<div style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 4px">
+  <a class="btn pri" style="text-decoration:none" href="${u}&aba=com" target="_blank" rel="noopener">📊 Painel do Comercial (gestor e financeiro)</a>
+  <a class="btn" style="text-decoration:none" href="${u}&aba=cfg" target="_blank" rel="noopener">👥 Cadastrar vendedores e configurar</a>
+  <a class="btn" style="text-decoration:none" href="${u}&ver=vend" target="_blank" rel="noopener">💻 Ver como o vendedor vê</a></div>
+  <p class="nota" style="margin:4px 0 0">Para cadastrar um vendedor: <b>👥 Cadastrar vendedores e configurar</b> → parte <b>🧑‍💼 Painel dos vendedores</b> → nome e telefone → <b>＋ Cadastrar vendedor</b>. Cada vendedor ganha um link próprio para mandar pelo WhatsApp (abre só no computador).</p>`;}
 function orcTabHtml(e){if(!e)return '';const adm=!PUB&&!cli,u='orcamento/?e='+encodeURIComponent(e.id);
  if(adm)return `<div class="box"><h3 style="margin-top:0">🧾 Painel de orçamentos · ${esc(e.nome||'')}</h3><p class="nota">Os vendedores montam o orçamento pelo link de cada um, com os itens e o preço de venda da planilha de precificação, as fotos dos itens e a forma de pagamento. Eles não veem custo nem as planilhas.</p>
-  <div style="display:flex;gap:8px;flex-wrap:wrap"><a class="btn pri" style="text-decoration:none" href="${u}" target="_blank" rel="noopener">↗ Abrir o painel de orçamentos</a><a class="btn" style="text-decoration:none" href="${u}&aba=cfg" target="_blank" rel="noopener">⚙️ Configurar itens, fotos e vendedores</a></div></div>
+  ${orcBotoes(u)}</div>
   <div class="box" style="padding:0;overflow:hidden"><iframe src="${u}" title="Painel de orçamentos" style="width:100%;height:max(760px,82vh);border:0;display:block;background:#f2f6f7" loading="lazy"></iframe></div>`;
  const L=ORCL[e.id];if(L===undefined&&PUB){ORCL[e.id]=null;sb.rpc('orc_portal_lista',{p_chave:KEY}).then(r=>{ORCL[e.id]=r.error?[]:(r.data||[]);if(at===e.id&&tab==='orc')ficha();});}
  const ST={aberto:'Em aberto',enviado:'Enviado',aprovado:'Aprovado',perdido:'Perdido',cancelado:'Cancelado'},R=v=>'R$ '+(+v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
  const ap=(L||[]).filter(o=>o.status==='aprovado'),tot=ap.reduce((a,o)=>a+(+o.total||0),0);
  return `<div class="box"><h3 style="margin-top:0">🧾 Orçamentos dos vendedores</h3><p class="nota">Cada vendedor monta os orçamentos pelo link que recebeu. Aqui vocês acompanham todos.</p>
   ${PUB?`<div style="display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 10px"><a class="btn pri" style="text-decoration:none" target="_blank" rel="noopener" href="orcamento/?k=${encodeURIComponent(KEY)}">📊 Abrir Painel do Comercial</a><a class="btn" style="text-decoration:none" target="_blank" rel="noopener" href="orcamento/?k=${encodeURIComponent(KEY)}&aba=cfg">⚙️ Vendedores e configuração</a></div>`:''}
-  ${!PUB?'<p class="nota">(Na visão do cliente a lista aparece no link de acompanhamento.)</p>':L==null?'<p class="nota">Carregando…</p>':L.length?`<p style="margin:6px 0"><b>${L.length}</b> orçamento${L.length>1?'s':''} · <b>${ap.length}</b> aprovado${ap.length===1?'':'s'} (${R(tot)})</p>
+  ${!PUB?orcBotoes('orcamento/?e='+encodeURIComponent(e.id))+'<p class="nota">(No link do cliente, o gestor vê aqui a lista dos orçamentos e o botão do Painel do Comercial.)</p>':L==null?'<p class="nota">Carregando…</p>':L.length?`<p style="margin:6px 0"><b>${L.length}</b> orçamento${L.length>1?'s':''} · <b>${ap.length}</b> aprovado${ap.length===1?'':'s'} (${R(tot)})</p>
   <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:14px"><tr style="text-align:left"><th>Nº</th><th>Data</th><th>Cliente</th><th>Vendedor</th><th style="text-align:right">Total</th><th>Situação</th></tr>
   ${L.map(o=>`<tr style="border-top:1px solid rgba(255,255,255,.1)"><td>${o.numero}</td><td>${new Date(o.em).toLocaleDateString('pt-BR')}</td><td>${esc(o.cliente||'')}</td><td>${esc(o.vend||'')}</td><td style="text-align:right">${R(o.total)}</td><td>${ST[o.status]||o.status}</td></tr>`).join('')}</table></div>`:'<p class="nota">Nenhum orçamento ainda.</p>'}</div>`;}
 /* ---------- TREINAMENTO EM ESQUADRIAS 3D AO VIVO ---------- */
