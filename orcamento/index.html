@@ -58,6 +58,9 @@ table.it input.pz{width:92px;padding:6px;border:1px solid #f2a51e;border-radius:
 .kp{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-bottom:14px}.kp div{background:#fff;border:1px solid var(--ln);border-radius:14px;padding:12px 14px}.kp small{display:block;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--tm)}.kp b{font:800 24px var(--f-d);color:#0f4f53}.kp em{display:block;font-style:normal;font-size:12.5px;color:var(--tm)}
 #mdl{position:fixed;inset:0;background:rgba(10,20,28,.55);z-index:6000;display:flex;align-items:center;justify-content:center;padding:16px}#mdl .c{background:#fff;border-radius:16px;padding:18px 20px;max-width:440px;width:100%}
 html.so .top{display:none}html.so main{padding-top:6px}
+html.emb .top{display:none}html.emb main{padding-top:8px}
+.modoApr .cHead,.modoApr .kp,.modoApr .cGrid,.modoCom .cAg{display:none}
+.modoVend .box:not(.vbox){display:none}.modoCfg .vbox{display:none}
 /* impressão */
 #imp{display:none}
 @media print{body{background:#fff}.top,main,.toast,#impOv{display:none!important}#imp{display:block!important}@page{size:A4;margin:10mm}}
@@ -131,7 +134,7 @@ async function mudaSt(id,novo){if(DEMO){toast('Demonstração: na tela do vended
   if(r.error||!r.data){toast(/function|p_info/i.test((r.error&&r.error.message)||'')?'Falta rodar o SQL do Painel do Comercial.':'Não foi possível mudar.');return false;}
   await carregar();toast(ST[novo]);return true;}
 
-const DEMO=Q.get('ver')==='vend',SO=Q.get('so')==='1';if(SO)document.documentElement.classList.add('so');
+const DEMO=Q.get('ver')==='vend',SO=Q.get('so')==='1';if(Q.get('emb')==='1')document.documentElement.classList.add('emb');if(SO)document.documentElement.classList.add('so');
 let FC=false,ADM=false,EMP='',EMPS=[],D=null,ABA='novo',O=null,BQ='',SUGI=0;
 const novoOrc=()=>({id:null,cliente:{},itens:[],pagamento:{forma:'',cond:'avista',parcelas:1,prazos:'',entrada:0,obs:''},desconto:0,descTipo:'rs',frete:0,validade:maisDias(D&&D.validade_dias||7),obs:D&&D.obs||'',status:'aberto'});
 
@@ -140,18 +143,21 @@ async function rpcDados(){const r=await sb.rpc('orc_dados',{p_chave:FC?null:VKEY
 async function carregar(){const d=await rpcDados();
   if(d==='sql'){$('#app').innerHTML='<div class="box"><h2 class="t">Falta rodar o SQL</h2><p class="nota">Rode o arquivo orcamentos.sql no Supabase para ativar o painel de orçamentos.</p></div>';return false;}
   if(!d){$('#app').innerHTML='<p class="vazio">Link inválido ou desativado. Fale com o gestor da empresa ou com a FC Consultoria.</p>';return false;}
-  D=d;EMP=d.emp;if(!FC)ADM=!!d.adm;if(DEMO)ADM=false;const c=d.cab||{};$('#hd').textContent='Orçamentos · '+(c.nome||d.nome||'');$('#hdSub').textContent=DEMO?'Demonstração · tela do vendedor':FC?'FC Consultoria · painel da matriz':GESTOR?'Gestor da empresa':'Vendedor: '+((d.vend&&d.vend.nome)||'');
+  D=d;EMP=d.emp;if(!FC)ADM=!!d.adm;if(DEMO)ADM=false;const c=d.cab||{};$('#hd').textContent='Painel de Vendas · '+(c.nome||d.nome||'');$('#hdSub').textContent=DEMO?'Demonstração · tela do vendedor':FC?'FC Consultoria · painel da matriz':GESTOR?'Gestor da empresa':'Vendedor: '+((d.vend&&d.vend.nome)||'');
   if(c.logo)$('#hdLogo').src=fotoUrl(c.logo);
   if(!O)O=novoOrc();if(!EQ||EQ.emp!==EMP||EQ.n!==D.itens.length){EQ=null;carregaEQ().then(e=>{e.emp=EMP;e.n=D.itens.length;if(ABA==='novo'&&O.itens.length&&document.activeElement&&document.activeElement.id!=='bq')tela();});}return true;}
 
 /* ================= TELA ================= */
-function tela(){if(!D)return;const ab=[['novo',O&&O.id?'✏️ Orçamento nº '+(O.numero||''):'🧾 Novo orçamento'],['lista',(ADM?'📂 Orçamentos e pedidos (':'📂 Meus orçamentos e pedidos (')+D.orcs.length+')']];if(ADM){const ag=D.orcs.filter(o=>o.status==='aguardando').length;ab.unshift(['com','📊 Painel do Comercial'+(ag?' · '+ag+' aguardando':'')]);ab.push(['est','📦 Estoque']);ab.push(['cfg','⚙️ Configurar']);}
-  let h=SO?'':`<div class="abas">${ab.map(([k,t])=>`<button type="button" data-ab="${k}" class="${ABA===k?'on':''}">${esc(t)}</button>`).join('')}</div>`;
+function tela(){if(!D)return;const ag=D.orcs.filter(o=>o.status==='aguardando').length;
+  const ab=ADM?[['com','📊 Resultados'],['apr','⏳ Aprovar pedidos'+(ag?' ('+ag+')':'')],['novo',O&&O.id?'✏️ Orçamento nº '+(O.numero||''):'🧾 Criação de orçamento'],['lista','📂 Orçamentos e pedidos ('+D.orcs.length+')'],['vend','👥 Vendedores'],['cest','📦 Consulta de estoque']]
+    :[['novo',O&&O.id?'✏️ Orçamento nº '+(O.numero||''):'🧾 Novo orçamento'],['lista','📂 Meus orçamentos e pedidos ('+D.orcs.length+')'],['cest','📦 Consulta de estoque']];
+  if(D.cat)ab.push(['cat','📚 Catálogo']);if(ADM){if(ABA==='est')ab.push(['est','📦 Importar estoque']);ab.push(['cfg','⚙️ Configurar']);}
+  let h=SO?'':`<div class="abas">${ab.map(([k,t])=>`<button type="button" data-ab="${k}" class="${ABA===k?'on':''}">${esc(t)}</button>`).join('')}${GESTOR&&!DEMO?`<span style="flex:1"></span><button type="button" class="btn" id="gFC" title="Fica registrado em Solicitações com a FC">📨 Falar com a FC</button><a class="btn" style="background:#1f9d55;border-color:#1f9d55;color:#fff" target="_blank" rel="noopener" href="https://wa.me/5566999867984?text=${encodeURIComponent('Olá, FC! Sou o gestor da '+(D.nome||'')+' e preciso de ajuda no Painel de Vendas.')}">💬 WhatsApp FC</a>`:''}</div>`;
   if(DEMO)h=`<div class="box" style="border-color:#e0b100;background:#fff8dc"><b>👁 Demonstração: é assim que o vendedor vê.</b> <span class="nota">Ele só tem estas duas abas, não vê custo nem planilha e abre só no computador. Nesta demonstração nada é salvo.</span></div>`+h;
   if(!D.itens.length&&ABA!=='cfg')h+=`<div class="box" style="border-color:var(--or);background:var(--orc)"><b>Ainda não há itens liberados para orçamento.</b><p class="nota" style="margin:2px 0 0">${ADM?'Vá em ⚙️ Configurar e clique em "Atualizar itens da precificação".':'A FC Consultoria está preparando a lista de itens. Volte mais tarde.'}</p></div>`;
-  if((ABA==='com'||ABA==='cfg'||ABA==='est')&&!ADM)ABA='novo';if(ABA==='novo')h+=telaNovo();else if(ABA==='lista')h+=telaLista();else if(ABA==='com')h+=telaCom();else if(ABA==='est')h+=telaEst();else h+=telaCfg();
+  if(['com','apr','vend','cfg','est'].includes(ABA)&&!ADM)ABA='novo';if(ABA==='cat'&&!D.cat)ABA='novo';if(ABA==='novo')h+=telaNovo();else if(ABA==='lista')h+=telaLista();else if(ABA==='com'||ABA==='apr')h+=`<div class="${ABA==='apr'?'modoApr':'modoCom'}">`+telaCom()+'</div>';else if(ABA==='est')h+=telaEst();else if(ABA==='cest')h+=telaCest();else if(ABA==='cat')h+=telaCat();else h+=`<div class="${ABA==='vend'?'modoVend':'modoCfg'}">`+telaCfg()+'</div>';
   $('#app').innerHTML=h;$$('[data-ab]').forEach(b=>b.onclick=()=>{ABA=b.dataset.ab;tela();});
-  if(ABA==='novo')wireNovo();else if(ABA==='lista')wireLista();else if(ABA==='com')wireCom();else if(ABA==='est')wireEst();else wireCfg();}
+  if(ABA==='novo')wireNovo();else if(ABA==='lista')wireLista();else if(ABA==='com'||ABA==='apr')wireCom();else if(ABA==='est')wireEst();else if(ABA==='cest')wireCest();else if(ABA==='cat'){}else wireCfg();const gf=$('#gFC');if(gf)gf.onclick=suporte;}
 
 /* ---------- novo / editar ---------- */
 function calc(){const sub=O.itens.reduce((a,i)=>a+Math.round(num(i.preco)*num(i.qtd)*100)/100,0);let dsc=O.descTipo==='pc'?Math.round(sub*num(O.descPc)/100*100)/100:num(O.desconto);
@@ -285,7 +291,7 @@ function telaCom(){const i0=perIni(),i1=perFim(),inP=o=>{const t=new Date(o.cria
   const fin=o=>{const i=o.info||{};return `${i.entrega?'entrega '+dBR(i.entrega):''}${i.sinal?' · sinal '+rs(i.sinal):''}${i.obs&&o.status==='aguardando'?'<br><small class="nota">'+esc(i.obs)+'</small>':''}`;};
   const linha=(o,bt)=>`<tr><td><b>${o.numero}</b></td><td>${dBR(((o.info||{}).fechado_em)||o.atualizado_em||o.criado_em)}</td><td>${esc(o.vend_nome||'')}</td><td>${esc((o.cliente||{}).nome||'')}</td><td class="n"><b>${rs(o.total)}</b></td><td class="hm">${esc((o.pagamento||{}).forma||'')}${(o.pagamento||{}).resumo?' · '+esc(o.pagamento.resumo):''}</td><td>${fin(o)}</td><td style="white-space:nowrap">${bt}</td></tr>`;
   const th='<thead><tr><th>Nº</th><th>Fechado em</th><th>Vendedor</th><th>Cliente</th><th class="n">Total</th><th class="hm">Pagamento</th><th>Entrega / sinal</th><th></th></tr></thead>';
-  return `<div class="box"><div class="row"><h3 style="margin:0;flex:1">📊 Painel do Comercial</h3>
+  return `<div class="box cHead"><div class="row"><h3 style="margin:0;flex:1">📊 Resultados do comercial</h3>
    <select class="inp" id="cpP" style="width:auto">${[['mes','Este mês'],['ant','Mês passado'],['90','Últimos 90 dias'],['tudo','Tudo']].map(([k,t])=>`<option value="${k}" ${CP===k?'selected':''}>${t}</option>`).join('')}</select>
    <select class="inp" id="cpV" style="width:auto"><option value="">Todos os vendedores</option>${VS.map(([k,n])=>`<option value="${esc(k)}" ${CV===k?'selected':''}>${esc(n)}</option>`).join('')}</select></div>
    <p class="nota">Os vendedores montam os orçamentos no computador, cada um pelo seu link. Quando o cliente fecha, o pedido chega aqui para a aprovação do financeiro.</p></div>
@@ -294,16 +300,16 @@ function telaCom(){const i0=perIni(),i1=perFim(),inP=o=>{const t=new Date(o.cria
    <div><small>Aprovado pelo financeiro</small><b>${rs(sm(ap))}</b><em>${ap.length} pedido${ap.length===1?'':'s'}</em></div>
    <div><small>Conversão</small><b>${A.length?Math.round(fe.length/A.length*100):0}%</b><em>orçamentos que viraram pedido</em></div>
    <div><small>Ticket médio</small><b>${rs(fe.length?sm(fe)/fe.length:0)}</b><em>por pedido fechado</em></div></div>
-  <div class="box" style="border-color:${AG.length?'#e0b100':'var(--ln)'}"><h3>⏳ Aguardando aprovação do financeiro (${AG.length})</h3>
+  <div class="box cAg" style="border-color:${AG.length?'#e0b100':'var(--ln)'}"><h3>⏳ Aguardando aprovação do financeiro (${AG.length})</h3>
    ${AG.length?`<div style="overflow-x:auto"><table class="it">${th}<tbody>${AG.map(o=>linha(o,`<button class="btn mini ok" type="button" data-apr="${o.id}">✔ Aprovar</button> <button class="btn mini" type="button" data-dev="${o.id}">↩ Devolver</button> <button class="btn mini" type="button" data-ver="${o.id}" title="Ver o orçamento">🖨</button>`)).join('')}</tbody></table></div>`:'<p class="vazio" style="padding:12px">Nenhum pedido esperando aprovação.</p>'}</div>
   <div class="box"><div class="row"><h3 style="margin:0;flex:1">✅ Pedidos aprovados (${ap.length})</h3>${ap.length?'<button class="btn mini" type="button" id="cpCsv">⬇ Exportar planilha</button>':''}</div>
    ${ap.length?`<div style="overflow-x:auto;margin-top:8px"><table class="it">${th}<tbody>${ap.map(o=>linha(o,`<button class="btn mini" type="button" data-ver="${o.id}">🖨</button>`)).join('')}</tbody></table></div>`:'<p class="vazio" style="padding:12px">Nenhum pedido aprovado no período.</p>'}</div>
-  <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(320px,1fr))">
+  <div class="grid cGrid" style="grid-template-columns:repeat(auto-fit,minmax(320px,1fr))">
    <div class="box"><h3>🏆 Vendedores</h3>${rk.length?`<table class="it"><thead><tr><th>Vendedor</th><th class="n">Orçam.</th><th class="n">Fechados</th><th class="n">Conv.</th><th class="n">Valor fechado</th></tr></thead><tbody>${rk.map(x=>`<tr><td><b>${esc(x.n)}</b></td><td class="n">${x.q}</td><td class="n">${x.f}</td><td class="n">${Math.round(x.f/x.q*100)}%</td><td class="n"><b>${rs(x.v)}</b></td></tr>`).join('')}</tbody></table>`:'<p class="vazio" style="padding:12px">Sem orçamentos no período.</p>'}</div>
    <div class="box"><h3>⚠️ Atenção</h3>
     ${par.length?`<p style="margin:0 0 6px"><b>${par.length}</b> orçamento${par.length===1?'':'s'} enviado${par.length===1?'':'s'} ou em negociação <b>sem movimento há mais de 3 dias</b>:</p><ul style="margin:0 0 10px;padding-left:18px">${par.slice(0,12).map(o=>`<li>nº ${o.numero} · ${esc((o.cliente||{}).nome||'')} · ${esc(o.vend_nome||'')} · ${rs(o.total)}</li>`).join('')}</ul>`:'<p class="nota">Nenhum orçamento parado há mais de 3 dias.</p>'}
     <p style="margin:6px 0 4px"><b>Motivos das vendas perdidas</b></p>${Object.keys(mot).length?Object.entries(mot).sort((a,b)=>b[1]-a[1]).map(([m,n])=>`<div class="row" style="justify-content:space-between"><span>${esc(m)}</span><b>${n}</b></div>`).join(''):'<p class="nota">Nenhuma venda perdida no período.</p>'}</div></div>`;}
-function wireCom(){$('#cpP').onchange=e=>{CP=e.target.value;tela();};$('#cpV').onchange=e=>{CV=e.target.value;tela();};
+function wireCom(){$$('[data-apr]').length;if($('#cpP'))$('#cpP').onchange=e=>{CP=e.target.value;tela();};$('#cpV').onchange=e=>{CV=e.target.value;tela();};
   $$('[data-apr]').forEach(b=>b.onclick=async()=>{if(await mudaSt(b.dataset.apr,'aprovado'))tela();});
   $$('[data-dev]').forEach(b=>b.onclick=async()=>{if(await mudaSt(b.dataset.dev,'negociando'))tela();});
   $$('[data-ver]').forEach(b=>b.onclick=()=>{const s=D.orcs.find(o=>o.id===b.dataset.ver);imprimir(Object.assign({},s,{descTipo:'rs'}));});
@@ -336,7 +342,7 @@ async function carregaCfg(){if(!FC){const [g,pl]=await Promise.all([sb.rpc('orc_
 function telaCfg(){if(!CF){carregaCfg().then(tela);return '<p class="vazio">Carregando configuração…</p>';}
   const c=CF.cab||{},f=sem(IF),L=CF.itens.filter(i=>!f||sem(i.cod+' '+i.desc+' '+(i.cor||'')+' '+(i.forn||'')).includes(f)),semFoto=CF.itens.filter(i=>!i.foto).length;
   const link=k=>BASE+'orcamento/?v='+k;
-  return `${!FC?`<div class="box" style="border-color:var(--or);background:var(--orc);display:flex;gap:12px;align-items:center;flex-wrap:wrap"><div style="flex:1;min-width:240px"><b>Precisa de ajuda ou de um ajuste que não está aqui?</b><p class="nota" style="margin:2px 0 0">Trocar a planilha, colocar fotos dos itens, logo ou qualquer outra mudança: chame o suporte da FC Consultoria.</p></div><button class="btn pri" type="button" id="supBtn">🆘 Chamar suporte da FC</button></div>`:''}<div class="box"><h3>🧑‍💼 Painel dos vendedores (${VEND.length})</h3>
+  return `${!FC?`<div class="box" style="border-color:var(--or);background:var(--orc);display:flex;gap:12px;align-items:center;flex-wrap:wrap"><div style="flex:1;min-width:240px"><b>Precisa de ajuda ou de um ajuste que não está aqui?</b><p class="nota" style="margin:2px 0 0">Trocar a planilha, colocar fotos dos itens, logo ou qualquer outra mudança: chame o suporte da FC Consultoria.</p></div><button class="btn pri" type="button" id="supBtn">🆘 Chamar suporte da FC</button></div>`:''}<div class="box vbox"><h3>👥 Vendedores (${VEND.length})</h3>
    ${VEND.length?`<div style="overflow-x:auto"><table class="it"><thead><tr><th>Vendedor</th><th class="n">Orçamentos</th><th class="n">Aprovados</th><th class="n">Valor aprovado</th><th>Situação</th><th>Link</th><th></th></tr></thead><tbody>${VEND.map(v=>{const os=D.orcs.filter(o=>o.vend_id===v.id),ap=os.filter(o=>o.status==='aprovado');
     return `<tr style="${v.ativo?'':'opacity:.55'}"><td><b>${esc(v.nome)}</b><br><span class="nota">${esc(v.telefone||'sem telefone')}</span></td><td class="n">${os.length}</td><td class="n">${ap.length}</td><td class="n">${rs(ap.reduce((a,o)=>a+(+o.total||0),0))}</td>
     <td>${v.ativo?'<span class="pill s-aprovado">Ativo</span>':'<span class="pill s-perdido">Desativado</span>'}</td>
@@ -445,6 +451,21 @@ function wireEstImp(q){if(q('estImp'))q('estImp').onchange=async e=>{const f=e.t
       let ok=0;CF.itens.forEach(i=>{const ks=[nk(i.cod),...String(i.cod).split(/[|\/]/).map(nk)].filter(Boolean);const k=ks.find(x=>x in S);if(k!=null){i.est=S[k];ok++;}else delete i.est;});
       CF.cab=CF.cab||{};CF.cab.estEm=new Date().toISOString();if(await salvaCfg()){const usados=new Set();CF.itens.forEach(i=>[nk(i.cod),...String(i.cod).split(/[|\/]/).map(nk)].forEach(k=>usados.add(k)));const fora=Object.keys(S).filter(k=>!usados.has(k)).length;const tx=`✓ ${ok} de ${CF.itens.length} itens da tabela de preços com saldo`+(fora?` · ${fora} códigos fora da tabela de preços foram ignorados`:'');CF.cab.estMsg=tx;toast(tx);}tela();}
     catch(err){m.textContent='Não foi possível ler: '+(err.message||err);}};}
+
+/* ---------- 📦 Consulta de estoque (para vender) ---------- */
+let CEF='',CEQ='';
+function telaCest(){const nv=i=>estNv(i)||'x',LB={g:['#16a34a','Em estoque'],a:['#eab308','No limite'],l:['#f97316','Estoque baixo'],v:['#dc2626','Sem estoque'],x:['#94a3b8','Sem informação']};
+  const f=sem(CEQ),k=nk(CEQ),L=D.itens,cnt={g:0,a:0,l:0,v:0,x:0};L.forEach(i=>cnt[nv(i)]++);
+  const F=L.filter(i=>(!CEF||nv(i)===CEF)&&(!f||sem(i.cod+' '+i.desc+' '+(i.cor||'')).includes(f)||(k.length>=3&&nk(i.desc).includes(k)))).sort((a,b)=>String(a.desc).localeCompare(String(b.desc))||String(a.cor||'').localeCompare(String(b.cor||'')));
+  const em=D.cab&&D.cab.estEm?new Date(D.cab.estEm):null;
+  return `<div class="box"><div class="row"><h3 style="margin:0;flex:1">📦 Consulta de estoque</h3><input class="inp" id="ceq" placeholder="Buscar por código, descrição ou cor" value="${esc(CEQ)}" style="max-width:340px"></div>
+   <p class="nota">${em?'Estoque atualizado em <b>'+em.toLocaleDateString('pt-BR')+'</b>.':'<b style="color:#b45309">O estoque ainda não foi importado.</b>'} Mostra a situação de cada item para orientar a venda${ADM?'':' (a quantidade não aparece)'}.</p>
+   <div class="chips"><button type="button" data-cef="" class="${!CEF?'on':''}">Todos (${L.length})</button>${'glavx'.split('').filter(x=>cnt[x]).map(x=>`<button type="button" data-cef="${x}" class="${CEF===x?'on':''}"><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${LB[x][0]};margin-right:5px"></span>${LB[x][1]} (${cnt[x]})</button>`).join('')}</div>
+   ${F.length?`<div style="max-height:620px;overflow:auto"><table class="it"><thead><tr><th>Código</th><th>Cód. ref.</th><th>Descrição</th><th>Cor</th>${ADM?'<th class="n">Saldo</th>':''}<th>Situação</th><th class="n">Preço</th></tr></thead><tbody>
+   ${F.slice(0,500).map(i=>`<tr><td><b>${esc(i.cod)}</b></td><td style="color:#0f6b70;font-weight:700">${esc(crefDe(i))}</td><td>${esc(i.desc)}</td><td>${corTag(i.cor)}</td>${ADM?`<td class="n">${i.est!=null?String(i.est).replace('.',','):'—'}</td>`:''}<td>${estTag(i)||'<span class="nota">sem informação</span>'}</td><td class="n">${rs(i.preco)}</td></tr>`).join('')}</tbody></table></div>`:'<p class="vazio">Nenhum item encontrado.</p>'}</div>`;}
+function wireCest(){const q=$('#ceq');q.oninput=()=>{CEQ=q.value;const p=q.selectionStart;tela();const n=$('#ceq');n.focus();n.setSelectionRange(p,p);};$$('[data-cef]').forEach(b=>b.onclick=()=>{CEF=b.dataset.cef;tela();});}
+function telaCat(){return `<div class="box" style="padding:10px"><div class="row" style="margin-bottom:8px"><h3 style="margin:0;flex:1">📚 Catálogo · ${esc(D.nome||'')}</h3><a class="btn" href="${esc(D.cat)}" target="_blank" rel="noopener">↗ Abrir em outra aba</a></div>
+  <iframe src="${esc(D.cat)}" title="Catálogo" style="width:100%;height:max(760px,80vh);border:1px solid var(--ln);border-radius:10px;display:block;background:#fff"></iframe></div>`;}
 
 /* ---------- 📦 Estoque (importação, rotina e situação) ---------- */
 let EF='';
