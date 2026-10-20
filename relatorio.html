@@ -52,7 +52,8 @@ table.et th,table.et td{white-space:nowrap}tr.er{cursor:pointer}tr.er:hover td{b
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="auth.js"></script>
 <script>
-const ZCFG=new Set(['colab','liberacao','sistema','gestor','chave_app','sugestao','resposta','sug_excluida','zerar']);
+const pzL=(ev,uid)=>ev.filter(e=>e.tipo==='pausa'&&(e.detalhe||{}).para===uid).map(e=>({on:!!(e.detalhe||{}).on,t:Date.parse(e.criado_em)})).sort((a,b)=>a.t-b.t),pzOn=P=>!!P.length&&P[P.length-1].on,pzMs=(P,ini)=>{let s=0,st=null;for(const p of P){if(p.on&&st==null)st=p.t;else if(!p.on&&st!=null){s+=Math.max(0,p.t-Math.max(st,ini));st=null;}}if(st!=null)s+=Math.max(0,Date.now()-Math.max(st,ini));return s;};
+const ZCFG=new Set(['colab','liberacao','sistema','gestor','chave_app','sugestao','resposta','sug_excluida','zerar','pausa']);
 function zerarFiltro(ev,zs){const Z={};(zs||ev).forEach(e=>{if(e.tipo==='zerar'){const p=(e.detalhe||{}).para,t=Date.parse(e.criado_em);if(!Z[p]||t>Z[p])Z[p]=t;}});
   return ev.filter(e=>ZCFG.has(e.tipo)||!Z[e.user_id]||Date.parse(e.criado_em)>Z[e.user_id]);}
 const TIPOS={jcr200:'Suprema JCR 200',jcr200a:'Suprema JCR 200A',jcr300:'Suprema JCR 300',jcr205:'Suprema JCR 205',pcr200:'Suprema PCR 200',pvz300:'Suprema PVZ 300',pgr100:'Suprema PGR 100',max800:'Suprema MAX 800',gjc2f:'Gold JC-2F',gpc3fvz:'Gold PC3F-VZ',gpc2fpe:'Gold PC-2FPE',gjc4f:'Gold JC-4F',gjc4fs:'Gold JC-4FS',gpc2f:'Gold PC-2F',gpc2fm:'Gold PC-2F MAC',gmax:'Gold MAX'};
@@ -79,6 +80,7 @@ gateUI(async({session,perfil})=>{
   if(perfil.papel!=='admin'&&!(await gestorOk(emp)))return;
   const [ra,rc,rs]=await Promise.all([sb.from('trein_alunos').select('login,nome').eq('user_id',emp).maybeSingle(),sb.from('trein_eventos').select('detalhe,criado_em').eq('tipo','colab').order('criado_em'),sb.from('trein_eventos').select('detalhe,criado_em').eq('tipo','sistema').order('criado_em')]);
   const EV=[];for(let i=0;;i+=1000){const r=await sb.from('trein_eventos').select('tipo,tipologia,detalhe,criado_em').eq('user_id',emp).order('criado_em').range(i,i+999);if(r.error||!r.data.length)break;EV.push(...r.data);if(r.data.length<1000)break;}
+  {const pr=await sb.from('trein_eventos').select('tipo,detalhe,criado_em').eq('tipo','pausa');window.PZ=pzL(pr.data||[],emp);}
   {const zr=await sb.from('trein_eventos').select('tipo,detalhe,criado_em').eq('tipo','zerar');const zz=(zr.data||[]).filter(e=>(e.detalhe||{}).para===emp);const t=Math.max(0,...zz.map(e=>Date.parse(e.criado_em)));if(t){const keep=EV.filter(e=>ZCFG.has(e.tipo)||Date.parse(e.criado_em)>t);EV.length=0;EV.push(...keep);}}
   let LD={};{const lb=await sb.from('trein_eventos').select('detalhe').eq('tipo','liberacao').order('criado_em',{ascending:false}).limit(30);LD=((lb.data||[]).find(r=>(r.detalhe||{}).para===emp)||{}).detalhe||{};}
   const HJ=new Date(Date.now()-4*3600e3).toISOString().slice(0,10),SEMP=!!(LD.contrato&&LD.ate&&LD.ate>=HJ),ATEBR=LD.ate?LD.ate.split('-').reverse().join('/'):'';
@@ -108,7 +110,7 @@ gateUI(async({session,perfil})=>{
     {const fl=ev.filter(e=>e.tipo==='falta');if(fl.length){if(fl.some(e=>(e.detalhe||{}).ok))fortes.push('Percebeu a peça que faltava na maxim-ar Gold (pingadeira LG-091)');else melhorar.push('Não percebeu que faltava a pingadeira LG-091 na maxim-ar Gold');}}
     if(tip.size>=NT)fortes.push('Estudou todas as tipologias');else if(tip.size)melhorar.push(`Ainda não abriu ${NT-tip.size} tipologia${NT-tip.size>1?'s':''}`);
     if(!Object.keys(mont).length)melhorar.push('Ainda não fez o desafio Monte a esquadria');if(SZ.wv&&!wv.length)melhorar.push('Ainda não fez o desafio WVetro');if(SZ.cem&&!cm.length)melhorar.push('Ainda não fez o desafio CEM');
-    const fim=ini?Date.parse(ini)+(x.horas||72)*3600e3:null;
+    const fim=ini?Date.parse(ini)+(x.horas||72)*3600e3+pzMs(window.PZ||[],Date.parse(ini)):null;
     const sit=SEMP?(!ini?'ainda não começou':(LD.impl?'implantação':'contrato')+' até '+ATEBR):!ini?'ainda não começou':fim<Date.now()?`prazo de ${x.horas||72} h encerrado em ${fDH(fim)}`:`em andamento · prazo até ${fDH(fim)}`;
     const rows=Object.entries(mont).map(([t,m])=>`<tr><td>Monte a esquadria · ${esc(TIPOS[t]||t)}${m.lv?` <span class="note">· chegou ao Nível ${m.lv}</span>`:''}</td><td>${stars(m.best.st)}</td><td class="n">${m.best.pct}%</td><td class="n">${fT(m.best.ms)}</td><td class="n">${m.n}</td></tr>`)
       .concat(bW&&SZ.wv?[`<tr><td>Lançamento no WVetro</td><td>${stars(bW.stars)}</td><td class="n">${bW.pct}%</td><td class="n">${fT(bW.ms)}</td><td class="n">${wv.length}</td></tr>`]:[])

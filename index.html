@@ -90,15 +90,17 @@ function sugInit(){const box=document.getElementById('sugBox'),f=document.getEle
     m.textContent='Enviado! A resposta da FC aparece aqui e no botão “Dúvidas”.';document.getElementById('sugTxt').value='';await load();draw();};}
 const HOJE=()=>new Date(Date.now()-4*3600e3).toISOString().slice(0,10),DOW=()=>new Date(Date.now()-4*3600e3).getUTCDay();
 const fmtR=ms=>{const h=Math.floor(ms/3600e3),m=Math.floor(ms%3600e3/60e3);return h>=1?h+' h '+String(m).padStart(2,'0'):m+' min';};
+const pzL=(ev,uid)=>ev.filter(e=>e.tipo==='pausa'&&(e.detalhe||{}).para===uid).map(e=>({on:!!(e.detalhe||{}).on,t:Date.parse(e.criado_em)})).sort((a,b)=>a.t-b.t),pzOn=P=>!!P.length&&P[P.length-1].on,pzMs=(P,ini)=>{let s=0,st=null;for(const p of P){if(p.on&&st==null)st=p.t;else if(!p.on&&st!=null){s+=Math.max(0,p.t-Math.max(st,ini));st=null;}}if(st!=null)s+=Math.max(0,Date.now()-Math.max(st,ini));return s;};
 async function estadoEmpresa(uid){
-  const [c,e,l,zr]=await Promise.all([sb.from('trein_eventos').select('detalhe,criado_em').eq('tipo','colab').order('criado_em'),
+  const [c,e,l,zr,pz]=await Promise.all([sb.from('trein_eventos').select('detalhe,criado_em').eq('tipo','colab').order('criado_em'),
     sb.from('trein_eventos').select('tipo,detalhe,criado_em').eq('user_id',uid).in('tipo',['colab_inicio','pedido_tempo']).order('criado_em'),
-    sb.from('trein_eventos').select('detalhe').eq('tipo','liberacao').order('criado_em',{ascending:false}).limit(1),sb.from('trein_eventos').select('criado_em,detalhe').eq('tipo','zerar')]);
+    sb.from('trein_eventos').select('detalhe').eq('tipo','liberacao').order('criado_em',{ascending:false}).limit(1),sb.from('trein_eventos').select('criado_em,detalhe').eq('tipo','zerar'),sb.from('trein_eventos').select('tipo,criado_em,detalhe').eq('tipo','pausa')]);
   const zt=Math.max(0,...(zr.data||[]).filter(r=>!(r.detalhe||{}).para||(r.detalhe||{}).para===uid).map(r=>Date.parse(r.criado_em)));window.ZERAR_T=zt;
   const C={};(c.data||[]).forEach(r=>{const d=r.detalhe||{};if(d.para!==uid)return;C[d.id]=Object.assign({},C[d.id]||{},d,{alt:r.criado_em});});
   (e.data||[]).filter(r=>Date.parse(r.criado_em)>zt).forEach(r=>{const d=r.detalhe||{},x=C[d.cid];if(!x)return;if(r.tipo==='colab_inicio'){if(!x.ini)x.ini=r.criado_em;}else x.ped=r.criado_em;});
   const L0=((l.data||[])[0]||{}).detalhe||{},CT=L0.contrato&&L0.ate?Date.parse(L0.ate+'T23:59:59-04:00'):0;window.CONTRATO_FIM=CT>Date.now()?CT:0;window.CONTRATO_ATE=CT>Date.now()?L0.ate:null;window.IMPL_ATE=L0.impl&&CT>Date.now()?L0.ate:null;
-  const lst=Object.values(C).filter(x=>!x.removido).map(x=>{x.fim=window.CONTRATO_FIM?window.CONTRATO_FIM:x.ini?Date.parse(x.ini)+(x.horas||72)*3600e3:null;x.resta=x.fim?x.fim-Date.now():null;
+  const PZ=pzL(pz.data||[],uid);window.PAUSADO=pzOn(PZ);
+  const lst=Object.values(C).filter(x=>!x.removido).map(x=>{x.fim=window.CONTRATO_FIM?window.CONTRATO_FIM:x.ini?Date.parse(x.ini)+(x.horas||72)*3600e3+pzMs(PZ,Date.parse(x.ini)):null;x.resta=x.fim?x.fim-Date.now():null;
     x.pend=x.ped&&Date.parse(x.ped)>Date.parse(x.alt);return x;});
   const ate=((l.data||[])[0]||{}).detalhe?.ate||null;
   return {lst,ate,impl:!!L0.impl,ctr:L0.contrato?L0.ate:null,liberado:!!ate&&ate>=HOJE()};}
@@ -128,6 +130,7 @@ function escolherColab(uid,perfil){return new Promise(res=>{
       L.innerHTML='<a href="https://wa.me/5566999867984?text='+encodeURIComponent('Olá Fernando, quero renovar o acesso do FC Mostruário 3D ('+(perfil.nome||perfil.login)+').')+'" target="_blank" rel="noopener" style="display:inline-block;background:#1f9d55;color:#fff;text-decoration:none;font:700 15px Barlow,sans-serif;padding:11px 16px;border-radius:9px">💬 Renovar pelo WhatsApp</a>';return;}
     if(!st.liberado){T.textContent='Acesso da semana encerrado';
       X.textContent='O acesso desta empresa não foi liberado para esta semana. Fale com a FC Consultoria: WhatsApp (66) 9 9986-7984 (atendimento de segunda a sexta).';L.innerHTML='';return;}
+    if(window.PAUSADO){T.textContent='⏸ Acesso pausado';X.textContent='O acesso desta empresa está pausado pela FC Consultoria. As horas de cada colaborador estão paradas e continuam de onde pararam quando o acesso voltar. Dúvidas: WhatsApp (66) 9 9986-7984.';L.innerHTML='';return;}
     if(window.IMPL_ATE){let tries=0;const put=()=>{if(document.getElementById('implBar'))return true;const wr=document.querySelector('.wrap');if(!wr)return false;const ib=document.createElement('div');ib.id='implBar';ib.style.cssText='margin:0 0 12px;padding:9px 14px;border-radius:10px;background:#fff7e8;border:1px solid #f0c48a;color:#5a3d0c;font:600 14px Barlow,system-ui,sans-serif;display:flex;gap:8px;align-items:center;flex-wrap:wrap';ib.innerHTML='🛠 <span>Acesso exclusivo durante a implantação da precificação · válido até <b>'+window.IMPL_ATE.split('-').reverse().join('/')+'</b></span>';wr.insertBefore(ib,wr.firstChild);return true;};if(!put()){const t=setInterval(()=>{if(put()||++tries>120)clearInterval(t);},500);}}
     T.textContent='Quem está estudando agora?';X.textContent=window.IMPL_ATE?'Toque no seu nome. Acesso exclusivo da implantação até '+window.IMPL_ATE.split('-').reverse().join('/')+'.':window.CONTRATO_FIM?'Toque no seu nome. Acesso liberado pelo contrato até '+new Date(window.CONTRATO_FIM).toLocaleDateString('pt-BR')+'.':'Toque no seu nome. Cada colaborador tem 72 horas corridas a partir do primeiro acesso.';
     X.textContent+=' O Mostruário fica aberto todos os dias, de domingo a domingo. O suporte da FC atende somente de segunda a sexta, das 8h às 11h e das 13h às 17h (horário de Sinop/MT).';
@@ -378,7 +381,7 @@ window.dicasInit=async function(){try{if(!window.FCD||document.getElementById('d
    O aviso não mostra nome de aluno nem de empresa; no máximo 1 por semana para cada aluno. */
 (function(){
 const TIP=['jcr200','jcr200a','jcr300','jcr205','pcr200','pvz300','pgr100','max800','gjc2f','gpc3fvz','gpc2fpe','gjc4f','gjc4fs','gpc2f','gpc2fm','gmax'];
-const ZC=new Set(['colab','liberacao','sistema','gestor','chave_app','sugestao','resposta','sug_excluida','zerar']);
+const ZC=new Set(['colab','liberacao','sistema','gestor','chave_app','sugestao','resposta','sug_excluida','zerar','pausa']);
 let UID=null,SZ={wv:true,cem:true},LOAD=0,EV=[],CONC=[],ABERTO=false;
 async function carregar(){
   const ev=[];for(let i=0;i<30000;i+=1000){const r=await sb.from('trein_eventos').select('id,tipo,tipologia,criado_em,cid:detalhe->>cid,quem:detalhe->>quem,ref:detalhe->>ref').eq('user_id',UID).order('criado_em').range(i,i+999);if(r.error)throw r.error;if(!r.data.length)break;ev.push(...r.data);if(r.data.length<1000)break;}

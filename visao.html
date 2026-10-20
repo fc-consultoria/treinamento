@@ -44,7 +44,7 @@ tr.r{cursor:pointer}tr.r:hover td{background:#f5f8fa}tr.d>td{background:#fafbfc;
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="auth.js"></script>
 <script>
-const ZCFG=new Set(['colab','liberacao','sistema','gestor','chave_app','sugestao','resposta','sug_excluida','zerar']);
+const ZCFG=new Set(['colab','liberacao','sistema','gestor','chave_app','sugestao','resposta','sug_excluida','zerar','pausa']);
 function zerarFiltro(ev,zs){const Z={};(zs||ev).forEach(e=>{if(e.tipo==='zerar'){const p=(e.detalhe||{}).para,t=Date.parse(e.criado_em);if(!Z[p]||t>Z[p])Z[p]=t;}});
   return ev.filter(e=>ZCFG.has(e.tipo)||!Z[e.user_id]||Date.parse(e.criado_em)>Z[e.user_id]);}
 const esc=v=>String(v||'').replace(/&/g,'&amp;').replace(/</g,'&lt;');
@@ -53,6 +53,7 @@ const fH=s=>{const m=Math.round(s/60);return m<60?m+' min':Math.floor(m/60)+' h 
 const HOJE=()=>new Date(Date.now()-4*3600e3).toISOString().slice(0,10);
 const stars=n=>`<span class="st">${'★'.repeat(n||0)}<i>${'★'.repeat(3-(n||0))}</i></span>`;
 let A=[],EV=[],aberto=new Set();
+const pzL=(ev,uid)=>ev.filter(e=>e.tipo==='pausa'&&(e.detalhe||{}).para===uid).map(e=>({on:!!(e.detalhe||{}).on,t:Date.parse(e.criado_em)})).sort((a,b)=>a.t-b.t),pzOn=P=>!!P.length&&P[P.length-1].on,pzMs=(P,ini)=>{let s=0,st=null;for(const p of P){if(p.on&&st==null)st=p.t;else if(!p.on&&st!=null){s+=Math.max(0,p.t-Math.max(st,ini));st=null;}}if(st!=null)s+=Math.max(0,Date.now()-Math.max(st,ini));return s;};
 async function carregar(){
   const a=await sb.from('trein_alunos').select('*').order('login');A=(a.data||[]).filter(x=>x.papel==='aluno'&&x.ativo);
   EV=[];for(let i=0;;i+=1000){const r=await sb.from('trein_eventos').select('user_id,tipo,tipologia,detalhe,criado_em').neq('tipo','hb').order('criado_em').range(i,i+999);if(r.error||!r.data.length)break;EV.push(...r.data);if(r.data.length<1000)break;}
@@ -66,7 +67,7 @@ function resumo(uid){
     if(e.tipo==='teste'){const pct=d.pct!=null?d.pct:0,st=d.stars||0,r={mont:1,desm:2,esp:3}[d.nivel]||1;x.st=Math.max(x.st||0,st);if(r>(x.lv||0)&&(r===1?pct>=70:st>=1))x.lv=r;}
     if(['teste','wvetro','cem'].includes(e.tipo)){x.nd=(x.nd||0)+1;x.sp=(x.sp||0)+(d.pct||0);}});
   const L=Object.values(C).filter(x=>!x.removido&&x.nome);
-  L.forEach(x=>{x.fim=x.ini?Date.parse(x.ini)+(x.horas||72)*3600e3:null;x.pend=x.ped&&Date.parse(x.ped)>Date.parse(x.alt);});
+  const PZ=pzL(EV,uid);L.forEach(x=>{x.fim=x.ini?Date.parse(x.ini)+(x.horas||72)*3600e3+pzMs(PZ,Date.parse(x.ini)):null;x.pend=x.ped&&Date.parse(x.ped)>Date.parse(x.alt);});
   const seg=L.reduce((s,x)=>s+(x.seg||0),0),nd=L.reduce((s,x)=>s+(x.nd||0),0),sp=L.reduce((s,x)=>s+(x.sp||0),0);
   const ult=ev.length?ev[ev.length-1].criado_em:null;
   return {L,lib,seg,nd,med:nd?Math.round(sp/nd):null,ult,ini:L.filter(x=>x.ini).length,ped:L.filter(x=>x.pend).length};}
