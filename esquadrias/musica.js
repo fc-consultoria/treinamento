@@ -72,7 +72,7 @@
   const btn=document.createElement('button');btn.type='button';btn.className='fcm-btn';btn.setAttribute('aria-label','Som para estudar');btn.innerHTML='<span class="eq"><i></i><i></i><i></i></span>🎧 Música';
   const box=document.createElement('div');box.className='fcm-box';box.hidden=true;box.setAttribute('role','dialog');box.setAttribute('aria-label','Som para estudar');
   document.body.append(btn,box);
-  function lista(){const loc=ALUNO()?[]:minhas().map(p=>({...p,loc:1}));return [...PLS,...loc];}
+  function lista(){const loc=ALUNO()||!window.FCM_ADMIN?[]:minhas().map(p=>({...p,loc:1}));return [...PLS,...loc];}
   function desenhar(){const L=lista();
     box.innerHTML=`<button type="button" class="fcm-x" aria-label="Fechar">×</button><h3>🎧 Som para estudar</h3>
      <div><h4>Sons de foco</h4><div class="fcm-sons">${Object.entries(SONS).map(([k,s])=>`<button type="button" data-som="${k}" class="${atual===k?'on':''}">${atual===k?'⏸ ':'▶ '}${s.n}<small>${s.d}</small></button>`).join('')}</div></div>
