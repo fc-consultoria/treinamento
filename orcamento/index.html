@@ -48,11 +48,14 @@ table.it input.q{width:72px;padding:6px;border:1px solid #c4ccd2;border-radius:8
 table.it input.pz{width:92px;padding:6px;border:1px solid #f2a51e;border-radius:8px;text-align:right}
 .tot{display:grid;grid-template-columns:1fr auto;gap:6px 18px;max-width:460px;align-items:center;margin-left:auto;font-size:15px}.tot b{text-align:right}.tot .g{font:800 24px var(--f-d);color:#0f4f53}
 .pill{display:inline-block;border-radius:99px;padding:2px 9px;font-size:12px;font-weight:700;background:#eef2f4}
-.s-aberto{background:#e8f0ff;color:#1d4ed8}.s-enviado{background:var(--orc);color:#92400e}.s-aprovado{background:var(--okc);color:var(--ok)}.s-perdido,.s-cancelado{background:var(--bxc);color:var(--bx)}
+.s-aberto{background:#e8f0ff;color:#1d4ed8}.s-negociando{background:#efe7ff;color:#6d28d9}.s-aguardando{background:#fff3c4;color:#8a5a00}.s-enviado{background:var(--orc);color:#92400e}.s-aprovado{background:var(--okc);color:var(--ok)}.s-perdido,.s-cancelado{background:var(--bxc);color:var(--bx)}
 .est{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:7px;vertical-align:-1px;box-shadow:0 0 0 2px #fff,0 0 0 3px rgba(0,0,0,.12)}
 .vazio{color:var(--tm);text-align:center;padding:30px}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#13232e;color:#fff;padding:10px 18px;border-radius:12px;z-index:9000;font-weight:600}
 .parc{background:var(--tlc);border-radius:10px;padding:8px 12px;font-size:14px;margin-top:8px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 10px}.chips button{border:1px solid var(--ln);background:#fff;border-radius:99px;padding:5px 12px;font-weight:700;font-size:13px;cursor:pointer;color:var(--ink)}.chips button.on{background:var(--tl);border-color:var(--tl);color:#fff}
+.kp{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-bottom:14px}.kp div{background:#fff;border:1px solid var(--ln);border-radius:14px;padding:12px 14px}.kp small{display:block;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--tm)}.kp b{font:800 24px var(--f-d);color:#0f4f53}.kp em{display:block;font-style:normal;font-size:12.5px;color:var(--tm)}
+#mdl{position:fixed;inset:0;background:rgba(10,20,28,.55);z-index:6000;display:flex;align-items:center;justify-content:center;padding:16px}#mdl .c{background:#fff;border-radius:16px;padding:18px 20px;max-width:440px;width:100%}
 /* impressão */
 #imp{display:none}
 @media print{body{background:#fff}.top,main,.toast,#impOv{display:none!important}#imp{display:block!important}@page{size:A4;margin:10mm}}
@@ -104,8 +107,23 @@ function estI(i){return i?estB(i.est,i.estCor):'';}
 function estB(q,man){if(man&&COR_EST[man]){const [c,t]=COR_EST[man];return `<span class="est" title="${t[0].toUpperCase()+t.slice(1)} (definido manualmente)${ADM&&q!=null?' · saldo '+String(q).replace('.',','):''}" style="background:${c}"></span>`;}if(q==null||q==='')return '';const f=FX(),v=+q;const [bg,fc,t]=v<f.verm?['','#dc2626','sem estoque']:v<f.lar?['','#f97316','estoque baixo']:v>f.verde?['','#16a34a','estoque bom']:['','#eab308','estoque no limite'];
   return `<span class="est" title="${t[0].toUpperCase()+t.slice(1)}${ADM?' (saldo '+String(v).replace('.',',')+')':''}" style="background:${fc}"></span>`;}
 function toast(t){const d=document.createElement('div');d.className='toast';d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),2800);}
-const ST={aberto:'Em aberto',enviado:'Enviado ao cliente',aprovado:'Aprovado',perdido:'Perdido',cancelado:'Cancelado'};
+const ST={aberto:'Em aberto',enviado:'Enviado ao cliente',negociando:'Em negociação',aguardando:'Fechado · aguardando financeiro',aprovado:'Pedido aprovado',perdido:'Perdido',cancelado:'Cancelado'};
+const TRAVA=st=>st==='aguardando'||st==='aprovado',MOTIVOS=['Preço','Prazo de entrega','Fechou com concorrente','Cliente desistiu','Sem retorno do cliente','Outro'];
 const PAG_PADRAO=['PIX','Dinheiro','Cartão de débito','Cartão de crédito','Boleto','Transferência','Cheque'];
+
+function pede(tit,txt,campos){return new Promise(res=>{const m=document.createElement('div');m.id='mdl';
+  m.innerHTML=`<div class="c"><h3>${tit}</h3>${txt?`<p class="nota">${txt}</p>`:''}${campos.map(c=>`<label class="f" style="margin-top:8px">${c.l}${c.op?`<select class="inp" data-k="${c.k}">${c.op.map(o=>`<option>${esc(o)}</option>`).join('')}</select>`:c.area?`<textarea data-k="${c.k}" rows="3"></textarea>`:`<input data-k="${c.k}" type="${c.t||'text'}" ${c.im?'inputmode="decimal"':''} placeholder="${esc(c.ph||'')}">`}</label>`).join('')}
+  <div class="row" style="margin-top:14px;justify-content:flex-end"><button class="btn" type="button" data-x>Cancelar</button><button class="btn pri" type="button" data-ok>Confirmar</button></div></div>`;
+  document.body.appendChild(m);const fim=v=>{m.remove();res(v);};m.querySelector('[data-x]').onclick=()=>fim(null);
+  m.querySelector('[data-ok]').onclick=()=>{const o={};m.querySelectorAll('[data-k]').forEach(e=>o[e.dataset.k]=e.value.trim());for(const c of campos)if(c.req&&!o[c.k]){alert('Preencha: '+c.l);return;}fim(o);};});}
+async function mudaSt(id,novo){const o=D.orcs.find(x=>x.id===id);if(!o)return false;let info={};
+  if(novo==='aguardando'){const r=await pede('✅ Fechar pedido nº '+o.numero,'O pedido vai para a aprovação do financeiro. Depois de enviado, o vendedor não consegue mais alterar.',[{k:'entrega',l:'Data de entrega combinada',t:'date'},{k:'sinal',l:'Sinal / entrada recebida (R$)',im:1,ph:'0,00'},{k:'obs',l:'Observação para o financeiro',area:1}]);if(!r)return false;info={entrega:r.entrega||null,sinal:num(r.sinal),obs:r.obs,fechado_em:new Date().toISOString()};}
+  else if(novo==='perdido'){const r=await pede('❌ Orçamento nº '+o.numero+' perdido','Por que o cliente não fechou? Isso ajuda o gestor a entender as vendas perdidas.',[{k:'motivo',l:'Motivo',op:MOTIVOS},{k:'obs',l:'Detalhe (opcional)',area:1}]);if(!r)return false;info={motivo:r.motivo,obs:r.obs};}
+  else if(novo==='negociando'&&o.status==='aguardando'&&ADM){const r=await pede('↩ Devolver pedido nº '+o.numero+' ao vendedor','O pedido volta para "Em negociação" e o vendedor pode corrigir.',[{k:'obs',l:'O que precisa corrigir',area:1,req:1}]);if(!r)return false;info={devolvido:r.obs,obs:r.obs};}
+  else if(novo==='aprovado'){const r=await pede('✔ Aprovar pedido nº '+o.numero,`Cliente: ${esc((o.cliente||{}).nome||'')} · Total ${rs(o.total)}`,[{k:'obs',l:'Observação do financeiro (opcional)',area:1}]);if(!r)return false;info={obs:r.obs};}
+  const r=await sb.rpc('orc_status',{p_chave:FC?null:VKEY,p_id:id,p_status:novo,p_emp:FC?EMP:null,p_info:info});
+  if(r.error||!r.data){toast(/function|p_info/i.test((r.error&&r.error.message)||'')?'Falta rodar o SQL do Painel do Comercial.':'Não foi possível mudar.');return false;}
+  await carregar();toast(ST[novo]);return true;}
 
 let FC=false,ADM=false,EMP='',EMPS=[],D=null,ABA='novo',O=null,BQ='',SUGI=0;
 const novoOrc=()=>({id:null,cliente:{},itens:[],pagamento:{forma:'',cond:'avista',parcelas:1,prazos:'',entrada:0,obs:''},desconto:0,descTipo:'rs',frete:0,validade:maisDias(D&&D.validade_dias||7),obs:D&&D.obs||'',status:'aberto'});
@@ -120,12 +138,12 @@ async function carregar(){const d=await rpcDados();
   if(!O)O=novoOrc();return true;}
 
 /* ================= TELA ================= */
-function tela(){if(!D)return;const ab=[['novo',O&&O.id?'✏️ Orçamento nº '+(O.numero||''):'🧾 Novo orçamento'],['lista','📂 Orçamentos ('+D.orcs.length+')']];if(ADM)ab.push(['cfg','⚙️ Configurar']);
+function tela(){if(!D)return;const ab=[['novo',O&&O.id?'✏️ Orçamento nº '+(O.numero||''):'🧾 Novo orçamento'],['lista',(ADM?'📂 Orçamentos e pedidos (':'📂 Meus orçamentos e pedidos (')+D.orcs.length+')']];if(ADM){const ag=D.orcs.filter(o=>o.status==='aguardando').length;ab.unshift(['com','📊 Painel do Comercial'+(ag?' · '+ag+' aguardando':'')]);ab.push(['cfg','⚙️ Configurar']);}
   let h=`<div class="abas">${ab.map(([k,t])=>`<button type="button" data-ab="${k}" class="${ABA===k?'on':''}">${esc(t)}</button>`).join('')}</div>`;
   if(!D.itens.length&&ABA!=='cfg')h+=`<div class="box" style="border-color:var(--or);background:var(--orc)"><b>Ainda não há itens liberados para orçamento.</b><p class="nota" style="margin:2px 0 0">${ADM?'Vá em ⚙️ Configurar e clique em "Atualizar itens da precificação".':'A FC Consultoria está preparando a lista de itens. Volte mais tarde.'}</p></div>`;
-  if(ABA==='novo')h+=telaNovo();else if(ABA==='lista')h+=telaLista();else h+=telaCfg();
+  if(ABA==='com'&&!ADM)ABA='novo';if(ABA==='novo')h+=telaNovo();else if(ABA==='lista')h+=telaLista();else if(ABA==='com')h+=telaCom();else h+=telaCfg();
   $('#app').innerHTML=h;$$('[data-ab]').forEach(b=>b.onclick=()=>{ABA=b.dataset.ab;tela();});
-  if(ABA==='novo')wireNovo();else if(ABA==='lista')wireLista();else wireCfg();}
+  if(ABA==='novo')wireNovo();else if(ABA==='lista')wireLista();else if(ABA==='com')wireCom();else wireCfg();}
 
 /* ---------- novo / editar ---------- */
 function calc(){const sub=O.itens.reduce((a,i)=>a+Math.round(num(i.preco)*num(i.qtd)*100)/100,0);let dsc=O.descTipo==='pc'?Math.round(sub*num(O.descPc)/100*100)/100:num(O.desconto);
@@ -133,7 +151,7 @@ function calc(){const sub=O.itens.reduce((a,i)=>a+Math.round(num(i.preco)*num(i.
 function parcelasTxt(t){const p=O.pagamento;if(p.cond!=='parcelado')return '';const ent=num(p.entrada),n=Math.max(1,parseInt(p.parcelas)||1),rest=Math.max(0,t-ent),v=Math.round(rest/n*100)/100;
   const pz=String(p.prazos||'').split(/[\/;, ]+/).filter(Boolean);return (ent>0?`Entrada ${rs(ent)} + `:'')+`${n}x de ${rs(v)}`+(pz.length?` (${pz.join('/')} dias)`:'');}
 function telaNovo(){const c=O.cliente,p=O.pagamento,k=calc(),pag=(D.pag&&D.pag.length?D.pag:PAG_PADRAO);
-  return `<div class="box"><h3>👤 Cliente</h3><div class="grid">
+  return `${O.id&&TRAVA(O.status)?`<div class="box" style="border-color:${O.status==='aprovado'?'var(--ok)':'#e0b100'};background:${O.status==='aprovado'?'var(--okc)':'#fff8dc'}"><b>${O.status==='aprovado'?'✅ Pedido aprovado pelo financeiro.':'⏳ Pedido fechado, aguardando aprovação do financeiro.'}</b><p class="nota" style="margin:2px 0 0">${ADM?'Você pode ajustar e salvar.':'Não dá mais para alterar. Para corrigir, peça ao financeiro para devolver o pedido.'}</p></div>`:''}`+`<div class="box"><h3>👤 Cliente</h3><div class="grid">
    <label class="f">Nome / Razão social *<input data-c="nome" value="${esc(c.nome)}" maxlength="120"></label>
    <label class="f">CPF / CNPJ<input data-c="doc" value="${esc(c.doc)}" maxlength="30"></label>
    <label class="f">Telefone / WhatsApp<input data-c="fone" value="${esc(c.fone)}" maxlength="30" inputmode="tel"></label>
@@ -194,7 +212,7 @@ function wireNovo(){const bq=$('#bq'),sug=$('#sug');let L=[];
   $('#limpa').onclick=()=>{if(O.itens.length&&!O.id&&!confirm('Começar outro orçamento? O que não foi salvo será perdido.'))return;O=novoOrc();BQ='';tela();};
   $('#impr').onclick=()=>imprimir(O);
   $('#salvar').onclick=salvar;}
-async function salvar(){const m=$('#msg'),k=calc();if(!String(O.cliente.nome||'').trim()){m.textContent='Coloque o nome do cliente.';return;}if(!O.itens.length){m.textContent='Inclua ao menos um item.';return;}
+async function salvar(){const m=$('#msg'),k=calc();if(!ADM&&O.id&&TRAVA(O.status)){m.textContent='Este pedido já foi para o financeiro e não pode ser alterado.';return;}if(!String(O.cliente.nome||'').trim()){m.textContent='Coloque o nome do cliente.';return;}if(!O.itens.length){m.textContent='Inclua ao menos um item.';return;}
   if(k.acima){m.textContent='Desconto acima do limite.';return;}
   $('#salvar').disabled=true;m.textContent='Salvando…';
   const p={id:O.id,cliente:O.cliente,itens:O.itens.map(i=>({id:i.id,qtd:num(i.qtd),preco:ADM?num(i.preco):undefined,cod:i.cod,desc:i.desc,un:i.un,foto:i.foto})),pagamento:Object.assign({},O.pagamento,{resumo:parcelasTxt(k.tot)}),
@@ -206,12 +224,18 @@ function abrirOrc(s,ficar){O={id:s.id,numero:s.numero,cliente:Object.assign({},s
   desconto:+s.desconto||0,descTipo:'rs',frete:+s.frete||0,validade:s.validade||'',obs:s.obs||'',status:s.status,vend_nome:s.vend_nome,criado_em:s.criado_em,total:s.total,subtotal:s.subtotal};ABA='novo';tela();}
 
 /* ---------- lista ---------- */
-let LF='';
-function telaLista(){const f=sem(LF);const L=D.orcs.filter(o=>!f||sem(o.numero+' '+(o.cliente&&o.cliente.nome)+' '+(o.vend_nome||'')).includes(f));
+let LF='',LC='';const LCH=[['','Todos'],['and','Em andamento'],['aguardando','Aguardando financeiro'],['aprovado','Pedidos aprovados'],['perd','Perdidos e cancelados']];
+const lcOk=(o,c)=>!c||(c==='and'?['aberto','enviado','negociando'].includes(o.status):c==='perd'?['perdido','cancelado'].includes(o.status):o.status===c);
+function stCel(o){const inf=o.info||{};const ex=o.status==='aguardando'&&inf.entrega?`<br><small class="nota">entrega ${dBR(inf.entrega)}</small>`:o.status==='perdido'&&inf.motivo?`<br><small class="nota">${esc(inf.motivo)}</small>`:inf.devolvido&&o.status==='negociando'?`<br><small style="color:var(--bx)">devolvido: ${esc(inf.devolvido)}</small>`:'';
+  if(!ADM&&TRAVA(o.status))return `<span class="pill s-${o.status}">${ST[o.status]}</span>${ex}`;
+  return `<select class="inp" data-st="${o.id}" style="padding:4px 6px;width:auto">${Object.entries(ST).filter(([k])=>ADM||k!=='aprovado').map(([k,t])=>`<option value="${k}" ${o.status===k?'selected':''}>${t}</option>`).join('')}</select>${ex}`;}
+function telaLista(){const f=sem(LF);const L=D.orcs.filter(o=>lcOk(o,LC)&&(!f||sem(o.numero+' '+(o.cliente&&o.cliente.nome)+' '+(o.vend_nome||'')).includes(f)));
   return `<div class="box"><div class="row" style="margin-bottom:10px"><h3 style="margin:0;flex:1">📂 ${ADM?'Todos os orçamentos':'Meus orçamentos'}</h3><input class="inp" id="lf" placeholder="Filtrar por nº, cliente${ADM?' ou vendedor':''}" value="${esc(LF)}" style="max-width:320px"></div>
+  <div class="chips">${LCH.map(([k,t])=>`<button type="button" data-lc="${k}" class="${LC===k?'on':''}">${t} (${D.orcs.filter(o=>lcOk(o,k)).length})</button>`).join('')}</div>
+  ${!ADM?'<p class="nota" style="margin:0 0 8px">Mude a situação conforme a negociação anda. Quando o cliente fechar, escolha <b>Fechado · aguardando financeiro</b>: o pedido vai para a aprovação do financeiro.</p>':''}
   ${L.length?`<div style="overflow-x:auto"><table class="it"><thead><tr><th>Nº</th><th>Data</th><th>Cliente</th>${ADM?'<th>Vendedor</th>':''}<th class="n">Total</th><th>Situação</th><th></th></tr></thead><tbody>
   ${L.map(o=>`<tr><td><b>${o.numero}</b></td><td>${dBR(o.criado_em)}</td><td>${esc(o.cliente&&o.cliente.nome)}</td>${ADM?`<td>${esc(o.vend_nome||'')}</td>`:''}<td class="n"><b>${rs(o.total)}</b></td>
-   <td><select class="inp" data-st="${o.id}" style="padding:4px 6px;width:auto">${Object.entries(ST).map(([k,t])=>`<option value="${k}" ${o.status===k?'selected':''}>${t}</option>`).join('')}</select></td>
+   <td>${stCel(o)}</td>
    <td style="white-space:nowrap"><button class="btn mini" type="button" data-ab2="${o.id}">✏️ Abrir</button> <button class="btn mini" type="button" data-pr="${o.id}">🖨</button> <button class="btn mini" type="button" data-dup="${o.id}" title="Duplicar">⧉</button></td></tr>`).join('')}
   </tbody></table></div>`:'<p class="vazio">Nenhum orçamento ainda.</p>'}</div>`;}
 function wireLista(){const lf=$('#lf');lf.oninput=()=>{LF=lf.value;const p=lf.selectionStart;tela();const n=$('#lf');n.focus();n.setSelectionRange(p,p);};
@@ -219,7 +243,49 @@ function wireLista(){const lf=$('#lf');lf.oninput=()=>{LF=lf.value;const p=lf.se
   $$('[data-pr]').forEach(b=>b.onclick=()=>{const s=D.orcs.find(o=>o.id===b.dataset.pr);imprimir(Object.assign({},s,{descTipo:'rs'}));});
   $$('[data-dup]').forEach(b=>b.onclick=()=>{const s=D.orcs.find(o=>o.id===b.dataset.dup);abrirOrc(s);O.id=null;O.numero=null;O.status='aberto';O.validade=maisDias(D.validade_dias||7);
     O.itens.forEach(i=>{const a=D.itens.find(x=>x.id===i.id);if(a){i.preco=a.preco;i.foto=a.foto||i.foto;}});tela();toast('Cópia criada com os preços atuais. Salve para gerar o número.');});
-  $$('[data-st]').forEach(s=>s.onchange=async()=>{const r=await sb.rpc('orc_status',{p_chave:FC?null:VKEY,p_id:s.dataset.st,p_status:s.value,p_emp:FC?EMP:null});if(r.error||!r.data){toast('Não foi possível mudar.');return;}const o=D.orcs.find(x=>x.id===s.dataset.st);o.status=s.value;toast('Situação: '+ST[s.value]);});}
+  $$('[data-lc]').forEach(b=>b.onclick=()=>{LC=b.dataset.lc;tela();});
+  $$('[data-st]').forEach(s=>s.onchange=async()=>{await mudaSt(s.dataset.st,s.value);tela();});}
+
+/* ---------- Painel do Comercial (gestor / financeiro) ---------- */
+let CP='mes',CV='';
+function perIni(){const d=new Date();d.setHours(0,0,0,0);if(CP==='mes'){d.setDate(1);return d;}if(CP==='ant'){d.setDate(1);d.setMonth(d.getMonth()-1);return d;}if(CP==='90'){d.setDate(d.getDate()-90);return d;}return null;}
+function perFim(){if(CP!=='ant')return null;const d=new Date();d.setHours(0,0,0,0);d.setDate(1);return d;}
+function telaCom(){const i0=perIni(),i1=perFim(),inP=o=>{const t=new Date(o.criado_em);return (!i0||t>=i0)&&(!i1||t<i1);};
+  const VS=[...new Map(D.orcs.filter(o=>o.vend_nome).map(o=>[o.vend_id||o.vend_nome,o.vend_nome])).entries()];
+  const A=D.orcs.filter(o=>inP(o)&&(!CV||(o.vend_id||o.vend_nome)===CV)&&o.status!=='cancelado');
+  const sm=L=>L.reduce((a,o)=>a+(+o.total||0),0),fe=A.filter(o=>TRAVA(o.status)),ap=A.filter(o=>o.status==='aprovado');
+  const AG=D.orcs.filter(o=>o.status==='aguardando'&&(!CV||(o.vend_id||o.vend_nome)===CV));
+  const par=D.orcs.filter(o=>['enviado','negociando'].includes(o.status)&&(Date.now()-Date.parse(o.atualizado_em||o.criado_em))>3*864e5);
+  const mot={};A.filter(o=>o.status==='perdido').forEach(o=>{const m=(o.info||{}).motivo||'Sem motivo';mot[m]=(mot[m]||0)+1;});
+  const rk=VS.map(([k,n])=>{const L=A.filter(o=>(o.vend_id||o.vend_nome)===k),F=L.filter(o=>TRAVA(o.status));return {n,q:L.length,f:F.length,v:sm(F),a:sm(L.filter(o=>o.status==='aprovado'))};}).filter(x=>x.q).sort((a,b)=>b.v-a.v);
+  const fin=o=>{const i=o.info||{};return `${i.entrega?'entrega '+dBR(i.entrega):''}${i.sinal?' · sinal '+rs(i.sinal):''}${i.obs&&o.status==='aguardando'?'<br><small class="nota">'+esc(i.obs)+'</small>':''}`;};
+  const linha=(o,bt)=>`<tr><td><b>${o.numero}</b></td><td>${dBR(((o.info||{}).fechado_em)||o.atualizado_em||o.criado_em)}</td><td>${esc(o.vend_nome||'')}</td><td>${esc((o.cliente||{}).nome||'')}</td><td class="n"><b>${rs(o.total)}</b></td><td class="hm">${esc((o.pagamento||{}).forma||'')}${(o.pagamento||{}).resumo?' · '+esc(o.pagamento.resumo):''}</td><td>${fin(o)}</td><td style="white-space:nowrap">${bt}</td></tr>`;
+  const th='<thead><tr><th>Nº</th><th>Fechado em</th><th>Vendedor</th><th>Cliente</th><th class="n">Total</th><th class="hm">Pagamento</th><th>Entrega / sinal</th><th></th></tr></thead>';
+  return `<div class="box"><div class="row"><h3 style="margin:0;flex:1">📊 Painel do Comercial</h3>
+   <select class="inp" id="cpP" style="width:auto">${[['mes','Este mês'],['ant','Mês passado'],['90','Últimos 90 dias'],['tudo','Tudo']].map(([k,t])=>`<option value="${k}" ${CP===k?'selected':''}>${t}</option>`).join('')}</select>
+   <select class="inp" id="cpV" style="width:auto"><option value="">Todos os vendedores</option>${VS.map(([k,n])=>`<option value="${esc(k)}" ${CV===k?'selected':''}>${esc(n)}</option>`).join('')}</select></div>
+   <p class="nota">Os vendedores montam os orçamentos no computador, cada um pelo seu link. Quando o cliente fecha, o pedido chega aqui para a aprovação do financeiro.</p></div>
+  <div class="kp"><div><small>Orçado</small><b>${rs(sm(A))}</b><em>${A.length} orçamento${A.length===1?'':'s'}</em></div>
+   <div><small>Fechado</small><b>${rs(sm(fe))}</b><em>${fe.length} pedido${fe.length===1?'':'s'}</em></div>
+   <div><small>Aprovado pelo financeiro</small><b>${rs(sm(ap))}</b><em>${ap.length} pedido${ap.length===1?'':'s'}</em></div>
+   <div><small>Conversão</small><b>${A.length?Math.round(fe.length/A.length*100):0}%</b><em>orçamentos que viraram pedido</em></div>
+   <div><small>Ticket médio</small><b>${rs(fe.length?sm(fe)/fe.length:0)}</b><em>por pedido fechado</em></div></div>
+  <div class="box" style="border-color:${AG.length?'#e0b100':'var(--ln)'}"><h3>⏳ Aguardando aprovação do financeiro (${AG.length})</h3>
+   ${AG.length?`<div style="overflow-x:auto"><table class="it">${th}<tbody>${AG.map(o=>linha(o,`<button class="btn mini ok" type="button" data-apr="${o.id}">✔ Aprovar</button> <button class="btn mini" type="button" data-dev="${o.id}">↩ Devolver</button> <button class="btn mini" type="button" data-ver="${o.id}" title="Ver o orçamento">🖨</button>`)).join('')}</tbody></table></div>`:'<p class="vazio" style="padding:12px">Nenhum pedido esperando aprovação.</p>'}</div>
+  <div class="box"><div class="row"><h3 style="margin:0;flex:1">✅ Pedidos aprovados (${ap.length})</h3>${ap.length?'<button class="btn mini" type="button" id="cpCsv">⬇ Exportar planilha</button>':''}</div>
+   ${ap.length?`<div style="overflow-x:auto;margin-top:8px"><table class="it">${th}<tbody>${ap.map(o=>linha(o,`<button class="btn mini" type="button" data-ver="${o.id}">🖨</button>`)).join('')}</tbody></table></div>`:'<p class="vazio" style="padding:12px">Nenhum pedido aprovado no período.</p>'}</div>
+  <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(320px,1fr))">
+   <div class="box"><h3>🏆 Vendedores</h3>${rk.length?`<table class="it"><thead><tr><th>Vendedor</th><th class="n">Orçam.</th><th class="n">Fechados</th><th class="n">Conv.</th><th class="n">Valor fechado</th></tr></thead><tbody>${rk.map(x=>`<tr><td><b>${esc(x.n)}</b></td><td class="n">${x.q}</td><td class="n">${x.f}</td><td class="n">${Math.round(x.f/x.q*100)}%</td><td class="n"><b>${rs(x.v)}</b></td></tr>`).join('')}</tbody></table>`:'<p class="vazio" style="padding:12px">Sem orçamentos no período.</p>'}</div>
+   <div class="box"><h3>⚠️ Atenção</h3>
+    ${par.length?`<p style="margin:0 0 6px"><b>${par.length}</b> orçamento${par.length===1?'':'s'} enviado${par.length===1?'':'s'} ou em negociação <b>sem movimento há mais de 3 dias</b>:</p><ul style="margin:0 0 10px;padding-left:18px">${par.slice(0,12).map(o=>`<li>nº ${o.numero} · ${esc((o.cliente||{}).nome||'')} · ${esc(o.vend_nome||'')} · ${rs(o.total)}</li>`).join('')}</ul>`:'<p class="nota">Nenhum orçamento parado há mais de 3 dias.</p>'}
+    <p style="margin:6px 0 4px"><b>Motivos das vendas perdidas</b></p>${Object.keys(mot).length?Object.entries(mot).sort((a,b)=>b[1]-a[1]).map(([m,n])=>`<div class="row" style="justify-content:space-between"><span>${esc(m)}</span><b>${n}</b></div>`).join(''):'<p class="nota">Nenhuma venda perdida no período.</p>'}</div></div>`;}
+function wireCom(){$('#cpP').onchange=e=>{CP=e.target.value;tela();};$('#cpV').onchange=e=>{CV=e.target.value;tela();};
+  $$('[data-apr]').forEach(b=>b.onclick=async()=>{if(await mudaSt(b.dataset.apr,'aprovado'))tela();});
+  $$('[data-dev]').forEach(b=>b.onclick=async()=>{if(await mudaSt(b.dataset.dev,'negociando'))tela();});
+  $$('[data-ver]').forEach(b=>b.onclick=()=>{const s=D.orcs.find(o=>o.id===b.dataset.ver);imprimir(Object.assign({},s,{descTipo:'rs'}));});
+  const cs=$('#cpCsv');if(cs)cs.onclick=()=>{const i0=perIni(),i1=perFim();const L=D.orcs.filter(o=>o.status==='aprovado'&&(!CV||(o.vend_id||o.vend_nome)===CV)&&(!i0||new Date(o.criado_em)>=i0)&&(!i1||new Date(o.criado_em)<i1));
+    const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"',R=[['Nº','Data','Vendedor','Cliente','Telefone','Total','Pagamento','Entrega','Sinal','Aprovado em'].map(q).join(';')].concat(L.map(o=>{const i=o.info||{},c=o.cliente||{},p=o.pagamento||{};return [o.numero,dBR(o.criado_em),o.vend_nome,c.nome,c.fone||c.tel||'',n2(o.total),[p.forma,p.resumo].filter(Boolean).join(' · '),dBR(i.entrega),i.sinal?n2(i.sinal):'',i.fin?dBR(i.fin.em):''].map(q).join(';');}));
+    const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+R.join('\n')],{type:'text/csv'}));a.download='pedidos-aprovados.csv';a.click();};}
 
 /* ---------- impressão ---------- */
 function imprimir(o){const c=D.cab||{},cl=o.cliente||{},p=o.pagamento||{},it=o.itens||[];
@@ -376,7 +442,7 @@ if(Q.get('est')){let _t=0;const _iv=setInterval(()=>{const b=document.getElement
 /* Vendedor: montar orçamento só no computador (20/10) */
 const MOVEL=/Android|iPhone|iPad|iPod|Mobile|Tablet/i.test(navigator.userAgent)||(/Macintosh/.test(navigator.userAgent)&&navigator.maxTouchPoints>1)||(matchMedia('(pointer:coarse)').matches&&Math.min(screen.width,screen.height)<900);
 if(VKEY&&!GESTOR&&MOVEL){const L=location.href;document.body.innerHTML=`<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:#0f1a22;font:400 16px/1.5 system-ui,sans-serif"><div style="max-width:420px;background:#fff;border-radius:16px;padding:24px;text-align:center;color:#1d2a33"><div style="font-size:46px">💻</div><h2 style="margin:6px 0 8px">Abra no computador</h2><p style="margin:0 0 14px;color:#4b5b66">O painel de orçamentos funciona só no computador. Abra este mesmo link no computador da loja para montar os orçamentos.</p><button type="button" id="mvCp" style="background:#0f6b70;color:#fff;border:0;border-radius:10px;padding:11px 16px;font-weight:700;font-size:15px;cursor:pointer;width:100%">📋 Copiar o link</button><p id="mvMsg" style="margin:10px 0 0;font-size:13px;color:#1f8a4c;min-height:18px"></p><p style="margin:8px 0 0;font-size:12px;color:#7a8a95">FC Consultoria · (66) 9 9986-7984</p></div></div>`;document.getElementById('mvCp').onclick=async()=>{try{await navigator.clipboard.writeText(L);document.getElementById('mvMsg').textContent='Link copiado. Cole no navegador do computador.';}catch(_){prompt('Copie o link:',L);}};throw new Error('vendedor no celular');}
-(async()=>{if(VKEY){if(GESTOR&&Q.get('aba'))ABA=Q.get('aba');if(await carregar())tela();return;}
+(async()=>{if(VKEY){if(GESTOR)ABA=Q.get('aba')||'com';if(await carregar())tela();return;}
   gateUI(async()=>{try{const r=await sb.rpc('trein_is_admin');ADM=!!r.data;}catch(_){}
     if(!ADM){$('#app').innerHTML='<p class="vazio">Esta área é da FC Consultoria. O vendedor entra pelo link que recebeu.</p>';return;}FC=true;
     const a=document.createElement('a');a.className='vt';a.href='/treinamento/painel.html';a.textContent='← Painel matriz';$('header.top .w').appendChild(a);
