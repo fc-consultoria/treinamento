@@ -107,7 +107,7 @@ const FS=()=>Object.keys(D.forn).filter(f=>f!=='alcoa');
 function voltaUrl(adm){if(adm)return '/treinamento/painel.html';let u='';try{u=localStorage.getItem('fc_painel_cli')||'';}catch(_){}
  const k=new URLSearchParams(location.search).get('k');if(k)u='/treinamento/consultorias.html?k='+encodeURIComponent(k);return u||'/treinamento/';}
 function voltaBtn(adm){if(window.top!==window)return;let b=document.getElementById('bVolta');if(!b){b=document.createElement('a');b.id='bVolta';const h=document.querySelector('header.top .w');if(!h)return;h.appendChild(b);}
- b.href=voltaUrl(adm);b.textContent=adm?'← Painel matriz':'← Painel inicial';b.title=adm?'Voltar para o painel matriz da FC':'Voltar para o painel inicial da empresa';}
+ b.href=voltaUrl(adm);b.textContent=adm?'← Painel matriz':'← Painel inicial';b.title=adm?'Voltar para o painel matriz da FC':'Voltar para o painel inicial da empresa';if(window.top!==window.self)b.hidden=true;}
 /* Edição dos pares pela matriz: cada mudança fica gravada (trein_eventos 'equiv_edit'); a última vale e o cliente vê a versão editada */
 const EDITS={};
 function aplicarEdits(lista){(lista||[]).forEach(x=>{if(x&&x.f&&x.c&&(x.l||'suprema')===LIN)EDITS[x.f+'|'+x.c]=x;});

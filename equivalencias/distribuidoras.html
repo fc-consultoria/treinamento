@@ -120,7 +120,7 @@ async function iniciar(){await carrega();Q=decodeURIComponent(location.hash.slic
   if(!ok){$('#app').innerHTML='<p class="vazio">Link inválido ou expirado. Fale com a FC Consultoria.</p>';return;}marca('uso exclusivo do cliente');iniciar();}
  else gateUI(async()=>{try{const r=await sb.rpc('trein_is_admin');ADM=!!r.data;}catch(_){}
   if(!ADM){$('#app').innerHTML='<p class="vazio">Esta área é da FC Consultoria. O cliente entra pelo link do portal.</p>';return;}
-  marca('uso interno');const a=document.createElement('a');a.className='vt';a.href='/treinamento/painel.html';a.textContent='← Painel matriz';$('header.top .w').appendChild(a);iniciar();});})();
+  marca('uso interno');const a=document.createElement('a');a.className='vt';a.href='/treinamento/painel.html';a.textContent='← Painel matriz';if(window.top===window.self)$('header.top .w').appendChild(a);iniciar();});})();
 </script>
 </body>
 </html>
