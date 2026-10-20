@@ -155,6 +155,9 @@ td.qd{cursor:help}td.qd:hover{background:#eef6f8;box-shadow:inset 0 -2px 0 #1f6f
    <a href="equivalencias/comprar.html" style="display:flex;gap:12px;align-items:center;background:#0f6b70;color:#fff;padding:14px 16px;border-radius:12px;text-decoration:none"><span style="font-size:30px">🏭</span><span><b style="font-size:18px;display:block">Compras na extrusão</b><span style="font-size:13.5px;opacity:.9">Onde comprar · preço por kg, pintura, compra mínima, curva ABC, simulação e acompanhamento dos clientes</span></span></a>
    <a href="equivalencias/distribuidoras.html" style="display:flex;gap:12px;align-items:center;background:#13232e;color:#fff;padding:14px 16px;border-radius:12px;text-decoration:none"><span style="font-size:30px">🏬</span><span><b style="font-size:18px;display:block">Compras com distribuidora</b><span style="font-size:13.5px;opacity:.9">Mesmo perfil em Pronto, Corso, Alueste, Pereira Brito e Vidromax · barra de 6 m</span></span></a>
   </div></div></section>
+ <section class="card" id="trCard" data-tab="home" style="border:2px solid #ef4444;background:linear-gradient(120deg,#fff1f1,#fff)"><div style="padding:14px 16px">
+  <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap"><span style="font-size:32px">🪟</span><div style="flex:1;min-width:240px"><h2 style="margin:0">Treinamentos ao vivo · Esquadrias 3D</h2><p class="note" style="margin:2px 0 0">Conduza o passo a passo de cada cliente direto daqui. A equipe do cliente acompanha pelo link da sala.</p></div></div>
+  <div id="trList" style="display:grid;gap:8px;margin-top:10px"><p class="note">Carregando…</p></div></div></section>
  <section class="card" id="mcCard" data-tab="home" style="border:2px solid #7c5cd6;background:linear-gradient(120deg,#f3effd,#fff)"><div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;padding:14px 16px">
   <span style="font-size:34px">🏙</span><div style="flex:1;min-width:240px"><h2 style="margin:0">Monte sua Casa 3D</h2><p class="note" style="margin:2px 0 0">Monte as casas e o prédio com esquadrias Suprema e Gold em 3D. É o mesmo que os alunos abrem no Mostruário e o visitante vê no site.</p></div>
   <a href="esquadrias/monte-casa.html?v=6" target="_blank" rel="noopener" style="background:#7c5cd6;color:#fff;padding:10px 16px;border-radius:9px;font-weight:700;text-decoration:none">▶ Abrir Monte sua Casa</a><a href="https://fc-consultoria.github.io/monte-sua-casa/" target="_blank" rel="noopener" style="border:1px solid #7c5cd6;color:#7c5cd6;padding:9px 14px;border-radius:9px;font-weight:700;text-decoration:none">🌐 Versão do site</a></div></section>
@@ -1850,5 +1853,19 @@ setTimeout(()=>{if(PTAB==='cat')ui();},2500);
 <script src="painel-skin.js?v=2"></script>
 <script>window.FCM_MODO="matriz";</script><script src="esquadrias/musica.js?v=6"></script>
 <script src="estoque-aviso.js?v=2"></script><script>setTimeout(()=>FCEstAviso.matriz(),3000);</script>
+<script>
+(function(){const ESQ='https://fc-consultoria.github.io/treinamento/esquadrias/';
+ async function tr(){const el=document.getElementById('trList');if(!el)return;const S=(typeof sb!=='undefined'&&sb)||window.sb;if(!S){setTimeout(tr,1500);return;}
+  const r=await S.from('rotina_docs').select('id,data').eq('col','consultoria');const L=(r.data||[]).filter(x=>x.data&&x.data.treinSala).map(x=>({id:x.id,n:x.data.nome||x.id,c:x.data.treinSala,cda:x.id==='cb'||!!x.data.cda})).sort((a,b)=>(b.cda-a.cda)||a.n.localeCompare(b.n,'pt'));
+  if(!L.length){el.innerHTML='<p class="note">Nenhum cliente com sala de treinamento. Libere na consultoria do cliente (aba Treinamento 3D).</p>';return;}
+  const e=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  el.innerHTML=L.map(x=>{const q=x.cda?'&cda=1':'',sala=ESQ+'?sala='+x.c+q;return `<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:#fff;border:1px solid ${x.cda?'#f5c48a':'#e3e9ec'};border-radius:10px;padding:9px 12px">
+   <b style="flex:1;min-width:180px">${e(x.n)}${x.cda?' <span style="background:#fff1e0;color:#b45309;border:1px solid #f5c48a;border-radius:6px;padding:0 6px;font-size:12px">com códigos CDA</span>':''}</b>
+   <a href="${ESQ}?apresentar=${encodeURIComponent(x.c)}${q}" target="_blank" rel="noopener" style="background:#ef4444;color:#fff;padding:8px 12px;border-radius:8px;font-weight:700;text-decoration:none">▶ Conduzir agora</a>
+   <button type="button" data-trcp="${e(sala)}" style="border:1px solid #c4ccd2;background:#fff;border-radius:8px;padding:7px 11px;font-weight:700;cursor:pointer">📋 Copiar link da equipe</button>
+   <a href="https://wa.me/?text=${encodeURIComponent('Olá! Aqui é o Fernando, da FC Consultoria. Entre por este link para acompanhar o treinamento de Esquadrias 3D: '+sala)}" target="_blank" rel="noopener" style="background:#1f9d55;color:#fff;padding:8px 11px;border-radius:8px;font-weight:700;text-decoration:none">💬 WhatsApp</a></div>`;}).join('');
+  el.querySelectorAll('[data-trcp]').forEach(b=>b.onclick=()=>{navigator.clipboard&&navigator.clipboard.writeText(b.dataset.trcp);b.textContent='✓ Copiado';setTimeout(()=>b.textContent='📋 Copiar link da equipe',2000);});}
+ setTimeout(tr,2500);})();
+</script>
 </body>
 </html>
