@@ -796,10 +796,10 @@ async function abrirPlanilha(id){const p=planDe(at).find(x=>x.id===id);if(!p)ret
 async function importarPlanilha(file,tema,trocarId){if(!file)return;const st=document.getElementById('sync');st.textContent='Lendo '+file.name+'…';
   try{const m=await Planilha.importar(await file.arrayBuffer());
     if(trocarId){const p=PLAN.find(x=>x.id===trocarId);if(!confirm('Trocar "'+p.nome+'" pelo arquivo '+file.name+'?\n\nO que foi preenchido na planilha online será substituído pelo arquivo novo.'))return;
-      const {error}=await sb.from('cons_planilhas').update({dados:m,versao:p.versao+1,atualizado:new Date().toISOString(),atualizado_por:'FC (arquivo trocado)'}).eq('id',trocarId);if(error)throw error;}
+      const {data:d0,error}=await sb.from('cons_planilhas').update({dados:m,versao:p.versao+1,atualizado:new Date().toISOString(),atualizado_por:'FC (arquivo trocado)'}).eq('id',trocarId).select('id');if(error)throw error;if(!d0||!d0.length)throw new Error('a troca não foi gravada (sem permissão ou planilha não encontrada). Entre de novo como FC e tente outra vez.');}
     else{const nome=prompt('Nome da planilha (aparece para o cliente):',file.name.replace(/\.xlsx$/i,'').replace(/_/g,' '));if(!nome)return;
       const {error}=await sb.from('cons_planilhas').insert({empresa_id:at,tema:tema||null,nome,dados:m});if(error)throw error;}
-    await carregarPlan();st.textContent='✓ Planilha salva';ficha();}catch(err){alert('Não foi possível importar: '+(err.message||err));st.textContent='';}}
+    await carregarPlan();st.textContent='✓ Planilha salva';if(trocarId)alert('✓ Planilha trocada pelo arquivo '+file.name);ficha();}catch(err){alert('Não foi possível importar: '+(err.message||err));st.textContent='';}}
 function wirePlSol(e){const q=(s,f)=>document.querySelectorAll(s).forEach(f);wireDiaVer(e);wireMktCli(e,q);wireGalVer(e,q);
   q('[data-plab]',b=>b.onclick=()=>abrirPlanilha(b.dataset.plab));
   if(PUB||cli){const se=document.getElementById('soEnv');if(se){try{document.getElementById('soNome').value=localStorage.getItem('cons-nome')||''}catch(_){}
