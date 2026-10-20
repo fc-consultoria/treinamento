@@ -65,32 +65,42 @@
     return null;}
   let PLS=[],tocando=null,MODO='estudo';
   const ALUNO=()=>/[?&]sala=/.test(location.search);
+  /* modo: 'impl' (painel de implantação: inclui playlist para os alunos) · 'matriz' (painel matriz: só neste aparelho) · aluno (só ouve) */
+  const MOD=()=>window.FCM_MODO||(window.FCM_ADMIN?'matriz':'aluno');
+  const RPC=(fn,body)=>fetch('https://cpkjphodruyxfouirhpd.supabase.co/rest/v1/rpc/'+fn,{method:'POST',headers:{apikey:'sb_publishable_d0HEeWsaqOeZIQKGftlF-Q_B8BUOWWg','Content-Type':'application/json'},body:JSON.stringify(body||{})});
+  let OF=[];
   function minhas(){return ler('fcm_pl',[]);}
-  async function carregar(){if(window.FCM_SO_SONS){PLS=[];return;}try{const r=await fetch(BASE+'musica.json?v='+Date.now());const j=await r.json();PLS=(j.playlists||[]).filter(p=>embed(p.url));}catch(_){PLS=[];}}
+  async function carregar(){if(window.FCM_SO_SONS){PLS=[];return;}let base=[];try{const r=await fetch(BASE+'musica.json?v='+Date.now());const j=await r.json();base=(j.playlists||[]).filter(p=>embed(p.url));}catch(_){}
+    try{const r=await RPC('musica_ler');OF=r.ok?((await r.json())||[]).filter(p=>p&&embed(p.url)):[];}catch(_){OF=[];}
+    PLS=[...base,...OF.map((p,k)=>({...p,of:1,ofi:k}))];}
+  async function salvaOF(L){const c=(typeof sb!=='undefined'&&sb)||window.sb;if(!c){alert('Entre no painel para salvar.');return false;}const {error}=await c.rpc('musica_salvar',{p_pls:L});if(error){const m=$('#fcmMsg');if(m)m.textContent='Não salvou: '+error.message;return false;}OF=L;return true;}
 
   /* ---------- tela ---------- */
   const btn=document.createElement('button');btn.type='button';btn.className='fcm-btn';btn.setAttribute('aria-label','Som para estudar');btn.innerHTML='<span class="eq"><i></i><i></i><i></i></span>🎧 Música';
   const box=document.createElement('div');box.className='fcm-box';box.hidden=true;box.setAttribute('role','dialog');box.setAttribute('aria-label','Som para estudar');
   document.body.append(btn,box);
-  function lista(){const loc=ALUNO()||!window.FCM_ADMIN?[]:minhas().map(p=>({...p,loc:1}));return [...PLS,...loc];}
+  function lista(){const loc=ALUNO()||MOD()!=='matriz'?[]:minhas().map(p=>({...p,loc:1}));return [...PLS,...loc];}
   function desenhar(){const L=lista();
     box.innerHTML=`<button type="button" class="fcm-x" aria-label="Fechar">×</button><h3>🎧 Som para estudar</h3>
      <div><h4>Sons de foco</h4><div class="fcm-sons">${Object.entries(SONS).map(([k,s])=>`<button type="button" data-som="${k}" class="${atual===k?'on':''}">${atual===k?'⏸ ':'▶ '}${s.n}<small>${s.d}</small></button>`).join('')}</div></div>
      <div class="fcm-vol"><span>🔈</span><input type="range" min="0" max="1" step=".05" value="${ler('fcm_vol',.5)}" aria-label="Volume dos sons de foco"><span>🔊</span></div>
-     ${(()=>{const it=(p,i)=>`<div class="it"><button type="button" class="p${tocando===i?' on':''}" data-pl="${i}">${tocando===i?'⏸':'▶'} ${esc(p.nome||embed(p.url).f)}<small style="display:block;font-weight:400;color:#5a6b75">${esc(embed(p.url).f)}${p.loc?' · só neste aparelho':''}</small></button>${p.loc?`<button type="button" class="x" data-del="${i-PLS.length}" aria-label="Tirar playlist">✕</button>`:''}</div>`;
+     ${(()=>{const it=(p,i)=>`<div class="it"><button type="button" class="p${tocando===i?' on':''}" data-pl="${i}">${tocando===i?'⏸':'▶'} ${esc(p.nome||embed(p.url).f)}<small style="display:block;font-weight:400;color:#5a6b75">${esc(embed(p.url).f)}${p.loc?' · só neste aparelho':''}${p.of&&MOD()!=='aluno'?' · incluída no painel de implantação':''}</small></button>${p.loc?`<button type="button" class="x" data-del="${i-PLS.length}" aria-label="Tirar playlist">✕</button>`:''}${p.of&&MOD()==='impl'?`<button type="button" class="x" data-delof="${p.ofi}" aria-label="Tirar playlist dos alunos">✕</button>`:''}</div>`;
        if(!L.length)return `<div><h4>Playlists da FC</h4><div class="fcm-pl">${window.FCM_SO_SONS?'<p class="fcm-nt">Nesta prévia só os sons de foco tocam. As playlists aparecem dentro do link.</p>':'<p class="fcm-nt">A FC ainda vai escolher as playlists. Enquanto isso, use os sons de foco acima.</p>'}</div></div>`;
        const grp=[['abertura','🎉 Abertura do treinamento','Para tocar enquanto o pessoal vai entrando.'],['estudo','📚 Para estudar','Sem pressa, volume baixo, só de fundo.']];const ord=MODO==='abertura'?grp:[grp[1],grp[0]];
        return `<div>${ord.map(([g,t,dd])=>{const xs=L.map((p,i)=>[p,i]).filter(([p])=>(p.g||'estudo')===g);return xs.length?`<h4>${t}</h4><p class="fcm-nt" style="margin:-4px 0 6px">${dd}</p><div class="fcm-pl" style="margin-bottom:10px">${xs.map(([p,i])=>it(p,i)).join('')}</div>`:'';}).join('')}
-      <div class="fcm-emb" id="fcmEmb">${tocando!=null&&L[tocando]?(()=>{const e=embed(L[tocando].url);return `<iframe src="${esc(e.src)}" height="${e.h}" loading="lazy" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" title="Playlist"></iframe>`;})():''}</div></div>`;})()}
-     ${ALUNO()||window.FCM_SO_SONS||!window.FCM_ADMIN?'':`<div><h4>Adicionar playlist</h4><form class="fcm-add"><input id="fcmUrl" placeholder="Cole o link do Spotify, YouTube ou Deezer" autocomplete="off" aria-label="Link da playlist"><button>＋</button></form><p class="fcm-nt" id="fcmMsg">Fica salva neste aparelho. Para aparecer para todos os alunos, mande o link para incluir na lista oficial.</p></div>`}
+      <div class="fcm-emb" id="fcmEmb">${tocando!=null&&L[tocando]?(()=>{const e=embed(L[tocando].url);return `<iframe src="${esc(e.src)}" height="${e.h}" loading="lazy" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" title="Playlist"></iframe>`+(e.f==='Spotify'?`<p class="fcm-nt" style="margin:6px 0 0">Sem entrar na conta do Spotify neste navegador, ele toca só 30 segundos de cada música. <a href="${esc(L[tocando].url)}" target="_blank" rel="noopener">↗ Abrir no Spotify</a> para ouvir completo.</p>`:'');})():''}</div></div>`;})()}
+     ${ALUNO()||window.FCM_SO_SONS||MOD()==='aluno'?'':`<div><h4>Adicionar playlist${MOD()==='impl'?' · entra para os alunos':' · só neste aparelho'}</h4><form class="fcm-add"><input id="fcmUrl" placeholder="Cole o link do Spotify, YouTube ou Deezer" autocomplete="off" aria-label="Link da playlist"><button>＋</button></form><p class="fcm-nt" id="fcmMsg">${MOD()==='impl'?'A playlist incluída aqui aparece para todos os alunos no Mostruário e no treinamento.':'Fica só neste aparelho, para você testar. Para os alunos ouvirem, inclua pelo painel de implantação.'}</p></div>`}
      <p class="fcm-nt">Dica: volume baixo, só de fundo. Os sons de foco funcionam até sem internet.</p>`;}
   box.addEventListener('click',e=>{const t=e.target.closest('button');if(!t)return;
     if(t.classList.contains('fcm-x')){box.hidden=true;return;}
     if(t.dataset.som){const k=t.dataset.som;if(atual===k)parar();else{tocando=null;tocar(k);}btn.classList.toggle('on',!!atual||tocando!=null);desenhar();return;}
     if(t.dataset.pl!=null){const i=+t.dataset.pl;parar();tocando=tocando===i?null:i;btn.classList.toggle('on',tocando!=null);desenhar();return;}
+    if(t.dataset.delof!=null){if(!confirm('Tirar esta playlist da lista dos alunos?'))return;const L=OF.slice();L.splice(+t.dataset.delof,1);parar();tocando=null;salvaOF(L).then(async ok=>{if(ok){await carregar();desenhar();}});return;}
     if(t.dataset.del!=null){const L=minhas();L.splice(+t.dataset.del,1);grava('fcm_pl',L);tocando=null;desenhar();}});
   box.addEventListener('input',e=>{if(e.target.type==='range'){const v=+e.target.value;grava('fcm_vol',v);if(MS)MS.gain.value=v;}});
   box.addEventListener('submit',e=>{e.preventDefault();const u=$('#fcmUrl').value,em=embed(u);if(!em){$('#fcmMsg').textContent='Esse link não é de playlist do Spotify, YouTube ou Deezer. Copie o link pelo botão Compartilhar da playlist.';return;}
+    if(MOD()==='impl'){const nome=prompt('Nome da playlist (os alunos veem este nome):',em.f+' '+(OF.length+1));if(nome===null)return;const g=confirm('É para a ABERTURA do treinamento (animada)?\n\nOK = abertura · Cancelar = para estudar')?'abertura':'estudo';
+      salvaOF([...OF,{nome:nome.trim()||em.f,url:u.trim(),g}]).then(async ok=>{if(ok){await carregar();tocando=PLS.length-1;parar();btn.classList.add('on');desenhar();const m=$('#fcmMsg');if(m)m.textContent='✓ Incluída: os alunos já podem ouvir.';}});return;}
     const L=minhas();L.push({nome:em.f+' '+(L.length+1),url:u.trim()});grava('fcm_pl',L);tocando=PLS.length+L.length-1;parar();btn.classList.add('on');desenhar();});
   window.FCM={async abertura(){MODO='abertura';await carregar();desenhar();box.hidden=false;},parar(){parar();tocando=null;btn.classList.remove('on');MODO='estudo';if(!box.hidden){desenhar();box.hidden=true;}}};
   btn.onclick=async()=>{if(box.hidden){await carregar();desenhar();}box.hidden=!box.hidden;};
