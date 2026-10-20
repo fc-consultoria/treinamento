@@ -130,7 +130,9 @@ const KEY=new URLSearchParams(location.search).get('k')||'';
 const norm=s=>String(s||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
 const BARRA=6;
 const FORN=['alcoa','texa','selta','fbk','ecoalumi','perfileve','cda'];
-const LIB=()=>Array.isArray(DADOS.lib)&&DADOS.lib.length?DADOS.lib:null;const FL=()=>ADM?FORN:(LIB()?FORN.filter(f=>LIB().includes(f)):FORN);
+const REFF='alcoa';/* Alcoa = catálogo de referência: confere desenho e peso, não entra na compra */
+const FC_=FORN.filter(f=>f!==REFF);
+const LIB=()=>Array.isArray(DADOS.lib)&&DADOS.lib.length?DADOS.lib:null;const FL=()=>ADM?FC_:(LIB()?FC_.filter(f=>LIB().includes(f)):FC_);
 const CORES=[['natural','Sem acabamento','#d9dee1'],['fosco','Fosco','#9aa3a8'],['branco','Branco','#ffffff'],['preto','Preto','#1c1c1c'],['bronze','Bronze','#6b4a2b'],['brilhante','Brilhante','#e8edf0'],['cerejeira','Cerejeira real','#8a3b26']];
 const CORN=Object.fromEntries(CORES.map(c=>[c[0],c[1]]));
 const PART=['Comercial','Estoque','Produção'];
@@ -168,7 +170,7 @@ async function carregaIndice(){
   if(!ADM){try{const r=await sb.rpc('equiv_ok_lista',{p_chave:KEY});(r.data||[]).forEach(k=>OK[k]=true);}catch(_){}}
   BY={};IDX.g.forEach((g,i)=>{g.i=i;g.m.forEach(m=>{(BY[norm(m[1])]=BY[norm(m[1])]||[]).push(i);});if(g.mc)(BY[norm(g.k)]=BY[norm(g.k)]||[]).push(i);});
 }
-const visivel=(g,m)=>{if(!ADM&&LIB()&&m[3]!=='base'&&!LIB().includes(m[0]))return false;return ADM||m[3]==='base'||m[3]==='alta'||OK[g.k+'|'+m[1]];};
+const visivel=(g,m)=>{if(!ADM&&LIB()&&m[3]!=='base'&&m[0]!==REFF&&!LIB().includes(m[0]))return false;return ADM||m[3]==='base'||m[3]==='alta'||OK[g.k+'|'+m[1]];};
 function imgDe(g,m){if(m[4])return m[4];if(g.l==='tc')return '';const L=IDX.linhas[g.l];const pasta=(m[3]==='base'&&!g.sp)?'alcoa':m[0];return L.img+pasta+'/'+encodeURIComponent(m[1])+'.webp?v=2';}
 const linhaF=(g,f)=>((IDX.lnf[g.l]||{})[f])||IDX.linhas[g.l].n;
 function buscar(q){const k=norm(q);if(!k)return [];
@@ -180,11 +182,11 @@ function buscar(q){const k=norm(q);if(!k)return [];
   return ids.map(i=>IDX.g[i]).filter(g=>g.m.some(m=>visivel(g,m)));}
 
 /* ===== preço ===== */
-function preco(f){if(!ADM&&LIB()&&!LIB().includes(f))return {sem:'fornecedor não liberado'};const P=DADOS.forn[f];if(!P||P.natural==null)return {sem:'sem preço informado'};
+function preco(f){if(f===REFF)return {sem:'catálogo de referência · não entra na compra',ref:1};if(!ADM&&LIB()&&!LIB().includes(f))return {sem:'fornecedor não liberado'};const P=DADOS.forn[f];if(!P||P.natural==null)return {sem:'sem preço informado'};
   let v=+P.natural;if(COR!=='natural'){const s=P.cores&&P.cores[COR];if(s==null)return {sem:'sem preço de '+CORN[COR].toLowerCase()+' informado'};v+= +s;}
   return {kg:v,minItem:P.min_item!=null?+P.min_item:null,minPed:P.min_pedido!=null?+P.min_pedido:null};}
 function calc(g,m){const pr=preco(m[0]);const kgb=m[2]*BARRA;const o={f:m[0],c:m[1],p:m[2],lvl:m[3],kgb,img:imgDe(g,m),lin:linhaF(g,m[0]),pg:m[5]};
-  if(pr.sem){o.sem=pr.sem;return o;}
+  if(pr.sem){o.sem=pr.sem;if(pr.ref)o.rf=1;return o;}
   o.kg=pr.kg;o.vb=kgb*pr.kg;o.minPed=pr.minPed;o.minItem=pr.minItem;
   if(pr.minItem){o.bars=Math.ceil(pr.minItem/kgb-1e-9);}else o.bars=1;
   o.kgmin=o.bars*kgb;o.vmin=o.kgmin*pr.kg;return o;}
@@ -196,8 +198,9 @@ function linhasDe(g,q){
   const com=L.filter(o=>!o.sem),sem=L.filter(o=>o.sem);
   const key=MODO==='min'?'vmin':'vb';com.sort((a,b)=>a[key]-b[key]||a.vb-b.vb);
   if(!ref)ref=com[0]||L[0];
-  return {L:[...com,...sem],com,sem,ref,best:com[0]||null,key};}
+  return {L:[...sem.filter(o=>o.rf),...com,...sem.filter(o=>!o.rf)],com,sem,ref,best:com[0]||null,key};}
 function frase(o,r,b){
+  if(o.rf)return (o===r?'Código pesquisado · ':'')+'Catálogo Alcoa: é a referência para conferir o desenho e o peso. Não entra na comparação de preço nem na compra.';
   if(o===r&&(!b||o===b||o.sem||r.sem))return o===b?'Código pesquisado: é a base da comparação e já é a melhor opção.':'Código pesquisado: é a base da comparação.';
   const partes=[];
   if(o!==r){const dp=o.p/r.p-1,dk=o.kgb-r.kgb;
@@ -226,7 +229,7 @@ function tela(){const a=$('#app');
 function semPrecos(){return !FL().some(f=>DADOS.forn[f]&&DADOS.forn[f].natural!=null);}
 function telaBusca(){
   const r=Q?buscar(Q):[];if(r.length&&(!SEL||!r.includes(SEL)))SEL=r[0];
-  return `<section class="box"><h1 class="t">Onde comprar</h1><p class="sub">Digite o código de qualquer fornecedor (Alcoa, Texa, Selta, FBK, Ecoalumi ou Perfileve), o código de mercado ou a medida do tubo (ex.: 25,4 x 1,58). A ferramenta junta os equivalentes e mostra onde a barra de 6 m sai mais barata.</p>
+  return `<section class="box"><h1 class="t">Onde comprar</h1><p class="sub">Digite o código de qualquer fornecedor (Texa, Selta, FBK, Ecoalumi, Perfileve ou CDA), o código de mercado (Alcoa) ou a medida do tubo (ex.: 25,4 x 1,58). A ferramenta junta os equivalentes e mostra onde a barra de 6 m sai mais barata. A Alcoa aparece só como 📘 referência, para conferir o desenho e o peso.</p>
   <form class="sb" id="fb"><input id="q" value="${esc(Q)}" placeholder="Ex.: SU-001, TBX028, VT-0161, PMB-0001" autocomplete="off" aria-label="Código"><button>Comparar</button></form>
   <div class="opc"><div class="g"><span>Acabamento</span><div class="chips">${CORES.map(([k,t,c])=>`<button type="button" data-cor="${k}" class="${COR===k?'on':''}"><span class="dot" style="background:${c}"></span>${t}</button>`).join('')}</div></div>
   <div class="g"><span>Ordenar por</span><div class="chips"><button type="button" data-modo="barra" class="${MODO==='barra'?'on':''}">Melhor preço por barra</button><button type="button" data-modo="min" class="${MODO==='min'?'on':''}">Melhor compra mínima</button></div></div></div>
@@ -250,9 +253,9 @@ function resultado(r){
     const al=cl==='C'&&!o.sem&&o.bars>6?`<div class="fr al">⚠️ Compra mínima de ${o.bars} barras para um perfil de giro baixo (menos de 6 barras/mês) = mais de ${(o.bars/6).toLocaleString('pt-BR',{maximumFractionDigits:1})} meses de estoque.</div>`:'';
     const nv=ADM&&(o.lvl==='media'||o.lvl==='baixa')?`<span class="nvl ${o.lvl}">${o.lvl==='media'?'provável':'revisar'}</span>`:'';
     return `<div class="lin ${isB?'best':''} ${isR?'ref':''} ${o.sem?'np':''}">
-      <div class="ps">${o.sem?'–':(isB?'✅':i+1+'º')}</div>
+      <div class="ps">${o.rf?'📘':o.sem?'–':(isB?'✅':R.com.indexOf(o)+1+'º')}</div>
       <div class="th" data-zoom="${esc(o.img)}" data-t="${esc(IDX.forn[o.f]+' '+o.c)}">${o.img?`<img src="${esc(o.img)}" alt="" loading="lazy" onerror="this.replaceWith(document.createTextNode('sem desenho'))">`:'<small>sem desenho</small>'}</div>
-      <div class="fo"><b>${esc(IDX.forn[o.f])}</b>${nv}<span class="c">${esc(o.c)}${isR?' <small style="display:inline;color:var(--tl)">· pesquisado</small>':''}</span><small>Linha ${esc(o.lin)}</small></div>
+      <div class="fo"><b>${esc(IDX.forn[o.f])}</b>${o.rf?'<span class="nvl" style="background:#e0ecff;color:#1d4ed8">referência</span>':''}${nv}<span class="c">${esc(o.c)}${isR?' <small style="display:inline;color:var(--tl)">· pesquisado</small>':''}</span><small>Linha ${esc(o.lin)}</small></div>
       <div class="cel"><span>Peso</span><b>${n3(o.p)} kg/m</b><small>${n3(o.kgb)} kg na barra</small></div>
       <div class="cel"><span>Dif. peso</span><b class="${isR?'':dp>.005?'up':dp<-.005?'dn':''}">${isR?'base':Math.abs(dp)<.0005?'igual':pc(dp)}</b><small>${isR||Math.abs(dk)<.0005?'':(dk<0?'−':'+')+n3(Math.abs(dk))+' kg/barra'}</small></div>
       <div class="cel"><span>Preço ${COR==='natural'?'natural':esc(CORN[COR].toLowerCase())}</span>${o.sem?`<small>${esc(o.sem)}</small>`:`<b>${rs(o.kg)}/kg</b><small>${o.minPed?'pedido mín. '+n2(o.minPed).replace(',00','')+' kg':'pedido mín. —'}</small>`}</div>
@@ -283,7 +286,7 @@ document.addEventListener('input',e=>{if(e.target.id==='q')aoDigitar(e.target.va
 function telaPrecos(){
   return `<section class="box"><h1 class="t">Preços dos fornecedores</h1><p class="sub">Preencha o custo que cada fornecedor passa para ${esc(DADOS.nome||'a empresa')}. Só o <b>preço natural</b> é obrigatório. A pintura é opcional: informe o <b>acréscimo por kg</b> de cada cor (ex.: natural R$ 30,00 + preto R$ 5,20 = R$ 35,20/kg). Os mínimos são sempre em kg.</p></section>
   ${ADM?`<section class="box" style="border:2px solid #f2a51e"><h2 class="t" style="margin-top:0">🏭 Fornecedores liberados para ${esc(DADOS.nome||EMP)}</h2><p class="sub">Marque as extrusoras que este cliente pode comparar e comprar. Sem nenhuma marcada, o cliente vê todas.</p>
-   <div style="display:flex;gap:10px;flex-wrap:wrap;margin:8px 0">${FORN.map(f=>`<label style="display:inline-flex;gap:6px;align-items:center;border:1px solid #d6dee4;border-radius:10px;padding:8px 12px;font-weight:700;cursor:pointer;background:#fff"><input type="checkbox" data-lib="${f}" ${!LIB()||LIB().includes(f)?'checked':''}> ${esc(IDX.forn[f])}</label>`).join('')}</div>
+   <div style="display:flex;gap:10px;flex-wrap:wrap;margin:8px 0">${FC_.map(f=>`<label style="display:inline-flex;gap:6px;align-items:center;border:1px solid #d6dee4;border-radius:10px;padding:8px 12px;font-weight:700;cursor:pointer;background:#fff"><input type="checkbox" data-lib="${f}" ${!LIB()||LIB().includes(f)?'checked':''}> ${esc(IDX.forn[f])}</label>`).join('')}</div>
    <button type="button" class="btn" id="libSalva" style="background:#0f6b70;color:#fff;border:0;border-radius:10px;padding:9px 16px;font-weight:700;cursor:pointer">💾 Salvar fornecedores do cliente</button> <span id="libMsg" style="color:#5d6f7a"></span></section>`:''}
   <div class="fgrid">${FL().map(f=>{const P=DADOS.forn[f]||{};const d=dias(P.em);
     const stt=P.natural==null?'<span class="st vz">sem preço</span>':d>30?`<span class="st vl">atualizar · ${d} dias</span>`:'<span class="st ok">em dia</span>';
@@ -511,8 +514,8 @@ async function iniciar(){
     if(window.FCFoto)FCFoto.ligar({idx:'foto-ext.json',tem:c=>!!BY[norm(c)],ir:c=>{$('#q').value=c;$('#fb').requestSubmit();},forn:f=>IDX&&IDX.forn[f]});iniciar();});})();
 document.addEventListener('click',async e=>{const b=e.target.closest&&e.target.closest('#libSalva');if(!b)return;const L=[...document.querySelectorAll('[data-lib]:checked')].map(x=>x.dataset.lib);const m=document.getElementById('libMsg');
   if(!L.length){m.textContent='Marque pelo menos um fornecedor.';return;}b.disabled=true;m.textContent='Salvando…';
-  const r=await sb.rpc('compra_forn_lib',{p_emp:EMP,p_lista:L.length===FORN.length?[]:L});b.disabled=false;
-  if(r.error||!r.data){m.textContent='Não salvou: '+((r.error&&r.error.message)||'sem acesso');return;}DADOS.lib=L.length===FORN.length?[]:L;m.textContent='✓ Salvo: o cliente vê '+(L.length===FORN.length?'todos os fornecedores':L.map(f=>IDX.forn[f]).join(', '));});
+  const r=await sb.rpc('compra_forn_lib',{p_emp:EMP,p_lista:L.length===FC_.length?[]:L});b.disabled=false;
+  if(r.error||!r.data){m.textContent='Não salvou: '+((r.error&&r.error.message)||'sem acesso');return;}DADOS.lib=L.length===FC_.length?[]:L;m.textContent='✓ Salvo: o cliente vê '+(L.length===FC_.length?'todos os fornecedores':L.map(f=>IDX.forn[f]).join(', '));});
 </script>
 </body>
 </html>
