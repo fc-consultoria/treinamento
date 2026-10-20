@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Convite · Vitrine de clientes FC</title>
+<link rel="icon" href="https://fc-consultoria.github.io/img/logo-fc-160.jpg">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600;700&display=swap">
+<style>
+:root{--tl:#0f6b70;--tl2:#13878d;--tlc:#e5f2f2;--or:#e8912d;--orc:#fff4dc;--ink:#13232e;--tm:#5a6b75;--ln:#d8e2e6;--bg:#f2f6f7;--ok:#15803d;--okc:#e7f6ec;--bx:#b42318;--f-d:'Barlow Condensed',system-ui,sans-serif;--f-b:'Barlow',system-ui,sans-serif}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.5 var(--f-b)}
+.top{background:#0f1a22;color:#fff}.top .w{display:flex;gap:12px;align-items:center;padding:12px 16px}.top img{width:44px;height:44px;border-radius:10px;object-fit:cover}.top small{display:block;color:#9fb3bf;font-size:13px}.top b{font:700 20px var(--f-d)}
+.w{max-width:980px;margin:0 auto;padding:0 16px}
+.hero{padding:26px 0 8px}.hero h1{font:800 clamp(28px,5vw,40px)/1.05 var(--f-d);margin:0 0 8px}.hero p{margin:0;color:var(--tm);max-width:680px}
+.card{background:#fff;border:1px solid var(--ln);border-radius:14px;padding:18px;margin:16px 0}
+.card h2{font:700 22px var(--f-d);margin:0 0 4px}.note{color:var(--tm);font-size:14px}
+.passos{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-top:14px}.passos div{background:var(--tlc);border-radius:10px;padding:10px 12px;font-size:14.5px}.passos b{display:block;font:700 18px var(--f-d);color:var(--tl)}
+.g{display:grid;grid-template-columns:180px 1fr;gap:18px;align-items:start}
+@media(max-width:640px){.g{grid-template-columns:1fr}}
+.dp{border:2px dashed #b9c4cc;border-radius:12px;aspect-ratio:1;display:grid;place-items:center;text-align:center;color:var(--tm);cursor:pointer;background:#f8fafb center/contain no-repeat;font-size:14px;padding:8px;width:100%;max-width:220px}
+.dp.tem span{display:none}.dp.tem{border-style:solid;border-color:var(--tl2)}
+label.f{display:block;font-size:13.5px;color:var(--tm)}label.f input,label.f select{display:block;width:100%;font:500 16px var(--f-b);padding:9px 11px;border:1px solid #c9d3da;border-radius:9px;margin-top:3px;background:#fff;color:var(--ink)}
+.r3{display:grid;grid-template-columns:1.4fr 1fr 90px;gap:8px;margin-top:10px}@media(max-width:640px){.r3{grid-template-columns:1fr 90px}.r3 .nm{grid-column:1/-1}}
+.aut{display:flex;gap:10px;align-items:flex-start;margin-top:12px;font-size:14.5px;background:var(--orc);border:1px solid #f1d27a;border-radius:10px;padding:10px 12px;cursor:pointer}.aut input{width:20px;height:20px;margin-top:2px;flex:none}
+.bt{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+button{font:700 15px var(--f-b);border-radius:10px;padding:11px 16px;cursor:pointer;border:1px solid #c9d3da;background:#fff;color:var(--ink)}
+button.pri{background:var(--tl);border-color:var(--tl);color:#fff}button:disabled{opacity:.45;cursor:default}
+#msg{margin-top:10px;font-weight:600}
+#mapa{margin-top:12px;border-radius:12px;overflow:hidden}
+.ok{background:var(--okc);border:2px solid #9fd4b4}.ok h2{color:var(--ok)}
+.fim{padding:20px 0 40px;text-align:center;color:var(--tm);font-size:14px}
+</style>
+</head>
+<body>
+<header class="top"><div class="w"><img src="https://fc-consultoria.github.io/img/logo-fc-160.jpg" alt=""><div><small>FC Consultoria e Representação</small><b>Vitrine de clientes</b></div></div></header>
+<main class="w" id="app"><p style="padding:30px 0">Carregando o convite…</p></main>
+<div class="fim w">FC Consultoria · (66) 9 9986-7984 · <a href="https://fc-consultoria.github.io/" target="_blank" rel="noopener">fc-consultoria.github.io</a></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="../mapa.js?v=1792037768"></script>
+<script>
+const sb=window.supabase.createClient('https://cpkjphodruyxfouirhpd.supabase.co','sb_publishable_d0HEeWsaqOeZIQKGftlF-Q_B8BUOWWg',{auth:{persistSession:false}});
+const TOK=new URLSearchParams(location.search).get('c')||'';
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const TT={o:'🧊 Mostruário 3D',on:'💻 Consultoria on-line',pr:'📍 Consultoria presencial'};
+const app=document.getElementById('app');
+let D=null,IMG=null;
+function mapaDe(img,c,u){const m=D.mapa||{},vit=(m.vit||[]).filter(x=>x&&x.img&&!x.oc);const voce=img?[{img,c,u,t:D.tipo,voce:1}]:[];return {orient:(m.orient||[]),vit:voce.concat(vit)};}
+function desenhaMapa(){const el=document.getElementById('mapa');if(!el||!window.FCM||!FCM.render2)return;const c=(document.getElementById('cd')||{}).value||'',u=(document.getElementById('uf')||{}).value||'MT';const M=mapaDe(IMG,c,u);
+  try{FCM.render2(el,{orient:M.orient,cons:[],showCons:false,vit:M.vit,semFesta:true});}catch(e){el.innerHTML='';}}
+function verVitrine(){const c=(document.getElementById('cd')||{}).value.trim(),u=document.getElementById('uf').value;if(!IMG){msg('Envie a logo primeiro para ver como fica.',1);return;}
+  const M=mapaDe(IMG,c,u);const V=M.orient.filter(x=>x.logo).map(x=>({img:x.logo,c:x.c,u:x.u,t:'o'})).concat(M.vit);
+  V.sort((a,b)=>(b.voce?1:0)-(a.voce?1:0));FCM.vitrine(V);}
+function msg(t,ruim){const m=document.getElementById('msg');if(m){m.textContent=t;m.style.color=ruim?'var(--bx)':'var(--ok)';}}
+function tela(){
+  if(!D){app.innerHTML=`<div class="card"><h2>Convite não encontrado</h2><p class="note">Este link não está mais ativo. Fale com a FC Consultoria pelo WhatsApp (66) 9 9986-7984.</p></div>`;return;}
+  const r=D.resp||{};
+  if(D.status==='publicado'){app.innerHTML=`<div class="card ok"><h2>✔ Sua logo já está na vitrine</h2><p>Obrigado pela parceria, ${esc(D.nome)}! Ela aparece no mapa <b>FC no Brasil</b>, no botão <b>🤝 Ver clientes</b>, no site da FC e no Mostruário 3D.</p><p class="note">Quer tirar ou trocar? Fale com a FC pelo WhatsApp (66) 9 9986-7984.</p></div>`;return;}
+  if(D.status==='respondido'&&!window.REENVIAR){app.innerHTML=`<div class="card ok"><h2>✔ Recebemos a sua logo</h2><p>Obrigado, ${esc(D.nome)}! A FC confere a imagem e publica na vitrine${r.c?` com <b>${esc(r.c)}/${esc(r.u)}</b>`:''}. Você não precisa fazer mais nada.</p><div class="bt"><button type="button" id="outra">Enviar outra logo</button></div></div>`;
+    document.getElementById('outra').onclick=()=>{window.REENVIAR=1;tela();};return;}
+  const UFS=Object.keys(FCM.NOME).sort();
+  app.innerHTML=`<section class="hero"><h1>${esc(D.nome)}, sua logo na vitrine da FC</h1><p>A FC Consultoria tem o mapa <b>FC no Brasil</b>, que aparece no site e no Mostruário 3D. No botão <b>🤝 Ver clientes</b> ficam as logos das empresas parceiras, com a cidade e o tipo de atendimento. Queremos colocar a sua empresa lá. É gratuito e opcional.</p></section>
+  ${D.status==='recusado'?`<div class="card" style="border-color:#f1d27a;background:var(--orc)"><b>A logo enviada antes não foi publicada.</b>${D.motivo?` <span>${esc(D.motivo)}</span>`:''} Pode enviar outra abaixo.</div>`:''}
+  <div class="card"><h2>Como funciona</h2><div class="passos"><div><b>1. Envie a logo</b>PNG ou JPG, de preferência com fundo branco.</div><div><b>2. Confira como fica</b>No botão “Ver como fica” você vê a sua logo na vitrine.</div><div><b>3. Autorize</b>A FC confere e publica. Você pode pedir para tirar quando quiser.</div></div></div>
+  <div class="card"><div class="g"><div><div class="dp" id="dp" role="button" tabindex="0"><span>＋ Enviar a logo<br><small>PNG ou JPG</small></span></div><input type="file" id="fi" accept="image/*" hidden></div>
+   <div><h2>Dados para a vitrine</h2><p class="note" style="margin:0">Aparecem só a logo, a cidade/UF e o tipo de atendimento (${esc(TT[D.tipo]||TT.on)}).</p>
+    <div class="r3"><label class="f nm">Nome da empresa (só a FC vê)<input id="nm" value="${esc(r.nome||D.nome)}"></label><label class="f">Cidade<input id="cd" list="cdl" placeholder="Ex.: Sinop" value="${esc(r.c||'')}"><datalist id="cdl"></datalist></label><label class="f">UF<select id="uf">${UFS.map(u=>`<option${u===(r.u||'MT')?' selected':''}>${u}</option>`).join('')}</select></label></div>
+    <div class="r3" style="grid-template-columns:1.4fr 1fr"><label class="f">Seu nome (quem autorizou)<input id="rp" value="${esc(r.resp||'')}" placeholder="Ex.: João"></label><label class="f">WhatsApp (opcional)<input id="tl" value="${esc(r.tel||'')}" placeholder="(66) 9 0000-0000" inputmode="tel"></label></div>
+    <label class="aut"><input type="checkbox" id="ok"><span>Autorizo a FC Consultoria a mostrar a logo e a cidade da minha empresa na vitrine de clientes. Posso pedir para tirar quando quiser.</span></label>
+    <div class="bt"><button type="button" id="ver">👁 Ver como fica</button><button type="button" class="pri" id="env" disabled>✓ Quero aparecer na vitrine</button></div><div id="msg"></div></div></div></div>
+  <div class="card"><h2>Como vai ficar</h2><p class="note" style="margin:0">Este é o mapa FC no Brasil. ${'Toque em <b>🤝 Ver clientes</b> ou em <b>👁 Ver como fica</b> para ver a sua logo em destaque.'}</p><div id="mapa"></div></div>`;
+  const dp=document.getElementById('dp'),fi=document.getElementById('fi'),ok=document.getElementById('ok'),env=document.getElementById('env'),uf=document.getElementById('uf');
+  const upd=()=>{env.disabled=!(ok.checked&&IMG);};ok.onchange=upd;
+  const fill=()=>{document.getElementById('cdl').innerHTML=(FCM.PORUF[uf.value]||[]).map(n=>`<option value="${esc(n)}"></option>`).join('');};fill();uf.onchange=()=>{fill();desenhaMapa();};
+  document.getElementById('cd').onchange=desenhaMapa;
+  dp.onclick=()=>fi.click();dp.onkeydown=e=>{if(e.key==='Enter'||e.key===' ')fi.click();};
+  fi.onchange=async()=>{const f=fi.files[0];if(!f)return;try{IMG=await reduz(f);dp.style.backgroundImage=`url('${IMG}')`;dp.classList.add('tem');msg('');upd();desenhaMapa();}catch(_){msg('Não consegui abrir esta imagem. Tente um PNG ou JPG.',1);}};
+  document.getElementById('ver').onclick=verVitrine;
+  env.onclick=async()=>{const nm=v=>v.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();let c=document.getElementById('cd').value.trim();const u=uf.value;
+    if(!c){msg('Informe a cidade.',1);return;}const fc=(FCM.PORUF[u]||[]).find(n=>nm(n)===nm(c));if(fc)c=fc;
+    env.disabled=true;msg('Enviando…');
+    const {data,error}=await sb.rpc('vit_conv_enviar',{p_token:TOK,p_dados:{img:IMG,nome:document.getElementById('nm').value.trim(),c,u,resp:document.getElementById('rp').value.trim(),tel:document.getElementById('tl').value.trim(),aut:true}});
+    if(error||!data){msg('Não foi possível enviar. Tente de novo ou fale com a FC pelo WhatsApp (66) 9 9986-7984.',1);env.disabled=false;return;}
+    D.status='respondido';D.resp={nome:document.getElementById('nm').value.trim(),c,u};window.REENVIAR=0;tela();window.scrollTo({top:0,behavior:'smooth'});};
+  desenhaMapa();}
+function reduz(f){return new Promise((ok,no)=>{const r=new FileReader();r.onerror=no;r.onload=()=>{const im=new Image();im.onerror=no;im.onload=()=>{const M=360,k=Math.min(1,M/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(im,0,0,c.width,c.height);ok(c.toDataURL('image/jpeg',.86));};im.src=r.result;};r.readAsDataURL(f);});}
+(async()=>{if(TOK.length<20){D=null;tela();return;}const {data,error}=await sb.rpc('vit_conv_ver',{p_token:TOK});D=error?null:data;tela();})();
+</script>
+</body>
+</html>
