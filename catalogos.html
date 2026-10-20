@@ -175,7 +175,9 @@ function editor(){const c=CUR,L=linhasDo(c);if(!L.length){cc().innerHTML='<p sty
   <label>Nome da empresa<input data-k="nome" value="${esc(c.nome)}"></label><label>Sigla do logo<input data-k="sigla" maxlength="3" value="${esc(c.sigla||'')}"></label><label>Cor principal<input data-k="cor" type="color" value="${esc(c.cor||'#17606b')}"></label><label>WhatsApp de atendimento<input data-k="zap" value="${esc(c.zap||'')}"></label><label>Cidade<input data-k="cidade" value="${esc(c.cidade||'')}"></label>
   <label style="grid-column:1/-1">Texto do topo do catálogo<textarea data-k="texto" rows="2">${esc(c.texto||'')}</textarea></label>
   <label style="grid-column:1/-1">Observação padrão do “Sob consulta”<textarea data-k="obs_pad" rows="2">${esc(c.obs_pad||'')}</textarea></label>
-  <label style="grid-column:1/-1">Cores que já vêm marcadas nos perfis<span class="cores">${CORES.map(([id,nm,hx])=>`<span class="cor ${pc.includes(id)?'on':''}" title="${nm}" style="background:${hx}" data-pc="${id}"></span>`).join('')}</span></label></div></div>
+  <label style="grid-column:1/-1">Cores que já vêm marcadas nos perfis<span class="cores">${CORES.map(([id,nm,hx])=>`<span class="cor ${pc.includes(id)?'on':''}" title="${nm}" style="background:${hx}" data-pc="${id}"></span>`).join('')}</span></label></div>
+  <div style="display:flex;gap:10px;align-items:center;margin-top:12px;flex-wrap:wrap"><button class="btn pri" data-a="salvaMarca">💾 Salvar</button><span class="note" id="msgMarca">As alterações também são salvas sozinhas ao sair de cada campo.</span></div></div>
+ ${apCard(c)}
  ${vitCard(c)}
  <div class="card"><h2>Perfis do catálogo</h2>
   <div class="tools">${L.map(l=>`<button class="btn sm ${l.id===LI?'pri':''}" data-li="${l.id}">${esc(l.n)}</button>`).join('')}<input type="search" id="gq" placeholder="Buscar código ou nome" value="${esc(Q)}">
@@ -220,6 +222,29 @@ function vitCard(c){const V=vitDe(c),L=linhasDo(c),all=L.flatMap(l=>l.p),nm=q=>{
    <span style="flex-basis:100%;height:0"></span>
    <input id="vitOt" placeholder="Título da oferta" style="border:1px solid #c9d3d8;border-radius:8px;padding:6px 8px;min-width:200px"><label class="btn sm" style="cursor:pointer">🖼 Foto ou folder<input type="file" id="vitOf" accept="image/*" hidden></label><span class="note" id="vitOn"></span>
    <button class="btn sm pri" data-va="addo">＋ Oferta</button></div></div>`;}
+/* ===== páginas de apresentação: capa, quem somos, contato ===== */
+function apCard(c){const A=c.apres||{},v=k=>esc(A[k]||'');
+ const foto=(k,t,dica)=>`<label>${t}<span style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">${A[k]?`<img src="${esc(A[k])}" alt="" style="height:64px;max-width:150px;object-fit:cover;border-radius:8px;border:1px solid #c9d3d8;background:#fff">`:'<span class="tag gr">sem imagem</span>'}
+   <input type="file" accept="image/*" data-apf="${k}" style="max-width:220px">${A[k]?`<button type="button" class="btn sm" data-apx="${k}">Tirar</button>`:''}</span><small style="font-weight:400">${dica}</small></label>`;
+ return `<div class="card" id="apC"><h2>📖 Páginas do catálogo</h2><p class="note" style="margin:-4px 0 10px">Capa com a foto da empresa, “Quem somos” (missão, valores e objetivo) e a página de contato com as redes sociais. Deixa o catálogo com cara de catálogo profissional, na tela e no PDF impresso.</p>
+  <label style="display:flex;gap:8px;align-items:center;font-weight:700;margin-bottom:10px"><input type="checkbox" data-apon ${A.on?'checked':''}> Mostrar as páginas de apresentação no catálogo</label>
+  <h3 style="font:800 17px var(--f-d);text-transform:uppercase;margin:6px 0 6px;color:var(--tl)">1 · Capa</h3>
+  <div class="cfg">${foto('capa','Foto da empresa (capa)','Foto da fachada, da loja ou do estoque. Deitada (horizontal) fica melhor.')}${foto('logo','Logo da empresa (opcional)','Sem logo, aparece a sigla.')}
+   <label style="grid-column:1/-1">Frase da capa<textarea data-ap="frase" rows="2" placeholder="Ex.: Há 20 anos levando qualidade em alumínio para o sertão pernambucano.">${v('frase')}</textarea></label></div>
+  <h3 style="font:800 17px var(--f-d);text-transform:uppercase;margin:14px 0 6px;color:var(--tl)">2 · Quem somos</h3>
+  <div class="cfg"><label style="grid-column:1/-1">Apresentação da empresa<textarea data-ap="sobre" rows="3" placeholder="Conte em poucas linhas a história e o que a empresa faz.">${v('sobre')}</textarea></label>
+   <label>🎯 Missão<textarea data-ap="missao" rows="3">${v('missao')}</textarea></label><label>🤝 Valores<textarea data-ap="valores" rows="3">${v('valores')}</textarea></label><label>🚀 Objetivo<textarea data-ap="objetivo" rows="3">${v('objetivo')}</textarea></label></div>
+  <h3 style="font:800 17px var(--f-d);text-transform:uppercase;margin:14px 0 6px;color:var(--tl)">3 · Contato e redes sociais</h3>
+  <div class="cfg"><label>Telefone<input data-ap="fone" value="${v('fone')}" placeholder="(87) 3831-0000"></label><label>E-mail<input data-ap="email" value="${v('email')}" placeholder="vendas@empresa.com.br"></label>
+   <label>Instagram<input data-ap="insta" value="${v('insta')}" placeholder="@empresa"></label><label>Facebook<input data-ap="face" value="${v('face')}" placeholder="facebook.com/empresa"></label><label>Site<input data-ap="site" value="${v('site')}" placeholder="www.empresa.com.br"></label>
+   <label style="grid-column:span 2">Endereço<input data-ap="ender" value="${v('ender')}" placeholder="Rua, número, bairro, cidade - UF"></label><label>Horário de atendimento<input data-ap="horario" value="${v('horario')}" placeholder="Seg. a sex., 8h às 18h"></label></div>
+  <p class="note" style="margin:8px 0 0">O WhatsApp vem do campo “WhatsApp de atendimento” lá em cima. Campo vazio não aparece no catálogo.</p>
+  <div style="display:flex;gap:10px;align-items:center;margin-top:12px;flex-wrap:wrap"><button class="btn pri" data-a="apSalva">💾 Salvar</button><a class="btn or" target="_blank" rel="noopener" href="${esc(pubUrl(c))}">👁 Ver como ficou</a><span class="note" id="msgAp"></span></div></div>`;}
+function apLer(){const A=Object.assign({},CUR.apres||{});document.querySelectorAll('[data-ap]').forEach(i=>A[i.dataset.ap]=i.value.trim());const on=document.querySelector('[data-apon]');if(on)A.on=on.checked;return A;}
+async function apFoto(f,k){const im=await new Promise((ok,er)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=er;i.src=URL.createObjectURL(f);});
+ const mx=k==='logo'?500:1800,q=Math.min(1,mx/Math.max(im.width,im.height)),cv=document.createElement('canvas');cv.width=Math.round(im.width*q);cv.height=Math.round(im.height*q);const x=cv.getContext('2d');if(k!=='logo'){x.fillStyle='#fff';x.fillRect(0,0,cv.width,cv.height);}x.drawImage(im,0,0,cv.width,cv.height);
+ const png=k==='logo',b=await new Promise(ok=>cv.toBlob(ok,png?'image/png':'image/jpeg',.86));const path='cat-apres/'+CUR.id+'/'+k+'-'+Date.now()+(png?'.png':'.jpg');
+ const r=await sb.storage.from('fc-anexos').upload(path,b,{contentType:png?'image/png':'image/jpeg',upsert:false});if(r.error)throw r.error;return sb.storage.from('fc-anexos').getPublicUrl(path).data.publicUrl;}
 async function vitSalva(V){await salvaCli({vitrine:V});}
 async function vitFoto(f){const im=await new Promise((ok,er)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=er;i.src=URL.createObjectURL(f);});
  const k=Math.min(1,900/Math.max(im.width,im.height)),cv=document.createElement('canvas');cv.width=Math.round(im.width*k);cv.height=Math.round(im.height*k);cv.getContext('2d').drawImage(im,0,0,cv.width,cv.height);
@@ -243,6 +268,8 @@ function bind(){const A=cc();
  A.querySelectorAll('[data-a]').forEach(b=>b.onclick=async()=>{const a=b.dataset.a;
   if(a==='novo')formCli(null);if(a==='config')formCli(CL.find(x=>x.id===b.dataset.c));
   if(a==='editar'){CUR=CL.find(x=>x.id===b.dataset.c);VIEW='ed';LI='sup';Q='';FL='todos';draw();scrollTo(0,0);}
+  if(a==='salvaMarca'){b.disabled=true;const d={};A.querySelectorAll('[data-k]').forEach(i=>d[i.dataset.k]=i.value);await salvaCli(d);b.disabled=false;const m=$('#msgMarca');if(m)m.textContent='✓ Salvo às '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});}
+  if(a==='apSalva'){b.disabled=true;await salvaCli({apres:apLer()});b.disabled=false;const m=$('#msgAp');if(m)m.textContent='✓ Salvo às '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})+(CUR.apres.on?'':' · ligue “Mostrar as páginas” para aparecer no catálogo');}
   if(a==='voltar'){VIEW='lista';await carregar();draw();}
   if(a==='copiar'){navigator.clipboard&&navigator.clipboard.writeText(b.dataset.u);b.textContent='✓ Link copiado';}
   if(a==='upload'){const f=$('#upF').files[0],nm=$('#upNome').value.trim();if(!f){st('Escolha o arquivo');return;}b.disabled=true;b.textContent='Enviando…';
@@ -253,6 +280,10 @@ function bind(){const A=cc();
  A.querySelectorAll('[data-li]').forEach(b=>b.onclick=()=>{LI=b.dataset.li;draw();});
  const q=$('#gq');if(q)q.oninput=e=>{Q=e.target.value;clearTimeout(window.__t);window.__t=setTimeout(()=>{draw();const n=$('#gq');n.focus();n.setSelectionRange(n.value.length,n.value.length);},300);};
  const gf=$('#gf');if(gf)gf.onchange=e=>{FL=e.target.value;draw();};
+ A.querySelectorAll('[data-ap]').forEach(i=>i.onchange=async()=>{await salvaCli({apres:apLer()});});
+ A.querySelectorAll('[data-apon]').forEach(i=>i.onchange=async()=>{await salvaCli({apres:apLer()});});
+ A.querySelectorAll('[data-apf]').forEach(i=>i.onchange=async()=>{const f=i.files[0];if(!f)return;st('Enviando a imagem…');try{const u=await apFoto(f,i.dataset.apf);const A2=apLer();A2[i.dataset.apf]=u;await salvaCli({apres:A2});draw();}catch(e){st('Erro ao enviar: '+(e.message||e));}});
+ A.querySelectorAll('[data-apx]').forEach(b=>b.onclick=async()=>{const A2=apLer();delete A2[b.dataset.apx];await salvaCli({apres:A2});draw();});
  A.querySelectorAll('[data-k]').forEach(i=>i.onchange=async()=>{await salvaCli({[i.dataset.k]:i.value});if(['cor','nome'].includes(i.dataset.k))draw();});
  A.querySelectorAll('[data-pc]').forEach(s=>s.onclick=async()=>{const pc=(CUR.cores||['branco','preto','natural']).slice(),k=s.dataset.pc,n=pc.includes(k)?pc.filter(x=>x!==k):pc.concat(k);await salvaCli({cores:n});draw();});
  const q0=k=>BASE.flatMap(l=>l.p).find(x=>x.c===k);
