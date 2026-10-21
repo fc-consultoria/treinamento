@@ -209,7 +209,7 @@ function buscar(q){const k=norm(q);if(!k)return [];
   return ids.map(i=>IDX.g[i]).filter(g=>g.m.some(m=>visivel(g,m)));}
 
 /* ===== preço ===== */
-function preco(f,cor,fb){cor=cor||COR;if(f===REFF)return {sem:'catálogo de referência · não entra na compra',ref:1};if(!ADM&&LIB()&&!LIB().includes(f))return {sem:'fornecedor não liberado'};const P=DADOS.forn[f];if(!P||P.natural==null)return {sem:'sem preço informado'};
+function preco(f,cor,fb){cor=cor||COR;if(f===REFF)return {sem:'catálogo de referência · não entra na compra',ref:1};if(!ADM&&LIB()&&!LIB().includes(f))return {sem:'fornecedor não liberado'};const P=DADOS.forn[f];if(!P||P.natural==null||!(+P.natural>0))return {sem:'sem preço informado'};
   let v=+P.natural;if(cor!=='natural'){const s=P.cores&&P.cores[cor];if(s==null){if(!fb)return {sem:'sem preço de '+CORN[cor].toLowerCase()+' informado'};return {kg:v,minItem:P.min_item!=null?+P.min_item:null,minPed:P.min_pedido!=null?+P.min_pedido:null,semCor:1};}v+= +s;}
   return {kg:v,minItem:P.min_item!=null?+P.min_item:null,minPed:P.min_pedido!=null?+P.min_pedido:null};}
 function calc(g,m,cor,mt,fb){const pr=preco(m[0],cor,fb);const kgb=m[2]*(mt||BARRA);const o={f:m[0],c:m[1],p:m[2],lvl:m[3],kgb,img:imgDe(g,m),lin:linhaF(g,m[0]),pg:m[5]};
@@ -253,7 +253,7 @@ function tela(){const a=$('#app');
   const demo=LOCAL?`<div class="aviso noprint">🧪 <b>Modo demonstração.</b> Os preços ficam guardados só neste aparelho até a FC ativar o banco de dados desta ferramenta.</div>`:'';
   let h='';if(ABA==='busca')h=telaBusca();else if(ABA==='precos')h=telaPrecos();else if(ABA==='rel')h=telaRel();else if(ABA==='sim')h=telaSim();else if(ABA==='abc')h=telaAbc();else if(ABA==='uso')h='<div class="box"><p class="vazio">Carregando o acompanhamento…</p></div>';
   a.innerHTML=abas()+demo+h;if(ABA==='uso')telaUso();if(ABA==='busca'){const i=$('#q');if(i&&!Q)i.focus();}}
-function semPrecos(){return !FL().some(f=>DADOS.forn[f]&&DADOS.forn[f].natural!=null);}
+function semPrecos(){return !FL().some(f=>DADOS.forn[f]&&+DADOS.forn[f].natural>0);}
 let VSIM=null;/* item da simulação aberto na pesquisa (espelho) */
 function espelhoSim(){if(VSIM==null||!SIM[VSIM])return '';const x=SIM[VSIM];if(norm(Q)!==norm(x.q))return `<div class="esp noprint"><span>🧮 Você veio da <b>Simular pedido</b>.</span><button type="button" class="bt p" data-voltasim>← Voltar para Simular pedido</button></div>`;
   let ch='';try{const S=simular();const e=S.esc.find(y=>y.t.i===VSIM);if(e&&e.p)ch=`Na simulação: <b>${esc(IDX.forn[e.p.o.f])} · ${esc(e.p.o.c)}</b> · ${n2(e.p.kg)} kg · ${rs(e.p.v)}`;else if(e)ch='Na simulação: sem preço em nenhum fornecedor';else ch='Na simulação: fora desta reposição';}catch(_){}
@@ -320,7 +320,7 @@ function telaPrecos(){
    <div style="display:flex;gap:10px;flex-wrap:wrap;margin:8px 0">${FC_.map(f=>`<label style="display:inline-flex;gap:6px;align-items:center;border:1px solid #d6dee4;border-radius:10px;padding:8px 12px;font-weight:700;cursor:pointer;background:#fff"><input type="checkbox" data-lib="${f}" ${!LIB()||LIB().includes(f)?'checked':''}> ${esc(IDX.forn[f])}</label>`).join('')}</div>
    <button type="button" class="btn" id="libSalva" style="background:#0f6b70;color:#fff;border:0;border-radius:10px;padding:9px 16px;font-weight:700;cursor:pointer">💾 Salvar fornecedores do cliente</button> <span id="libMsg" style="color:#5d6f7a"></span></section>`:''}
   <div class="fgrid">${FL().map(f=>{const P=DADOS.forn[f]||{};const d=dias(P.em);
-    const stt=P.natural==null?'<span class="st vz">sem preço</span>':d>30?`<span class="st vl">atualizar · ${d} dias</span>`:'<span class="st ok">em dia</span>';
+    const stt=!(+P.natural>0)?'<span class="st vz">sem preço · fora da simulação</span>':d>30?`<span class="st vl">atualizar · ${d} dias</span>`:'<span class="st ok">em dia</span>';
     const v=x=>x==null?'':String(x).replace('.',',');
     return `<form class="fc" data-forn="${f}"><h3>${esc(IDX.forn[f])} ${stt}</h3>
     <div class="ff"><label class="w">Preço natural (sem acabamento) *<div class="inp"><i>R$/kg</i><input name="natural" inputmode="decimal" value="${v(P.natural)}" placeholder="0,00"></div></label>
@@ -374,7 +374,7 @@ const SFKEY=()=>'fc_compra_simf_'+(EMP||'x');
 const SFOP=[['todos','Todos os itens',null],['A','Só curva A',['A']],['AB','Curvas A e B',['A','B']],['C','Só curva C',['C']],['-','Sem curva',['-']]];
 function simFiltro(){const k=ls.get(SFKEY(),'todos');const o=SFOP.find(x=>x[0]===k);return o?o[2]:null;}
 function simular(){
-  const itens=SIM.map((x,i)=>{const g=simGrupo(x);if(!g)return {x,i,nf:1};const L=g.m.filter(m=>visivel(g,m)).map(m=>calc(g,m,'natural',sM(x))).filter(o=>!o.sem);
+  const itens=SIM.map((x,i)=>{const g=simGrupo(x);if(!g)return {x,i,nf:1};const L=g.m.filter(m=>visivel(g,m)).map(m=>calc(g,m,'natural',sM(x))).filter(o=>!o.sem&&o.kg>0&&(!LIB()||LIB().includes(o.f)));
     return {x,i,g,cl:classe(g,x.q),ops:L.map(o=>opcao(o,x.b)).sort((a,b)=>a.v-b.v)};});
   const FX=simFiltro();itens.forEach(t=>{if(!t.nf&&FX&&!FX.includes(t.cl||'-'))t.fora=1;});
   const val=itens.filter(t=>!t.nf&&!t.fora);
