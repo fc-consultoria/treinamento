@@ -136,6 +136,7 @@ function escolherColab(uid,perfil){return new Promise(res=>{
     T.textContent='Quem está estudando agora?';X.textContent=window.IMPL_ATE?'Toque no seu nome. Acesso exclusivo da implantação até '+window.IMPL_ATE.split('-').reverse().join('/')+'.':window.CONTRATO_FIM?'Toque no seu nome. Acesso liberado pelo contrato até '+new Date(window.CONTRATO_FIM).toLocaleDateString('pt-BR')+'.':'Toque no seu nome. Seu acesso fica disponível por 3 dias a partir do primeiro acesso. Depois desse prazo o acesso é suspenso: para liberar de novo, peça ao gerente comercial da sua empresa.';
     X.textContent+=' O Mostruário fica aberto todos os dias, de domingo a domingo. O suporte da FC atende somente de segunda a sexta, das 8h às 11h e das 13h às 17h (horário de Sinop/MT).';
     if(!st.lst.length){L.innerHTML='<p>Nenhum colaborador cadastrado para '+esc(perfil.nome||perfil.login)+'. Peça à FC Consultoria para cadastrar os nomes.</p>';return;}
+    {const cx=st.lst.find(x=>x.comp);if(cx){await drawComp(cx,st);return;}}
     L.innerHTML='';st.lst.forEach(x=>{const exp=x.resta!=null&&x.resta<=0,b=document.createElement('button');b.type='button';b.className='cbtn'+(exp?' exp':'');
       b.innerHTML=`<span>${esc(x.nome)}</span><small>${window.IMPL_ATE?'implantação até '+window.IMPL_ATE.split('-').reverse().join('/'):window.CONTRATO_FIM?'contrato até '+new Date(window.CONTRATO_FIM).toLocaleDateString('pt-BR'):x.pz?'⏸ acesso pausado':x.resta==null?'3 dias · ainda não começou':exp?(x.pend?'acesso suspenso · pedido enviado':'acesso suspenso'):'restam '+fmtR(x.resta)}</small>`;
       b.onclick=async()=>{if(x.pz){T.textContent=x.nome+': acesso pausado';X.textContent='O acesso de '+x.nome+' está pausado pela FC Consultoria. Os dias de acesso dele estão parados e continuam de onde pararam quando for liberado. Fale com o gerente comercial da sua empresa.';L.innerHTML='';return;}if(exp){T.textContent=x.nome+': acesso suspenso';X.textContent='Os dias de acesso de '+x.nome+' terminaram e o acesso foi suspenso. Peça ao gerente comercial da sua empresa para solicitar a liberação à FC Consultoria.';L.innerHTML='';
@@ -159,19 +160,68 @@ function escolherColab(uid,perfil){return new Promise(res=>{
       L.appendChild(b);});
     let last=ultCid();
     const lx=st.lst.find(x=>x.id===last&&x.ini&&x.resta>0);if(lx&&!window.ALUNO_CID){[...L.children][st.lst.indexOf(lx)].click();}}
+  /* ===== Acesso 3D compartilhado: 1 acesso, até N pessoas ao mesmo tempo, cada uma no seu aparelho ===== */
+  async function onlineComp(cx){const {data}=await sb.from('trein_eventos').select('tipo,detalhe,criado_em').eq('user_id',uid).in('tipo',['colab_sessao','hb','tempo']).gt('criado_em',new Date(Date.now()-180000).toISOString()).limit(500);
+    const S=new Set();(data||[]).forEach(r=>{const d=r.detalhe||{};const ss=r.tipo==='tempo'?d.ss:d.s;if(d.cid===cx.id&&ss)S.add(ss);});return S;}
+  async function drawComp(cx,st){const max=+cx.max||12,ate=st.ate,fimE=ate?Date.parse(ate+'T23:59:59-04:00'):Date.now()+864e5;
+    const mys=LSx.g('treinFC-s-'+cx.id)||'';const on=await onlineComp(cx);on.delete(mys);const n=on.size;
+    T.textContent='Toque para entrar';X.textContent='Acesso 3D: até '+max+' pessoas ao mesmo tempo, cada uma no seu aparelho'+(ate?' · liberado até '+ate.split('-').reverse().join('/'):'')+'. Gire, abra as folhas, desmonte as esquadrias e faça os desafios.';
+    L.innerHTML='';const b=document.createElement('button');b.type='button';b.className='cbtn';b.innerHTML=`<span>🪟 ${esc(cx.nome||'Acesso 3D')}</span><small>${n} de ${max} pessoas usando agora</small>`;L.appendChild(b);
+    b.onclick=async()=>{let V=null;try{V=JSON.parse(LSx.g('treinFC-vis-'+uid)||'null');}catch(_){}
+      if(!V||!V.nome||!V.empresa){V=await fichaComp();if(!V)return;}
+      const on2=await onlineComp(cx);on2.delete(mys);if(on2.size>=max){M.style.color='';M.textContent='O Acesso 3D está cheio agora ('+max+' pessoas usando). Tente de novo em alguns minutos.';return;}
+      window.ALUNO_COMP=true;window.ALUNO_VIS=V;window.ALUNO_NOME=V.nome+' · '+V.empresa;window.ALUNO_CID=cx.id;window.ALUNO_FIM=fimE;window.ALUNO_INI=Date.now();marcaCid(cx.id);
+      window.COLAB_S=mys||Math.random().toString(36).slice(2,10);LSx.s('treinFC-s-'+cx.id,window.COLAB_S);
+      if(!LSx.g('treinFC-visok-'+uid)){await sb.from('trein_eventos').insert({user_id:uid,tipo:'visitante',tipologia:null,detalhe:Object.assign({cid:cx.id,s:window.COLAB_S},V)});LSx.s('treinFC-visok-'+uid,'1');}
+      await sb.from('trein_eventos').insert({user_id:uid,tipo:'colab_sessao',tipologia:null,detalhe:{cid:cx.id,quem:window.ALUNO_NOME,s:window.COLAB_S,comp:true}});
+      const tag=document.getElementById('quemTag');tag.textContent='👤 '+V.nome;tag.title='Acesso 3D';tag.hidden=false;box.hidden=true;
+      setTimeout(()=>{try{ctaComp(perfil);}catch(e){console.warn(e);}},800);res(Object.assign({},cx,{nome:window.ALUNO_NOME}));};
+    if(ultCid()===cx.id&&LSx.g('treinFC-vis-'+uid)&&!window.ALUNO_CID)b.click();}
+  function fichaComp(){return new Promise(ok=>{T.textContent='Quem está entrando?';X.textContent='Preencha uma vez só neste aparelho. Serve para o relatório e para a FC saber quem conheceu a ferramenta.';M.textContent='';
+    const st='display:block;width:100%;box-sizing:border-box;margin:2px 0 8px;padding:10px 12px;border:1px solid #c4ccd2;border-radius:8px;font:600 16px Barlow,system-ui,sans-serif';
+    L.innerHTML=`<label style="text-align:left;font-size:13.5px">Seu nome *<input id="vN" style="${st}" autocomplete="name"></label><label style="text-align:left;font-size:13.5px">Empresa *<input id="vE" style="${st}" autocomplete="organization"></label><label style="text-align:left;font-size:13.5px">Cidade<input id="vC" style="${st}" placeholder="Ex.: Sorriso - MT"></label><label style="text-align:left;font-size:13.5px">WhatsApp (opcional)<input id="vZ" style="${st}" inputmode="tel" placeholder="(66) 9 9999-9999"></label><button type="button" id="vOk">Entrar no Mostruário 3D →</button><button type="button" id="vVolta" style="background:#fff;color:#1d3f57;border:1px solid #c9d3da">← Voltar</button>`;
+    setTimeout(()=>document.getElementById('vN').focus(),50);
+    document.getElementById('vOk').onclick=()=>{const g=id=>document.getElementById(id).value.trim().replace(/\s+/g,' ');const V={nome:g('vN').slice(0,60),empresa:g('vE').slice(0,80),cidade:g('vC').slice(0,60),zap:g('vZ').slice(0,30)};
+      if(V.nome.length<2||V.empresa.length<2){M.style.color='#b23a32';M.textContent='Preencha o seu nome e o nome da empresa.';return;}LSx.s('treinFC-vis-'+uid,JSON.stringify(V));ok(V);};
+    document.getElementById('vVolta').onclick=()=>{ok(null);draw();};});}
   window.COLAB_DRAW=draw;draw();});}
 const trocouRecarrega=p=>p.then(x=>{if(x)location.reload();});
 function escolherColabAviso(uid,perfil,nome){trocouRecarrega(escolherColab(uid,perfil));setTimeout(()=>{const M=document.getElementById('quemMsg');M.style.color='';
   M.textContent='O nome '+nome+' foi aberto em outro aparelho, e este foi desconectado. Cada colaborador só pode usar um aparelho por vez. Para continuar aqui, toque no seu nome de novo.';},700);}
+/* ===== Virada de chave: quer a ferramenta para a sua equipe? (Acesso 3D compartilhado) ===== */
+const FCZAP='5566999867984';
+function ctaComp(perfil){if(document.getElementById('ctaBtn'))return;const V=window.ALUNO_VIS||{};
+  const st=document.createElement('style');st.textContent=`#ctaBtn{background:#e8912d!important;border-color:#e8912d!important;color:#1b1206!important;font-weight:800}
+  #ctaOv{position:fixed;inset:0;z-index:99990;background:rgba(8,16,22,.62);display:grid;place-items:center;padding:16px}#ctaOv .cx{width:min(520px,100%);border-radius:18px;overflow:hidden;background:linear-gradient(135deg,#0f6b70,#0a3b40);color:#fff;padding:22px;font:500 15px Barlow,system-ui,sans-serif;position:relative}
+  #ctaOv h3{margin:0 0 12px;font:800 28px/1.1 "Barlow Condensed",Barlow,sans-serif}#ctaOv ul{list-style:none;padding:0;margin:0 0 14px;display:grid;gap:8px}#ctaOv li{display:flex;gap:10px;align-items:center;font:700 17px Barlow,sans-serif;background:rgba(255,255,255,.1);border-radius:10px;padding:10px 12px}#ctaOv li span{font-size:22px}
+  #ctaOv .ft{font:700 18px Barlow,sans-serif;color:#ffd58a;margin-bottom:12px}#ctaOv .bs{display:flex;gap:8px;flex-wrap:wrap}#ctaOv .bs a,#ctaOv .bs button{border:0;border-radius:10px;padding:11px 16px;font:800 15.5px Barlow,sans-serif;cursor:pointer;text-decoration:none}
+  #ctaOv .z{background:#1f9d55;color:#fff}#ctaOv .c{background:#f2a51e;color:#2a1b00}#ctaOv .x{position:absolute;right:12px;top:10px;background:rgba(255,255,255,.18);color:#fff;border:0;border-radius:50%;width:30px;height:30px;font-size:16px;cursor:pointer}#ctaOv .ok{margin-top:10px;font-weight:700;color:#bff5d4}#ctaOv .sg{margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.22);display:flex;gap:8px;flex-wrap:wrap;align-items:center}#ctaOv .sg b{flex-basis:100%;font-size:14px;letter-spacing:.06em;text-transform:uppercase;color:#bfe3e6}#ctaOv .sg a{background:#fff;color:#0f4f53;border-radius:99px;padding:8px 14px;font:800 15px Barlow,sans-serif;text-decoration:none}#ctaOv .sg a.ig{background:linear-gradient(45deg,#f58529,#dd2a7b,#8134af);color:#fff}
+  #igBtn{background:linear-gradient(45deg,#f58529,#dd2a7b,#8134af)!important;border-color:#dd2a7b!important;color:#fff!important;font-weight:800}`;document.head.appendChild(st);
+  const b=document.createElement('button');b.type='button';b.id='ctaBtn';b.textContent='⭐ Quero para minha empresa';b.title='Fale com a Equipe FC';b.onclick=()=>abre('botão');
+  const ub=document.getElementById('ubar');if(ub)ub.insertBefore(b,ub.children[2]||null);
+  if(ub&&!document.getElementById('igBtn')){const ig=document.createElement('a');ig.id='igBtn';ig.href='https://www.instagram.com/fc__consultoria/';ig.target='_blank';ig.rel='noopener';ig.textContent='📸 Siga @fc__consultoria';ig.title='Instagram da FC Consultoria';ub.insertBefore(ig,b.nextSibling);const sb2=document.createElement('a');sb2.id='siteBtn';sb2.href='https://fc-consultoria.github.io/?o=a3d';sb2.target='_blank';sb2.rel='noopener';sb2.textContent='🌐 Site da FC';sb2.style.cssText='background:#0f6b70;border-color:#0f6b70;color:#fff;font-weight:800';ub.insertBefore(sb2,ig.nextSibling);}
+  function abre(origem){if(document.getElementById('ctaOv'))return;const o=document.createElement('div');o.id='ctaOv';
+    const txt='Olá, Equipe FC! Conheci o FC Mostruário 3D pelo Acesso 3D'+(perfil&&perfil.nome?' de '+perfil.nome:'')+' e quero saber mais.\nNome: '+(V.nome||'')+'\nEmpresa: '+(V.empresa||'')+(V.cidade?'\nCidade: '+V.cidade:'');
+    o.innerHTML=`<div class="cx"><button type="button" class="x" aria-label="Fechar">✕</button><h3>Gostou do FC Mostruário 3D?</h3><ul><li><span>💡</span>Quer saber mais?</li><li><span>👥</span>Quer ter esta ferramenta para a sua equipe?</li><li><span>📊</span>Quer montar um Painel de Vendas usando esta ferramenta?</li></ul><div class="ft">Entre em contato com a Equipe FC.</div>
+      <div class="bs"><a class="z" href="https://wa.me/${FCZAP}?text=${encodeURIComponent(txt)}" target="_blank" rel="noopener">💬 Chamar no WhatsApp</a><button type="button" class="c" id="ctaMe">✉️ Quero que a FC me chame</button></div><div class="ok" id="ctaOk"></div><div class="sg"><b>Siga a FC Consultoria</b><a href="https://fc-consultoria.github.io/?o=a3d" target="_blank" rel="noopener">🌐 fc-consultoria.github.io</a><a class="ig" href="https://www.instagram.com/fc__consultoria/" target="_blank" rel="noopener">📸 @fc__consultoria</a></div></div>`;
+    document.body.appendChild(o);const fecha=()=>o.remove();o.querySelector('.x').onclick=fecha;o.onclick=e=>{if(e.target===o)fecha();};
+    o.querySelector('.z').addEventListener('click',()=>{try{TRK('cta_zap',{o:origem});}catch(_){}});
+    document.getElementById('ctaMe').onclick=async ev=>{const bt=ev.target;bt.disabled=true;bt.textContent='Enviando…';
+      const r=await sb.from('trein_eventos').insert({user_id:(await sb.auth.getSession()).data.session.user.id,tipo:'interesse',tipologia:null,detalhe:{quem:(V.nome||'')+' · '+(V.empresa||''),t:'🌐 Acesso 3D: quer saber mais / ferramenta para a equipe / painel de vendas'+(V.cidade?' · '+V.cidade:'')+(V.zap?' · WhatsApp '+V.zap:''),cid:window.ALUNO_CID||null,acesso3d:true,vis:V}});
+      bt.textContent=r.error?'Tente de novo':'✓ Pedido enviado';document.getElementById('ctaOk').textContent=r.error?'Não foi possível enviar agora. Use o WhatsApp.':'Pronto! A Equipe FC vai entrar em contato'+(V.zap?' pelo WhatsApp '+V.zap:'')+'.';if(r.error)bt.disabled=false;};}
+  window.CTA_ABRE=abre;
+  /* abre sozinho uma vez depois de 10 min de uso e uma vez ao concluir um desafio */
+  if(!LSx.g('treinFC-cta1'))setTimeout(()=>{if(!LSx.g('treinFC-cta1')){LSx.s('treinFC-cta1','1');abre('10min');}},600000);
+  const t0=window.TRK;if(t0&&!t0.__cta){window.TRK=function(tipo,d){const r=t0.apply(this,arguments);if(tipo==='teste'&&!LSx.g('treinFC-cta2')){LSx.s('treinFC-cta2','1');setTimeout(()=>abre('desafio'),2500);}return r;};window.TRK.__cta=1;}}
 function vigiaPrazo(uid,perfil){setInterval(()=>{if(window.ALUNO_CID)marcaCid(window.ALUNO_CID);},60000);setInterval(()=>{if(window.ALUNO_CID&&window.COLAB_S&&document.visibilityState==='visible')sb.from('trein_eventos').insert({user_id:uid,tipo:'hb',tipologia:null,detalhe:{cid:window.ALUNO_CID,s:window.COLAB_S}});},60000);
-  setInterval(async()=>{if(!window.ALUNO_CID||!window.COLAB_S)return;
+  setInterval(async()=>{if(!window.ALUNO_CID||!window.COLAB_S||window.ALUNO_COMP)return;
     const {data}=await sb.from('trein_eventos').select('detalhe').eq('user_id',uid).eq('tipo','colab_sessao').order('criado_em',{ascending:false}).limit(30);
     const ult=(data||[]).map(r=>r.detalhe||{}).find(d=>d.cid===window.ALUNO_CID);
     if(ult&&ult.s!==window.COLAB_S){const nome=window.ALUNO_NOME;window.ALUNO_CID=null;window.COLAB_S=null;window.ALUNO_FIM=null;if(window.TRKFLUSH)TRKFLUSH();
       await escolherColabAviso(uid,perfil,nome);}},45000);
   setInterval(()=>{if(window.ALUNO_FIM&&Date.now()>window.ALUNO_FIM){window.ALUNO_FIM=null;window.ALUNO_CID=null;
     if(window.TRKFLUSH)TRKFLUSH();trocouRecarrega(escolherColab(uid,perfil));}},30000);
-  document.getElementById('quemTag').onclick=async()=>{const antes=window.ALUNO_CID;if(window.TRKFLUSH)await TRKFLUSH();window.ALUNO_CID=null;window.ALUNO_NOME=null;window.COLAB_S=null;LSx.r('treinFC-cid');const x=await escolherColab(uid,perfil);if(x&&x.id!==antes)location.reload();};}
+  document.getElementById('quemTag').onclick=async()=>{if(window.ALUNO_COMP){if(!confirm('Sair do Acesso 3D neste aparelho? Na próxima entrada a ficha (nome e empresa) é pedida de novo.'))return;LSx.r('treinFC-vis-'+uid);LSx.r('treinFC-visok-'+uid);LSx.r('treinFC-cid');location.reload();return;}const antes=window.ALUNO_CID;if(window.TRKFLUSH)await TRKFLUSH();window.ALUNO_CID=null;window.ALUNO_NOME=null;window.COLAB_S=null;LSx.r('treinFC-cid');const x=await escolherColab(uid,perfil);if(x&&x.id!==antes)location.reload();};}
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="auth.js"></script>
@@ -221,7 +271,7 @@ function vigiaPrazo(uid,perfil){setInterval(()=>{if(window.ALUNO_CID)marcaCid(wi
     fila.push({user_id:uid,tipo:'login',tipologia:(typeof S!=='undefined'?S.typo:null)||null,detalhe:window.ALUNO_NOME?{quem:window.ALUNO_NOME,cid:window.ALUNO_CID||null}:{}});
     TRK('tipologia',{t:(typeof S!=='undefined'?S.typo:null)||''});
     try{PROG={};localStorage.removeItem('treinFC-prog');if(typeof LV!=='undefined'){for(const k in LV)delete LV[k];}localStorage.removeItem('treinFC-lv');}catch(e){}
-    sb.from('trein_eventos').select('detalhe,criado_em').eq('user_id',uid).eq('tipo','teste').then(({data})=>{data=(data||[]).filter(r=>Date.parse(r.criado_em)>(window.ZERAR_T||0));
+    sb.from('trein_eventos').select('detalhe,criado_em').eq('user_id',uid).eq('tipo','teste').then(({data})=>{if(window.ALUNO_COMP)return;data=(data||[]).filter(r=>Date.parse(r.criado_em)>(window.ZERAR_T||0));
       if(!data||typeof mergeProg!=='function')return;
       mergeProg(data.map(r=>{const x=r.detalhe||{},pct=x.pct!=null?x.pct:Math.round((x.tot||0)/((x.tot||0)+(x.err||0)||1)*100);
         return {t:x.t,pct,stars:x.stars!=null?x.stars:(pct>=90?3:pct>=70?2:1),ms:x.ms||359999000,nivel:x.nivel||null};}));});
@@ -461,6 +511,6 @@ const st=document.createElement('style');st.textContent=`.ubar a#uSite{backgroun
 <!-- Monte sua Casa tirado do app do aluno (20/10): os alunos entravam nele e não iam para o principal -->
 <script src="esquadrias/musica.js?v=6"></script>
 <script src="offline.js?v=1"></script>
-<script src="ubar-menu.js?v=2"></script>
+<script src="ubar-menu.js?v=4"></script>
 </body>
 </html>
