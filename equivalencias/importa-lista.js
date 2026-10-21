@@ -30,15 +30,15 @@
   let IT=[],ARQ='';
   function tabela(){const ok=IT.filter(x=>x.ok).length;
     return `<div class="imp-md" role="dialog" aria-label="Importar lista"><div class="imp-h"><b>📎 Lista do cliente · ${esc(ARQ)}</b><button type="button" class="bt" data-impx>✕ Fechar</button></div>
-     <p class="sub" style="margin:0">${IT.length} linhas lidas · <b style="color:var(--ok,#16a34a)">${ok} encontradas</b>${IT.length-ok?` · <b style="color:var(--md,#d97706)">${IT.length-ok} para conferir</b> (corrija o código na linha ou deixe desmarcado)`:''}. A cor vem da coluna Cor ou da abreviação no fim do código (.BCO, -PTO, -NAT…).</p>
+     <p class="sub" style="margin:0">${IT.length} linhas lidas · <b style="color:var(--ok,#16a34a)">${ok} encontradas</b>${IT.length-ok?` · <b style="color:var(--md,#d97706)">${IT.length-ok} para conferir</b> (entram na simulação como “não encontrado”: corrija o código aqui ou ajuste depois com ＋ 2ª opção)`:''}. A cor vem da coluna Cor ou da abreviação no fim do código (.BCO, -PTO, -NAT…).</p>
      <div style="overflow:auto;max-height:58vh;border:1px solid #d6dee4;border-radius:10px"><table class="imp-t"><thead><tr><th></th><th>Código na lista</th><th>Produto</th><th>Achado como</th><th>Curva</th><th>Cor</th><th class="n">Barras</th><th>Barra</th></tr></thead><tbody>
-     ${IT.map((x,i)=>`<tr class="${x.ok?'':'nf'}"><td><input type="checkbox" data-iu="${i}" ${x.ok&&x.use!==false?'checked':''} ${x.ok?'':'disabled'} aria-label="Usar"></td><td><b>${esc(x.raw)}</b>${x.corAb?`<br><small>cor no código: ${esc(CORN[x.corAb])}</small>`:''}</td><td><small>${esc(x.prod)}</small></td>
-      <td>${x.ok?`<b>${esc(x.ach.g.k)}</b><br><small>${esc(IDX.linhas[x.ach.g.l].n)}${x.ach.g.n?' · '+esc(x.ach.g.n):''}${x.ach.n>1?' · aparece em '+x.ach.n+' linhas':''}</small>`:`<input data-ic="${i}" value="${esc(x.base)}" style="width:120px" aria-label="Corrigir código"> <small style="color:var(--md,#d97706)">não achei</small>`}</td>
+     ${IT.map((x,i)=>`<tr class="${x.ok?'':'nf'}"><td><input type="checkbox" data-iu="${i}" ${x.use!==false?'checked':''} aria-label="Usar"></td><td><b>${esc(x.raw)}</b>${x.corAb?`<br><small>cor no código: ${esc(CORN[x.corAb])}</small>`:''}</td><td><small>${esc(x.prod)}</small></td>
+      <td>${x.ok?`<b>${esc(x.ach.g.k)}</b><br><small>${esc(IDX.linhas[x.ach.g.l].n)}${x.ach.g.n?' · '+esc(x.ach.g.n):''}${x.ach.n>1?' · aparece em '+x.ach.n+' linhas':''}</small>`:`<input data-ic="${i}" value="${esc(x.base)}" style="width:120px" aria-label="Corrigir código"> <small style="color:var(--md,#d97706)">não achei · entra assim e você ajusta com ＋ 2ª opção</small>`}</td>
       <td>${x.ok?(c=>c?`<span class="abcb ${c}">${c}</span>`:'<small>—</small>')(classe(x.ach.g,x.ach.cod)):''}</td>
       <td><select data-icor="${i}" aria-label="Cor">${CORES.map(([k,t])=>`<option value="${k}" ${x.cor===k?'selected':''}>${esc(t)}</option>`).join('')}</select></td>
       <td class="n"><input data-iq="${i}" value="${x.q}" inputmode="numeric" style="width:70px;text-align:right" aria-label="Barras"></td>
       <td><select data-im="${i}" aria-label="Tamanho">${[...new Set(MTS.concat([x.mt]))].sort((a,b)=>a-b).map(m=>`<option value="${m}" ${x.mt===m?'selected':''}>${String(m).replace('.',',')} m</option>`).join('')}</select></td></tr>`).join('')}</tbody></table></div>
-     <div class="acoes" style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="bt p" data-impok="novo">✅ Simular com esta lista (${IT.filter(x=>x.ok&&x.use!==false).length} itens)</button><button type="button" class="bt" data-impok="soma">＋ Somar à simulação atual</button></div></div>`;}
+     <div class="acoes" style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="bt p" data-impok="novo">✅ Simular com esta lista (${IT.filter(x=>x.use!==false).length} itens)</button><button type="button" class="bt" data-impok="soma">＋ Somar à simulação atual</button></div></div>`;}
   function abre(){let o=document.getElementById('impOv');if(!o){o=document.createElement('div');o.id='impOv';document.body.appendChild(o);}o.innerHTML=tabela();}
   const css=`#impOv{position:fixed;inset:0;z-index:80;background:rgba(10,20,28,.55);display:flex;align-items:center;justify-content:center;padding:14px}
   .imp-md{background:#fff;color:#13232e;border-radius:16px;width:min(1180px,100%);max-height:100%;overflow:auto;padding:16px 18px;display:flex;flex-direction:column;gap:10px}
@@ -58,9 +58,9 @@
     if(t.closest('[data-implista]')){let i=document.getElementById('impFile');if(!i){i=document.createElement('input');i.type='file';i.id='impFile';i.hidden=true;i.accept='.xlsx,.xls,.csv,.txt';document.body.appendChild(i);i.onchange=()=>{if(i.files[0])arquivo(i.files[0]);i.value='';};}i.click();return;}
     if(!document.getElementById('impOv'))return;
     if(t.closest('[data-impx]')||t.id==='impOv'){document.getElementById('impOv').remove();return;}
-    const ok=t.closest('[data-impok]');if(ok){const U=IT.filter(x=>x.ok&&x.use!==false);if(!U.length){toast('Nenhum item encontrado para simular.');return;}
-      if(ok.dataset.impok==='novo')SIM.length=0;U.forEach(x=>{simAdd(x.ach.g.k,x.q,x.ach.g.l+'|'+x.ach.g.k,x.cor,x.mt);const it=SIM.find(y=>norm(y.q)===norm(x.ach.g.k)&&y.cor===x.cor&&+y.m===x.mt);if(it&&!it.orig){it.orig=x.raw;ls.set(SKEY(),SIM);}});
-      document.getElementById('impOv').remove();ABA='sim';tela();scrollTo(0,0);toast(U.length+' itens na simulação.'+(IT.length-U.length?' Ficaram de fora: '+(IT.length-U.length)+'.':''));}});
+    const ok=t.closest('[data-impok]');if(ok){const U=IT.filter(x=>x.use!==false);if(!U.length){toast('Nenhum item marcado para simular.');return;}
+      if(ok.dataset.impok==='novo')SIM.length=0;U.forEach(x=>{const q=x.ok?x.ach.g.k:String(x.base||x.raw).toUpperCase();simAdd(q,x.q,x.ok?x.ach.g.l+'|'+x.ach.g.k:null,x.cor,x.mt);const it=SIM.find(y=>norm(y.q)===norm(q)&&y.cor===x.cor&&+y.m===x.mt);if(it){if(!it.orig)it.orig=x.raw;if(!x.ok&&x.prod&&!it.desc)it.desc=String(x.prod).slice(0,90);ls.set(SKEY(),SIM);}});
+      document.getElementById('impOv').remove();ABA='sim';tela();scrollTo(0,0);const nf=U.filter(x=>!x.ok).length;toast(U.length+' itens na simulação.'+(nf?' '+nf+' não encontrado'+(nf>1?'s':'')+': ajuste com ＋ 2ª opção.':'')+(IT.length-U.length?' Ficaram de fora: '+(IT.length-U.length)+'.':''));}});
   document.addEventListener('change',e=>{const t=e.target;if(!t.closest||!t.closest('#impOv'))return;const d=t.dataset;
     if(d.iu!=null)IT[+d.iu].use=t.checked;
     else if(d.icor!=null)IT[+d.icor].cor=t.value;
