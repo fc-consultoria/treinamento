@@ -157,7 +157,7 @@ function tela(){if(!D)return;const ag=D.orcs.filter(o=>o.status==='aguardando').
   if(!D.itens.length&&ABA!=='cfg')h+=`<div class="box" style="border-color:var(--or);background:var(--orc)"><b>Ainda não há itens liberados para orçamento.</b><p class="nota" style="margin:2px 0 0">${ADM?'Vá em ⚙️ Configurar e clique em "Atualizar itens da precificação".':'A FC Consultoria está preparando a lista de itens. Volte mais tarde.'}</p></div>`;
   if(['com','apr','vend','cfg','est','cli'].includes(ABA)&&!ADM)ABA='novo';if(ABA==='cat'&&!D.cat)ABA='novo';if(ABA==='novo')h+=telaNovo();else if(ABA==='lista')h+=telaLista();else if(ABA==='com'||ABA==='apr')h+=`<div class="${ABA==='apr'?'modoApr':'modoCom'}">`+telaCom()+'</div>';else if(ABA==='est')h+=telaEst();else if(ABA==='cest')h+=telaCest();else if(ABA==='cat')h+=telaCat();else if(ABA==='atd'||ABA==='cli')h+='<div id="atdBox"></div>';else if(window.VX&&VX.tem(ABA))h+=VX.tela(ABA);else h+=`<div class="${ABA==='vend'?'modoVend':'modoCfg'}">`+telaCfg()+'</div>';
   $('#app').innerHTML=h;$$('[data-ab]').forEach(b=>b.onclick=()=>{ABA=b.dataset.ab;tela();});
-  if(ABA==='novo')wireNovo();else if(ABA==='lista')wireLista();else if(ABA==='com'||ABA==='apr')wireCom();else if(ABA==='est')wireEst();else if(ABA==='cest')wireCest();else if(ABA==='cat'){}else if(ABA==='atd'||ABA==='cli'){if(window.ATD)ATD.abrir(ABA);}else if(window.VX&&VX.tem(ABA))VX.wire(ABA);else wireCfg();if(window.ATD&&!DEMO)ATD.ligar();const gf=$('#gFC');if(gf)gf.onclick=suporte;const stb=$('#supTab');if(stb)stb.onclick=suporte;}
+  if(ABA==='novo')wireNovo();else if(ABA==='lista')wireLista();else if(ABA==='com'||ABA==='apr')wireCom();else if(ABA==='est')wireEst();else if(ABA==='cest')wireCest();else if(ABA==='cat'){}else if(ABA==='atd'||ABA==='cli'){if(window.ATD)ATD.abrir(ABA);}else if(window.VX&&VX.tem(ABA))VX.wire(ABA);else wireCfg();if(window.VX&&VX.pos)VX.pos();if(window.ATD&&!DEMO)ATD.ligar();const gf=$('#gFC');if(gf)gf.onclick=suporte;const stb=$('#supTab');if(stb)stb.onclick=suporte;}
 
 /* ---------- novo / editar ---------- */
 function calc(){const sub=O.itens.reduce((a,i)=>a+Math.round(num(i.preco)*num(i.qtd)*100)/100,0);let dsc=O.descTipo==='pc'?Math.round(sub*num(O.descPc)/100*100)/100:num(O.desconto);
@@ -531,6 +531,6 @@ if(VKEY&&!GESTOR&&MOVEL){const L=location.href;document.body.innerHTML=`<div sty
     let e0=Q.get('e')||(()=>{try{return localStorage.getItem('fc_orc_emp');}catch(_){return '';}})()||'cb';if(!EMPS.some(e=>e.id===e0))e0=(EMPS.find(e=>e.id==='cb')||EMPS[0]||{}).id;s.value=e0;s.onchange=()=>trocaEmp(s.value);
     if(ABA0)ABA=ABA0;await trocaEmp(e0);});})();
 </script>
-<script src="atendimentos.js?v=2"></script><script src="vend-extra.js?v=2"></script>
+<script src="atendimentos.js?v=2"></script><script src="vend-extra.js?v=4"></script>
 </body>
 </html>

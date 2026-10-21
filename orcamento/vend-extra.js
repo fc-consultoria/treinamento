@@ -23,7 +23,7 @@
   VX.abas=()=>[['sup','🛟 Suporte Técnico FC'+(NOVAS?' ('+NOVAS+')':'')],['gui','🎓 Guia de Treinamento'],['fol','📣 Folder de divulgação']];
   VX.tem=a=>a==='sup'||a==='gui'||a==='fol';
   VX.tela=a=>{st();if(a==='sup')return telaSup();if(a==='gui')return telaGui();return telaFol();};
-  VX.wire=a=>{clearInterval(POLL);if(a==='sup')wireSup();else if(a==='fol')wireFol();};
+  VX.wire=a=>{clearInterval(POLL);setTimeout(()=>{if(DST)pinta();},0);if(a==='sup')wireSup();else if(a==='fol')wireFol();};
 
   /* ---------- 🛟 suporte ---------- */
   function telaSup(){return `<div class="box"><div class="row" style="margin-bottom:6px"><h3 style="margin:0;flex:1">🛟 Suporte Técnico FC</h3><span class="nota">Atendimento de segunda a sexta, 08:00–11:00 e 13:00–17:00</span></div>
@@ -57,7 +57,7 @@
     if(t.closest&&t.closest('[data-vxrm]')){ANX=null;document.getElementById('vxAnx').innerHTML='';return;}
     const im=t.closest&&t.closest('[data-vxim]');if(im&&im.src){const o=document.createElement('div');o.className='vx-lb';o.innerHTML=`<img src="${im.src}" alt="">`;o.onclick=()=>o.remove();document.body.appendChild(o);return;}
     const pf=t.closest&&t.closest('[data-vxpdf]');if(pf){const d=await anexo(pf.dataset.vxpdf);if(!d)return;const b=await (await fetch(d.dados)).blob();window.open(URL.createObjectURL(b),'_blank');return;}
-    const fo=t.closest&&t.closest('[data-vxfo]');if(fo)acaoFolder(fo.dataset.vxfo,+fo.dataset.i);});
+    });
   async function envia(){const tx=document.getElementById('vxTx'),b=document.getElementById('vxEnv');const texto=tx.value.trim();if(!texto&&!ANX){toast('Escreva a mensagem ou anexe um print.');return;}
     let nm='';try{nm=localStorage.getItem('cons-nome')||'';}catch(_){}
     b.disabled=true;b.textContent='Enviando…';const r=await sb.rpc('orc_sup_enviar',{p_chave:key(),p_texto:texto||'',p_nome:nm||null,p_anexo_nome:ANX&&ANX.nome||null,p_anexo_tipo:ANX&&ANX.tipo||null,p_dados:ANX&&ANX.dados||null});
@@ -66,7 +66,7 @@
   /* aviso de resposta nova da FC (aba com contador) */
   VX.checar=async()=>{try{const L=await carregaMsgs();let s='';try{s=localStorage.getItem(seenK())||'';}catch(_){}const n=L.filter(m=>m.de==='fc'&&m.em>s).length;if(n!==NOVAS){NOVAS=n;if(typeof tela==='function'&&ABA!=='sup')tela();}}catch(_){}};
 
-  let INI=false;VX.iniciar=()=>{if(INI||typeof DEMO!=='undefined'&&DEMO||typeof FC!=='undefined'&&FC||!VKEY)return;INI=true;VX.checar();setInterval(()=>{if(document.visibilityState==='visible')VX.checar();},60000);};
+  let INI=false;VX.iniciar=()=>{if(INI||typeof DEMO!=='undefined'&&DEMO||typeof FC!=='undefined'&&FC||!VKEY)return;INI=true;flutuante();VX.checar();setInterval(()=>{if(document.visibilityState==='visible')VX.checar();},60000);};
   /* o script pode carregar depois da primeira tela: redesenha com as abas novas */
   setTimeout(()=>{try{if(typeof D!=='undefined'&&D&&typeof tela==='function'){tela();VX.iniciar();}}catch(_){}},0);
   /* ---------- 🎓 guia ---------- */
@@ -77,23 +77,65 @@
      <iframe src="${BASE}guia/" title="Guia de uso do Mostruário" loading="lazy" style="width:100%;height:max(620px,70vh);border:1px solid var(--ln,#d8e2e6);border-radius:10px;background:#fff"></iframe></div>
     <div class="nota">Não tem login? Peça ao gestor da loja ou fale com a FC na aba 🛟 Suporte Técnico FC.</div></div></div>`;}
 
-  /* ---------- 📣 folder ---------- */
+  /* ---------- 📣 folder · destaques um por vez (igual ao site da FC) ---------- */
   const catUrl=v=>v&&(v.dominio?'https://'+String(v.dominio).replace(/^https?:\/\//,'').replace(/\/$/,'')+'/':'https://fc-consultoria.github.io/catalogo/'+v.slug);
-  function telaFol(){return `<div class="box"><div class="row" style="margin-bottom:6px"><h3 style="margin:0;flex:1">📣 Folder de divulgação</h3></div><p class="nota" style="margin:0 0 12px">As mesmas ofertas que aparecem em destaque no catálogo da loja. Use na conversa com o cliente que chegou pelo site: copie a imagem e cole na conversa, baixe ou mande pelo WhatsApp.</p><div id="vxFol"><p class="nota">Carregando…</p></div></div>`;}
-  async function wireFol(){const box=document.getElementById('vxFol');if(!box)return;
-    if(!VIT){const r=await sb.rpc('orc_vend_vitrine',{p_chave:key()});VIT=r.data||{};}
-    const it=((VIT.vit&&VIT.vit.it)||[]).filter(x=>x.k==='o'&&(x.img||x.t));const pf=((VIT.vit&&VIT.vit.it)||[]).filter(x=>x.k==='p');const cu=VIT.slug?catUrl(VIT):'';
-    box.innerHTML=(it.length?`<div class="vx-g">${it.map((x,i)=>`<div class="vx-f"><div class="im" style="${x.img?`background-image:url('${e(x.img)}')`:''}">${x.img?'':'<div style="display:grid;place-items:center;height:100%;font-size:40px">📣</div>'}</div><div class="bd"><b>${e(x.t||'Oferta')}</b>${x.x?`<span class="nota">${e(x.x)}</span>`:''}
-      <div class="ac">${x.img?`<button type="button" class="btn pri" data-vxfo="copiar" data-i="${i}">📋 Copiar imagem</button><button type="button" class="btn" data-vxfo="baixar" data-i="${i}">⬇️ Baixar</button>`:''}<button type="button" class="btn" style="background:#1f9d55;border-color:#1f9d55;color:#fff" data-vxfo="zap" data-i="${i}">💬 WhatsApp</button></div></div></div>`).join('')}</div>`
-      :`<div class="vx-card"><span style="font-size:34px">🗂</span><div style="flex:1;min-width:240px"><b>Ainda não há folder na vitrine do catálogo.</b><div class="nota">Quando a loja cadastrar uma oferta na vitrine do catálogo, ela aparece aqui para você usar com o cliente.</div></div></div>`)
-      +(pf.length?`<p class="nota" style="margin:12px 0 4px"><b>Perfis em destaque no catálogo:</b> ${pf.map(x=>e(x.c)).join(' · ')}</p>`:'')
-      +(cu?`<div style="margin-top:10px"><a class="btn" href="${e(cu)}" target="_blank" rel="noopener">📚 Abrir o catálogo da loja ↗</a></div>`:'');
-    VX._it=it;VX._cu=cu;}
-  async function acaoFolder(a,i){const x=(VX._it||[])[i];if(!x)return;
-    if(a==='zap'){const t=`${x.t||'Oferta'}${x.x?'\n'+x.x:''}${x.img?'\n'+x.img:''}${VX._cu?'\n\nVeja o catálogo: '+VX._cu:''}`;window.open('https://wa.me/?text='+encodeURIComponent(t),'_blank');return;}
+  const PIMG='https://fc-consultoria.github.io/perfis/img/',P3D='https://fc-consultoria.github.io/perfis/?ver=';
+  let DST=null,DI=0,DT=null,DPAUSA=false;
+  async function destaques(){if(DST)return DST;
+    if(!VIT){try{const r=await sb.rpc('orc_vend_vitrine',{p_chave:key()});VIT=r.data||{};}catch(_){VIT={};}}
+    let PF={};try{PF=(await fetch('../esquadrias/perfis.json?v=1').then(r=>r.json())).P||{};}catch(_){}
+    const pf=c=>PF[c]||PF[Object.keys(PF).find(k=>k.split(' / ')[0]===c)];
+    DST=((VIT.vit&&VIT.vit.it)||[]).map(x=>{if(x.k==='p'){const q=pf(x.c);return {k:'p',c:x.c,t:x.t||x.c,x:x.x||(q&&q.n)||'',img:q?PIMG+(q.d3?q.i:'c'+q.i)+'.webp':''};}
+      if(x.k==='o'&&(x.t||x.img))return {k:'o',t:x.t||'Oferta',x:x.x||'',img:x.img||''};return null;}).filter(Boolean);
+    VX._cu=VIT.slug?catUrl(VIT):'';return DST;}
+  const segs=()=>Math.max(4,Math.min(12,+((VIT&&VIT.vit&&VIT.vit.seg)||6)));
+  function cardDst(x,grande){return `<div class="vx-dst${grande?' gr':''}"><div class="vx-dh">📣 <span>Destaques · ${e((typeof D!=='undefined'&&D&&D.nome)||'')}</span>${grande?'':'<button type="button" data-vxd="min" title="Minimizar">–</button>'}</div>
+    <div class="vx-di${x.k==='o'?' of':''}" style="${x.img?`background-image:url('${e(x.img)}')`:''}" data-vxd="ver">${x.img?'':`<div class="sx">${e(x.t)}</div>`}${x.k==='o'?'<span class="cvo">OFERTA</span>':''}</div>
+    <div class="vx-dt"><b>${e(x.t)}</b><small>${e(x.x)}</small>
+     <div class="vx-da">${x.k==='p'?`<button type="button" class="btn pri" data-vxd="ver">↻ Ver em 3D</button>`:''}${x.img?`<button type="button" class="btn${x.k==='o'?' pri':''}" data-vxd="copiar">📋 Copiar imagem</button>`:''}${grande&&x.img?'<button type="button" class="btn" data-vxd="baixar">⬇️ Baixar</button>':''}<button type="button" class="btn" style="background:#1f9d55;border-color:#1f9d55;color:#fff" data-vxd="zap">💬 WhatsApp</button></div></div>
+    <div class="vx-dd">${grande?'<button type="button" data-vxd="ant" aria-label="Anterior">‹</button>':''}${DST.map((_,k)=>`<i class="${k===DI?'on':''}" data-vxd="ir" data-k="${k}"></i>`).join('')}${grande?'<button type="button" data-vxd="prox" aria-label="Próximo">›</button>':''}</div></div>`;}
+  /* cabe na margem ao lado do painel? (igual ao site: só flutua onde não cobre o trabalho) */
+  const margem=()=>{const m=document.querySelector('main');return m?m.getBoundingClientRect().left:0;};
+  function pinta(){const g=document.getElementById('vxDstG');if(g&&DST&&DST.length)g.innerHTML=cardDst(DST[DI],true);
+    const md=document.getElementById('vxDstM');if(md&&DST&&DST.length)md.firstElementChild.innerHTML=cardDst(DST[DI],false);
+    const mg=margem(),cabe=mg-28>=210,f=document.getElementById('vxDstF');
+    if(f){if(DST&&DST.length&&!g&&!mini()&&cabe){f.hidden=false;f.style.width=Math.min(300,mg-28)+'px';f.innerHTML=cardDst(DST[DI],false);}else f.hidden=true;}
+    const tb=document.getElementById('vxDstT');if(tb){const x=DST&&DST[DI];tb.hidden=!(x&&!g&&!md&&(mini()||!cabe));if(x){tb.querySelector('.ti').style.backgroundImage=x.img?`url('${x.img}')`:'';tb.querySelector('small').textContent=x.t;}}}
+  const mini=()=>{try{return sessionStorage.getItem('vx_dst_min')==='1';}catch(_){return false;}};
+  function giro(){clearInterval(DT);DT=setInterval(()=>{if(DPAUSA||!DST||DST.length<2)return;DI=(DI+1)%DST.length;pinta();},segs()*1000);}
+  /* janela flutuante em todas as abas (minimiza para um botão) */
+  async function flutuante(){const L=await destaques();if(!L.length)return;
+    if(!document.getElementById('vxDstF')){const f=document.createElement('div');f.id='vxDstF';f.className='vx-flt';f.hidden=true;f.onmouseenter=()=>DPAUSA=true;f.onmouseleave=()=>DPAUSA=false;document.body.appendChild(f);
+      const t=document.createElement('button');t.type='button';t.id='vxDstT';t.className='vx-tab';t.hidden=true;t.innerHTML='<span class="ti"></span><span>📣 Destaques<small></small></span>';t.onclick=()=>{try{sessionStorage.removeItem('vx_dst_min');}catch(_){}if(margem()-28>=210){pinta();return;}
+        /* tela sem margem: abre como janela por cima, fecha clicando fora */
+        const m=document.createElement('div');m.id='vxDstM';m.className='vx-mod';m.innerHTML='<div style="width:min(360px,92vw)"></div>';m.onclick=ev=>{if(ev.target===m){m.remove();pinta();}};
+        m.onmouseenter=()=>DPAUSA=true;m.onmouseleave=()=>DPAUSA=false;document.body.appendChild(m);pinta();};document.body.appendChild(t);addEventListener('resize',()=>{if(DST)pinta();});}
+    pinta();giro();}
+  VX.flutuante=flutuante;VX.pos=()=>{if(DST)pinta();};
+  function telaFol(){return `<div class="box"><div class="row" style="margin-bottom:6px"><h3 style="margin:0;flex:1">📣 Folder de divulgação</h3></div><p class="nota" style="margin:0 0 12px">Os mesmos destaques que giram no catálogo da loja, um por vez. Use na conversa com o cliente que chegou pelo site: copie a imagem e cole na conversa, baixe ou mande pelo WhatsApp. Passe o mouse para pausar.</p><div id="vxDstG" class="vx-gw"><p class="nota">Carregando…</p></div><div id="vxCat"></div></div>`;}
+  async function wireFol(){const L=await destaques();const g=document.getElementById('vxDstG');if(!g)return;
+    if(!L.length){g.innerHTML=`<div class="vx-card"><span style="font-size:34px">🗂</span><div style="flex:1;min-width:240px"><b>Ainda não há destaques na vitrine do catálogo.</b><div class="nota">Quando a loja colocar perfis em destaque ou ofertas na vitrine do catálogo, eles aparecem aqui, um por vez.</div></div></div>`;return;}
+    g.onmouseenter=()=>DPAUSA=true;g.onmouseleave=()=>DPAUSA=false;pinta();giro();
+    const c=document.getElementById('vxCat');if(c&&VX._cu)c.innerHTML=`<div style="margin-top:12px"><a class="btn" href="${e(VX._cu)}" target="_blank" rel="noopener">📚 Abrir o catálogo da loja ↗</a></div>`;}
+  document.addEventListener('click',ev=>{const b=ev.target.closest&&ev.target.closest('[data-vxd]');if(!b||!DST)return;const a=b.dataset.vxd,x=DST[DI];
+    if(a==='min'){try{sessionStorage.setItem('vx_dst_min','1');}catch(_){}const md=document.getElementById('vxDstM');if(md)md.remove();pinta();return;}
+    if(a==='ir'){DI=+b.dataset.k;pinta();giro();return;}if(a==='prox'||a==='ant'){DI=(DI+(a==='prox'?1:DST.length-1))%DST.length;pinta();giro();return;}
+    if(a==='ver'){if(x.k==='p')window.open(P3D+encodeURIComponent(x.c),'_blank');return;}
+    acaoFolder(a,x);});
+  async function acaoFolder(a,x){if(!x)return;
+    if(a==='zap'){const t=`${x.k==='p'?x.c+' · ':''}${x.t===x.c?'':x.t}${x.x?(x.k==='p'?'':'\n')+x.x:''}${x.k==='p'?'\nVeja em 3D: '+P3D+encodeURIComponent(x.c):x.img?'\n'+x.img:''}${VX._cu?'\n\nCatálogo: '+VX._cu:''}`;window.open('https://wa.me/?text='+encodeURIComponent(t),'_blank');return;}
     try{const b=await (await fetch(x.img,{mode:'cors'})).blob();
-      if(a==='baixar'){const u=URL.createObjectURL(b);const l=document.createElement('a');l.href=u;l.download=(x.t||'folder').replace(/[^\w\- ]+/g,'').trim().replace(/\s+/g,'-')+'.'+((b.type.split('/')[1]||'jpg').replace('jpeg','jpg'));l.click();return;}
-      let png=b;if(b.type!=='image/png'){const im=await createImageBitmap(b);const c=document.createElement('canvas');c.width=im.width;c.height=im.height;c.getContext('2d').drawImage(im,0,0);png=await new Promise(ok=>c.toBlob(ok,'image/png'));}
+      if(a==='baixar'){const u=URL.createObjectURL(b);const l=document.createElement('a');l.href=u;l.download=(x.k==='p'?x.c:(x.t||'folder')).replace(/[^\w\- ]+/g,'').trim().replace(/\s+/g,'-')+'.'+((b.type.split('/')[1]||'jpg').replace('jpeg','jpg'));l.click();return;}
+      const im=await createImageBitmap(b);const c=document.createElement('canvas');c.width=im.width;c.height=im.height;const cx=c.getContext('2d');cx.fillStyle='#fff';cx.fillRect(0,0,c.width,c.height);cx.drawImage(im,0,0);const png=await new Promise(ok=>c.toBlob(ok,'image/png'));
       await navigator.clipboard.write([new ClipboardItem({'image/png':png})]);toast('✓ Imagem copiada: cole na conversa com Ctrl+V');}
     catch(_){if(a==='baixar'){window.open(x.img,'_blank');return;}toast('O navegador não deixou copiar: use ⬇️ Baixar e anexe na conversa.');}}
+  {const k=document.createElement('style');k.textContent=`.vx-dst{background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 14px 34px rgba(10,25,35,.22);display:flex;flex-direction:column}
+  .vx-dh{background:#0f6b70;color:#fff;display:flex;align-items:center;gap:8px;padding:8px 12px;font:700 12.5px system-ui;letter-spacing:.06em;text-transform:uppercase}.vx-dh span{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.vx-dh button{all:unset;cursor:pointer;width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,.22);display:grid;place-items:center;font-weight:800}
+  .vx-di{position:relative;aspect-ratio:16/10;background:#eef2f4 center/contain no-repeat;cursor:pointer;transition:background-image .3s}.vx-di.of{background-size:cover}.vx-di .sx{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:16px;color:#fff;font:800 20px/1.2 system-ui;background:linear-gradient(135deg,#0f6b70,#1b232a)}.vx-di .cvo{position:absolute;left:8px;top:8px;background:#e8912d;color:#fff;font:800 11px system-ui;border-radius:99px;padding:2px 8px}
+  .vx-dt{padding:10px 12px}.vx-dt b{display:block;font-size:17px}.vx-dt small{display:block;color:#5d6b76;margin:2px 0 8px;min-height:18px}.vx-da{display:flex;gap:6px;flex-wrap:wrap}.vx-da .btn{padding:6px 10px;font-size:13px}
+  .vx-dd{display:flex;gap:5px;justify-content:center;align-items:center;padding:0 0 10px}.vx-dd i{width:7px;height:7px;border-radius:50%;background:#d0d8de;cursor:pointer}.vx-dd i.on{background:#0f6b70}.vx-dd button{all:unset;cursor:pointer;font:800 22px system-ui;color:#0f6b70;padding:0 10px}
+  .vx-gw{max-width:640px}.vx-dst.gr .vx-dt b{font-size:20px}
+  .vx-flt{position:fixed;left:12px;top:50%;transform:translateY(-50%);z-index:900;width:290px}.vx-flt .vx-di{aspect-ratio:4/3}.vx-mod{position:fixed;inset:0;z-index:9990;background:rgba(8,16,22,.6);display:grid;place-items:center;padding:16px}
+  .vx-tab{position:fixed;right:12px;bottom:12px;z-index:900;border:0;border-radius:14px;background:#0f6b70;color:#fff;font:700 12.5px/1.2 system-ui;padding:5px 12px 5px 5px;cursor:pointer;box-shadow:0 8px 22px rgba(0,0,0,.3);display:flex;align-items:center;gap:8px;max-width:240px;text-align:left}.vx-tab[hidden],.vx-flt[hidden]{display:none}.vx-tab .ti{width:44px;height:44px;flex:none;border-radius:9px;background:#fff center/contain no-repeat}.vx-tab small{display:block;font-weight:500;opacity:.88;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  @media print{.vx-flt,.vx-tab{display:none!important}}`;document.head.appendChild(k);}
 })();
