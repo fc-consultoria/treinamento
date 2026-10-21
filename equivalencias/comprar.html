@@ -601,10 +601,10 @@ document.addEventListener('click',async ev=>{const t=ev.target.closest('[data-su
     o.hidden=false;window.__altAnexo=undefined;if(!F.length)toast('Nenhum fornecedor liberado com preço. Preencha a aba Preços.');}
   else if(d.altx!=null){$('#altOv').hidden=true;}
   else if(d.altrm!=null){delete SIM[+d.altrm].alt;ls.set(SKEY(),SIM);$('#altOv').hidden=true;tela();toast('2ª opção tirada.');}
-  else if(d.altok!=null){const c=$('#altC').value.trim(),pp=+String($('#altP').value).replace(',','.');if(!c||!(pp>0)){toast('Preencha o código e o peso (kg/m).');return;}
+  else if(d.altok!=null){const c=$('#altC').value.trim(),pp=+String($('#altP').value).replace(',','.');if(!c||!(pp>0)){const fa=!c?$('#altC'):$('#altP');[$('#altC'),$('#altP')].forEach(z=>z.style.borderColor='');fa.style.borderColor='#dc2626';fa.style.boxShadow='0 0 0 3px #fecaca';fa.focus();fa.scrollIntoView({block:'center'});const m=$('#altAm');if(m){m.style.color='#dc2626';m.textContent='⚠️ Falta preencher '+(!c?'o código no fornecedor':'o peso (kg/m)')+' para salvar.';}toast('Preencha '+(!c?'o código no fornecedor':'o peso (kg/m)')+'.');return;}
     const ant=SIM[+d.altok].alt||{};const A2={f:$('#altF').value,c:c.toUpperCase(),p:pp};const nv=window.__altAnexo;
     if(nv&&nv.img)A2.img=nv.img;else if(nv&&nv.pdf)A2.pdf=nv.pdf;else if(nv!==null){if(ant.img)A2.img=ant.img;if(ant.pdf)A2.pdf=ant.pdf;}
-    window.__altAnexo=undefined;SIM[+d.altok].alt=A2;try{ls.set(SKEY(),SIM);localStorage.getItem(SKEY());}catch(_){}$('#altOv').hidden=true;tela();toast('2ª opção salva: entra na comparação deste item.');}
+    window.__altAnexo=undefined;SIM[+d.altok].alt=A2;try{ls.set(SKEY(),SIM);localStorage.getItem(SKEY());}catch(_){}$('#altOv').hidden=true;ABA='sim';VSIM=null;tela();const ix=+d.altok;setTimeout(()=>{const r=document.getElementById('simrow-'+ix);if(r){r.scrollIntoView({behavior:'smooth',block:'center'});r.style.transition='background 1.5s';r.style.background='#fff3c4';setTimeout(()=>r.style.background='',2500);}},80);toast('2ª opção salva: veja a linha destacada e a comparação embaixo.');}
   else if(d.simver!=null){const i=+d.simver,x=SIM[i];VSIM=i;Q=x.q;COR='natural';MODO='barra';const r=buscar(Q);SEL=(x.g&&r.find(g=>g.l+'|'+g.k===x.g))||r[0]||null;ABA='busca';history.replaceState(null,'','#'+encodeURIComponent(Q));tela();scrollTo(0,0);}
   else if(d.voltasim!=null){const i=VSIM;VSIM=null;ABA='sim';tela();setTimeout(()=>{const r=document.getElementById('simrow-'+i);if(r){r.scrollIntoView({block:'center'});r.classList.add('hl');setTimeout(()=>r.classList.remove('hl'),2000);}},60);}
   else if(d.simlimpa!=null){if(confirm('Limpar a simulação?')){SIM=[];ls.set(SKEY(),SIM);tela();}}
@@ -643,7 +643,7 @@ async function altArq(f){const m=$('#altAm'),pv=$('#altPv');
     const big=document.createElement('canvas');const k2=Math.min(3,1800/Math.max(im.width,im.height));big.width=Math.round(im.width*k2);big.height=Math.round(im.height*k2);big.getContext('2d').drawImage(im,0,0,big.width,big.height);
     const r=await Tesseract.recognize(big,'por');const T=(r&&r.data&&r.data.text||'').replace(/\r/g,'');
     const pm=T.match(/peso[^\d]{0,12}(\d+[.,]\d+)/i)||T.match(/(\d+[.,]\d{2,3})\s*kg/i);
-    const cm=T.match(/\b([A-Z]{1,5}[ -]?\d{2,5}[A-Z]?)\b/);
+    const cm0=T.match(/\b([A-Z]{1,5}[ -]?[0-9O]{2,5}[A-Z]?)\b/);const cm=cm0&&/\d/.test(cm0[1])?[cm0[0],cm0[1].replace(/^([A-Z]{1,5}[ -]?)([0-9O]+)/,(q,l,n)=>l+n.replace(/O/g,'0'))]:null;
     let ok=[];if(pm&&!$('#altP').value){$('#altP').value=pm[1].replace('.',',');ok.push('peso '+pm[1]);}
     if(cm&&!$('#altC').value){$('#altC').value=cm[1].replace(' ','');ok.push('código '+cm[1]);}
     m.textContent=ok.length?'✓ Lido do print: '+ok.join(' · ')+'. Confira antes de salvar.':'Não consegui ler o código e o peso. Preencha à mão.';}
