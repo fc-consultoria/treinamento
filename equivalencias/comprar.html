@@ -123,6 +123,11 @@ td.n{text-align:right;white-space:nowrap}tr.best td{background:#effaf2;font-weig
  .pp-t{width:100%;border-collapse:collapse;margin-top:8px}.pp-t th{background:#0f6b70!important;color:#fff!important;text-align:left;padding:5px 6px;font-size:11px;-webkit-print-color-adjust:exact;print-color-adjust:exact}.pp-t td{border-bottom:1px solid #ccc;padding:5px 6px}.pp-t .n{text-align:right}
  .pp-t tr.pg td{background:#eef3f4;border-top:2px solid #0f6b70;-webkit-print-color-adjust:exact;print-color-adjust:exact}.pp-t tr.pt td{border-top:2px solid #111}.pp-t tr{break-inside:avoid}
  .pp-a{display:flex;gap:30px;margin-top:50px}.pp-a div{flex:1;border-top:1px solid #111;padding-top:4px;font-size:12px}.pp-fc{margin-top:18px;font-size:10px;color:#777}}
+.sfx{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:12px;padding:10px 12px;border:1px solid var(--ln,#d6dee4);border-radius:12px;background:var(--bg,#f2f5f4)}.sfx b{font-size:14.5px;margin-right:4px}.sfx small{flex-basis:100%;color:var(--mu,#5d6b76)}
+.sfx button{border:1px solid var(--ln,#d6dee4);background:#fff;border-radius:18px;padding:5px 12px;font:700 14px var(--f-b);cursor:pointer;color:inherit}.sfx button.on{background:var(--ink,#13232e);color:#fff;border-color:var(--ink,#13232e)}
+.abcsel{min-width:58px;font-weight:800}.abcsel.A{background:#e6f5ec;color:#16a34a}.abcsel.B{background:#fff4df;color:#b45309}.abcsel.C{background:#eef1f3;color:#475569}
+.abcb{display:inline-block;width:26px;height:26px;border-radius:7px;color:#fff;font:800 15px/26px var(--f-d);text-align:center}.abcb.A{background:var(--ok,#16a34a)}.abcb.B{background:var(--md,#d97706)}.abcb.C{background:var(--bx,#64748b)}
+tr.fora td{opacity:.45}
 </style>
 </head>
 <body>
@@ -136,7 +141,7 @@ td.n{text-align:right;white-space:nowrap}tr.best td{background:#effaf2;font-weig
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="../auth.js"></script>
 <script src="foto-busca.js?v=2"></script>
-<script src="importa-lista.js?v=1"></script>
+<script src="importa-lista.js?v=2"></script>
 <script>
 const $=s=>document.querySelector(s),esc=t=>String(t??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const KEY=new URLSearchParams(location.search).get('k')||'';
@@ -352,10 +357,14 @@ function csv(){const I=relItens();const L=[['Código pesquisado','Linha','Classe
 function simGrupo(x){let g=x.g?IDX.g.find(y=>y.l+'|'+y.k===x.g):null;if(!g){const r=buscar(x.q);g=r[0]||null;}return g;}
 function opcao(o,q){/* custo de levar q barras deste código, respeitando a compra mínima por item */
   const br=Math.max(q,o.bars||1);return {o,br,kg:br*o.kgb,v:br*o.kgb*o.kg,forc:br>q};}
+const SFKEY=()=>'fc_compra_simf_'+(EMP||'x');
+const SFOP=[['todos','Todos os itens',null],['A','Só curva A',['A']],['AB','Curvas A e B',['A','B']],['C','Só curva C',['C']],['-','Sem curva',['-']]];
+function simFiltro(){const k=ls.get(SFKEY(),'todos');const o=SFOP.find(x=>x[0]===k);return o?o[2]:null;}
 function simular(){
   const itens=SIM.map((x,i)=>{const g=simGrupo(x);if(!g)return {x,i,nf:1};const L=g.m.filter(m=>visivel(g,m)).map(m=>calc(g,m,'natural',sM(x))).filter(o=>!o.sem);
     return {x,i,g,cl:classe(g,x.q),ops:L.map(o=>opcao(o,x.b)).sort((a,b)=>a.v-b.v)};});
-  const val=itens.filter(t=>!t.nf);
+  const FX=simFiltro();itens.forEach(t=>{if(!t.nf&&FX&&!FX.includes(t.cl||'-'))t.fora=1;});
+  const val=itens.filter(t=>!t.nf&&!t.fora);
   const fs=[...new Set(val.flatMap(t=>t.ops.map(p=>p.o.f)))];
   const minP=f=>{const P=DADOS.forn[f];return P&&P.min_pedido!=null?+P.min_pedido:0;};
   const resumo=esc=>{const por={};esc.forEach(e=>{if(!e.p)return;const f=e.p.o.f;por[f]=por[f]||{kg:0,v:0,n:0};por[f].kg+=e.p.kg;por[f].v+=e.p.v;por[f].n++;});
@@ -383,7 +392,7 @@ function telaSim(){
    <form id="fSim" class="sb" style="flex-wrap:wrap"><input name="c" placeholder="Código (qualquer fornecedor)" autocomplete="off" style="flex:2 1 220px"><select name="cor" aria-label="Cor" class="simsel">${CORES.map(([k,t])=>`<option value="${k}" ${COR===k?'selected':''}>${esc(t)}</option>`).join('')}</select><input name="b" inputmode="numeric" placeholder="Barras" style="flex:0 1 110px;text-transform:none"><select name="m" aria-label="Tamanho da barra" class="simsel">${MTS.map(m=>`<option value="${m}" ${m===6?'selected':''}>barra de ${m} m</option>`).join('')}</select><button>＋ Incluir</button></form>
    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px;padding:12px 14px;border:2px dashed var(--tl,#0f6b70);border-radius:12px;background:var(--bg,#f2f5f4)"><button type="button" class="bt p" data-implista>📎 Importar a lista do cliente (Excel ou CSV)</button><span style="font-size:14px;color:var(--mu,#5d6b76)">O sistema lê código, cor (até abreviada no código: <b>SU-123.BCO</b>, <b>PLK303-PTO</b>), barras e tamanho da barra, e já mostra onde comprar.</span></div>
    <details style="margin-top:8px"><summary style="cursor:pointer;font-weight:700;color:var(--tl)">Colar uma lista (código;barras;cor;metros)</summary><form id="fSimL" style="display:flex;flex-direction:column;gap:6px;margin-top:6px"><textarea name="t" rows="5" placeholder="SU-001;20;branco;6&#10;SU-005;12;preto&#10;TBX028;4" style="border:1px solid #c4ccd2;border-radius:10px;padding:10px;font:600 15px var(--f-b)"></textarea><button class="bt p" style="align-self:flex-start">Incluir lista</button></form></details>
-   ${SIM.length?`<div style="overflow:auto;margin-top:12px"><table><thead><tr><th>Código</th><th>Perfil</th><th>Cor</th><th class="n">Barras</th><th>Tamanho</th><th class="n">Peso total (kg)</th><th></th></tr></thead><tbody>${S.itens.map(t=>{const ep=(S.esc.find(e=>e.t===t)||{}).p;return `<tr><td><b>${esc(t.x.orig||t.x.q)}</b>${t.x.orig&&norm(t.x.orig)!==norm(t.x.q)?`<br><small>${esc(t.x.q)}</small>`:''}</td><td>${t.nf?'<span style="color:var(--bx)">não encontrado</span>':esc((t.g.n||'')+' · '+IDX.linhas[t.g.l].n)+(t.cl?' · Classe '+t.cl:'')+(t.ops&&!t.ops.length?' · <span style="color:var(--md)">sem preço em nenhum fornecedor</span>':'')}</td><td><select class="simsel" data-simcor="${t.i}" aria-label="Cor">${CORES.map(([k,tt])=>`<option value="${k}" ${sCor(t.x)===k?'selected':''}>${esc(tt)}</option>`).join('')}</select></td><td class="n"><input data-simq="${t.i}" value="${t.x.b}" inputmode="numeric" style="width:70px;padding:4px 6px;border:1px solid #c4ccd2;border-radius:7px;font:600 15px var(--f-b);text-align:right"></td><td><select class="simsel" data-simm="${t.i}" aria-label="Tamanho da barra">${[...new Set(MTS.concat([sM(t.x)]))].sort((a,b)=>a-b).map(m=>`<option value="${m}" ${sM(t.x)===m?'selected':''}>${String(m).replace('.',',')} m</option>`).join('')}</select></td><td class="n">${ep?`<input data-simkg="${t.i}" data-kgb="${ep.o.kgb}" value="${n2(t.x.b*ep.o.kgb)}" inputmode="decimal" title="Digite o peso para ajustar as barras" style="width:96px;padding:4px 6px;border:1px solid #c4ccd2;border-radius:7px;font:600 15px var(--f-b);text-align:right"><br><small>${n3(ep.o.p)} kg/m · ${esc(IDX.forn[ep.o.f])}</small>`:'—'}</td><td><button type="button" class="bt r" data-simrm="${t.i}" style="padding:2px 9px">Tirar</button></td></tr>`;}).join('')}</tbody></table></div>
+   ${SIM.length?`<div class="sfx"><b>Reposição pela curva ABC:</b>${SFOP.map(([k,t])=>`<button type="button" data-simf="${k}" class="${ls.get(SFKEY(),'todos')===k?'on':''}">${t}</button>`).join('')}<small>${ADM?'Defina a curva de cada perfil na coluna Curva: ela fica gravada e aparece sempre que o perfil voltar numa lista.':'A curva de cada perfil é definida pela FC com a sua equipe.'}</small></div><div style="overflow:auto;margin-top:8px"><table><thead><tr><th>Código</th><th>Perfil</th><th>Curva</th><th>Cor</th><th class="n">Barras</th><th>Tamanho</th><th class="n">Peso total (kg)</th><th></th></tr></thead><tbody>${S.itens.map(t=>{const ep=(S.esc.find(e=>e.t===t)||{}).p;return `<tr class="${t.fora?'fora':''}"><td><b>${esc(t.x.orig||t.x.q)}</b>${t.x.orig&&norm(t.x.orig)!==norm(t.x.q)?`<br><small>${esc(t.x.q)}</small>`:''}</td><td>${t.nf?'<span style="color:var(--bx)">não encontrado</span>':esc((t.g.n||'')+' · '+IDX.linhas[t.g.l].n)+(t.fora?' · <b style="color:var(--md)">fora desta reposição</b>':'')+(t.ops&&!t.ops.length?' · <span style="color:var(--md)">sem preço em nenhum fornecedor</span>':'')}</td><td>${t.nf?'':ADM?`<select class="simsel abcsel ${t.cl||''}" data-simabc="${t.i}" aria-label="Curva ABC"><option value="">—</option>${['A','B','C'].map(c=>`<option ${t.cl===c?'selected':''}>${c}</option>`).join('')}</select>`:t.cl?`<span class="abcb ${t.cl}">${t.cl}</span>`:'<small>—</small>'}</td><td><select class="simsel" data-simcor="${t.i}" aria-label="Cor">${CORES.map(([k,tt])=>`<option value="${k}" ${sCor(t.x)===k?'selected':''}>${esc(tt)}</option>`).join('')}</select></td><td class="n"><input data-simq="${t.i}" value="${t.x.b}" inputmode="numeric" style="width:70px;padding:4px 6px;border:1px solid #c4ccd2;border-radius:7px;font:600 15px var(--f-b);text-align:right"></td><td><select class="simsel" data-simm="${t.i}" aria-label="Tamanho da barra">${[...new Set(MTS.concat([sM(t.x)]))].sort((a,b)=>a-b).map(m=>`<option value="${m}" ${sM(t.x)===m?'selected':''}>${String(m).replace('.',',')} m</option>`).join('')}</select></td><td class="n">${ep?`<input data-simkg="${t.i}" data-kgb="${ep.o.kgb}" value="${n2(t.x.b*ep.o.kgb)}" inputmode="decimal" title="Digite o peso para ajustar as barras" style="width:96px;padding:4px 6px;border:1px solid #c4ccd2;border-radius:7px;font:600 15px var(--f-b);text-align:right"><br><small>${n3(ep.o.p)} kg/m · ${esc(IDX.forn[ep.o.f])}</small>`:'—'}</td><td><button type="button" class="bt r" data-simrm="${t.i}" style="padding:2px 9px">Tirar</button></td></tr>`;}).join('')}</tbody></table></div>
    <div class="acoes noprint" style="margin-top:10px"><button type="button" class="bt p" data-simprint>🖨️ Imprimir / PDF</button><button type="button" class="bt" data-simcsv>⬇️ Baixar Excel</button><button type="button" class="bt r" data-simlimpa>Limpar simulação</button></div>`:''}</section>`;
   if(!S)return lista+`<div class="box" style="margin-top:14px"><p class="vazio">Inclua os perfis do pedido para simular. Também dá para levar um código direto da aba Pesquisar (botão “🧮 Levar para a simulação”).</p></div>`;
   if(semPrecos())return lista+`<div class="aviso">Preencha os preços na aba <button type="button" class="bt" data-aba="precos" style="padding:3px 10px">💲 Preços dos fornecedores</button> para simular.</div>`;
@@ -519,7 +528,7 @@ document.addEventListener('submit',async ev=>{const f=ev.target;
     const r=await sb.from('compra_abc_meta').upsert({empresa_id:EMP,data_reuniao:meta.data,participantes:meta.part,obs:meta.obs,atualizado_em:new Date().toISOString()});
     if(r.error){if(/relation|does not exist|schema cache/i.test(r.error.message)){LOCAL=true;DADOS.meta=meta;ls.set('fc_compra_meta_'+EMP,meta);toast('Reunião salva (modo demonstração).');tela();return;}toast('Não salvou: '+r.error.message);return;}
     DADOS.meta=meta;toast('Reunião salva.');tela();}});
-document.addEventListener('click',async ev=>{const t=ev.target.closest('[data-sug],[data-addsim],[data-simrm],[data-simprint],[data-pedf],[data-pedpdf],[data-simcsv],[data-simlimpa],[data-aba],[data-cor],[data-modo],[data-g],[data-addrel],[data-rmrel],[data-print],[data-csv],[data-limpa],[data-setabc],[data-abctodos],[data-rmabc],[data-ir],[data-zoom]');if(!t)return;const d=t.dataset;
+document.addEventListener('click',async ev=>{const t=ev.target.closest('[data-sug],[data-addsim],[data-simrm],[data-simprint],[data-pedf],[data-pedpdf],[data-simf],[data-simcsv],[data-simlimpa],[data-aba],[data-cor],[data-modo],[data-g],[data-addrel],[data-rmrel],[data-print],[data-csv],[data-limpa],[data-setabc],[data-abctodos],[data-rmabc],[data-ir],[data-zoom]');if(!t)return;const d=t.dataset;
   if(d.sug){Q=d.sug;SEL=null;tela();regBusca();}
   else if(d.aba){ABA=d.aba;tela();window.scrollTo(0,0);}
   else if(d.cor){COR=d.cor;salvaPref();tela();}
@@ -532,6 +541,7 @@ document.addEventListener('click',async ev=>{const t=ev.target.closest('[data-su
   else if(d.simcsv!=null)simCsv();
   else if(d.pedf)pedForn(d.pedf);
   else if(d.pedpdf)pedPdf(d.pedpdf);
+  else if(d.simf){ls.set(SFKEY(),d.simf);tela();}
   else if(d.simlimpa!=null){if(confirm('Limpar a simulação?')){SIM=[];ls.set(SKEY(),SIM);tela();}}
   else if(d.rmrel!=null){REL.splice(+d.rmrel,1);ls.set(RKEY(),REL);tela();}
   else if(d.print!=null){registrar('relatorio',{itens:REL.length,cor:COR,modo:MODO,formato:'pdf'});window.print();}
@@ -547,7 +557,10 @@ document.addEventListener('click',async ev=>{const t=ev.target.closest('[data-su
 $('#zmX').onclick=()=>$('#zm').hidden=true;$('#zm').onclick=e=>{if(e.target.id==='zm')$('#zm').hidden=true;};
 document.addEventListener('keydown',e=>{if(e.key==='Escape')$('#zm').hidden=true;});
 document.addEventListener('input',e=>{if(e.target.id==='simOC')ls.set(OKEY(),e.target.value.trim());});
-document.addEventListener('change',e=>{const t=e.target;if(t.dataset&&(t.dataset.simcor!=null||t.dataset.simm!=null)){const x=SIM[+(t.dataset.simcor??t.dataset.simm)];if(t.dataset.simcor!=null)x.cor=t.value;else x.m=+t.value;ls.set(SKEY(),SIM);tela();return;}if(t.dataset&&t.dataset.simkg!=null){const kg=+String(t.value).replace(/\./g,'').replace(',','.');const kb=+t.dataset.kgb;if(kg>0&&kb>0){SIM[+t.dataset.simkg].b=Math.max(1,Math.ceil(kg/kb-1e-9));ls.set(SKEY(),SIM);toast('Barras ajustadas para '+SIM[+t.dataset.simkg].b+' ('+n2(SIM[+t.dataset.simkg].b*kb)+' kg).');}tela();return;}
+document.addEventListener('change',e=>{const t=e.target;if(t.dataset&&(t.dataset.simcor!=null||t.dataset.simm!=null)){const x=SIM[+(t.dataset.simcor??t.dataset.simm)];if(t.dataset.simcor!=null)x.cor=t.value;else x.m=+t.value;ls.set(SKEY(),SIM);tela();return;}if(t.dataset&&t.dataset.simabc!=null){const x=SIM[+t.dataset.simabc];const g=simGrupo(x);const cod=(x.q||'').toUpperCase();
+   /* grava no código pesquisado e tira classe antiga de outro código do mesmo grupo para não conflitar */
+   const it=[[cod,t.value||null]];salvaAbc(it).then(ok=>{if(ok)toast(t.value?cod+' agora é curva '+t.value+'.':'Curva tirada de '+cod+'.');tela();});return;}
+ if(t.dataset&&t.dataset.simkg!=null){const kg=+String(t.value).replace(/\./g,'').replace(',','.');const kb=+t.dataset.kgb;if(kg>0&&kb>0){SIM[+t.dataset.simkg].b=Math.max(1,Math.ceil(kg/kb-1e-9));ls.set(SKEY(),SIM);toast('Barras ajustadas para '+SIM[+t.dataset.simkg].b+' ('+n2(SIM[+t.dataset.simkg].b*kb)+' kg).');}tela();return;}
  if(t.dataset&&t.dataset.simq!=null){const v=Math.max(1,Math.round(+t.value.replace(',','.')||1));SIM[+t.dataset.simq].b=v;ls.set(SKEY(),SIM);tela();}});
 
 /* ===== início ===== */
