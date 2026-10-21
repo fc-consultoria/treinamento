@@ -116,7 +116,7 @@ td.n{text-align:right;white-space:nowrap}tr.best td{background:#effaf2;font-weig
 .simoc{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:10px 0 2px}.simoc label{font-weight:800;font-size:15px}.simoc input{border:2px solid var(--tl,#0f6b70);border-radius:10px;padding:9px 12px;font:700 16px var(--f-b);min-width:220px;flex:0 1 280px}.simoc span{font-size:13px;color:var(--mu,#5d6b76)}
 #pedPrint{display:none}
 .simtir{margin-top:10px;border:1px solid #f2c27a;background:#fff8ec;border-radius:12px;padding:8px 12px}.simtir summary{cursor:pointer;font-weight:700;color:#9a5b00}.simtir>div{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;align-items:center}.simtir span{display:inline-flex;gap:8px;align-items:center;background:#fff;border:1px solid #e5d3b3;border-radius:99px;padding:4px 6px 4px 12px;font-size:14px}.simtir button{border:0;background:#0f6b70;color:#fff;border-radius:99px;padding:5px 12px;font:700 13px inherit;cursor:pointer}.simtir .lmp{background:none;color:#7a8794;text-decoration:underline}
-#pedPrint .pp-im{width:74px;padding:3px 4px!important}#pedPrint .pp-im img{display:block;width:66px;height:52px;object-fit:contain;background:#fff;border:1px solid #d6dee4;border-radius:4px}#pedPrint tr{page-break-inside:avoid}
+#pedPrint .pp-im{width:64px;padding:2px 3px!important}#pedPrint .pp-im img{display:block;width:58px;height:44px;object-fit:contain;background:#fff;border:1px solid #d6dee4;border-radius:4px}#pedPrint tr{page-break-inside:avoid}
 @media print{body.pedp>*:not(#pedPrint){display:none!important}body.pedp #pedPrint{display:block;color:#111;font:13px/1.4 Arial,sans-serif}
  .pp-h{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:3px solid #0f6b70;padding-bottom:8px;margin-bottom:10px}.pp-h small{display:block;letter-spacing:.2em;font-weight:700;color:#0f6b70;font-size:11px}.pp-h b{font-size:24px}
  .pp-r{text-align:right;display:flex;flex-direction:column}.pp-r span{font-size:11px;color:#555}.pp-r b{font-size:18px}
@@ -207,7 +207,7 @@ async function carregaIndice(){
   BY={};IDX.g.forEach((g,i)=>{g.i=i;g.m.forEach(m=>{(BY[norm(m[1])]=BY[norm(m[1])]||[]).push(i);});if(g.mc)(BY[norm(g.k)]=BY[norm(g.k)]||[]).push(i);});
 }
 const visivel=(g,m)=>{if(!ADM&&LIB()&&m[3]!=='base'&&m[0]!==REFF&&!LIB().includes(m[0]))return false;return ADM||m[3]==='base'||m[3]==='alta'||OK[g.k+'|'+m[1]];};
-function imgDe(g,m){if(m[4])return m[4];if(g.l==='tc')return '';const L=IDX.linhas[g.l];const pasta=(m[3]==='base'&&!g.sp)?'alcoa':m[0];return L.img+pasta+'/'+encodeURIComponent(m[1])+'.webp?v=2';}
+function imgDe(g,m){if(m[4])return m[4];if(g.l==='tc')return '';const L=IDX.linhas[g.l];const pasta=(m[3]==='base'&&!g.sp)?'alcoa':m[0];return L.img+pasta+'/'+encodeURIComponent(m[1])+'.webp?v=3';}
 const linhaF=(g,f)=>((IDX.lnf[g.l]||{})[f])||IDX.linhas[g.l].n;
 function buscar(q){const k=norm(q);if(!k)return [];
   let ids=[...new Set(BY[k]||[])];

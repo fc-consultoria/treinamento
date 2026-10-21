@@ -143,7 +143,7 @@ function editar(r,e){const novo=!e;const F=Object.keys(D.forn).filter(f=>f!=='al
   if(pv&&isNaN(+pv)){g('edM').textContent='Peso inválido. Use número, ex.: 0,520';return;}
   gravar({l:LIN,f,c,a,p:pv?+pv:null,n:g('edN').value,t:g('edT').value,o:g('edO').value.trim(),pg:e?e.pg:'—',cc:e?e.cc:undefined});};
  if(!novo)g('edDel').onclick=()=>{if(g('edDel').dataset.c){gravar({l:LIN,f:e.f,c:e.c,a:null});return;}g('edDel').dataset.c=1;g('edDel').textContent='Clique de novo para remover';};}
-const IMGX={};function img(f,c){return IMGX[f+'|'+c]||LN().img+f+'/'+encodeURIComponent(c)+'.webp?v=2';}
+const IMGX={};function img(f,c){return IMGX[f+'|'+c]||LN().img+f+'/'+encodeURIComponent(c)+'.webp?v=3';}
 const eimg=e=>e.u||img(e.f,e.c);
 const ehead=r=>r.fora&&r.ref?(r.ref.f==='texa'?((r.eq.find(e=>e.f==='texa'&&e.c===r.ref.c)||{}).u||''):img(r.ref.f,r.ref.c)):img('alcoa',r.c);
 /* ===== busca por descrição (todas as linhas) ===== */
@@ -153,7 +153,7 @@ function idxD(){if(IDXD)return Promise.resolve(IDXD);if(!IDXP)IDXP=fetch('indice
 function descRes(q){const ws=sa(q).split(/\s+/).filter(w=>w.length>1);if(!ws.length||!IDXD)return [];
  const R=[];IDXD.g.forEach(g=>{if(g.l==='tc'||!g.n||!LINHAS[g.l])return;const t=sa(g.n+' '+IDXD.linhas[g.l].n);if(ws.every(w=>t.includes(w)))R.push(g);});
  R.sort((a,b)=>(a.l===LIN?0:1)-(b.l===LIN?0:1)||a.l.localeCompare(b.l)||a.k.localeCompare(b.k,'pt',{numeric:true}));return R;}
-function descImg(g){const m=g.m[0];if(!m)return '';if(m[4])return m[4];const L=IDXD.linhas[g.l];const pasta=(m[3]==='base'&&!g.sp)?'alcoa':m[0];return L.img+pasta+'/'+encodeURIComponent(m[1])+'.webp?v=2';}
+function descImg(g){const m=g.m[0];if(!m)return '';if(m[4])return m[4];const L=IDXD.linhas[g.l];const pasta=(m[3]==='base'&&!g.sp)?'alcoa':m[0];return L.img+pasta+'/'+encodeURIComponent(m[1])+'.webp?v=3';}
 function descTela(q){const nf=`<div class="card" style="margin-top:16px"><b style="font:800 22px var(--f-d)">Código não encontrado: ${esc(q)}</b><span class="ob">Confira se digitou certo. Confira também a outra linha nas abas acima.</span></div>`;
  if(!IDXD){idxD().then(j=>{if(j&&Q===q)tela();});return '<div class="card" style="margin-top:16px"><p class="ob">Procurando em todas as linhas…</p></div>';}
  const cl=crossLin(q);if(cl)return cl;
