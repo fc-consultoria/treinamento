@@ -168,7 +168,7 @@ function escolherColab(uid,perfil){return new Promise(res=>{
     T.textContent='Toque para entrar';X.textContent='Acesso 3D: até '+max+' pessoas ao mesmo tempo, cada uma no seu aparelho. Cada pessoa tem 72 horas a partir do primeiro acesso. Gire, abra as folhas, desmonte as esquadrias e faça os desafios.';
     L.innerHTML='';const b=document.createElement('button');b.type='button';b.className='cbtn';b.innerHTML=`<span>🪟 ${esc(cx.nome||'Acesso 3D')}</span><small>${n} de ${max} pessoas usando agora</small>`;L.appendChild(b);
     b.onclick=async()=>{let V=null;try{V=JSON.parse(LSx.g('treinFC-vis-'+uid)||'null');}catch(_){}
-      if(!V||!V.nome||!V.empresa){V=await fichaComp();if(!V)return;}
+      if(!V||!V.nome||!V.empresa||String(V.zap||'').replace(/\D/g,'').length<10){V=await fichaComp();if(!V)return;}
       /* 72 h por pessoa, contadas do 1º acesso dela (mesmo nome e empresa = mesma pessoa) */
       if(!V.ini){const nz=t=>String(t||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/\s+/g,' ').trim();
         const {data:vv}=await sb.from('trein_eventos').select('detalhe,criado_em').eq('user_id',uid).eq('tipo','visitante').order('criado_em').limit(1000);
@@ -190,10 +190,10 @@ function escolherColab(uid,perfil){return new Promise(res=>{
     if(ultCid()===cx.id&&LSx.g('treinFC-vis-'+uid)&&!window.ALUNO_CID)b.click();}
   function fichaComp(){return new Promise(ok=>{T.textContent='Quem está entrando?';X.textContent='Preencha uma vez só neste aparelho. Serve para o relatório e para a FC saber quem conheceu a ferramenta.';M.textContent='';
     const st='display:block;width:100%;box-sizing:border-box;margin:2px 0 8px;padding:10px 12px;border:1px solid #c4ccd2;border-radius:8px;font:600 16px Barlow,system-ui,sans-serif';
-    L.innerHTML=`<label style="text-align:left;font-size:13.5px">Seu nome *<input id="vN" style="${st}" autocomplete="name"></label><label style="text-align:left;font-size:13.5px">Empresa *<input id="vE" style="${st}" autocomplete="organization"></label><label style="text-align:left;font-size:13.5px">Cidade<input id="vC" style="${st}" placeholder="Ex.: Sorriso - MT"></label><label style="text-align:left;font-size:13.5px">WhatsApp (opcional)<input id="vZ" style="${st}" inputmode="tel" placeholder="(66) 9 9999-9999"></label><button type="button" id="vOk">Entrar no Mostruário 3D →</button><button type="button" id="vVolta" style="background:#fff;color:#1d3f57;border:1px solid #c9d3da">← Voltar</button>`;
+    L.innerHTML=`<label style="text-align:left;font-size:13.5px">Seu nome *<input id="vN" style="${st}" autocomplete="name"></label><label style="text-align:left;font-size:13.5px">Empresa *<input id="vE" style="${st}" autocomplete="organization"></label><label style="text-align:left;font-size:13.5px">Cidade<input id="vC" style="${st}" placeholder="Ex.: Sorriso - MT"></label><label style="text-align:left;font-size:13.5px">WhatsApp *<input id="vZ" style="${st}" inputmode="tel" placeholder="(66) 9 9999-9999"></label><button type="button" id="vOk">Entrar no Mostruário 3D →</button><button type="button" id="vVolta" style="background:#fff;color:#1d3f57;border:1px solid #c9d3da">← Voltar</button>`;
     setTimeout(()=>document.getElementById('vN').focus(),50);
     document.getElementById('vOk').onclick=()=>{const g=id=>document.getElementById(id).value.trim().replace(/\s+/g,' ');const V={nome:g('vN').slice(0,60),empresa:g('vE').slice(0,80),cidade:g('vC').slice(0,60),zap:g('vZ').slice(0,30)};
-      if(V.nome.length<2||V.empresa.length<2){M.style.color='#b23a32';M.textContent='Preencha o seu nome e o nome da empresa.';return;}LSx.s('treinFC-vis-'+uid,JSON.stringify(V));ok(V);};
+      const zd=V.zap.replace(/\D/g,'');if(V.nome.length<2||V.empresa.length<2||zd.length<10||zd.length>13){M.style.color='#b23a32';M.textContent=V.nome.length<2||V.empresa.length<2?'Preencha o seu nome e o nome da empresa.':'Preencha o seu WhatsApp com DDD (ex.: 66 9 9999-9999).';return;}LSx.s('treinFC-vis-'+uid,JSON.stringify(V));ok(V);};
     document.getElementById('vVolta').onclick=()=>{ok(null);draw();};});}
   window.COLAB_DRAW=draw;draw();});}
 const trocouRecarrega=p=>p.then(x=>{if(x)location.reload();});
