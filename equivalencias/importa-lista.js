@@ -59,7 +59,7 @@
     if(!document.getElementById('impOv'))return;
     if(t.closest('[data-impx]')||t.id==='impOv'){document.getElementById('impOv').remove();return;}
     const ok=t.closest('[data-impok]');if(ok){const U=IT.filter(x=>x.use!==false);if(!U.length){toast('Nenhum item marcado para simular.');return;}
-      if(ok.dataset.impok==='novo')SIM.length=0;U.forEach(x=>{const q=x.ok?x.ach.g.k:String(x.base||x.raw).toUpperCase();simAdd(q,x.q,x.ok?x.ach.g.l+'|'+x.ach.g.k:null,x.cor,x.mt);const it=SIM.find(y=>norm(y.q)===norm(q)&&y.cor===x.cor&&+y.m===x.mt);if(it){if(!it.orig)it.orig=x.raw;if(!x.ok&&x.prod&&!it.desc)it.desc=String(x.prod).slice(0,90);ls.set(SKEY(),SIM);}});
+      if(ok.dataset.impok==='novo')SIM.length=0;U.forEach(x=>{const q=x.ok?x.ach.g.k:String(x.base||x.raw).toUpperCase();simAdd(q,x.q,x.ok?x.ach.g.l+'|'+x.ach.g.k:null,x.cor,x.mt);const it=SIM.find(y=>norm(y.q)===norm(q)&&y.cor===x.cor&&+y.m===x.mt);if(it){if(!it.orig)it.orig=x.raw;if(x.prod&&!it.desc)it.desc=String(x.prod).slice(0,90);ls.set(SKEY(),SIM);}});
       document.getElementById('impOv').remove();ABA='sim';tela();scrollTo(0,0);const nf=U.filter(x=>!x.ok).length;toast(U.length+' itens na simulação.'+(nf?' '+nf+' não encontrado'+(nf>1?'s':'')+': ajuste com ＋ 2ª opção.':'')+(IT.length-U.length?' Ficaram de fora: '+(IT.length-U.length)+'.':''));}});
   document.addEventListener('change',e=>{const t=e.target;if(!t.closest||!t.closest('#impOv'))return;const d=t.dataset;
     if(d.iu!=null)IT[+d.iu].use=t.checked;

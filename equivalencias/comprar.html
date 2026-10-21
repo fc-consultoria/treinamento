@@ -158,7 +158,7 @@ tr.hl td{background:#fff3c4!important;transition:background .4s}
 <script src="../atualiza.js"></script>
 <script src="../auth.js"></script>
 <script src="foto-busca.js?v=2"></script>
-<script src="importa-lista.js?v=3"></script>
+<script src="importa-lista.js?v=4"></script>
 <script>
 const $=s=>document.querySelector(s),esc=t=>String(t??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const KEY=new URLSearchParams(location.search).get('k')||'';const EMPFIX=new URLSearchParams(location.search).get('emp')||'';
@@ -472,12 +472,12 @@ function pedPdf(f){const S=simular();const oc=ls.get(OKEY(),'');const E=S.esc.fi
   const cores=[...new Set(E.map(e=>sCor(e.t.x)))];
   const tb=cores.map(c=>{const L=E.filter(e=>sCor(e.t.x)===c);const x=CORES.find(y=>y[0]===c);
     return `<tr class="pg"><td colspan="8"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${x?x[2]:'#ccc'};border:1px solid #555;vertical-align:-1px;margin-right:6px"></span><b>Cor: ${esc(CORN[c])}</b> · ${L.length} ${L.length===1?'item':'itens'} · ${L.reduce((a,e)=>a+e.p.br,0)} barras · ${n2b(L.reduce((a,e)=>a+e.p.kg,0))} kg</td></tr>`+
-     L.map(e=>`<tr><td>${E.indexOf(e)+1}</td><td class="pp-im">${pedImg(e)}</td><td><b>${esc(e.p.o.c)}</b></td><td>${esc(e.p.o.lin)}</td><td>${esc(CORN[c])}</td><td class="n">${e.p.br}</td><td class="n">${String(sM(e.t.x)).replace('.',',')} m</td><td class="n">${n2b(e.p.kg)}</td></tr>`).join('');}).join('');
+     L.map(e=>`<tr><td>${E.indexOf(e)+1}</td><td class="pp-im">${pedImg(e)}</td><td><b>${esc(e.p.o.c)}</b></td><td>${e.t.x.desc?esc(e.t.x.desc):esc(e.p.o.lin)}<br><small style="color:#555">Cód. cliente: ${esc(e.t.x.orig||e.t.x.q)}</small></td><td>${esc(CORN[c])}</td><td class="n">${e.p.br}</td><td class="n">${String(sM(e.t.x)).replace('.',',')} m</td><td class="n">${n2b(e.p.kg)}</td></tr>`).join('');}).join('');
   let d=document.getElementById('pedPrint');if(!d){d=document.createElement('div');d.id='pedPrint';document.body.appendChild(d);}
   d.innerHTML=`<div class="pp-h"><div><small>PEDIDO DE COMPRA</small><b>${esc(DADOS.nome||'')}</b></div><div class="pp-r">${oc?`<span>Ordem de compra</span><b>${esc(oc)}</b>`:''}<span>Data: ${new Date().toLocaleDateString('pt-BR')}</span></div></div>
    <div class="pp-f"><span>Fornecedor</span><b>${esc(IDX.forn[f])}</b></div>
    <p class="pp-o">⚠ Pintar cada item na cor indicada. Barras no tamanho pedido.</p>
-   <table class="pp-t"><thead><tr><th>Item</th><th>Desenho</th><th>Código ${esc(IDX.forn[f])}</th><th>Linha</th><th>Cor (pintura)</th><th class="n">Barras</th><th class="n">Tamanho</th><th class="n">kg</th></tr></thead><tbody>${tb}
+   <table class="pp-t"><thead><tr><th>Item</th><th>Desenho</th><th>Código ${esc(IDX.forn[f])}</th><th>Descrição (lista do cliente)</th><th>Cor (pintura)</th><th class="n">Barras</th><th class="n">Tamanho</th><th class="n">kg</th></tr></thead><tbody>${tb}
    <tr class="pt"><td colspan="5"><b>Total</b></td><td class="n"><b>${E.reduce((a,e)=>a+e.p.br,0)}</b></td><td></td><td class="n"><b>${n2b(E.reduce((a,e)=>a+e.p.kg,0))}</b></td></tr></tbody></table>
    <div class="pp-a"><div>Comprador · ${esc(DADOS.nome||'')}</div><div>${esc(IDX.forn[f])} · recebido em ___/___/______</div></div>
    <p class="pp-fc">Pedido gerado pelo Onde comprar · FC Consultoria em Esquadria</p>`;
@@ -496,8 +496,8 @@ function pedForn(f){const S=simular();const oc=ls.get(OKEY(),'');const E=S.esc.f
   const n=v=>String(Math.round(v*100)/100).replace('.',',');
   const L=[['Pedido de compra · '+IDX.forn[f]],['Cliente',DADOS.nome||''],['Data',new Date().toLocaleDateString('pt-BR')]];if(oc)L.push(['Ordem de compra',oc]);
   L.push(['Observação','Pintar cada item na cor indicada.']);L.push([]);
-  L.push(['Item','Código '+IDX.forn[f],'Linha','Cor (pintura)','Barras','Tamanho da barra (m)','Peso kg/m','kg total']);
-  E.forEach((e,i)=>L.push([i+1,e.p.o.c,e.p.o.lin,CORN[sCor(e.t.x)],e.p.br,n(sM(e.t.x)),String(Math.round(e.p.o.p*1000)/1000).replace('.',','),n(e.p.kg)]));
+  L.push(['Item','Código '+IDX.forn[f],'Descrição (lista do cliente)','Código do cliente','Cor (pintura)','Barras','Tamanho da barra (m)','Peso kg/m','kg total']);
+  E.forEach((e,i)=>L.push([i+1,e.p.o.c,e.t.x.desc||e.p.o.lin,e.t.x.orig||e.t.x.q,CORN[sCor(e.t.x)],e.p.br,n(sM(e.t.x)),String(Math.round(e.p.o.p*1000)/1000).replace('.',','),n(e.p.kg)]));
   L.push([]);L.push(['Total','','','',E.reduce((a,e)=>a+e.p.br,0),'','',n(E.reduce((a,e)=>a+e.p.kg,0))]);
   const t='\ufeff'+L.map(r=>r.map(c=>{c=String(c);return /[;"\n]/.test(c)?'"'+c.replace(/"/g,'""')+'"':c;}).join(';')).join('\r\n');
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'text/csv;charset=utf-8'}));a.download='pedido-'+f+(oc?'-OC-'+oc.replace(/[^\w-]+/g,'_'):'')+'-'+new Date().toISOString().slice(0,10)+'.csv';a.click();
