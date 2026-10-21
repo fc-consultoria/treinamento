@@ -168,7 +168,7 @@ button.card:hover{border-color:var(--teal)}
   <section id="v-relatorio" hidden></section>
 </main>
 <div id="modal" class="modal" hidden></div>
-<div id="login" class="login" hidden><form id="loginForm" autocomplete="on"><span class="lbl">FC Consultoria</span><h1>Precificação de Kits</h1><p class="note">Entre com o acesso fornecido pela FC Consultoria.</p><label><span class="lbl">Empresa</span><input id="lg-user" name="username" autocomplete="username" required></label><label><span class="lbl">Senha</span><input id="lg-pass" name="password" type="password" autocomplete="current-password" required></label><p class="err" id="lg-err"></p><button class="btn primary" id="lg-btn" type="submit" style="justify-content:center;padding:10px">Entrar</button><button class="btn ghost" id="lg-tut" type="button" style="justify-content:center">▶ Ver como funciona (vídeo de 1 min e meio)</button></form></div>
+<div id="login" class="login" hidden><form id="loginForm" autocomplete="on"><span class="lbl">FC Consultoria</span><h1>Precificação de Kits</h1><p class="note">Entre com o acesso fornecido pela FC Consultoria.</p><label><span class="lbl">Empresa</span><input id="lg-user" name="username" autocomplete="username" required></label><label><span class="lbl">Senha</span><input id="lg-pass" name="password" type="password" autocomplete="current-password" required></label><p class="err" id="lg-err"></p><button class="btn primary" id="lg-btn" type="submit" style="justify-content:center;padding:10px">Entrar</button><button class="btn ghost" id="lg-tut" type="button" style="justify-content:center">▶ Ver como funciona (vídeo de 2 min, com áudio)</button></form></div>
 <div id="toast" class="toast" hidden></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -522,7 +522,7 @@ $("#logout").onclick=async()=>{ try{ if(sess) await rpc("precif_sair",{p_token:s
 $("#reload").onclick=()=>{ if(sess && !pending.size && !writing) load(); };
 window.addEventListener("focus",()=>{ if(sess && loaded && !pending.size && !writing && !(document.activeElement && document.activeElement.matches("input,select"))) load(); });
 function openTutorial(){
-  const md=$("#modal"); md.innerHTML=`<div class="box" role="dialog" aria-modal="true" aria-label="Vídeo: como usar" style="width:min(1000px,100%)"><div class="row" style="justify-content:space-between"><h2>Como usar a Precificação de Kits</h2><button class="btn" id="tut-x" type="button">Fechar</button></div><video src="tutorial.mp4?v=1" controls autoplay playsinline style="width:100%;aspect-ratio:16/9;border-radius:10px;background:#000;display:block"></video></div>`;
+  const md=$("#modal"); md.innerHTML=`<div class="box" role="dialog" aria-modal="true" aria-label="Vídeo: como usar" style="width:min(1000px,100%)"><div class="row" style="justify-content:space-between"><h2>Como usar a Precificação de Kits</h2><button class="btn" id="tut-x" type="button">Fechar</button></div><video src="tutorial.mp4?v=2" controls autoplay playsinline style="width:100%;aspect-ratio:16/9;border-radius:10px;background:#000;display:block"></video></div>`;
   md.hidden=false; $("#login").style.zIndex="10";
   const close=()=>{ const v=md.querySelector("video"); if(v) v.pause(); md.hidden=true; md.innerHTML=""; $("#login").style.zIndex=""; };
   $("#tut-x").onclick=close; md.onclick=e=>{ if(e.target===md) close(); };
