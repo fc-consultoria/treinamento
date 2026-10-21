@@ -165,16 +165,27 @@ function escolherColab(uid,perfil){return new Promise(res=>{
     const S=new Set();(data||[]).forEach(r=>{const d=r.detalhe||{};const ss=r.tipo==='tempo'?d.ss:d.s;if(d.cid===cx.id&&ss)S.add(ss);});return S;}
   async function drawComp(cx,st){const max=+cx.max||12,ate=st.ate,fimE=ate?Date.parse(ate+'T23:59:59-04:00'):Date.now()+864e5;
     const mys=LSx.g('treinFC-s-'+cx.id)||'';const on=await onlineComp(cx);on.delete(mys);const n=on.size;
-    T.textContent='Toque para entrar';X.textContent='Acesso 3D: até '+max+' pessoas ao mesmo tempo, cada uma no seu aparelho'+(ate?' · liberado até '+ate.split('-').reverse().join('/'):'')+'. Gire, abra as folhas, desmonte as esquadrias e faça os desafios.';
+    T.textContent='Toque para entrar';X.textContent='Acesso 3D: até '+max+' pessoas ao mesmo tempo, cada uma no seu aparelho. Cada pessoa tem 72 horas a partir do primeiro acesso. Gire, abra as folhas, desmonte as esquadrias e faça os desafios.';
     L.innerHTML='';const b=document.createElement('button');b.type='button';b.className='cbtn';b.innerHTML=`<span>🪟 ${esc(cx.nome||'Acesso 3D')}</span><small>${n} de ${max} pessoas usando agora</small>`;L.appendChild(b);
     b.onclick=async()=>{let V=null;try{V=JSON.parse(LSx.g('treinFC-vis-'+uid)||'null');}catch(_){}
       if(!V||!V.nome||!V.empresa){V=await fichaComp();if(!V)return;}
+      /* 72 h por pessoa, contadas do 1º acesso dela (mesmo nome e empresa = mesma pessoa) */
+      if(!V.ini){const nz=t=>String(t||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/\s+/g,' ').trim();
+        const {data:vv}=await sb.from('trein_eventos').select('detalhe,criado_em').eq('user_id',uid).eq('tipo','visitante').order('criado_em').limit(1000);
+        const ant=(vv||[]).find(r=>nz((r.detalhe||{}).nome)===nz(V.nome)&&nz((r.detalhe||{}).empresa)===nz(V.empresa));
+        V.ini=ant?Date.parse(ant.criado_em):Date.now();if(ant)LSx.s('treinFC-visok-'+uid,'1');LSx.s('treinFC-vis-'+uid,JSON.stringify(V));}
+      const fimP=V.ini+72*3600e3;
+      if(Date.now()>fimP){T.textContent=V.nome+': as suas 72 h terminaram';X.textContent='O seu acesso ao FC Mostruário 3D pelo Acesso 3D era de 72 horas a partir do primeiro acesso. Gostou? Fale com a Equipe FC para ter a ferramenta na sua empresa.';
+        const tx='Olá, Equipe FC! Usei o FC Mostruário 3D pelo Acesso 3D'+(perfil&&perfil.nome?' de '+perfil.nome:'')+' e quero ter a ferramenta na minha empresa.\nNome: '+V.nome+'\nEmpresa: '+V.empresa+(V.cidade?'\nCidade: '+V.cidade:'');
+        L.innerHTML='<a href="https://wa.me/5566999867984?text='+encodeURIComponent(tx)+'" target="_blank" rel="noopener" style="display:inline-block;background:#1f9d55;color:#fff;text-decoration:none;font:700 15px Barlow,sans-serif;padding:11px 16px;border-radius:9px">💬 Falar com a Equipe FC</a><a href="https://www.instagram.com/fc__consultoria/" target="_blank" rel="noopener" style="display:inline-block;background:linear-gradient(45deg,#f58529,#dd2a7b,#8134af);color:#fff;text-decoration:none;font:700 15px Barlow,sans-serif;padding:11px 16px;border-radius:9px">📸 Siga @fc__consultoria</a><a href="https://fc-consultoria.github.io/?o=a3d" target="_blank" rel="noopener" style="display:inline-block;background:#0f6b70;color:#fff;text-decoration:none;font:700 15px Barlow,sans-serif;padding:11px 16px;border-radius:9px">🌐 Site da FC</a>';
+        const ou=document.createElement('button');ou.type='button';ou.textContent='Sou outra pessoa';ou.style.cssText='background:#fff;color:#1d3f57;border:1px solid #c9d3da';ou.onclick=()=>{LSx.r('treinFC-vis-'+uid);LSx.r('treinFC-visok-'+uid);draw();};L.appendChild(ou);
+        try{await sb.from('trein_eventos').insert({user_id:uid,tipo:'visitante_fim',tipologia:null,detalhe:{cid:cx.id,nome:V.nome,empresa:V.empresa}});}catch(_){}return;}
       const on2=await onlineComp(cx);on2.delete(mys);if(on2.size>=max){M.style.color='';M.textContent='O Acesso 3D está cheio agora ('+max+' pessoas usando). Tente de novo em alguns minutos.';return;}
-      window.ALUNO_COMP=true;window.ALUNO_VIS=V;window.ALUNO_NOME=V.nome+' · '+V.empresa;window.ALUNO_CID=cx.id;window.ALUNO_FIM=fimE;window.ALUNO_INI=Date.now();marcaCid(cx.id);
+      window.ALUNO_COMP=true;window.ALUNO_VIS=V;window.ALUNO_NOME=V.nome+' · '+V.empresa;window.ALUNO_CID=cx.id;window.ALUNO_FIM=Math.min(fimE,fimP);window.ALUNO_INI=V.ini;marcaCid(cx.id);
       window.COLAB_S=mys||Math.random().toString(36).slice(2,10);LSx.s('treinFC-s-'+cx.id,window.COLAB_S);
       if(!LSx.g('treinFC-visok-'+uid)){await sb.from('trein_eventos').insert({user_id:uid,tipo:'visitante',tipologia:null,detalhe:Object.assign({cid:cx.id,s:window.COLAB_S},V)});LSx.s('treinFC-visok-'+uid,'1');}
       await sb.from('trein_eventos').insert({user_id:uid,tipo:'colab_sessao',tipologia:null,detalhe:{cid:cx.id,quem:window.ALUNO_NOME,s:window.COLAB_S,comp:true}});
-      const tag=document.getElementById('quemTag');tag.textContent='👤 '+V.nome;tag.title='Acesso 3D';tag.hidden=false;box.hidden=true;
+      const tag=document.getElementById('quemTag');tag.textContent='👤 '+V.nome+' · restam '+fmtR(fimP-Date.now());tag.title='Acesso 3D: 72 h a partir do seu 1º acesso';tag.hidden=false;box.hidden=true;
       setTimeout(()=>{try{ctaComp(perfil);}catch(e){console.warn(e);}},800);res(Object.assign({},cx,{nome:window.ALUNO_NOME}));};
     if(ultCid()===cx.id&&LSx.g('treinFC-vis-'+uid)&&!window.ALUNO_CID)b.click();}
   function fichaComp(){return new Promise(ok=>{T.textContent='Quem está entrando?';X.textContent='Preencha uma vez só neste aparelho. Serve para o relatório e para a FC saber quem conheceu a ferramenta.';M.textContent='';
