@@ -99,7 +99,7 @@ async function estadoEmpresa(uid){
   const zt=Math.max(0,...(zr.data||[]).filter(r=>!(r.detalhe||{}).para||(r.detalhe||{}).para===uid).map(r=>Date.parse(r.criado_em)));window.ZERAR_T=zt;
   const C={};(c.data||[]).forEach(r=>{const d=r.detalhe||{};if(d.para!==uid)return;C[d.id]=Object.assign({},C[d.id]||{},d,{alt:r.criado_em});});
   (e.data||[]).filter(r=>Date.parse(r.criado_em)>zt).forEach(r=>{const d=r.detalhe||{},x=C[d.cid];if(!x)return;if(r.tipo==='colab_inicio'){if(!x.ini)x.ini=r.criado_em;}else x.ped=r.criado_em;});
-  const L0=((l.data||[])[0]||{}).detalhe||{},CT=L0.contrato&&L0.ate?Date.parse(L0.ate+'T23:59:59-04:00'):0;window.CONTRATO_FIM=CT>Date.now()?CT:0;window.CONTRATO_ATE=CT>Date.now()?L0.ate:null;window.IMPL_ATE=L0.impl&&CT>Date.now()?L0.ate:null;
+  const L0=((l.data||[])[0]||{}).detalhe||{},CT=L0.contrato&&L0.ate&&!L0.lim72?Date.parse(L0.ate+'T23:59:59-04:00'):0;/* bônus com 72 h: empresa liberada até a data, mas cada colaborador segue as 72 h */window.CONTRATO_FIM=CT>Date.now()?CT:0;window.CONTRATO_ATE=CT>Date.now()?L0.ate:null;window.IMPL_ATE=L0.impl&&CT>Date.now()?L0.ate:null;
   const PZ=pzL(pz.data||[],uid);window.PAUSADO=pzOn(PZ);
   const lst=Object.values(C).filter(x=>!x.removido).map(x=>{x.fim=window.CONTRATO_FIM?window.CONTRATO_FIM:x.ini?Date.parse(x.ini)+(x.horas||72)*3600e3+pzMs(PZ,Date.parse(x.ini),pzL(pz.data||[],uid,x.id)):null;x.resta=x.fim?x.fim-Date.now():null;x.pz=pzOn(pzL(pz.data||[],uid,x.id));
     x.pend=x.ped&&Date.parse(x.ped)>Date.parse(x.alt);return x;});
