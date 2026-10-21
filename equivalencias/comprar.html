@@ -115,6 +115,7 @@ td.n{text-align:right;white-space:nowrap}tr.best td{background:#effaf2;font-weig
 #fSim .simsel{flex:0 1 auto;min-height:48px}tr.gsim td{background:var(--bg,#f2f5f4);border-top:2px solid var(--ln,#d6dee4)}
 .simoc{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:10px 0 2px}.simoc label{font-weight:800;font-size:15px}.simoc input{border:2px solid var(--tl,#0f6b70);border-radius:10px;padding:9px 12px;font:700 16px var(--f-b);min-width:220px;flex:0 1 280px}.simoc span{font-size:13px;color:var(--mu,#5d6b76)}
 #pedPrint{display:none}
+#pedPrint .pp-im{width:74px;padding:3px 4px!important}#pedPrint .pp-im img{display:block;width:66px;height:52px;object-fit:contain;background:#fff;border:1px solid #d6dee4;border-radius:4px}#pedPrint tr{page-break-inside:avoid}
 @media print{body.pedp>*:not(#pedPrint){display:none!important}body.pedp #pedPrint{display:block;color:#111;font:13px/1.4 Arial,sans-serif}
  .pp-h{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:3px solid #0f6b70;padding-bottom:8px;margin-bottom:10px}.pp-h small{display:block;letter-spacing:.2em;font-weight:700;color:#0f6b70;font-size:11px}.pp-h b{font-size:24px}
  .pp-r{text-align:right;display:flex;flex-direction:column}.pp-r span{font-size:11px;color:#555}.pp-r b{font-size:18px}
@@ -469,18 +470,27 @@ function pedPdf(f){const S=simular();const oc=ls.get(OKEY(),'');const E=S.esc.fi
   const n2b=v=>Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
   const cores=[...new Set(E.map(e=>sCor(e.t.x)))];
   const tb=cores.map(c=>{const L=E.filter(e=>sCor(e.t.x)===c);const x=CORES.find(y=>y[0]===c);
-    return `<tr class="pg"><td colspan="7"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${x?x[2]:'#ccc'};border:1px solid #555;vertical-align:-1px;margin-right:6px"></span><b>Cor: ${esc(CORN[c])}</b> · ${L.length} ${L.length===1?'item':'itens'} · ${L.reduce((a,e)=>a+e.p.br,0)} barras · ${n2b(L.reduce((a,e)=>a+e.p.kg,0))} kg</td></tr>`+
-     L.map(e=>`<tr><td>${E.indexOf(e)+1}</td><td><b>${esc(e.p.o.c)}</b>${e.p.o.alt&&e.t.x.alt&&e.t.x.alt.img?`<br><img src="${e.t.x.alt.img}" alt="" style="height:46px;margin-top:3px;border:1px solid #ccc">`:''}</td><td>${esc(e.p.o.lin)}</td><td>${esc(CORN[c])}</td><td class="n">${e.p.br}</td><td class="n">${String(sM(e.t.x)).replace('.',',')} m</td><td class="n">${n2b(e.p.kg)}</td></tr>`).join('');}).join('');
+    return `<tr class="pg"><td colspan="8"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${x?x[2]:'#ccc'};border:1px solid #555;vertical-align:-1px;margin-right:6px"></span><b>Cor: ${esc(CORN[c])}</b> · ${L.length} ${L.length===1?'item':'itens'} · ${L.reduce((a,e)=>a+e.p.br,0)} barras · ${n2b(L.reduce((a,e)=>a+e.p.kg,0))} kg</td></tr>`+
+     L.map(e=>`<tr><td>${E.indexOf(e)+1}</td><td class="pp-im">${pedImg(e)}</td><td><b>${esc(e.p.o.c)}</b></td><td>${esc(e.p.o.lin)}</td><td>${esc(CORN[c])}</td><td class="n">${e.p.br}</td><td class="n">${String(sM(e.t.x)).replace('.',',')} m</td><td class="n">${n2b(e.p.kg)}</td></tr>`).join('');}).join('');
   let d=document.getElementById('pedPrint');if(!d){d=document.createElement('div');d.id='pedPrint';document.body.appendChild(d);}
   d.innerHTML=`<div class="pp-h"><div><small>PEDIDO DE COMPRA</small><b>${esc(DADOS.nome||'')}</b></div><div class="pp-r">${oc?`<span>Ordem de compra</span><b>${esc(oc)}</b>`:''}<span>Data: ${new Date().toLocaleDateString('pt-BR')}</span></div></div>
    <div class="pp-f"><span>Fornecedor</span><b>${esc(IDX.forn[f])}</b></div>
    <p class="pp-o">⚠ Pintar cada item na cor indicada. Barras no tamanho pedido.</p>
-   <table class="pp-t"><thead><tr><th>Item</th><th>Código ${esc(IDX.forn[f])}</th><th>Linha</th><th>Cor (pintura)</th><th class="n">Barras</th><th class="n">Tamanho</th><th class="n">kg</th></tr></thead><tbody>${tb}
-   <tr class="pt"><td colspan="4"><b>Total</b></td><td class="n"><b>${E.reduce((a,e)=>a+e.p.br,0)}</b></td><td></td><td class="n"><b>${n2b(E.reduce((a,e)=>a+e.p.kg,0))}</b></td></tr></tbody></table>
+   <table class="pp-t"><thead><tr><th>Item</th><th>Desenho</th><th>Código ${esc(IDX.forn[f])}</th><th>Linha</th><th>Cor (pintura)</th><th class="n">Barras</th><th class="n">Tamanho</th><th class="n">kg</th></tr></thead><tbody>${tb}
+   <tr class="pt"><td colspan="5"><b>Total</b></td><td class="n"><b>${E.reduce((a,e)=>a+e.p.br,0)}</b></td><td></td><td class="n"><b>${n2b(E.reduce((a,e)=>a+e.p.kg,0))}</b></td></tr></tbody></table>
    <div class="pp-a"><div>Comprador · ${esc(DADOS.nome||'')}</div><div>${esc(IDX.forn[f])} · recebido em ___/___/______</div></div>
    <p class="pp-fc">Pedido gerado pelo Onde comprar · FC Consultoria em Esquadria</p>`;
   document.body.classList.add('pedp');const fim=()=>{document.body.classList.remove('pedp');removeEventListener('afterprint',fim);};addEventListener('afterprint',fim);
-  registrar('pedido_fornecedor',{forn:f,itens:E.length,oc,formato:'pdf'});simEnvia(IDX.forn[f]||f);setTimeout(()=>window.print(),150);}
+  registrar('pedido_fornecedor',{forn:f,itens:E.length,oc,formato:'pdf'});simEnvia(IDX.forn[f]||f);
+  /* espera os desenhos carregarem antes de abrir a impressão (máx. 5 s) */
+  const ims=[...d.querySelectorAll('img')];Promise.race([Promise.all(ims.map(i=>i.complete?1:new Promise(ok=>{i.addEventListener('load',ok);i.addEventListener('error',()=>setTimeout(ok,400));}))),new Promise(ok=>setTimeout(ok,5000))]).then(()=>setTimeout(()=>window.print(),150));}
+/* desenho do perfil no pedido: print da 2ª opção, desenho do fornecedor ou, se faltar, o desenho Alcoa equivalente */
+function pedImg(e){const L=[];
+  if(e.p.o.alt&&e.t.x.alt&&(e.t.x.alt.img||e.t.x.alt.th))L.push(e.t.x.alt.img||e.t.x.alt.th);
+  if(e.p.o.img)L.push(e.p.o.img);
+  const g=e.t.g;if(g&&g.m&&g.l!=='__m'){const bm=g.m.find(m=>m[3]==='base');const out=g.m.filter(m=>m!==bm&&!(m[0]===e.p.o.f&&m[1]===e.p.o.c));[bm,...out].forEach(m=>{if(!m)return;try{const u=imgDe(g,m);if(u&&!L.includes(u))L.push(u);}catch(_){}});}
+  if(!L.length)return '';const fb=L.slice(1,5).join('|');
+  return `<img src="${esc(L[0])}" alt=""${fb?` data-fb="${esc(fb)}"`:''} onerror="const r=(this.dataset.fb||'').split('|').filter(Boolean);if(r.length){this.dataset.fb=r.slice(1).join('|');this.src=r[0];}else{this.style.display='none';}">`;}
 function pedForn(f){const S=simular();const oc=ls.get(OKEY(),'');const E=S.esc.filter(e=>e.p&&e.p.o.f===f).sort((a,b)=>CORES.findIndex(c=>c[0]===sCor(a.t.x))-CORES.findIndex(c=>c[0]===sCor(b.t.x)));
   const n=v=>String(Math.round(v*100)/100).replace('.',',');
   const L=[['Pedido de compra · '+IDX.forn[f]],['Cliente',DADOS.nome||''],['Data',new Date().toLocaleDateString('pt-BR')]];if(oc)L.push(['Ordem de compra',oc]);
