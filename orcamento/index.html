@@ -149,15 +149,15 @@ async function carregar(){const d=await rpcDados();
 
 /* ================= TELA ================= */
 function tela(){if(!D)return;const ag=D.orcs.filter(o=>o.status==='aguardando').length;
-  const ab=ADM?[['com','📊 Resultados'],['apr','⏳ Aprovar pedidos'+(ag?' ('+ag+')':'')],['novo',O&&O.id?'✏️ Orçamento nº '+(O.numero||''):'🧾 Criação de orçamento'],['lista','📂 Orçamentos e pedidos ('+D.orcs.length+')'],['vend','👥 Vendedores'],['cest','📦 Consulta de estoque']]
-    :[['novo',O&&O.id?'✏️ Orçamento nº '+(O.numero||''):'🧾 Novo orçamento'],['lista','📂 Meus orçamentos e pedidos ('+D.orcs.length+')'],['cest','📦 Consulta de estoque']];
+  const ab=ADM?[['com','📊 Resultados'],['apr','⏳ Aprovar pedidos'+(ag?' ('+ag+')':'')],['novo',O&&O.id?'✏️ Orçamento nº '+(O.numero||''):'🧾 Criação de orçamento'],['lista','📂 Orçamentos e pedidos ('+D.orcs.length+')'],['atd',window.ATD?ATD.rotulo('atd'):'💬 Atendimentos do site'],['cli',window.ATD?ATD.rotulo('cli'):'👤 Clientes do site'],['vend','👥 Vendedores'],['cest','📦 Consulta de estoque']]
+    :[['novo',O&&O.id?'✏️ Orçamento nº '+(O.numero||''):'🧾 Novo orçamento'],['lista','📂 Meus orçamentos e pedidos ('+D.orcs.length+')'],['atd',window.ATD?ATD.rotulo('atd'):'💬 Atendimentos do site'],['cest','📦 Consulta de estoque']];
   if(D.cat)ab.push(['cat','📚 Catálogo']);if(ADM){if(ABA==='est')ab.push(['est','📦 Importar estoque']);ab.push(['cfg','⚙️ Configurar']);}
   let h=SO?'':`<div class="abas">${ab.map(([k,t])=>`<button type="button" data-ab="${k}" class="${ABA===k?'on':''}">${esc(t)}</button>`).join('')}${GESTOR&&!DEMO?`<span style="flex:1"></span>${document.documentElement.classList.contains('emb')?'':`<a class="btn" href="../consultorias.html?k=${encodeURIComponent(VKEY)}">← Voltar ao painel da empresa</a>`}<button type="button" class="btn" id="gFC" title="Fica registrado em Solicitações com a FC">📨 Falar com a FC</button><a class="btn" style="background:#1f9d55;border-color:#1f9d55;color:#fff" target="_blank" rel="noopener" href="https://wa.me/5566999867984?text=${encodeURIComponent('Olá, FC! Sou o gestor da '+(D.nome||'')+' e preciso de ajuda no Painel de Vendas.')}">💬 WhatsApp FC</a>`:''}</div>`;
   if(DEMO)h=`<div class="box" style="border-color:#e0b100;background:#fff8dc"><b>👁 Demonstração: é assim que o vendedor vê.</b> <span class="nota">Ele só tem estas duas abas, não vê custo nem planilha e abre só no computador. Nesta demonstração nada é salvo.</span></div>`+h;
   if(!D.itens.length&&ABA!=='cfg')h+=`<div class="box" style="border-color:var(--or);background:var(--orc)"><b>Ainda não há itens liberados para orçamento.</b><p class="nota" style="margin:2px 0 0">${ADM?'Vá em ⚙️ Configurar e clique em "Atualizar itens da precificação".':'A FC Consultoria está preparando a lista de itens. Volte mais tarde.'}</p></div>`;
-  if(['com','apr','vend','cfg','est'].includes(ABA)&&!ADM)ABA='novo';if(ABA==='cat'&&!D.cat)ABA='novo';if(ABA==='novo')h+=telaNovo();else if(ABA==='lista')h+=telaLista();else if(ABA==='com'||ABA==='apr')h+=`<div class="${ABA==='apr'?'modoApr':'modoCom'}">`+telaCom()+'</div>';else if(ABA==='est')h+=telaEst();else if(ABA==='cest')h+=telaCest();else if(ABA==='cat')h+=telaCat();else h+=`<div class="${ABA==='vend'?'modoVend':'modoCfg'}">`+telaCfg()+'</div>';
+  if(['com','apr','vend','cfg','est','cli'].includes(ABA)&&!ADM)ABA='novo';if(ABA==='cat'&&!D.cat)ABA='novo';if(ABA==='novo')h+=telaNovo();else if(ABA==='lista')h+=telaLista();else if(ABA==='com'||ABA==='apr')h+=`<div class="${ABA==='apr'?'modoApr':'modoCom'}">`+telaCom()+'</div>';else if(ABA==='est')h+=telaEst();else if(ABA==='cest')h+=telaCest();else if(ABA==='cat')h+=telaCat();else if(ABA==='atd'||ABA==='cli')h+='<div id="atdBox"></div>';else h+=`<div class="${ABA==='vend'?'modoVend':'modoCfg'}">`+telaCfg()+'</div>';
   $('#app').innerHTML=h;$$('[data-ab]').forEach(b=>b.onclick=()=>{ABA=b.dataset.ab;tela();});
-  if(ABA==='novo')wireNovo();else if(ABA==='lista')wireLista();else if(ABA==='com'||ABA==='apr')wireCom();else if(ABA==='est')wireEst();else if(ABA==='cest')wireCest();else if(ABA==='cat'){}else wireCfg();const gf=$('#gFC');if(gf)gf.onclick=suporte;const stb=$('#supTab');if(stb)stb.onclick=suporte;}
+  if(ABA==='novo')wireNovo();else if(ABA==='lista')wireLista();else if(ABA==='com'||ABA==='apr')wireCom();else if(ABA==='est')wireEst();else if(ABA==='cest')wireCest();else if(ABA==='cat'){}else if(ABA==='atd'||ABA==='cli'){if(window.ATD)ATD.abrir(ABA);}else wireCfg();if(window.ATD&&!DEMO)ATD.ligar();const gf=$('#gFC');if(gf)gf.onclick=suporte;const stb=$('#supTab');if(stb)stb.onclick=suporte;}
 
 /* ---------- novo / editar ---------- */
 function calc(){const sub=O.itens.reduce((a,i)=>a+Math.round(num(i.preco)*num(i.qtd)*100)/100,0);let dsc=O.descTipo==='pc'?Math.round(sub*num(O.descPc)/100*100)/100:num(O.desconto);
@@ -531,5 +531,6 @@ if(VKEY&&!GESTOR&&MOVEL){const L=location.href;document.body.innerHTML=`<div sty
     let e0=Q.get('e')||(()=>{try{return localStorage.getItem('fc_orc_emp');}catch(_){return '';}})()||'cb';if(!EMPS.some(e=>e.id===e0))e0=(EMPS.find(e=>e.id==='cb')||EMPS[0]||{}).id;s.value=e0;s.onchange=()=>trocaEmp(s.value);
     if(ABA0)ABA=ABA0;await trocaEmp(e0);});})();
 </script>
+<script src="atendimentos.js?v=2"></script>
 </body>
 </html>
