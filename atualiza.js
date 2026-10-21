@@ -3,7 +3,7 @@
    Se mudou desde a última visita, baixa de novo as páginas principais e recarrega uma vez. */
 (function(){
   const base=(document.currentScript&&document.currentScript.src||'').replace(/atualiza\.js.*$/,'');
-  const PAGS=['index.html','painel.html','consultorias.html','empresa.html','orcamento/','orcamento/index.html','estoque-aviso.js','auth.js','implantacao/','esquadrias/musica.js','equivalencias/distribuidoras.html'];
+  const PAGS=['index.html','painel.html','consultorias.html','empresa.html','orcamento/','orcamento/index.html','estoque-aviso.js','auth.js','implantacao/','esquadrias/musica.js','equivalencias/distribuidoras.html','equivalencias/comprar.html','equivalencias/','equivalencias/index.html','equivalencias/importa-lista.js','equivalencias/foto-busca.js','orcamento/atendimentos.js'];
   const lg=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v);}catch(_){return null;}};
   fetch(base+'versao.json?t='+Date.now(),{cache:'no-store'}).then(r=>r.json()).then(async j=>{
     const v=String(j.v||'');if(!v)return;const ant=lg('fc_versao');
