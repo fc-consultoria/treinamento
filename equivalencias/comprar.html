@@ -140,7 +140,7 @@ tr.hl td{background:#fff3c4!important;transition:background .4s}
 #altOv[hidden]{display:none!important}#altOv{position:fixed;inset:0;z-index:85;background:rgba(10,20,28,.55);display:flex;align-items:center;justify-content:center;padding:14px}.altmd{background:#fff;color:#13232e;border-radius:16px;width:min(460px,100%);padding:18px;display:flex;flex-direction:column;gap:8px}
 .altmd label{display:flex;flex-direction:column;gap:4px;font-size:13px;font-weight:700;color:#5d6b76}.altmd input,.altmd select{border:1.5px solid #c4ccd2;border-radius:9px;padding:9px 10px;font:600 15px var(--f-b);color:#13232e}
 .cmp{min-width:210px;width:230px}.cmpw{display:flex;flex-direction:column;gap:5px}.cmpb{display:flex;gap:5px;align-items:center;flex-wrap:wrap}.cmpw .fxsel{max-width:225px;width:100%}
-.altan{display:flex;flex-direction:column;gap:4px}.altan small{font-weight:500;color:#5d6b76}.altimg{max-width:100%;max-height:180px;border:1px solid #d6dee4;border-radius:8px;cursor:zoom-in}.altpdf{font-weight:700}
+.altan{display:flex;flex-direction:column;gap:4px}.altcola{border:2px dashed #0f6b70;border-radius:12px;background:#eef6f5;padding:14px;display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;outline:none}.altcola.on,.altcola:focus{background:#d9efec;border-color:#f2a51e}.altcola>b{font-size:17px;color:#0f6b70}.altcola>span{font-size:13px;color:#5d6b76}.altcola kbd{background:#fff;border:1px solid #c4ccd2;border-radius:4px;padding:0 5px;font:700 12px monospace}.altmsg{display:block;font-weight:500;color:#5d6b76;margin-top:4px}.altan small{font-weight:500;color:#5d6b76}.altimg{max-width:100%;max-height:180px;border:1px solid #d6dee4;border-radius:8px;cursor:zoom-in}.altpdf{font-weight:700}
 .altmini{width:34px;height:34px;object-fit:cover;border-radius:5px;float:left;margin-right:6px;cursor:zoom-in}.altlb{position:fixed;inset:0;z-index:95;background:rgba(0,0,0,.85);display:grid;place-items:center;padding:16px;cursor:zoom-out}.altlb img{max-width:100%;max-height:100%;border-radius:8px}
 </style>
 </head>
@@ -177,7 +177,7 @@ const pc=v=>(v>0?'+':'')+(v*100).toLocaleString('pt-BR',{maximumFractionDigits:1
 const num=s=>{s=String(s??'').trim().replace(/\s/g,'');if(!s)return null;if(s.includes(','))s=s.replace(/\./g,'').replace(',','.');const v=+s;return isNaN(v)?NaN:v;};
 const dt=s=>s?new Date(s).toLocaleDateString('pt-BR'):'';
 const dias=s=>s?Math.floor((Date.now()-new Date(s))/864e5):null;
-const ls={get:(k,d)=>{try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v);}catch(_){return d;}},set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));}catch(_){}}};
+const ls={get:(k,d)=>{try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v);}catch(_){return d;}},set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));}catch(_){}if(/^fc_compra_(sim|oc|simf)_/.test(k)&&window.__simAg)window.__simAg();}};
 function toast(t){const d=document.createElement('div');d.className='toast';d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),2600);}
 function marca(t){const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="460" height="300"><g transform="rotate(-24 230 150)" font-family="Barlow,Arial,sans-serif" text-anchor="middle" fill="#0f4f53" fill-opacity=".04"><text x="230" y="150" font-size="24" font-weight="800">FC CONSULTORIA EM ESQUADRIA</text><text x="230" y="176" font-size="13">${t}</text></g></svg>`;const w=document.createElement('div');w.id='wm';w.style.backgroundImage=`url("data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}")`;document.body.appendChild(w);}
 
@@ -464,7 +464,7 @@ function simCsv(){const S=simular();const f=v=>v==null||isNaN(v)?'':String(Math.
   S.unicos.forEach(u=>L.push([IDX.forn[u.f],u.cob+'/'+S.val.length,f(u.kg),f(u.falta),f(u.v)]));
   const t='﻿'+L.map(r=>r.map(c=>{c=String(c);return /[;"\n]/.test(c)?'"'+c.replace(/"/g,'""')+'"':c;}).join(';')).join('\r\n');
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'text/csv;charset=utf-8'}));a.download='simulacao-pedido-'+(EMP||'fc')+'-'+new Date().toISOString().slice(0,10)+'.csv';a.click();
-  registrar('simulacao',{itens:SIM.length,total:Math.round(S.totC),cor:COR,formato:'excel'});}
+  registrar('simulacao',{itens:SIM.length,total:Math.round(S.totC),cor:COR,formato:'excel'});simEnvia();}
 function pedPdf(f){const S=simular();const oc=ls.get(OKEY(),'');const E=S.esc.filter(e=>e.p&&e.p.o.f===f).sort((a,b)=>CORES.findIndex(c=>c[0]===sCor(a.t.x))-CORES.findIndex(c=>c[0]===sCor(b.t.x)));
   const n2b=v=>Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
   const cores=[...new Set(E.map(e=>sCor(e.t.x)))];
@@ -480,7 +480,7 @@ function pedPdf(f){const S=simular();const oc=ls.get(OKEY(),'');const E=S.esc.fi
    <div class="pp-a"><div>Comprador · ${esc(DADOS.nome||'')}</div><div>${esc(IDX.forn[f])} · recebido em ___/___/______</div></div>
    <p class="pp-fc">Pedido gerado pelo Onde comprar · FC Consultoria em Esquadria</p>`;
   document.body.classList.add('pedp');const fim=()=>{document.body.classList.remove('pedp');removeEventListener('afterprint',fim);};addEventListener('afterprint',fim);
-  registrar('pedido_fornecedor',{forn:f,itens:E.length,oc,formato:'pdf'});setTimeout(()=>window.print(),150);}
+  registrar('pedido_fornecedor',{forn:f,itens:E.length,oc,formato:'pdf'});simEnvia(IDX.forn[f]||f);setTimeout(()=>window.print(),150);}
 function pedForn(f){const S=simular();const oc=ls.get(OKEY(),'');const E=S.esc.filter(e=>e.p&&e.p.o.f===f).sort((a,b)=>CORES.findIndex(c=>c[0]===sCor(a.t.x))-CORES.findIndex(c=>c[0]===sCor(b.t.x)));
   const n=v=>String(Math.round(v*100)/100).replace('.',',');
   const L=[['Pedido de compra · '+IDX.forn[f]],['Cliente',DADOS.nome||''],['Data',new Date().toLocaleDateString('pt-BR')]];if(oc)L.push(['Ordem de compra',oc]);
@@ -490,7 +490,7 @@ function pedForn(f){const S=simular();const oc=ls.get(OKEY(),'');const E=S.esc.f
   L.push([]);L.push(['Total','','','',E.reduce((a,e)=>a+e.p.br,0),'','',n(E.reduce((a,e)=>a+e.p.kg,0))]);
   const t='\ufeff'+L.map(r=>r.map(c=>{c=String(c);return /[;"\n]/.test(c)?'"'+c.replace(/"/g,'""')+'"':c;}).join(';')).join('\r\n');
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'text/csv;charset=utf-8'}));a.download='pedido-'+f+(oc?'-OC-'+oc.replace(/[^\w-]+/g,'_'):'')+'-'+new Date().toISOString().slice(0,10)+'.csv';a.click();
-  registrar('pedido_fornecedor',{forn:f,itens:E.length,oc});}
+  registrar('pedido_fornecedor',{forn:f,itens:E.length,oc});simEnvia(IDX.forn[f]||f);}
 function simAdd(q,b,g,cor,mt){b=Math.max(1,Math.round(+String(b).replace(',','.')||0));if(!q||!b)return false;cor=cor||COR;mt=+mt||BARRA;
   const i=SIM.findIndex(x=>norm(x.q)===norm(q)&&(x.cor||COR)===cor&&(+x.m||BARRA)===mt);
   if(i>=0)SIM[i].b+=b;else SIM.push({q:q.toUpperCase(),b,g:g||null,cor,m:mt});ls.set(SKEY(),SIM);return true;}
@@ -540,6 +540,21 @@ async function telaUso(){const box=$('#app .box:last-child');let L=[],P=[],F=[];
      ${p?`<p class="sub" style="font-size:13px;margin-top:8px">Portal: ${p.acessos||0} acessos · último ${p.ultimo_acesso?dt(p.ultimo_acesso):'—'}</p>`:''}</div>`;}).join('');
   $('#app').innerHTML=abas()+`<section class="box"><h1 class="t">Acompanhamento</h1><p class="sub">O que cada cliente está pesquisando e se está usando a ferramenta.</p></section><div class="cli2">${html}</div>`;}
 
+/* ===== orçamento do cliente vai para o painel da FC (card Novo orçamento e compra de clientes) ===== */
+const SIDK=()=>'fc_compra_simid_'+(EMP||'x');let simT=null;
+function simId(){let id=ls.get(SIDK(),null);if(!id){id=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{const r=Math.random()*16|0;return (c==='x'?r:(r&3|8)).toString(16);});ls.set(SIDK(),id);}return id;}
+function simSnap(){if(!SIM.length||!IDX)return null;let S;try{S=simular();}catch(_){return null;}const r2=v=>v==null||isNaN(v)?null:Math.round(v*100)/100;
+  const it=S.itens.map(t=>{const e=S.esc.find(y=>y.t===t);const p=e&&e.p;const a=t.x.alt;
+    return {cod:t.x.orig||t.x.q,q:t.x.q,cor:CORN[sCor(t.x)]||'',b:t.x.b,m:sM(t.x),cl:t.cl||'',nf:t.nf?1:0,fora:t.fora?1:0,
+      per:t.g&&!t.nf?((t.g.n||'')+((IDX.linhas[t.g.l]||{}).n?' · '+IDX.linhas[t.g.l].n:'')):'',
+      f:p?(IDX.forn[p.o.f]||p.o.f):'',c:p?p.o.c:'',br:p?p.br:null,kg:p?Math.round(p.kg*1000)/1000:null,rkg:p?r2(p.o.kg):null,v:p?r2(p.v):null,
+      alt:p&&p.o.alt?1:0,fix:e&&e.fix?1:0,mov:e&&e.mov?(IDX.forn[e.mov]||e.mov):'',a2:a&&a.c?{f:IDX.forn[a.f]||a.f||'',c:a.c,p:a.p,img:a.img?1:0,pdf:a.pdf?1:0}:null};});
+  const pf={};Object.entries(S.porC).forEach(([f,r])=>{pf[IDX.forn[f]||f]={n:r.n,kg:r2(r.kg),v:r2(r.v),falta:r2(r.falta)};});
+  return {oc:ls.get(OKEY(),''),n:SIM.length,kg:r2(S.kgC),tot:r2(S.totC),fs:Object.keys(pf),pf,it,filtro:ls.get(SFKEY(),'todos')};}
+function simEnvia(ped){if(ADM||!KEY||LOCAL)return;clearTimeout(simT);const d=simSnap();if(!d)return;
+  sb.rpc('compra_sim_salvar',{p_chave:KEY,p_id:simId(),p_dados:d,p_nome:nomeQ()||null,p_pedido:ped||null}).then(()=>{},()=>{});}
+window.__simAg=()=>{if(ADM||!KEY||LOCAL)return;clearTimeout(simT);if(!SIM.length){try{localStorage.removeItem(SIDK());}catch(_){}return;}simT=setTimeout(()=>simEnvia(),4000);};
+
 /* ===== registro de uso (cliente) ===== */
 let regT=null,regU='';
 function registrar(tipo,det){if(ADM||!KEY||LOCAL)return;sb.rpc('compra_registrar',{p_chave:KEY,p_tipo:tipo,p_detalhe:det,p_nome:nomeQ()||null}).then(()=>{},()=>{});}
@@ -569,7 +584,7 @@ document.addEventListener('click',async ev=>{const t=ev.target.closest('[data-su
   else if(d.addrel!=null)addRel();
   else if(d.addsim!=null){const v=($('#sxB')||{}).value||'1',cr=($('#sxCor')||{}).value||COR,mt=+(($('#sxM')||{}).value||6);if(simAdd(Q,v,SEL?SEL.l+'|'+SEL.k:null,cr,mt)){toast(`Incluído na simulação: ${Q.toUpperCase()} · ${CORN[cr]} · ${v} barras de ${mt} m.`);tela();}}
   else if(d.simrm!=null){SIM.splice(+d.simrm,1);ls.set(SKEY(),SIM);tela();}
-  else if(d.simprint!=null){const S=simular();registrar('simulacao',{itens:SIM.length,total:Math.round(S.totC),cor:COR,formato:'pdf'});window.print();}
+  else if(d.simprint!=null){const S=simular();registrar('simulacao',{itens:SIM.length,total:Math.round(S.totC),cor:COR,formato:'pdf'});simEnvia();window.print();}
   else if(d.simcsv!=null)simCsv();
   else if(d.pedf)pedForn(d.pedf);
   else if(d.pedpdf)pedPdf(d.pedpdf);
@@ -580,7 +595,7 @@ document.addEventListener('click',async ev=>{const t=ev.target.closest('[data-su
      <label>Fornecedor<select id="altF">${F.map(f=>`<option value="${f}" ${a.f===f?'selected':''}>${esc(IDX.forn[f])} · R$ ${n2(+DADOS.forn[f].natural)}/kg</option>`).join('')}</select></label>
      <label>Código no fornecedor<input id="altC" value="${esc(a.c||'')}" placeholder="Ex.: 25C-123"></label>
      <label>Peso (kg/m)<input id="altP" inputmode="decimal" value="${a.p?String(a.p).replace('.',','):''}" placeholder="Ex.: 0,918"></label>
-     <label>Print ou PDF do produto (catálogo do fornecedor)<span class="altan"><input type="file" id="altA" accept="image/*,application/pdf"><small id="altAm">${a.img||a.pdf?'':'Opcional. Com print, o sistema tenta ler o código e o peso sozinho.'}</small></span></label>
+     <b style="font-size:14px">Print ou PDF do produto (catálogo do fornecedor)</b><div class="altcola" id="altCola" tabindex="0"><b>📋 Cole o print aqui</b><span>Tire o print (Win+Shift+S) e aperte <kbd>Ctrl</kbd>+<kbd>V</kbd> com esta janela aberta · ou arraste a imagem para cá</span><span style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:4px"><button type="button" class="bt p" data-altcola>📋 Colar print</button><label class="bt" style="cursor:pointer">📁 Escolher arquivo<input type="file" id="altA" accept="image/*,application/pdf" hidden></label></span></div><small id="altAm" class="altmsg">${a.img||a.pdf?'':'Opcional. Com print, o sistema tenta ler o código e o peso sozinho.'}</small>
      <div id="altPv">${a.img?`<img src="${a.img}" alt="" class="altimg" data-altver="1">`:a.pdf?`<span class="altpdf">📄 ${esc(a.pdf.nome)}</span>`:''}</div>
      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px"><button type="button" class="bt p" data-altok="${i}">Salvar 2ª opção</button>${x.alt?`<button type="button" class="bt r" data-altrm="${i}">Tirar 2ª opção</button>`:''}<button type="button" class="bt" data-altx>Cancelar</button></div></div>`;
     o.hidden=false;window.__altAnexo=undefined;if(!F.length)toast('Nenhum fornecedor liberado com preço. Preencha a aba Preços.');}
@@ -606,7 +621,17 @@ document.addEventListener('click',async ev=>{const t=ev.target.closest('[data-su
   else if(d.zoom!=null){if(!d.zoom)return;$('#zmI').src=d.zoom;$('#zmT').textContent=d.t||'';$('#zm').hidden=false;}});
 $('#zmX').onclick=()=>$('#zm').hidden=true;$('#zm').onclick=e=>{if(e.target.id==='zm')$('#zm').hidden=true;};
 document.addEventListener('keydown',e=>{if(e.key==='Escape')$('#zm').hidden=true;});
-document.addEventListener('change',async e=>{if(e.target.id!=='altA')return;const f=e.target.files[0];if(!f)return;const m=$('#altAm'),pv=$('#altPv');
+document.addEventListener('change',e=>{if(e.target.id==='altA'&&e.target.files[0])altArq(e.target.files[0]);});
+const altAberto=()=>{const o=$('#altOv');return o&&!o.hidden;};
+document.addEventListener('paste',e=>{if(!altAberto())return;const it=[...(e.clipboardData&&e.clipboardData.items||[])].find(x=>x.kind==='file'&&/^image\/|pdf$/.test(x.type));if(!it)return;e.preventDefault();const f=it.getAsFile();if(f)altArq(f.name&&f.name!=='image.png'?f:new File([f],'print.png',{type:f.type}));});
+document.addEventListener('dragover',e=>{if(altAberto()&&e.target.closest&&e.target.closest('#altCola')){e.preventDefault();e.target.closest('#altCola').classList.add('on');}});
+document.addEventListener('dragleave',e=>{const z=e.target.closest&&e.target.closest('#altCola');if(z)z.classList.remove('on');});
+document.addEventListener('drop',e=>{const z=e.target.closest&&e.target.closest('#altCola');if(!z||!altAberto())return;e.preventDefault();z.classList.remove('on');const f=e.dataTransfer.files[0];if(f)altArq(f);});
+document.addEventListener('click',async e=>{if(!e.target.closest('[data-altcola]'))return;const m=$('#altAm');
+  try{if(!navigator.clipboard||!navigator.clipboard.read)throw 0;const L=await navigator.clipboard.read();for(const c of L){const t=c.types.find(x=>/^image\//.test(x));if(t){const b=await c.getType(t);altArq(new File([b],'print.png',{type:t}));return;}}
+    m.textContent='Não há print copiado. Tire o print (Win+Shift+S) e clique de novo, ou aperte Ctrl+V.';}
+  catch(_){m.textContent='O navegador não deixou ler a área de transferência: aperte Ctrl+V com esta janela aberta.';}});
+async function altArq(f){const m=$('#altAm'),pv=$('#altPv');
   const dataUrl=b=>new Promise(ok=>{const r=new FileReader();r.onload=()=>ok(r.result);r.readAsDataURL(b);});
   if(/pdf$/i.test(f.type)||/\.pdf$/i.test(f.name)){if(f.size>1.5*1024*1024){m.textContent='PDF grande demais para guardar (máx. 1,5 MB). Mande um print da página.';return;}
     window.__altAnexo={pdf:{nome:f.name,dados:await dataUrl(f)}};pv.innerHTML=`<span class="altpdf">📄 ${esc(f.name)}</span>`;m.textContent='PDF anexado.';return;}
@@ -622,7 +647,7 @@ document.addEventListener('change',async e=>{if(e.target.id!=='altA')return;cons
     let ok=[];if(pm&&!$('#altP').value){$('#altP').value=pm[1].replace('.',',');ok.push('peso '+pm[1]);}
     if(cm&&!$('#altC').value){$('#altC').value=cm[1].replace(' ','');ok.push('código '+cm[1]);}
     m.textContent=ok.length?'✓ Lido do print: '+ok.join(' · ')+'. Confira antes de salvar.':'Não consegui ler o código e o peso. Preencha à mão.';}
-  catch(_){m.textContent='Print anexado. Preencha o código e o peso à mão.';}});
+  catch(_){m.textContent='Print anexado. Preencha o código e o peso à mão.';}}
 document.addEventListener('click',e=>{const v=e.target.closest('[data-altver],.altmini');if(!v)return;e.stopPropagation();const l=document.createElement('div');l.className='altlb';l.innerHTML=`<img src="${v.getAttribute('src')}" alt="">`;l.onclick=()=>l.remove();document.body.appendChild(l);},true);
 document.addEventListener('input',e=>{if(e.target.id==='simOC')ls.set(OKEY(),e.target.value.trim());});
 document.addEventListener('change',e=>{const t=e.target;if(t.dataset&&(t.dataset.simcor!=null||t.dataset.simm!=null)){const x=SIM[+(t.dataset.simcor??t.dataset.simm)];if(t.dataset.simcor!=null)x.cor=t.value;else x.m=+t.value;ls.set(SKEY(),SIM);tela();return;}if(t.dataset&&t.dataset.simfx!=null){const x=SIM[+t.dataset.simfx];if(t.value)x.fx=t.value;else delete x.fx;ls.set(SKEY(),SIM);tela();toast(t.value?'Fornecedor definido pelo comprador: '+IDX.forn[t.value]+'.':'Voltou para a escolha automática.');return;}
