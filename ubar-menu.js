@@ -3,7 +3,7 @@
    Todos os outros botões (guia, material, catálogos, dicas, avisos, indique, site, Instagram, painel, sair)
    vão para o menu "Mais", com os mesmos cliques de antes. */
 (function(){
-  const FICA=new Set(['uname','quemTag','upainel','mcBtn','sugBtn','umMais','ctaBtn','igBtn','siteBtn']);
+  const FICA=new Set(['uname','quemTag','upainel','mcBtn','sugBtn','umMais','ctaBtn','igBtn','siteBtn','vidBtn']);
   const st=document.createElement('style');st.textContent=`
   #umMais{position:relative}
   #umMenu{position:absolute;right:12px;top:calc(100% + 6px);z-index:9300;background:#fff;color:#14231f;border-radius:14px;box-shadow:0 18px 44px rgba(0,0,0,.28);padding:8px;min-width:240px;display:flex;flex-direction:column;gap:2px}
