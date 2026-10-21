@@ -161,7 +161,7 @@ tr.hl td{background:#fff3c4!important;transition:background .4s}
 <script src="importa-lista.js?v=2"></script>
 <script>
 const $=s=>document.querySelector(s),esc=t=>String(t??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const KEY=new URLSearchParams(location.search).get('k')||'';
+const KEY=new URLSearchParams(location.search).get('k')||'';const EMPFIX=new URLSearchParams(location.search).get('emp')||'';
 const norm=s=>String(s||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
 const BARRA=6;
 const FORN=['alcoa','texa','selta','fbk','ecoalumi','perfileve','cda'];
@@ -696,12 +696,12 @@ async function carregaDados(){
     DADOS={forn:ls.get('fc_compra_local_'+EMP,{}),abc:ls.get('fc_compra_abc_'+EMP,{}),meta:ls.get('fc_compra_meta_'+EMP,null),nome:(EMPS.find(e=>e.id===EMP)||{}).nome||''};return true;}
   if(!r||r.error||!r.data)return false;
   LOCAL=false;DADOS={forn:r.data.forn||{},abc:r.data.abc||{},meta:r.data.meta||null,nome:r.data.nome||'',lib:r.data.lib||null};EMP=r.data.emp;return true;}
-async function trocaEmp(id){EMP=id;ls.set('fc_compra_emp',id);REL=ls.get(RKEY(),[]);SIM=ls.get(SKEY(),[]);await carregaDados();$('#hd').textContent='Onde comprar · '+(DADOS.nome||id);}
+async function trocaEmp(id){EMP=id;if(!EMPFIX)ls.set('fc_compra_emp',id);REL=ls.get(RKEY(),[]);SIM=ls.get(SKEY(),[]);await carregaDados();$('#hd').textContent='Onde comprar · '+(DADOS.nome||id);}
 async function iniciar(){
   await carregaIndice();
   if(ADM){const r=await sb.from('rotina_docs').select('id,data').eq('col','consultoria');EMPS=(r.data||[]).map(x=>({id:x.id,nome:(x.data&&x.data.nome)||x.id})).sort((a,b)=>a.nome.localeCompare(b.nome,'pt'));
     const s=$('#selEmp');s.hidden=false;s.innerHTML=EMPS.map(e=>`<option value="${esc(e.id)}">${esc(e.nome)}</option>`).join('');
-    let e0=ls.get('fc_compra_emp','');if(!EMPS.some(e=>e.id===e0))e0=EMPS[0]&&EMPS[0].id;s.value=e0;s.onchange=async()=>{await trocaEmp(s.value);SEL=null;tela();};
+    let e0=EMPFIX||ls.get('fc_compra_emp','');if(!EMPS.some(e=>e.id===e0))e0=EMPS[0]&&EMPS[0].id;s.value=e0;if(EMPFIX&&e0===EMPFIX)s.hidden=true;s.onchange=async()=>{await trocaEmp(s.value);SEL=null;tela();};
     await trocaEmp(e0);}
   else{const ok=await carregaDados();if(!ok&&!LOCAL){$('#app').innerHTML='<p class="vazio">Link inválido ou expirado. Fale com a FC Consultoria.</p>';return;}
     if(LOCAL){const v=await sb.rpc('cons_portal_ver',{p_chave:KEY}).catch(()=>({}));if(!v||v.error||!v.data){$('#app').innerHTML='<p class="vazio">Link inválido ou expirado. Fale com a FC Consultoria.</p>';return;}EMP=v.data.id;DADOS.nome=v.data.nome||'';DADOS.forn=ls.get('fc_compra_local_'+EMP,{});}
