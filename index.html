@@ -161,8 +161,9 @@ function escolherColab(uid,perfil){return new Promise(res=>{
     let last=ultCid();
     const lx=st.lst.find(x=>x.id===last&&x.ini&&x.resta>0);if(lx&&!window.ALUNO_CID){[...L.children][st.lst.indexOf(lx)].click();}}
   /* ===== Acesso 3D compartilhado: 1 acesso, até N pessoas ao mesmo tempo, cada uma no seu aparelho ===== */
+  const a3pid=V=>{const nz=t=>String(t||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/g,'');let h=5381;for(const c of nz(V.nome)+'|'+nz(V.empresa))h=((h*33)^c.charCodeAt(0))>>>0;return h.toString(36);};
   async function onlineComp(cx){const {data}=await sb.from('trein_eventos').select('tipo,detalhe,criado_em').eq('user_id',uid).in('tipo',['colab_sessao','hb','tempo']).gt('criado_em',new Date(Date.now()-180000).toISOString()).limit(500);
-    const S=new Set();(data||[]).forEach(r=>{const d=r.detalhe||{};const ss=r.tipo==='tempo'?d.ss:d.s;if(d.cid===cx.id&&ss)S.add(ss);});return S;}
+    const S=new Set();(data||[]).forEach(r=>{const d=r.detalhe||{};const ss=r.tipo==='tempo'?d.ss:d.s;if(String(d.cid||'').split('~')[0]===cx.id&&ss)S.add(ss);});return S;}
   async function drawComp(cx,st){const max=+cx.max||12,ate=st.ate,fimE=ate?Date.parse(ate+'T23:59:59-04:00'):Date.now()+864e5;
     const mys=LSx.g('treinFC-s-'+cx.id)||'';const on=await onlineComp(cx);on.delete(mys);const n=on.size;
     T.textContent='Toque para entrar';X.textContent='Acesso 3D: até '+max+' pessoas ao mesmo tempo, cada uma no seu aparelho. Cada pessoa tem 72 horas a partir do primeiro acesso. Gire, abra as folhas, desmonte as esquadrias e faça os desafios.';
@@ -181,10 +182,10 @@ function escolherColab(uid,perfil){return new Promise(res=>{
         const ou=document.createElement('button');ou.type='button';ou.textContent='Sou outra pessoa';ou.style.cssText='background:#fff;color:#1d3f57;border:1px solid #c9d3da';ou.onclick=()=>{LSx.r('treinFC-vis-'+uid);LSx.r('treinFC-visok-'+uid);draw();};L.appendChild(ou);
         try{await sb.from('trein_eventos').insert({user_id:uid,tipo:'visitante_fim',tipologia:null,detalhe:{cid:cx.id,nome:V.nome,empresa:V.empresa}});}catch(_){}return;}
       const on2=await onlineComp(cx);on2.delete(mys);if(on2.size>=max){M.style.color='';M.textContent='O Acesso 3D está cheio agora ('+max+' pessoas usando). Tente de novo em alguns minutos.';return;}
-      window.ALUNO_COMP=true;window.ALUNO_VIS=V;window.ALUNO_NOME=V.nome+' · '+V.empresa;window.ALUNO_CID=cx.id;window.ALUNO_FIM=Math.min(fimE,fimP);window.ALUNO_INI=V.ini;marcaCid(cx.id);
+      window.ALUNO_COMP=true;window.ALUNO_VIS=V;window.ALUNO_NOME=V.nome+' · '+V.empresa;window.ALUNO_CID=cx.id+'~'+a3pid(V);/* cada pessoa tem o seu id: conversa, relatório e presença individuais */window.ALUNO_FIM=Math.min(fimE,fimP);window.ALUNO_INI=V.ini;marcaCid(cx.id);
       window.COLAB_S=mys||Math.random().toString(36).slice(2,10);LSx.s('treinFC-s-'+cx.id,window.COLAB_S);
-      if(!LSx.g('treinFC-visok-'+uid)){await sb.from('trein_eventos').insert({user_id:uid,tipo:'visitante',tipologia:null,detalhe:Object.assign({cid:cx.id,s:window.COLAB_S},V)});LSx.s('treinFC-visok-'+uid,'1');}
-      await sb.from('trein_eventos').insert({user_id:uid,tipo:'colab_sessao',tipologia:null,detalhe:{cid:cx.id,quem:window.ALUNO_NOME,s:window.COLAB_S,comp:true}});
+      if(!LSx.g('treinFC-visok-'+uid)){await sb.from('trein_eventos').insert({user_id:uid,tipo:'visitante',tipologia:null,detalhe:Object.assign({cid:cx.id,pid:a3pid(V),s:window.COLAB_S},V)});LSx.s('treinFC-visok-'+uid,'1');}
+      await sb.from('trein_eventos').insert({user_id:uid,tipo:'colab_sessao',tipologia:null,detalhe:{cid:window.ALUNO_CID,quem:window.ALUNO_NOME,s:window.COLAB_S,comp:true}});
       const tag=document.getElementById('quemTag');tag.textContent='👤 '+V.nome+' · restam '+fmtR(fimP-Date.now());tag.title='Acesso 3D: 72 h a partir do seu 1º acesso';tag.hidden=false;box.hidden=true;
       setTimeout(()=>{try{ctaComp(perfil);}catch(e){console.warn(e);}},800);res(Object.assign({},cx,{nome:window.ALUNO_NOME}));};
     if(ultCid()===cx.id&&LSx.g('treinFC-vis-'+uid)&&!window.ALUNO_CID)b.click();}
