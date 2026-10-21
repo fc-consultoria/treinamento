@@ -111,6 +111,8 @@ td.n{text-align:right;white-space:nowrap}tr.best td{background:#effaf2;font-weig
  body{background:#fff}.top,.abas,.noprint,#wm,.toast{display:none!important}main{padding:0;max-width:none}
  .prt{display:block;margin-bottom:10px}.rit{break-inside:avoid;border-color:#bbb}th{background:#eee!important}
 }
+.simx{display:inline-flex;gap:6px;align-items:center;flex-wrap:wrap}.simx select,.simx input,.simsel{border:1px solid #c4ccd2;border-radius:9px;padding:7px 8px;font:600 14px var(--f-b);background:#fff;color:inherit}.simx input{width:62px;text-align:right}.sxu{font-size:13px;color:var(--mu,#5d6b76)}
+#fSim .simsel{flex:0 1 auto;min-height:48px}tr.gsim td{background:var(--bg,#f2f5f4);border-top:2px solid var(--ln,#d6dee4)}
 </style>
 </head>
 <body>
@@ -133,7 +135,8 @@ const FORN=['alcoa','texa','selta','fbk','ecoalumi','perfileve','cda'];
 const REFF='alcoa';/* Alcoa = catálogo de referência: confere desenho e peso, não entra na compra */
 const FC_=FORN.filter(f=>f!==REFF);
 const LIB=()=>Array.isArray(DADOS.lib)&&DADOS.lib.length?DADOS.lib:null;const FL=()=>ADM?FC_:(LIB()?FC_.filter(f=>LIB().includes(f)):FC_);
-const CORES=[['natural','Sem acabamento','#d9dee1'],['fosco','Fosco','#9aa3a8'],['branco','Branco','#ffffff'],['preto','Preto','#1c1c1c'],['bronze','Bronze','#6b4a2b'],['brilhante','Brilhante','#e8edf0'],['cerejeira','Cerejeira real','#8a3b26']];
+const CORES=[['natural','Natural (sem acabamento)','#d9dee1'],['branco','Branco','#ffffff'],['preto','Preto','#1c1c1c'],['cerejeira','Cerejeira real','#8a3b26'],['fosco','Anodizado fosco','#9aa3a8'],['brilhante','Brilhante cromado','#e8edf0'],['bronze','Bronze','#6b4a2b']];
+const MTS=[3,4,5,6,7,8];/* tamanhos de barra (m) */
 const CORN=Object.fromEntries(CORES.map(c=>[c[0],c[1]]));
 const PART=['Comercial','Estoque','Produção'];
 const n2=v=>v==null||isNaN(v)?'—':v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -182,10 +185,10 @@ function buscar(q){const k=norm(q);if(!k)return [];
   return ids.map(i=>IDX.g[i]).filter(g=>g.m.some(m=>visivel(g,m)));}
 
 /* ===== preço ===== */
-function preco(f){if(f===REFF)return {sem:'catálogo de referência · não entra na compra',ref:1};if(!ADM&&LIB()&&!LIB().includes(f))return {sem:'fornecedor não liberado'};const P=DADOS.forn[f];if(!P||P.natural==null)return {sem:'sem preço informado'};
-  let v=+P.natural;if(COR!=='natural'){const s=P.cores&&P.cores[COR];if(s==null)return {sem:'sem preço de '+CORN[COR].toLowerCase()+' informado'};v+= +s;}
+function preco(f,cor){cor=cor||COR;if(f===REFF)return {sem:'catálogo de referência · não entra na compra',ref:1};if(!ADM&&LIB()&&!LIB().includes(f))return {sem:'fornecedor não liberado'};const P=DADOS.forn[f];if(!P||P.natural==null)return {sem:'sem preço informado'};
+  let v=+P.natural;if(cor!=='natural'){const s=P.cores&&P.cores[cor];if(s==null)return {sem:'sem preço de '+CORN[cor].toLowerCase()+' informado'};v+= +s;}
   return {kg:v,minItem:P.min_item!=null?+P.min_item:null,minPed:P.min_pedido!=null?+P.min_pedido:null};}
-function calc(g,m){const pr=preco(m[0]);const kgb=m[2]*BARRA;const o={f:m[0],c:m[1],p:m[2],lvl:m[3],kgb,img:imgDe(g,m),lin:linhaF(g,m[0]),pg:m[5]};
+function calc(g,m,cor,mt){const pr=preco(m[0],cor);const kgb=m[2]*(mt||BARRA);const o={f:m[0],c:m[1],p:m[2],lvl:m[3],kgb,img:imgDe(g,m),lin:linhaF(g,m[0]),pg:m[5]};
   if(pr.sem){o.sem=pr.sem;if(pr.ref)o.rf=1;return o;}
   o.kg=pr.kg;o.vb=kgb*pr.kg;o.minPed=pr.minPed;o.minItem=pr.minItem;
   if(pr.minItem){o.bars=Math.ceil(pr.minItem/kgb-1e-9);}else o.bars=1;
@@ -266,7 +269,7 @@ function resultado(r){
   return `<div class="res">${outras}
   <div class="box cab"><div class="im" data-zoom="${esc(ref.img)}" data-t="${esc(IDX.forn[ref.f]+' '+ref.c)}">${ref.img?`<img src="${esc(ref.img)}" alt="" onerror="this.replaceWith(document.createTextNode('sem desenho'))">`:'<small>sem desenho</small>'}</div>
    <div><div class="cd">${esc(Q.toUpperCase())}</div><div class="nm">${esc(g.n||(IDX.forn[ref.f]+' '+ref.c))}</div><div class="ln">${esc(IDX.linhas[g.l].n)} · ${R.L.length} ${R.L.length===1?'código':'códigos equivalentes'} · ${esc(CORN[COR])}</div>
-   <div class="acoes noprint" style="margin-top:8px"><button type="button" class="bt ${naRel?'':'p'}" data-addrel ${naRel?'disabled':''}>${naRel?'✓ Está no relatório':'＋ Adicionar ao relatório'}</button><button type="button" class="bt" data-addsim>🧮 Levar para a simulação</button></div></div>${abcB}</div>
+   <div class="acoes noprint" style="margin-top:8px"><button type="button" class="bt ${naRel?'':'p'}" data-addrel ${naRel?'disabled':''}>${naRel?'✓ Está no relatório':'＋ Adicionar ao relatório'}</button><span class="simx"><select id="sxCor" aria-label="Cor do perfil">${CORES.map(([k,t])=>`<option value="${k}" ${COR===k?'selected':''}>${esc(t)}</option>`).join('')}</select><input id="sxB" inputmode="numeric" value="1" aria-label="Barras" title="Barras"><span class="sxu">barras de</span><select id="sxM" aria-label="Tamanho da barra">${MTS.map(m=>`<option value="${m}" ${m===6?'selected':''}>${m} m</option>`).join('')}</select><button type="button" class="bt" data-addsim>🧮 Levar para a simulação</button></span></div></div>${abcB}</div>
   ${mel}${R.L.length===1?`<div class="aviso">Este código ainda não tem equivalente ${ADM?'':'confirmado pela FC '}nos outros fornecedores.</div>`:''}
   ${linhas}
   <p class="sub" style="font-size:13px">Barra de ${BARRA} m. Compra mínima por item em kg, arredondada para barras inteiras. ${COR!=='natural'?'Preço com acabamento = natural + acréscimo da cor por kg. ':''}Os pares vêm da Conversão de códigos da FC: confira o desenho antes de fechar a compra.${meta?' '+esc(meta):''}</p></div>`;}
@@ -339,7 +342,7 @@ function simGrupo(x){let g=x.g?IDX.g.find(y=>y.l+'|'+y.k===x.g):null;if(!g){cons
 function opcao(o,q){/* custo de levar q barras deste código, respeitando a compra mínima por item */
   const br=Math.max(q,o.bars||1);return {o,br,kg:br*o.kgb,v:br*o.kgb*o.kg,forc:br>q};}
 function simular(){
-  const itens=SIM.map((x,i)=>{const g=simGrupo(x);if(!g)return {x,i,nf:1};const L=g.m.filter(m=>visivel(g,m)).map(m=>calc(g,m)).filter(o=>!o.sem);
+  const itens=SIM.map((x,i)=>{const g=simGrupo(x);if(!g)return {x,i,nf:1};const L=g.m.filter(m=>visivel(g,m)).map(m=>calc(g,m,sCor(x),sM(x))).filter(o=>!o.sem);
     return {x,i,g,cl:classe(g,x.q),ops:L.map(o=>opcao(o,x.b)).sort((a,b)=>a.v-b.v)};});
   const val=itens.filter(t=>!t.nf);
   const fs=[...new Set(val.flatMap(t=>t.ops.map(p=>p.o.f)))];
@@ -364,40 +367,51 @@ function simular(){
   return {itens,val,unicos,esc,porC,totC:Object.values(porC).reduce((a,r)=>a+r.v,0),kgC:Object.values(porC).reduce((a,r)=>a+r.kg,0)};}
 function telaSim(){
   const S=SIM.length?simular():null;
-  const lista=`<section class="box"><h1 class="t">Simular pedido</h1><p class="sub">Lance os perfis e a quantidade de barras de 6 m. A ferramenta mostra quanto sai o pedido inteiro em cada fornecedor e a melhor combinação, conferindo o <b>pedido mínimo</b> e a <b>compra mínima por item</b> (em kg) de cada um. Acabamento: <b>${esc(CORN[COR])}</b> (troque na aba Pesquisar).</p>
-   <form id="fSim" class="sb" style="flex-wrap:wrap"><input name="c" placeholder="Código (qualquer fornecedor)" autocomplete="off" style="flex:2 1 220px"><input name="b" inputmode="numeric" placeholder="Barras" style="flex:0 1 120px;text-transform:none"><button>＋ Incluir</button></form>
-   <details style="margin-top:8px"><summary style="cursor:pointer;font-weight:700;color:var(--tl)">Colar uma lista (código;barras)</summary><form id="fSimL" style="display:flex;flex-direction:column;gap:6px;margin-top:6px"><textarea name="t" rows="5" placeholder="SU-001;20&#10;SU-005;12&#10;TBX028;4" style="border:1px solid #c4ccd2;border-radius:10px;padding:10px;font:600 15px var(--f-b)"></textarea><button class="bt p" style="align-self:flex-start">Incluir lista</button></form></details>
-   ${SIM.length?`<div style="overflow:auto;margin-top:12px"><table><thead><tr><th>Código</th><th>Perfil</th><th class="n">Barras</th><th></th></tr></thead><tbody>${S.itens.map(t=>`<tr><td><b>${esc(t.x.q)}</b></td><td>${t.nf?'<span style="color:var(--bx)">não encontrado</span>':esc((t.g.n||'')+' · '+IDX.linhas[t.g.l].n)+(t.cl?' · Classe '+t.cl:'')+(t.ops&&!t.ops.length?' · <span style="color:var(--md)">sem preço em nenhum fornecedor</span>':'')}</td><td class="n"><input data-simq="${t.i}" value="${t.x.b}" inputmode="numeric" style="width:70px;padding:4px 6px;border:1px solid #c4ccd2;border-radius:7px;font:600 15px var(--f-b);text-align:right"></td><td><button type="button" class="bt r" data-simrm="${t.i}" style="padding:2px 9px">Tirar</button></td></tr>`).join('')}</tbody></table></div>
+  const lista=`<section class="box"><h1 class="t">Simular pedido</h1><p class="sub">Lance cada perfil com a <b>cor</b>, a quantidade de <b>barras</b> e o <b>tamanho da barra</b> (padrão 6 m; dá para pedir barras menores ou maiores). A ferramenta mostra quanto sai o pedido em cada fornecedor e a melhor combinação, separado por fornecedor e por cor, conferindo o <b>pedido mínimo</b> e a <b>compra mínima por item</b> (em kg).</p>
+   <form id="fSim" class="sb" style="flex-wrap:wrap"><input name="c" placeholder="Código (qualquer fornecedor)" autocomplete="off" style="flex:2 1 220px"><select name="cor" aria-label="Cor" class="simsel">${CORES.map(([k,t])=>`<option value="${k}" ${COR===k?'selected':''}>${esc(t)}</option>`).join('')}</select><input name="b" inputmode="numeric" placeholder="Barras" style="flex:0 1 110px;text-transform:none"><select name="m" aria-label="Tamanho da barra" class="simsel">${MTS.map(m=>`<option value="${m}" ${m===6?'selected':''}>barra de ${m} m</option>`).join('')}</select><button>＋ Incluir</button></form>
+   <details style="margin-top:8px"><summary style="cursor:pointer;font-weight:700;color:var(--tl)">Colar uma lista (código;barras;cor;metros)</summary><form id="fSimL" style="display:flex;flex-direction:column;gap:6px;margin-top:6px"><textarea name="t" rows="5" placeholder="SU-001;20;branco;6&#10;SU-005;12;preto&#10;TBX028;4" style="border:1px solid #c4ccd2;border-radius:10px;padding:10px;font:600 15px var(--f-b)"></textarea><button class="bt p" style="align-self:flex-start">Incluir lista</button></form></details>
+   ${SIM.length?`<div style="overflow:auto;margin-top:12px"><table><thead><tr><th>Código</th><th>Perfil</th><th>Cor</th><th class="n">Barras</th><th>Tamanho</th><th></th></tr></thead><tbody>${S.itens.map(t=>`<tr><td><b>${esc(t.x.q)}</b></td><td>${t.nf?'<span style="color:var(--bx)">não encontrado</span>':esc((t.g.n||'')+' · '+IDX.linhas[t.g.l].n)+(t.cl?' · Classe '+t.cl:'')+(t.ops&&!t.ops.length?' · <span style="color:var(--md)">sem preço nesta cor em nenhum fornecedor</span>':'')}</td><td><select class="simsel" data-simcor="${t.i}" aria-label="Cor">${CORES.map(([k,tt])=>`<option value="${k}" ${sCor(t.x)===k?'selected':''}>${esc(tt)}</option>`).join('')}</select></td><td class="n"><input data-simq="${t.i}" value="${t.x.b}" inputmode="numeric" style="width:70px;padding:4px 6px;border:1px solid #c4ccd2;border-radius:7px;font:600 15px var(--f-b);text-align:right"></td><td><select class="simsel" data-simm="${t.i}" aria-label="Tamanho da barra">${[...new Set(MTS.concat([sM(t.x)]))].sort((a,b)=>a-b).map(m=>`<option value="${m}" ${sM(t.x)===m?'selected':''}>${String(m).replace('.',',')} m</option>`).join('')}</select></td><td><button type="button" class="bt r" data-simrm="${t.i}" style="padding:2px 9px">Tirar</button></td></tr>`).join('')}</tbody></table></div>
    <div class="acoes noprint" style="margin-top:10px"><button type="button" class="bt p" data-simprint>🖨️ Imprimir / PDF</button><button type="button" class="bt" data-simcsv>⬇️ Baixar Excel</button><button type="button" class="bt r" data-simlimpa>Limpar simulação</button></div>`:''}</section>`;
   if(!S)return lista+`<div class="box" style="margin-top:14px"><p class="vazio">Inclua os perfis do pedido para simular. Também dá para levar um código direto da aba Pesquisar (botão “🧮 Levar para a simulação”).</p></div>`;
   if(semPrecos())return lista+`<div class="aviso">Preencha os preços na aba <button type="button" class="bt" data-aba="precos" style="padding:3px 10px">💲 Preços dos fornecedores</button> para simular.</div>`;
   const N=S.val.length;
   const melhorU=S.unicos.find(u=>u.cob===N&&u.falta<=0)||S.unicos.find(u=>u.cob===N);
   const eco=melhorU?melhorU.v-S.totC:null;
-  const combo=`<div class="melhor" style="margin-top:14px"><div class="tr">🏆</div><div><small>Melhor combinação · ${esc(CORN[COR])}</small><b>${Object.keys(S.porC).map(f=>esc(IDX.forn[f])).join(' + ')||'—'}</b>
+  const combo=`<div class="melhor" style="margin-top:14px"><div class="tr">🏆</div><div><small>Melhor combinação · ${[...new Set(S.val.map(t=>CORN[sCor(t.x)]))].map(esc).join(' · ')}</small><b>${Object.keys(S.porC).map(f=>esc(IDX.forn[f])).join(' + ')||'—'}</b>
     <p>${eco!=null&&eco>0.005?`Economia de ${rs(eco)} em relação a comprar tudo na ${esc(IDX.forn[melhorU.f])}.`:melhorU?`Comprar tudo na ${esc(IDX.forn[melhorU.f])} já é a melhor opção.`:'Nenhum fornecedor tem todos os itens: a combinação é o único jeito de fechar o pedido.'}</p></div>
     <div class="vl"><small>Total do pedido</small>${rs(S.totC)}<small>${n2(S.kgC)} kg</small></div></div>`;
+  const porCor=f=>{const o={};S.esc.forEach(e=>{if(!e.p||e.p.o.f!==f)return;const c=sCor(e.t.x);o[c]=o[c]||{kg:0,v:0,n:0};o[c].kg+=e.p.kg;o[c].v+=e.p.v;o[c].n++;});return o;};
+  const dotC=c=>{const x=CORES.find(y=>y[0]===c);return `<span class="dot" style="display:inline-block;width:11px;height:11px;border-radius:50%;background:${x?x[2]:'#ccc'};border:1px solid rgba(0,0,0,.25);margin-right:4px"></span>`;};
   const porF=Object.entries(S.porC).map(([f,r])=>`<div class="fc" style="gap:4px"><h3 style="font-size:22px">${esc(IDX.forn[f])} <span class="st ${r.falta>0?'vl':'ok'}">${r.falta>0?'faltam '+n2(r.falta)+' kg':'pedido mínimo ok'}</span></h3><div class="kv" style="display:flex;gap:6px;flex-wrap:wrap"><span class="abc" style="padding:3px 9px;font-size:14px">${r.n} ${r.n===1?'item':'itens'}</span><span class="abc" style="padding:3px 9px;font-size:14px">${n2(r.kg)} kg${r.min?' de '+n2(r.min).replace(',00','')+' kg mín.':''}</span><span class="abc" style="padding:3px 9px;font-size:14px">${rs(r.v)}</span></div>
+    <div style="display:flex;flex-direction:column;gap:2px;margin-top:4px">${Object.entries(porCor(f)).map(([c,x])=>`<small style="display:flex;justify-content:space-between;gap:8px"><span>${dotC(c)}${esc(CORN[c])} · ${x.n} ${x.n===1?'item':'itens'} · ${n2(x.kg)} kg</span><b>${rs(x.v)}</b></small>`).join('')}</div>
     ${r.falta>0?`<small style="color:var(--md)">Para fechar este pedido precisa completar ${n2(r.falta)} kg (≈ ${rs(r.falta*S.esc.find(e=>e.p&&e.p.o.f===f).p.o.kg)}) ou passar estes itens para outro fornecedor.</small>`:''}</div>`).join('');
-  const tab=`<div class="rit"><h3>Itens na melhor combinação <small>barras de 6 m</small></h3><table><thead><tr><th>Pedido</th><th class="n">Barras</th><th>Comprar em</th><th>Código</th><th class="n">Barras compradas</th><th class="n">kg</th><th class="n">R$/kg</th><th class="n">Total</th></tr></thead><tbody>
-    ${S.esc.map(e=>e.p?`<tr><td><b>${esc(e.t.x.q)}</b>${e.t.cl?` <small>· ${e.t.cl}</small>`:''}</td><td class="n">${e.t.x.b}</td><td>${esc(IDX.forn[e.p.o.f])}<br><small>${esc(e.p.o.lin)}</small>${e.mov?`<br><small style="color:var(--md)">passou da ${esc(IDX.forn[e.mov])} para fechar o mínimo</small>`:''}</td><td>${esc(e.p.o.c)}${ADM&&(e.p.o.lvl==='media'||e.p.o.lvl==='baixa')?`<span class="nvl ${e.p.o.lvl}">${e.p.o.lvl==='media'?'provável':'revisar'}</span>`:''}</td><td class="n">${e.p.br}${e.p.forc?`<br><small style="color:var(--md)">mínimo por item</small>`:''}</td><td class="n">${n2(e.p.kg)}</td><td class="n">${n2(e.p.o.kg)}</td><td class="n"><b>${n2(e.p.v)}</b></td></tr>`:`<tr><td><b>${esc(e.t.x.q)}</b></td><td class="n">${e.t.x.b}</td><td colspan="6" style="color:var(--md)">sem preço em nenhum fornecedor</td></tr>`).join('')}
-    <tr><td colspan="5"><b>Total</b></td><td class="n"><b>${n2(S.kgC)}</b></td><td></td><td class="n"><b>${n2(S.totC)}</b></td></tr></tbody></table></div>`;
+  const grp={};S.esc.forEach(e=>{const k=e.p?e.p.o.f+'|'+sCor(e.t.x):'~|'+sCor(e.t.x);(grp[k]=grp[k]||[]).push(e);});
+  const ordem=Object.keys(grp).sort((a,b)=>{const [fa,ca]=a.split('|'),[fb,cb]=b.split('|');return (fa==='~')-(fb==='~')||(IDX.forn[fa]||'').localeCompare(IDX.forn[fb]||'')||CORES.findIndex(x=>x[0]===ca)-CORES.findIndex(x=>x[0]===cb);});
+  const linha=e=>e.p?`<tr><td><b>${esc(e.t.x.q)}</b>${e.t.cl?` <small>· ${e.t.cl}</small>`:''}</td><td class="n">${e.t.x.b}</td><td class="n">${String(sM(e.t.x)).replace('.',',')} m</td><td>${esc(e.p.o.c)}<br><small>${esc(e.p.o.lin)}</small>${e.mov?`<br><small style="color:var(--md)">passou da ${esc(IDX.forn[e.mov])} para fechar o mínimo</small>`:''}${ADM&&(e.p.o.lvl==='media'||e.p.o.lvl==='baixa')?`<span class="nvl ${e.p.o.lvl}">${e.p.o.lvl==='media'?'provável':'revisar'}</span>`:''}</td><td class="n">${e.p.br}${e.p.forc?`<br><small style="color:var(--md)">mínimo por item</small>`:''}</td><td class="n">${n2(e.p.kg)}</td><td class="n">${n2(e.p.o.kg)}</td><td class="n"><b>${n2(e.p.v)}</b></td></tr>`
+    :`<tr><td><b>${esc(e.t.x.q)}</b></td><td class="n">${e.t.x.b}</td><td class="n">${String(sM(e.t.x)).replace('.',',')} m</td><td colspan="5" style="color:var(--md)">sem preço nesta cor em nenhum fornecedor</td></tr>`;
+  const tab=`<div class="rit"><h3>Itens na melhor combinação <small>separados por fornecedor e por cor</small></h3><table><thead><tr><th>Pedido</th><th class="n">Barras</th><th class="n">Barra</th><th>Código no fornecedor</th><th class="n">Barras compradas</th><th class="n">kg</th><th class="n">R$/kg</th><th class="n">Total</th></tr></thead><tbody>
+    ${ordem.map(k=>{const [f,c]=k.split('|');const L=grp[k];const kg=L.reduce((a,e)=>a+(e.p?e.p.kg:0),0),v=L.reduce((a,e)=>a+(e.p?e.p.v:0),0);
+      return `<tr class="gsim"><td colspan="5"><b>${f==='~'?'Sem preço':esc(IDX.forn[f])}</b> · ${dotC(c)}${esc(CORN[c])}</td><td class="n"><b>${n2(kg)}</b></td><td></td><td class="n"><b>${n2(v)}</b></td></tr>`+L.map(linha).join('');}).join('')}
+    <tr><td colspan="5"><b>Total do pedido</b></td><td class="n"><b>${n2(S.kgC)}</b></td><td></td><td class="n"><b>${n2(S.totC)}</b></td></tr></tbody></table></div>`;
   const forc=S.esc.filter(e=>e.p&&e.p.forc&&e.t.cl==='C');
   const alC=forc.length?`<div class="aviso bx">⚠️ ${forc.length} ${forc.length===1?'item de giro baixo (classe C) obriga':'itens de giro baixo (classe C) obrigam'} a comprar mais barras que o pedido por causa da compra mínima: ${forc.map(e=>`${esc(e.t.x.q)} (${e.t.x.b} → ${e.p.br} barras)`).join(', ')}.</div>`:'';
   const uni=`<div class="rit"><h3>Comprar tudo num fornecedor só</h3><table><thead><tr><th>Fornecedor</th><th class="n">Itens que tem</th><th class="n">kg</th><th>Pedido mínimo</th><th class="n">Total</th><th class="n">vs melhor combinação</th></tr></thead><tbody>
     ${S.unicos.map(u=>`<tr class="${u===melhorU?'best':''}"><td>${u===melhorU?'✅ ':''}${esc(IDX.forn[u.f])}</td><td class="n">${u.cob}/${N}${u.cob<N?'<br><small style="color:var(--md)">faltam '+(N-u.cob)+'</small>':''}</td><td class="n">${n2(u.kg)}</td><td>${u.min?(u.falta>0?`<span style="color:var(--md)">faltam ${n2(u.falta)} kg</span>`:'ok'):'—'}</td><td class="n">${rs(u.v)}${u.cob<N?'<br><small>só dos itens que tem</small>':''}</td><td class="n">${u.cob===N?(u.v-S.totC>0.005?'+'+rs(u.v-S.totC):'igual'):'—'}</td></tr>`).join('')}</tbody></table></div>`;
-  const head=`<div class="prt"><b style="font:800 26px var(--f-d)">FC Consultoria · Simulação de pedido</b><br>${esc(DADOS.nome||'')} · ${new Date().toLocaleDateString('pt-BR')} · ${esc(CORN[COR])} · barra de ${BARRA} m</div>`;
+  const head=`<div class="prt"><b style="font:800 26px var(--f-d)">FC Consultoria · Simulação de pedido</b><br>${esc(DADOS.nome||'')} · ${new Date().toLocaleDateString('pt-BR')} · cores e tamanhos de barra por item</div>`;
   return head+lista+combo+alC+`<div class="fgrid">${porF}</div>`+tab+uni+`<p class="sub" style="font-size:13px;margin-top:10px">Cada item vai para o fornecedor mais barato. Se um fornecedor não fecha o pedido mínimo, a simulação tenta passar os itens dele para outro fornecedor já usado, quando isso sai mais barato do que completar o mínimo. Só entram pares que você vê na pesquisa.</p>`;}
 function simCsv(){const S=simular();const f=v=>v==null||isNaN(v)?'':String(Math.round(v*100)/100).replace('.',',');
-  const L=[['Código pedido','Barras pedidas','Classe','Fornecedor','Código','Barras compradas','kg','R$/kg','Total R$']];
-  S.esc.forEach(e=>L.push(e.p?[e.t.x.q,e.t.x.b,e.t.cl||'',IDX.forn[e.p.o.f],e.p.o.c,e.p.br,f(e.p.kg),f(e.p.o.kg),f(e.p.v)]:[e.t.x.q,e.t.x.b,e.t.cl||'','sem preço','','','','','']));
-  L.push(['Total','','','','','',f(S.kgC),'',f(S.totC)]);L.push([]);L.push(['Fornecedor único','Itens','kg','Falta p/ mínimo kg','Total R$']);
+  const L=[['Fornecedor','Cor','Código pedido','Barras pedidas','Tamanho da barra (m)','Classe','Código no fornecedor','Barras compradas','kg','R$/kg','Total R$']];
+  S.esc.slice().sort((a,b)=>((a.p?IDX.forn[a.p.o.f]:'~')+sCor(a.t.x)).localeCompare((b.p?IDX.forn[b.p.o.f]:'~')+sCor(b.t.x))).forEach(e=>L.push(e.p?[IDX.forn[e.p.o.f],CORN[sCor(e.t.x)],e.t.x.q,e.t.x.b,f(sM(e.t.x)),e.t.cl||'',e.p.o.c,e.p.br,f(e.p.kg),f(e.p.o.kg),f(e.p.v)]:['sem preço',CORN[sCor(e.t.x)],e.t.x.q,e.t.x.b,f(sM(e.t.x)),e.t.cl||'','','','','','']));
+  L.push(['Total','','','','','','','',f(S.kgC),'',f(S.totC)]);L.push([]);L.push(['Fornecedor único','Itens','kg','Falta p/ mínimo kg','Total R$']);
   S.unicos.forEach(u=>L.push([IDX.forn[u.f],u.cob+'/'+S.val.length,f(u.kg),f(u.falta),f(u.v)]));
   const t='﻿'+L.map(r=>r.map(c=>{c=String(c);return /[;"\n]/.test(c)?'"'+c.replace(/"/g,'""')+'"':c;}).join(';')).join('\r\n');
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'text/csv;charset=utf-8'}));a.download='simulacao-pedido-'+(EMP||'fc')+'-'+new Date().toISOString().slice(0,10)+'.csv';a.click();
   registrar('simulacao',{itens:SIM.length,total:Math.round(S.totC),cor:COR,formato:'excel'});}
-function simAdd(q,b,g){b=Math.max(1,Math.round(+String(b).replace(',','.')||0));if(!q||!b)return false;const i=SIM.findIndex(x=>norm(x.q)===norm(q));
-  if(i>=0)SIM[i].b+=b;else SIM.push({q:q.toUpperCase(),b,g:g||null});ls.set(SKEY(),SIM);return true;}
+function simAdd(q,b,g,cor,mt){b=Math.max(1,Math.round(+String(b).replace(',','.')||0));if(!q||!b)return false;cor=cor||COR;mt=+mt||BARRA;
+  const i=SIM.findIndex(x=>norm(x.q)===norm(q)&&(x.cor||COR)===cor&&(+x.m||BARRA)===mt);
+  if(i>=0)SIM[i].b+=b;else SIM.push({q:q.toUpperCase(),b,g:g||null,cor,m:mt});ls.set(SKEY(),SIM);return true;}
+const sCor=x=>x.cor||COR,sM=x=>+x.m||BARRA;
+const sa=t=>String(t||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
 
 /* ===== curva ABC (FC) ===== */
 function telaAbc(){const A=DADOS.abc||{};const M=DADOS.meta||{};const cs=Object.entries(A).sort((a,b)=>a[1].localeCompare(b[1])||a[0].localeCompare(b[0]));
@@ -451,8 +465,8 @@ function regBusca(){const q=Q.trim().toUpperCase();if(!q||q===regU)return;clearT
 document.addEventListener('submit',async ev=>{const f=ev.target;
   if(f.id==='fb'){ev.preventDefault();Q=$('#q').value.trim();SEL=null;history.replaceState(null,'','#'+encodeURIComponent(Q));tela();regBusca();}
   else if(f.classList.contains('fc')){ev.preventDefault();salvarForn(f);}
-  else if(f.id==='fSim'){ev.preventDefault();const q=f.c.value.trim();if(!q){f.c.focus();return;}if(!buscar(q).length){toast('Não achei '+q.toUpperCase()+'.');return;}if(!simAdd(q,f.b.value||1))return;tela();setTimeout(()=>{const c=$('#fSim [name=c]');if(c)c.focus();},50);}
-  else if(f.id==='fSimL'){ev.preventDefault();let n=0,nf=[];f.t.value.split(/\n/).map(x=>x.trim()).filter(Boolean).forEach(l=>{const p=l.split(/[;\t]/).map(x=>x.trim());if(!p[0])return;if(!buscar(p[0]).length)nf.push(p[0]);if(simAdd(p[0],p[1]||1))n++;});toast(n+' itens incluídos.'+(nf.length?' Não achei: '+nf.join(', '):''));tela();}
+  else if(f.id==='fSim'){ev.preventDefault();const q=f.c.value.trim();if(!q){f.c.focus();return;}if(!buscar(q).length){toast('Não achei '+q.toUpperCase()+'.');return;}if(!simAdd(q,f.b.value||1,null,f.cor.value,f.m.value))return;tela();setTimeout(()=>{const c=$('#fSim [name=c]');if(c)c.focus();},50);}
+  else if(f.id==='fSimL'){ev.preventDefault();let n=0,nf=[];f.t.value.split(/\n/).map(x=>x.trim()).filter(Boolean).forEach(l=>{const p=l.split(/[;\t]/).map(x=>x.trim());if(!p[0])return;if(!buscar(p[0]).length)nf.push(p[0]);const cr=p[2]?(CORES.find(c=>sa(c[0])===sa(p[2])||sa(c[1]).startsWith(sa(p[2])))||[COR])[0]:COR;const mt=p[3]?+p[3].replace(',','.').replace(/m$/i,''):BARRA;if(simAdd(p[0],p[1]||1,null,cr,mt>0?mt:BARRA))n++;});toast(n+' itens incluídos.'+(nf.length?' Não achei: '+nf.join(', '):''));tela();}
   else if(f.id==='fAbc'){ev.preventDefault();const m=f.querySelector('.msg');const it=[],bad=[];
     f.t.value.split(/\n/).map(s=>s.trim()).filter(Boolean).forEach(s=>{const p=s.split(/[;\t,]/).map(x=>x.trim());const c=(p[0]||'').toUpperCase(),k=(p[1]||'').toUpperCase();if(c&&['A','B','C'].includes(k))it.push([c,k]);else bad.push(s);});
     if(!it.length){m.textContent='Nada para salvar. Use o formato código;classe (A, B ou C).';return;}
@@ -469,7 +483,7 @@ document.addEventListener('click',async ev=>{const t=ev.target.closest('[data-su
   else if(d.modo){MODO=d.modo;salvaPref();tela();}
   else if(d.g!=null){SEL=IDX.g[+d.g];tela();}
   else if(d.addrel!=null)addRel();
-  else if(d.addsim!=null){const v=prompt('Quantas barras de 6 m de '+Q.toUpperCase()+'?','1');if(v==null)return;if(simAdd(Q,v,SEL?SEL.l+'|'+SEL.k:null)){toast('Incluído na simulação.');tela();}}
+  else if(d.addsim!=null){const v=($('#sxB')||{}).value||'1',cr=($('#sxCor')||{}).value||COR,mt=+(($('#sxM')||{}).value||6);if(simAdd(Q,v,SEL?SEL.l+'|'+SEL.k:null,cr,mt)){toast(`Incluído na simulação: ${Q.toUpperCase()} · ${CORN[cr]} · ${v} barras de ${mt} m.`);tela();}}
   else if(d.simrm!=null){SIM.splice(+d.simrm,1);ls.set(SKEY(),SIM);tela();}
   else if(d.simprint!=null){const S=simular();registrar('simulacao',{itens:SIM.length,total:Math.round(S.totC),cor:COR,formato:'pdf'});window.print();}
   else if(d.simcsv!=null)simCsv();
@@ -487,7 +501,7 @@ document.addEventListener('click',async ev=>{const t=ev.target.closest('[data-su
   else if(d.zoom!=null){if(!d.zoom)return;$('#zmI').src=d.zoom;$('#zmT').textContent=d.t||'';$('#zm').hidden=false;}});
 $('#zmX').onclick=()=>$('#zm').hidden=true;$('#zm').onclick=e=>{if(e.target.id==='zm')$('#zm').hidden=true;};
 document.addEventListener('keydown',e=>{if(e.key==='Escape')$('#zm').hidden=true;});
-document.addEventListener('change',e=>{const t=e.target;if(t.dataset&&t.dataset.simq!=null){const v=Math.max(1,Math.round(+t.value.replace(',','.')||1));SIM[+t.dataset.simq].b=v;ls.set(SKEY(),SIM);tela();}});
+document.addEventListener('change',e=>{const t=e.target;if(t.dataset&&(t.dataset.simcor!=null||t.dataset.simm!=null)){const x=SIM[+(t.dataset.simcor??t.dataset.simm)];if(t.dataset.simcor!=null)x.cor=t.value;else x.m=+t.value;ls.set(SKEY(),SIM);tela();return;}if(t.dataset&&t.dataset.simq!=null){const v=Math.max(1,Math.round(+t.value.replace(',','.')||1));SIM[+t.dataset.simq].b=v;ls.set(SKEY(),SIM);tela();}});
 
 /* ===== início ===== */
 async function carregaDados(){
