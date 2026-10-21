@@ -149,7 +149,7 @@ const ehead=r=>r.fora&&r.ref?(r.ref.f==='texa'?((r.eq.find(e=>e.f==='texa'&&e.c=
 /* ===== busca por descrição (todas as linhas) ===== */
 let IDXD=null,IDXP=null;
 const sa=t=>String(t||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
-function idxD(){if(IDXD)return Promise.resolve(IDXD);if(!IDXP)IDXP=fetch('indice.json?v=4').then(r=>r.json()).then(j=>{IDXD=j;return j;}).catch(()=>null);return IDXP;}
+function idxD(){if(IDXD)return Promise.resolve(IDXD);if(!IDXP)IDXP=fetch('indice.json?v=5').then(r=>r.json()).then(j=>{IDXD=j;return j;}).catch(()=>null);return IDXP;}
 function descRes(q){const ws=sa(q).split(/\s+/).filter(w=>w.length>1);if(!ws.length||!IDXD)return [];
  const R=[];IDXD.g.forEach(g=>{if(g.l==='tc'||!g.n||!LINHAS[g.l])return;const t=sa(g.n+' '+IDXD.linhas[g.l].n);if(ws.every(w=>t.includes(w)))R.push(g);});
  R.sort((a,b)=>(a.l===LIN?0:1)-(b.l===LIN?0:1)||a.l.localeCompare(b.l)||a.k.localeCompare(b.k,'pt',{numeric:true}));return R;}
