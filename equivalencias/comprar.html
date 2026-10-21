@@ -186,12 +186,12 @@ function buscar(q){const k=norm(q);if(!k)return [];
   return ids.map(i=>IDX.g[i]).filter(g=>g.m.some(m=>visivel(g,m)));}
 
 /* ===== preço ===== */
-function preco(f,cor){cor=cor||COR;if(f===REFF)return {sem:'catálogo de referência · não entra na compra',ref:1};if(!ADM&&LIB()&&!LIB().includes(f))return {sem:'fornecedor não liberado'};const P=DADOS.forn[f];if(!P||P.natural==null)return {sem:'sem preço informado'};
-  let v=+P.natural;if(cor!=='natural'){const s=P.cores&&P.cores[cor];if(s==null)return {sem:'sem preço de '+CORN[cor].toLowerCase()+' informado'};v+= +s;}
+function preco(f,cor,fb){cor=cor||COR;if(f===REFF)return {sem:'catálogo de referência · não entra na compra',ref:1};if(!ADM&&LIB()&&!LIB().includes(f))return {sem:'fornecedor não liberado'};const P=DADOS.forn[f];if(!P||P.natural==null)return {sem:'sem preço informado'};
+  let v=+P.natural;if(cor!=='natural'){const s=P.cores&&P.cores[cor];if(s==null){if(!fb)return {sem:'sem preço de '+CORN[cor].toLowerCase()+' informado'};return {kg:v,minItem:P.min_item!=null?+P.min_item:null,minPed:P.min_pedido!=null?+P.min_pedido:null,semCor:1};}v+= +s;}
   return {kg:v,minItem:P.min_item!=null?+P.min_item:null,minPed:P.min_pedido!=null?+P.min_pedido:null};}
-function calc(g,m,cor,mt){const pr=preco(m[0],cor);const kgb=m[2]*(mt||BARRA);const o={f:m[0],c:m[1],p:m[2],lvl:m[3],kgb,img:imgDe(g,m),lin:linhaF(g,m[0]),pg:m[5]};
+function calc(g,m,cor,mt,fb){const pr=preco(m[0],cor,fb);const kgb=m[2]*(mt||BARRA);const o={f:m[0],c:m[1],p:m[2],lvl:m[3],kgb,img:imgDe(g,m),lin:linhaF(g,m[0]),pg:m[5]};
   if(pr.sem){o.sem=pr.sem;if(pr.ref)o.rf=1;return o;}
-  o.kg=pr.kg;o.vb=kgb*pr.kg;o.minPed=pr.minPed;o.minItem=pr.minItem;
+  o.kg=pr.kg;o.vb=kgb*pr.kg;if(pr.semCor)o.semCor=1;o.minPed=pr.minPed;o.minItem=pr.minItem;
   if(pr.minItem){o.bars=Math.ceil(pr.minItem/kgb-1e-9);}else o.bars=1;
   o.kgmin=o.bars*kgb;o.vmin=o.kgmin*pr.kg;return o;}
 function classe(g,q){const A=DADOS.abc||{};const k=Object.keys(A).find(c=>norm(c)===norm(q));if(k)return A[k];
@@ -343,7 +343,7 @@ function simGrupo(x){let g=x.g?IDX.g.find(y=>y.l+'|'+y.k===x.g):null;if(!g){cons
 function opcao(o,q){/* custo de levar q barras deste código, respeitando a compra mínima por item */
   const br=Math.max(q,o.bars||1);return {o,br,kg:br*o.kgb,v:br*o.kgb*o.kg,forc:br>q};}
 function simular(){
-  const itens=SIM.map((x,i)=>{const g=simGrupo(x);if(!g)return {x,i,nf:1};const L=g.m.filter(m=>visivel(g,m)).map(m=>calc(g,m,sCor(x),sM(x))).filter(o=>!o.sem);
+  const itens=SIM.map((x,i)=>{const g=simGrupo(x);if(!g)return {x,i,nf:1};const L=g.m.filter(m=>visivel(g,m)).map(m=>calc(g,m,sCor(x),sM(x),true)).filter(o=>!o.sem);
     return {x,i,g,cl:classe(g,x.q),ops:L.map(o=>opcao(o,x.b)).sort((a,b)=>a.v-b.v)};});
   const val=itens.filter(t=>!t.nf);
   const fs=[...new Set(val.flatMap(t=>t.ops.map(p=>p.o.f)))];
@@ -389,7 +389,7 @@ function telaSim(){
     ${r.falta>0?`<small style="color:var(--md)">Para fechar este pedido precisa completar ${n2(r.falta)} kg (≈ ${rs(r.falta*S.esc.find(e=>e.p&&e.p.o.f===f).p.o.kg)}) ou passar estes itens para outro fornecedor.</small>`:''}</div>`).join('');
   const grp={};S.esc.forEach(e=>{const k=e.p?e.p.o.f+'|'+sCor(e.t.x):'~|'+sCor(e.t.x);(grp[k]=grp[k]||[]).push(e);});
   const ordem=Object.keys(grp).sort((a,b)=>{const [fa,ca]=a.split('|'),[fb,cb]=b.split('|');return (fa==='~')-(fb==='~')||(IDX.forn[fa]||'').localeCompare(IDX.forn[fb]||'')||CORES.findIndex(x=>x[0]===ca)-CORES.findIndex(x=>x[0]===cb);});
-  const linha=e=>e.p?`<tr><td><b>${esc(e.t.x.orig||e.t.x.q)}</b>${e.t.cl?` <small>· ${e.t.cl}</small>`:''}</td><td class="n">${e.t.x.b}</td><td class="n">${String(sM(e.t.x)).replace('.',',')} m</td><td>${esc(e.p.o.c)}<br><small>${esc(e.p.o.lin)}</small>${e.mov?`<br><small style="color:var(--md)">passou da ${esc(IDX.forn[e.mov])} para fechar o mínimo</small>`:''}${ADM&&(e.p.o.lvl==='media'||e.p.o.lvl==='baixa')?`<span class="nvl ${e.p.o.lvl}">${e.p.o.lvl==='media'?'provável':'revisar'}</span>`:''}</td><td class="n">${e.p.br}${e.p.forc?`<br><small style="color:var(--md)">mínimo por item</small>`:''}</td><td class="n">${n2(e.p.kg)}</td><td class="n">${n2(e.p.o.kg)}</td><td class="n"><b>${n2(e.p.v)}</b></td></tr>`
+  const linha=e=>e.p?`<tr><td><b>${esc(e.t.x.orig||e.t.x.q)}</b>${e.t.cl?` <small>· ${e.t.cl}</small>`:''}</td><td class="n">${e.t.x.b}</td><td class="n">${String(sM(e.t.x)).replace('.',',')} m</td><td>${esc(e.p.o.c)}<br><small>${esc(e.p.o.lin)}</small>${e.mov?`<br><small style="color:var(--md)">passou da ${esc(IDX.forn[e.mov])} para fechar o mínimo</small>`:''}${ADM&&(e.p.o.lvl==='media'||e.p.o.lvl==='baixa')?`<span class="nvl ${e.p.o.lvl}">${e.p.o.lvl==='media'?'provável':'revisar'}</span>`:''}</td><td class="n">${e.p.br}${e.p.forc?`<br><small style="color:var(--md)">mínimo por item</small>`:''}</td><td class="n">${n2(e.p.kg)}</td><td class="n">${n2(e.p.o.kg)}${e.p.o.semCor?'<br><small style="color:var(--md)">preço natural</small>':''}</td><td class="n"><b>${n2(e.p.v)}</b></td></tr>`
     :`<tr><td><b>${esc(e.t.x.orig||e.t.x.q)}</b></td><td class="n">${e.t.x.b}</td><td class="n">${String(sM(e.t.x)).replace('.',',')} m</td><td colspan="5" style="color:var(--md)">sem preço nesta cor em nenhum fornecedor</td></tr>`;
   const tab=`<div class="rit"><h3>Itens na melhor combinação <small>separados por fornecedor e por cor</small></h3><table><thead><tr><th>Pedido</th><th class="n">Barras</th><th class="n">Barra</th><th>Código no fornecedor</th><th class="n">Barras compradas</th><th class="n">kg</th><th class="n">R$/kg</th><th class="n">Total</th></tr></thead><tbody>
     ${ordem.map(k=>{const [f,c]=k.split('|');const L=grp[k];const kg=L.reduce((a,e)=>a+(e.p?e.p.kg:0),0),v=L.reduce((a,e)=>a+(e.p?e.p.v:0),0);
@@ -400,7 +400,9 @@ function telaSim(){
   const uni=`<div class="rit"><h3>Comprar tudo num fornecedor só</h3><table><thead><tr><th>Fornecedor</th><th class="n">Itens que tem</th><th class="n">kg</th><th>Pedido mínimo</th><th class="n">Total</th><th class="n">vs melhor combinação</th></tr></thead><tbody>
     ${S.unicos.map(u=>`<tr class="${u===melhorU?'best':''}"><td>${u===melhorU?'✅ ':''}${esc(IDX.forn[u.f])}</td><td class="n">${u.cob}/${N}${u.cob<N?'<br><small style="color:var(--md)">faltam '+(N-u.cob)+'</small>':''}</td><td class="n">${n2(u.kg)}</td><td>${u.min?(u.falta>0?`<span style="color:var(--md)">faltam ${n2(u.falta)} kg</span>`:'ok'):'—'}</td><td class="n">${rs(u.v)}${u.cob<N?'<br><small>só dos itens que tem</small>':''}</td><td class="n">${u.cob===N?(u.v-S.totC>0.005?'+'+rs(u.v-S.totC):'igual'):'—'}</td></tr>`).join('')}</tbody></table></div>`;
   const head=`<div class="prt"><b style="font:800 26px var(--f-d)">FC Consultoria · Simulação de pedido</b><br>${esc(DADOS.nome||'')} · ${new Date().toLocaleDateString('pt-BR')} · cores e tamanhos de barra por item</div>`;
-  return head+lista+combo+alC+`<div class="fgrid">${porF}</div>`+tab+uni+`<p class="sub" style="font-size:13px;margin-top:10px">Cada item vai para o fornecedor mais barato. Se um fornecedor não fecha o pedido mínimo, a simulação tenta passar os itens dele para outro fornecedor já usado, quando isso sai mais barato do que completar o mínimo. Só entram pares que você vê na pesquisa.</p>`;}
+  const scF=[...new Set(S.esc.filter(e=>e.p&&e.p.o.semCor).map(e=>e.p.o.f+'|'+sCor(e.t.x)))];
+  const alCor=scF.length?`<div class="aviso">⚠️ Sem acréscimo de cor cadastrado para: ${scF.map(k=>{const [f,c]=k.split('|');return '<b>'+esc(IDX.forn[f])+'</b> ('+esc(CORN[c])+')';}).join(', ')}. Nesses itens a comparação usou o <b>preço natural</b>. Cadastre o acréscimo de cada cor na aba <button type="button" class="bt" data-aba="precos" style="padding:3px 10px">💲 Preços dos fornecedores</button> para o valor final ficar certo.</div>`:'';
+  return head+lista+combo+alCor+alC+`<div class="fgrid">${porF}</div>`+tab+uni+`<p class="sub" style="font-size:13px;margin-top:10px">Cada item vai para o fornecedor mais barato. Se um fornecedor não fecha o pedido mínimo, a simulação tenta passar os itens dele para outro fornecedor já usado, quando isso sai mais barato do que completar o mínimo. Só entram pares que você vê na pesquisa.</p>`;}
 function simCsv(){const S=simular();const f=v=>v==null||isNaN(v)?'':String(Math.round(v*100)/100).replace('.',',');
   const L=[['Fornecedor','Cor','Código pedido','Barras pedidas','Tamanho da barra (m)','Classe','Código no fornecedor','Barras compradas','kg','R$/kg','Total R$']];
   S.esc.slice().sort((a,b)=>((a.p?IDX.forn[a.p.o.f]:'~')+sCor(a.t.x)).localeCompare((b.p?IDX.forn[b.p.o.f]:'~')+sCor(b.t.x))).forEach(e=>L.push(e.p?[IDX.forn[e.p.o.f],CORN[sCor(e.t.x)],e.t.x.orig||e.t.x.q,e.t.x.b,f(sM(e.t.x)),e.t.cl||'',e.p.o.c,e.p.br,f(e.p.kg),f(e.p.o.kg),f(e.p.v)]:['sem preço',CORN[sCor(e.t.x)],e.t.x.orig||e.t.x.q,e.t.x.b,f(sM(e.t.x)),e.t.cl||'','','','','','']));
