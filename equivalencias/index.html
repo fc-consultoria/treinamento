@@ -112,7 +112,7 @@ function voltaBtn(adm){if(window.top!==window)return;let b=document.getElementBy
  b.href=voltaUrl(adm);b.textContent=adm?'← Painel matriz':'← Painel inicial';b.title=adm?'Voltar para o painel matriz da FC':'Voltar para o painel inicial da empresa';if(window.top!==window.self)b.hidden=true;}
 /* Edição dos pares pela matriz: cada mudança fica gravada (trein_eventos 'equiv_edit'); a última vale e o cliente vê a versão editada */
 const EDITS={};
-function aplicarEdits(lista){(lista||[]).forEach(x=>{if(x&&x.f&&x.c&&(x.l||'suprema')===LIN)EDITS[x.f+'|'+x.c]=x;});
+function aplicarEdits(lista){(lista||[]).forEach(x=>{if(x&&x.f&&x.c&&(x.l||'suprema')===LIN){EDITS[x.f+'|'+x.c]=x;if(x.img)IMGX[x.f+'|'+x.c]=x.img;}});
  Object.values(EDITS).forEach(x=>{D.perfis.forEach(r=>{r.eq=r.eq.filter(e=>!(e.f===x.f&&e.c===x.c));});
   (D.semPar[x.f]||[]).splice(0,1e9,...(D.semPar[x.f]||[]).filter(s=>s.c!==x.c));
   if(!x.a)return;const r=D.perfis.find(y=>y.c===x.a);if(!r)return;
@@ -143,7 +143,7 @@ function editar(r,e){const novo=!e;const F=Object.keys(D.forn).filter(f=>f!=='al
   if(pv&&isNaN(+pv)){g('edM').textContent='Peso inválido. Use número, ex.: 0,520';return;}
   gravar({l:LIN,f,c,a,p:pv?+pv:null,n:g('edN').value,t:g('edT').value,o:g('edO').value.trim(),pg:e?e.pg:'—',cc:e?e.cc:undefined});};
  if(!novo)g('edDel').onclick=()=>{if(g('edDel').dataset.c){gravar({l:LIN,f:e.f,c:e.c,a:null});return;}g('edDel').dataset.c=1;g('edDel').textContent='Clique de novo para remover';};}
-function img(f,c){return LN().img+f+'/'+encodeURIComponent(c)+'.webp?v=2';}
+const IMGX={};function img(f,c){return IMGX[f+'|'+c]||LN().img+f+'/'+encodeURIComponent(c)+'.webp?v=2';}
 const eimg=e=>e.u||img(e.f,e.c);
 const ehead=r=>r.fora&&r.ref?(r.ref.f==='texa'?((r.eq.find(e=>e.f==='texa'&&e.c===r.ref.c)||{}).u||''):img(r.ref.f,r.ref.c)):img('alcoa',r.c);
 /* ===== busca por descrição (todas as linhas) ===== */
