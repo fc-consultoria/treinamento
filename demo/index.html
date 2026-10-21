@@ -3145,7 +3145,7 @@ function demo2Init(){
   {const md=document.querySelector('.modes');if(md)md.addEventListener('click',e=>{setTimeout(()=>Object.keys(TUT).forEach(rot),60);const b=e.target.closest('#m-test,#m-prat,#m-dia');if(!b||PREV)return;const id=b.id;if(ativo(id))return;
     if(usos(id)>=LIM){e.stopImmediatePropagation();e.preventDefault();vid(id,true);return;}
     const n=usos(id)+1;try{localStorage.setItem(uk(id),n);}catch(_){}TRK('ferramenta',{m:TUT[id][0],n});rot(id);},true);}
-  ['c-swap','c-us'].forEach(id=>{const e=document.getElementById(id);if(e)e.classList.add('dhide');});
+  if(!ESQE)['c-swap','c-us'].forEach(id=>{const e=document.getElementById(id);if(e)e.classList.add('dhide');});
   const gb=document.querySelector('.guiabtn');if(gb)gb.classList.add('dhide');
   {const c=document.getElementById('in-cor');if(c)c.addEventListener('change',()=>TRK('cor',{t:S.typo,c:c.value}));}
 }
