@@ -114,6 +114,15 @@ td.n{text-align:right;white-space:nowrap}tr.best td{background:#effaf2;font-weig
 .simx{display:inline-flex;gap:6px;align-items:center;flex-wrap:wrap}.simx select,.simx input,.simsel{border:1px solid #c4ccd2;border-radius:9px;padding:7px 8px;font:600 14px var(--f-b);background:#fff;color:inherit}.simx input{width:62px;text-align:right}.sxu{font-size:13px;color:var(--mu,#5d6b76)}
 #fSim .simsel{flex:0 1 auto;min-height:48px}tr.gsim td{background:var(--bg,#f2f5f4);border-top:2px solid var(--ln,#d6dee4)}
 .simoc{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:10px 0 2px}.simoc label{font-weight:800;font-size:15px}.simoc input{border:2px solid var(--tl,#0f6b70);border-radius:10px;padding:9px 12px;font:700 16px var(--f-b);min-width:220px;flex:0 1 280px}.simoc span{font-size:13px;color:var(--mu,#5d6b76)}
+#pedPrint{display:none}
+@media print{body.pedp>*:not(#pedPrint){display:none!important}body.pedp #pedPrint{display:block;color:#111;font:13px/1.4 Arial,sans-serif}
+ .pp-h{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:3px solid #0f6b70;padding-bottom:8px;margin-bottom:10px}.pp-h small{display:block;letter-spacing:.2em;font-weight:700;color:#0f6b70;font-size:11px}.pp-h b{font-size:24px}
+ .pp-r{text-align:right;display:flex;flex-direction:column}.pp-r span{font-size:11px;color:#555}.pp-r b{font-size:18px}
+ .pp-f{display:flex;gap:10px;align-items:baseline;margin:6px 0}.pp-f span{font-size:11px;color:#555;text-transform:uppercase;letter-spacing:.1em}.pp-f b{font-size:20px}
+ .pp-o{border:1.5px solid #c47f00;background:#fff6e0;padding:6px 10px;border-radius:6px;font-weight:700;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+ .pp-t{width:100%;border-collapse:collapse;margin-top:8px}.pp-t th{background:#0f6b70!important;color:#fff!important;text-align:left;padding:5px 6px;font-size:11px;-webkit-print-color-adjust:exact;print-color-adjust:exact}.pp-t td{border-bottom:1px solid #ccc;padding:5px 6px}.pp-t .n{text-align:right}
+ .pp-t tr.pg td{background:#eef3f4;border-top:2px solid #0f6b70;-webkit-print-color-adjust:exact;print-color-adjust:exact}.pp-t tr.pt td{border-top:2px solid #111}.pp-t tr{break-inside:avoid}
+ .pp-a{display:flex;gap:30px;margin-top:50px}.pp-a div{flex:1;border-top:1px solid #111;padding-top:4px;font-size:12px}.pp-fc{margin-top:18px;font-size:10px;color:#777}}
 </style>
 </head>
 <body>
@@ -388,7 +397,7 @@ function telaSim(){
   const dotC=c=>{const x=CORES.find(y=>y[0]===c);return `<span class="dot" style="display:inline-block;width:11px;height:11px;border-radius:50%;background:${x?x[2]:'#ccc'};border:1px solid rgba(0,0,0,.25);margin-right:4px"></span>`;};
   const porF=Object.entries(S.porC).map(([f,r])=>`<div class="fc" style="gap:4px"><h3 style="font-size:22px">${esc(IDX.forn[f])} <span class="st ${r.falta>0?'vl':'ok'}">${r.falta>0?'faltam '+n2(r.falta)+' kg':'pedido mínimo ok'}</span></h3><div class="kv" style="display:flex;gap:6px;flex-wrap:wrap"><span class="abc" style="padding:3px 9px;font-size:14px">${r.n} ${r.n===1?'item':'itens'}</span><span class="abc" style="padding:3px 9px;font-size:14px">${n2(r.kg)} kg${r.min?' de '+n2(r.min).replace(',00','')+' kg mín.':''}</span><span class="abc" style="padding:3px 9px;font-size:14px">${rs(r.v)}</span></div>
     <div style="display:flex;flex-direction:column;gap:2px;margin-top:4px">${Object.entries(porCor(f)).map(([c,x])=>`<small style="display:flex;justify-content:space-between;gap:8px"><span>${dotC(c)}${esc(CORN[c])} · ${x.n} ${x.n===1?'item':'itens'} · ${n2(x.kg)} kg</span><b>${rs(x.v)}</b></small>`).join('')}</div>
-    <button type="button" class="bt noprint" data-pedf="${f}" style="align-self:flex-start;margin-top:4px">⬇️ Pedido para a ${esc(IDX.forn[f])} (Excel)</button>
+    <span class="noprint" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px"><button type="button" class="bt p" data-pedpdf="${f}">📄 Pedido para a ${esc(IDX.forn[f])} (PDF)</button><button type="button" class="bt" data-pedf="${f}">⬇️ Excel</button></span>
     ${r.falta>0?`<small style="color:var(--md)">Para fechar este pedido precisa completar ${n2(r.falta)} kg (≈ ${rs(r.falta*S.esc.find(e=>e.p&&e.p.o.f===f).p.o.kg)}) ou passar estes itens para outro fornecedor.</small>`:''}</div>`).join('');
   const grp={};S.esc.forEach(e=>{const k=e.p?e.p.o.f+'|'+sCor(e.t.x):'~|'+sCor(e.t.x);(grp[k]=grp[k]||[]).push(e);});
   const ordem=Object.keys(grp).sort((a,b)=>{const [fa,ca]=a.split('|'),[fb,cb]=b.split('|');return (fa==='~')-(fb==='~')||(IDX.forn[fa]||'').localeCompare(IDX.forn[fb]||'')||CORES.findIndex(x=>x[0]===ca)-CORES.findIndex(x=>x[0]===cb);});
@@ -415,6 +424,22 @@ function simCsv(){const S=simular();const f=v=>v==null||isNaN(v)?'':String(Math.
   const t='﻿'+L.map(r=>r.map(c=>{c=String(c);return /[;"\n]/.test(c)?'"'+c.replace(/"/g,'""')+'"':c;}).join(';')).join('\r\n');
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'text/csv;charset=utf-8'}));a.download='simulacao-pedido-'+(EMP||'fc')+'-'+new Date().toISOString().slice(0,10)+'.csv';a.click();
   registrar('simulacao',{itens:SIM.length,total:Math.round(S.totC),cor:COR,formato:'excel'});}
+function pedPdf(f){const S=simular();const oc=ls.get(OKEY(),'');const E=S.esc.filter(e=>e.p&&e.p.o.f===f).sort((a,b)=>CORES.findIndex(c=>c[0]===sCor(a.t.x))-CORES.findIndex(c=>c[0]===sCor(b.t.x)));
+  const n2b=v=>Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const cores=[...new Set(E.map(e=>sCor(e.t.x)))];
+  const tb=cores.map(c=>{const L=E.filter(e=>sCor(e.t.x)===c);const x=CORES.find(y=>y[0]===c);
+    return `<tr class="pg"><td colspan="7"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${x?x[2]:'#ccc'};border:1px solid #555;vertical-align:-1px;margin-right:6px"></span><b>Cor: ${esc(CORN[c])}</b> · ${L.length} ${L.length===1?'item':'itens'} · ${L.reduce((a,e)=>a+e.p.br,0)} barras · ${n2b(L.reduce((a,e)=>a+e.p.kg,0))} kg</td></tr>`+
+     L.map(e=>`<tr><td>${E.indexOf(e)+1}</td><td><b>${esc(e.p.o.c)}</b></td><td>${esc(e.p.o.lin)}</td><td>${esc(CORN[c])}</td><td class="n">${e.p.br}</td><td class="n">${String(sM(e.t.x)).replace('.',',')} m</td><td class="n">${n2b(e.p.kg)}</td></tr>`).join('');}).join('');
+  let d=document.getElementById('pedPrint');if(!d){d=document.createElement('div');d.id='pedPrint';document.body.appendChild(d);}
+  d.innerHTML=`<div class="pp-h"><div><small>PEDIDO DE COMPRA</small><b>${esc(DADOS.nome||'')}</b></div><div class="pp-r">${oc?`<span>Ordem de compra</span><b>${esc(oc)}</b>`:''}<span>Data: ${new Date().toLocaleDateString('pt-BR')}</span></div></div>
+   <div class="pp-f"><span>Fornecedor</span><b>${esc(IDX.forn[f])}</b></div>
+   <p class="pp-o">⚠ Pintar cada item na cor indicada. Barras no tamanho pedido.</p>
+   <table class="pp-t"><thead><tr><th>Item</th><th>Código ${esc(IDX.forn[f])}</th><th>Linha</th><th>Cor (pintura)</th><th class="n">Barras</th><th class="n">Tamanho</th><th class="n">kg</th></tr></thead><tbody>${tb}
+   <tr class="pt"><td colspan="4"><b>Total</b></td><td class="n"><b>${E.reduce((a,e)=>a+e.p.br,0)}</b></td><td></td><td class="n"><b>${n2b(E.reduce((a,e)=>a+e.p.kg,0))}</b></td></tr></tbody></table>
+   <div class="pp-a"><div>Comprador · ${esc(DADOS.nome||'')}</div><div>${esc(IDX.forn[f])} · recebido em ___/___/______</div></div>
+   <p class="pp-fc">Pedido gerado pelo Onde comprar · FC Consultoria em Esquadria</p>`;
+  document.body.classList.add('pedp');const fim=()=>{document.body.classList.remove('pedp');removeEventListener('afterprint',fim);};addEventListener('afterprint',fim);
+  registrar('pedido_fornecedor',{forn:f,itens:E.length,oc,formato:'pdf'});setTimeout(()=>window.print(),150);}
 function pedForn(f){const S=simular();const oc=ls.get(OKEY(),'');const E=S.esc.filter(e=>e.p&&e.p.o.f===f).sort((a,b)=>CORES.findIndex(c=>c[0]===sCor(a.t.x))-CORES.findIndex(c=>c[0]===sCor(b.t.x)));
   const n=v=>String(Math.round(v*100)/100).replace('.',',');
   const L=[['Pedido de compra · '+IDX.forn[f]],['Cliente',DADOS.nome||''],['Data',new Date().toLocaleDateString('pt-BR')]];if(oc)L.push(['Ordem de compra',oc]);
@@ -494,7 +519,7 @@ document.addEventListener('submit',async ev=>{const f=ev.target;
     const r=await sb.from('compra_abc_meta').upsert({empresa_id:EMP,data_reuniao:meta.data,participantes:meta.part,obs:meta.obs,atualizado_em:new Date().toISOString()});
     if(r.error){if(/relation|does not exist|schema cache/i.test(r.error.message)){LOCAL=true;DADOS.meta=meta;ls.set('fc_compra_meta_'+EMP,meta);toast('Reunião salva (modo demonstração).');tela();return;}toast('Não salvou: '+r.error.message);return;}
     DADOS.meta=meta;toast('Reunião salva.');tela();}});
-document.addEventListener('click',async ev=>{const t=ev.target.closest('[data-sug],[data-addsim],[data-simrm],[data-simprint],[data-pedf],[data-simcsv],[data-simlimpa],[data-aba],[data-cor],[data-modo],[data-g],[data-addrel],[data-rmrel],[data-print],[data-csv],[data-limpa],[data-setabc],[data-abctodos],[data-rmabc],[data-ir],[data-zoom]');if(!t)return;const d=t.dataset;
+document.addEventListener('click',async ev=>{const t=ev.target.closest('[data-sug],[data-addsim],[data-simrm],[data-simprint],[data-pedf],[data-pedpdf],[data-simcsv],[data-simlimpa],[data-aba],[data-cor],[data-modo],[data-g],[data-addrel],[data-rmrel],[data-print],[data-csv],[data-limpa],[data-setabc],[data-abctodos],[data-rmabc],[data-ir],[data-zoom]');if(!t)return;const d=t.dataset;
   if(d.sug){Q=d.sug;SEL=null;tela();regBusca();}
   else if(d.aba){ABA=d.aba;tela();window.scrollTo(0,0);}
   else if(d.cor){COR=d.cor;salvaPref();tela();}
@@ -506,6 +531,7 @@ document.addEventListener('click',async ev=>{const t=ev.target.closest('[data-su
   else if(d.simprint!=null){const S=simular();registrar('simulacao',{itens:SIM.length,total:Math.round(S.totC),cor:COR,formato:'pdf'});window.print();}
   else if(d.simcsv!=null)simCsv();
   else if(d.pedf)pedForn(d.pedf);
+  else if(d.pedpdf)pedPdf(d.pedpdf);
   else if(d.simlimpa!=null){if(confirm('Limpar a simulação?')){SIM=[];ls.set(SKEY(),SIM);tela();}}
   else if(d.rmrel!=null){REL.splice(+d.rmrel,1);ls.set(RKEY(),REL);tela();}
   else if(d.print!=null){registrar('relatorio',{itens:REL.length,cor:COR,modo:MODO,formato:'pdf'});window.print();}
