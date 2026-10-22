@@ -92,9 +92,9 @@
       c?add(c,'Acompanhamento da implantação',l):(OUT.portal[p.cli]=OUT.portal[p.cli]||[]).push(l);});
     mostr().forEach(a=>{const c=quem(a.login+' '+a.nome);
       const ab={t:'Abrir',f:()=>abrirMostr(a.uid)};
-      const L=[linha(a.nome,'Mostruário · login '+a.login,a.ativo?['empresa ativa','']:['bloqueada','off'],a.ult,ab,a.login,a.seg)];
+      const L=[Object.assign(linha(a.nome,'Mostruário · login '+a.login,a.ativo?['empresa ativa','']:['bloqueada','off'],a.ult,ab,a.login,a.seg),{uid:a.uid})];
       a.col.forEach(x=>L.push(linha(x.nome,'colaborador · '+(x.ini?'1º acesso '+new Date(x.ini).toLocaleDateString('pt-BR'):'sem acesso ainda'),tagCol(x),x.ult,null,a.nome+' '+a.login,x.seg||(x.ini?0:null))));
-      if(c)L.forEach(l=>add(c,'Mostruário 3D',l));else OUT.mostr.push({emp:a.nome,L});});
+      if(c)L.forEach(l=>add(c,'Mostruário 3D',l));else OUT.mostr.push({emp:a.nome,uid:a.uid,ativo:a.ativo,L});});
     (d.demo||[]).forEach(x=>{let t;if(x.encerrado)t=['encerrado','nv'];else if(!x.inicio)t=['aguardando abrir','pz'];else{const r=Date.parse(x.inicio)+(x.horas||72)*3600e3-Date.now();t=r>0?['restam '+Math.max(1,Math.round(r/3600e3))+' h','']:['prazo acabou','off'];}
       OUT.demo.push(linha(x.nome,'link de teste '+x.code+(x.cidade?' · '+x.cidade:'')+' · '+(x.horas||72)+' h',t,x.ult||x.inicio,null,x.cidade,x.seg));});
     (d.equipe||[]).forEach(x=>OUT.equipe.unshift(linha(x.nome,(x.admin?'Matriz':'Equipe')+' · '+x.email,['ativo',''],x.ult,null,'',x.seg)));
@@ -152,4 +152,8 @@
     else if(vis&&S.d&&!S.carregando&&!document.activeElement?.closest?.('#axCard'))pintaLeve();},2000);
   let pl=0;function pintaLeve(){if(Date.now()-pl<15e3)return;pl=Date.now();pinta();}
   window.acessosTodosLoad=()=>carregar(true);
+  /* usado pela 🧭 Central do Cliente (cards por empresa) */
+  const linhasSemBotao=L=>{const sv=ACOES,sb2=S.busca;ACOES=[];S.busca='';const r=rows(L.map(l=>Object.assign({},l,{acao:null})));ACOES=sv;S.busca=sb2;return r;};
+  window.FCAcessos={CLI,ORDEM,online,quando,linhas:linhasSemBotao,abrirMostr,
+    async buscar(){if(!S.d||!S.em||Date.now()-S.em>60e3){const r=await sb.rpc('fc_acessos_todos');if(r.error)throw r.error;S.d=r.data||{};S.erro='';S.em=new Date();}return montar();}};
 })();

@@ -411,7 +411,7 @@ td.qd{cursor:help}td.qd:hover{background:#eef6f8;box-shadow:inset 0 -2px 0 #1f6f
    <div><h3>Últimas atividades</h3><ul class="tl" id="tl"></ul></div>
   </div>
  </section>
-<section class="card" id="ccliCard" data-tab="ccli"><h2>🧭 Central do Cliente <span class="note" style="font-weight:500;text-transform:none;letter-spacing:0">o que cada cliente da consultoria está fazendo, alertas e "ver como o gestor vê"</span></h2><div id="ccliBody"><p class="note" style="padding:12px 16px">Carregando…</p></div></section>
+<section class="card" id="ccliCard" data-tab="ccli"><h2>🧭 Central do Cliente <span class="note" style="font-weight:500;text-transform:none;letter-spacing:0">um card por empresa: consultoria, implantação, Mostruário e todos os logins</span></h2><div id="ccliBody"><p class="note" style="padding:12px 16px">Carregando…</p></div></section>
 <section class="card" id="acompCard" data-tab="acomp"><h2 style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">📡 Acompanhamento online dos clientes<span class="note" style="font-weight:500;text-transform:none;letter-spacing:0">link do cliente, publicação e situação do dia</span><button type="button" onclick="acompLoad()" style="margin-left:auto;font:600 14px var(--f-display);text-transform:none;letter-spacing:0;background:#fff;color:var(--fg);border:1px solid var(--line);padding:7px 12px;border-radius:9px;cursor:pointer">Atualizar</button></h2><div id="acompBody"><p class="note" style="padding:14px 16px">Carregando…</p></div></section>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
@@ -1901,7 +1901,7 @@ setTimeout(()=>{if(PTAB==='cat')ui();},2500);
  await Promise.all(P.map(u=>fetch(u,{cache:'reload'}).catch(()=>{})));try{if(window.caches){const k=await caches.keys();await Promise.all(k.map(x=>caches.delete(x)));}}catch(_){}
  location.replace(location.pathname+'?v='+Date.now()+location.hash);};})();</script>
 <script src="conversa-equipe.js?v=10"></script>
-<script src="conversas.js?v=3"></script><script>setTimeout(()=>window.FCConversas&&FCConversas.matriz({semBotao:true}),2500);</script><script src="caixa-fc.js?v=4"></script><script src="central-cliente.js?v=1"></script><script src="acessos-todos.js?v=4"></script>
+<script src="conversas.js?v=3"></script><script>setTimeout(()=>window.FCConversas&&FCConversas.matriz({semBotao:true}),2500);</script><script src="caixa-fc.js?v=4"></script><script src="acessos-todos.js?v=5"></script><script src="central-cliente.js?v=2"></script>
 <script src="painel-skin.js?v=3"></script>
 <script>window.FCM_MODO="matriz";window.FCM_BARRA={sel:"header.mx .mxutil, header .acts",lado:"dir",nome:"Na barra de cima"};</script><script src="esquadrias/musica.js?v=7"></script>
 <script src="estoque-aviso.js?v=2"></script><script>setTimeout(()=>FCEstAviso.matriz(),3000);</script>
