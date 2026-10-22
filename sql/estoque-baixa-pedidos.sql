@@ -143,6 +143,18 @@ begin
 end $$;
 grant execute on function public.compra_sim_inativar(uuid, boolean) to authenticated;
 
+-- excluir de vez: só a FC (Painel da Matriz) e só depois de inativado
+create or replace function public.orc_excluir(p_id uuid) returns boolean
+language plpgsql security definer set search_path to 'public' as $$
+begin
+  if not public.trein_is_admin() then return false; end if;
+  delete from orc_orcamentos where id = p_id and status = 'inativo';
+  if not found then return false; end if;
+  delete from orc_est_baixa where pedido_id = p_id;
+  return true;
+end $$;
+grant execute on function public.orc_excluir(uuid) to authenticated;
+
 -- rotina de importação da Casa Bandeirante: toda semana, aos sábados (1º prazo 24/10/2026)
 update orc_cfg set cab = jsonb_set(coalesce(cab,'{}'::jsonb), '{estFx}',
   coalesce(cab->'estFx','{}'::jsonb) || '{"dias":7,"ini":"2026-10-24"}'::jsonb)
