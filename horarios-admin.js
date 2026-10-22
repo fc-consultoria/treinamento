@@ -4,9 +4,9 @@
 (function(){
   if(typeof sb==='undefined')return;
   const $=id=>document.getElementById(id);
-  const SER=[['mostr','Mostruário','#1f6f9a'],['teste','Links de teste','#e8912d'],['cons','Link da consultoria','#6d4bd8'],['acomp','Acompanhamento','#1f8a4c']];
+  const SER=[['mostr','Mostruário','#1f6f9a'],['teste','Links de teste','#e8912d'],['cons','Link da consultoria','#6d4bd8'],['acomp','Acompanhamento','#1f8a4c'],['fc','Acessos da FC (testes)','#9aa5ad']];
   const DIA=['','seg','ter','qua','qui','sex','sáb','dom'];
-  const S={dias:30,d:null,erro:'',t:0,carregando:false,off:{}};
+  const S={dias:30,d:null,erro:'',t:0,carregando:false,off:{fc:true}};
   try{S.dias=+localStorage.getItem('fc_hr_dias')||30;}catch(_){}
 
   function pinta(){const el=$('lvHr');if(!el)return;
@@ -17,7 +17,7 @@
     const top=H.map(h=>({h:h.h,n:tot(h)})).filter(x=>x.n).sort((a,b)=>b.n-a.n).slice(0,3);
     const faixa=(a,b)=>H.filter(h=>h.h>=a&&h.h<b).reduce((s,h)=>s+tot(h),0),pc=n=>soma?Math.round(n/soma*100):0;
     const F=[['🌅 Manhã','06–12h',faixa(6,12)],['☀️ Tarde','12–18h',faixa(12,18)],['🌙 Noite','18–24h',faixa(18,24)],['🌃 Madrugada','00–06h',faixa(0,6)]];
-    const W=S.d.semana||[],mw=Math.max(1,...W.map(x=>x.n));
+    const W=(S.d.semana||[]).map(x=>({d:x.d,n:(+x.n||0)+(S.off.fc?0:(+x.fc||0))})),mw=Math.max(1,...W.map(x=>x.n));
     const bars=H.map(h=>{const t=tot(h),alto=top.length&&t===top[0].n&&t>0;
       return `<div class="hrc" title="${String(h.h).padStart(2,'0')}h · ${t} entrada${t===1?'':'s'}${vis.map(x=>(+h[x[0]]?'\n'+x[1]+': '+h[x[0]]:'')).join('')}">
         <span class="hrn">${t||''}</span><div class="hrb" style="height:${Math.round(t/mx*100)}%">${vis.map(x=>+h[x[0]]?`<i style="background:${x[2]};flex:${h[x[0]]}"></i>`:'').join('')}</div>
@@ -25,12 +25,12 @@
     el.innerHTML=`<div class="hrbar"><div class="seg">${[7,30,90].map(d=>`<button type="button" data-hrd="${d}" class="${S.dias===d?'on':''}">${d} dias</button>`).join('')}</div>
         <div class="hrlg">${SER.map(x=>`<label><input type="checkbox" data-hrs="${x[0]}" ${S.off[x[0]]?'':'checked'}><i style="background:${x[2]}"></i>${x[1]}</label>`).join('')}</div></div>
       <div class="hrk"><div><b>${soma}</b><span>entradas em ${S.dias} dias</span></div><div><b>${(soma/S.dias).toFixed(1).replace('.',',')}</b><span>por dia, em média</span></div>
-        <div><b>${top.length?top.map(x=>String(x.h).padStart(2,'0')+'h').join(' · '):'—'}</b><span>horários de pico</span></div></div>
+        <div><b>${top.length?top.map(x=>String(x.h).padStart(2,'0')+'h').join(' · '):'—'}</b><span>horários de pico</span></div><div style="background:#eef0f2"><b style="color:#5b6870">${+S.d.fc||0}</b><span>acessos da FC ${S.off.fc?'(fora da conta)':'(somados)'}</span></div></div>
       ${soma?`<div class="hrg" role="img" aria-label="Entradas por hora do dia">${bars}</div>
       <div class="hrf">${F.map(f=>`<div><span>${f[0]} <small>${f[1]}</small></span><div class="hrfb"><i style="width:${pc(f[2])}%"></i></div><b>${pc(f[2])}%</b></div>`).join('')}</div>
       <div class="hrw">${W.map(x=>`<div title="${x.n} entradas"><div class="hrwb"><i style="height:${Math.round(x.n/mw*100)}%"></i></div><span>${DIA[x.d]}</span></div>`).join('')}<p class="note" style="margin:0;align-self:center">Por dia da semana (todos os links)</p></div>`
       :'<p class="note">Nenhuma entrada neste período.</p>'}
-      <p class="note" style="margin:8px 0 0">Conta cada entrada (login ou abertura do link). Os seus acessos como Matriz não entram na conta.</p>`;
+      <p class="note" style="margin:8px 0 0">Conta cada entrada (login ou abertura do link) dos clientes. Os acessos da FC (Matriz, login fcconsultoria e links de teste internos) ficam separados: marque “Acessos da FC” para somar.</p>`;
     el.querySelectorAll('[data-hrd]').forEach(b=>b.onclick=()=>{S.dias=+b.dataset.hrd;try{localStorage.setItem('fc_hr_dias',S.dias)}catch(_){}carregar(true);});
     el.querySelectorAll('[data-hrs]').forEach(c=>c.onchange=()=>{S.off[c.dataset.hrs]=!c.checked;pinta();});}
 
