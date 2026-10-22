@@ -23,3 +23,6 @@ begin
   );
 end $$;
 grant execute on function public.fc_acessos_todos() to authenticated;
+
+-- Online no Painel do Gestor: batida a cada 45 s (emp_ping) e emp_central considera sessão viva < 2 min ou evento < 3 min.
+-- (aplicado no Supabase pela migração emp_ping_online)

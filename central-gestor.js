@@ -61,17 +61,17 @@
     const lib=abas.filter(k=>abasLib(e).includes(k)),K=kpis(e);
     return `<section class="cg-card" aria-labelledby="cg-${id}"><header><span class="cg-ic" aria-hidden="true">${ic}</span><h3 id="cg-${id}">${h(tit)}</h3></header>
       ${K.length?`<div class="cg-kp">${K.map(([v,l,t])=>`<div class="${t?'cg-'+t:''}"><b>${h(v)}</b><small>${h(l)}</small></div>`).join('')}</div>`:''}
-      ${papeis.length?`<div class="cg-pe">${P.length?P.map(p=>`<span class="cg-p"><i class="${p.online?'on':''}" aria-hidden="true"></i>${h(p.nome)} <small>· ${p.online?'online agora':quando(p.ultimo)}</small></span>`).join(''):`<span class="nota">Ninguém de ${h(papeis.map(x=>PAPEL[x]).join(' / '))} cadastrado ainda. Peça o acesso à FC.</span>`}</div>`:''}
+      ${papeis.length?`<div class="cg-pe">${P.length?P.map(p=>`<span class="cg-p ${p.online?'on':''}"><i class="${p.online?'on':''}" aria-hidden="true"></i>${h(p.nome)} <small>· ${p.online?'🟢 online agora':quando(p.ultimo)}</small></span>`).join(''):`<span class="nota">Ninguém de ${h(papeis.map(x=>PAPEL[x]).join(' / '))} cadastrado ainda. Peça o acesso à FC.</span>`}</div>`:''}
       <ul class="cg-ev">${EV.length?EV.map(linhaEv).join(''):'<li class="nota">Nenhuma movimentação registrada ainda.</li>'}</ul>
       <footer>${lib.map(k=>`<button class="btn" type="button" data-cgab="${k}">${h(nomeAba(k))} →</button>`).join('')||'<span class="nota">Sem aba liberada para este setor.</span>'}</footer></section>`;}
 
   function html(e){if(D&&ADM()&&D.emp!==at){D=null;erro='';}if(!D&&!erro)carregar();
-    const P=(D&&D.pessoas)||[],on=P.filter(p=>p.online).length,EV=(D&&D.eventos)||[];
+    const P=((D&&D.pessoas)||[]).slice().sort((a,b)=>(b.online?1:0)-(a.online?1:0)),on=P.filter(p=>p.online).length,EV=(D&&D.eventos)||[];
     return `<style>
 .cg-top{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:12px}.cg-top h2{flex:1;min-width:200px}
 .cg-eq{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
 .cg-p{display:inline-flex;align-items:center;gap:6px;background:var(--surface-2);border:1px solid var(--line);border-radius:99px;padding:4px 11px;font-size:13.5px;font-weight:600}
-.cg-p small{font-weight:500;color:var(--muted)}.cg-p i{width:8px;height:8px;border-radius:50%;background:var(--line);flex:none}.cg-p i.on{background:var(--ok);box-shadow:0 0 0 3px var(--ok-soft)}
+.cg-p small{font-weight:500;color:var(--muted)}.cg-p i{width:8px;height:8px;border-radius:50%;background:var(--line);flex:none}.cg-p i.on{background:var(--ok);box-shadow:0 0 0 3px var(--ok-soft)}.cg-p.on{background:#e3f6ea;border-color:#22b36b;color:#14532d}.cg-p.on small{color:#16683f;font-weight:700}
 .cg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
 .cg-card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px}
 .cg-card header{display:flex;align-items:center;gap:8px}.cg-ic{font-size:20px}
@@ -90,7 +90,7 @@
   <span class="nota">${D?(on?`🟢 ${on} online agora · `:'')+`atualizado ${new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}`:carregando?'Carregando…':''}</span>
   <button class="btn" type="button" id="cgAt">↻ Atualizar</button></div>
 ${erro?`<div class="box" style="background:var(--warn-soft)">${h(erro)}</div>`:''}
-<div class="cg-eq">${P.map(p=>`<span class="cg-p"><i class="${p.online?'on':''}" aria-hidden="true"></i>${h(p.nome)} <small>· ${h(PAPEL[p.papel]||p.papel)} · ${p.online?'online agora':quando(p.ultimo)}</small></span>`).join('')}</div>
+<div class="cg-eq">${P.map(p=>`<span class="cg-p ${p.online?'on':''}"><i class="${p.online?'on':''}" aria-hidden="true"></i>${h(p.nome)} <small>· ${h(PAPEL[p.papel]||p.papel)} · ${p.online?'🟢 online agora':quando(p.ultimo)}</small></span>`).join('')}</div>
 <div class="cg-grid">${CARDS.map(c=>card(c,e)).join('')}</div>
 <details class="box cg-feed"><summary><b>🕘 Atividade recente da equipe</b> <span class="muted" style="font-size:13px">· ${EV.length} registro${EV.length===1?'':'s'}</span></summary>
   <ul>${EV.length?EV.slice(0,60).map(linhaEv).join(''):'<li class="nota">Nada registrado ainda.</li>'}</ul></details>`;}
@@ -104,12 +104,12 @@ ${erro?`<div class="box" style="background:var(--warn-soft)">${h(erro)}</div>`:'
     if(!GRUPOS_ABA.some(g=>g[1].includes('cen')))GRUPOS_ABA.unshift(['Central',['cen']]);
     DESC_ABA.cen='Resumo de cada setor da empresa: quem entrou, o que fez e o que está pendente. Toque no botão do card para ir à aba.';
     const L=Array.isArray(data.abasLib)?data.abasLib:abasLib(data);data.abasLib=['cen'].concat(L.filter(k=>k!=='cen'));tab='cen';
-    setInterval(()=>{if(tab==='cen'&&!document.hidden)carregar();},120000);}
+    setInterval(()=>{if(tab==='cen'&&!document.hidden)carregar();},30000);}
   /* Matriz (FC logada): a aba aparece na visão FC e em "Como o cliente vê", com os dados da empresa aberta */
   function admin(){if(!ABAS.some(a=>a[0]==='cen'))ABAS.unshift(['cen','🏠 Central do Gestor']);
     if(!GRUPOS_ABA.some(g=>g[1].includes('cen')))GRUPOS_ABA.unshift(['Central',['cen']]);
     DESC_ABA.cen='Resumo de cada setor da empresa, como o gestor vê: quem entrou, o que fez e o que está pendente.';
-    setInterval(()=>{if(tab==='cen'&&at&&!document.hidden){D=null;carregar();}},120000);}
+    setInterval(()=>{if(tab==='cen'&&at&&!document.hidden)carregar();},30000);}
   window.FCCentral={html,wire,ativar,admin};
   if(typeof PUB!=='undefined'&&!PUB)admin();
 })();

@@ -95,6 +95,7 @@ html.emb .top{display:none}html.emb main{padding-top:8px}
 <script>
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)],esc=t=>String(t??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const Q=new URLSearchParams(location.search),VKEY=Q.get('v')||Q.get('k')||'',GESTOR=!Q.get('v')&&!!Q.get('k');
+(function(){const tk=Q.get('et');if(!tk)return;const ping=()=>{try{if(!document.hidden&&typeof sb!=='undefined')sb.rpc('emp_ping',{p_token:tk}).then(()=>{},()=>{});}catch(_){}};setTimeout(ping,1500);setInterval(ping,45000);document.addEventListener('visibilitychange',ping);})();
 const BASE='https://fc-consultoria.github.io/treinamento/';
 const nk=s=>String(s||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
 const sem=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');

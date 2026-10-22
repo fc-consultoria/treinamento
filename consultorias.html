@@ -1259,7 +1259,9 @@ $('#nova').onclick=()=>{const nome=prompt('Nome da empresa:');if(!nome)return;co
 /* ---------- ENTRADA POR PESSOA (consultorias.html?e=<empresa>) ---------- */
 const PAPEL_NOME={gestor:'Gestor geral',compras:'Compras',vendas:'Vendas',gerente:'Gerente comercial',marketing:'Marketing',fabrica:'Fábrica'};
 const tokKey=()=>'emp-tok-'+EMPL;
-function usarPessoa(p){PESSOA=p;KEY=p.chave;try{localStorage.setItem(tokKey(),p.token);localStorage.setItem('cons-nome',p.nome);}catch(_){}}
+function empPing(){try{if(PESSOA&&PESSOA.token&&!document.hidden)sb.rpc('emp_ping',{p_token:PESSOA.token}).then(()=>{},()=>{});}catch(_){}}
+if(!window.__empPing){window.__empPing=setInterval(empPing,45000);document.addEventListener('visibilitychange',empPing);}
+function usarPessoa(p){PESSOA=p;KEY=p.chave;setTimeout(empPing,500);try{localStorage.setItem(tokKey(),p.token);localStorage.setItem('cons-nome',p.nome);}catch(_){}}
 async function entrarPessoa(){
   let tk=null;try{tk=localStorage.getItem(tokKey())}catch(_){}
   if(tk){const r=await sb.rpc('emp_sessao',{p_token:tk});if(r.data&&r.data.token){return seguirPessoa(r.data);}try{localStorage.removeItem(tokKey())}catch(_){}}
@@ -1313,6 +1315,6 @@ else{/* links da Matriz: ?ver=<empresa> abre a empresa · &como=gestor abre "Com
 <script src="central-tam.js?v=1"></script>
 <script src="estoque-aviso.js?v=2"></script><script>if(PUB)FCEstAviso.cliente(KEY);</script>
 <script src="acessos-pessoas.js?v=1"></script>
-<script src="central-gestor.js?v=3"></script>
+<script src="central-gestor.js?v=4"></script>
 <script src="conversas.js?v=3"></script>
 </body></html>
