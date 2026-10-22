@@ -148,6 +148,11 @@ button.card:hover{border-color:var(--teal)}
 .login .err{color:var(--bad);font-size:13px;min-height:18px;margin:0}
 .sup{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:5px 10px;border-radius:999px;text-decoration:none;border:1px solid var(--line);color:var(--muted);background:var(--surface)}
 .sup.on{color:var(--good);border-color:color-mix(in srgb,var(--good) 40%,transparent);background:color-mix(in srgb,var(--good) 10%,var(--surface))}
+.usando{font-size:12px;font-weight:600;color:var(--teal);background:var(--teal-soft);padding:5px 10px;border-radius:999px;white-space:nowrap}
+.aviso{position:fixed;bottom:calc(16px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);z-index:31;background:var(--surface);color:var(--ink);border:1px solid var(--teal);box-shadow:0 6px 24px rgb(0 0 0/.18);border-radius:12px;padding:8px 8px 8px 14px;display:flex;gap:8px;align-items:center;max-width:calc(100% - 32px);font-weight:600}
+.aviso .btn.primary{white-space:nowrap}
+.trava{background:var(--amber-soft);color:var(--ink);border:1px solid var(--amber);border-radius:10px;padding:9px 14px;margin:0 0 12px;font-weight:600}
+#v-planilha.travado .sheet, #v-planilha.travado .params{opacity:.72}
 .sup .dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
 .sup.on .dot{background:var(--good);box-shadow:0 0 0 3px color-mix(in srgb,var(--good) 25%,transparent)}
 .espbar{position:sticky;top:0;z-index:15;background:#7a4bc4;color:#fff;padding:9px 14px;border-radius:10px;margin-bottom:14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;font-weight:600}
@@ -176,7 +181,7 @@ body.espelho main > section .espbar, body.espelho main > section .espbar *{point
     <button id="tab-relatorio" role="tab" aria-selected="false" data-tab="relatorio">Relatório</button>
     <button id="tab-acomp" role="tab" aria-selected="false" data-tab="acomp" hidden>👁 Acompanhar</button>
   </nav>
-  <div class="who"><a id="sup" class="sup" href="https://wa.me/5566999867984" target="_blank" rel="noopener" hidden title="Falar com o suporte da FC pelo WhatsApp"><span class="dot"></span><span id="supTxt">Suporte FC</span></a><select id="empSel" hidden aria-label="Empresa aberta" title="Trocar a empresa"></select><button class="btn tut" id="tutBtn" type="button">▶ Como usar</button><a class="btn ghost" id="voltar" href="../painel.html" hidden>← Painel da Matriz</a><span class="save" id="save"></span><span id="who"></span><button class="btn ghost" id="reload" title="Buscar alterações feitas por outras pessoas">Atualizar</button><button class="btn ghost" id="logout">Sair</button></div>
+  <div class="who"><a id="sup" class="sup" href="https://wa.me/5566999867984" target="_blank" rel="noopener" hidden title="Falar com o suporte da FC pelo WhatsApp"><span class="dot"></span><span id="supTxt">Suporte FC</span></a><select id="empSel" hidden aria-label="Empresa aberta" title="Trocar a empresa"></select><button class="btn tut" id="tutBtn" type="button">▶ Como usar</button><a class="btn ghost" id="voltar" href="../painel.html" hidden>← Painel da Matriz</a><span class="usando" id="usando" hidden></span><span class="save" id="save"></span><span id="who"></span><button class="btn ghost" id="reload" title="Buscar alterações feitas por outras pessoas">Atualizar</button><button class="btn ghost" id="logout">Sair</button></div>
 </div></header>
 
 <main class="wrap">
@@ -186,8 +191,9 @@ body.espelho main > section .espbar, body.espelho main > section .espbar *{point
   <section id="v-acomp" hidden></section>
 </main>
 <div id="modal" class="modal" hidden></div>
-<div id="login" class="login" hidden><form id="loginForm" autocomplete="on"><span class="lbl">FC Consultoria</span><h1>Precificação de Kits</h1><p class="note">Entre com o acesso fornecido pela FC Consultoria.</p><label><span class="lbl">Empresa</span><input id="lg-user" name="username" autocomplete="username" required></label><label><span class="lbl">Senha</span><input id="lg-pass" name="password" type="password" autocomplete="current-password" required></label><p class="err" id="lg-err"></p><button class="btn primary" id="lg-btn" type="submit" style="justify-content:center;padding:10px">Entrar</button><button class="btn tut" id="lg-tut" type="button" style="justify-content:center;padding:10px">▶ Ver como funciona (vídeo de 2 min, com áudio)</button></form></div>
+<div id="login" class="login" hidden><form id="loginForm" autocomplete="on"><span class="lbl">FC Consultoria</span><h1>Precificação de Kits</h1><p class="note">Entre com o acesso fornecido pela FC Consultoria.</p><label><span class="lbl">Empresa</span><input id="lg-user" name="username" autocomplete="username" required></label><label><span class="lbl">Senha</span><input id="lg-pass" name="password" type="password" autocomplete="current-password" required></label><label id="lg-nome-l" hidden><span class="lbl">Seu nome</span><input id="lg-nome" name="nome" autocomplete="given-name" maxlength="40" placeholder="Ex.: Paulo"></label><p class="err" id="lg-err"></p><button class="btn primary" id="lg-btn" type="submit" style="justify-content:center;padding:10px">Entrar</button><button class="btn tut" id="lg-tut" type="button" style="justify-content:center;padding:10px">▶ Ver como funciona (vídeo de 2 min, com áudio)</button></form></div>
 <div id="toast" class="toast" hidden></div>
+<div id="aviso" class="aviso" hidden role="status"><span id="avisoTxt"></span><button class="btn primary" id="avisoOk" type="button">🔄 Atualizar</button><button class="btn ghost" id="avisoX" type="button" aria-label="Fechar aviso">×</button></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
@@ -214,7 +220,7 @@ let sess=null; try{ sess=JSON.parse(localStorage.getItem("cde-sessao")||"null");
 async function rpc(fn, args){
   const r = await fetch(SB_URL+"/rest/v1/rpc/"+fn, {method:"POST", headers:{"apikey":SB_KEY,"Authorization":"Bearer "+SB_KEY,"Content-Type":"application/json"}, body:JSON.stringify(args)});
   const t = await r.text(); let j=null; try{ j=t?JSON.parse(t):null; }catch(e){}
-  if(!r.ok){ const msg=(j&&j.message)||("Erro "+r.status); const err=new Error(msg); err.auth=/Sessão expirada|incorretas/.test(msg); throw err; }
+  if(!r.ok){ const msg=(j&&j.message)||("Erro "+r.status); const err=new Error(msg); err.auth=/Sessão expirada|incorretas|Acesso cheio|Digite o seu nome|Já tem alguém/.test(msg); throw err; }
   return j;
 }
 let models={}, ui={tab:"planilha", model:null, group:null, rModel:null, rGroup:null, rKit:"all", q:"", linha:""};
@@ -248,15 +254,20 @@ const mClass = m => m==null ? "" : m>=0.35 ? "ok" : m>=0.2 ? "low" : "bad";
 /* ---------- persistência ---------- */
 const pending = new Map(); let writing=false;
 function setSave(t){ $("#save").textContent=t; }
-function touch(id){ pending.set(id, true); setSave("Salvando…"); clearTimeout(touch.t); touch.t=setTimeout(flush, 700); }
+const vers={};                 /* versão (atualizado_em) de cada kit que este navegador conhece */
+function touch(id){
+  if (travas[id]){ toast("🔒 Em edição por "+travas[id]+". Sua alteração não foi salva."); load(); return; }
+  if (meuEdit!==id) ensureLock(id);
+  ultEdit=Date.now(); pending.set(id, true); setSave("Salvando…"); clearTimeout(touch.t); touch.t=setTimeout(flush, 700);
+}
 async function flush(){
   if (writing) { touch.t=setTimeout(flush,400); return; }
   if (!sess){ setSave("Sem conexão"); return; }
   writing=true;
   try{
-    for (const id of [...pending.keys()]){ pending.delete(id); const m=models[id]; if(m){ await rpc("precif_salvar",{p_token:sess.token, p_id:id, p_dados:m}); const t=Date.now(); if(!(flush.ult||(flush.ult={}))[id] || t-flush.ult[id]>120000){ flush.ult[id]=t; evento("alterou",{modelo:m.nome}); } } }
+    for (const id of [...pending.keys()]){ pending.delete(id); const m=models[id]; if(m){ const v=await rpc("precif_salvar",{p_token:sess.token, p_id:id, p_dados:m, p_base:vers[id]||null}); if(v) vers[id]=v; } }
     setSave("Salvo");
-  }catch(e){ setSave("Erro ao salvar"); if(e.auth){ showLogin("Sua sessão expirou. Entre novamente; a última alteração não foi salva."); } else toast("Não foi possível salvar: "+e.message+". Verifique a internet e tente de novo."); }
+  }catch(e){ setSave("Erro ao salvar"); if(/^(Em edição por|Alterado por)/.test(e.message)){ pending.clear(); writing=false; toast("🔒 "+e.message+". Carregando a versão mais nova; sua última alteração nesse kit não foi salva."); meuEdit=null; await load(); return; } if(e.auth){ showLogin("Sua sessão expirou. Entre novamente; a última alteração não foi salva."); } else toast("Não foi possível salvar: "+e.message+". Verifique a internet e tente de novo."); }
   writing=false;
 }
 function toast(t){ const el=$("#toast"); el.textContent=t; el.hidden=false; clearTimeout(toast.t); toast.t=setTimeout(()=>el.hidden=true, 3200); }
@@ -283,7 +294,7 @@ function renderSheet(){
   if (!Object.keys(models).length){ v.innerHTML = `<div class="empty"><h2>Nenhum modelo de kit ainda</h2><p class="note">Crie um modelo (por exemplo, Frontal e Canto Redondo) e adicione os perfis pelo catálogo.</p><button class="btn primary" id="newModel">Novo modelo</button></div>`; $("#newModel").onclick=addModel; return; }
   const m=curModel(), g=curGroup(m); saveUi(); if(m && renderSheet.ultimo!==ui.model){ renderSheet.ultimo=ui.model; evento("modelo",{modelo:m.nome}); }
   const ins = m.insumos||[];
-  let h = `<div class="row" style="justify-content:space-between"><div class="chips" role="group" aria-label="Modelos">${sortedModels().map(([id,x])=>`<button class="chip" data-m="${id}" aria-pressed="${id===ui.model}">${esc(x.nome)}</button>`).join("")}<button class="chip add" id="newModel">+ Modelo</button></div></div>`;
+  let h = `<div class="row" style="justify-content:space-between"><div class="chips" role="group" aria-label="Modelos">${sortedModels().map(([id,x])=>`<button class="chip" data-m="${id}" aria-pressed="${id===ui.model}" ${travas[id]?`title="Em edição por ${esc(travas[id])}"`:""}>${esc(x.nome)}${travas[id]?" 🔒":""}</button>`).join("")}<button class="chip add" id="newModel">+ Modelo</button></div></div>`;
   h += `<div class="params">
     <label class="param"><span class="lbl">Nome do modelo</span><input id="p-nome" value="${esc(m.nome)}"></label>
     <label class="param"><span class="lbl">Custo kg alumínio</span><span class="in"><input id="p-alu" class="num" value="${n2(m.aluminio)}"><span class="unit">R$/kg</span></span></label>
@@ -293,7 +304,7 @@ function renderSheet(){
   </div>`;
   h += `<div class="row" style="justify-content:space-between;margin-bottom:10px"><div class="chips" role="group" aria-label="Grupos">${m.grupos.map(x=>`<button class="chip" data-g="${x.id}" aria-pressed="${x.id===ui.group}">${esc(x.nome)}</button>`).join("")}<button class="chip add" id="addGroup">+ Grupo</button></div>
     ${g?`<div class="row"><label class="row"><span class="lbl">Grupo</span><input id="g-nome" value="${esc(g.nome)}" style="width:110px"></label><label class="row"><span class="lbl">Margem alvo</span><input id="g-alvo" class="num" style="width:60px" value="${g.margemAlvo??""}" placeholder="—"><span class="muted">%</span></label></div>`:""}</div>`;
-  if (!g){ v.innerHTML=h+`<div class="empty"><p>Este modelo ainda não tem grupos.</p></div>`; bindSheet(v,m,g); return; }
+  if (!g){ v.innerHTML=h+`<div class="empty"><p>Este modelo ainda não tem grupos.</p></div>`; bindSheet(v,m,g); travarTela(v); return; }
   const res = g.kits.map(k=>calcKit(m,g,k));
   h += `<div class="sheet"><table class="grid"><thead><tr><th class="stick"><div class="line" style="font-size:inherit"><span>Foto</span><span>Função</span><span>Código</span><span>Peso kg/m</span><span>Medida</span><span>Qtd</span><span></span></div></th>`;
   h += g.kits.map(k=>`<th><div class="kh"><input class="lab" data-kl="${k.id}" value="${esc(k.rotulo)}" aria-label="Rótulo do kit"><span class="dims">L <input data-kw="${k.id}" value="${n2(k.L)}"> A <input data-kht="${k.id}" value="${n2(k.H)}"><button class="btn ghost" data-kdel="${k.id}" title="Remover tamanho">×</button></span></div></th>`).join("");
@@ -324,7 +335,13 @@ function renderSheet(){
   h += `<tr><td class="stick">Margem sobre a venda</td>${res.map(r=>`<td class="v"><span class="margin ${mClass(r.margem)}">${r.margem==null?"—":n2(r.margem*100,1)+"%"}</span></td>`).join("")}<td></td></tr>`;
   h += `</tbody></table></div>`;
   h += `<div class="bar"><p class="note">Custo do perfil = peso kg/m × custo kg × medida (m) × quantidade. Margem = (venda − custo) ÷ venda, sem impostos nem comissão. Pesos do catálogo são demonstrativos; confirme com o fornecedor.</p><div class="row"><button class="btn danger" id="delGroup">Excluir grupo</button><button class="btn danger" id="delModel">Excluir modelo</button></div></div>`;
-  v.innerHTML=h; bindSheet(v,m,g);
+  v.innerHTML=h; bindSheet(v,m,g); travarTela(v);
+}
+function travarTela(v){
+  const por=travas[ui.model]; v.classList.toggle("travado",!!por);
+  if(!por) return;
+  v.insertAdjacentHTML("afterbegin",`<div class="trava" role="status">🔒 Este kit está em edição por <b>${esc(por)}</b>. Você pode olhar; quando terminar, aparece o aviso para atualizar.</div>`);
+  v.querySelectorAll("input,select,button").forEach(e=>{ if(!e.matches("[data-m],[data-g],#newModel")) e.disabled=true; });
 }
 
 function confirmBtn(btn, fn){ if(btn.dataset.armed){ fn(); return; } btn.dataset.armed="1"; const t=btn.textContent; btn.textContent="Clique de novo para confirmar"; setTimeout(()=>{ if(btn.isConnected){ btn.textContent=t; delete btn.dataset.armed; } },3000); }
@@ -369,7 +386,7 @@ function bindSheet(v,m,g){
   $("#addPerfMan",v).onclick=()=>{ const insAt=g.linhas.findIndex(l=>l.tipo==="insumo"); const nl={id:uid(), tipo:"perfil", funcao:"", codigo:"", peso:0, medida:"L", qtd:1}; insAt<0?g.linhas.push(nl):g.linhas.splice(insAt,0,nl); ch(); };
   const ai=$("#addInsLine",v); if(ai) ai.onclick=()=>{ if(!m.insumos?.length) return; g.linhas.push({id:uid(), tipo:"insumo", funcao:m.insumos[0].nome, insumo:m.insumos[0].id, medida:"H", qtd:1}); ch(); };
   $("#delGroup",v).onclick=e=>confirmBtn(e.currentTarget,()=>{ m.grupos=m.grupos.filter(x=>x.id!==g.id); ui.group=null; ch(); });
-  $("#delModel",v).onclick=e=>confirmBtn(e.currentTarget, async ()=>{ const mid=ui.model; delete models[mid]; ui.model=null; ui.group=null; renderSheet(); try{ await rpc("precif_excluir",{p_token:sess.token, p_id:mid}); setSave("Salvo"); }catch(err){ toast("Não foi possível excluir o modelo."); } });
+  $("#delModel",v).onclick=e=>confirmBtn(e.currentTarget, async ()=>{ const mid=ui.model; if(travas[mid]){ toast("🔒 Em edição por "+travas[mid]+"."); return; } delete models[mid]; ui.model=null; ui.group=null; renderSheet(); try{ await rpc("precif_excluir",{p_token:sess.token, p_id:mid}); setSave("Salvo"); }catch(err){ toast("Não foi possível excluir o modelo: "+err.message); load(); } });
 }
 async function addModel(){
   const id=uid(); models[id]={nome:"Novo modelo", ordem:Date.now(), aluminio:0, embalagem:0, insumos:[], grupos:[{id:uid(), nome:"Grupo 1", acessorio:0, ipi:0, linhas:[], kits:[{id:uid(), rotulo:"1000x1900", L:1, H:1.9, venda:null}]}]};
@@ -426,7 +443,7 @@ function openApply(c){
     $("#ap-x",md).onclick=closeModal;
     $("#ap-m",md).onchange=e=>{ mid=e.target.value; gid=null; draw(); };
     $("#ap-g",md).onchange=e=>{ gid=e.target.value; draw(); };
-    const done=()=>{ touch(mid); closeModal(); ui.model=mid; ui.group=gid; ui.tab="planilha"; saveUi(); showTab(); toast(`${c.c} aplicado em ${m.nome} · ${g.nome}`); };
+    const done=()=>{ if(travas[mid]){ closeModal(); toast("🔒 "+m.nome+" está em edição por "+travas[mid]+". Tente quando terminar."); load(); return; } touch(mid); closeModal(); ui.model=mid; ui.group=gid; ui.tab="planilha"; saveUi(); showTab(); toast(`${c.c} aplicado em ${m.nome} · ${g.nome}`); };
     md.querySelectorAll("[data-ap]").forEach(b=>b.onclick=()=>{ applyCat(g.linhas.find(l=>l.id===b.dataset.ap), c); done(); });
     $("#ap-new",md).onclick=()=>{ if(!g) return; const at=g.linhas.findIndex(l=>l.tipo==="insumo"); const nl={id:uid(), tipo:"perfil", funcao:c.n, codigo:c.c, catId:c.id, peso:c.p, medida:/Trilho|Capa|Guia|Click|Travessa/i.test(c.n)?"L":"H", qtd:1}; at<0?g.linhas.push(nl):g.linhas.splice(at,0,nl); done(); };
   };
@@ -519,10 +536,10 @@ function showLogin(msg){ $("#login").hidden=false; $("#lg-err").textContent=msg|
 async function load(){
   try{
     const rows = await rpc("precif_listar",{p_token:sess.token});
-    const fresh={}; for (const r of rows||[]) fresh[r.id]=r.dados;
+    const fresh={}; for (const r of rows||[]){ fresh[r.id]=r.dados; if(!pending.has(r.id)) vers[r.id]=r.atualizado_em; }
     for (const id of pending.keys()) if(models[id]) fresh[id]=models[id];
-    models=fresh; loaded=true; $("#who").textContent=""; $("#brandSub").textContent=(sess.nome||"")+" · FC Consultoria"; empresasFC(); $("#voltar").hidden = sess.login!=="fc"; $("#tab-acomp").hidden = sess.login!=="fc"; $("#sup").hidden = sess.login==="fc"; atualizarSuporte(); pingSoon(); setSave(pending.size?"Salvando…":"Salvo"); renderNow();
-  }catch(e){ if(e.auth){ sess=null; try{localStorage.removeItem("cde-sessao");}catch(_){} showLogin(); } else { setSave("Sem conexão"); toast("Não foi possível carregar os dados: "+e.message); } }
+    models=fresh; loaded=true; $("#who").textContent=""; $("#brandSub").textContent=(sess.nome||"")+" · FC Consultoria"; empresasFC(); $("#voltar").hidden = sess.login!=="fc"; $("#tab-acomp").hidden = sess.login!=="fc"; $("#sup").hidden = sess.login==="fc"; atualizarSuporte(); esconderAviso(); mostrarUsando(); pingSoon(); setSave(pending.size?"Salvando…":"Salvo"); renderNow();
+  }catch(e){ if(e.auth){ sess=null; try{localStorage.removeItem("cde-sessao");}catch(_){} showLogin(/Acesso cheio/.test(e.message)?e.message+".":""); } else { setSave("Sem conexão"); toast("Não foi possível carregar os dados: "+e.message); } }
 }
 $("#loginForm").addEventListener("submit", async e=>{
   e.preventDefault(); const b=$("#lg-btn"); b.disabled=true; $("#lg-err").textContent="";
@@ -533,14 +550,17 @@ $("#loginForm").addEventListener("submit", async e=>{
       const {error}=await sbm.auth.signInWithPassword({email:MATRIZ_EMAIL,password:$("#lg-pass").value});
       if(error){ const er=new Error("login"); er.auth=true; throw er; }
       r = await viaMatriz(); if(!r){ const er=new Error("login"); er.auth=true; throw er; }
-    } else r = await rpc("precif_login",{p_login:u, p_senha:$("#lg-pass").value});
+    } else { const a={p_login:u, p_senha:$("#lg-pass").value}, nm=$("#lg-nome").value.trim(); if(nm) a.p_usuario=nm; r = await rpc("precif_login",a); if(r.usuario){ try{ localStorage.setItem("precif-nome", r.usuario); }catch(_){} } }
     sess = r; try{ localStorage.setItem("cde-sessao", JSON.stringify(r)); sessionStorage.removeItem("precif-sem-auto"); }catch(_){}
-    $("#login").hidden=true; $("#lg-pass").value=""; await load();
-  }catch(err){ $("#lg-err").textContent = err.auth ? "Empresa ou senha incorretas." : "Sem conexão com o servidor. Tente de novo."; }
+    $("#login").hidden=true; $("#lg-pass").value=""; $("#lg-nome-l").hidden=true; desde=null; meuEdit=null; travas={}; await load();
+  }catch(err){
+    if (/Digite o seu nome|Já tem alguém/.test(err.message)){ const l=$("#lg-nome-l"), wasHidden=l.hidden; l.hidden=false; const n=$("#lg-nome"); if(!n.value){ try{ n.value=localStorage.getItem("precif-nome")||""; }catch(_){} }
+      $("#lg-err").textContent = /Digite/.test(err.message) ? (wasHidden ? "Este acesso é usado por até 4 pessoas: digite o seu nome e toque em Entrar." : "Digite o seu nome.") : err.message; n.focus(); n.select(); }
+    else $("#lg-err").textContent = /Acesso cheio/.test(err.message) ? "Acesso cheio agora (4 pessoas usando). Tente em alguns minutos." : err.auth ? "Empresa ou senha incorretas." : "Sem conexão com o servidor. Tente de novo."; }
   b.disabled=false;
 });
-$("#logout").onclick=async()=>{ pararEspelho(true); try{ if(sess){ await evento("saiu"); await rpc("precif_sair",{p_token:sess.token}); } }catch(_){} sess=null; models={}; loaded=false; try{localStorage.removeItem("cde-sessao");}catch(_){} try{sessionStorage.setItem("precif-sem-auto","1");}catch(_){} $("#who").textContent=""; $("#brandSub").textContent="FC Consultoria"; $("#empSel").hidden=true; setSave(""); $("#voltar").hidden=true; renderNow(); showLogin(); };
-$("#reload").onclick=()=>{ if(sess && !pending.size && !writing) load(); };
+$("#logout").onclick=async()=>{ pararEspelho(true); meuEdit=null; travas={}; desde=null; esconderAviso(); $("#usando").hidden=true; try{ if(sess){ await evento("saiu"); await rpc("precif_sair",{p_token:sess.token}); } }catch(_){} sess=null; models={}; loaded=false; try{localStorage.removeItem("cde-sessao");}catch(_){} try{sessionStorage.setItem("precif-sem-auto","1");}catch(_){} $("#who").textContent=""; $("#brandSub").textContent="FC Consultoria"; $("#empSel").hidden=true; setSave(""); $("#voltar").hidden=true; renderNow(); showLogin(); };
+$("#reload").onclick=()=>{ if(sess && !pending.size && !writing){ esconderAviso(); load(); } };
 window.addEventListener("focus",()=>{ if(sess && loaded && !pending.size && !writing && !(document.activeElement && document.activeElement.matches("input,select"))) load(); });
 function openTutorial(){
   const md=$("#modal"); md.innerHTML=`<div class="box" role="dialog" aria-modal="true" aria-label="Vídeo: como usar" style="width:min(1000px,100%)"><div class="row" style="justify-content:space-between"><h2>Como usar a Precificação de Kits</h2><button class="btn" id="tut-x" type="button">Fechar</button></div><video src="tutorial.mp4?v=3" controls autoplay playsinline style="width:100%;aspect-ratio:16/9;border-radius:10px;background:#000;display:block"></video></div>`;
@@ -571,9 +591,64 @@ async function trocarEmpresa(emp, silencioso){
 
 /* ---------- presença do cliente (para o espelho e o histórico) ---------- */
 function estadoAtual(){ const m=models[ui.model]; return {tab:ui.tab, model:ui.model, modelo:m?m.nome:null, group:ui.group, grupo:m&&m.grupos? (m.grupos.find(g=>g.id===ui.group)||{}).nome||null : null, rModel:ui.rModel, rGroup:ui.rGroup, rKit:ui.rKit, q:ui.q, linha:ui.linha, rolagem:Math.round(window.scrollY||0), alt:Math.max(1,document.documentElement.scrollHeight-innerHeight)}; }
-async function ping(){ if(!sess || sess.login==="fc" || !loaded || document.visibilityState!=="visible") return; try{ await rpc("precif_ping",{p_token:sess.token, p_estado:estadoAtual()}); }catch(_){} }
+/* ---------- várias pessoas ao mesmo tempo: quem está usando, travas e aviso de alteração ---------- */
+let travas={}, meuEdit=null, ultEdit=0, desde=null, avisos=[];
+const LIBERA_MS=90000;          /* sem mexer por 90 s, o kit é liberado para os outros */
+async function ping(){
+  if(!sess || !loaded || espelho) return;
+  if(ping.on) return; ping.on=true;
+  if(meuEdit && (meuEdit!==ui.model || ui.tab!=="planilha" || Date.now()-ultEdit>LIBERA_MS) && !pending.has(meuEdit) && !writing) meuEdit=null;
+  try{
+    const r=await rpc("precif_ping",{p_token:sess.token, p_estado:estadoAtual(), p_editando:meuEdit, p_desde:desde});
+    if(r && typeof r==="object") aplicarPing(r);
+  }catch(e){ if(e.auth){ sess=null; loaded=false; meuEdit=null; try{localStorage.removeItem("cde-sessao");}catch(_){} showLogin(/Acesso cheio/.test(e.message)?"Acesso cheio agora (4 pessoas usando). Tente em alguns minutos.":"Sua sessão terminou. Entre novamente."); } }
+  ping.on=false;
+}
+function aplicarPing(r){
+  if(r.agora) desde=r.agora;
+  if(sess){ sess.max=r.max; sess.outros=r.usuarios||[]; }
+  mostrarUsando();
+  if(r.trava && !r.trava.ok && meuEdit){ const id=meuEdit; meuEdit=null; toast("🔒 "+r.trava.por+" começou a editar "+((models[id]||{}).nome||"este kit")+"."); }
+  const nov={}; for(const t of r.travas||[]) nov[t.id]=t.por;
+  const antes=travas[ui.model]||null, depois=nov[ui.model]||null; travas=nov;
+  if(antes!==depois && ui.tab==="planilha" && $("#modal").hidden && !(document.activeElement && $("#v-planilha").contains(document.activeElement) && !depois)) renderSheet();
+  else marcarChips();
+  for(const a of r.alteracoes||[]){ if(pending.has(a.id)) continue; avisos=avisos.filter(x=>x.id!==a.id); avisos.push(a); }
+  if(avisos.length) mostrarAviso();
+}
+function mostrarUsando(){
+  const el=$("#usando"); if(!sess || !sess.max){ el.hidden=true; return; }
+  const nomes=[sess.usuario||"você", ...(sess.outros||[])];
+  el.textContent="👥 "+nomes.length+" usando: "+nomes.join(", "); el.title="Até "+sess.max+" pessoas podem usar este acesso ao mesmo tempo"; el.hidden=false;
+}
+function mostrarAviso(){
+  const a=avisos[avisos.length-1], mais=avisos.length-1;
+  $("#avisoTxt").textContent="✏️ "+(a.por||"Outra pessoa")+" alterou o kit "+(a.nome||"")+" agora"+(mais>0?" (+"+mais+" "+(mais>1?"outros":"outro")+")":"");
+  $("#aviso").hidden=false;
+}
+function esconderAviso(){ avisos=[]; $("#aviso").hidden=true; }
+$("#avisoOk").onclick=async()=>{ if(pending.size||writing){ toast("Aguarde salvar e toque de novo."); return; } esconderAviso(); await load(); toast("Atualizado"); };
+$("#avisoX").onclick=()=>{ $("#aviso").hidden=true; avisos=[]; };
+async function ensureLock(id){
+  if(!sess || !id || travas[id] || ensureLock.busy===id) return !travas[id];
+  ensureLock.busy=id; meuEdit=id; ultEdit=Date.now();
+  try{
+    const r=await rpc("precif_travar",{p_token:sess.token, p_id:id});
+    if(!r.ok){ meuEdit=null; travas[id]=r.por; toast("🔒 "+r.por+" está editando este kit agora."); if(document.activeElement) document.activeElement.blur(); renderSheet(); return false; }
+    if(r.versao && vers[id] && r.versao!==vers[id] && new Date(r.versao)>new Date(vers[id]) && !pending.has(id)){ toast("Este kit tinha alterações novas: carregando a versão mais nova."); await load(); }
+    return true;
+  }catch(e){ return true; }
+  finally{ ensureLock.busy=null; }
+}
+function marcarChips(){ document.querySelectorAll("#v-planilha [data-m]").forEach(b=>{ const t=travas[b.dataset.m]; b.classList.toggle("locked",!!t); b.title=t?"Em edição por "+t:""; const base=(models[b.dataset.m]||{}).nome||""; b.textContent=base+(t?" 🔒":""); }); }
+/* entrar num campo da planilha = começar a editar o kit */
+document.addEventListener("focusin",e=>{ const v=$("#v-planilha"); if(!sess || espelho || !v.contains(e.target) || !e.target.matches("input,select")) return; if(travas[ui.model]){ e.target.blur(); toast("🔒 Em edição por "+travas[ui.model]+"."); return; } ultEdit=Date.now(); if(meuEdit!==ui.model) ensureLock(ui.model); });
+document.addEventListener("input",e=>{ if($("#v-planilha").contains(e.target)) ultEdit=Date.now(); });
+/* aba fechada: libera a vaga e o kit na hora */
+window.addEventListener("pagehide",()=>{ if(!sess) return; try{ fetch(SB_URL+"/rest/v1/rpc/precif_ausente",{method:"POST",keepalive:true,headers:{"apikey":SB_KEY,"Authorization":"Bearer "+SB_KEY,"Content-Type":"application/json"},body:JSON.stringify({p_token:sess.token})}); }catch(_){} });
 function pingSoon(){ clearTimeout(pingSoon.t); pingSoon.t=setTimeout(ping, 800); }
-setInterval(ping, 15000);
+setInterval(()=>{ if(document.visibilityState==="visible") ping(); }, 5000);
+setInterval(()=>{ if(document.visibilityState!=="visible") ping(); }, 60000);
 window.addEventListener("scroll",()=>{ clearTimeout(pingSoon.s); pingSoon.s=setTimeout(pingSoon,1500); },{passive:true});
 document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible") pingSoon(); });
 async function evento(tipo, detalhe){ if(!sess || sess.login==="fc") return; try{ await rpc("precif_evento",{p_token:sess.token, p_tipo:tipo, p_detalhe:detalhe||null}); }catch(_){} }
@@ -599,28 +674,28 @@ const tela = st => !st ? "—" : (ABA[st.tab]||st.tab||"—") + (st.tab==="plani
 function acao(e){ const d=e.detalhe||{};
   switch(e.tipo){ case "entrou": return "Entrou na precificação"; case "saiu": return "Saiu";
     case "aba": return "Abriu a aba "+(d.aba||""); case "modelo": return "Abriu o modelo "+(d.modelo||"");
-    case "alterou": return "Alterou valores em "+(d.modelo||""); case "pdf": return "Baixou o PDF · "+[d.modelo,d.grupo,d.kit].filter(Boolean).join(" · ");
+    case "alterou": return "Alterou o kit "+(d.modelo||""); case "excluiu": return "Excluiu o kit "+(d.modelo||""); case "pdf": return "Baixou o PDF · "+[d.modelo,d.grupo,d.kit].filter(Boolean).join(" · ");
     default: return e.tipo; } }
 let acompFiltro="", acompTimer=null;
 async function renderAcomp(){
   const v=$("#v-acomp"); if(!sess || sess.login!=="fc"){ v.innerHTML=""; return; }
   if(!v.querySelector(".mon")) v.innerHTML=`<div class="mon"><div class="row" style="justify-content:space-between"><h2>Acompanhar clientes</h2><label class="row"><span class="lbl">Empresa</span><select id="ac-emp"><option value="">Todas</option>${EMPRESAS.map(e=>`<option value="${esc(e.empresa)}" ${e.empresa===acompFiltro?"selected":""}>${esc(e.nome)}</option>`).join("")}</select></label></div>
     <div><span class="lbl">🟢 Online agora</span><div class="oncards" id="ac-on" style="margin-top:8px"></div></div>
-    <div><span class="lbl">Histórico de acesso</span><div style="overflow-x:auto;margin-top:8px"><table class="hist"><thead><tr><th>Quando (Sinop/MT)</th><th>Empresa</th><th>Login</th><th>O que fez</th></tr></thead><tbody id="ac-hist"></tbody></table></div></div></div>`;
+    <div><span class="lbl">Histórico de acesso</span><div style="overflow-x:auto;margin-top:8px"><table class="hist"><thead><tr><th>Quando (Sinop/MT)</th><th>Empresa</th><th>Login</th><th>Pessoa</th><th>O que fez</th></tr></thead><tbody id="ac-hist"></tbody></table></div></div></div>`;
   const se=$("#ac-emp"); se.onchange=()=>{ acompFiltro=se.value; atualizarAcomp(); };
   atualizarAcomp(); clearInterval(acompTimer); acompTimer=setInterval(()=>{ if(ui.tab==="acomp" && !espelho && document.visibilityState==="visible") atualizarAcomp(); }, 6000);
 }
 async function atualizarAcomp(){
   let r; try{ r=await rpc("precif_monitor",{p_token:sess.token, p_empresa:acompFiltro||null, p_limite:300}); }catch(e){ $("#ac-on") && ($("#ac-on").innerHTML=`<p class="muted">Não foi possível carregar: ${esc(e.message)}</p>`); return; }
   const on=$("#ac-on"), hi=$("#ac-hist"); if(!on||!hi) return;
-  on.innerHTML = r.online.length ? r.online.map(o=>`<div class="oncard"><b>${esc(o.login)} · ${esc(nomeEmp(o.empresa))}</b><span class="muted">${esc(tela(o.estado))}</span><span class="muted" style="font-size:12px">visto às ${quando(o.visto).split(" ")[1]}</span><button class="btn primary" data-esp="${o.token}" style="align-self:flex-start;margin-top:4px">👁 Espelhar tela</button></div>`).join("") : `<p class="muted">Nenhum cliente com a precificação aberta agora.</p>`;
+  on.innerHTML = r.online.length ? r.online.map(o=>`<div class="oncard"><b>${esc(o.login)}${o.usuario?" ("+esc(o.usuario)+")":""} · ${esc(nomeEmp(o.empresa))}</b><span class="muted">${esc(tela(o.estado))}</span><span class="muted" style="font-size:12px">visto às ${quando(o.visto).split(" ")[1]}</span><button class="btn primary" data-esp="${o.token}" style="align-self:flex-start;margin-top:4px">👁 Espelhar tela</button></div>`).join("") : `<p class="muted">Nenhum cliente com a precificação aberta agora.</p>`;
   on.querySelectorAll("[data-esp]").forEach(b=>b.onclick=()=>{ const o=r.online.find(x=>x.token===b.dataset.esp); iniciarEspelho(o); });
-  hi.innerHTML = r.eventos.length ? r.eventos.map(e=>`<tr><td style="white-space:nowrap">${quando(e.em)}</td><td>${esc(nomeEmp(e.empresa))}</td><td>${esc(e.login)}</td><td>${esc(acao(e))}</td></tr>`).join("") : `<tr><td colspan="4" class="muted">Ainda não há acessos registrados.</td></tr>`;
+  hi.innerHTML = r.eventos.length ? r.eventos.map(e=>`<tr><td style="white-space:nowrap">${quando(e.em)}</td><td>${esc(nomeEmp(e.empresa))}</td><td>${esc(e.login)}</td><td>${esc(e.usuario||"—")}</td><td>${esc(acao(e))}</td></tr>`).join("") : `<tr><td colspan="5" class="muted">Ainda não há acessos registrados.</td></tr>`;
 }
 let espelho=null, espTimer=null, espCarga=0;
 async function iniciarEspelho(o){
   if(pending.size||writing){ toast("Aguarde salvar antes de espelhar."); return; }
-  espelho={token:o.token, login:o.login, empresa:o.empresa, estado:o.estado, visto:o.visto};
+  espelho={token:o.token, login:o.login, usuario:o.usuario, empresa:o.empresa, estado:o.estado, visto:o.visto};
   document.body.classList.add("espelho");
   const ok=await trocarEmpresa(o.empresa, true); if(!ok){ pararEspelho(); return; }
   aplicarEspelho(); clearInterval(espTimer); espTimer=setInterval(tickEspelho, 3000);
@@ -629,7 +704,7 @@ async function tickEspelho(){
   if(!espelho || document.visibilityState!=="visible") return;
   let r; try{ r=await rpc("precif_monitor",{p_token:sess.token, p_empresa:espelho.empresa, p_limite:1}); }catch(_){ return; }
   const o=r.online.find(x=>x.token===espelho.token);
-  if(!o){ toast(espelho.login+" fechou a precificação. Espelho encerrado."); pararEspelho(); return; }
+  if(!o){ toast((espelho.usuario||espelho.login)+" fechou a precificação. Espelho encerrado."); pararEspelho(); return; }
   espelho.estado=o.estado; espelho.visto=o.visto;
   if(++espCarga%2===0){ try{ const rows=await rpc("precif_listar",{p_token:sess.token}); const f={}; for(const x of rows||[]) f[x.id]=x.dados; models=f; }catch(_){} }
   aplicarEspelho();
@@ -643,7 +718,7 @@ function aplicarEspelho(){
 function mostrarBarraEspelho(){
   const sec=$("#v-"+ui.tab); if(!sec||!espelho) return; let b=sec.querySelector(".espbar");
   if(!b){ b=document.createElement("div"); b.className="espbar"; sec.prepend(b); }
-  b.innerHTML=`<span>👁 Espelhando <b>${esc(espelho.login)}</b> · ${esc(nomeEmp(espelho.empresa))} — ${esc(tela(espelho.estado))}</span><span style="opacity:.8;font-weight:500;font-size:12px">atualiza a cada 3 s · visto às ${espelho.visto?quando(espelho.visto).split(" ")[1]:"—"}</span><button class="btn" id="espStop" type="button">Parar espelho</button>`;
+  b.innerHTML=`<span>👁 Espelhando <b>${esc(espelho.usuario||espelho.login)}</b> · ${esc(nomeEmp(espelho.empresa))} — ${esc(tela(espelho.estado))}</span><span style="opacity:.8;font-weight:500;font-size:12px">atualiza a cada 3 s · visto às ${espelho.visto?quando(espelho.visto).split(" ")[1]:"—"}</span><button class="btn" id="espStop" type="button">Parar espelho</button>`;
   b.querySelector("#espStop").onclick=()=>pararEspelho();
 }
 function pararEspelho(silencioso){
