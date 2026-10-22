@@ -39,7 +39,8 @@
   /* contadores que o painel já calcula (lidos da tela) */
   function locais(){const t=id=>{const e=document.getElementById(id);return e?e.textContent:'';},n=(id,re)=>+((t(id).match(re)||[0,0])[1]);
     const vis=id=>{const e=document.getElementById(id);return e&&!e.hidden;};
-    return [[n('cvN',/(\d+) aguardando/),'🛒','Conversas pelo site (Engefitas, Nopla, site da FC)','ped'],
+    const ant=(()=>{const e=document.querySelector('.fcchat-count');if(!e||e.style.display==='none')return 0;const v=e.textContent.trim();return v==='9+'?10:(+v||0);})();
+    return [[ant,'🗨','Conversa com a Antonia (Painel de Implantação)','fcchat'],[n('cvN',/(\d+) aguardando/),'🛒','Conversas pelo site (Engefitas, Nopla, site da FC)','ped'],
       [n('csimN',/^(\d+)/),'🧾','Simulações de pedido dos clientes','sim','csimCard'],
       [n('sugN',/(\d+) sem resposta/),'💡','Dúvidas e sugestões dos alunos','sug'],
       [n('intN',/^(\d+)/),'🤝','Interessados para atender','ped'],
@@ -84,6 +85,7 @@
     document.getElementById('cxConv').onclick=()=>{fechar();window.FCConversas&&FCConversas.abrirMatriz&&FCConversas.abrirMatriz();};
     document.addEventListener('keydown',e=>{if(e.key==='Escape'&&S.aberto)fechar();});
     document.getElementById('cxDr').addEventListener('click',e=>{const g=e.target.closest('.go');if(!g)return;
+      if(g.dataset.tab==='fcchat'){fechar();window.fcChatAbrir&&fcChatAbrir();return;}
       if(g.dataset.tab){fechar();irCard(g.dataset.tab,g.dataset.card);return;}
       const k=g.dataset.cx,id=g.dataset.id,emp=g.dataset.emp;
       if(k==='conv'){fechar();if(window.FCConversas&&FCConversas.abrirMatriz)FCConversas.abrirMatriz(id).then(()=>carregar());return;}
