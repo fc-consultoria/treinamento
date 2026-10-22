@@ -298,7 +298,7 @@ const SEED={
   arq:[['xlsx','Planilha de precificação · ZFM','exemplo'],['pdf','Plano estratégico','exemplo']]}
 };
 let OPEN={},openLane=null,pasteKey=null,E={},at=null,tab='proc',fr=0,frFlow=-1,cli=false,HORAS=[],PORT={},linkAberto=false;
-const KEY=new URLSearchParams(location.search).get('k'),PUB=!!KEY;try{if(KEY)localStorage.setItem('fc_painel_cli',location.href);}catch(_){}
+let KEY=new URLSearchParams(location.search).get('k');const EMPL=(new URLSearchParams(location.search).get('e')||'').toLowerCase().replace(/[^\w-]/g,''),PUB=!!KEY||!!EMPL;let PESSOA=null;try{if(KEY)localStorage.setItem('fc_painel_cli',location.href);}catch(_){}
 const URL_BASE='https://fc-consultoria.github.io/treinamento/consultorias.html?k=';
 function novaChave(){const a=new Uint8Array(18);crypto.getRandomValues(a);return Array.from(a,b=>b.toString(16).padStart(2,'0')).join('');}
 async function carregarPortais(){const {data}=await sb.from('cons_portal').select('*');PORT={};(data||[]).forEach(p=>PORT[p.empresa_id]=p);}
@@ -484,7 +484,7 @@ const DESC_ABA={proc:'Etapas da consultoria e o que já foi concluído em cada f
  cat:'Catálogo de perfis da empresa para mostrar aos clientes.',est:'Importação da planilha de estoque: alimenta a situação de cada item no Painel do Comercial (Em estoque, No limite, Estoque baixo, Sem estoque).',orc:'Tudo do comercial: resultados, aprovação dos pedidos pelo financeiro, criação de orçamento, vendedores, consulta de estoque e catálogo.',mkt:'Ideias de posts e ações para divulgar a empresa e os produtos.',div:'Artes e materiais prontos para divulgar os produtos da empresa.',
  dsp:'Despesas da FC com este cliente (só a FC vê).',vis:'Checklist e registros das visitas (só a FC vê).',arq:'Arquivos internos da FC (só a FC vê).',hrs:'Horas trabalhadas para este cliente (só a FC vê).'};
 const lblAba=(l,e)=>String(l).replace('{cli}',(e&&e.nome)||'a empresa');
-function ficha(){const e=E[at];let h='';{const ok=ABAS.filter(a=>(cli?abasLib(e).includes(a[0]):(!CLI_ABAS.includes(a[0])||abasLib(e).includes(a[0])))&&(a[0]!=='acao'||e.acao)).map(a=>a[0]);if(ok.length&&!ok.includes(tab))tab=ok[0];}
+function ficha(){const e=E[at];let h='';if(PESSOA&&window.__abaLog!==tab){window.__abaLog=tab;sb.rpc('emp_registrar',{p_token:PESSOA.token,p_area:'aba',p_acao:tab}).then(()=>{},()=>{});}{const ok=ABAS.filter(a=>(cli?abasLib(e).includes(a[0]):(!CLI_ABAS.includes(a[0])||abasLib(e).includes(a[0])))&&(a[0]!=='acao'||e.acao)).map(a=>a[0]);if(ok.length&&!ok.includes(tab))tab=ok[0];}
  if(tab==='proc'&&e.objetivo)h=`<details class="box obj"><summary><b>🎯 Objetivo da consultoria</b><span class="muted" style="font-size:13px"> · toque para ler</span></summary><p style="margin:8px 0 0">${esc(e.objetivo)}</p></details>`;
  if(tab==='proc'){const tot=e.frentes.reduce((n,f)=>n+f.p.length,0),ok=e.frentes.reduce((n,f)=>n+f.p.filter(p=>p[0]==='ok').length,0),pct=tot?Math.round(ok/tot*100):0;
    const prox=(()=>{for(const [fi,f] of e.frentes.entries()){const i=f.p.findIndex(p=>p[0]==='and');if(i>=0)return {f,fi,p:f.p[i]};}for(const [fi,f] of e.frentes.entries()){const i=f.p.findIndex(p=>p[0]!=='ok');if(i>=0)return {f,fi,p:f.p[i]};}return null})();
@@ -570,9 +570,10 @@ function ficha(){const e=E[at];let h='';{const ok=ABAS.filter(a=>(cli?abasLib(e)
    h+='<p class="nota"><b>🔒 Só para o seu controle:</b> o cliente não vê as horas nem quando a FC trabalhou na consultoria. Vem da Rotina FC: 07:00 às 18:00 é horário normal; 18:01 às 06:59 e fim de semana, hora extra. A barra de cada dia mostra a parte em horário normal.</p>';}
  const abas=(cli?ABAS.filter(a=>abasLib(e).includes(a[0])):ABAS.filter(a=>!CLI_ABAS.includes(a[0])||abasLib(e).includes(a[0]))).filter(a=>a[0]!=='acao'||e.acao);if(!abas.some(a=>a[0]===tab)&&abas.length)tab=abas[0][0]; if(cli&&!abas.some(a=>a[0]===tab))tab='proc';
  $('#ficha').style.setProperty('--c',e.c);
- $('#ficha').innerHTML=`<div class="fh"><span class="sw"></span><div style="min-width:0;flex:1"><h2>${e.nome}</h2><div class="muted" style="font-size:14px">${e.cid} · ${e.mod}</div></div><span class="pill ${e.st[0]}">${e.st[1]}</span>${cli?'':`<button class="btn" type="button" id="lkTog">🔗 Link do cliente${PORT[at]&&PORT[at].ativo?' ✓':''}</button>`}</div>
+ $('#ficha').innerHTML=`<div class="fh"><span class="sw"></span><div style="min-width:0;flex:1"><h2>${e.nome}</h2><div class="muted" style="font-size:14px">${e.cid} · ${e.mod}</div></div><span class="pill ${e.st[0]}">${e.st[1]}</span>${cli?'':`<button class="btn" type="button" id="lkTog">🔗 Link do cliente${PORT[at]&&PORT[at].ativo?' ✓':''}</button><button class="btn" type="button" id="apBtn" title="Login e senha de cada pessoa da empresa">👥 Acessos</button>`}</div>
   ${PUB?'':cli&&PRES?`<div style="padding:12px 18px 0"><div class="cliente-bar">📡 <b>Acompanhamento da consultoria</b> · tudo o que a FC faz aparece aqui e no link da empresa, em tempo real.</div></div>`:cli?`<div style="padding:12px 18px 0"><div class="cliente-bar">🔗 <b>Link do cliente</b> · ${e.nome} vê o fluxo, o plano de ação, as planilhas, o catálogo, as solicitações e as entregas. Horas, arquivos internos, checklist de visita e observações da FC ficam ocultos.</div></div>`:linkAberto?`<div style="padding:12px 18px 0">${linkBox(e)}</div>`:''}${!cli&&!PUB?kpisEmp(at,e):''}<div class="tabg" role="tablist">${GRUPOS_ABA.map(([g,ks])=>{const L=abas.filter(x=>ks.includes(x[0]));return L.length?`<div class="tg"><span class="tgl">${esc(typeof g==='function'?g(e):g)}</span><div class="tgb">${L.map(([k,l])=>`<button class="tab" role="tab" type="button" aria-selected="${k===tab}" data-t="${k}" title="${esc(DESC_ABA[k]||'')}">${esc(lblAba(l,e))}${!cli&&CLI_ABAS.includes(k)&&!abasLib(e).includes(k)?' <span title="O cliente ainda não vê esta aba" style="opacity:.6">🔒</span>':''}${k==='sol'&&!cli&&solNovas(at)?` <span class="pill p-bad">${solNovas(at)}</span>`:''}</button>`).join('')}</div></div>`:''}).join('')}</div><div class="body">${DESC_ABA[tab]?`<p class="muted" style="margin:0 0 12px;font-size:14px">ℹ️ ${esc(DESC_ABA[tab])}</p>`:''}${tab==='orc'?orcTabHtml(E[at]):''}${tab==='est'?estTabHtml(E[at]):''}${h}</div>`;
  document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{tab=b.dataset.t;ficha()});
+ {const ab=document.getElementById('apBtn');if(ab)ab.onclick=()=>window.abrirAcessos&&window.abrirAcessos(at,E[at].nome);}
  document.querySelectorAll('[data-lane]').forEach(b=>b.onclick=()=>{const v=+b.dataset.lane;openLane=openLane===v?-1:v;ficha();});
  document.querySelectorAll('[data-fr]').forEach(b=>b.onclick=()=>{fr=+b.dataset.fr;delete OPEN.acao;ficha();});
  document.querySelectorAll('[data-sec]').forEach(b=>b.onclick=()=>{OPEN[tab]=OPEN[tab]===b.dataset.sec?'':b.dataset.sec;ficha();});
@@ -1252,15 +1253,50 @@ $('#cmp').onchange=e=>{$('#app').classList.toggle('compact',e.target.checked);tr
 try{if(localStorage.getItem('cons-cmp')==='1'){$('#cmp').checked=true;$('#app').classList.add('compact')}}catch(_){}
 $('#nova').onclick=()=>{const nome=prompt('Nome da empresa:');if(!nome)return;const cid=prompt('Cidade / estado:')||'';const k='e'+Date.now().toString(36);
   E[k]={nome,cid,c:COR[Object.keys(E).length%COR.length],mod:'Consultoria presencial',st:['p-mut','Novo'],visita:'a definir',frentes:[{n:'Antes da visita',p:[]}],dem:[],vis:{tit:'Próxima visita',prep:[],dur:[],dep:[],ok:{}},arq:[]};at=k;tab='proc';render();salvar(k);};
+/* ---------- ENTRADA POR PESSOA (consultorias.html?e=<empresa>) ---------- */
+const PAPEL_NOME={gestor:'Gestor geral',compras:'Compras',vendas:'Vendas',gerente:'Gerente comercial',marketing:'Marketing',fabrica:'Fábrica'};
+const tokKey=()=>'emp-tok-'+EMPL;
+function usarPessoa(p){PESSOA=p;KEY=p.chave;try{localStorage.setItem(tokKey(),p.token);localStorage.setItem('cons-nome',p.nome);}catch(_){}}
+async function entrarPessoa(){
+  let tk=null;try{tk=localStorage.getItem(tokKey())}catch(_){}
+  if(tk){const r=await sb.rpc('emp_sessao',{p_token:tk});if(r.data&&r.data.token){return seguirPessoa(r.data);}try{localStorage.removeItem(tokKey())}catch(_){}}
+  const inf=(await sb.rpc('emp_info',{p_emp:EMPL})).data;
+  if(!inf){$('#pubT').textContent='Link indisponível';$('#ficha').innerHTML='<div class="body"><p style="margin:0">Este link não está ativo. Fale com a FC Consultoria: (66) 9 9986-7984.</p></div>';return false;}
+  $('#pubT').textContent=inf.nome;document.title='Entrar · '+inf.nome+' · FC Consultoria';
+  return new Promise(res=>{
+    $('#ficha').innerHTML=`<div class="body" style="display:flex;justify-content:center;padding:28px 16px"><form id="lgF" style="width:100%;max-width:380px;display:flex;flex-direction:column;gap:12px" autocomplete="on">
+      <div><div class="eyebrow">Acesso da equipe</div><h2 style="margin:4px 0 2px">${esc(inf.nome)}</h2><p class="muted" style="margin:0;font-size:14px">Entre com o login e a senha que a FC Consultoria cadastrou para você.</p></div>
+      <label class="nota" style="color:var(--fg);font-weight:600">Login<input class="inpx" id="lgU" name="username" autocomplete="username" autocapitalize="none" required style="display:block;width:100%;margin-top:4px"></label>
+      <label class="nota" style="color:var(--fg);font-weight:600">Senha<input class="inpx" id="lgS" name="password" type="password" autocomplete="current-password" required style="display:block;width:100%;margin-top:4px"></label>
+      <button class="btn" id="lgB" type="submit" style="justify-content:center;background:var(--accent);color:#fff;border-color:var(--accent)">Entrar</button>
+      <p id="lgM" class="nota" style="margin:0;min-height:1.2em" role="status"></p>
+      <p class="nota" style="margin:0">Esqueceu a senha? Fale com a FC Consultoria: <a href="https://wa.me/5566999867984" target="_blank" rel="noopener">(66) 9 9986-7984</a>.</p></form></div>`;
+    $('#lgU').focus();
+    $('#lgF').onsubmit=async ev=>{ev.preventDefault();const b=$('#lgB'),m=$('#lgM');b.disabled=true;m.textContent='Entrando…';
+      const r=await sb.rpc('emp_entrar',{p_emp:EMPL,p_login:$('#lgU').value.trim(),p_senha:$('#lgS').value,p_ua:navigator.userAgent});b.disabled=false;
+      const d=r.data;if(r.error||!d){m.textContent='Não foi possível entrar agora. Tente de novo.';return;}
+      if(d.erro==='bloqueado'){m.textContent='Muitas tentativas erradas. Aguarde 15 minutos ou fale com a FC.';return;}
+      if(d.erro){m.textContent='Login ou senha incorretos.';$('#lgS').select();return;}
+      res(seguirPessoa(d));};});}
+function seguirPessoa(p){
+  if(p.papel==='vendas'){try{localStorage.setItem(tokKey(),p.token);localStorage.setItem('cons-nome',p.nome);}catch(_){}
+    if(p.vchave){location.replace('orcamento/?v='+encodeURIComponent(p.vchave)+'&et='+encodeURIComponent(p.token));return false;}
+    $('#ficha').innerHTML='<div class="body"><p style="margin:0">Seu acesso de vendedor ainda não foi liberado no Painel de Vendas. Fale com a FC Consultoria.</p></div>';return false;}
+  if(!p.chave){$('#ficha').innerHTML='<div class="body"><p style="margin:0">O acesso da empresa está pausado. Fale com a FC Consultoria: (66) 9 9986-7984.</p></div>';return false;}
+  usarPessoa(p);return true;}
+function barraPessoa(){const t=document.querySelector('#app > .top');if(!t||document.getElementById('pesBar'))return;
+  t.insertAdjacentHTML('beforeend',`<div id="pesBar" style="margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span class="nota" style="color:var(--fg)">👤 <b>${esc(PESSOA.nome)}</b> · ${esc(PAPEL_NOME[PESSOA.papel]||PESSOA.papel)}</span><button class="btn" type="button" id="pesSair">Sair</button></div>`);
+  $('#pesSair').onclick=async()=>{try{await sb.rpc('emp_sair',{p_token:PESSOA.token});}catch(_){}try{localStorage.removeItem(tokKey());localStorage.removeItem('cons-nome');}catch(_){}location.replace(location.pathname+'?e='+EMPL);};}
 if(PUB){(async()=>{document.title='Acompanhamento da consultoria · FC Consultoria';
   document.querySelectorAll('#app > .top').forEach(t=>t.hidden=true);$('#emps').hidden=true;
   $('#app').insertAdjacentHTML('afterbegin','<div class="top" style="align-items:center;gap:12px"><img src="midia/logo-fc.png" alt="FC Consultoria e Representação" style="height:44px;border-radius:8px"><div><div class="eyebrow">FC Consultoria · acompanhamento da consultoria</div><h1 id="pubT">Carregando…</h1></div></div>');
+  if(EMPL&&!KEY){const ok=await entrarPessoa();if(!ok)return;}
   const {data,error}=await sb.rpc('cons_portal_ver',{p_chave:KEY});
   if(error||!data){$('#pubT').textContent='Link indisponível';$('#ficha').innerHTML='<div class="body"><p style="margin:0">Este link não está ativo. Fale com a FC Consultoria: (66) 9 9986-7984.</p></div>';return;}
   const [pl,so]=await Promise.all([sb.rpc('cons_portal_planilhas',{p_chave:KEY}),sb.rpc('cons_portal_solicitacoes',{p_chave:KEY})]);PUBPL=pl.data||[];PUBSOL=(so.data||[]).map(x=>Object.assign(x,{criado_em:x.em}));
-  E={[data.id]:data};at=data.id;cli=true;
+  if(PESSOA&&Array.isArray(PESSOA.abas))data.abasLib=PESSOA.abas;E={[data.id]:data};at=data.id;cli=true;
   const ping=()=>{if(!document.hidden)sb.rpc('cons_portal_ping',{p_chave:KEY,p_nome:nomeCli()}).then(()=>{},()=>{});};ping();setInterval(ping,120000);document.addEventListener('visibilitychange',()=>{if(!document.hidden){ping();checarDivs();}});
-  setTimeout(saudacaoDoDia,1000);setInterval(checarDivs,60000);$('#pubT').textContent='Acompanhamento da consultoria';ficha();{const m=(location.hash||'').match(/pl=([\w-]+)/);if(m){tab='pla';ficha();history.replaceState(null,'',location.pathname+location.search);setTimeout(()=>abrirPlanilha(m[1]),300);}}})();}
+  setTimeout(saudacaoDoDia,1000);setInterval(checarDivs,60000);$('#pubT').textContent='Acompanhamento da consultoria';if(PESSOA)barraPessoa();ficha();{const m=(location.hash||'').match(/pl=([\w-]+)/);if(m){tab='pla';ficha();history.replaceState(null,'',location.pathname+location.search);setTimeout(()=>abrirPlanilha(m[1]),300);}}})();}
 else{gateUI(()=>carregar(),{soMatriz:true});
   $('#acbar').hidden=false;
   $('#bVoltar').onclick=()=>{at=null;cli=false;openLane=null;$('#vFC').setAttribute('aria-pressed',true);$('#vCli').setAttribute('aria-pressed',false);render();window.scrollTo({top:0,behavior:'smooth'});};
@@ -1270,4 +1306,5 @@ else{gateUI(()=>carregar(),{soMatriz:true});
 <script src="conversa-equipe.js?v=10"></script>
 <script src="central-tam.js?v=1"></script>
 <script src="estoque-aviso.js?v=2"></script><script>if(PUB)FCEstAviso.cliente(KEY);</script>
+<script src="acessos-pessoas.js?v=1"></script>
 </body></html>
