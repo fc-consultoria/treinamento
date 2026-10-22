@@ -1,3 +1,5 @@
+/* © 2026 FC Consultoria em Esquadria (FC Desenvolvimento de Projetos de Compra e Venda LTDA · CNPJ 52.985.682/0001-32).
+   Criação da FC · todos os direitos reservados · uso exclusivo. Cópia ou reprodução sem autorização é proibida. */
 /* ===== Painel da Matriz · 🧭 Central do Cliente (cards por empresa) =====
    Um card por empresa, juntando tudo que antes ficava espalhado:
    - Consultorias presenciais (rotina_docs col=consultoria + RPC emp_central: alertas, equipe, orçamentos)
@@ -123,7 +125,9 @@
 
   /* ---------- estilo ---------- */
   function css(){if($('ccliCss'))return;const st=document.createElement('style');st.id='ccliCss';st.textContent=`
-#ccliCard .cc-body{padding:14px 16px;display:flex;flex-direction:column;gap:14px}
+#ccliCard .cc-body{padding:14px 16px;display:flex;flex-direction:column;gap:14px;position:relative}
+#ccliCard .cc-wm{position:absolute;inset:0;pointer-events:none;background-repeat:repeat;background-position:center top;z-index:2;border-radius:0 0 14px 14px}
+#ccliCard .cc-ass{margin:4px 0 0;font:600 11.5px system-ui;color:var(--muted);text-align:center;letter-spacing:.02em}
 #ccliCard .cc-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 #ccliCard .cc-bar input{flex:1;min-width:200px;font-size:15px;padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--fg)}
 #ccliCard .cc-f{display:flex;gap:6px;flex-wrap:wrap}
@@ -173,6 +177,11 @@
 #ccliCard .cc-vz{font-size:14px;color:var(--muted);margin:0}
 #ccliCard .cc-pg{height:10px;border-radius:5px;background:var(--bg);overflow:hidden}#ccliCard .cc-pg b{display:block;height:10px;background:#e0892a}`;document.head.appendChild(st);}
 
+  /* marca d'água da FC (mesmo padrão do Esquadrias 3D) */
+  function marca(){const d=new Date().toLocaleDateString('pt-BR');
+    const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="460" height="300"><g transform="rotate(-24 230 150)" font-family="Barlow,Arial,sans-serif" text-anchor="middle" fill="#0f4f53" fill-opacity=".06"><text x="230" y="140" font-size="26" font-weight="800">FC CONSULTORIA EM ESQUADRIA</text><text x="230" y="168" font-size="14" font-weight="600">Uso exclusivo · Painel da Matriz · ${d}</text></g></svg>`;
+    return `url("data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}")`;}
+  const ASS=`<p class="cc-ass">© ${new Date().getFullYear()} FC Consultoria em Esquadria · criação FC · uso exclusivo</p>`;
   const ini=n=>String(n||'?').replace(/[^\p{L}\p{N} ]/gu,'').trim().split(/\s+/).slice(0,2).map(p=>p[0]||'').join('').toUpperCase()||'?';
   const CORST={impl:'#c06a14',cons:'#6d4bd8',mostr:'#0d5c8f',bloq:'#7b8a93',outro:'#7b8a93'};
 
@@ -274,7 +283,7 @@
     if(!E.length){B.innerHTML=`<p class="note" style="padding:12px 16px">${S.erro?h(S.erro):'Carregando…'}</p>`;return;}
     const foco=document.activeElement&&document.activeElement.id==='ccliQ';
     const e=S.ver&&E.find(x=>x.key===S.sel);
-    B.innerHTML=`<div class="cc-body">${e?pagina(e):grade(E)}</div>`;
+    B.innerHTML=`<div class="cc-body">${e?pagina(e):grade(E)}${ASS}<div class="cc-wm" aria-hidden="true" style='background-image:${marca()}'></div></div>`;
     B.querySelectorAll('[data-ccf]').forEach(b=>b.onclick=()=>{S.filtro=b.dataset.ccf;grava('fc_ccli_f',S.filtro);pinta();});
     B.querySelectorAll('[data-cce]').forEach(b=>b.onclick=()=>{S.sel=b.dataset.cce;S.ver=true;S.aba='res';grava('fc_ccli_emp',S.sel);pinta();$('ccliCard').scrollIntoView({behavior:'smooth',block:'start'});});
     B.querySelectorAll('[data-cct]').forEach(b=>b.onclick=()=>{S.aba=b.dataset.cct;pinta();});
