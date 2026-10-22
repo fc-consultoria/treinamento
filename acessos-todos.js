@@ -69,8 +69,7 @@
 
   const linha=(nome,sub,tag,ult,acao,busca,seg)=>({nome,sub,tag,ult,acao,seg:seg==null?null:+seg,b:norm([nome,sub,busca].join(' '))});
   const tempo=sg=>{if(sg==null)return '';const m=Math.round(sg/60);if(m<1)return '⏱ menos de 1 min';if(m<60)return '⏱ '+m+' min';return '⏱ '+Math.floor(m/60)+' h '+String(m%60).padStart(2,'0');};
-  function tagCol(x){if(x.pz)return ['pausado','pz'];if(!x.ini)return ['ainda não entrou','nv'];if(x.resta!=null&&x.resta<=0)return ['72 h encerradas','off'];
-    return ['restam '+Math.max(1,Math.round(x.resta/3600e3))+' h',''];}
+  function tagCol(x){if(x.pz)return ['pausado','pz'];if(!x.ini)return ['ainda não entrou','nv'];return ['acesso liberado',''];}
 
   function montar(){
     const d=S.d||{},G={};CLI.forEach(c=>G[c.k]={c,sec:{}});
@@ -94,7 +93,7 @@
     mostr().forEach(a=>{const c=quem(a.login+' '+a.nome);
       const ab={t:'Abrir',f:()=>abrirMostr(a.uid)};
       const L=[linha(a.nome,'Mostruário · login '+a.login,a.ativo?['empresa ativa','']:['bloqueada','off'],a.ult,ab,a.login,a.seg)];
-      a.col.forEach(x=>L.push(linha(x.nome,'colaborador · '+(x.ini?'1º acesso '+new Date(x.ini).toLocaleDateString('pt-BR'):'sem acesso ainda'),tagCol(x),x.ult,null,a.nome+' '+a.login,x.seg||0)));
+      a.col.forEach(x=>L.push(linha(x.nome,'colaborador · '+(x.ini?'1º acesso '+new Date(x.ini).toLocaleDateString('pt-BR'):'sem acesso ainda'),tagCol(x),x.ult,null,a.nome+' '+a.login,x.seg||(x.ini?0:null))));
       if(c)L.forEach(l=>add(c,'Mostruário 3D',l));else OUT.mostr.push({emp:a.nome,L});});
     (d.demo||[]).forEach(x=>{let t;if(x.encerrado)t=['encerrado','nv'];else if(!x.inicio)t=['aguardando abrir','pz'];else{const r=Date.parse(x.inicio)+(x.horas||72)*3600e3-Date.now();t=r>0?['restam '+Math.max(1,Math.round(r/3600e3))+' h','']:['prazo acabou','off'];}
       OUT.demo.push(linha(x.nome,'link de teste '+x.code+(x.cidade?' · '+x.cidade:'')+' · '+(x.horas||72)+' h',t,x.ult||x.inicio,null,x.cidade,x.seg));});
