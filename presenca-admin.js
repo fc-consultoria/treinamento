@@ -12,10 +12,7 @@
   const on=r=>Date.now()-Date.parse(r.visto_em)<ON_MS;
 
   function caixa(){
-    let el=document.getElementById('lvEq');if(el)return el;
-    const k=document.getElementById('lvK');if(!k)return null;
-    el=document.createElement('div');el.id='lvEq';el.style.cssText='padding:12px 16px 0';
-    k.insertAdjacentElement('afterend',el);return el;
+    return document.getElementById('lvEqSlot');
   }
   async function carregar(){
     try{
@@ -45,13 +42,8 @@
     const cliOn=S.port.filter(on),cliHoje=S.port.filter(r=>!on(r));
     const linhaCli=(r,o)=>`<div class="lvr"><span class="lvd${o?' on':''}"></span><div class="nm"><b>${esc(r.nome||'Sem nome')} <span style="font-weight:500;color:var(--muted)">· ${esc(S.cli[r.cliente_id]||'Cliente')}</span><span class="lvt ct">link</span></b>
       <span>${o?'🟢 com o link aberto · desde '+hm(r.entrou_em):'saiu às '+hm(r.visto_em)}</span></div></div>`;
-    el.innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px" class="lvgEq">
-      <div><h3 class="dvt" style="margin:4px 0 8px">🛠 Equipe FC <span class="note" style="text-transform:none;letter-spacing:0;font-weight:500">· nos painéis agora</span></h3>
-        ${S.semTabela?'<p class="note" style="color:var(--bad)">Falta rodar o arquivo presenca_equipe.sql no Supabase.</p>':pessoas.length?pessoas.map(linhaEq).join(''):'<p class="note">Nenhum login de equipe cadastrado.</p>'}</div>
-      <div><h3 class="dvt" style="margin:4px 0 8px">📡 Clientes nos links de acompanhamento <span class="note" style="text-transform:none;letter-spacing:0;font-weight:500">· hoje</span></h3>
-        <div class="lvh">🟢 Online agora · ${cliOn.length}</div>${cliOn.length?cliOn.map(r=>linhaCli(r,true)).join(''):'<p class="note">Ninguém com o link aberto agora.</p>'}
-        <div class="lvh">Entraram hoje · ${cliHoje.length}</div>${cliHoje.length?cliHoje.map(r=>linhaCli(r,false)).join(''):'<p class="note">Mais ninguém hoje.</p>'}</div></div>
-      <style>@media(max-width:1000px){.lvgEq{grid-template-columns:1fr!important}}</style>`;
+    el.innerHTML=`<h3 class="dvt" style="margin:4px 0 8px">🛠 Equipe FC <span class="note" style="text-transform:none;letter-spacing:0;font-weight:500">· nos painéis agora</span></h3>
+        ${S.semTabela?'<p class="note" style="color:var(--bad)">Falta rodar o arquivo presenca_equipe.sql no Supabase.</p>':pessoas.length?pessoas.map(linhaEq).join(''):'<p class="note">Nenhum login de equipe cadastrado.</p>'}`;
     el.querySelectorAll('[data-eqon]').forEach(ch=>ch.onchange=async()=>{
       const email=ch.dataset.eqon,v=ch.checked;ch.disabled=true;
       const {data,error}=await sb.from('impl_acesso').update({aparecer_online:v}).eq('email',email).select('email');
