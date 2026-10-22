@@ -19,13 +19,17 @@
     {k:'gs',n:'Guaporé Sinop',cor:'#b45309',m:s=>/guapore/.test(s)&&/sinop/.test(s),emp:'guaporesinop'},
     {k:'gen',n:'Genesis',cor:'#1f8a4c',m:s=>/genesis/.test(s),emp:'genesis'}];
   const quem=s=>{const n=norm(s);return CLI.find(c=>c.m(n))||null;};
-  const S={d:null,erro:'',busca:'',em:null,carregando:false};
+  const S={d:null,erro:'',busca:'',em:null,carregando:false,ab:new Set()};
+  try{(JSON.parse(localStorage.getItem('fc_ax_ab')||'[]')||[]).forEach(k=>S.ab.add(k));}catch(_){}
+  const guardaAb=()=>{try{localStorage.setItem('fc_ax_ab',JSON.stringify([...S.ab]));}catch(_){}};
 
   const css=document.createElement('style');
   css.textContent=`.axg{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px;padding:12px 16px 4px}
 .axc{border:1px solid var(--line,#d7e0e5);border-radius:14px;background:#fff;overflow:hidden;display:flex;flex-direction:column}
 .axh{display:flex;align-items:center;gap:8px;padding:11px 14px;color:#fff;font:700 16px var(--f-display,system-ui)}
-.axh small{margin-left:auto;font:600 12px system-ui;opacity:.92}
+.axh small{margin-left:auto;font:600 12px system-ui;opacity:.92}.axh{cursor:pointer;user-select:none}.axh .sv{font-size:13px;margin-left:4px;transition:transform .15s}.axc.fech .axh .sv{transform:rotate(-90deg)}
+.axres{display:flex;flex-wrap:wrap;gap:6px;padding:10px 14px}.axres span{font:600 12px system-ui;background:#f2f6f8;border-radius:99px;padding:3px 10px;color:#35505e}.axres span b{color:#13232e}
+.axg{align-items:start}
 .axs{padding:8px 14px 2px;font:700 12px system-ui;letter-spacing:.04em;text-transform:uppercase;color:#5b6d78;display:flex;align-items:center;gap:6px}
 .axs button{margin-left:auto;font:600 12px system-ui;text-transform:none;letter-spacing:0;padding:3px 9px;border-radius:7px;border:1px solid #c9d6dd;background:#fff;cursor:pointer}
 .axr{display:grid;grid-template-columns:12px minmax(0,1fr) auto;gap:9px;align-items:center;padding:7px 14px;border-top:1px solid #eef2f4}
@@ -113,7 +117,9 @@
         const ger=s==='Central do Gestor'&&typeof abrirAcessos==='function'?`<button type="button" data-axg="${c.emp}|${h(c.n)}">Gerenciar</button>`:'';
         return `<div class="axs">${h(s)} · ${L.length}${ger}</div>${r}`;}).join('');
       if(S.busca&&!secs)return '';
-      return `<div class="axc"><div class="axh" style="background:${c.cor}">${h(c.n)}<small>${n} acesso${n===1?'':'s'}${o?' · 🟢 '+o+' online':''}</small></div>${secs||'<p class="axv">Nenhum acesso cadastrado ainda.</p>'}</div>`;}).join('');
+      const aberto=S.busca?true:S.ab.has(c.k);
+      const res=ORDEM.filter(x=>g.sec[x]).map(x=>{const L=g.sec[x],oo=L.filter(l=>online(l.ult)).length;return `<span>${h(x)} · <b>${L.length}</b>${oo?' · 🟢 '+oo:''}</span>`;}).join('');
+      return `<div class="axc ${aberto?'':'fech'}"><div class="axh" style="background:${c.cor}" data-axab="${c.k}" role="button" tabindex="0" aria-expanded="${aberto}" title="${aberto?'Toque para ocultar':'Toque para abrir'}"><span class="sv">▾</span>${h(c.n)}<small>${n} acesso${n===1?'':'s'}${o?' · 🟢 '+o+' online':''}</small></div>${aberto?(secs||'<p class="axv">Nenhum acesso cadastrado ainda.</p>'):(res?`<div class="axres">${res}</div>`:'<p class="axv">Nenhum acesso cadastrado ainda.</p>')}</div>`;}).join('');
     const grupo=(tit,L,vazio)=>{conta(L);const r=rows(L);if(!r&&(S.busca||!vazio))return '';return `<h3>${tit} <span class="note" style="font-weight:500">· ${L.length}</span></h3><div class="axc">${r||`<p class="axv">${vazio}</p>`}</div>`;};
     let outros='';
     OUT.mostr.forEach(m=>{conta(m.L);const r=rows(m.L);if(r)outros+=`<div class="axc" style="margin-bottom:8px"><div class="axs">${h(m.emp)} · ${m.L.length-1} colaborador${m.L.length===2?'':'es'}</div>${r}</div>`;});
@@ -126,9 +132,11 @@
     outros+=grupo('🧭 Página da consultoria · outros',OUT.cons,'');
     outros+=grupo('🧪 Links de teste',OUT.demo,'Nenhum link de teste.');
     outros+=grupo('🛠 Equipe FC',OUT.equipe,'');
-    body.innerHTML=`<div class="axg">${quadros||'<p class="note">Nenhum cliente principal com esse nome.</p>'}</div><div class="axl"><h3 style="margin-top:8px;font-size:17px">Demais acessos</h3>${outros||'<p class="note">Nada encontrado.</p>'}</div>`;
+    body.innerHTML=`<div style="display:flex;gap:8px;padding:10px 16px 0"><button type="button" data-axall="1" style="font-size:12.5px">▾ Abrir todas</button><button type="button" data-axall="0" style="font-size:12.5px">▸ Ocultar todas</button></div><div class="axg">${quadros||'<p class="note">Nenhum cliente principal com esse nome.</p>'}</div><div class="axl"><h3 style="margin-top:8px;font-size:17px">Demais acessos</h3>${outros||'<p class="note">Nada encontrado.</p>'}</div>`;
     $('axTot').innerHTML=`<span class="axk"><b>${tot}</b>acessos</span><span class="axk"><b style="color:#16683f">${on}</b>online agora</span>`+(S.em?`<span class="note">atualizado às ${S.em.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</span>`:'');
     body.querySelectorAll('[data-ax]').forEach(b=>b.onclick=()=>{const f=ACOES[+b.dataset.ax];f&&f();});
+    body.querySelectorAll('[data-axab]').forEach(el=>{const t=()=>{const k=el.dataset.axab;S.ab.has(k)?S.ab.delete(k):S.ab.add(k);guardaAb();pinta();};el.onclick=ev=>{if(ev.target.closest('button'))return;t();};el.onkeydown=ev=>{if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();t();}};});
+    body.querySelectorAll('[data-axall]').forEach(b=>b.onclick=()=>{if(b.dataset.axall==='1')CLI.forEach(c=>S.ab.add(c.k));else S.ab.clear();guardaAb();pinta();});
     body.querySelectorAll('[data-axg]').forEach(b=>b.onclick=()=>{const [e,n]=b.dataset.axg.split('|');abrirAcessos(e,n);});}
 
   async function carregar(forca){if(S.carregando)return;if(!card())return;S.carregando=true;
