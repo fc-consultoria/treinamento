@@ -49,7 +49,7 @@ language sql immutable as $$
     when 'gestor'    then null
     when 'compras'   then array['comp','dist','est','pla','conv','age','sol']
     when 'vendas'    then array['orc']
-    when 'gerente'   then array['orc','cat']
+    when 'gerente'   then array['orc']
     when 'marketing' then array['cat']
     when 'fabrica'   then array['esq','cat']
   end::text[] $$;
