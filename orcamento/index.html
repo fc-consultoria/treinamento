@@ -110,7 +110,7 @@ const FX=()=>Object.assign({verm:0,lar:6,verde:8,dias:7},(D&&D.cab&&D.cab.estFx)
 const COR_EST={v:['#dc2626','sem estoque'],l:['#f97316','estoque baixo'],a:['#eab308','estoque no limite'],g:['#16a34a','estoque bom']};
 function estDe(id){const i=D&&D.itens.find(x=>x.id===id);return i||null;}
 function estNv(i){if(!i)return null;if(i.estCor&&COR_EST[i.estCor])return i.estCor;if(i.est==null||i.est==='')return null;const f=FX(),v=+i.est;return (v<=0||v<f.verm)?'v':v<f.lar?'l':v>f.verde?'g':'a';}
-function estTag(i){const n=estNv(i);if(!n)return (i&&D&&D.cab&&D.cab.estEm)?'<span title="Este item não veio na planilha de estoque" style="display:inline-flex;align-items:center;gap:5px;font-weight:800;font-size:12.5px;color:#64748b;background:#fff;border:1.5px solid #94a3b8;border-radius:6px;padding:1px 7px;margin-left:6px;vertical-align:1px;white-space:nowrap"><span style="width:9px;height:9px;border-radius:2px;background:#94a3b8;display:inline-block"></span>Sem informação</span>':'';const [c]=COR_EST[n],t={v:'Sem estoque',l:'Estoque baixo',a:'No limite',g:'Em estoque'}[n];
+function estTag(i){if(i&&i.estConf&&!i.estCor)return '<span title="Unidade do estoque em conferência pela Compras" style="display:inline-flex;align-items:center;gap:5px;font-weight:800;font-size:12.5px;color:#64748b;background:#fff;border:1.5px dashed #94a3b8;border-radius:6px;padding:1px 7px;margin-left:6px;vertical-align:1px;white-space:nowrap"><span style="width:9px;height:9px;border-radius:2px;background:#94a3b8;display:inline-block"></span>A confirmar</span>';const n=estNv(i);if(!n)return (i&&D&&D.cab&&D.cab.estEm)?'<span title="Este item não veio na planilha de estoque" style="display:inline-flex;align-items:center;gap:5px;font-weight:800;font-size:12.5px;color:#64748b;background:#fff;border:1.5px solid #94a3b8;border-radius:6px;padding:1px 7px;margin-left:6px;vertical-align:1px;white-space:nowrap"><span style="width:9px;height:9px;border-radius:2px;background:#94a3b8;display:inline-block"></span>Sem informação</span>':'';const [c]=COR_EST[n],t={v:'Sem estoque',l:'Estoque baixo',a:'No limite',g:'Em estoque'}[n];
   return `<span title="Situação do estoque${i.estCor?' (definida manualmente)':''}" style="display:inline-flex;align-items:center;gap:5px;font-weight:800;font-size:12.5px;color:${c};background:#fff;border:1.5px solid ${c};border-radius:6px;padding:1px 7px;margin-left:6px;vertical-align:1px;white-space:nowrap"><span style="width:9px;height:9px;border-radius:2px;background:${c};display:inline-block"></span>${t}</span>`;}
 function estI(i){return i?estB(i.est,i.estCor):'';}
 function estB(q,man){if(man&&COR_EST[man]){const [c,t]=COR_EST[man];return `<span class="est" title="${t[0].toUpperCase()+t.slice(1)} (definido manualmente)${ADM&&q!=null?' · saldo '+String(q).replace('.',','):''}" style="background:${c}"></span>`;}if(q==null||q==='')return '';const f=FX(),v=+q;const [bg,fc,t]=(v<=0||v<f.verm)?['','#dc2626','sem estoque']:v<f.lar?['','#f97316','estoque baixo']:v>f.verde?['','#16a34a','estoque bom']:['','#eab308','estoque no limite'];
@@ -216,14 +216,18 @@ async function carregaEQ(){if(EQ)return EQ;try{const [a,b]=await Promise.all([fe
   (a.g||[]).forEach(g=>{const al=(g.m||[]).find(m=>m[0]==='alcoa');const x={mk:al?al[1]:g.k,n:g.n||'',c:new Map()};x.c.set(nk(g.k),g.k);(g.m||[]).forEach(m=>{if(m[3]!=='baixa'&&m[1])x.c.set(nk(m[1]),m[1]+' ('+(FN[m[0]]||m[0])+')');});byK[nk(g.k)]=G.length;G.push(x);});
   const DN=(b.dist||{});(b.g||[]).forEach(g=>{let gi=byK[nk(g.gk||g.k)];if(gi==null){gi=G.length;G.push({mk:g.mk||g.k,n:g.n||'',c:new Map([[nk(g.k),g.mk||g.k]])});byK[nk(g.k)]=gi;}(g.m||[]).forEach(m=>{const k=nk(m[1]);if(k.length>=3&&!G[gi].c.has(k))G[gi].c.set(k,m[1]+' ('+(DN[m[0]]||m[0])+')');});});
   const TOK={};G.forEach((g,gi)=>g.c.forEach((_,k)=>{(TOK[k]=TOK[k]||[]).push(gi);}));
-  const IT={},MK={};(D&&D.itens||[]).forEach(i=>{tokItem(i).forEach(k=>(TOK[k]||[]).forEach(gi=>{(IT[gi]=IT[gi]||new Set()).add(i.id);if(!MK[i.id])MK[i.id]=G[gi].mk;}));});
+  const IT={},MK={};(D&&D.itens||[]).forEach(i=>{if(i.tipo==='comp')return;tokItem(i).forEach(k=>(TOK[k]||[]).forEach(gi=>{(IT[gi]=IT[gi]||new Set()).add(i.id);if(!MK[i.id])MK[i.id]=G[gi].mk;}));});
   EQ={G,TOK,IT,MK};}catch(_){EQ={G:[],TOK:{},IT:{},MK:{}};}return EQ;}
 const CORHEX=c=>{c=sem(c);return /branc/.test(c)?'#ffffff':/pret/.test(c)?'#111111':/bronz/.test(c)?'#6b4a2b':/champ/.test(c)?'#c9b28a':/natur|fosc|anod/.test(c)?'#c0c4c8':/cinz|grafit/.test(c)?'#5b6168':/dourad|ouro/.test(c)?'#c9a227':/madeir/.test(c)?'#8a5a32':'';};
 const corTag=c=>c?`<span style="display:inline-flex;align-items:center;gap:5px;font-weight:800;font-size:14px;color:#13232e;background:#eef2f4;border:1px solid #c4ccd2;border-radius:99px;padding:1px 9px 1px 5px;margin-left:6px;vertical-align:1px">${CORHEX(c)?`<span style="width:12px;height:12px;border-radius:50%;background:${CORHEX(c)};border:1px solid #8a959c;display:inline-block"></span>`:''}${esc(String(c).toUpperCase())}</span>`:'';
 const temPreco=i=>+((i||{}).preco)>0,SCTAG='<span style="display:inline-block;background:#fff3c4;color:#8a5a00;border:1px solid #e0b100;border-radius:7px;padding:2px 8px;font-weight:800;font-size:12.5px;white-space:nowrap">Sob consulta</span>';
-const crefDe=i=>i.cref||(EQ&&EQ.MK[i.id])||'';
+const crefDe=i=>i.cref||(i.tipo==='comp'?(i.ref||''):(EQ&&EQ.MK[i.id]))||'';
+const z0=k=>/^\d+$/.test(k)?k.replace(/^0+(?=\d)/,''):k;
+const codsDe=i=>[i.cod,...String(i.codAlt||'').split('|')].map(nk).filter(Boolean);
+const txtBusca=i=>sem(i.cod+' '+(i.codAlt||'')+' '+i.desc+' '+(i.cor||'')+' '+(i.linha||'')+' '+(i.ref||''));
+function casaCod(i,k){if(!k)return 0;const k0=z0(k),cs=codsDe(i);if(cs.some(c=>c===k||z0(c)===k0))return 100;if(k.length>=3&&cs.some(c=>c.startsWith(k)||z0(c).startsWith(k0)))return 40;return 0;}
 function filtrar(q){const w=sem(q).split(/\s+/).filter(Boolean),k=nk(q);if(!w.length)return [];
-  const R=D.itens.map(i=>{const t=sem(i.cod+' '+i.desc+' '+(i.cor||'')+' '+(i.linha||'')+' '+(i.ref||''));let s=0;if(k&&nk(i.cod)===k)s+=100;else if(k&&nk(i.cod).startsWith(k))s+=40;if(k.length>=3&&nk(i.desc).includes(k))s+=20;if(w.every(x=>t.includes(x)))s+=10;return [s,i];}).filter(x=>x[0]>0);
+  const R=D.itens.map(i=>{const t=txtBusca(i);let s=casaCod(i,k);if(k.length>=3&&(nk(i.desc).includes(k)||nk(i.ref||'').includes(k)))s+=20;if(w.every(x=>t.includes(x)))s+=10;return [s,i];}).filter(x=>x[0]>0);
   if(EQ&&k.length>=3&&EQ.TOK[k]){const ja=new Map(R.map(x=>[x[1].id,x]));EQ.TOK[k].forEach(gi=>{const g=EQ.G[gi],lab=g.c.get(k)||q.toUpperCase();(EQ.IT[gi]||[]).forEach(id=>{const i=D.itens.find(x=>x.id===id);if(!i)return;const e=ja.get(id);if(e&&e[0]>=40)return;
     const v=Object.assign({},i,{_conv:lab.replace(/ \(.*\)$/,'')+' → '+i.cod+(g.n?' · '+g.n:''),_cref:lab.replace(/ \(.*\)$/,'')});if(e){e[0]+=60;e[1]=v;}else{const r=[60,v];R.push(r);ja.set(id,r);}});});}
   return R.sort((a,b)=>b[0]-a[0]).slice(0,40).map(x=>x[1]);}
@@ -413,7 +417,7 @@ function telaCfg(){if(!CF){carregaCfg().then(tela);return '<p class="vazio">Carr
    <label class="f">Validade padrão (dias)<input id="cVd" value="${esc(CF.validade_dias)}" inputmode="numeric"></label>
    <label class="f" style="grid-column:1/-1">Observação padrão do orçamento<textarea id="cObs">${esc(CF.obs||'')}</textarea></label></div>
    <div class="row" style="margin-top:10px"><button class="btn pri" type="button" id="cSalva">💾 Salvar configuração</button><span class="nota" id="cMsg"></span></div></div>`;}
-async function salvaCfg(msg){const r=!FC?await sb.rpc('orc_g_cfg_salvar',{p_chave:VKEY,p_cfg:{itens:CF.itens,cab:CF.cab||{},pag:CF.pag,desc_max:num(CF.desc_max),validade_dias:parseInt(CF.validade_dias)||7,obs:CF.obs||null,planilha_id:CF.planilha_id||null,itens_em:CF.itens_em||null}}):await sb.from('orc_cfg').upsert({empresa_id:EMP,itens:CF.itens,cab:CF.cab||{},pag:CF.pag,desc_max:num(CF.desc_max),validade_dias:parseInt(CF.validade_dias)||7,obs:CF.obs||null,planilha_id:CF.planilha_id||null,itens_em:CF.itens_em||null,atualizado_em:new Date().toISOString()});
+async function salvaCfg(msg){const r=!FC?await sb.rpc('orc_g_cfg_salvar',{p_chave:VKEY,p_cfg:{itens:CF.itens,...(Array.isArray(CF.comp)?{comp:CF.comp}:{}),cab:CF.cab||{},pag:CF.pag,desc_max:num(CF.desc_max),validade_dias:parseInt(CF.validade_dias)||7,obs:CF.obs||null,planilha_id:CF.planilha_id||null,itens_em:CF.itens_em||null}}):await sb.from('orc_cfg').upsert({empresa_id:EMP,itens:CF.itens,...(Array.isArray(CF.comp)?{comp:CF.comp}:{}),cab:CF.cab||{},pag:CF.pag,desc_max:num(CF.desc_max),validade_dias:parseInt(CF.validade_dias)||7,obs:CF.obs||null,planilha_id:CF.planilha_id||null,itens_em:CF.itens_em||null,atualizado_em:new Date().toISOString()});
   if(r.error||r.data===false){toast('Não salvou: '+((r.error&&r.error.message)||'sem acesso'));return false;}await carregar();if(msg)toast(msg);return true;}
 async function carregaFAuto(){if(FAUTO)return FAUTO;FAUTO=await fetch('fotos-auto.json?v=3').then(r=>r.json()).catch(()=>({}));return FAUTO;}
 function fotoAutoDe(i,F){const toks=[...String(i.ref||'').split(/[|\/,;]+/),...String(i.cod||'').split(/[|\/,;]+/),...(/^acess/i.test(String(i.linha||''))?[]:(String(i.desc).toUpperCase().match(/\b[A-Z]{1,5}-?\d{2,6}[A-Z]?\b/g)||[]).filter(t=>!/^L-?\d{2}$/.test(t)))];for(const t of toks){const k=nk(t);if(k.length>=3&&F[k])return F[k];}return '';}
@@ -511,22 +515,89 @@ function wireEstImp(q){if(q('estImp'))q('estImp').onchange=async e=>{const f=e.t
       else{const md=await Planilha.importar(await f.arrayBuffer()),mt=new Planilha.Motor(md),sh=md.sheets[0];const mr=Math.max(...Object.keys(sh.c).map(a=>+(a.match(/\d+$/)||[0])[0]));const mc=Math.max(...Object.keys(sh.c).map(a=>{const x=a.match(/^[A-Z]+/)[0];let n=0;for(const ch of x)n=n*26+ch.charCodeAt(0)-64;return n;}));
         const CL=n=>{let s='';while(n>0){const r=(n-1)%26;s=String.fromCharCode(65+r)+s;n=Math.floor((n-1)/26);}return s;};
         for(let r=1;r<=mr;r++){const row=[];for(let c=1;c<=mc;c++){const v=mt.val(sh,CL(c)+r);row.push(v==null?'':v);}rows.push(row);}}
-      let hi=-1,cc=-1,qc=-1;for(let r=0;r<Math.min(rows.length,15)&&hi<0;r++){const h=rows[r].map(x=>sem(String(x)));const a=h.findIndex(x=>/^cod|codigo|referencia|^ref/.test(x)),b=h.findIndex(x=>/saldo|quant|qtd|qtde|estoque|disponivel/.test(x));if(a>=0&&b>=0){hi=r;cc=a;qc=b;}}
-      if(hi<0){m.textContent='Não achei as colunas de código e quantidade/saldo no cabeçalho.';return;}
+      const lay=layoutPlan(rows);
+      if(lay.t==='preco'){if(!FC){m.textContent='A tabela de preços de componentes é importada pela FC.';return;}await impPreco(rows,f.name,m);return;}
+      if(lay.t==='comp'){await impCompEst(rows,lay,m);return;}
+      if(lay.t!=='perfis'){m.textContent='Não achei as colunas de código e quantidade/saldo no cabeçalho.';return;}
+      const {hi,cc,qc}=lay;
       const S={};let rep=0;rows.slice(hi+1).forEach(r=>{const k=nk0(r[cc]);if(!k)return;const v=typeof r[qc]==='number'?r[qc]:num(r[qc]);if(k in S){rep++;return;}S[k]=v;});
       const kDe=i=>[nk0(i.cod),...String(i.cod).split(/[|\/]/).map(nk0)].filter(Boolean).find(x=>x in S);
+      {const nOk=CF.itens.filter(i=>kDe(i)!=null).length;if(!nOk){m.textContent='Nenhum código desta planilha bate com os perfis. Nada foi alterado. Se for o estoque de componentes, a planilha precisa ter as colunas Material e Unidade.';e.target.value='';return;}
+       if(nOk<CF.itens.length*0.3&&!confirm(`Só ${nOk} de ${CF.itens.length} perfis aparecem nesta planilha. Os outros ficarão sem informação de estoque. Continuar?`)){m.textContent='Importação cancelada. Nada foi alterado.';e.target.value='';return;}}
       m.textContent='Comparando com o estoque da plataforma…';const cmp=await estComparar(S,kDe);if(!cmp){m.textContent='Importação cancelada. Nada foi gravado.';e.target.value='';return;}
       let ok=0;CF.itens.forEach(i=>{const k=kDe(i);if(k!=null){i.est=S[k];ok++;}else delete i.est;});
       CF.cab=CF.cab||{};CF.cab.estEm=new Date().toISOString();if(await salvaCfg()){const usados=new Set();CF.itens.forEach(i=>[nk0(i.cod),...String(i.cod).split(/[|\/]/).map(nk0)].forEach(k=>usados.add(k)));const fora=Object.keys(S).filter(k=>!usados.has(k)).length;const tx=`✓ ${ok} de ${CF.itens.length} itens da tabela de preços com saldo`+(cmp.msg?' · '+cmp.msg:'')+(fora?` · ${fora} códigos fora da tabela de preços foram ignorados`:'')+(rep?` · ${rep} códigos repetidos na planilha de estoque (valeu a 1ª linha de cada um, sem somar)`:'');CF.cab.estMsg=tx;toast(tx);}tela();}
     catch(err){m.textContent='Não foi possível ler: '+(err.message||err);}};}
 
+/* ---------- 🔩 Componentes: tabela de preços + estoque ---------- */
+function layoutPlan(rows){for(let r=0;r<Math.min(rows.length,15);r++){const h=rows[r].map(x=>sem(String(x)).trim());
+    if(/^codigo/.test(h[0]||'')&&h.some(x=>/preco de compra/.test(x)))return {t:'preco'};
+    const a=h.findIndex(x=>/^cod|codigo|referencia|^ref/.test(x)),b=h.findIndex(x=>/saldo|quant|qtd|qtde|estoque|disponivel/.test(x));
+    if(a>=0&&b>=0){const mt=h.findIndex(x=>/^material|^descri/.test(x)),un=h.findIndex(x=>/^unidade$|^un$|^und$/.test(x));
+      if(mt>=0&&un>=0)return {t:'comp',hi:r,cc:a,qc:b,uc:un,mc:mt};return {t:'perfis',hi:r,cc:a,qc:b};}}return {t:''};}
+const COR_COMP=[['PRETO FOSCO','Preto Fosco'],['PTF','Preto Fosco'],['PF','Preto Fosco'],['BCO','Branco'],['CBO','Branco'],['BR','Branco'],['BRANCO','Branco'],['PRT','Preto'],['PRETO','Preto'],['PRETA','Preto'],['INOX','Inox'],['FOSCO','Fosco']];
+function corDeTxt(d){const t=String(d).toUpperCase().replace(/\([^)]*\)/g,' ').replace(/[-\/]/g,' ').match(/[A-Z0-9]+/g)||[],j=' '+t.join(' ')+' ';for(const [k,v] of COR_COMP){if(k.includes(' ')?j.includes(' '+k+' '):t.includes(k))return v;}return '';}
+function secComp(s){s=String(s).toUpperCase();if(/DIVERSOS/.test(s))return 'Diversos';if(/VAN GOGH/.test(s)&&!/SUPREMA/.test(s))return 'Van Gogh';if(/LINHA D.?ORO/.test(s))return "D'Oro";if(/SUPREMA/.test(s)||!s.trim())return 'Suprema';return 'Diversos';}
+function fatorAuto(i){const q=i.estQ,eu=i.estUn,un=i.un;if(q==null||!eu)return null;if(un==='UN'&&eu==='UN')return 1;if(un==='RL'&&eu==='MT')return q>1?(+i.pc||50):null;if(un==='RL'&&eu==='RL')return 1;if(un==='PCT'&&(eu==='PT'||eu==='PA'))return 1;return null;}
+function compRecalc(i){if(!i.fatorMan){const f=fatorAuto(i);if(f)i.fator=f;else delete i.fator;}delete i.est;delete i.estConf;if(i.estQ==null||i.estQ==='')return;if(+i.fator>0)i.est=Math.round(i.estQ/i.fator*100)/100;else i.estConf=1;}
+async function impPreco(rows,nome,m){let cab=null,sec='';const out=[],vis=new Set();
+  rows.forEach(r=>{const h=r.map(x=>sem(String(x)).trim());
+    if(/^codigo/.test(h[0]||'')){if(h.some(x=>/preco de compra/.test(x))||!cab)cab={u:h.findIndex(x=>/unitari/.test(x)),p:h.findIndex(x=>/pacote/.test(x)),cp:h.findIndex(x=>/preco de compra/.test(x)),ipi:h.findIndex(x=>x==='ipi')};if(r[1]&&!/^descri/i.test(sem(r[1])))sec=String(r[1]);return;}
+    if(!cab)return;const cods=String(r[0]??'').replace(/^=/,'').replace(/"/g,'').split('|').map(x=>x.trim()).filter(Boolean);const cp=typeof r[cab.cp]==='number'?r[cab.cp]:num(r[cab.cp]);
+    if(!cods.length||!(cp>0)||!r[1])return;const id='c_'+z0(nk(cods[0]));if(vis.has(id))return;vis.add(id);
+    const d0=String(r[1]).replace(/\s+/g,' ').trim(),em=d0.match(/(Pacote|Rolo)\s*c\/\s*(\d+)\s*(\w+)/i);let un='UN',pc=1,vend='Unidade';
+    if(em){pc=+em[2];if(/rolo/i.test(em[1])){un='RL';vend='Rolo c/ '+pc+' m';}else{un='PCT';vend='Pacote c/ '+pc+(/par/i.test(em[3])?' pares':' pçs');}}
+    const desc=d0.replace(/\s*[–-]\s*Rolo c\/.*$/i,'').replace(/\s*\(Pacote c\/[^)]*\)/i,'').replace(/\s+/g,' ').trim();
+    const refs=(desc.match(/\(([^)]+)\)/g)||[]).map(x=>x.slice(1,-1).trim()).filter(x=>x===x.toUpperCase()&&/^[A-Z]{2,}[- ]?\d/.test(x));
+    const pu=typeof r[cab.u]==='number'?r[cab.u]:num(r[cab.u]),pp=cab.p>=0?(typeof r[cab.p]==='number'?r[cab.p]:num(r[cab.p])):0;const ipi=cab.ipi>=0?(typeof r[cab.ipi]==='number'?r[cab.ipi]:num(r[cab.ipi])):0;
+    if(pp>0&&un==='UN'){un='PCT';vend='Pacote';}
+    const it={id,tipo:'comp',cod:cods[0],desc:desc+(un==='UN'?'':' — '+vend),vend,un,pc,linha:'Componentes · '+secComp(sec),cor:corDeTxt(desc),ref:refs.length?refs[refs.length-1].replace(/\s*\|\s*/g,'|'):'',compra:cp,ipi:Math.round(ipi*10000)/100,preco:Math.round((pp>0?pp:pu)*100)/100};
+    if(cods.length>1)it.codAlt=cods.slice(1).join('|');out.push(it);});
+  if(!out.length){m.textContent='Não achei itens com preço de compra nesta planilha.';return;}
+  const antes={};(CF.comp||[]).forEach(i=>antes[i.id]=i);let novos=0;
+  out.forEach(i=>{const a=antes[i.id];if(!a){novos++;return;}['estQ','estUn','fator','fatorMan','estCor','foto'].forEach(k=>{if(a[k]!=null)i[k]=a[k];});if(a.refMan){i.ref=a.ref;i.refMan=1;}if(a.cor&&a.corMan){i.cor=a.cor;i.corMan=1;}compRecalc(i);});
+  const sai=Object.keys(antes).filter(id=>!out.some(i=>i.id===id)).length;
+  CF.comp=out;CF.cab=CF.cab||{};CF.cab.compPrecoEm=new Date().toISOString();CF.cab.compPrecoMsg=`${out.length} componentes · ${nome}`;
+  const semP=out.filter(i=>!(i.preco>0)).length;
+  if(await salvaCfg()){toast(`✓ Tabela de preços: ${out.length} componentes`+(novos?` · ${novos} novos`:'')+(sai?` · ${sai} saíram da tabela`:'')+(semP?` · ${semP} sem preço de venda`:''));}tela();}
+async function impCompEst(rows,lay,m){if(!(CF.comp||[]).length){m.textContent='Esta é a planilha de estoque de componentes, mas a tabela de preços de componentes ainda não foi importada. Fale com a FC.';return;}
+  const S={};let rep=0;rows.slice(lay.hi+1).forEach(r=>{const k=z0(nk(r[lay.cc]));if(!k)return;if(k in S){rep++;return;}S[k]={q:typeof r[lay.qc]==='number'?r[lay.qc]:num(r[lay.qc]),u:String(r[lay.uc]||'').trim().toUpperCase(),d:lay.mc>=0?String(r[lay.mc]||''):''};});
+  if(!Object.keys(S).length){m.textContent='A planilha não tem linhas de estoque.';return;}
+  let ok=0,cf=0;const usados=new Set();CF.comp.forEach(i=>{const ks=codsDe(i).map(z0);ks.forEach(k=>usados.add(k));const k=ks.find(x=>x in S);if(k!=null){i.estQ=S[k].q;i.estUn=S[k].u;if(!i.cor&&S[k].d)i.cor=corDeTxt(S[k].d);ok++;}else{delete i.estQ;delete i.estUn;}compRecalc(i);if(i.estConf)cf++;});
+  if(!ok){m.textContent='Nenhum código desta planilha bate com os componentes da tabela de preços. Nada foi alterado.';return;}
+  const fora=Object.keys(S).filter(k=>!usados.has(k)).length;CF.cab=CF.cab||{};CF.cab.compEstEm=new Date().toISOString();
+  const tx=`✓ ${ok} de ${CF.comp.length} componentes com saldo`+(cf?` · ${cf} com unidade a confirmar`:'')+(fora?` · ${fora} códigos fora da tabela de preços`:'')+(rep?` · ${rep} códigos repetidos`:'');CF.cab.compEstMsg=tx;
+  if(await salvaCfg())toast(tx);tela();}
+let CPQ='',CPF='';
+function telaComp(){const L=CF.comp||[];if(!L.length&&!FC)return '';const c=CF.cab||{};
+  const nv=i=>i.estConf?'c':estNv(i)||'x',LB={c:['#94a3b8','A confirmar'],v:['#dc2626','Sem estoque'],l:['#f97316','Estoque baixo'],a:['#eab308','No limite'],g:['#16a34a','Em estoque'],x:['#cbd5e1','Sem informação']},cnt={};L.forEach(i=>{const k=nv(i);cnt[k]=(cnt[k]||0)+1;});
+  const f=sem(CPQ).trim(),k=nk(CPQ);const F=L.filter(i=>(!CPF||nv(i)===CPF)&&(!f||f.split(/\s+/).every(x=>txtBusca(i).includes(x))||casaCod(i,k)||(k.length>=3&&nk(i.ref||'').includes(k))));
+  const uv=i=>i.un==='RL'?'rolo':i.un==='PCT'?'pct':'un';
+  const opF=i=>{const eu=i.estUn||'?',o=[['','A confirmar'],['1',`1 ${eu} = 1 ${uv(i)}`]];if(+i.pc>1)o.push([String(i.pc),`${i.pc} ${eu} = 1 ${uv(i)}`]);if(i.fator&&!o.some(x=>x[0]===String(i.fator)))o.push([String(i.fator),`${i.fator} ${eu} = 1 ${uv(i)}`]);o.push(['out','Outro…']);return o.map(([v,t])=>`<option value="${v}" ${String(i.fator||'')===v?'selected':''}>${t}</option>`).join('');};
+  return `<div class="box" id="compBox"><div class="row" style="align-items:flex-start;gap:14px"><div style="flex:1;min-width:260px"><h3>🔩 Componentes (${L.length})</h3>
+    <p class="nota" style="margin:2px 0">Tabela de preços: ${c.compPrecoEm?'<b>'+new Date(c.compPrecoEm).toLocaleDateString('pt-BR')+'</b> · '+esc(c.compPrecoMsg||''):'ainda não importada'}</p>
+    <p class="nota" style="margin:2px 0">Estoque: ${c.compEstEm?'<b>'+new Date(c.compEstEm).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})+'</b> · '+esc(c.compEstMsg||''):'ainda não importado'}</p>
+    <p class="nota" style="margin:2px 0">O botão <b>Importar planilha de estoque</b> reconhece sozinho o estoque de componentes (colunas Material e Unidade)${FC?' e a tabela de preços de componentes (coluna Preço de compra)':''}. Na coluna <b>Unidade do estoque</b> diga quantas unidades do estoque formam 1 unidade de venda: enquanto estiver "A confirmar", o vendedor vê o item sem a situação do estoque.</p></div></div>
+   <div class="row" style="margin:8px 0"><input class="inp" id="cpq" placeholder="Buscar código, descrição, ref. (ex.: 00031725, braço, 725/810, bra725)" value="${esc(CPQ)}" style="flex:1;min-width:240px"></div>
+   <div class="chips"><button type="button" data-cpf="" class="${!CPF?'on':''}">Todos (${L.length})</button>${'cvlagx'.split('').filter(x=>cnt[x]).map(x=>`<button type="button" data-cpf="${x}" class="${CPF===x?'on':''}"><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${LB[x][0]};margin-right:5px"></span>${LB[x][1]} (${cnt[x]})</button>`).join('')}</div>
+   ${F.length?`<div style="max-height:620px;overflow:auto"><table class="it"><thead><tr><th>Código</th><th>Descrição</th><th>Cód. referência</th><th>Vende por</th><th class="n">Preço</th>${FC?'<th class="n">Compra</th>':''}<th class="n">Estoque</th><th>Unidade do estoque</th><th class="n">Na venda</th><th>Situação</th></tr></thead><tbody>
+   ${F.map(i=>`<tr><td style="white-space:nowrap"><b>${esc(i.cod)}</b>${i.codAlt?`<br><small class="nota">${esc(i.codAlt)}</small>`:''}</td><td>${esc(i.desc)}${corTag(i.cor)}<br><small class="nota">${esc(i.linha||'')}</small></td>
+    <td>${FC?`<input class="inp" data-cpr="${esc(i.id)}" value="${esc(i.ref||'')}" placeholder="—" style="width:120px;padding:3px 6px">`:esc(i.ref||'—')}</td><td style="white-space:nowrap">${esc(i.vend||i.un)}</td><td class="n">${temPreco(i)?rs(i.preco):SCTAG}</td>${FC?`<td class="n">${i.compra?rs(i.compra):'—'}${i.ipi?`<br><small class="nota">IPI ${String(i.ipi).replace('.',',')}%</small>`:''}</td>`:''}
+    <td class="n">${i.estQ!=null?String(i.estQ).replace('.',',')+' '+esc(i.estUn||''):'—'}</td><td>${i.estQ!=null?`<select class="inp" data-cpf2="${esc(i.id)}" style="padding:2px 4px;font-size:12px;width:auto">${opF(i)}</select>`:'<span class="nota">—</span>'}</td>
+    <td class="n">${i.est!=null?String(i.est).replace('.',',')+' '+uv(i):'—'}</td><td>${estTag(i)||'<span class="nota">—</span>'}</td></tr>`).join('')}</tbody></table></div>`:'<p class="vazio">Nenhum componente encontrado.</p>'}</div>`;}
+function wireComp(){const q=$('#cpq');if(!q)return;q.oninput=()=>{CPQ=q.value;const p=q.selectionStart;tela();const n=$('#cpq');if(n){n.focus();n.setSelectionRange(p,p);}};
+  $$('[data-cpf]').forEach(b=>b.onclick=()=>{CPF=b.dataset.cpf;tela();});
+  $$('[data-cpr]').forEach(e=>e.onchange=async()=>{const i=CF.comp.find(x=>x.id===e.dataset.cpr);if(!i)return;i.ref=e.value.trim().toUpperCase();i.refMan=1;if(await salvaCfg('Código de referência salvo'))tela();});
+  $$('[data-cpf2]').forEach(e=>e.onchange=async()=>{const i=CF.comp.find(x=>x.id===e.dataset.cpf2);if(!i)return;let v=e.value;if(v==='out'){const r=prompt(`Quantas unidades do estoque (${i.estUn||''}) formam 1 unidade de venda (${i.vend||i.un})?`,'');if(r==null){tela();return;}v=String(num(r)||'');}
+    if(v){i.fator=num(v);i.fatorMan=1;}else{delete i.fator;delete i.fatorMan;i.fatorMan=1;}compRecalc(i);if(!v){delete i.fator;i.estConf=1;delete i.est;}if(await salvaCfg('Unidade do estoque salva'))tela();});}
+
 /* ---------- 📦 Consulta de estoque (para vender) ---------- */
 let CEF='',CEQ='';
 function telaCest(){const nv=i=>estNv(i)||'x',LB={g:['#16a34a','Em estoque'],a:['#eab308','No limite'],l:['#f97316','Estoque baixo'],v:['#dc2626','Sem estoque'],x:['#94a3b8','Sem informação']};
   const f=sem(CEQ),k=nk(CEQ),L=D.itens,cnt={g:0,a:0,l:0,v:0,x:0};L.forEach(i=>cnt[nv(i)]++);
-  const F=L.filter(i=>(!CEF||nv(i)===CEF)&&(!f||sem(i.cod+' '+i.desc+' '+(i.cor||'')).includes(f)||(k.length>=3&&nk(i.desc).includes(k)))).sort((a,b)=>String(a.desc).localeCompare(String(b.desc))||String(a.cor||'').localeCompare(String(b.cor||'')));
+  const F=L.filter(i=>(!CEF||nv(i)===CEF)&&(!f||f.split(/\s+/).every(x=>txtBusca(i).includes(x))||casaCod(i,k)||(k.length>=3&&(nk(i.desc).includes(k)||nk(i.ref||'').includes(k))))).sort((a,b)=>String(a.desc).localeCompare(String(b.desc))||String(a.cor||'').localeCompare(String(b.cor||'')));
   const em=D.cab&&D.cab.estEm?new Date(D.cab.estEm):null;
-  return `<div class="box"><div class="row"><h3 style="margin:0;flex:1">📦 Consulta de estoque</h3><input class="inp" id="ceq" placeholder="Buscar por código, descrição ou cor" value="${esc(CEQ)}" style="max-width:340px"></div>
+  return `<div class="box"><div class="row"><h3 style="margin:0;flex:1">📦 Consulta de estoque</h3><input class="inp" id="ceq" placeholder="Buscar por código, descrição, cor ou código de referência" value="${esc(CEQ)}" style="max-width:340px"></div>
    <p class="nota">${em?'Estoque atualizado em <b>'+em.toLocaleDateString('pt-BR')+'</b>.':'<b style="color:#b45309">O estoque ainda não foi importado.</b>'} Mostra a situação de cada item para orientar a venda${ADM?'':' (a quantidade não aparece)'}.</p>
    <div class="chips"><button type="button" data-cef="" class="${!CEF?'on':''}">Todos (${L.length})</button>${'glavx'.split('').filter(x=>cnt[x]).map(x=>`<button type="button" data-cef="${x}" class="${CEF===x?'on':''}"><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${LB[x][0]};margin-right:5px"></span>${LB[x][1]} (${cnt[x]})</button>`).join('')}</div>
    ${F.length?`<div style="max-height:620px;overflow:auto"><table class="it"><thead><tr><th>Código</th><th>Cód. ref.</th><th>Descrição</th><th>Cor</th>${ADM?'<th class="n">Saldo</th>':''}<th>Situação</th><th class="n">Preço</th></tr></thead><tbody>
@@ -573,7 +644,7 @@ function telaEst(){if(!CF){carregaCfg().then(tela);return '<p class="vazio">Carr
     <p style="margin:2px 0;font-size:16px">${ok?'✅ <b>Estoque em dia</b> para o prazo de '+cc.prazo.toLocaleDateString('pt-BR'):'⚠️ <b>Importar até '+dLong(cc.prazo)+'</b>'+(falta===0?' · <b style="color:var(--bx)">é hoje</b>':falta>0?' · faltam '+falta+' dia'+(falta>1?'s':''):'')}</p>
     <p class="nota" style="margin:2px 0">${em?'Última importação: <b>'+em.toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})+'</b>':'O estoque ainda não foi importado.'}${c.estMsg?' · '+esc(c.estMsg):''}</p>
     <p class="nota" style="margin:2px 0">O Painel do Comercial mostra ao vendedor só a situação de cada item (Em estoque, No limite, Estoque baixo, Sem estoque). O saldo não aparece para ele.</p></div>
-   <div><label class="btn pri" style="cursor:pointer;font-size:16px;padding:12px 18px">📥 Importar planilha de estoque<input type="file" accept=".xlsx,.csv" id="estImp" hidden></label><p class="nota" id="estMsg" style="max-width:320px">Arquivo .xlsx ou .csv do sistema, com as colunas de <b>código</b> e <b>quantidade/saldo</b>.</p></div></div></div>
+   <div><label class="btn pri" style="cursor:pointer;font-size:16px;padding:12px 18px">📥 Importar planilha de estoque<input type="file" accept=".xlsx,.csv" id="estImp" hidden></label><p class="nota" id="estMsg" style="max-width:320px">Arquivo .xlsx ou .csv do sistema, com as colunas de <b>código</b> e <b>quantidade/saldo</b>. Serve para perfis e componentes: o painel reconhece qual é.</p></div></div></div>
   <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(330px,1fr))">
    <div class="box"><h3>🗓 Rotina de importação</h3>
     <div class="grid"><label class="f">Importar a cada<select class="inp" id="fxD">${[[7,'7 dias (toda semana)'],[15,'15 dias'],[30,'30 dias (todo mês)']].map(([v,t])=>`<option value="${v}" ${+f.dias===v?'selected':''}>${t}</option>`).join('')}</select></label>
@@ -590,8 +661,8 @@ function telaEst(){if(!CF){carregaCfg().then(tela);return '<p class="vazio">Carr
    <div class="chips"><button type="button" data-ef="" class="${!EF?'on':''}">Todos (${L.length})</button>${'vlagx'.split('').map(k=>`<button type="button" data-ef="${k}" class="${EF===k?'on':''}"><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${LB[k][0]};margin-right:5px"></span>${LB[k][1]} (${cnt[k]})</button>`).join('')}</div>
    ${F.length?`<div style="max-height:560px;overflow:auto"><table class="it"><thead><tr><th>Código</th><th>Descrição</th><th>Cor</th><th class="n">Saldo</th><th>Situação</th></tr></thead><tbody>
    ${F.slice(0,600).map(i=>`<tr><td><b>${esc(i.cod)}</b></td><td>${esc(i.desc)}</td><td>${corTag(i.cor)}</td><td class="n">${i.est!=null?String(i.est).replace('.',','):'—'}</td>
-    <td>${estTag(i)||'<span class="nota">—</span>'} <select class="inp" data-ec2="${esc(i.id)}" title="Trocar a situação à mão" style="padding:2px 4px;font-size:12px;width:auto;margin-left:4px"><option value="">Automático</option>${Object.entries(COR_EST).map(([k,[,t]])=>`<option value="${k}" ${i.estCor===k?'selected':''}>${t[0].toUpperCase()+t.slice(1)}</option>`).join('')}</select></td></tr>`).join('')}</tbody></table></div>`:'<p class="vazio">Nenhum item nesta situação.</p>'}</div>`;}
-function wireEst(){if(!CF)return;const q=s=>document.getElementById(s);wireEstImp(q);
+    <td>${estTag(i)||'<span class="nota">—</span>'} <select class="inp" data-ec2="${esc(i.id)}" title="Trocar a situação à mão" style="padding:2px 4px;font-size:12px;width:auto;margin-left:4px"><option value="">Automático</option>${Object.entries(COR_EST).map(([k,[,t]])=>`<option value="${k}" ${i.estCor===k?'selected':''}>${t[0].toUpperCase()+t.slice(1)}</option>`).join('')}</select></td></tr>`).join('')}</tbody></table></div>`:'<p class="vazio">Nenhum item nesta situação.</p>'}</div>`+telaComp();}
+function wireEst(){if(!CF)return;const q=s=>document.getElementById(s);wireEstImp(q);wireComp();
   $$('[data-ef]').forEach(b=>b.onclick=()=>{EF=b.dataset.ef;tela();});
   $$('[data-ec2]').forEach(s=>s.onchange=async()=>{const i=CF.itens.find(x=>x.id===s.dataset.ec2);if(!i)return;if(s.value)i.estCor=s.value;else delete i.estCor;if(await salvaCfg('Situação atualizada'))tela();});
   q('fxSalva').onclick=async()=>{CF.cab=CF.cab||{};CF.cab.estFx={verm:num(q('fxV').value),lar:num(q('fxL').value),verde:num(q('fxG').value),dias:parseInt(q('fxD').value)||7,ini:q('fxI').value||''};if(await salvaCfg('Rotina e regras salvas'))tela();};}
