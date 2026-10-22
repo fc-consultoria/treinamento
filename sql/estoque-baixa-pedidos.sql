@@ -79,7 +79,7 @@ end $$;
 revoke execute on function public.orc_est_pend_emp(text) from public, anon, authenticated;
 grant execute on function public.orc_est_pend(text, text) to anon, authenticated;
 
--- status: aceita 'inativo' (só FC/gestor)
+-- status: aceita 'inativo' (vendedor inativa orçamento não fechado; pedido fechado só FC/gestor)
 create or replace function public.orc_status(p_chave text, p_id uuid, p_status text, p_emp text default null, p_info jsonb default null)
 returns boolean language plpgsql security definer set search_path to 'public' as $function$
 declare q record; o record; inf jsonb; h jsonb;
@@ -88,8 +88,8 @@ begin
   if q.emp is null or p_status not in ('aberto','enviado','negociando','aguardando','aprovado','perdido','cancelado','inativo') then return false; end if;
   select * into o from orc_orcamentos where id = p_id and empresa_id = q.emp and (q.adm or vend_id = q.vend);
   if not found then return false; end if;
-  -- vendedor: não aprova, não inativa e não mexe em pedido que já foi fechado
-  if not q.adm and (p_status in ('aprovado','inativo') or o.status in ('aguardando','aprovado','inativo')) then return false; end if;
+  -- vendedor: não aprova e não mexe em pedido já fechado ou inativado (pode inativar orçamento ainda não fechado)
+  if not q.adm and (p_status = 'aprovado' or o.status in ('aguardando','aprovado','inativo')) then return false; end if;
   inf := coalesce(o.info,'{}'::jsonb);
   if p_info is not null and jsonb_typeof(p_info) = 'object' and length(p_info::text) < 4000 then
     inf := inf || (p_info - 'hist' - 'fin');
