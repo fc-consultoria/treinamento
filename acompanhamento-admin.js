@@ -152,6 +152,7 @@
   }
 
   function render(){
+    {const FB=$('acompFolder');if(FB){FB.innerHTML=!S.carregado?'<p class="note" style="padding:12px 16px">Carregando…</p>':S.erro?'<p class="note" style="padding:12px 16px;color:var(--bad)">Não carregou: '+esc(S.erro)+'</p>':folderHtml()+'<div style="height:12px"></div>';}}
     const B=$('acompBody');if(!B)return;
     if(!S.carregado){B.innerHTML='<p class="note" style="padding:14px 16px">Carregando…</p>';return;}
     if(S.erro){const falta=/impl_portal|impl_cronograma|does not exist|schema cache/i.test(S.erro);B.innerHTML=falta?`<p class="note" style="padding:14px 16px;color:var(--bad)">O acompanhamento online ainda não foi ligado no banco de dados. Rode o arquivo portal_etapa1.sql no Supabase e clique em Atualizar.</p>`:`<p class="note" style="padding:14px 16px;color:var(--bad)">Não consegui carregar o acompanhamento: ${esc(S.erro)}. Confira se você entrou com o login da matriz.</p>`;return;}
@@ -160,7 +161,7 @@
       <span style="font-size:22px">🎬</span><div style="flex:1;min-width:240px"><b style="font:600 16px var(--f-display)">Demonstração para cliente novo</b><div class="note">Empresa fictícia com 15 dias de implantação: o cliente avança os dias e vê como o acompanhamento funciona. Não usa dados de nenhum cliente.</div></div>
       <a href="${URL_DEMO}" target="_blank" rel="noopener" style="font:600 13.5px var(--f-body);color:var(--accent)">Abrir demonstração ↗</a>
       ${btn('copiar','Copiar link','data-url="'+URL_DEMO+'"')}${btn('copiarMsgDemo','Copiar mensagem')}
-      <a href="https://wa.me/?text=${encodeURIComponent(MSG_DEMO)}" target="_blank" rel="noopener" style="font:600 13.5px var(--f-body);color:#1f8a4c">Enviar pelo WhatsApp ↗</a></div>`+folderHtml()+`<p class="note" style="padding:10px 16px 0">Ative o acompanhamento cliente por cliente. Quem não estiver ativado continua como antes, só com o WhatsApp.</p>
+      <a href="https://wa.me/?text=${encodeURIComponent(MSG_DEMO)}" target="_blank" rel="noopener" style="font:600 13.5px var(--f-body);color:#1f8a4c">Enviar pelo WhatsApp ↗</a></div>`+`<p class="note" style="padding:10px 16px 0">Ative o acompanhamento cliente por cliente. Quem não estiver ativado continua como antes, só com o WhatsApp.</p>
     <div style="padding:6px 16px 16px">${ordem.map(c=>{const p=S.por[c.id],f=S.fotos[c.id],ab=S.aberto===c.id;
       const on=quemOnline(c.id);
       const badge=!p?'<span style="color:var(--muted);font-size:13px">Sem portal</span>':p.ativo?'<span style="background:#eef1f4;color:var(--muted);font:600 12.5px var(--f-body);padding:2px 9px;border-radius:99px" title="O link está ligado. Online só aparece quando alguém do cliente está com ele aberto.">🔗 Link ativo</span>'+(on.length?`<span style="background:var(--ok-soft);color:var(--ok);font:600 12.5px var(--f-body);padding:2px 9px;border-radius:99px" title="Com o link aberto agora">● Online agora: ${esc(nomesOnline(c.id))}</span>`:''):'<span style="background:var(--bad-soft);color:var(--bad);font:600 12.5px var(--f-body);padding:2px 9px;border-radius:99px">Desativado</span>';
@@ -244,7 +245,7 @@
   async function publicar(id){const {error}=await sb.rpc('impl_portal_publicar',{p_cliente:id});if(error)throw error;}
 
   document.addEventListener('click',async ev=>{
-    const el=ev.target.closest('#acompBody [data-ac]');if(!el)return;
+    const el=ev.target.closest('#acompBody [data-ac], #acompFolder [data-ac]');if(!el)return;
     const a=el.dataset.ac,id=el.dataset.id;
     try{
       if(a==='fAbrir'){F.aberto=!F.aberto;render();return;}

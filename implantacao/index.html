@@ -3875,6 +3875,7 @@ function renderClienteVisao(c,p,pGeral){
   return `
   ${renderLinkClientePortal(c)}
   ${renderRecebidosPortal(c)}
+  ${window.renderGaleriaImpl?renderGaleriaImpl(c):''}
   ${renderPainelAvisosLinhas(c)}
   <div class="panel" style="padding:22px;">
     <div class="panel-head" style="padding:0 0 14px;">
@@ -8788,7 +8789,7 @@ iniciar();
   document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') checar(); });
 })();
 </script>
-<script src="../tema-cor.js?v=4"></script>
+<script src="galeria-impl.js?v=1"></script><script src="../tema-cor.js?v=4"></script>
 <script src="../conversa-equipe.js?v=10"></script>
 <script>window.FCM_MODO="impl";window.FCM_BARRA={sel:"#btn-logout",antes:true,lado:"esq",nome:"No menu lateral"};</script><script src="../esquadrias/musica.js?v=7"></script>
 </body>

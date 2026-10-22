@@ -263,6 +263,7 @@ td.qd{cursor:help}td.qd:hover{background:#eef6f8;box-shadow:inset 0 -2px 0 #1f6f
  </div>
  <style>.fnt{width:100%;border-collapse:collapse;font-size:13.5px;background:#fff;border:1px solid var(--line);border-radius:10px;overflow:hidden}.fnt th,.fnt td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left}.fnt th{font:600 11.5px var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:#f6f9fa}.fnt td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}.fnt button{font-size:12.5px;padding:4px 9px}.fnt .nfok{color:#1f8a4c;font-weight:700}.fnt .nfp{background:#fff1dc;border:1px solid #e8912d;color:#8a4b00;font-weight:700}</style>
 </section>
+<section class="card" id="acompFolderCard" data-tab="mkt"><h2>📣 Folders e dicas na tela do cliente <span class="note" style="font-weight:500;text-transform:none;letter-spacing:0">link de acompanhamento da implantação</span></h2><div id="acompFolder"><p class="note" style="padding:12px 16px">Carregando…</p></div></section>
 <section class="card" id="mktCard" data-tab="mkt"><h2 style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">🚀 Marketing · catálogo de esquadria<span class="note" style="font-weight:500;text-transform:none;letter-spacing:0">status, Instagram e mensagens para contatos</span><span style="margin-left:auto;display:flex;gap:6px"><select id="mkP" style="font-size:13px"><option value="7">7 dias</option><option value="30">30 dias</option><option value="1">Hoje</option></select><button type="button" id="mkRe" style="font-size:13px">🔄 Atualizar</button></span></h2>
  <div style="padding:12px 16px 18px">
   <div id="fsBox"></div>
@@ -415,7 +416,7 @@ td.qd{cursor:help}td.qd:hover{background:#eef6f8;box-shadow:inset 0 -2px 0 #1f6f
 </main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="auth.js"></script>
-<script src="mapa.js?v=1792037768"></script><script src="acompanhamento-admin.js?v=14"></script><script src="compra-sim-admin.js?v=3"></script><script src="orc-suporte-admin.js?v=2"></script><script src="presenca-admin.js?v=2"></script><script src="horarios-admin.js?v=2"></script><script src="festa-admin.js?v=1"></script><script src="vitrine-admin.js?v=2"></script><script src="vitrine-convite-adm.js?v=1"></script><script src="conclusao-admin.js?v=1"></script><script src="dicas.js?v=1792028270"></script>
+<script src="mapa.js?v=1792037768"></script><script src="acompanhamento-admin.js?v=15"></script><script src="compra-sim-admin.js?v=3"></script><script src="orc-suporte-admin.js?v=2"></script><script src="presenca-admin.js?v=2"></script><script src="horarios-admin.js?v=2"></script><script src="festa-admin.js?v=1"></script><script src="vitrine-admin.js?v=2"></script><script src="vitrine-convite-adm.js?v=1"></script><script src="conclusao-admin.js?v=1"></script><script src="dicas.js?v=1792028270"></script>
 <script>
 const ZCFG=new Set(['pausa','senha_forte','vit_nome','logo_mapa','logo_ok','implantacao','promo','contrato','empresa_local','gestor_in','gestor_hb','gestor_acao','colab','liberacao','sistema','gestor','chave_app','sugestao','resposta','sug_excluida','zerar','interesse','interesse_ok','cat3d','chave_cat3d','chave_cat3d_demo']);
 function zerarFiltro(ev,zs){const Z={};(zs||ev).forEach(e=>{if(e.tipo==='zerar'){const p=(e.detalhe||{}).para,t=Date.parse(e.criado_em);if(!Z[p]||t>Z[p])Z[p]=t;}});
@@ -1299,7 +1300,7 @@ function ptab(t,silent){if(!PGRP[t])t='home';PTAB=t;pgSync(t);try{localStorage.s
   if(t==='mkt'&&window.mkLoad)mkLoad();
   if(t==='vconv'&&window.vcLoad&&(!silent||!window.VC_OK))vcLoad();
   if(t==='fin')try{finUI();}catch(e){console.warn(e);}
-  if(t==='acomp'&&window.acompLoad)acompLoad();
+  if((t==='acomp'||t==='mkt')&&window.acompLoad)acompLoad();
   if(t==='div'){const b=document.getElementById('dvBody');if(b.hidden){b.hidden=false;document.getElementById('dvTog').textContent='Ocultar';}}
   if(t==='sug'){const b=document.getElementById('sugBody');if(b&&b.hidden){b.hidden=false;window.SUG_T=1;document.getElementById('sugTog').textContent='Ocultar';}}
   if(!silent)window.scrollTo({top:document.getElementById('pgrp').offsetTop-10,behavior:'smooth'});}
