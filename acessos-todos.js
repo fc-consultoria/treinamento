@@ -64,9 +64,11 @@
     const ult={};for(const e of ev){if(!e.user_id)continue;const d=e.detalhe||{};const k=e.user_id+'|'+(d.cid||(d.quem?'q:'+d.quem:''));if(!ult[k])ult[k]=e.criado_em;if(!ult[e.user_id])ult[e.user_id]=e.criado_em;}
     return AL.filter(a=>a.nome&&a.nome.trim()).map(a=>{let C=[];try{C=colabs(a.user_id)||[];}catch(_){}
       return {uid:a.user_id,login:a.login,nome:a.nome,ativo:a.ativo,ult:ult[a.user_id]||null,
-        col:C.map(x=>({nome:x.nome||'Colaborador',ini:x.ini,resta:x.resta,pz:x.pz,ult:ult[a.user_id+'|'+x.id]||null}))};});}
+        seg:(()=>{try{return resumo(a.user_id).seg||0;}catch(_){return C.reduce((t,x)=>t+(x.seg||0),0);}})(),
+        col:C.map(x=>({nome:x.nome||'Colaborador',ini:x.ini,resta:x.resta,pz:x.pz,seg:x.seg||0,ult:ult[a.user_id+'|'+x.id]||null}))};});}
 
-  const linha=(nome,sub,tag,ult,acao,busca)=>({nome,sub,tag,ult,acao,b:norm([nome,sub,busca].join(' '))});
+  const linha=(nome,sub,tag,ult,acao,busca,seg)=>({nome,sub,tag,ult,acao,seg:seg==null?null:+seg,b:norm([nome,sub,busca].join(' '))});
+  const tempo=sg=>{if(sg==null)return '';const m=Math.round(sg/60);if(m<1)return '⏱ menos de 1 min';if(m<60)return '⏱ '+m+' min';return '⏱ '+Math.floor(m/60)+' h '+String(m%60).padStart(2,'0');};
   function tagCol(x){if(x.pz)return ['pausado','pz'];if(!x.ini)return ['ainda não entrou','nv'];if(x.resta!=null&&x.resta<=0)return ['72 h encerradas','off'];
     return ['restam '+Math.max(1,Math.round(x.resta/3600e3))+' h',''];}
 
@@ -74,29 +76,29 @@
     const d=S.d||{},G={};CLI.forEach(c=>G[c.k]={c,sec:{}});
     const OUT={mostr:[],portal:{},demo:[],equipe:[],cat:[],precif:[],pessoas:[],cons:[]};
     const add=(c,sec,l)=>{(G[c.k].sec[sec]=G[c.k].sec[sec]||[]).push(l);};
-    (d.pessoas||[]).forEach(p=>{const c=quem(p.emp);const l=linha(p.nome,'login '+p.login+' · '+(PAPEL[p.papel]||p.papel),p.ativo?['ativo','']:['inativo','off'],p.ult,null,p.emp);
+    (d.pessoas||[]).forEach(p=>{const c=quem(p.emp);const l=linha(p.nome,'login '+p.login+' · '+(PAPEL[p.papel]||p.papel),p.ativo?['ativo','']:['inativo','off'],p.ult,null,p.emp,p.seg);
       c?add(c,'Central do Gestor',l):OUT.pessoas.push(Object.assign(l,{grp:p.emp}));});
     (d.cons||[]).forEach(p=>{const c=quem(p.emp);const v=p.ate&&Date.parse(p.ate)>Date.now();const l=linha(p.nome,'acesso à página da consultoria',v?['liberado','']:['encerrado','nv'],p.em,null,p.emp);
       c?add(c,'Página da consultoria',l):OUT.cons.push(Object.assign(l,{grp:p.emp}));});
-    (d.precif||[]).forEach(p=>{if(norm(p.login)==='fc'){OUT.equipe.push(linha('FC Consultoria','Precificação de Kits · login '+p.login,p.ativo?['ativo','']:['inativo','off'],p.ult,null,''));return;}
+    (d.precif||[]).forEach(p=>{if(norm(p.login)==='fc'){OUT.equipe.push(linha('FC Consultoria','Precificação de Kits · login '+p.login,p.ativo?['ativo','']:['inativo','off'],p.ult,null,'',p.seg));return;}
       const us=(p.usuarios||[]).filter(Boolean);const c=quem(p.emp+' '+p.nome);
-      const l=linha(p.nome,'login '+p.login+(us.length?' · usuários: '+us.join(', '):''),p.ativo?['ativo','']:['inativo','off'],p.ult,null,p.emp);
+      const l=linha(p.nome,'login '+p.login+(us.length?' · usuários: '+us.join(', '):''),p.ativo?['ativo','']:['inativo','off'],p.ult,null,p.emp,p.seg);
       c?add(c,'Precificação de Kits',l):OUT.precif.push(Object.assign(l,{grp:p.emp}));});
     const catN={};(d.catcli||[]).forEach(x=>catN[x.id]=x.nome);
     (d.cat||[]).forEach(p=>{const c=quem(p.emp+' '+(catN[p.emp]||''));const st=p.status||'';
       const l=linha(p.nome+(p.empresa?' · '+p.empresa:''),'Catálogo virtual · '+(p.login||''),st==='ativo'?['ativo','']:[st||'—','nv'],p.ult,null,p.emp);
       c?add(c,'Catálogo virtual',l):OUT.cat.push(Object.assign(l,{grp:catN[p.emp]||p.emp}));});
     (d.portal||[]).forEach(p=>{const c=quem(p.cli);const t=p.visto&&(!p.ult||p.visto>p.ult)?p.visto:p.ult;
-      const l=linha(p.nome,'link de acompanhamento da implantação',p.ativo?['link ativo','']:['link desligado','nv'],t,null,p.cli);
+      const l=linha(p.nome,'link de acompanhamento da implantação',p.ativo?['link ativo','']:['link desligado','nv'],t,null,p.cli,p.seg);
       c?add(c,'Acompanhamento da implantação',l):(OUT.portal[p.cli]=OUT.portal[p.cli]||[]).push(l);});
     mostr().forEach(a=>{const c=quem(a.login+' '+a.nome);
       const ab={t:'Abrir',f:()=>abrirMostr(a.uid)};
-      const L=[linha(a.nome,'Mostruário · login '+a.login,a.ativo?['empresa ativa','']:['bloqueada','off'],a.ult,ab,a.login)];
-      a.col.forEach(x=>L.push(linha(x.nome,'colaborador · '+(x.ini?'1º acesso '+new Date(x.ini).toLocaleDateString('pt-BR'):'sem acesso ainda'),tagCol(x),x.ult,null,a.nome+' '+a.login)));
+      const L=[linha(a.nome,'Mostruário · login '+a.login,a.ativo?['empresa ativa','']:['bloqueada','off'],a.ult,ab,a.login,a.seg)];
+      a.col.forEach(x=>L.push(linha(x.nome,'colaborador · '+(x.ini?'1º acesso '+new Date(x.ini).toLocaleDateString('pt-BR'):'sem acesso ainda'),tagCol(x),x.ult,null,a.nome+' '+a.login,x.seg||0)));
       if(c)L.forEach(l=>add(c,'Mostruário 3D',l));else OUT.mostr.push({emp:a.nome,L});});
     (d.demo||[]).forEach(x=>{let t;if(x.encerrado)t=['encerrado','nv'];else if(!x.inicio)t=['aguardando abrir','pz'];else{const r=Date.parse(x.inicio)+(x.horas||72)*3600e3-Date.now();t=r>0?['restam '+Math.max(1,Math.round(r/3600e3))+' h','']:['prazo acabou','off'];}
-      OUT.demo.push(linha(x.nome,'link de teste '+x.code+(x.cidade?' · '+x.cidade:'')+' · '+(x.horas||72)+' h',t,x.ult||x.inicio,null,x.cidade));});
-    (d.equipe||[]).forEach(x=>OUT.equipe.unshift(linha(x.nome,(x.admin?'Matriz':'Equipe')+' · '+x.email,['ativo',''],x.ult,null,'')));
+      OUT.demo.push(linha(x.nome,'link de teste '+x.code+(x.cidade?' · '+x.cidade:'')+' · '+(x.horas||72)+' h',t,x.ult||x.inicio,null,x.cidade,x.seg));});
+    (d.equipe||[]).forEach(x=>OUT.equipe.unshift(linha(x.nome,(x.admin?'Matriz':'Equipe')+' · '+x.email,['ativo',''],x.ult,null,'',x.seg)));
     return {G,OUT};}
 
   function abrirMostr(uid){try{sel=uid;render();detalhe();const c=$('detCard');if(c)c.scrollIntoView({behavior:'smooth'});}catch(e){console.warn(e);}}
@@ -106,7 +108,7 @@
   function rows(L){return L.filter(l=>!S.busca||l.b.includes(S.busca)).sort((a,b)=>(online(b.ult)-online(a.ult))).map(l=>{let bt='';
     if(l.acao){ACOES.push(l.acao.f);bt=`<button type="button" class="ab" data-ax="${ACOES.length-1}">${h(l.acao.t)}</button>`;}
     const [tt,tc]=l.tag||['',''];
-    return `<div class="axr"><span class="axd ${online(l.ult)?'on':''}" title="${online(l.ult)?'online agora':''}"></span><div><b>${h(l.nome)}</b><span class="s">${h(l.sub)} · ${online(l.ult)?'<b style="display:inline;color:#16683f">online agora</b>':h(quando(l.ult))}</span></div><div style="white-space:nowrap">${tt?`<span class="axt ${tc}">${h(tt)}</span>`:''}${bt}</div></div>`;}).join('');}
+    return `<div class="axr"><span class="axd ${online(l.ult)?'on':''}" title="${online(l.ult)?'online agora':''}"></span><div><b>${h(l.nome)}</b><span class="s">${h(l.sub)}${l.seg!=null?' · <b style="display:inline;color:#1f5f8b">'+tempo(l.seg)+'</b>':''} · ${online(l.ult)?'<b style="display:inline;color:#16683f">online agora</b>':h(quando(l.ult))}</span></div><div style="white-space:nowrap">${tt?`<span class="axt ${tc}">${h(tt)}</span>`:''}${bt}</div></div>`;}).join('');}
 
   function pinta(){const body=$('axBody');if(!body)return;
     if(S.erro){body.innerHTML=`<p class="msg bad" style="margin:12px 16px">Não carregou os acessos: ${h(S.erro)}</p>`;return;}
