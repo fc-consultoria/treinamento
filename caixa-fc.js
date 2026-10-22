@@ -73,8 +73,8 @@
 
   async function iniciar(){const ok=await sb.rpc('fc_caixa');if(ok.error||!ok.data){setTimeout(iniciar,15000);return;}if(document.getElementById('cxBtn'))return;
     const st=document.createElement('style');st.textContent=CSS;document.head.appendChild(st);
-    const acts=document.querySelector('header .acts');const b=document.createElement('button');b.type='button';b.id='cxBtn';b.innerHTML='📥 Para responder <span class="cx-n"></span>';
-    if(acts)acts.prepend(b);else document.body.prepend(b);
+    const ref=document.getElementById('bAtu'),acts=ref?ref.parentElement:document.querySelector('header .acts');const b=document.createElement('button');b.type='button';b.id='cxBtn';b.innerHTML='📥 Para responder <span class="cx-n"></span>';
+    if(ref){b.className=ref.className;b.setAttribute('style',ref.getAttribute('style')||'');ref.parentElement.insertBefore(b,ref);}else if(acts)acts.prepend(b);else document.body.prepend(b);
     document.body.insertAdjacentHTML('beforeend',`<div class="cx-ov" id="cxOv"></div><aside class="cx-dr" id="cxDr" role="dialog" aria-modal="true" aria-label="Para responder">
       <div class="cx-hd"><b>📥 Para responder</b><button type="button" id="cxAt">↻ Atualizar</button><button type="button" id="cxX" aria-label="Fechar">✕</button></div>
       <div class="cx-bd"></div>
