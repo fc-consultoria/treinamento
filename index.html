@@ -158,6 +158,8 @@ function escolherColab(uid,perfil){return new Promise(res=>{
         await sb.from('trein_eventos').insert({user_id:uid,tipo:'colab_sessao',tipologia:null,detalhe:{cid:x.id,quem:x.nome,s:window.COLAB_S}});
         const tag=document.getElementById('quemTag');tag.textContent='👤 '+x.nome+' · trocar';tag.title='Quem está estudando agora. Toque para trocar de colaborador';tag.hidden=false;box.hidden=true;res(x);};
       L.appendChild(b);});
+    /* entrada pelo painel da empresa (?colab=ID): já abre no nome da pessoa, sem escolher na lista */
+    {const qc=new URLSearchParams(location.search).get('colab');if(qc&&!window.ALUNO_CID){const ix=st.lst.findIndex(x=>x.id===qc);if(ix>=0){[...L.children][ix].click();return;}}}
     let last=ultCid();
     const lx=st.lst.find(x=>x.id===last&&x.ini&&x.resta>0);if(lx&&!window.ALUNO_CID){[...L.children][st.lst.indexOf(lx)].click();}}
   /* ===== Acesso 3D compartilhado: 1 acesso, até N pessoas ao mesmo tempo, cada uma no seu aparelho ===== */
