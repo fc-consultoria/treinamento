@@ -365,7 +365,7 @@ async function carregar(){const {data,error}=await sb.from('rotina_docs').select
   for(const k of Object.keys(E)){const a=E[k].acao;if(a&&!a._extra1){EXTRA.forEach(t=>{if(!a.temas.some(x=>x[0]===t[0]))a.temas.push(t.slice(0,1+a.cols.length));});a._extra1=true;await salvar(k);}}
   if(E.cb&&!E.cb.agenda){E.cb.agenda=[['2026-10-19','Visita técnica · dia 1 · Abertura e Revenda'],['2026-10-20','Visita técnica · dia 2 · Revenda e Fábrica'],['2026-10-21','Visita técnica · dia 3 · Sistema CEM e Treinamento'],['2026-10-22','Visita técnica · dia 4 · Fábrica e Encerramento (devolutiva 15:30)']].map(([d,t],i)=>({id:'cbv'+(i+1),data:d,hora:'08:00',fim:'17:30',tipo:'visita',titulo:t,local:'Casa Bandeirante',cli:true,anexos:[]}));await salvar('cb');}
   if(at&&!E[at])at=null;
-  await carregarPortais();await carregarPlan();await carregarSol();await carregarCat();await carregarAcessos();await carregarDivv();await carregarAlunos();setInterval(vigiarAcessos,60000);setInterval(()=>{if(at&&tab==='div')carregarDivv().then(()=>ficha());},90000);const h=await sb.from('rotina_docs').select('data').eq('col','horas');HORAS=(h.data||[]).map(x=>x.data);{const hs=(location.hash||'').slice(1),[hk,hp]=hs.split('/pl=');if(hk&&E[hk]&&!at){abrirEmpresa(hk,hp?'pla':'proc');history.replaceState(null,'',location.pathname+location.search);if(hp)setTimeout(()=>abrirPlanilha(hp),300);return;}}render();}
+  await carregarPortais();await carregarPlan();await carregarSol();await carregarCat();await carregarAcessos();await carregarDivv();await carregarAlunos();setInterval(vigiarAcessos,60000);setInterval(()=>{if(at&&tab==='div')carregarDivv().then(()=>ficha());},90000);const h=await sb.from('rotina_docs').select('data').eq('col','horas');HORAS=(h.data||[]).map(x=>x.data);{const hs=(location.hash||'').slice(1),[hk0,hp]=hs.split('/pl='),[hk,ht]=hk0.split('/t=');if(hk&&E[hk]&&!at){abrirEmpresa(hk,hp?'pla':(ht||'proc'));history.replaceState(null,'',location.pathname+location.search);if(hp)setTimeout(()=>abrirPlanilha(hp),300);return;}}render();}
 const nrm=t=>String(t||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/s\b/g,'').trim();
 function horasDe(e){const k=nrm(e.nome.split('·')[0]),k2=nrm(e.apelido||'');const mes=new Date().toISOString().slice(0,7);
   return HORAS.filter(x=>{const c=nrm(x.cliente);return c&&(c.includes(k)||k.includes(c)||(k2&&c.includes(k2)))});}
@@ -1309,5 +1309,5 @@ else{gateUI(()=>carregar(),{soMatriz:true});
 <script src="estoque-aviso.js?v=2"></script><script>if(PUB)FCEstAviso.cliente(KEY);</script>
 <script src="acessos-pessoas.js?v=1"></script>
 <script src="central-gestor.js?v=2"></script>
-<script src="conversas.js?v=1"></script>
+<script src="conversas.js?v=2"></script>
 </body></html>

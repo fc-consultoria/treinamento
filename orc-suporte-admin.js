@@ -39,7 +39,7 @@
     if(t.dataset.osim&&t.src){const o=document.createElement('div');o.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;cursor:zoom-out';o.innerHTML=`<img src="${t.src}" style="max-width:95vw;max-height:92vh;background:#fff;border-radius:8px">`;o.onclick=()=>o.remove();document.body.appendChild(o);return;}
     if(t.dataset.ospdf){ev.preventDefault();const r=await cli().from('orc_sup').select('dados').eq('id',t.dataset.ospdf).single();if(r.data){const b=await (await fetch(r.data.dados)).blob();window.open(URL.createObjectURL(b),'_blank');}}});
   document.addEventListener('paste',ev=>{if(!$('osTx')||document.activeElement!==$('osTx'))return;const it=[...((ev.clipboardData||{}).items||[])].find(i=>i.kind==='file');if(it){ev.preventDefault();prep(it.getAsFile());}});
-  window.osupLoad=carrega;
+  window.osupLoad=carrega;window.osupAbrir=k=>{if(S.ab!==k)abrir(k);};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(carrega,1400));else setTimeout(carrega,1400);
   setInterval(()=>{if(!document.hidden&&!S.ab)carrega();},90000);
 })();

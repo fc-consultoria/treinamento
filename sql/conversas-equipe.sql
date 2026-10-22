@@ -195,3 +195,9 @@ grant execute on function public.emp_chat_lista(text), public.emp_chat_abrir(tex
   public.emp_chat_enviar(text,uuid,text), public.emp_chat_nao_lidas(text),
   public.emp_chat_fc_lista(), public.emp_chat_fc_msgs(uuid), public.emp_chat_fc_enviar(uuid,text), public.emp_chat_fc_nao_lidas()
   to anon, authenticated;
+
+-- ===== 22/10/2026 · 📥 Para responder (migração fc_caixa_responder) =====
+-- fc_caixa(): só a FC. Junta numa lista o que espera resposta:
+--   conversas das equipes com a FC não lidas, suporte dos vendedores (orc_sup não lido, por conversa),
+--   solicitações dos clientes (nova/aceita) e pedidos do site sem vendedor há mais de 30 min.
+-- Usado pelo caixa-fc.js no topo do painel.html (o botão 💬 separado foi incorporado).

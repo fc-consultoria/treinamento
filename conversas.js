@@ -112,17 +112,17 @@
     badge();setInterval(()=>{if(document.hidden)return;badge();if(box.classList.contains('on')){if(S.cvId)recarregar();}},15000);}
 
   /* ================= MATRIZ (FC) ================= */
-  async function matriz(){if(document.getElementById('fcvMat'))return;
-    const ok=await sb.rpc('emp_chat_fc_nao_lidas');if(ok.error||!ok.data){setTimeout(matriz,15000);return;}if(document.getElementById('fcvMat'))return;css();
+  async function matriz(op){op=op||{};if(document.getElementById('fcvMat'))return;
+    const ok=await sb.rpc('emp_chat_fc_nao_lidas');if(ok.error||!ok.data){setTimeout(()=>matriz(op),15000);return;}if(document.getElementById('fcvMat'))return;css();
     const S={d:null,emp:'',conv:null,cv:null,ult:null,primeira:true};
     const acts=document.querySelector('header .acts');
     const tb=document.createElement('button');tb.type='button';tb.id='fcvMat';tb.className='fcv-tb';tb.title='Conversas das equipes dos clientes com a FC';
     tb.innerHTML='💬 Conversas das equipes <span class="fcv-n" id="fcvMN"></span>';
-    if(acts)acts.prepend(tb);else{tb.className='fcv-btn';document.body.appendChild(tb);}
+    if(op.semBotao){tb.hidden=true;document.body.appendChild(tb);}else if(acts)acts.prepend(tb);else{tb.className='fcv-btn';document.body.appendChild(tb);}
     const box=document.createElement('div');box.className='fcv fcv-mat';box.setAttribute('role','dialog');box.setAttribute('aria-label','Conversas das equipes');document.body.appendChild(box);
     tb.onclick=()=>{box.classList.toggle('on');if(box.classList.contains('on'))lista();};
     const tit0=document.title;
-    async function badge(){const r=await sb.rpc('emp_chat_fc_nao_lidas');if(r.error||!r.data)return;const d=r.data,n=(d.conversas||0)+(d.sup||0);
+    async function badge(){if(op.semBotao)return;const r=await sb.rpc('emp_chat_fc_nao_lidas');if(r.error||!r.data)return;const d=r.data,n=(d.conversas||0)+(d.sup||0);
       document.getElementById('fcvMN').textContent=n?n:'';document.title=(n?'('+n+') ':'')+tit0;
       if(!S.primeira&&d.ultima&&d.ultima!==S.ult){bip();if(box.classList.contains('on'))lista();}S.ult=d.ultima;S.primeira=false;}
     async function lista(){const r=await sb.rpc('emp_chat_fc_lista');if(r.error||!r.data){box.innerHTML='<div class="fcv-vazio">Não consegui abrir. Entre como Matriz.</div>';return;}S.d=r.data;pinta();}
@@ -142,6 +142,7 @@
       box.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>abrir(b.dataset.c));
       const sp=document.getElementById('fcvSup');if(sp)sp.onclick=()=>{box.classList.remove('on');try{ptab('home');}catch(_){}const c=document.getElementById('osupCard');if(c)c.scrollIntoView({behavior:'smooth'});};
       if(S.cv)chat();}
+    window.FCConversas=window.FCConversas||{};window.FCConversas.abrirMatriz=async id=>{box.classList.add('on');await lista();if(id)await abrir(id);};
     async function abrir(id){S.conv=id;const r=await sb.rpc('emp_chat_fc_msgs',{p_conversa:id});if(!r.data)return;S.cv=r.data;box.classList.add('chat');
       const c=S.d.conversas.find(x=>x.id===id);if(c)c.nao_lidas=0;pinta();badge();}
     function chat(){const C=S.cv,c=C.conversa,m=document.getElementById('fcvMain');
@@ -158,5 +159,5 @@
           t.value='';const r2=await sb.rpc('emp_chat_fc_msgs',{p_conversa:S.conv});if(r2.data){S.cv=r2.data;chat();}lista();};}}
     badge();setInterval(()=>{badge();if(box.classList.contains('on')&&S.conv&&!document.hidden)sb.rpc('emp_chat_fc_msgs',{p_conversa:S.conv}).then(r=>{if(r.data&&(r.data.msgs.length!==S.cv.msgs.length||r.data.lido_outro!==S.cv.lido_outro)){const t=document.getElementById('fcvT'),v=t?t.value:'';S.cv=r.data;chat();const t2=document.getElementById('fcvT');if(t2)t2.value=v;}});},20000);}
 
-  window.FCConversas={equipe,matriz};
+  window.FCConversas=Object.assign(window.FCConversas||{},{equipe,matriz});
 })();
