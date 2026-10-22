@@ -533,7 +533,7 @@ function home(){const G=LS.g('fc_esq_prova',null);return `<div class="hero"><div
  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px"><button class="btn o" data-go="${(MOD.find(m=>!FEITO.has(m.id))||MOD[0]).id}">${FEITO.size?'▶ Continuar':'▶ Começar'}</button><button class="btn" data-go="quiz" style="background:transparent;color:#fff;border-color:rgba(255,255,255,.5)">✓ Prova final${G?' · '+G.a+'/10':''}</button></div></div>
  <div class="mg">${MOD.map((m,k)=>`<button class="mc ${FEITO.has(m.id)?'ok':''}" data-go="${m.id}"><span class="n">${FEITO.has(m.id)?'✓':String(k+1).padStart(2,'0')}</span><div><b>${esc(m.n)}</b><small>${esc(m.d)}</small></div></button>`).join('')}</div>`;}
 const R={cat:mCat,tip:mTip,cm:mCm,gua:mGua,max:mMax,cor:mCor,pad:mPad,giro:mGiro,div:mDiv,per:mPer,quiz:mQuiz};
-function go(id,keep){AT=id&&R[id]?id:null;$('#main').innerHTML=AT?R[AT]():home();navUI();setTimeout(place3d,0);if(!keep)scrollTo({top:0,behavior:'smooth'});try{if(!ALUNO)history.replaceState(null,'',(location.search||'')+(AT?'#'+AT:''));}catch(_){}LIVE.push();}
+function go(id,keep){if(ESTUDO&&id)id=trava90(id);AT=id&&R[id]?id:null;$('#main').innerHTML=AT?R[AT]():home();navUI();setTimeout(place3d,0);if(!keep)scrollTo({top:0,behavior:'smooth'});try{if(!ALUNO)history.replaceState(null,'',(location.search||'')+(AT?'#'+AT:''));}catch(_){}LIVE.push();}
 function re(){const y=scrollY;go(AT,true);scrollTo(0,y);}
 /* ===== Controle de ângulo (o mesmo direcionador do Mostruário) em todo 3D do passo a passo ===== */
 const QA={};function angTx(c){const Q=window.CM3D&&CM3D.QUADROS[c];return Q?`↻ ${(QA[c]||0)*15}°`:'↻ preparando…';}
@@ -611,7 +611,8 @@ document.addEventListener('input',e=>{const t=e.target;if(t.closest&&t.closest('
 });
 /* ===================== AO VIVO: a FC conduz e todos acompanham ===================== */
 const QS=new URLSearchParams(location.search),SALA=(QS.get('sala')||'').replace(/[^a-z0-9]/gi,'').slice(0,24),APRES=(QS.get('apresentar')||'').replace(/[^a-z0-9]/gi,'').slice(0,24);
-const ALUNO=SALA.length>=10;
+/* estudo=1: o funcionário estuda sozinho pelo painel da empresa (sem formulário e sem login da matriz), com a trava de 90% por módulo */
+const ESTUDO=QS.get('estudo')==='1'&&SALA.length>=10,ALUNO=SALA.length>=10&&!ESTUDO;
 const LIVE={ch:null,on:false,tm:null,
  snap(){const dh=document.documentElement.scrollHeight-innerHeight;let d3=null;try{const f=$('#d3f');if(f&&f.contentWindow.ESQ_SNAP)d3=f.contentWindow.ESQ_SNAP();}catch(_){}return {at:AT,md:MD,d3,y:dh>0?Math.round(scrollY/dh*1000)/1000:0,v:{CATL,CATG,CATQ,TIPF,TIPS,CMK,CMX,CMT,CMC,CMR,CMF,CMP2,CMD,GL,GI,GE,MXL,MXH,MXA,MXV,CRK,CRA,GA},cm:(AT==='cm'&&CMS)?CM3D.camGet(CMS):null};},
  push(){if(!this.on||ALUNO)return;clearTimeout(this.tm);this.tm=setTimeout(()=>{try{this.ch.send({type:'broadcast',event:'st',payload:this.snap()});}catch(_){}},120);},
@@ -624,12 +625,12 @@ function aplica(st){const v=st.v||{};({CATL,CATG,CATQ,TIPF,TIPS,CMK,CMX,CMT,CMC,
  const dh=document.documentElement.scrollHeight-innerHeight;if(typeof st.y==='number')scrollTo({top:st.y*dh,behavior:'smooth'});}
 /* Link do aluno: só passa para o próximo módulo com 90% de acerto no teste do módulo. Na FC (sem link de aluno) fica tudo livre. */
 const PASS=new Set((()=>{try{return JSON.parse(localStorage.getItem('fc_esq_90_'+SALA)||'[]')}catch(_){return []}})());
-function trava90(at){if(!ALUNO||!at)return at;const ti=at==='quiz'?MOD.length:MOD.findIndex(m=>m.id===at);if(ti<0)return at;
+function trava90(at){if(!(ALUNO||ESTUDO)||!at)return at;const ti=at==='quiz'?MOD.length:MOD.findIndex(m=>m.id===at);if(ti<0)return at;
  const b=MOD.findIndex((m,k)=>k<ti&&!PASS.has(m.id));if(b<0)return at;
  setTimeout(()=>aviso90(MOD[b],at==='quiz'?'na prova final':'no módulo '+String(ti+1).padStart(2,'0')),60);return MOD[b].id;}
 function aviso90(m,onde){let a=$('#av90');if(!a){a=document.createElement('div');a.id='av90';a.style.cssText='position:fixed;left:50%;top:76px;transform:translateX(-50%);background:#b45309;color:#fff;padding:10px 18px;border-radius:12px;font:600 14.5px var(--f-b);z-index:999;max-width:calc(100vw - 32px);box-shadow:0 8px 24px rgba(0,0,0,.2);text-align:center';document.body.appendChild(a);}
- a.innerHTML=`🔒 A turma já está ${onde}. Para avançar, acerte <b>90%</b> do teste de <b>${esc(m.n)}</b> (no fim desta página).`;clearTimeout(a.t);a.t=setTimeout(()=>a.remove(),9000);}
-function nota90(){if(!ALUNO||!AT||AT==='quiz')return;const qs=[...document.querySelectorAll('#main .q')];if(!qs.length||qs.some(q=>!q.dataset.done))return;
+ a.innerHTML=ESTUDO?`🔒 Para abrir ${onde.replace(/^no /,'o ').replace(/^na /,'a ')}, acerte <b>90%</b> do teste de <b>${esc(m.n)}</b> (no fim desta página).`:`🔒 A turma já está ${onde}. Para avançar, acerte <b>90%</b> do teste de <b>${esc(m.n)}</b> (no fim desta página).`;clearTimeout(a.t);a.t=setTimeout(()=>a.remove(),9000);}
+function nota90(){if(!(ALUNO||ESTUDO)||!AT||AT==='quiz')return;const qs=[...document.querySelectorAll('#main .q')];if(!qs.length||qs.some(q=>!q.dataset.done))return;
  const ac=qs.filter(q=>q.dataset.acerto==='1').length,pc=Math.round(ac/qs.length*100),box=document.querySelector('#main .qz');if(!box)return;
  let r=$('#qzR');if(!r){r=document.createElement('div');r.id='qzR';r.style.cssText='margin-top:12px;padding:12px 14px;border-radius:12px;font:600 15px var(--f-b);display:flex;gap:12px;align-items:center;flex-wrap:wrap';box.after(r);}
  if(pc>=90){PASS.add(AT);try{localStorage.setItem('fc_esq_90_'+SALA,JSON.stringify([...PASS]))}catch(_){}
@@ -755,7 +756,7 @@ async function iniciar(){try{const j=await fetch('perfis.json?v=1',{cache:'no-ca
   Object.entries(raw).forEach(([k,v])=>{const o=Object.assign({k},v);P[k]=o;IDX[k]=o;k.split(' / ').forEach(c=>IDX[c.trim()]=o);});}catch(e){console.warn(e);}
  try{const x=await fetch('perfis_extra.json?v=1',{cache:'no-cache'}).then(r=>r.json());Object.entries(x).forEach(([k,v])=>{if(IDX[k])return;const o=Object.assign({k},v);P[k]=o;IDX[k]=o;});}catch(e){console.warn(e);}
  if(ALUNO){participar();return;}const h=location.hash.slice(1);go(R[h]?h:null);if(APRES.length>=10){try{localStorage.setItem('fc_esq_sala',APRES)}catch(_){}apresentar(APRES);}}
-marca();if(!ALUNO){const g=$('#bGrav');if(g)g.hidden=false;}voltaBtn(!ALUNO);if(ALUNO)iniciar();else gateUI(()=>{try{localStorage.setItem('fc_eu','1')}catch(_){}iniciar();},{soMatriz:true});
+marca();if(!ALUNO&&!ESTUDO){const g=$('#bGrav');if(g)g.hidden=false;}voltaBtn(!ALUNO&&!ESTUDO);if(ALUNO||ESTUDO)iniciar();else gateUI(()=>{try{localStorage.setItem('fc_eu','1')}catch(_){}iniciar();},{soMatriz:true});
 </script>
 <script src="../conversa-equipe.js?v=10"></script>
 

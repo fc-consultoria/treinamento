@@ -535,9 +535,9 @@ function telaMos(){return `<div class="box"><div class="row" style="margin-botto
   <iframe src="/treinamento/" title="FC Mostruário 3D" style="width:100%;height:max(760px,82vh);border:1px solid var(--ln);border-radius:12px;background:#fff"></iframe></div>
   <div class="box"><div class="row" style="margin-bottom:6px"><h3 style="margin:0;flex:1">📘 Guia de Esquadrias (material de consulta)</h3><a class="btn" href="${APOST}" download="Guia-de-Esquadrias-FC.pdf">⬇ Baixar PDF</a></div>
   <iframe src="${APOST}#view=FitH" title="Guia de Esquadrias" loading="lazy" style="width:100%;height:min(780px,80vh);border:1px solid var(--ln);border-radius:12px"></iframe></div>`;}
-function telaT3d(){const e=D.estudo||{},u=e.sala?'/treinamento/esquadrias/?sala='+encodeURIComponent(e.sala)+(e.cda?'&cda=1':''):'/treinamento/esquadrias/';
+function telaT3d(){const e=D.estudo||{},u='/treinamento/esquadrias/?estudo=1&sala='+encodeURIComponent(e.sala||'')+(e.cda?'&cda=1':'');
   return `<div class="box"><div class="row" style="margin-bottom:6px"><h3 style="margin:0;flex:1">🪟 Treinamento 3D · Esquadrias passo a passo</h3><a class="btn" href="${esc(u)}" target="_blank" rel="noopener">Abrir em tela cheia ↗</a></div>
-  <p class="nota" style="margin:0 0 10px">10 módulos com os perfis em 3D, peso e medidas. Para passar ao próximo módulo, acerte 90% do teste no fim de cada um. Quando o Fernando estiver conduzindo ao vivo, a tela acompanha sozinha.</p>
+  <p class="nota" style="margin:0 0 10px">10 módulos com os perfis em 3D, peso e medidas. Para passar ao próximo módulo, acerte 90% do teste no fim de cada um. Os treinamentos ao vivo com o Fernando continuam pelo link de cada turma.</p>
   <iframe src="${esc(u)}" title="Treinamento 3D" style="width:100%;height:max(780px,84vh);border:1px solid var(--ln);border-radius:12px;background:#fff"></iframe></div>`;}
 function telaCat(){return `<div class="box" style="padding:10px"><div class="row" style="margin-bottom:8px"><h3 style="margin:0;flex:1">📚 Catálogo · ${esc(D.nome||'')}</h3><a class="btn" href="${esc(D.cat)}" target="_blank" rel="noopener">↗ Abrir em outra aba</a></div>
   <iframe src="${esc(D.cat)}" title="Catálogo" style="width:100%;height:max(760px,80vh);border:1px solid var(--ln);border-radius:10px;display:block;background:#fff"></iframe></div>`;}
