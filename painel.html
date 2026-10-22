@@ -362,7 +362,7 @@ td.qd{cursor:help}td.qd:hover{background:#eef6f8;box-shadow:inset 0 -2px 0 #1f6f
  <section class="card" id="opnCard" data-tab="sug" hidden><h2 style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">🏙 Opiniões do Monte sua Casa 3D <span class="note" id="opnN" style="font-weight:500;text-transform:none;letter-spacing:0"></span></h2><div id="opnList" style="padding:6px 16px 14px"></div></section>
  <section class="card" id="sugCard" data-tab="sug"><h2 style="display:flex;justify-content:space-between;align-items:center;gap:8px">💬 Dúvidas e sugestões dos alunos <span class="sgn" id="sugN" style="flex:1"></span><button type="button" id="sugTog" style="font-size:12px;padding:4px 10px">Mostrar</button></h2><div id="sugBody" hidden><p class="note" style="padding:0 16px">O aluno envia pelo botão “💬 Sugestão” na barra escura do Mostruário. Escreva a resposta embaixo da mensagem e clique em Responder: ela aparece para o aluno no mesmo botão.</p><ul class="tl" id="sugList"></ul></div></section>
  <section class="card" data-tab="emp">
-  <h2 style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">Empresas <button type="button" id="bSenTodas" style="margin-left:auto;font:600 13px var(--f-display);text-transform:none;letter-spacing:0;padding:7px 12px;border-radius:9px;cursor:pointer">🔐 Senhas fortes para as empresas</button></h2>
+  <h2 style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">🎓 Mostruário · empresas <button type="button" id="bSenTodas" style="margin-left:auto;font:600 13px var(--f-display);text-transform:none;letter-spacing:0;padding:7px 12px;border-radius:9px;cursor:pointer">🔐 Senhas fortes para as empresas</button></h2>
   <div id="ctrResumo" style="display:flex;gap:10px;flex-wrap:wrap;padding:10px 16px 0"></div>
   <p class="ihint">Clique no nome, no login ou em nova senha para editar · Enter salva · Esc desfaz. O login novo vale no próximo acesso do aluno (a senha continua a mesma). Maiúsculas aparecem no painel, mas o aluno pode digitar o login com ou sem maiúsculas.</p>
   <p class="msg bad" id="tbMsg" hidden></p>
@@ -1482,7 +1482,7 @@ const PV={
   site:['Site FC','O site público da FC, como o cliente vê.',['Catálogo de perfis 3D e bancada','Páginas das marcas representadas','Chat com clientes (respostas em Pedidos e conversas)'],'Depois de publicar uma novidade, para conferir'],
   painel:['Painel de Implantação','Onde o trabalho de implantação de preços acontece.',['Marcar os itens alimentados por linha','Banco de preços, vidro e perfis do cliente','Etapas, avisos de prazo e envio do link do cliente'],'Durante a alimentação no sistema do cliente'],
   live:['Online agora','Quem está dentro do Mostruário neste momento.',['Ver alunos e gestores online','Conversar ao vivo com quem está usando','Links de teste abertos agora'],'Quando quiser atender na hora'],
-  emp:['Empresas e logins','Empresas que contrataram o Mostruário.',['Criar e renovar logins','Colaboradores de cada empresa','Prazos, bloqueio e liberação da semana'],'Contrato novo, renovação ou bloqueio'],
+  emp:['Empresas e logins','Todos os acessos de cada cliente, em todas as ferramentas, e as empresas do Mostruário.',['Um quadro por cliente: CB, CDE, Guaporé Vidros, Guaporé Sinop e Genesis','Criar e renovar logins','Colaboradores de cada empresa','Prazos, bloqueio e liberação da semana'],'Contrato novo, renovação ou bloqueio'],
   ped:['Pedidos e conversas','Tudo o que está esperando uma resposta sua.',['Pedidos de mais tempo de acesso','Conversas do site: orçamentos e dúvidas','Quem tocou em "Tenho interesse"'],'Várias vezes ao dia (o número laranja avisa)'],
   mkt:['Marketing do catálogo','Divulgação do catálogo e comemorações no site.',['🎉 Comemoração no site: aniversário, feriado, férias coletivas','Mensagens prontas para Status e Instagram','Visitas por origem: Status, Instagram, Google'],'Quando for divulgar ou comemorar'],
   div:['Avisos aos alunos','O que aparece para os alunos dentro do Mostruário.',['Artes e novidades','Mensagem de boas-vindas','As artes também viram folder no Acompanhamento do cliente'],'Ao lançar algo novo para os alunos'],
@@ -1898,7 +1898,7 @@ setTimeout(()=>{if(PTAB==='cat')ui();},2500);
  await Promise.all(P.map(u=>fetch(u,{cache:'reload'}).catch(()=>{})));try{if(window.caches){const k=await caches.keys();await Promise.all(k.map(x=>caches.delete(x)));}}catch(_){}
  location.replace(location.pathname+'?v='+Date.now()+location.hash);};})();</script>
 <script src="conversa-equipe.js?v=10"></script>
-<script src="conversas.js?v=3"></script><script>setTimeout(()=>window.FCConversas&&FCConversas.matriz({semBotao:true}),2500);</script><script src="caixa-fc.js?v=4"></script><script src="central-cliente.js?v=1"></script>
+<script src="conversas.js?v=3"></script><script>setTimeout(()=>window.FCConversas&&FCConversas.matriz({semBotao:true}),2500);</script><script src="caixa-fc.js?v=4"></script><script src="central-cliente.js?v=1"></script><script src="acessos-todos.js?v=1"></script>
 <script src="painel-skin.js?v=3"></script>
 <script>window.FCM_MODO="matriz";window.FCM_BARRA={sel:"header.mx .mxutil, header .acts",lado:"dir",nome:"Na barra de cima"};</script><script src="esquadrias/musica.js?v=7"></script>
 <script src="estoque-aviso.js?v=2"></script><script>setTimeout(()=>FCEstAviso.matriz(),3000);</script>
