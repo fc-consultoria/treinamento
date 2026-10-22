@@ -49,7 +49,7 @@ table.it input.q{width:72px;padding:6px;border:1px solid #c4ccd2;border-radius:8
 table.it input.pz{width:92px;padding:6px;border:1px solid #f2a51e;border-radius:8px;text-align:right}
 .tot{display:grid;grid-template-columns:1fr auto;gap:6px 18px;max-width:460px;align-items:center;margin-left:auto;font-size:15px}.tot b{text-align:right}.tot .g{font:800 24px var(--f-d);color:#0f4f53}
 .pill{display:inline-block;border-radius:99px;padding:2px 9px;font-size:12px;font-weight:700;background:#eef2f4}
-.s-aberto{background:#e8f0ff;color:#1d4ed8}.s-negociando{background:#efe7ff;color:#6d28d9}.s-aguardando{background:#fff3c4;color:#8a5a00}.s-enviado{background:var(--orc);color:#92400e}.s-aprovado{background:var(--okc);color:var(--ok)}.s-perdido,.s-cancelado{background:var(--bxc);color:var(--bx)}
+.s-aberto{background:#e8f0ff;color:#1d4ed8}.s-negociando{background:#efe7ff;color:#6d28d9}.s-aguardando{background:#fff3c4;color:#8a5a00}.s-enviado{background:var(--orc);color:#92400e}.s-aprovado{background:var(--okc);color:var(--ok)}.s-perdido,.s-cancelado{background:var(--bxc);color:var(--bx)}.s-inativo{background:#eef0f2;color:#5b6670;text-decoration:line-through}
 .est{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:7px;vertical-align:-1px;box-shadow:0 0 0 2px #fff,0 0 0 3px rgba(0,0,0,.12)}
 .vazio{color:var(--tm);text-align:center;padding:30px}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#13232e;color:#fff;padding:10px 18px;border-radius:12px;z-index:9000;font-weight:600}
@@ -116,8 +116,8 @@ function estI(i){return i?estB(i.est,i.estCor):'';}
 function estB(q,man){if(man&&COR_EST[man]){const [c,t]=COR_EST[man];return `<span class="est" title="${t[0].toUpperCase()+t.slice(1)} (definido manualmente)${ADM&&q!=null?' · saldo '+String(q).replace('.',','):''}" style="background:${c}"></span>`;}if(q==null||q==='')return '';const f=FX(),v=+q;const [bg,fc,t]=(v<=0||v<f.verm)?['','#dc2626','sem estoque']:v<f.lar?['','#f97316','estoque baixo']:v>f.verde?['','#16a34a','estoque bom']:['','#eab308','estoque no limite'];
   return `<span class="est" title="${t[0].toUpperCase()+t.slice(1)}${ADM?' (saldo '+String(v).replace('.',',')+')':''}" style="background:${fc}"></span>`;}
 function toast(t){const d=document.createElement('div');d.className='toast';d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),2800);}
-const ST={aberto:'Em aberto',enviado:'Enviado ao cliente',negociando:'Em negociação',aguardando:'Fechado · aguardando financeiro',aprovado:'Pedido aprovado',perdido:'Perdido',cancelado:'Cancelado'};
-const TRAVA=st=>st==='aguardando'||st==='aprovado',MOTIVOS=['Preço','Prazo de entrega','Fechou com concorrente','Cliente desistiu','Sem retorno do cliente','Outro'];
+const ST={aberto:'Em aberto',enviado:'Enviado ao cliente',negociando:'Em negociação',aguardando:'Fechado · aguardando financeiro',aprovado:'Pedido aprovado',perdido:'Perdido',cancelado:'Cancelado',inativo:'🚫 Inativado (teste)'};
+const TRAVA=st=>st==='aguardando'||st==='aprovado'||st==='inativo',MOTIVOS=['Preço','Prazo de entrega','Fechou com concorrente','Cliente desistiu','Sem retorno do cliente','Outro'];
 const PAG_PADRAO=['PIX','Dinheiro','Cartão de débito','Cartão de crédito','Boleto','Transferência','Cheque'];
 
 function pede(tit,txt,campos){return new Promise(res=>{const m=document.createElement('div');m.id='mdl';
@@ -129,6 +129,7 @@ async function mudaSt(id,novo){if(DEMO){toast('Demonstração: na tela do vended
   if(novo==='aguardando'){const r=await pede('✅ Fechar pedido nº '+o.numero,'O pedido vai para a aprovação do financeiro. Depois de enviado, o vendedor não consegue mais alterar.',[{k:'entrega',l:'Data de entrega combinada',t:'date'},{k:'sinal',l:'Sinal / entrada recebida (R$)',im:1,ph:'0,00'},{k:'obs',l:'Observação para o financeiro',area:1}]);if(!r)return false;info={entrega:r.entrega||null,sinal:num(r.sinal),obs:r.obs,fechado_em:new Date().toISOString()};}
   else if(novo==='perdido'){const r=await pede('❌ Orçamento nº '+o.numero+' perdido','Por que o cliente não fechou? Isso ajuda o gestor a entender as vendas perdidas.',[{k:'motivo',l:'Motivo',op:MOTIVOS},{k:'obs',l:'Detalhe (opcional)',area:1}]);if(!r)return false;info={motivo:r.motivo,obs:r.obs};}
   else if(novo==='negociando'&&o.status==='aguardando'&&ADM){const r=await pede('↩ Devolver pedido nº '+o.numero+' ao vendedor','O pedido volta para "Em negociação" e o vendedor pode corrigir.',[{k:'obs',l:'O que precisa corrigir',area:1,req:1}]);if(!r)return false;info={devolvido:r.obs,obs:r.obs};}
+  else if(novo==='inativo'){const fe=TRAVA(o.status)&&o.status!=='inativo';if(!confirm('Inativar o nº '+o.numero+'?\n\nUse para orçamentos e pedidos de teste: ele sai das listas e dos relatórios (fica em "Inativados").'+(fe?'\n\nComo é um pedido fechado, o estoque volta, se a importação de estoque ainda não tiver sido feita depois do fechamento.':'')))return false;info={inativado_em:new Date().toISOString()};}
   else if(novo==='aprovado'){const r=await pede('✔ Aprovar pedido nº '+o.numero,`Cliente: ${esc((o.cliente||{}).nome||'')} · Total ${rs(o.total)}`,[{k:'obs',l:'Observação do financeiro (opcional)',area:1}]);if(!r)return false;info={obs:r.obs};}
   const r=await sb.rpc('orc_status',{p_chave:FC?null:VKEY,p_id:id,p_status:novo,p_emp:FC?EMP:null,p_info:info});
   if(r.error||!r.data){toast(/function|p_info/i.test((r.error&&r.error.message)||'')?'Falta rodar o SQL do Painel do Comercial.':'Não foi possível mudar.');return false;}
@@ -284,14 +285,14 @@ function abrirOrc(s,ficar){O={id:s.id,numero:s.numero,cliente:Object.assign({},s
   desconto:+s.desconto||0,descTipo:'rs',frete:+s.frete||0,validade:s.validade||'',obs:s.obs||'',status:s.status,vend_nome:s.vend_nome,criado_em:s.criado_em,total:s.total,subtotal:s.subtotal,desc_ped:s.desc_ped||null,desc_aut:s.desc_aut||null};ABA='novo';tela();}
 
 /* ---------- lista ---------- */
-let LF='',LC='';const LCH=[['','Todos'],['and','Em andamento'],['aguardando','Aguardando financeiro'],['aprovado','Pedidos aprovados'],['perd','Perdidos e cancelados']];
-const lcOk=(o,c)=>!c||(c==='and'?['aberto','enviado','negociando'].includes(o.status):c==='perd'?['perdido','cancelado'].includes(o.status):o.status===c);
+let LF='',LC='';const LCH=[['','Todos'],['and','Em andamento'],['aguardando','Aguardando financeiro'],['aprovado','Pedidos aprovados'],['perd','Perdidos e cancelados'],['inat','🚫 Inativados']];
+const lcOk=(o,c)=>c==='inat'?o.status==='inativo':o.status==='inativo'?false:!c||(c==='and'?['aberto','enviado','negociando'].includes(o.status):c==='perd'?['perdido','cancelado'].includes(o.status):o.status===c);
 function stCel(o){const inf=o.info||{};const ex=o.status==='aguardando'&&inf.entrega?`<br><small class="nota">entrega ${dBR(inf.entrega)}</small>`:o.status==='perdido'&&inf.motivo?`<br><small class="nota">${esc(inf.motivo)}</small>`:inf.devolvido&&o.status==='negociando'?`<br><small style="color:var(--bx)">devolvido: ${esc(inf.devolvido)}</small>`:'';
   if(!ADM&&TRAVA(o.status))return `<span class="pill s-${o.status}">${ST[o.status]}</span>${ex}`;
-  return `<select class="inp" data-st="${o.id}" style="padding:4px 6px;width:auto">${Object.entries(ST).filter(([k])=>ADM||k!=='aprovado').map(([k,t])=>`<option value="${k}" ${o.status===k?'selected':''}>${t}</option>`).join('')}</select>${ex}`;}
+  return `<select class="inp" data-st="${o.id}" style="padding:4px 6px;width:auto">${Object.entries(ST).filter(([k])=>ADM||(k!=='aprovado'&&k!=='inativo')).map(([k,t])=>`<option value="${k}" ${o.status===k?'selected':''}>${t}</option>`).join('')}</select>${ex}`;}
 function telaLista(){const f=sem(LF);const L=D.orcs.filter(o=>lcOk(o,LC)&&(!f||sem(o.numero+' '+(o.cliente&&o.cliente.nome)+' '+(o.vend_nome||'')).includes(f)));
   return `<div class="box"><div class="row" style="margin-bottom:10px"><h3 style="margin:0;flex:1">📂 ${ADM?'Todos os orçamentos':'Meus orçamentos'}</h3><input class="inp" id="lf" placeholder="Filtrar por nº, cliente${ADM?' ou vendedor':''}" value="${esc(LF)}" style="max-width:320px"></div>
-  <div class="chips">${LCH.map(([k,t])=>`<button type="button" data-lc="${k}" class="${LC===k?'on':''}">${t} (${D.orcs.filter(o=>lcOk(o,k)).length})</button>`).join('')}</div>
+  <div class="chips">${LCH.filter(([k])=>k!=='inat'||ADM).map(([k,t])=>`<button type="button" data-lc="${k}" class="${LC===k?'on':''}">${t} (${D.orcs.filter(o=>lcOk(o,k)).length})</button>`).join('')}</div>
   ${!ADM?'<p class="nota" style="margin:0 0 8px">Mude a situação conforme a negociação anda. Quando o cliente fechar, escolha <b>Fechado · aguardando financeiro</b>: o pedido vai para a aprovação do financeiro.</p>':''}
   ${L.length?`<div style="overflow-x:auto"><table class="it"><thead><tr><th>Nº</th><th>Data</th><th>Cliente</th>${ADM?'<th>Vendedor</th>':''}<th class="n">Total</th><th>Situação</th><th></th></tr></thead><tbody>
   ${L.map(o=>`<tr><td><b>${o.numero}</b></td><td>${dBR(o.criado_em)}</td><td>${esc(o.cliente&&o.cliente.nome)}</td>${ADM?`<td>${esc(o.vend_nome||'')}</td>`:''}<td class="n"><b>${rs(o.total)}</b></td>
@@ -312,7 +313,7 @@ function perIni(){const d=new Date();d.setHours(0,0,0,0);if(CP==='mes'){d.setDat
 function perFim(){if(CP!=='ant')return null;const d=new Date();d.setHours(0,0,0,0);d.setDate(1);return d;}
 function telaCom(){const i0=perIni(),i1=perFim(),inP=o=>{const t=new Date(o.criado_em);return (!i0||t>=i0)&&(!i1||t<i1);};
   const VS=[...new Map(D.orcs.filter(o=>o.vend_nome).map(o=>[o.vend_id||o.vend_nome,o.vend_nome])).entries()];
-  const A=D.orcs.filter(o=>inP(o)&&(!CV||(o.vend_id||o.vend_nome)===CV)&&o.status!=='cancelado');
+  const A=D.orcs.filter(o=>inP(o)&&(!CV||(o.vend_id||o.vend_nome)===CV)&&o.status!=='cancelado'&&o.status!=='inativo');
   const sm=L=>L.reduce((a,o)=>a+(+o.total||0),0),fe=A.filter(o=>TRAVA(o.status)),ap=A.filter(o=>o.status==='aprovado');
   const AG=D.orcs.filter(o=>o.status==='aguardando'&&(!CV||(o.vend_id||o.vend_nome)===CV));
   const par=D.orcs.filter(o=>['enviado','negociando'].includes(o.status)&&(Date.now()-Date.parse(o.atualizado_em||o.criado_em))>3*864e5);
@@ -474,6 +475,28 @@ function wireCfg(){if(!CF)return;const q=s=>document.getElementById(s);
   $$('[data-ec]').forEach(sel=>sel.onchange=async()=>{const it=CF.itens.find(i=>i.id===sel.dataset.ec);if(sel.value)it.estCor=sel.value;else delete it.estCor;if(await salvaCfg())toast(sel.value?'Situação definida manualmente':'Situação automática pelo saldo');tela();});
 }
 const nk0=x=>{const k=nk(x);return /^\d+$/.test(k)?k.replace(/^0+(?=\d)/,''):k;};
+/* Comparativo da importação: estoque da plataforma (última importação − pedidos fechados depois dela) x estoque do sistema da empresa */
+async function estComparar(S,kDe){let P={},semSql=false;
+  try{const r=await sb.rpc('orc_est_pend',{p_chave:FC?null:VKEY,p_emp:FC?EMP:null});if(r.error)semSql=true;else P=r.data||{};}catch(_){semSql=true;}
+  const n3=v=>Math.round(v*1000)/1000,fm=v=>v==null?'—':String(n3(v)).replace('.',',');
+  const L=CF.itens.map(i=>{const k=kDe(i),ant=(i.est==null||i.est==='')?null:+i.est,sai=+(P[i.id]||0),nos=ant==null?null:n3(ant-sai),sis=k!=null?n3(+S[k]):null;
+    return {cod:i.cod,desc:i.desc,cor:i.cor||'',ant,sai,nos,sis,dif:(nos==null||sis==null)?null:n3(sis-nos)};});
+  const D=L.filter(x=>x.dif!==0&&!(x.nos==null&&x.sis==null)).sort((a,b)=>Math.abs(b.dif??1e9)-Math.abs(a.dif??1e9));
+  const tSai=L.reduce((t,x)=>t+x.sai,0),nPed=L.filter(x=>x.sai>0).length;
+  const msg=D.length?`${D.length} ${D.length===1?'diferença':'diferenças'} entre a plataforma e o sistema`:'plataforma e sistema conferem';
+  return await new Promise(res=>{const md=document.createElement('div');md.id='mdl';
+    md.innerHTML=`<div class="c" style="max-width:980px;max-height:92vh;overflow:auto"><h3 style="margin:0 0 4px">📊 Nosso estoque x sistema da empresa</h3>
+    <p class="nota" style="margin:0 0 10px">Nosso saldo = última importação${CF.cab&&CF.cab.estEm?' ('+new Date(CF.cab.estEm).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})+')':''} − pedidos fechados depois dela. Ao gravar, vale o saldo do sistema, sem somar os pedidos.</p>
+    ${semSql?'<p class="nota" style="color:var(--bx)">⚠ A baixa automática por pedido ainda não está ativa no banco (falta rodar o SQL). O comparativo considera só a última importação.</p>':''}
+    <div class="row" style="gap:8px;flex-wrap:wrap;margin-bottom:10px"><span class="pill">${L.length} itens na tabela</span><span class="pill">${nPed} itens com saída em pedidos · ${fm(tSai)} un.</span><span class="pill" style="${D.length?'background:var(--bxc);color:var(--bx)':'background:var(--okc);color:var(--ok)'}">${D.length?D.length+' com diferença':'✓ Tudo confere'}</span></div>
+    ${D.length?`<div style="overflow:auto;max-height:52vh;border:1px solid #e3e8ec;border-radius:10px"><table style="width:100%;border-collapse:collapse;font-size:13.5px"><thead><tr style="position:sticky;top:0;background:#f4f7f8">${['Código','Descrição','Cor','Última importação','Saiu em pedidos','Nosso saldo','Sistema','Diferença'].map((h,j)=>`<th style="padding:6px 8px;text-align:${j>2?'right':'left'}">${h}</th>`).join('')}</tr></thead><tbody>
+      ${D.slice(0,400).map(x=>`<tr style="border-top:1px solid #eef1f3"><td style="padding:5px 8px"><b>${esc(x.cod)}</b></td><td style="padding:5px 8px">${esc(x.desc)}</td><td style="padding:5px 8px">${esc(x.cor)}</td><td style="padding:5px 8px;text-align:right">${fm(x.ant)}</td><td style="padding:5px 8px;text-align:right">${x.sai?fm(x.sai):'—'}</td><td style="padding:5px 8px;text-align:right"><b>${fm(x.nos)}</b></td><td style="padding:5px 8px;text-align:right"><b>${fm(x.sis)}</b></td><td style="padding:5px 8px;text-align:right;font-weight:700;color:${x.dif==null?'#5b6670':x.dif<0?'var(--bx)':'#1d4ed8'}">${x.dif==null?(x.sis==null?'sem saldo no sistema':'novo no sistema'):(x.dif>0?'+':'')+fm(x.dif)}</td></tr>`).join('')}</tbody></table></div>${D.length>400?`<p class="nota">Mostrando 400 de ${D.length}. O relatório completo está no CSV.</p>`:''}`:''}
+    <div class="row" style="margin-top:14px;justify-content:flex-end;gap:8px;flex-wrap:wrap"><button class="btn" type="button" data-csv>📄 Baixar relatório (CSV)</button><button class="btn" type="button" data-x>Cancelar</button><button class="btn pri" type="button" data-ok>✅ Gravar estoque do sistema</button></div></div>`;
+    document.body.appendChild(md);const fim=v=>{md.remove();res(v);};
+    md.querySelector('[data-x]').onclick=()=>fim(null);md.querySelector('[data-ok]').onclick=()=>fim({msg});
+    md.querySelector('[data-csv]').onclick=()=>{const q=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';const nb=v=>v==null?'':String(n3(v)).replace('.',',');
+      const csv='﻿'+['Código;Descrição;Cor;Última importação;Saiu em pedidos;Nosso saldo;Sistema;Diferença'].concat(L.map(x=>[q(x.cod),q(x.desc),q(x.cor),nb(x.ant),nb(x.sai),nb(x.nos),nb(x.sis),nb(x.dif)].join(';'))).join('\r\n');
+      const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='comparativo-estoque-'+(EMP||'empresa')+'-'+new Date().toISOString().slice(0,10)+'.csv';document.body.appendChild(a);a.click();a.remove();};});}
 function wireEstImp(q){if(q('estImp'))q('estImp').onchange=async e=>{const f=e.target.files[0];if(!f)return;const m=q('estMsg');m.textContent='Lendo '+f.name+'…';
     try{let rows=[];
       if(/\.csv$/i.test(f.name)){const t=await f.text();const sep=(t.split('\n')[0].match(/;/g)||[]).length>=(t.split('\n')[0].match(/,/g)||[]).length?';':',';rows=t.split(/\r?\n/).map(l=>l.split(sep).map(x=>x.replace(/^"|"$/g,'').trim()));}
@@ -483,8 +506,10 @@ function wireEstImp(q){if(q('estImp'))q('estImp').onchange=async e=>{const f=e.t
       let hi=-1,cc=-1,qc=-1;for(let r=0;r<Math.min(rows.length,15)&&hi<0;r++){const h=rows[r].map(x=>sem(String(x)));const a=h.findIndex(x=>/^cod|codigo|referencia|^ref/.test(x)),b=h.findIndex(x=>/saldo|quant|qtd|qtde|estoque|disponivel/.test(x));if(a>=0&&b>=0){hi=r;cc=a;qc=b;}}
       if(hi<0){m.textContent='Não achei as colunas de código e quantidade/saldo no cabeçalho.';return;}
       const S={};let rep=0;rows.slice(hi+1).forEach(r=>{const k=nk0(r[cc]);if(!k)return;const v=typeof r[qc]==='number'?r[qc]:num(r[qc]);if(k in S){rep++;return;}S[k]=v;});
-      let ok=0;CF.itens.forEach(i=>{const ks=[nk0(i.cod),...String(i.cod).split(/[|\/]/).map(nk0)].filter(Boolean);const k=ks.find(x=>x in S);if(k!=null){i.est=S[k];ok++;}else delete i.est;});
-      CF.cab=CF.cab||{};CF.cab.estEm=new Date().toISOString();if(await salvaCfg()){const usados=new Set();CF.itens.forEach(i=>[nk0(i.cod),...String(i.cod).split(/[|\/]/).map(nk0)].forEach(k=>usados.add(k)));const fora=Object.keys(S).filter(k=>!usados.has(k)).length;const tx=`✓ ${ok} de ${CF.itens.length} itens da tabela de preços com saldo`+(fora?` · ${fora} códigos fora da tabela de preços foram ignorados`:'')+(rep?` · ${rep} códigos repetidos na planilha de estoque (valeu a 1ª linha de cada um, sem somar)`:'');CF.cab.estMsg=tx;toast(tx);}tela();}
+      const kDe=i=>[nk0(i.cod),...String(i.cod).split(/[|\/]/).map(nk0)].filter(Boolean).find(x=>x in S);
+      m.textContent='Comparando com o estoque da plataforma…';const cmp=await estComparar(S,kDe);if(!cmp){m.textContent='Importação cancelada. Nada foi gravado.';e.target.value='';return;}
+      let ok=0;CF.itens.forEach(i=>{const k=kDe(i);if(k!=null){i.est=S[k];ok++;}else delete i.est;});
+      CF.cab=CF.cab||{};CF.cab.estEm=new Date().toISOString();if(await salvaCfg()){const usados=new Set();CF.itens.forEach(i=>[nk0(i.cod),...String(i.cod).split(/[|\/]/).map(nk0)].forEach(k=>usados.add(k)));const fora=Object.keys(S).filter(k=>!usados.has(k)).length;const tx=`✓ ${ok} de ${CF.itens.length} itens da tabela de preços com saldo`+(cmp.msg?' · '+cmp.msg:'')+(fora?` · ${fora} códigos fora da tabela de preços foram ignorados`:'')+(rep?` · ${rep} códigos repetidos na planilha de estoque (valeu a 1ª linha de cada um, sem somar)`:'');CF.cab.estMsg=tx;toast(tx);}tela();}
     catch(err){m.textContent='Não foi possível ler: '+(err.message||err);}};}
 
 /* ---------- 📦 Consulta de estoque (para vender) ---------- */
