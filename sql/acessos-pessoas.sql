@@ -183,3 +183,12 @@ grant execute on function public.emp_info(text), public.emp_entrar(text,text,tex
 -- orc_dados devolve 'papel'. emp_payload devolve a sessão como 'chave'.
 -- CB recebeu chave nova (link ?k= antigo desativado).
 -- (Aplicado direto no Supabase pela migração emp_token_acesso_restrito.)
+
+-- ===== 22/10/2026 · Etapa 2: aprovação de desconto (migrações orc_aprovacao_desconto e orc_compras_so_estoque) =====
+-- orc_orcamentos.desc_ped (pedido do vendedor) e desc_aut (aprovação: pct, por, em).
+-- orc_desc_pedir(p_chave, p_id, p_pct, p_motivo): vendedor pede; orçamento já salvo com o desconto do limite.
+-- orc_desc_decidir(p_chave, p_id, p_aprovar, p_pct, p_resposta, p_emp): só gestor/gerente (ou chave da empresa / FC);
+--   ao aprovar aplica o desconto no orçamento na hora. Tudo registrado em emp_eventos (area 'vendas').
+-- orc_salvar: limite do vendedor = maior entre desc_max e o % aprovado naquele orçamento.
+-- orc_g_cfg_salvar: sessão de Compras grava só est/estCor dos itens e estEm/estFx/estMsg do cabeçalho.
+-- orc_g_vend: Compras não cria/edita vendedores.
