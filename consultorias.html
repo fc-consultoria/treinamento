@@ -1128,7 +1128,7 @@ const hojeLocal=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getM
 const kSaud=()=>'cons-saud-'+KEY.slice(0,10);
 function jaSaudou(){try{return localStorage.getItem(kSaud())===hojeLocal();}catch(_){return false;}}
 function marcarSaudou(){try{localStorage.setItem(kSaud(),hojeLocal());}catch(_){}}
-async function saudacaoDoDia(){if(!PUB||jaSaudou())return;const mostrou=await checarDivs();marcarSaudou();if(mostrou)return;
+async function saudacaoDoDia(){if(!PUB||jaSaudou())return;await checarDivs();marcarSaudou();return; /* card de boas-vindas desativado para todos (22/10/2026) */
   const e=E[at]||{},h=new Date().getHours(),sd=h<12?'Bom dia':h<18?'Boa tarde':'Boa noite',nm=(nomeCli()||'').split(' ')[0];
   const fl=(e.frentes||[]).flatMap(f=>f.p),ok=fl.filter(p=>p[0]==='ok').length,hj=hojeLocal();
   const prox=(e.agenda||[]).filter(a=>a.data>=hj&&!a.feito).sort((a,b)=>(a.data+(a.hora||'')).localeCompare(b.data+(b.hora||'')))[0];
