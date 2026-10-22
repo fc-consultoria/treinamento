@@ -192,3 +192,37 @@ grant execute on function public.emp_info(text), public.emp_entrar(text,text,tex
 -- orc_salvar: limite do vendedor = maior entre desc_max e o % aprovado naquele orçamento.
 -- orc_g_cfg_salvar: sessão de Compras grava só est/estCor dos itens e estEm/estFx/estMsg do cabeçalho.
 -- orc_g_vend: Compras não cria/edita vendedores.
+
+-- ===== 22/10/2026 · Etapa 3: Central do Gestor (migração emp_central_gestor) =====
+-- emp_central(p_token, p_emp): resumo da empresa para a Central do Gestor.
+--   Sessão de gestor → empresa dele. FC (admin) → empresa de p_emp (serve também para a Central do Cliente na Matriz).
+create or replace function public.emp_central(p_token text, p_emp text default null) returns jsonb
+language plpgsql stable security definer set search_path = public as $$
+declare pes emp_pessoas; e text; m0 timestamptz := date_trunc('month', now() at time zone 'America/Cuiaba') at time zone 'America/Cuiaba';
+begin
+  pes := emp_token_pessoa(p_token);
+  if pes.id is not null and pes.papel = 'gestor' then e := pes.empresa_id;
+  elsif p_emp is not null and trein_is_admin() then e := p_emp;
+  else return null; end if;
+  return jsonb_build_object(
+    'emp', e,
+    'pessoas', coalesce((select jsonb_agg(jsonb_build_object('nome',p.nome,'papel',p.papel,'ativo',p.ativo,
+        'ultimo', greatest(p.ultimo_acesso, (select max(v.em) from emp_eventos v where v.pessoa_id = p.id)),
+        'online', exists(select 1 from emp_eventos v where v.pessoa_id = p.id and v.em > now() - interval '10 minutes'))
+        order by p.papel, p.nome) from emp_pessoas p where p.empresa_id = e and p.ativo), '[]'::jsonb),
+    'eventos', coalesce((select jsonb_agg(x order by x.em desc) from
+        (select nome, papel, area, acao, detalhe - 'ua' as detalhe, em from emp_eventos
+          where empresa_id = e and acao <> 'falha' order by em desc limit 200) x), '[]'::jsonb),
+    'orc', (select jsonb_build_object(
+        'mes_n', count(*) filter (where criado_em >= m0),
+        'mes_total', coalesce(sum(total) filter (where criado_em >= m0), 0),
+        'abertos', count(*) filter (where status = 'aberto'),
+        'total_n', count(*),
+        'desc_pend', count(*) filter (where desc_ped is not null and coalesce(desc_ped->>'status','') not in ('aprovado','recusado')),
+        'ultimo', max(criado_em)) from orc_orcamentos where empresa_id = e),
+    'vend_ativos', (select count(*) from orc_vend where empresa_id = e and ativo),
+    'estoque', (select jsonb_build_object('em', coalesce(c.cab->>'estEm', c.itens_em::text), 'itens', jsonb_array_length(coalesce(c.itens,'[]'::jsonb)))
+        from orc_cfg c where c.empresa_id = e),
+    'portal', (select jsonb_build_object('ultimo', ultimo_acesso, 'acessos', acessos) from cons_portal where empresa_id = e));
+end $$;
+grant execute on function public.emp_central(text, text) to anon, authenticated;

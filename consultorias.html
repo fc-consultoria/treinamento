@@ -535,6 +535,7 @@ function ficha(){const e=E[at];let h='';if(PESSOA&&window.__abaLog!==tab){window
  if(tab==='mkt')h+=MKT_OBS+mktTabHtml(e,hero,nextc);
  if(tab==='gal'){h+=galTabHtml(e,hero,nextc,sec);}
  if(tab==='dsp')h+=dspTabHtml(e,hero,nextc,sec);
+ if(tab==='cen'&&window.FCCentral)h+=FCCentral.html(e);
  if(tab==='cat'){if(OPEN.cat===undefined)OPEN.cat='cat';h+=catTabHtml(e,hero,nextc,sec);}
  if(tab==='sol')h+=solTabHtml(e);
  if(tab==='vis'){const v=e.vis;v.ok=v.ok||{};const G=[['a','Antes da visita','preparação',v.prep||[]],['d','Durante a visita','execução',v.dur||[]],['p','Depois da visita','fechamento',v.dep||[]]];
@@ -578,7 +579,7 @@ function ficha(){const e=E[at];let h='';if(PESSOA&&window.__abaLog!==tab){window
  document.querySelectorAll('[data-fr]').forEach(b=>b.onclick=()=>{fr=+b.dataset.fr;delete OPEN.acao;ficha();});
  document.querySelectorAll('[data-sec]').forEach(b=>b.onclick=()=>{OPEN[tab]=OPEN[tab]===b.dataset.sec?'':b.dataset.sec;ficha();});
  document.querySelectorAll('[data-ff]').forEach(b=>b.onclick=()=>{frFlow=+b.dataset.ff;ficha();});
- $('#ficha').classList.toggle('fc',!cli); wirePlSol(e); if(cli)return;
+ $('#ficha').classList.toggle('fc',!cli); wirePlSol(e); if(tab==='cen'&&window.FCCentral)FCCentral.wire(); if(cli)return;
  const g=id=>document.getElementById(id);
  if(g('lkTog'))g('lkTog').onclick=()=>{linkAberto=!linkAberto;ficha();};
  if(g('lkCriar'))g('lkCriar').onclick=async()=>{const r={empresa_id:at,chave:novaChave(),ativo:true};const {error}=await sb.from('cons_portal').insert(r);if(error){alert('Não foi possível criar: '+error.message);return;}PORT[at]=Object.assign({acessos:0},r);ficha();};
@@ -1294,7 +1295,7 @@ if(PUB){(async()=>{document.title='Acompanhamento da consultoria · FC Consultor
   const {data,error}=await sb.rpc('cons_portal_ver',{p_chave:KEY});
   if(error||!data){$('#pubT').textContent='Link indisponível';$('#ficha').innerHTML='<div class="body"><p style="margin:0">Este link não está ativo. Fale com a FC Consultoria: (66) 9 9986-7984.</p></div>';return;}
   const [pl,so]=await Promise.all([sb.rpc('cons_portal_planilhas',{p_chave:KEY}),sb.rpc('cons_portal_solicitacoes',{p_chave:KEY})]);PUBPL=pl.data||[];PUBSOL=(so.data||[]).map(x=>Object.assign(x,{criado_em:x.em}));
-  if(PESSOA&&Array.isArray(PESSOA.abas))data.abasLib=PESSOA.abas;E={[data.id]:data};at=data.id;cli=true;
+  if(PESSOA&&Array.isArray(PESSOA.abas))data.abasLib=PESSOA.abas;if(PESSOA&&window.FCCentral)FCCentral.ativar(data);E={[data.id]:data};at=data.id;cli=true;
   const ping=()=>{if(!document.hidden)sb.rpc('cons_portal_ping',{p_chave:KEY,p_nome:nomeCli()}).then(()=>{},()=>{});};ping();setInterval(ping,120000);document.addEventListener('visibilitychange',()=>{if(!document.hidden){ping();checarDivs();}});
   setTimeout(saudacaoDoDia,1000);setInterval(checarDivs,60000);$('#pubT').textContent='Acompanhamento da consultoria';if(PESSOA)barraPessoa();ficha();{const m=(location.hash||'').match(/pl=([\w-]+)/);if(m){tab='pla';ficha();history.replaceState(null,'',location.pathname+location.search);setTimeout(()=>abrirPlanilha(m[1]),300);}}})();}
 else{gateUI(()=>carregar(),{soMatriz:true});
@@ -1307,4 +1308,5 @@ else{gateUI(()=>carregar(),{soMatriz:true});
 <script src="central-tam.js?v=1"></script>
 <script src="estoque-aviso.js?v=2"></script><script>if(PUB)FCEstAviso.cliente(KEY);</script>
 <script src="acessos-pessoas.js?v=1"></script>
+<script src="central-gestor.js?v=1"></script>
 </body></html>
