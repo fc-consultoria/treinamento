@@ -20,8 +20,10 @@
   .vx-lb{position:fixed;inset:0;z-index:9999;background:rgba(5,15,20,.85);display:flex;align-items:center;justify-content:center;padding:20px;cursor:zoom-out}.vx-lb img{max-width:96vw;max-height:92vh;border-radius:8px;background:#fff}
   .vx-card{border:1px solid var(--ln,#d8e2e6);border-radius:14px;padding:14px 16px;background:#fff;display:flex;gap:14px;align-items:center;flex-wrap:wrap}`;
   let cssOk=false;const st=()=>{if(cssOk)return;const s=document.createElement('style');s.textContent=css;document.head.appendChild(s);cssOk=true;};
-  VX.abas=()=>[['sup','🛟 Suporte Técnico FC'+(NOVAS?' ('+NOVAS+')':'')],['gui','🎓 Guia de Treinamento'],['fol','📣 Folder de divulgação']];
-  VX.tem=a=>a==='sup'||a==='gui'||a==='fol';
+  /* Guia de Treinamento (abre o FC Mostruário 3D, que pede login próprio): oculto até a empresa ter o login do Mostruário (22/10/2026). Para religar: GUI_ON=true */
+  const GUI_ON=false;
+  VX.abas=()=>[['sup','🛟 Suporte Técnico FC'+(NOVAS?' ('+NOVAS+')':'')],...(GUI_ON?[['gui','🎓 Guia de Treinamento']]:[]),['fol','📣 Folder de divulgação']];
+  VX.tem=a=>a==='sup'||(GUI_ON&&a==='gui')||a==='fol';
   VX.tela=a=>{st();if(a==='sup')return telaSup();if(a==='gui')return telaGui();return telaFol();};
   VX.wire=a=>{clearInterval(POLL);setTimeout(()=>{if(DST)pinta();},0);if(a==='sup')wireSup();else if(a==='fol')wireFol();};
 
