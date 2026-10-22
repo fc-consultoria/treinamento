@@ -1,0 +1,11 @@
+-- 22/10/2026 · Pedidos do catálogo (área do cliente) entram numa fila geral de vendedores
+-- Migrações aplicadas direto no Supabase: atd_fila_geral e loja_aviso_atendido.
+-- loja_cotar: atendimento nasce sem vendedor (vend_id null), sempre na fila geral, mesmo cliente antigo.
+-- atd_lista: vendedor vê os dele completos, a fila completa (com o texto do pedido, sem conversa)
+--   e os atendimentos dos colegas só com nome/cidade do cliente e o vendedor ('bloq').
+--   Devolve 'fila' (quantos aguardam vendedor). Gestor/gerente/FC continuam vendo tudo.
+-- atd_pegar(p_chave, p_emp, p_atend): o primeiro vendedor que tocar em "Atender" fica com o pedido
+--   (update ... where vend_id is null, atômico). O cliente recebe "✅ Seu pedido está sendo atendido por X".
+--   Registra emp_eventos area 'vendas', acao 'site_assumido' (numero, cliente, minutos até assumir).
+-- Sem devolução automática à fila por enquanto (em teste). Gestor/gerente podem passar para outro (atd_set).
+-- loja_atends / loja_eu: o aviso de mensagem nova do cliente conta também as mensagens do sistema.

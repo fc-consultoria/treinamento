@@ -16,6 +16,7 @@
     if(x.acao==='desconto_pedido')return `pediu ${d.pct}% de desconto no orçamento nº ${d.numero}${d.cliente?' ('+d.cliente+')':''}`;
     if(x.acao==='desconto_aprovado')return `aprovou ${d.pct}% de desconto no orçamento nº ${d.numero}${d.vendedor?' de '+d.vendedor:''}`;
     if(x.acao==='desconto_recusado')return `recusou o desconto do orçamento nº ${d.numero}${d.vendedor?' de '+d.vendedor:''}`;
+    if(x.acao==='site_assumido')return `assumiu o pedido do site nº ${d.numero}${d.cliente?' ('+d.cliente+')':''} em ${d.minutos} min`;
     if(x.acao==='estoque_importado')return `atualizou o estoque (${d.itens} itens)`;
     return x.acao||'';}
   const linhaEv=x=>`<li><span class="cg-t">${quando(x.em)}</span> <b>${h(x.nome||'?')}</b> ${h(frase(x))}</li>`;

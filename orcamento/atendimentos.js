@@ -1,7 +1,7 @@
 /* Painel de Vendas · 💬 Atendimentos do site e 👤 Clientes do site.
    Usa as variáveis do painel (sb, FC, EMP, VKEY, ADM, D, O, ABA, tela, toast, esc, novoOrc, temPreco, crefDe, num). */
 (function(){
-  const A={L:null,sel:null,msgs:[],ult:0,filtro:'todos',anexo:null,nl:0,pend:0,vends:[],eu:null,contas:null,loja:null,senha:null,t:null};
+  const A={L:null,sel:null,msgs:[],ult:0,filtro:'todos',anexo:null,nl:0,pend:0,fila:0,vends:[],eu:null,contas:null,loja:null,senha:null,t:null};
   const args=x=>Object.assign({p_chave:FC?null:VKEY,p_emp:FC?EMP:null},x||{});
   const nz=s=>String(s||'').toUpperCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^A-Z0-9]/g,'');
   const hora=d=>{if(!d)return '';const x=new Date(d),h=new Date();return x.toDateString()===h.toDateString()?x.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):x.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})+' '+x.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});};
@@ -36,19 +36,27 @@
   let stOk=false;function st(){if(stOk)return;stOk=true;const s=document.createElement('style');s.textContent=css;document.head.appendChild(s);}
   function bip(){try{const c=new (window.AudioContext||window.webkitAudioContext)(),g=c.createGain(),o=c.createOscillator();o.frequency.value=740;g.gain.value=.07;o.connect(g);g.connect(c.destination);o.start();o.stop(c.currentTime+.18);}catch(_){}}
   async function lista(){const r=await sb.rpc('atd_lista',args());if(r.error||!r.data)return false;const d=r.data;
-    const nl=(d.atends||[]).reduce((s,a)=>s+(+a.nao_lidas||0),0);if(A.L&&nl>A.nl)bip();
-    A.L=d.atends||[];A.vends=d.vends||[];A.eu=d.eu;A.nl=nl;A.pend=+d.pendentes||0;rotulos();return true;}
-  function rotulos(){const a=document.querySelector('[data-ab="atd"]');if(a)a.textContent='💬 Atendimentos do site'+(A.nl?' ('+A.nl+')':'');const c=document.querySelector('[data-ab="cli"]');if(c)c.textContent='👤 Clientes do site'+(A.pend?' ('+A.pend+' novo'+(A.pend>1?'s':'')+')':'');}
+    const nl=(d.atends||[]).reduce((s,a)=>s+(+a.nao_lidas||0),0),fi=+d.fila||0;if(A.L&&(nl>A.nl||fi>A.fila))bip();
+    A.L=d.atends||[];A.vends=d.vends||[];A.eu=d.eu;A.nl=nl;A.fila=fi;A.pend=+d.pendentes||0;rotulos();return true;}
+  function rotulos(){const a=document.querySelector('[data-ab="atd"]');if(a)a.textContent=rotAtd();const c=document.querySelector('[data-ab="cli"]');if(c)c.textContent='👤 Clientes do site'+(A.pend?' ('+A.pend+' novo'+(A.pend>1?'s':'')+')':'');}
+  function rotAtd(){return '💬 Atendimentos do site'+(A.fila?' · 🆕 '+A.fila+' na fila':'')+(A.nl?' ('+A.nl+')':'');}
   /* ---------- atendimentos ---------- */
   function vendNome(id){const v=A.vends.find(x=>x.id===id);return v?v.nome:'';}
-  function inbox(){const L=(A.L||[]).filter(a=>A.filtro==='todos'||(A.filtro==='nl'&&a.nao_lidas>0)||(A.filtro==='sem'&&!a.vend_id));
-    return `<div class="atd-in"><div class="atd-f">${[['todos','Todos'],['nl','Não lidas']].concat(ADM?[['sem','Sem vendedor']]:[]).map(([k,t])=>`<button type="button" data-af="${k}" class="${A.filtro===k?'on':''}">${t}</button>`).join('')}</div>
-     ${L.map(a=>{const s=ST[a.status]||ST.aberto;return `<button type="button" class="atd-i ${a.id===A.sel?'on':''}" data-as="${a.id}"><b><span>${esc(a.cli.empresa||a.cli.nome)}</span>${a.nao_lidas?`<span class="atd-bd">${a.nao_lidas}</span>`:''}</b>
+  function inbox(){const L=(A.L||[]).filter(a=>A.filtro==='todos'||(A.filtro==='nl'&&a.nao_lidas>0)||(A.filtro==='sem'&&!a.vend_id)||(A.filtro==='fila'&&a.fila&&!['encerrado','pedido'].includes(a.status))||(A.filtro==='meus'&&!a.fila&&!a.bloq&&a.vend_id===A.eu));
+    return `<div class="atd-in"><div class="atd-f">${[['todos','Todos'],['fila','🆕 Fila'+(A.fila?' ('+A.fila+')':'')]].concat(ADM?[['nl','Não lidas']]:[['meus','Meus'],['nl','Não lidas']]).map(([k,t])=>`<button type="button" data-af="${k}" class="${A.filtro===k?'on':''}">${t}</button>`).join('')}</div>
+     ${L.map(a=>{const s=ST[a.status]||ST.aberto;if(a.bloq)return `<button type="button" class="atd-i ${a.id===A.sel?'on':''}" data-as="${a.id}" style="opacity:.7;background:#f6f8f9"><b><span>🔒 ${esc(a.cli.empresa||a.cli.nome)}</span></b><small>${esc(a.cli.cidade||'')} · ${hora(a.atualizado)}</small><small>Em atendimento com <b>${esc(a.vend||'outro vendedor')}</b></small></button>`;
+       if(a.fila&&!['encerrado','pedido'].includes(a.status))return `<button type="button" class="atd-i ${a.id===A.sel?'on':''}" data-as="${a.id}" style="border-left:4px solid #dc2626"><b><span>🆕 ${esc(a.cli.empresa||a.cli.nome)}</span></b><small>Cotação nº ${a.numero} · ${esc(a.cli.cidade||'')} · ${hora(a.criado||a.atualizado)}</small><small><span class="atd-st" style="background:#dc2626">Aguardando vendedor</span> · ${(a.itens||[]).length} ite${(a.itens||[]).length===1?'m':'ns'}</small></button>`;
+       return `<button type="button" class="atd-i ${a.id===A.sel?'on':''}" data-as="${a.id}"><b><span>${esc(a.cli.empresa||a.cli.nome)}</span>${a.nao_lidas?`<span class="atd-bd">${a.nao_lidas}</span>`:''}</b>
        <small>Cotação nº ${a.numero} · ${esc(a.cli.cidade||'')} · ${hora(a.atualizado)}</small><small>${esc(a.ult||'')}</small><small><span class="atd-st" style="background:${s[1]}">${s[0]}</span>${ADM?' · '+(a.vend?esc(a.vend):'<b style="color:#dc2626">sem vendedor</b>'):''}</small></button>`;}).join('')||'<p class="nota" style="padding:16px">Nenhum atendimento ainda. Quando um cliente pedir orçamento pelo catálogo, ele aparece aqui.</p>'}</div>`;}
   function msgHtml(m){if(m.autor==='sys')return `<div class="atd-m sys">${esc(m.texto)}</div>`;
     const ax=m.anexo&&m.anexo.id?`<button type="button" class="atd-ax" data-ax="${m.anexo.id}">${m.anexo.mini?`<img src="${esc(m.anexo.mini)}" alt="">`:'📄'}<span><b>${esc(m.anexo.nome)}</b><br><span class="nota">${Math.max(1,Math.round((m.anexo.tam||0)/1024))} KB · abrir</span></span></button>`:'';
     return `<div class="atd-m ${m.autor}">${m.nome?`<span class="who">${esc(m.nome)}</span>`:''}${m.texto?esc(m.texto):''}${ax}<small>${hora(m.criado)}${m.autor==='vend'&&A.cur&&A.cur.lido_cli&&new Date(A.cur.lido_cli)>=new Date(m.criado)?' · ✓✓ lida':''}</small></div>`;}
   function conversa(){const a=(A.L||[]).find(x=>x.id===A.sel);A.cur=a;if(!a)return `<div class="atd-cv"><p class="nota" style="margin:auto;padding:30px;text-align:center">Escolha um atendimento ao lado.</p></div>`;
+    if(a.bloq)return `<div class="atd-cv"><div style="margin:auto;padding:30px;text-align:center;max-width:420px"><div style="font-size:40px">🔒</div><h3 style="margin:6px 0">${esc(a.cli.empresa||a.cli.nome)}</h3><p class="nota">${esc(a.cli.cidade||'')}</p><p>Este cliente já está sendo atendido por <b>${esc(a.vend||'outro vendedor')}</b>. A conversa e o pedido ficam só com quem assumiu.</p></div></div>`;
+    if(a.fila&&!ADM&&!['encerrado','pedido'].includes(a.status))return `<div class="atd-cv"><div class="atd-h"><div><span class="nm">🆕 ${esc(a.cli.nome)}${a.cli.empresa?' · '+esc(a.cli.empresa):''}</span><br><span class="nota">${esc(a.cli.cidade||'')} · cotação nº ${a.numero} · chegou ${hora(a.criado)}</span></div></div>
+     <div style="padding:16px;overflow:auto;flex:1"><p style="margin:0 0 8px"><b>O que o cliente pediu</b></p><div class="atd-m cli" style="max-width:100%">${esc(a.pedido||(a.itens||[]).map(i=>i.cd+' · '+(i.corn||'')+' · '+i.q+' barras').join('\n'))}</div>
+      <p class="nota" style="margin:14px 0 8px">O primeiro vendedor que assumir fica com o atendimento. Os outros passam a ver só o nome do cliente. O contato e a conversa aparecem depois que você assumir.</p>
+      <button type="button" class="btn pri" data-apegar="${a.id}" style="font-size:16px;padding:12px 18px">✋ Atender este cliente</button></div></div>`;
     const c=a.cli,orcs=(D&&D.orcs||[]).slice(0,30);
     return `<div class="atd-cv"><div class="atd-h"><div><span class="nm">${esc(c.nome)}${c.empresa?' · '+esc(c.empresa):''}</span><br><span class="nota">${esc(c.cidade||'')}${c.doc?' · '+esc(c.doc):''}${c.zap?' · WhatsApp '+esc(c.zap):''}${c.email?' · '+esc(c.email):''}</span></div></div>
      <div class="atd-t"><button type="button" class="btn" data-aorc>🧾 Transformar em orçamento</button>
@@ -60,7 +68,7 @@
      <form class="atd-cp" id="aCp">${A.anexo?`<div style="width:100%;font-size:13px;background:#f3f6f7;border-radius:8px;padding:5px 8px">📎 <b>${esc(A.anexo.nome)}</b> <button type="button" class="btn" data-asx style="padding:1px 8px">Tirar</button></div>`:''}
       <button type="button" class="btn" data-aclip>📎</button><textarea id="aTx" rows="2" placeholder="Responder ${esc(c.nome.split(' ')[0])}… (Enter envia, Shift+Enter quebra a linha)"></textarea><button class="btn pri">Enviar</button><input type="file" id="aFile" hidden accept="image/*,application/pdf"></form></div>`;}
   function desenhaAtd(){const b=document.getElementById('atdBox');if(!b)return;const tx=b.querySelector('#aTx'),v=tx?tx.value:'';
-    b.innerHTML=`<div class="atd">${inbox()}${conversa()}</div><p class="nota" style="margin-top:8px">Os clientes entram pelo catálogo da loja (área do cliente), montam a cotação e conversam aqui. ${ADM?'O gestor vê todos os atendimentos; cada vendedor vê só os dele.':''}</p>`;
+    b.innerHTML=`<div class="atd">${inbox()}${conversa()}</div><p class="nota" style="margin-top:8px">Os clientes entram pelo catálogo da loja (área do cliente), montam a cotação e conversam aqui. ${ADM?'O gestor vê todos os atendimentos. Pedido novo cai na fila 🆕: o primeiro vendedor que assumir fica com ele e os outros veem só o nome do cliente.':''}</p>`;
     const t2=b.querySelector('#aTx');if(t2){t2.value=v;t2.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();b.querySelector('#aCp').requestSubmit();}});}
     const ms=b.querySelector('#aMs');if(ms)ms.scrollTop=ms.scrollHeight;}
   async function msgs(full){if(!A.sel)return;const r=await sb.rpc('atd_msgs',args({p_atend:A.sel,p_desde:full?0:A.ult}));if(r.error||!r.data)return;
@@ -112,7 +120,10 @@
   /* ---------- eventos ---------- */
   document.addEventListener('click',async e=>{const b=document.getElementById('atdBox');if(!b||!b.contains(e.target))return;const t=e.target;
     const f=t.closest('[data-af]');if(f){A.filtro=f.dataset.af;desenhaAtd();return;}
-    const s=t.closest('[data-as]');if(s){A.sel=s.dataset.as;A.ult=0;A.msgs=[];A.anexo=null;desenhaAtd();await msgs(true);return;}
+    const s=t.closest('[data-as]');if(s){A.sel=s.dataset.as;A.ult=0;A.msgs=[];A.anexo=null;desenhaAtd();const x=(A.L||[]).find(y=>y.id===A.sel);if(x&&!x.bloq&&!(x.fila&&!ADM))await msgs(true);return;}
+    const pg=t.closest('[data-apegar]');if(pg){pg.disabled=true;pg.textContent='Assumindo…';const r=await sb.rpc('atd_pegar',args({p_atend:pg.dataset.apegar}));
+      if(r.error||!r.data||r.data.erro){toast((r.data&&r.data.erro)||'Não foi possível assumir. Tente de novo.');await lista();desenhaAtd();return;}
+      await lista();A.ult=0;A.msgs=[];await msgs(true);desenhaAtd();toast('Pronto! O cliente foi avisado de que você está atendendo.');return;}
     const ax=t.closest('[data-ax]');if(ax){abreAnexo(ax.dataset.ax);return;}
     if(t.closest('[data-aclip]')){b.querySelector('#aFile').click();return;}
     if(t.closest('[data-asx]')){A.anexo=null;desenhaAtd();return;}
@@ -133,9 +144,9 @@
   document.addEventListener('submit',async e=>{if(e.target.id!=='aCp')return;e.preventDefault();const tx=e.target.querySelector('#aTx'),v=tx.value.trim();if(!v&&!A.anexo)return;
     const bt=e.target.querySelector('.pri');bt.disabled=true;tx.value='';const ax=A.anexo;if(await enviar(v,ax)){A.anexo=null;desenhaAtd();}else{tx.value=v;bt.disabled=false;}});
   window.ATD={
-    rotulo:k=>k==='atd'?'💬 Atendimentos do site'+(A.nl?' ('+A.nl+')':''):'👤 Clientes do site'+(A.pend?' ('+A.pend+' novo'+(A.pend>1?'s':'')+')':''),
+    rotulo:k=>k==='atd'?rotAtd():'👤 Clientes do site'+(A.pend?' ('+A.pend+' novo'+(A.pend>1?'s':'')+')':''),
     async abrir(k){st();const b=document.getElementById('atdBox');if(!b)return;b.innerHTML='<p class="nota" style="padding:20px">Carregando…</p>';await lista();
-      if(k==='cli'){await carregaCli();desenhaCli();}else{if(!A.sel&&A.L&&A.L.length)A.sel=A.L[0].id;desenhaAtd();if(A.sel)await msgs(true);}},
-    ligar(){if(A.t)return;lista();A.t=setInterval(async()=>{if(document.hidden)return;await lista();if(document.getElementById('atdBox')&&typeof ABA!=='undefined'&&ABA==='atd'){if(A.sel)await msgs(false);const tx=document.getElementById('aTx');if(!tx||!tx.value)desenhaAtd();}},10000);}
+      if(k==='cli'){await carregaCli();desenhaCli();}else{if(!A.sel&&A.L&&A.L.length)A.sel=A.L[0].id;desenhaAtd();const x=(A.L||[]).find(y=>y.id===A.sel);if(A.sel&&x&&!x.bloq&&!(x.fila&&!ADM))await msgs(true);}},
+    ligar(){if(A.t)return;lista();A.t=setInterval(async()=>{if(document.hidden)return;await lista();if(document.getElementById('atdBox')&&typeof ABA!=='undefined'&&ABA==='atd'){const x=(A.L||[]).find(y=>y.id===A.sel);if(A.sel&&x&&!x.bloq&&!(x.fila&&!ADM))await msgs(false);const tx=document.getElementById('aTx');if(!tx||!tx.value)desenhaAtd();}},10000);}
   };
 })();
