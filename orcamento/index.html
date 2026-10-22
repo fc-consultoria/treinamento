@@ -164,7 +164,10 @@ function tela(){if(!D)return;const ag=D.orcs.filter(o=>o.status==='aguardando').
 /* ---------- novo / editar ---------- */
 function calc(){const sub=O.itens.reduce((a,i)=>a+Math.round(num(i.preco)*num(i.qtd)*100)/100,0);let dsc=O.descTipo==='pc'?Math.round(sub*num(O.descPc)/100*100)/100:num(O.desconto);
   const lim=Math.max(+D.desc_max||0,(O.desc_aut&&+O.desc_aut.pct)||0);const max=Math.round(sub*lim/100*100)/100;const pf=sub>0?Math.min(1,Math.max(0,dsc)/sub):0;const acima=!ADM&&dsc>max+0.001;const fr=num(O.frete);return {sub,dsc,max,lim,acima,fr,pf,tot:Math.max(0,sub-Math.min(dsc,sub)+fr)};}
-function parcelasTxt(t){const p=O.pagamento;if(p.cond!=='parcelado')return '';const ent=num(p.entrada),n=Math.max(1,parseInt(p.parcelas)||1),rest=Math.max(0,t-ent),v=Math.round(rest/n*100)/100;
+/* cartão de crédito: no máximo MAXCC parcelas (padrão 6; a empresa pode mudar em cab.maxParcCC) */
+const MAXCC=()=>Math.max(1,parseInt(D&&D.cab&&D.cab.maxParcCC)||6),ehCC=p=>/cr[eé]dito/i.test((p&&p.forma)||'');
+function limitaCC(p){if(ehCC(p)&&p.cond==='parcelado')p.parcelas=String(Math.min(MAXCC(),Math.max(1,parseInt(p.parcelas)||1)));}
+function parcelasTxt(t){const p=O.pagamento;limitaCC(p);if(p.cond!=='parcelado')return '';const ent=num(p.entrada),n=Math.max(1,parseInt(p.parcelas)||1),rest=Math.max(0,t-ent),v=Math.round(rest/n*100)/100;
   const pz=String(p.prazos||'').split(/[\/;, ]+/).filter(Boolean);return (ent>0?`Entrada ${rs(ent)} + `:'')+`${n}x de ${rs(v)}`+(pz.length?` (${pz.join('/')} dias)`:'');}
 function telaNovo(){const c=O.cliente,p=O.pagamento,k=calc(),pag=(D.pag&&D.pag.length?D.pag:PAG_PADRAO);
   return `${O.id&&TRAVA(O.status)?`<div class="box" style="border-color:${O.status==='aprovado'?'var(--ok)':'#e0b100'};background:${O.status==='aprovado'?'var(--okc)':'#fff8dc'}"><b>${O.status==='aprovado'?'✅ Pedido aprovado pelo financeiro.':'⏳ Pedido fechado, aguardando aprovação do financeiro.'}</b><p class="nota" style="margin:2px 0 0">${ADM?'Você pode ajustar e salvar.':'Não dá mais para alterar. Para corrigir, peça ao financeiro para devolver o pedido.'}</p></div>`:''}`+`<div class="box"><h3>👤 Cliente</h3><div class="grid">
@@ -193,7 +196,7 @@ function telaNovo(){const c=O.cliente,p=O.pagamento,k=calc(),pag=(D.pag&&D.pag.l
   <div class="box"><h3>💳 Forma de pagamento</h3><div class="grid">
    <label class="f">Forma<select data-p="forma"><option value="">— escolher —</option>${pag.map(f=>`<option ${p.forma===f?'selected':''}>${esc(f)}</option>`).join('')}</select></label>
    <label class="f">Condição<select data-p="cond"><option value="avista" ${p.cond!=='parcelado'?'selected':''}>À vista</option><option value="parcelado" ${p.cond==='parcelado'?'selected':''}>Parcelado</option></select></label>
-   ${p.cond==='parcelado'?`<label class="f">Nº de parcelas<input data-p="parcelas" value="${esc(p.parcelas)}" inputmode="numeric"></label>
+   ${p.cond==='parcelado'?`<label class="f">Nº de parcelas${ehCC(p)?`<select class="inp" data-p="parcelas">${Array.from({length:MAXCC()},(_,k)=>k+1).map(n=>`<option value="${n}" ${(+p.parcelas||1)===n?'selected':''}>${n}x</option>`).join('')}</select><small class="nota">cartão de crédito: até ${MAXCC()}x</small>`:`<input data-p="parcelas" value="${esc(p.parcelas)}" inputmode="numeric">`}</label>
    <label class="f">Prazos (dias)<input data-p="prazos" value="${esc(p.prazos)}" placeholder="ex.: 30/60/90"></label>
    <label class="f">Entrada R$<input data-p="entrada" value="${p.entrada?n2(p.entrada):''}" inputmode="decimal"></label>`:''}
    <label class="f" style="grid-column:1/-1">Observação do pagamento<input data-p="obs" value="${esc(p.obs)}" maxlength="200" placeholder="ex.: 50% no pedido e 50% na entrega"></label></div>
@@ -239,7 +242,7 @@ function wireNovo(){const bq=$('#bq'),sug=$('#sug');let L=[];
   $('#dTp').onchange=e=>{O.descTipo=e.target.value;O.desconto=0;O.descPc='';tela();};
   $('#dV').onchange=e=>{if(O.descTipo==='pc')O.descPc=String(num(e.target.value));else O.desconto=num(e.target.value);tela();};
   $('#fV').onchange=e=>{O.frete=num(e.target.value);tela();};
-  $$('[data-p]').forEach(i=>{const f=()=>{const k=i.dataset.p;O.pagamento[k]=k==='entrada'?num(i.value):i.value;};i.oninput=f;if(i.tagName==='SELECT'||i.dataset.p==='parcelas'||i.dataset.p==='entrada'||i.dataset.p==='prazos')i.onchange=()=>{f();tela();};});
+  $$('[data-p]').forEach(i=>{const f=()=>{const k=i.dataset.p;O.pagamento[k]=k==='entrada'?num(i.value):i.value;};i.oninput=f;if(i.tagName==='SELECT'||i.dataset.p==='parcelas'||i.dataset.p==='entrada'||i.dataset.p==='prazos')i.onchange=()=>{f();limitaCC(O.pagamento);tela();};});
   $('#val').onchange=e=>{O.validade=e.target.value;};$('#obs').oninput=e=>{O.obs=e.target.value;};
   if($('#avAdd'))$('#avAdd').onclick=()=>{const d=$('#avD').value.trim();if(!d)return;O.itens.push({id:'av_'+Date.now(),cod:$('#avC').value.trim()||'—',desc:d,un:$('#avU').value.trim()||'UN',preco:num($('#avP').value),qtd:1,foto:''});tela();};
   $('#limpa').onclick=()=>{if(O.itens.length&&!O.id&&!confirm('Começar outro orçamento? O que não foi salvo será perdido.'))return;O=novoOrc();BQ='';tela();};
