@@ -21,8 +21,9 @@
     return x.acao||'';}
   const linhaEv=x=>`<li><span class="cg-t">${quando(x.em)}</span> <b>${h(x.nome||'?')}</b> ${h(frase(x))}</li>`;
 
-  async function carregar(){if(carregando||!PESSOA)return;carregando=true;erro='';
-    const r=await sb.rpc('emp_central',{p_token:PESSOA.token});carregando=false;
+  const ADM=()=>!PESSOA&&typeof PUB!=='undefined'&&!PUB&&!!at;
+  async function carregar(){if(carregando||(!PESSOA&&!ADM()))return;carregando=true;erro='';
+    const r=await sb.rpc('emp_central',PESSOA?{p_token:PESSOA.token}:{p_token:'',p_emp:at});carregando=false;
     if(r.error||!r.data){erro='Não consegui carregar o resumo agora. Toque em Atualizar.';}else D=r.data;
     if(tab==='cen')ficha();}
 
@@ -44,7 +45,7 @@
     ['fab','🏭','Setor Fábrica',['fabrica'],['esq'],x=>x.papel==='fabrica',e=>[]],
     ['fc','🤝','FC',[],['proc','acao','dem','sol','age'],x=>x.area==='aba'&&['proc','acao','dem','sol','age'].includes(x.acao),e=>{
       const fl=(e.frentes||[]).flatMap(f=>f.p),ok=fl.filter(p=>p[0]==='ok').length,A=e.acao,aT=A?A.temas.length*A.cols.length:0,aOk=A?Object.values(A.st||{}).filter(x=>x.s==='ok').length:0;
-      const S=PUBSOL||[],ab=S.filter(x=>x.status==='nova'||x.status==='aceita').length,dem=(e.dem||[]).filter(d=>d[3]!=='p-ok').length;
+      const S=ADM()?(SOL||[]).filter(x=>x.empresa_id===at):(PUBSOL||[]),ab=S.filter(x=>x.status==='nova'||x.status==='aceita').length,dem=(e.dem||[]).filter(d=>d[3]!=='p-ok').length;
       const hoje=new Date().toISOString().slice(0,10),nx=(e.agenda||[]).filter(a=>a.cli&&a.data>=hoje&&!a.feito).sort((a,b)=>(a.data+(a.hora||'')).localeCompare(b.data+(b.hora||'')))[0];
       return [[fl.length?Math.round(ok/fl.length*100)+'%':'—','andamento da consultoria'],...(aT?[[aOk+' de '+aT,'pontos do plano resolvidos']]:[]),
         [ab,'solicitaç'+(ab===1?'ão':'ões')+' em aberto',ab?'warn':'ok'],[dem,'entrega'+(dem===1?'':'s')+' pendente'+(dem===1?'':'s')],[nx?dBR(nx.data)+(nx.hora?' '+nx.hora:''):'—','próximo compromisso']];}],
@@ -64,7 +65,7 @@
       <ul class="cg-ev">${EV.length?EV.map(linhaEv).join(''):'<li class="nota">Nenhuma movimentação registrada ainda.</li>'}</ul>
       <footer>${lib.map(k=>`<button class="btn" type="button" data-cgab="${k}">${h(nomeAba(k))} →</button>`).join('')||'<span class="nota">Sem aba liberada para este setor.</span>'}</footer></section>`;}
 
-  function html(e){if(!D&&!erro)carregar();
+  function html(e){if(D&&ADM()&&D.emp!==at){D=null;erro='';}if(!D&&!erro)carregar();
     const P=(D&&D.pessoas)||[],on=P.filter(p=>p.online).length,EV=(D&&D.eventos)||[];
     return `<style>
 .cg-top{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:12px}.cg-top h2{flex:1;min-width:200px}
@@ -104,5 +105,11 @@ ${erro?`<div class="box" style="background:var(--warn-soft)">${h(erro)}</div>`:'
     DESC_ABA.cen='Resumo de cada setor da empresa: quem entrou, o que fez e o que está pendente. Toque no botão do card para ir à aba.';
     const L=Array.isArray(data.abasLib)?data.abasLib:abasLib(data);data.abasLib=['cen'].concat(L.filter(k=>k!=='cen'));tab='cen';
     setInterval(()=>{if(tab==='cen'&&!document.hidden)carregar();},120000);}
-  window.FCCentral={html,wire,ativar};
+  /* Matriz (FC logada): a aba aparece na visão FC e em "Como o cliente vê", com os dados da empresa aberta */
+  function admin(){if(!ABAS.some(a=>a[0]==='cen'))ABAS.unshift(['cen','🏠 Central do Gestor']);
+    if(!GRUPOS_ABA.some(g=>g[1].includes('cen')))GRUPOS_ABA.unshift(['Central',['cen']]);
+    DESC_ABA.cen='Resumo de cada setor da empresa, como o gestor vê: quem entrou, o que fez e o que está pendente.';
+    setInterval(()=>{if(tab==='cen'&&at&&!document.hidden){D=null;carregar();}},120000);}
+  window.FCCentral={html,wire,ativar,admin};
+  if(typeof PUB!=='undefined'&&!PUB)admin();
 })();
