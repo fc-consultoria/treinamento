@@ -491,12 +491,12 @@ function ficha(){const e=E[at];let h='';if(PESSOA&&window.__abaLog!==tab){window
    if(openLane===null)openLane=prox?prox.fi:0;
    const tag=t=>{const m=/^(Revenda|F[áa]brica)\s*·\s*/i.exec(t);return m?{fr:/^rev/i.test(m[1])?'rev':'fab',t:t.slice(m[0].length)}:{fr:'',t};};
    const frOk=(p,f)=>frFlow<0||!e.acao||(()=>{const g=tag(p[1]).fr;return g?(frFlow===0?g==='rev':g==='fab'):true})();
-   h+=`<div class="hero2"><div class="ring" style="--p:${pct}"><span>${pct}%</span></div><div style="min-width:0;flex:1 1 240px"><div class="eyebrow">Andamento geral</div><div class="big">${ok} de ${tot} etapas concluídas</div>
+   if(!cli)h+=`<div class="hero2"><div class="ring" style="--p:${pct}"><span>${pct}%</span></div><div style="min-width:0;flex:1 1 240px"><div class="eyebrow">Andamento geral</div><div class="big">${ok} de ${tot} etapas concluídas</div>
      ${prox?`<div class="nextc"><span class="dotc ${prox.p[0]}"></span><div style="min-width:0"><small>${prox.p[0]==='and'?'Em andamento agora':'Próxima etapa'} · ${esc(prox.f.n)}</small><b>${esc(tag(prox.p[1]).t)}</b>${prox.p[3]?`<span class="mono muted" style="font-size:12.5px"> · ${esc(prox.p[3])}</span>`:''}</div></div>`:'<div class="nextc"><b>✓ Todas as etapas concluídas</b></div>'}</div></div>`;
    h+=relListaHtml(e);
    let ocF=false;try{ocF=localStorage.getItem('cons-ocfases')==='1';}catch(_){}
-   h+=`<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><b style="flex:1;font-size:15px">🧭 Fases da consultoria <span class="muted" style="font-weight:500;font-size:13px">· ${e.frentes.length} fases</span></b><button class="btn" type="button" id="ocFases" aria-pressed="${ocF}">${ocF?'▾ Mostrar fases':'▴ Ocultar fases'}</button></div>`;
-   if(ocF){h+=`<div class="nota">Fases ocultas. Toque em "Mostrar fases" para ver as etapas.</div>`;}else{
+   if(!cli)h+=`<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><b style="flex:1;font-size:15px">🧭 Fases da consultoria <span class="muted" style="font-weight:500;font-size:13px">· ${e.frentes.length} fases</span></b><button class="btn" type="button" id="ocFases" aria-pressed="${ocF}">${ocF?'▾ Mostrar fases':'▴ Ocultar fases'}</button></div>`;
+   if(cli){}else if(ocF){h+=`<div class="nota">Fases ocultas. Toque em "Mostrar fases" para ver as etapas.</div>`;}else{
    if(e.acao)h+=`<div class="seg" role="group" aria-label="Mostrar frente" style="align-self:flex-start"><button type="button" data-ff="-1" aria-pressed="${frFlow<0}">Tudo</button>${e.acao.cols.map((c,ci)=>`<button type="button" data-ff="${ci}" aria-pressed="${frFlow===ci}">${ci?'🏭':'🏪'} ${esc(c)}</button>`).join('')}</div>`;
    let panF='';h+=`<div class="fgrid">${e.frentes.map((f,fi)=>{const P=f.p.map((p,i)=>({p,i})).filter(x=>frOk(x.p,f));if(!P.length&&frFlow>=0)return '';const k=f.p.filter(p=>p[0]==='ok').length,pp=f.p.length?Math.round(k/f.p.length*100):0,ab=openLane===fi,and=f.p.some(p=>p[0]==='and');
      const stF=pp===100?['ok','✓ Concluída']:and||k?['and','Em andamento']:['','A começar'];
