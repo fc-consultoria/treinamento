@@ -126,25 +126,26 @@
     const tw = document.createElement('span'); tw.className='mxtw'; tw.append(tb,pop);
     util.prepend(tw); util.prepend(rel);
     top.appendChild(util);
-    inn.append(top, apps, links);
+    inn.append(top); if(apps.children.length) inn.append(apps); if(links.children.length) inn.append(links);
     h.innerHTML=''; h.appendChild(inn);
     const tick = ()=>{ const d=new Date(), hr=d.getHours();
-      rel.textContent = d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+      rel.innerHTML = d.toLocaleTimeString('pt-BR',{timeZone:'America/Cuiaba',hour:'2-digit',minute:'2-digit'})+' <small style="font-size:12px;opacity:.8">MT</small>';
       const nome = (window.MEU_NOME || 'Fernando');
       ola.textContent = (hr<12?'Bom dia':hr<18?'Boa tarde':'Boa noite')+', '+nome+' · '+d.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'}); };
     // horários dos estados (fusos do Brasil)
     const FZ=[['🏠 MT · MS · RO · RR · AM','America/Cuiaba','Seu horário (Mato Grosso). Também: Mato Grosso do Sul, Rondônia, Roraima e Amazonas (Manaus).'],
       ['🏛 Brasília','America/Sao_Paulo','Horário de Brasília: DF, GO, TO, SP, RJ, MG, ES, PR, SC, RS, BA, todo o Nordeste, PA e AP.'],
       ['🌳 Acre','America/Rio_Branco','Acre e o oeste do Amazonas.'],['🏝 Noronha','America/Noronha','Fernando de Noronha.']];
-    const fz=document.createElement('div');fz.className='mxfz';fz.style.cssText='display:flex;gap:6px;flex-wrap:wrap;margin-top:8px';
+    const fz=document.createElement('span');fz.className='mxfz';fz.style.cssText='font:500 13px var(--f-display,system-ui);color:rgba(255,255,255,.85);white-space:nowrap';
     const hm=(tz,d)=>{const p=new Intl.DateTimeFormat('pt-BR',{timeZone:tz,hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(d);const H=+p.find(x=>x.type==='hour').value,M=+p.find(x=>x.type==='minute').value;return [H,M];};
     const fzTick=()=>{const d=new Date(),[h0,m0]=hm('America/Cuiaba',d);
-      fz.innerHTML=FZ.map(([n,tz,t])=>{const [h,m]=hm(tz,d);let df=(h*60+m-(h0*60+m0))/60;if(df>12)df-=24;if(df<-12)df+=24;const ab=h>=8&&h<18;
-        return `<span title="${t} ${ab?'Em horário comercial (8h às 18h).':'Fora do horário comercial.'}" style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:99px;padding:4px 11px;font:600 13px var(--f-display,system-ui);white-space:nowrap"><i style="width:8px;height:8px;border-radius:50%;background:${ab?'#4ade80':'#f87171'};display:inline-block"></i>${n} <b style="font-size:15px">${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}</b>${df?`<small style="opacity:.85">${df>0?'+':''}${df}h</small>`:''}</span>`;}).join('');};
-    fzTick();setInterval(fzTick,20000);inn.appendChild(fz);
+      fz.innerHTML=FZ.slice(1).map(([n,tz,t])=>{const [h,m]=hm(tz,d);const ab=h>=8&&h<18;
+        return `<span title="${t} ${ab?'Em horário comercial (8h às 18h).':'Fora do horário comercial.'}">${n.replace(/^\S+\s/,'')} ${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}</span>`;}).join(' · ');
+      const ab0=h0>=8&&h0<18;rel.title=FZ[0][2]+' '+(ab0?'Em horário comercial (8h às 18h).':'Fora do horário comercial.');};
+    fzTick();setInterval(fzTick,20000);{const lin=document.createElement('div');lin.className='mxhr';lin.style.cssText='display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:10px';rel.remove();lin.append(rel,fz);inn.appendChild(lin);}
     tick(); setInterval(tick, 20000);
     // KPIs com ícone
-    const ic = ['🏢','🚪','⏱️','🏆']; document.querySelectorAll('.kpis .kpi').forEach((k,i)=>k.dataset.ic=ic[i]||'📌');
+    const ic = ['🏢','🚪','⏱️','🏆']; document.querySelectorAll('.kpis').forEach(s=>s.querySelectorAll('.kpi').forEach((k,i)=>{if(!k.dataset.ic)k.dataset.ic=ic[i]||'📌';}));
     // cartões de destaque
     const F = {enqCard:['#0f6b70','#e6f4f3'], convCard:['#1f6fb2','#e8f1fb'], esqCard:['#f2a51e','#fff4e0']};
     Object.entries(F).forEach(([id,c])=>{ const s=document.getElementById(id); if(!s) return; s.classList.add('mxfeat'); s.style.setProperty('--fc',c[0]); s.style.setProperty('--fs',c[1]); s.style.border='0'; });

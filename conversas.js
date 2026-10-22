@@ -140,7 +140,7 @@
       box.querySelector('[data-x]').onclick=()=>box.classList.remove('on');
       box.querySelectorAll('[data-e]').forEach(b=>b.onclick=()=>{S.emp=b.dataset.e;pinta();});
       box.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>abrir(b.dataset.c));
-      const sp=document.getElementById('fcvSup');if(sp)sp.onclick=()=>{box.classList.remove('on');try{ptab('home');}catch(_){}const c=document.getElementById('osupCard');if(c)c.scrollIntoView({behavior:'smooth'});};
+      const sp=document.getElementById('fcvSup');if(sp)sp.onclick=()=>{box.classList.remove('on');try{ptab('sim');}catch(_){}const c=document.getElementById('osupCard');if(c)c.scrollIntoView({behavior:'smooth'});};
       if(S.cv)chat();}
     window.FCConversas=window.FCConversas||{};window.FCConversas.abrirMatriz=async id=>{box.classList.add('on');await lista();if(id)await abrir(id);};
     async function abrir(id){S.conv=id;const r=await sb.rpc('emp_chat_fc_msgs',{p_conversa:id});if(!r.data)return;S.cv=r.data;box.classList.add('chat');

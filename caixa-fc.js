@@ -40,7 +40,7 @@
   function locais(){const t=id=>{const e=document.getElementById(id);return e?e.textContent:'';},n=(id,re)=>+((t(id).match(re)||[0,0])[1]);
     const vis=id=>{const e=document.getElementById(id);return e&&!e.hidden;};
     return [[n('cvN',/(\d+) aguardando/),'🛒','Conversas pelo site (Engefitas, Nopla, site da FC)','ped'],
-      [n('csimN',/^(\d+)/),'🧾','Simulações de pedido dos clientes','home','csimCard'],
+      [n('csimN',/^(\d+)/),'🧾','Simulações de pedido dos clientes','sim','csimCard'],
       [n('sugN',/(\d+) sem resposta/),'💡','Dúvidas e sugestões dos alunos','sug'],
       [n('intN',/^(\d+)/),'🤝','Interessados para atender','ped'],
       [window.IND_NOVOS||0,'🎁','Indicações novas para confirmar','ped'],
@@ -87,7 +87,7 @@
       if(g.dataset.tab){fechar();irCard(g.dataset.tab,g.dataset.card);return;}
       const k=g.dataset.cx,id=g.dataset.id,emp=g.dataset.emp;
       if(k==='conv'){fechar();if(window.FCConversas&&FCConversas.abrirMatriz)FCConversas.abrirMatriz(id).then(()=>carregar());return;}
-      if(k==='sup'){fechar();irCard('home','osupCard');setTimeout(()=>{window.osupAbrir&&osupAbrir(id);},300);return;}
+      if(k==='sup'){fechar();irCard('sim','osupCard');setTimeout(()=>{window.osupAbrir&&osupAbrir(id);},300);return;}
       if(k==='sol'){window.open('consultorias.html#'+encodeURIComponent(emp)+'/t=sol','_blank','noopener');return;}
       if(k==='fila'){window.open('orcamento/?e='+encodeURIComponent(emp)+'&aba=atd','_blank','noopener');return;}});
     S.d=ok.data;S.ult=S.d.itens.filter(i=>i.tipo!=='fila').reduce((m,i)=>i.em>m?i.em:m,'');S.prim=false;badge();
