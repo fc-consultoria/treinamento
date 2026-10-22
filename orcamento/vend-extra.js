@@ -104,7 +104,9 @@
   const mini=()=>{try{return sessionStorage.getItem('vx_dst_min')==='1';}catch(_){return false;}};
   function giro(){clearInterval(DT);DT=setInterval(()=>{if(DPAUSA||!DST||DST.length<2)return;DI=(DI+1)%DST.length;pinta();},segs()*1000);}
   /* janela flutuante em todas as abas (minimiza para um botão) */
-  async function flutuante(){const L=await destaques();if(!L.length)return;
+  /* janela flutuante de destaques na tela do vendedor: oculta por enquanto (22/10/2026, ajustes em andamento). Para religar: FLUT_ON=true */
+  const FLUT_ON=false;
+  async function flutuante(){if(!FLUT_ON)return;const L=await destaques();if(!L.length)return;
     if(!document.getElementById('vxDstF')){const f=document.createElement('div');f.id='vxDstF';f.className='vx-flt';f.hidden=true;f.onmouseenter=()=>DPAUSA=true;f.onmouseleave=()=>DPAUSA=false;document.body.appendChild(f);
       const t=document.createElement('button');t.type='button';t.id='vxDstT';t.className='vx-tab';t.hidden=true;t.innerHTML='<span class="ti"></span><span>📣 Destaques<small></small></span>';t.onclick=()=>{try{sessionStorage.removeItem('vx_dst_min');}catch(_){}if(margem()-28>=210){pinta();return;}
         /* tela sem margem: abre como janela por cima, fecha clicando fora */
