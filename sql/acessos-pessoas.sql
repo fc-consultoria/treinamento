@@ -173,3 +173,13 @@ grant execute on function public.emp_info(text), public.emp_entrar(text,text,tex
   public.emp_sair(text), public.emp_registrar(text,text,text,jsonb), public.emp_pessoas_lista(text),
   public.emp_pessoa_salvar(uuid,text,text,text,text,text[],boolean,text), public.emp_eventos_lista(text,int)
   to anon, authenticated;
+
+-- ===== 22/10/2026 · sessão da pessoa vira a chave; Painel de Vendas travado por papel =====
+-- emp_token_pessoa(p_chave): pessoa da sessão ativa.
+-- cons_portal_empresa(p_chave): chave da empresa OU sessão de pessoa (menos vendas).
+-- emp_chave_venda(p_chave): chave da empresa OU sessão de gestor, gerente ou compras (compras só vê o estoque).
+-- compra_emp, cons_portal_ver, equiv_edits_lista, equiv_ok_lista passaram a usar cons_portal_empresa.
+-- orc_quem, orc_g_cfg, orc_g_cfg_salvar, orc_g_vend, orc_portal_lista passaram a usar emp_chave_venda.
+-- orc_dados devolve 'papel'. emp_payload devolve a sessão como 'chave'.
+-- CB recebeu chave nova (link ?k= antigo desativado).
+-- (Aplicado direto no Supabase pela migração emp_token_acesso_restrito.)
