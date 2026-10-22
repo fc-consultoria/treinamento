@@ -2,8 +2,8 @@
    Regra de ouro: COM internet tudo funciona igual a antes (sempre busca na rede primeiro).
    SEM internet: mostra a última versão guardada das telas e dos dados, e guarda os registros
    (tempo de estudo, opiniões, desafios) para enviar sozinho quando a internet voltar. */
-const V='fc-orient-v7';
-const CORE=['./','index.html','auth.js','indica.js?v=1','monte-casa-entrada.js?v=4','conversa-equipe.js?v=10','esquadrias/musica.js?v=3','esquadrias/musica.json','offline.js?v=1','ubar-menu.js?v=2','manifest.webmanifest',
+const V='fc-orient-v8';
+const CORE=['./','index.html','auth.js','indica.js?v=1','monte-casa-entrada.js?v=4','conversa-equipe.js?v=10','esquadrias/musica.json','offline.js?v=1','ubar-menu.js?v=2','manifest.webmanifest',
   'esquadrias/monte-casa.html?v=6','catalogo3d.html','https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js',
   'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js','https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js'];
 const SB='cpkjphodruyxfouirhpd.supabase.co';

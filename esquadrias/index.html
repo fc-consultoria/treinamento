@@ -717,7 +717,7 @@ function participar(){/* cliente / funcionário acompanhando: ouve o Fernando, c
  lvStyle();document.body.classList.add('aluno');const st=document.createElement('style');st.textContent='.aluno .nav,.aluno #bHome,.aluno .foot,.aluno [data-feito]{display:none!important}.aluno .lay{grid-template-columns:1fr}.aluno .top .prog{display:none}';document.head.appendChild(st);const sm=document.querySelector('.top small');if(sm)sm.textContent='🔴 Ao vivo com a FC Consultoria';
  const wait=t=>{$('#main').innerHTML=`<div class="hero" style="text-align:center"><div class="ey">FC Consultoria · ao vivo</div><h1 style="font-size:36px">Esquadrias 3D · Passo a passo</h1><div class="bar" style="margin:12px auto"></div><p style="margin:0 auto">${t}</p></div>`;};
  let nome='',emp='';try{const o=JSON.parse(localStorage.getItem('fc_esq_aluno')||'{}');nome=o.n||'';emp=o.e||'';}catch(_){}
- const entrar=()=>{wait('⏳ Aguardando o Fernando iniciar a apresentação…<br><small style="color:var(--tm,#5a6b75)">Enquanto isso, escolha uma música de abertura no 🎧. Ela para sozinha quando o Fernando começar a falar.</small>');setTimeout(()=>{try{window.FCM&&FCM.abertura();}catch(_){}},700);
+ const entrar=()=>{wait('⏳ Aguardando o Fernando iniciar a apresentação…');setTimeout(()=>{try{window.FCM&&FCM.abertura();}catch(_){}},700);
   const KEY='al-'+Math.random().toString(36).slice(2,9),T0=Date.now();const audio=new Audio();audio.autoplay=true;audio.playsInline=true;
   const ch=sb.channel('esq-'+SALA,{config:{broadcast:{self:false},presence:{key:KEY}}});let fc=false,pc=null,mic=false,mao=false,chat=[],aberto=false,cheia=false,novo=0;
   const bar=document.createElement('div');bar.className='lvp';bar.style.width='min(320px,calc(100vw - 28px))';document.body.appendChild(bar);
@@ -758,6 +758,6 @@ async function iniciar(){try{const j=await fetch('perfis.json?v=1',{cache:'no-ca
 marca();if(!ALUNO){const g=$('#bGrav');if(g)g.hidden=false;}voltaBtn(!ALUNO);if(ALUNO)iniciar();else gateUI(()=>{try{localStorage.setItem('fc_eu','1')}catch(_){}iniciar();},{soMatriz:true});
 </script>
 <script src="../conversa-equipe.js?v=10"></script>
-<script>window.FCM_ADMIN=!/[?&]sala=/.test(location.search);</script><script src="musica.js?v=6"></script>
+
 </body>
 </html>

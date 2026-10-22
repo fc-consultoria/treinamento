@@ -27,6 +27,17 @@
   .fcm-emb iframe{width:100%;border:0;border-radius:12px;display:block}
   .fcm-add{display:flex;gap:6px}.fcm-add input{flex:1;min-width:0;padding:8px 10px;border:1px solid #d8e2e6;border-radius:10px;font:inherit}.fcm-add button{border:0;background:#0f6b70;color:#fff;border-radius:10px;padding:8px 12px;font:700 13px system-ui;cursor:pointer}
   .fcm-nt{font-size:12px;color:#5a6b75;margin:0}
+  .fcm-btn .fcm-min{margin-left:4px;width:22px;height:22px;border-radius:50%;display:inline-grid;place-items:center;background:rgba(255,255,255,.14);font-size:14px;line-height:1}
+  .fcm-btn .fcm-min:hover{background:rgba(255,255,255,.3)}
+  body.fcm-lat .fcm-btn{left:0;bottom:calc(120px + env(safe-area-inset-bottom,0px));height:44px;padding:0 10px 0 8px;border-radius:0 14px 14px 0;opacity:.88}
+  body.fcm-lat .fcm-btn:hover,body.fcm-lat .fcm-btn:focus-visible{opacity:1}
+  body.fcm-lat .fcm-btn .t,body.fcm-lat .fcm-btn .fcm-min,.fcm-btn.fcm-bar .fcm-min{display:none}
+  body.fcm-lat .fcm-box{bottom:calc(176px + env(safe-area-inset-bottom,0px))}
+  .fcm-btn.fcm-bar{position:static;height:auto;padding:6px 12px;border-radius:9px;box-shadow:none;font-size:13.5px}
+  body.fcm-pbar .fcm-box{top:76px;bottom:auto}body.fcm-pbar.fcm-dir .fcm-box{left:auto;right:max(14px,env(safe-area-inset-right,0px))}
+  .sidebar .fcm-btn.fcm-bar{width:100%;justify-content:flex-start;background:transparent;color:inherit;font:inherit;padding:8px 10px}
+  .fcm-pos{display:flex;gap:6px;flex-wrap:wrap}.fcm-pos button{flex:1;border:1px solid #d8e2e6;background:#f6f9fa;border-radius:10px;padding:7px 8px;cursor:pointer;font:600 12.5px system-ui;color:#13232e;white-space:nowrap}
+  .fcm-pos button.on{background:#13232e;border-color:#13232e;color:#fff}
   .fcm-x{position:absolute;right:12px;top:10px;border:0;background:none;font-size:20px;cursor:pointer;color:#5a6b75}
   .fcm-box button:focus-visible,.fcm-btn:focus-visible{outline:3px solid #f2a51e;outline-offset:2px}`;
   const st=document.createElement('style');st.textContent=css;document.head.appendChild(st);
@@ -76,12 +87,24 @@
   async function salvaOF(L){const c=(typeof sb!=='undefined'&&sb)||window.sb;if(!c){alert('Entre no painel para salvar.');return false;}const {error}=await c.rpc('musica_salvar',{p_pls:L});if(error){const m=$('#fcmMsg');if(m)m.textContent='Não salvou: '+error.message;return false;}OF=L;return true;}
 
   /* ---------- tela ---------- */
-  const btn=document.createElement('button');btn.type='button';btn.className='fcm-btn';btn.setAttribute('aria-label','Som para estudar');btn.innerHTML='<span class="eq"><i></i><i></i><i></i></span>🎧 Música';
+  const btn=document.createElement('button');btn.type='button';btn.className='fcm-btn';btn.setAttribute('aria-label','Som para estudar');btn.innerHTML='<span class="eq"><i></i><i></i><i></i></span>🎧<span class="t"> Música</span><span class="fcm-min" role="button" tabindex="0" title="Ocultar na lateral" aria-label="Ocultar na lateral">‹</span>';
   const box=document.createElement('div');box.className='fcm-box';box.hidden=true;box.setAttribute('role','dialog');box.setAttribute('aria-label','Som para estudar');
   document.body.append(btn,box);
+  /* onde fica o botão: 'flut' (flutuante) · 'lat' (aba na lateral) · 'bar' (na barra de cima / menu) — lembra a escolha neste aparelho */
+  const CFGB=window.FCM_BARRA||null;let POS=ler('fcm_pos','flut');if(POS==='bar'&&!CFGB)POS='flut';
+  function alvoBarra(){if(!CFGB)return null;for(const q of String(CFGB.sel).split(',')){const e=document.querySelector(q.trim());if(e)return e;}return null;}
+  function posicionar(tent){document.body.classList.toggle('fcm-lat',POS==='lat');document.body.classList.toggle('fcm-pbar',POS==='bar');document.body.classList.toggle('fcm-dir',POS==='bar'&&CFGB&&CFGB.lado==='dir');
+    btn.classList.toggle('fcm-bar',POS==='bar');btn.title=POS==='lat'?'Música (aba na lateral)':'';
+    if(POS==='bar'){const a=alvoBarra();if(!a){if((tent||0)<20)return setTimeout(()=>posicionar((tent||0)+1),300);POS='flut';return posicionar();}
+      if(CFGB.antes)a.parentNode.insertBefore(btn,a);else{const sair=[...a.children].find(x=>/^\s*Sair\s*$/.test(x.textContent));sair?a.insertBefore(btn,sair):a.appendChild(btn);}}
+    else if(btn.parentNode!==document.body)document.body.insertBefore(btn,box);}
+  function mudaPos(p){POS=p;grava('fcm_pos',p);posicionar();}
+  posicionar();
+  window.addEventListener('load',()=>{if(POS==='bar'&&!alvoBarra()?.contains(btn))posicionar();});
   function lista(){const loc=ALUNO()||MOD()!=='matriz'?[]:minhas().map(p=>({...p,loc:1}));return [...PLS,...loc];}
   function desenhar(){const L=lista();
     box.innerHTML=`<button type="button" class="fcm-x" aria-label="Fechar">×</button><h3>🎧 Som para estudar</h3>
+     <div><h4>Onde fica o botão</h4><div class="fcm-pos">${[['flut','Flutuante'],['lat','Aba na lateral']].concat(CFGB?[['bar',CFGB.nome||'Na barra de cima']]:[]).map(([k,n])=>`<button type="button" data-pos="${k}" class="${POS===k?'on':''}">${n}</button>`).join('')}</div></div>
      <div><h4>Sons de foco</h4><div class="fcm-sons">${Object.entries(SONS).map(([k,s])=>`<button type="button" data-som="${k}" class="${atual===k?'on':''}">${atual===k?'⏸ ':'▶ '}${s.n}<small>${s.d}</small></button>`).join('')}</div></div>
      <div class="fcm-vol"><span>🔈</span><input type="range" min="0" max="1" step=".05" value="${ler('fcm_vol',.5)}" aria-label="Volume dos sons de foco"><span>🔊</span></div>
      ${(()=>{const it=(p,i)=>`<div class="it"><button type="button" class="p${tocando===i?' on':''}" data-pl="${i}">${tocando===i?'⏸':'▶'} ${esc(p.nome||embed(p.url).f)}<small style="display:block;font-weight:400;color:#5a6b75">${esc(embed(p.url).f)}${p.loc?' · só neste aparelho':''}${p.of&&MOD()!=='aluno'?' · incluída no painel de implantação':''}</small></button>${p.loc?`<button type="button" class="x" data-del="${i-PLS.length}" aria-label="Tirar playlist">✕</button>`:''}${p.of&&MOD()==='impl'?`<button type="button" class="x" data-delof="${p.ofi}" aria-label="Tirar playlist dos alunos">✕</button>`:''}</div>`;
@@ -93,6 +116,7 @@
      <p class="fcm-nt">Dica: volume baixo, só de fundo. Os sons de foco funcionam até sem internet.</p>`;}
   box.addEventListener('click',e=>{const t=e.target.closest('button');if(!t)return;
     if(t.classList.contains('fcm-x')){box.hidden=true;return;}
+    if(t.dataset.pos){mudaPos(t.dataset.pos);desenhar();return;}
     if(t.dataset.som){const k=t.dataset.som;if(atual===k)parar();else{tocando=null;tocar(k);}btn.classList.toggle('on',!!atual||tocando!=null);desenhar();return;}
     if(t.dataset.pl!=null){const i=+t.dataset.pl;parar();tocando=tocando===i?null:i;btn.classList.toggle('on',tocando!=null);desenhar();return;}
     if(t.dataset.delof!=null){if(!confirm('Tirar esta playlist da lista dos alunos?'))return;const L=OF.slice();L.splice(+t.dataset.delof,1);parar();tocando=null;salvaOF(L).then(async ok=>{if(ok){await carregar();desenhar();}});return;}
@@ -102,7 +126,9 @@
     if(MOD()==='impl'){const nome=prompt('Nome da playlist (os alunos veem este nome):',em.f+' '+(OF.length+1));if(nome===null)return;const g=confirm('É para a ABERTURA do treinamento (animada)?\n\nOK = abertura · Cancelar = para estudar')?'abertura':'estudo';
       salvaOF([...OF,{nome:nome.trim()||em.f,url:u.trim(),g}]).then(async ok=>{if(ok){await carregar();tocando=PLS.length-1;parar();btn.classList.add('on');desenhar();const m=$('#fcmMsg');if(m)m.textContent='✓ Incluída: os alunos já podem ouvir.';}});return;}
     const L=minhas();L.push({nome:em.f+' '+(L.length+1),url:u.trim()});grava('fcm_pl',L);tocando=PLS.length+L.length-1;parar();btn.classList.add('on');desenhar();});
-  window.FCM={async abertura(){MODO='abertura';await carregar();desenhar();box.hidden=false;},parar(){parar();tocando=null;btn.classList.remove('on');MODO='estudo';if(!box.hidden){desenhar();box.hidden=true;}}};
+  Object.assign(window.FCM||(window.FCM={}),{async abertura(){MODO='abertura';await carregar();desenhar();box.hidden=false;},parar(){parar();tocando=null;btn.classList.remove('on');MODO='estudo';if(!box.hidden){desenhar();box.hidden=true;}}});
+  const ocultar=e=>{e.stopPropagation();e.preventDefault();box.hidden=true;mudaPos('lat');};
+  btn.querySelector('.fcm-min').addEventListener('click',ocultar);btn.querySelector('.fcm-min').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' ')ocultar(e);});
   btn.onclick=async()=>{if(box.hidden){await carregar();desenhar();}box.hidden=!box.hidden;};
   document.addEventListener('keydown',e=>{if(e.key==='Escape')box.hidden=true;});
 })();
