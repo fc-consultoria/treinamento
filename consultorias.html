@@ -121,6 +121,10 @@ h1{font-size:28px}h2{font-size:21px}h3{font-size:17px}
 @media(max-width:560px){.st2{grid-template-columns:48px 24px minmax(0,1fr)}.st2::before{left:69px}.ring{width:66px;height:66px}.ring span{width:52px;height:52px;font-size:15px}}
 .acbar{position:sticky;bottom:max(10px,env(safe-area-inset-bottom,0px));z-index:20;display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 12px;box-shadow:0 10px 28px rgba(15,30,39,.16)}
 .acbar .st{flex:1;min-width:140px;font-size:13.5px;color:var(--muted)}
+.acbar .acmin{padding:6px 10px;font-size:15px;line-height:1}
+.acbar.mini{width:max-content;margin-left:auto;padding:5px 6px;gap:6px}
+.acbar.mini>*:not(#acMin):not(#acSt){display:none!important}
+.acbar.mini .st{flex:0 0 auto;min-width:0;font-size:12.5px;padding-left:6px}
 .stp{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:0;position:relative}.stp::before{content:"";position:absolute;left:10%;right:10%;top:12px;height:2px;background:var(--line)}
 .sp{all:unset;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;position:relative;z-index:1;padding:0 2px}.sp:disabled{cursor:default}.sp small{font-size:12px;color:var(--muted);line-height:1.25}.sp.cur small{color:var(--fg);font-weight:700}.sp:not(:disabled):hover .dotc{border-color:var(--accent)}
 @media(max-width:560px){.sp small{font-size:10.5px}}
@@ -252,7 +256,7 @@ button.cn-stat[data-ok]{cursor:pointer}button.cn-stat[data-ok]:hover{background:
   </div>
   <div class="emps" id="emps"></div>
   <section class="ficha" id="ficha"></section>
-  <div class="acbar" id="acbar" hidden><button class="btn" type="button" id="bVoltar">← Central</button><a class="btn" href="painel.html" style="text-decoration:none">Painel da Matriz</a><span class="st" id="acSt">Tudo salvo</span><button class="btn" type="button" id="bRel">📄 Relatório</button><button class="btn pri" type="button" id="bSalvar">💾 Salvar</button></div>
+  <div class="acbar" id="acbar" hidden><button class="btn" type="button" id="bVoltar">← Central</button><a class="btn" href="painel.html" style="text-decoration:none">Painel da Matriz</a><span class="st" id="acSt">Tudo salvo</span><button class="btn" type="button" id="bRel">📄 Relatório</button><button class="btn pri" type="button" id="bSalvar">💾 Salvar</button><button class="btn acmin" type="button" id="acMin" title="Ocultar esta barra" aria-label="Ocultar a barra">▾</button></div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
@@ -1343,4 +1347,9 @@ else{/* links da Matriz: ?ver=<empresa> abre a empresa · &como=gestor abre "Com
 <script src="acessos-pessoas.js?v=1"></script>
 <script src="central-gestor.js?v=4"></script>
 <script src="conversas.js?v=3"></script>
+<script>/* barra de baixo: ocultar / mostrar (fica lembrado neste aparelho) */
+(function(){const bar=document.getElementById('acbar'),bt=document.getElementById('acMin');if(!bar||!bt)return;
+ const set=m=>{bar.classList.toggle('mini',m);bt.textContent=m?'▴ Mostrar barra':'▾';bt.title=m?'Mostrar a barra':'Ocultar esta barra';bt.setAttribute('aria-label',bt.title);try{localStorage.setItem('fc_acbar_mini',m?'1':'');}catch(_){}};
+ let m=false;try{m=localStorage.getItem('fc_acbar_mini')==='1';}catch(_){}set(m);
+ bt.onclick=()=>set(!bar.classList.contains('mini'));})();</script>
 </body></html>
