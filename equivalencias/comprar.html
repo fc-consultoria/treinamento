@@ -218,6 +218,11 @@ function imgDe(g,m){if(m[4])return m[4];if(g.l==='tc')return '';const L=IDX.linh
 const linhaF=(g,f)=>((IDX.lnf[g.l]||{})[f])||IDX.linhas[g.l].n;
 function buscar(q){const k=norm(q);if(!k)return [];
   let ids=[...new Set(BY[k]||[])];
+  if(!ids.length){/* código digitado sem os zeros (PTQ013 = PTQ-0013) ou com a cor no fim (PTQ013.FCO) */
+    const z=c=>c.replace(/\d+/g,d=>String(+d));
+    if(!window.__BYZ||window.__BYZn!==Object.keys(BY).length){const M={};Object.keys(BY).forEach(c=>{(M[z(c)]=M[z(c)]||[]).push(...BY[c]);});window.__BYZ=M;window.__BYZn=Object.keys(BY).length;}
+    const sem=String(q).toUpperCase().replace(/[.\-\s]+[A-Z]{2,4}$/,'');
+    [z(k),z(norm(sem))].some(t=>{ids=[...new Set(window.__BYZ[t]||BY[norm(sem)]||[])];return ids.length;});}
   if(!ids.length){/* medida de tubo/cantoneira/U: 25,4 x 1,58 */
     const ns=(q.match(/\d+(?:[.,]\d+)?/g)||[]).map(x=>+x.replace(',','.'));
     if(ns.length>=2)ids=IDX.g.filter(g=>{if(g.l!=='tc')return false;const gn=(g.k.match(/\d+(?:,\d+)?/g)||[]).map(x=>+x.replace(',','.'));
