@@ -133,12 +133,12 @@
   function naoLidas(){ const l = lido(); return S.msgs.filter(m=>m.id>l && String(m.autor_email||'').toLowerCase()!==S.eu).length; }
   // pede uma vez para o navegador liberar os avisos do Windows (só precisa aceitar 1 vez)
   function pedirAvisos(){
-    try{ if(!('Notification' in window) || Notification.permission!=='default' || localStorage.getItem('fc_chat_pediu_aviso')) return; }catch(_){ return; }
-    const d=document.createElement('div');
+    try{ if(!('Notification' in window) || Notification.permission!=='default' || localStorage.getItem('fc_chat_pediu_aviso') || document.getElementById('fcAvisoPede')) return; }catch(_){ return; }
+    const d=document.createElement('div'); d.id='fcAvisoPede';
     d.style.cssText='position:fixed;right:14px;bottom:118px;z-index:9999;width:min(330px,calc(100vw - 28px));background:#fff;border:1px solid #dde1e6;border-radius:14px;box-shadow:0 14px 40px -12px rgba(15,23,42,.35);padding:12px 14px;font:400 13.5px system-ui,-apple-system,Segoe UI,sans-serif;color:#1c2126';
     d.innerHTML='<b>🔔 Receber aviso de mensagem?</b><div style="margin:6px 0 10px;color:#5b6570">Mesmo com o painel minimizado ou em outra aba, o Windows mostra um aviso quando chegar mensagem na conversa da equipe.</div><div style="display:flex;gap:8px;justify-content:flex-end"><button data-n style="border:1px solid #dde1e6;background:#fff;border-radius:9px;padding:6px 10px;cursor:pointer">Agora não</button><button data-s style="border:0;color:#fff;background:linear-gradient(135deg,var(--g1,#3452eb),var(--g2,#6f8bff));border-radius:9px;padding:6px 12px;font-weight:700;cursor:pointer">Ativar avisos</button></div>';
     const fim=()=>{ try{ localStorage.setItem('fc_chat_pediu_aviso','1'); }catch(_){ } d.remove(); };
-    d.querySelector('[data-n]').onclick=fim; d.querySelector('[data-s]').onclick=()=>{ Notification.requestPermission().finally(fim); };
+    d.querySelector('[data-n]').onclick=fim; d.querySelector('[data-s]').onclick=()=>{ fim(); try{ const r=Notification.requestPermission(); if(r&&r.catch) r.catch(()=>{}); }catch(_){ } };
     document.body.appendChild(d);
   }
   async function carregar(){

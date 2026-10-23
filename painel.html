@@ -1900,7 +1900,7 @@ setTimeout(()=>{if(PTAB==='cat')ui();},2500);
  const P=['painel.html','consultorias.html','catalogos.html','rotina.html','index.html','auth.js','esquadrias/','esquadrias/index.html','esquadrias/perfis.json','esquadrias/cm3d.js','esquadrias/cm3d.js?v=6','esquadrias/gua/shapes.json','/enquete/','equivalencias/','equivalencias/dados.json?v=1','/perfis/index.html','demo/index.html','acompanhamento/','vitrine-admin.js','/','/perfis/','/catalogo/','/catalogo/cat-vitrine.js','/vitrine.js','/teatro.js','/demo.html'];
  await Promise.all(P.map(u=>fetch(u,{cache:'reload'}).catch(()=>{})));try{if(window.caches){const k=await caches.keys();await Promise.all(k.map(x=>caches.delete(x)));}}catch(_){}
  location.replace(location.pathname+'?v='+Date.now()+location.hash);};})();</script>
-<script src="conversa-equipe.js?v=10"></script>
+<script src="conversa-equipe.js?v=11"></script>
 <script src="conversas.js?v=3"></script><script>setTimeout(()=>window.FCConversas&&FCConversas.matriz({semBotao:true}),2500);</script><script src="caixa-fc.js?v=4"></script><script src="acessos-todos.js?v=5"></script><script src="central-cliente.js?v=3"></script>
 <script src="painel-skin.js?v=3"></script>
 <script>window.FCM_MODO="matriz";window.FCM_BARRA={sel:"header.mx .mxutil, header .acts",lado:"dir",nome:"Na barra de cima"};</script><script src="esquadrias/musica.js?v=7"></script>
