@@ -147,6 +147,7 @@ tr.hl td{background:#fff3c4!important;transition:background .4s}
 .trcres{display:flex;flex-direction:column;gap:5px;max-height:220px;overflow:auto}
 .trc{display:flex;flex-direction:column;align-items:flex-start;gap:1px;text-align:left;background:#fff;border:1px solid #ddd3fb;border-radius:9px;padding:7px 10px;cursor:pointer;font:inherit;color:#13232e}
 .trc:hover,.trc:focus-visible{border-color:#7c3aed;background:#faf8ff;outline:none}.trc b{font-size:14.5px}.trc span{font-size:12.5px;color:#5d6b76}.trc small{font-size:11.5px;color:#7c3aed}
+.altmd input.altok{border-color:#16a34a!important;background:#ecfdf3!important;box-shadow:0 0 0 3px #bbf7d0}
 .altmd label{display:flex;flex-direction:column;gap:4px;font-size:13px;font-weight:700;color:#5d6b76}.altmd input,.altmd select{border:1.5px solid #c4ccd2;border-radius:9px;padding:9px 10px;font:600 15px var(--f-b);color:#13232e}
 .cmp{min-width:210px;width:230px}.cmpw{display:flex;flex-direction:column;gap:5px}.cmpb{display:flex;gap:5px;align-items:center;flex-wrap:wrap}.cmpw .fxsel{max-width:225px;width:100%}
 .altan{display:flex;flex-direction:column;gap:4px}.altcola{border:2px dashed #0f6b70;border-radius:12px;background:#eef6f5;padding:14px;display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;outline:none}.altcola.on,.altcola:focus{background:#d9efec;border-color:#f2a51e}.altcola>b{font-size:17px;color:#0f6b70}.altcola>span{font-size:13px;color:#5d6b76}.altcola kbd{background:#fff;border:1px solid #c4ccd2;border-radius:4px;padding:0 5px;font:700 12px monospace}.altmsg{display:block;font-weight:500;color:#5d6b76;margin-top:4px}.altan small{font-weight:500;color:#5d6b76}.altimg{max-width:100%;max-height:180px;border:1px solid #d6dee4;border-radius:8px;cursor:zoom-in}.altpdf{font-weight:700}
@@ -542,6 +543,19 @@ function buscarTroca(q){const k=norm(q);if(k.length<2)return [];const ex=buscar(
   const tem=g=>{const H=[g.k,g.n||'',IDX.linhas[g.l]&&IDX.linhas[g.l].n||''].concat(g.m.map(m=>m[1])).map(norm).join(' ');return norm(g.k).includes(k)||(P.length&&P.every(w=>H.includes(w)));};
   const r=IDX.g.filter(g=>g.l!=='__m'&&!ex.includes(g)&&vis(g)&&tem(g));
   return ex.concat(r).slice(0,12);}
+/* 2ª opção: código que já existe no banco → peso (kg/m) vem sozinho e o campo fica verde */
+function altAchaCodigo(c,f){const z=t=>norm(t).replace(/\d+/g,d=>String(+d));const k=z(String(c).replace(/[.\-\s]+[A-Z]{2,4}$/i,''));if(k.length<3)return null;
+  let alt=null;for(const g of IDX.g){for(const m of g.m){if(!(+m[2]>0)||z(m[1])!==k)continue;if(m[0]===f)return {f:m[0],c:m[1],p:+m[2],g};if(!alt)alt={f:m[0],c:m[1],p:+m[2],g};}}return alt;}
+function altAuto(){const C=$('#altC'),P=$('#altP'),F=$('#altF'),M=$('#altAm');if(!C||!P||!F)return;
+  const pinta=(el,ok)=>{el.classList.toggle('altok',!!ok);};
+  const roda=()=>{const r=altAchaCodigo(C.value,F.value);
+    if(r){if(r.f!==F.value&&[...F.options].some(o=>o.value===r.f))F.value=r.f;
+      P.value=String(r.p).replace('.',',');P.dataset.auto='1';pinta(C,1);pinta(P,1);
+      const outro=r.f!==F.value;
+      if(M){M.style.color=outro?'#b45309':'#15803d';M.textContent=outro?`⚠️ ${r.c} é da ${IDX.forn[r.f]||r.f}, que não tem preço liberado: o peso veio do banco, confira o fornecedor.`:`✅ ${r.c} já está no banco (${IDX.forn[r.f]||r.f}) · ${String(r.p).replace('.',',')} kg/m · ${r.g.n||r.g.k}`;}}
+    else{pinta(C,0);if(P.dataset.auto){P.value='';delete P.dataset.auto;}pinta(P,0);if(M&&/já está no banco|não tem preço liberado/.test(M.textContent)){M.style.color='';M.textContent='Opcional. Com print, o sistema tenta ler o código e o peso sozinho.';}}};
+  C.addEventListener('input',roda);F.addEventListener('change',roda);P.addEventListener('input',()=>{delete P.dataset.auto;pinta(P,0);});
+  if(C.value)roda();}
 function trocaLista(i,q){const R=buscarTroca(q);if(norm(q).length<2)return '<small class="sub">Digite pelo menos 2 letras ou números.</small>';
   if(!R.length)return '<small class="sub">Nenhum perfil do banco com esse código ou nome.</small>';
   return R.map(g=>{const cs=[...new Set(g.m.filter(m=>visivel(g,m)).map(m=>m[1]))].slice(0,4).join(' · ');
@@ -691,7 +705,7 @@ document.addEventListener('click',async ev=>{const t=ev.target.closest('[data-su
      <b style="font-size:14px">Print ou PDF do produto (catálogo do fornecedor)</b><div class="altcola" id="altCola" tabindex="0"><b>📋 Cole o print aqui</b><span>Tire o print (Win+Shift+S) e aperte <kbd>Ctrl</kbd>+<kbd>V</kbd> com esta janela aberta · ou arraste a imagem para cá</span><span style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:4px"><button type="button" class="bt p" data-altcola>📋 Colar print</button><label class="bt" style="cursor:pointer">📁 Escolher arquivo<input type="file" id="altA" accept="image/*,application/pdf" hidden></label></span></div><small id="altAm" class="altmsg">${a.img||a.pdf?'':'Opcional. Com print, o sistema tenta ler o código e o peso sozinho.'}</small>
      <div id="altPv">${a.img?`<img src="${a.img}" alt="" class="altimg" data-altver="1">`:a.pdf?`<span class="altpdf">📄 ${esc(a.pdf.nome)}</span>`:''}</div>
      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px"><button type="button" class="bt p" data-altok="${i}">Salvar 2ª opção</button>${x.alt?`<button type="button" class="bt r" data-altrm="${i}">Tirar 2ª opção</button>`:''}<button type="button" class="bt" data-altx>Cancelar</button></div></div>`;
-    o.hidden=false;window.__altAnexo=undefined;{const aq=$('#altQ');if(aq){aq.oninput=()=>{$('#altR').innerHTML=trocaLista(i,aq.value);};}}if(!F.length)toast('Nenhum fornecedor liberado com preço. Preencha a aba Preços.');}
+    o.hidden=false;window.__altAnexo=undefined;{const aq=$('#altQ');if(aq){aq.oninput=()=>{$('#altR').innerHTML=trocaLista(i,aq.value);};}}altAuto();if(!F.length)toast('Nenhum fornecedor liberado com preço. Preencha a aba Preços.');}
   else if(d.alttroca){const [ii,gi]=d.alttroca.split('|').map(Number),x=SIM[ii],g=IDX.g[gi];if(!x||!g)return;
     if(!x.trocaDe)x.trocaDe={q:x.q,orig:x.orig,g:x.g,desc:x.desc};delete x.orig;delete x.desc;x.q=g.k.toUpperCase();x.g=g.l+'|'+g.k;
     ls.set(SKEY(),SIM);$('#altOv').hidden=true;ABA='sim';VSIM=null;tela();
