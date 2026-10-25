@@ -1,4 +1,4 @@
-/* ===== Notícias G1 no Painel da Matriz (só perfil da matriz) =====
+/* ===== Notícias G1 no Painel da Matriz e no Painel de Implantação (matriz e Antonia) =====
    Faixa de manchetes rolando no topo do painel + card de destaques por assunto (abre ao clicar em "Notícias").
    Manchetes vêm da função "noticias" do Supabase (feeds RSS públicos do G1 e do Só Notícias/Sinop). Atualiza a cada 30 min.
    © FC Consultoria em Esquadria · uso exclusivo */
@@ -37,6 +37,9 @@
 #fcNot .nrod{font-size:11.5px;color:#7a8892;margin-top:6px}
 #fcNot .nvaz{padding:14px 2px;font-size:14px;color:#5d6b76}
 @media(max-width:640px){#fcNot .nlab span.tx{display:none}#fcNot .ntk a{font-size:13.5px}}
+#fcNotWrap{flex:1;min-width:0;max-width:1240px}#fcNotWrap>#fcNot{margin:20px 34px 0}
+@media(max-width:880px){#fcNotWrap>#fcNot{margin:10px 14px 0}}
+@media print{#fcNot{display:none!important}}
 @media(prefers-reduced-motion:reduce){#fcNot .ntk{animation:none}#fcNot .ntw{overflow-x:auto}}`;
 
   function hora(iso){if(!iso)return '';const d=new Date(iso),h=new Date();const min=Math.round((h-d)/60000);
@@ -67,13 +70,16 @@
     try{const r=await fetch(URL_N,{cache:'no-store'});if(!r.ok)throw 0;dados=await r.json();quando=Date.now();}catch(_){}
     faixa();if(aberto)card();
   }
-  function montar(){
-    const main=document.querySelector('main');if(!main||document.getElementById('fcNot'))return;
+  function montar(op){
+    op=op||{};if(document.getElementById('fcNot'))return;
+    const main=document.querySelector(op.envolver||'main');if(!main)return;
     const st=document.createElement('style');st.textContent=css;document.head.appendChild(st);
     const w=document.createElement('section');w.id='fcNot';w.setAttribute('aria-label','Notícias');
     w.innerHTML=`<div class="nbar"><button type="button" class="nlab" aria-expanded="false" aria-controls="fcNotCard" title="Ver destaques por assunto">📰 <span class="tx">Notícias</span> <span class="sv">▼</span></button><div class="ntw"><div class="ntk"><a>Carregando manchetes…</a></div></div></div>
 <div class="ncard" id="fcNotCard" hidden><div class="nch"><b>Destaques</b><small></small><button type="button" class="nx" aria-label="Fechar">✕</button></div><div class="nabas"></div><div class="nlist"></div><div class="nrod"></div></div>`;
-    main.prepend(w);
+    if(op.envolver){ /* página que redesenha o conteúdo inteiro: a faixa fica num invólucro acima dele */
+      const wr=document.createElement('div');wr.id='fcNotWrap';main.parentNode.insertBefore(wr,main);wr.appendChild(w);wr.appendChild(main);
+    }else main.prepend(w);
     w.querySelector('.nlab').onclick=()=>abrir(!aberto);
     w.querySelector('.nx').onclick=()=>abrir(false);
     document.addEventListener('click',e=>{if(aberto&&!e.composedPath().includes(w))abrir(false);});
@@ -82,5 +88,5 @@
     document.addEventListener('visibilitychange',()=>{if(!document.hidden&&Date.now()-quando>ATUALIZA_MIN*60000)carregar();});
   }
   /* Só monta depois que o login confirma o perfil da matriz (chamado no gateUI do painel.html) */
-  window.FCNoticias={iniciar(){if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',montar);else montar();}};
+  window.FCNoticias={iniciar(op){if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>montar(op));else montar(op);}};
 })();

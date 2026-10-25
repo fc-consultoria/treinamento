@@ -368,6 +368,7 @@ tbody tr:hover{background:var(--panel-2);}
   </div>
   <main id="view-root"></main>
 </div>
+<script src="../noticias.js?v=2"></script>
 
 <script>
 const SUPABASE_URL = 'https://cpkjphodruyxfouirhpd.supabase.co';
@@ -8677,6 +8678,7 @@ async function entrarComSessao(){
     await carregarTudo();
     await carregarAcessosEspelho();
     STATE.loggedIn = true;
+    try{ window.FCNoticias && FCNoticias.iniciar({envolver:'#view-root'}); }catch(_){}
     setTimeout(pingPresencaEquipe, 1500);
     setTimeout(carregarPresencaPortal, 1000);
     const {data:{user}} = await sb.auth.getUser();
