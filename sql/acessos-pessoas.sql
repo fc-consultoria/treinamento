@@ -226,3 +226,8 @@ begin
     'portal', (select jsonb_build_object('ultimo', ultimo_acesso, 'acessos', acessos) from cons_portal where empresa_id = e));
 end $$;
 grant execute on function public.emp_central(text, text) to anon, authenticated;
+
+-- ===== 25/10/2026 · Central do Gestor simplificada (migração emp_central_semana) =====
+-- emp_central devolve também 'sem': últimos 7 dias x 7 anteriores (n, v = orçamentos/valor; f, fv = pedidos fechados
+-- (status aguardando/aprovado, data pelo hist ou atualizado_em); p1 perdidos; abertos7; desc24 (desconto pendente > 24h);
+-- fin48 (aguardando financeiro > 48h); usaram7 / usaram_hoje (pessoas com evento).
