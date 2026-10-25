@@ -133,11 +133,13 @@
     outros+=grupo('🧭 Página da consultoria · outros',OUT.cons,'');
     outros+=grupo('🧪 Links de teste',OUT.demo,'Nenhum link de teste.');
     outros+=grupo('🛠 Equipe FC',OUT.equipe,'');
-    body.innerHTML=`<div style="display:flex;gap:8px;padding:10px 16px 0"><button type="button" data-axall="1" style="font-size:12.5px">▾ Abrir todas</button><button type="button" data-axall="0" style="font-size:12.5px">▸ Ocultar todas</button></div><div class="axg">${quadros||'<p class="note">Nenhum cliente principal com esse nome.</p>'}</div><div class="axl"><h3 style="margin-top:8px;font-size:17px">Demais acessos</h3>${outros||'<p class="note">Nada encontrado.</p>'}</div>`;
+    let demOc=false;try{demOc=localStorage.getItem('fc-ax-demais-oc')==='1';}catch(_){}if(S.busca)demOc=false;
+    body.innerHTML=`<div style="display:flex;gap:8px;padding:10px 16px 0"><button type="button" data-axall="1" style="font-size:12.5px">▾ Abrir todas</button><button type="button" data-axall="0" style="font-size:12.5px">▸ Ocultar todas</button></div><div class="axg">${quadros||'<p class="note">Nenhum cliente principal com esse nome.</p>'}</div><div class="axl"><h3 style="margin-top:8px;font-size:17px;display:flex;align-items:center;gap:10px">Demais acessos<button type="button" data-axdem="1" style="font-size:12.5px;font-weight:500" aria-expanded="${!demOc}">${demOc?'▸ Mostrar':'▾ Ocultar'}</button></h3>${demOc?'<p class="note">Parte oculta. Toque em "Mostrar" para ver os demais acessos.</p>':(outros||'<p class="note">Nada encontrado.</p>')}</div>`;
     $('axTot').innerHTML=`<span class="axk"><b>${tot}</b>acessos</span><span class="axk"><b style="color:#16683f">${on}</b>online agora</span>`+(S.em?`<span class="note">atualizado às ${S.em.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</span>`:'');
     body.querySelectorAll('[data-ax]').forEach(b=>b.onclick=()=>{const f=ACOES[+b.dataset.ax];f&&f();});
     body.querySelectorAll('[data-axab]').forEach(el=>{const t=()=>{const k=el.dataset.axab;S.ab.has(k)?S.ab.delete(k):S.ab.add(k);guardaAb();pinta();};el.onclick=ev=>{if(ev.target.closest('button'))return;t();};el.onkeydown=ev=>{if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();t();}};});
-    body.querySelectorAll('[data-axall]').forEach(b=>b.onclick=()=>{if(b.dataset.axall==='1')CLI.forEach(c=>S.ab.add(c.k));else S.ab.clear();guardaAb();pinta();});
+    body.querySelectorAll('[data-axall]').forEach(b=>b.onclick=()=>{const ab=b.dataset.axall==='1';if(ab)CLI.forEach(c=>S.ab.add(c.k));else S.ab.clear();try{localStorage.setItem('fc-ax-demais-oc',ab?'':'1');}catch(_){}guardaAb();pinta();});
+    body.querySelectorAll('[data-axdem]').forEach(b=>b.onclick=()=>{try{localStorage.setItem('fc-ax-demais-oc',demOc?'':'1');}catch(_){}pinta();});
     body.querySelectorAll('[data-axg]').forEach(b=>b.onclick=()=>{const [e,n]=b.dataset.axg.split('|');abrirAcessos(e,n);});}
 
   async function carregar(forca){if(S.carregando)return;if(!card())return;S.carregando=true;
