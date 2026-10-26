@@ -79,7 +79,7 @@ button:focus-visible,select:focus-visible{outline:2px solid var(--teal);outline-
     <button id="limpaq" aria-label="Limpar busca">×</button>
   </div>
   <div class="filtros">
-            <label for="fo">Fornecedor / cadastro<select id="fo"><option value="">Todos</option></select></label>
+            <label for="fo" id="foLab">Fornecedor / cadastro<select id="fo"><option value="">Todos</option></select></label>
     <label for="ff">Foto<select id="ff"><option value="">Com e sem foto</option><option value="1">Só com foto</option><option value="0">Só sem foto</option></select></label>
   </div>
   <p class="aviso"><strong>Imagens ilustrativas.</strong> Em caso de dúvida, consulte o catálogo do fornecedor.</p>
@@ -103,6 +103,8 @@ const PRM=new URLSearchParams(location.search),VER='20261026d';
 const FK=['wvetro','guapore','alcoa','fermax','udinese','rotofermax','mettallfleck','vitrasul','texa','selta','fbk','ecoalumi','perfileve','cda','prontoaluminio','aluminioscorso','alueste','pereirabrito','vidromax','aluvid'];
 const LIB=(PRM.has('f')?PRM.get('f'):'wvetro').split(',').filter(k=>FK.includes(k));
 {const n=PRM.get('n');if(n)document.getElementById('sub').textContent=n+' · produtos';}
+/* link do cliente (com chave): filtro Fornecedor / cadastro fica oculto; só a FC vê */
+const CLI=PRM.has('k');if(CLI)document.getElementById('foLab').hidden=true;
 function linhaDe(it){
   const c=(it.mk||it._mk||it.w||it.g||'').toUpperCase(),d=it.d;
   if(it.t==='componente'){if(/TEMPERADO|\bBOX\b/.test(d))return 'Temperado e box';if(/SUPREMA/.test(d))return 'Suprema';if(/\bGOLD\b/.test(d))return 'Gold';return 'Outras'}
@@ -138,7 +140,7 @@ async function carrega(){
     const PRI=['WVetro','Guaporé','Vitrasul','Roto Fermax','Fermax','Udinese','MettallFleck','Alutec','STAM','Alcoa'];
     const os=Object.keys(cont).filter(o=>cont[o]>=5).sort((a,b)=>{const i=PRI.indexOf(a),j=PRI.indexOf(b);return (i<0?99:i)-(j<0?99:j)||a.localeCompare(b)});
     $('fo').insertAdjacentHTML('beforeend',os.map(o=>`<option value="${esc(o)}">${esc(o)} (${cont[o].toLocaleString('pt-BR')})</option>`).join(''));
-    try{const s=JSON.parse(localStorage.getItem('pesqCod')||'{}');['fo','ff'].forEach(i=>{if(s[i]!=null&&[...$(i).options].some(o=>o.value===s[i]))$(i).value=s[i]})}catch(e){}
+    try{const s=JSON.parse(localStorage.getItem('pesqCod')||'{}');['fo','ff'].forEach(i=>{if(CLI&&i==='fo')return;if(s[i]!=null&&[...$(i).options].some(o=>o.value===s[i]))$(i).value=s[i]})}catch(e){}
     render();
   }catch(e){$('lista').innerHTML='<p class="vazio">Não foi possível carregar a base. Recarregue a página.</p>'}
 }
