@@ -359,7 +359,7 @@ tbody tr:hover{background:var(--panel-2);}
       <button class="navitem" id="btn-logout"><i data-lucide="log-out"></i> Sair</button>
     </div>
     <div class="sidebar-foot">
-      Painel de implantação — dados salvos em banco de dados real (Supabase), acesso restrito à equipe.<br><b>Versão 26/10b — fotos de todos os perfis da base</b>
+      Painel de implantação — dados salvos em banco de dados real (Supabase), acesso restrito à equipe.<br><b>Versão 26/10c — painel Em avaliação dos componentes fora do Banco FC</b>
     </div>
   </nav>
   <div class="mobile-topbar">
@@ -611,6 +611,9 @@ async function carregarClientes(){
   carregarFotos();
   CLIENTS.forEach(cl=>{ cl.fixoChecklist = {}; checklistRows.filter(r=>r.cliente_id===cl.id && r.fornecedor_fixo).forEach(r=>{ cl.fixoChecklist[(r.linha||'')+'|'+r.codigo] = r.fornecedor_fixo; }); });
   CLIENTS.forEach(cl=>{ cl.wvLinhas = {}; cl._wvCache = {}; checklistRows.filter(r=>r.cliente_id===cl.id && r.base_codigo && r.linha).forEach(r=>{ (cl.wvLinhas[r.linha] = cl.wvLinhas[r.linha]||[]).push({codigo:r.codigo, base:r.base_codigo, desc:r.desc_sistema||''}); }); });
+  // Itens do WVetro do cliente que não estão no Banco de Preços nas linhas contratadas → painel "Em avaliação"
+  try{ const {data:avRows} = await fetchAllRows('impl_wv_avaliacao', '*', 'codigo'); CLIENTS.forEach(cl=>{ cl.wvAval = (avRows||[]).filter(r=>r.cliente_id===cl.id); }); }
+  catch(_){ CLIENTS.forEach(cl=>{ cl.wvAval = []; }); }
   CLIENTS.forEach(cl=>{ cl.revisaoChecklist = {}; checklistRows.filter(r=>r.cliente_id===cl.id && (r.em_revisao || r.codigo_sistema)).forEach(r=>{ cl.revisaoChecklist[(r.linha||'')+'|'+r.codigo] = {sis:r.codigo_sistema||'', rev:!!r.em_revisao, obs:r.revisao_obs||'', em:r.revisao_em||null}; }); });
 
   // Acompanhamento online (versão nova): quem já tem link do portal do cliente. Falha aqui não trava o painel.
@@ -4604,7 +4607,7 @@ async function importarWvetro(c, file){
   if(!a.linhas.length){ alert('Marque primeiro as linhas contratadas deste cliente.'); return; }
   const porLinha = a.linhas.map(l=>`• ${l}: ${a.dentro.filter(x=>x.linha===l).length} código(s)`).join('\n');
   const conf = a.dentro.filter(x=>x.conferir).length;
-  if(!confirm(`${file.name}\n\n${a.total} códigos no WVetro do cliente.\n\nVão para o checklist (por linha):\n${porLinha}\n\n${conf} com descrição diferente → entram em Revisão.\n${a.fora.length} fora das linhas contratadas e ${a.faltando.length} itens do banco sem código no WVetro (ficam só no relatório).\n\nA equipe só vê depois que você liberar cada linha. Confirmar?`)) return;
+  if(!confirm(`${file.name}\n\n${a.total} códigos no WVetro do cliente.\n\nVão para o checklist (por linha):\n${porLinha}\n\n${conf} com descrição diferente → entram em Revisão.\n${a.fora.length} fora do Banco FC nas linhas contratadas → vão para o painel "Em avaliação" (você decide se alimenta).\n${a.faltando.length} itens do banco sem código no WVetro (ficam no relatório).\n\nA equipe só vê depois que você liberar cada linha. Confirmar?`)) return;
   const base = r=>({cliente_id:c.id, codigo:r.codigo, linha:r.linha, base_codigo:r.base, desc_sistema:r.desc||null, codigo_sistema:r.codigo});
   const normais = a.dentro.filter(r=>!r.conferir).map(base);
   const agora = new Date().toISOString();
@@ -4624,6 +4627,7 @@ async function importarWvetro(c, file){
   a.dentro.forEach(r=>{ (c.wvLinhas[r.linha] = c.wvLinhas[r.linha]||[]).push({codigo:r.codigo, base:r.base, desc:r.desc});
     setRevComp(c, r.linha, r.codigo, r.conferir ? {sis:r.codigo, rev:true, obs:'WVetro: "'+(r.desc||'')+'" · Banco ('+r.base+'): "'+(r.descBanco||'')+'"', em:agora} : {sis:r.codigo}); });
   c._wvRel = {arquivo:file.name, em:agora, ...a};
+  await salvarAvaliacaoWvetro(c, a.fora, agora);
   toastSalvo('Cadastro do WVetro importado'); render();
   if(confirm('Importado. Baixar agora a planilha por linha (com preço para alimentar, conferir, fora das linhas e faltando no WVetro)?')) baixarRelatorioWvetro(c);
 }
@@ -4665,6 +4669,98 @@ async function removerWvetro(c){
   Object.entries(c.wvLinhas||{}).forEach(([l,rows])=>rows.forEach(r=>{ if(c.alimentadosComponentes && c.alimentadosComponentes[l]) delete c.alimentadosComponentes[l][r.codigo]; if(c.revisaoChecklist) delete c.revisaoChecklist[l+'|'+r.codigo]; }));
   c.wvLinhas = {}; c._wvCache = {}; c._wvRel = null; toastSalvo('Checklist padrão'); render();
 }
+// ===== Em avaliação: códigos do WVetro do cliente que não estão no Banco FC nas linhas contratadas =====
+// Gravado em impl_wv_avaliacao. Reimportar atualiza os dados mas mantém a decisão (pendente / alimentar / não alimentar).
+async function salvarAvaliacaoWvetro(c, fora, agora){
+  const rows = (fora||[]).map(x=>({cliente_id:c.id, codigo:x.codigo, descricao:x.descricao||null, un:x.un||null, fab:x.fab||null, outra_linha:x.outra||null, no_export:true, importado_em:agora}));
+  for(let i=0;i<rows.length;i+=300){
+    const {error} = await sb.from('impl_wv_avaliacao').upsert(rows.slice(i,i+300), {onConflict:'cliente_id,codigo', defaultToNull:false});
+    if(error){ avisarErroSalvar(error); return; }
+  }
+  const novos = new Set(rows.map(r=>r.codigo));
+  const antigos = (c.wvAval||[]).filter(r=>!novos.has(r.codigo));
+  // código que agora casou com o banco (entrou no checklist) sai da avaliação; o que sumiu do WVetro fica marcado
+  const noChecklist = new Set(Object.values(c.wvLinhas||{}).flat().map(r=>r.codigo));
+  const apagar = antigos.filter(r=>noChecklist.has(r.codigo)).map(r=>r.id);
+  const sairam = antigos.filter(r=>!noChecklist.has(r.codigo) && r.no_export).map(r=>r.id);
+  for(let i=0;i<apagar.length;i+=100){ const {error} = await sb.from('impl_wv_avaliacao').delete().in('id', apagar.slice(i,i+100)); if(error){ avisarErroSalvar(error); return; } }
+  for(let i=0;i<sairam.length;i+=100){ const {error} = await sb.from('impl_wv_avaliacao').update({no_export:false}).in('id', sairam.slice(i,i+100)); if(error){ avisarErroSalvar(error); return; } }
+  const {data, error} = await sb.from('impl_wv_avaliacao').select('*').eq('cliente_id', c.id).order('codigo').range(0, 9999);
+  if(!error) c.wvAval = data||[];
+}
+const WV_DEC = {pendente:{t:'Pendente', cor:'#9a6700', bg:'#fff8c5'}, alimentar:{t:'Alimentar', cor:'#1a7f37', bg:'#dafbe1'}, nao:{t:'Não alimentar', cor:'#b42318', bg:'#ffebe9'}};
+function wvAvalFiltrados(c){
+  const fl = STATE.wvAvFiltro = STATE.wvAvFiltro || {grupo:'todos', dec:'pendente', busca:''};
+  const q = normalizeText(fl.busca||'').toLowerCase();
+  return (c.wvAval||[]).filter(r=>{
+    if(fl.grupo==='sem' && r.outra_linha) return false;
+    if(fl.grupo==='outra' && !r.outra_linha) return false;
+    if(fl.grupo==='saiu' ? r.no_export : (fl.dec!=='todas' && r.decisao!==fl.dec)) return false;
+    if(q && !normalizeText([r.codigo, r.descricao, r.fab, r.outra_linha].join(' ')).toLowerCase().includes(q)) return false;
+    return true;
+  });
+}
+function renderAvaliacaoWvetro(c){
+  if(!ehAdminEspelho() || STATE.verComoEquipe) return '';
+  const todos = c.wvAval||[];
+  if(!todos.length) return '';
+  const fl = STATE.wvAvFiltro = STATE.wvAvFiltro || {grupo:'todos', dec:'pendente', busca:''};
+  const cont = k=>todos.filter(r=>r.decisao===k).length;
+  const nSem = todos.filter(r=>!r.outra_linha).length, nOutra = todos.length - nSem, nSaiu = todos.filter(r=>!r.no_export).length;
+  const lista = wvAvalFiltrados(c), lim = STATE.wvAvLim || 200, vis = lista.slice(0, lim);
+  const chip = (grupoOuDec, v, t, n)=>`<button class="chip ${fl[grupoOuDec]===v?'active':''}" data-action="wv-av-filtro" data-k="${grupoOuDec}" data-v="${v}">${t}${n!=null?` <b>${n}</b>`:''}</button>`;
+  const btn = (r,k)=>`<button class="btn btn-sm" data-action="wv-av-dec" data-id="${r.id}" data-v="${k}" title="${WV_DEC[k].t}" style="padding:2px 8px;${r.decisao===k?`background:${WV_DEC[k].bg};color:${WV_DEC[k].cor};border-color:${WV_DEC[k].cor};font-weight:700;`:'opacity:.55;'}">${k==='alimentar'?'✅':k==='nao'?'❌':'⏳'}</button>`;
+  return `<div class="panel" style="border-left:4px solid #d97706;">
+    <div class="panel-head"><div><h3>🔎 Em avaliação — fora do Banco FC</h3><div class="desc">Códigos do WVetro de ${escapeHtml(c.nome)} que <b>não</b> estão no Banco de Preços nas linhas contratadas (o WVetro cadastra tudo como "GERAL"). Não entram no checklist. Decida item a item: <b>✅ Alimentar</b> (vai para a lista de cotação), <b>❌ Não alimentar</b> ou <b>⏳ Pendente</b>. Reimportar o WVetro mantém as decisões.</div></div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <button class="btn btn-sm" data-action="wv-av-baixar" data-modo="alimentar">${icon('download')} Lista para cotação (${cont('alimentar')})</button>
+        <button class="btn btn-sm" data-action="wv-av-baixar" data-modo="filtro">${icon('download')} Baixar o que está na tela</button>
+      </div></div>
+    <div style="padding:0 18px 10px; display:flex; gap:14px; flex-wrap:wrap; font-size:13px;">
+      <span><b>${todos.length}</b> códigos em avaliação</span>
+      <span style="color:${WV_DEC.pendente.cor}">⏳ ${cont('pendente')} pendentes</span>
+      <span style="color:${WV_DEC.alimentar.cor}">✅ ${cont('alimentar')} alimentar</span>
+      <span style="color:${WV_DEC.nao.cor}">❌ ${cont('nao')} não alimentar</span>
+    </div>
+    <div style="padding:0 18px 8px; display:flex; flex-direction:column; gap:8px;">
+      <div class="chiprow">${chip('grupo','todos','Todos',todos.length)}${chip('grupo','sem','Não está no Banco FC',nSem)}${chip('grupo','outra','No banco, linha não contratada',nOutra)}${nSaiu?chip('grupo','saiu','Saiu do WVetro',nSaiu):''}</div>
+      ${fl.grupo==='saiu'?'':`<div class="chiprow">${chip('dec','pendente','⏳ Pendentes')}${chip('dec','alimentar','✅ Alimentar')}${chip('dec','nao','❌ Não alimentar')}${chip('dec','todas','Todas as decisões')}</div>`}
+      <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+        <div class="searchbox" style="min-width:240px;flex:1 1 240px;max-width:420px">${icon('search')}<input placeholder="Buscar código, descrição ou fabricante" value="${escapeHtml(fl.busca||'')}" data-action="wv-av-busca"></div>
+        ${lista.length?`<span class="note">Aplicar aos ${lista.length} exibidos:</span>
+        <button class="btn btn-sm" data-action="wv-av-lote" data-v="alimentar">✅ Alimentar</button>
+        <button class="btn btn-sm" data-action="wv-av-lote" data-v="nao">❌ Não alimentar</button>
+        <button class="btn btn-sm" data-action="wv-av-lote" data-v="pendente">⏳ Pendente</button>`:''}
+      </div>
+    </div>
+    ${lista.length ? `<div class="table-wrap"><table class="table">
+      <thead><tr><th style="width:150px;">Código WVetro</th><th>Descrição WVetro</th><th style="width:50px;">UN</th><th style="width:140px;">Fabricante</th><th style="width:170px;">No Banco FC</th><th class="tcenter" style="width:130px;">Decisão</th></tr></thead>
+      <tbody>${vis.map(r=>`<tr${r.no_export?'':' style="opacity:.55;" title="Este código não veio na última exportação do WVetro"'}>
+        <td><b>${escapeHtml(r.codigo)}</b>${r.no_export?'':' <span class="badge">saiu do WVetro</span>'}</td>
+        <td>${escapeHtml(r.descricao||'')}</td><td>${escapeHtml(r.un||'')}</td><td>${escapeHtml(r.fab||'')}</td>
+        <td>${r.outra_linha?`<span class="badge" title="Existe no Banco de Preços, mas em linha que o cliente não contratou">${escapeHtml(r.outra_linha)}</span>`:'<span class="note">não está no banco</span>'}</td>
+        <td class="tcenter" style="white-space:nowrap;">${btn(r,'alimentar')} ${btn(r,'nao')} ${btn(r,'pendente')}</td></tr>`).join('')}</tbody></table></div>
+      ${lista.length>lim?`<div style="padding:10px 18px;"><button class="btn btn-sm" data-action="wv-av-mais">Mostrar mais (${lista.length-lim} restantes)</button></div>`:''}`
+      : `<div style="padding:6px 18px 16px;" class="note">Nenhum código neste filtro.</div>`}
+  </div>`;
+}
+async function decidirAvaliacao(c, ids, decisao){
+  if(!ehAdminEspelho() || !ids.length) return;
+  const agora = new Date().toISOString();
+  for(let i=0;i<ids.length;i+=100){ const {error} = await sb.from('impl_wv_avaliacao').update({decisao, decidido_em: decisao==='pendente'?null:agora}).in('id', ids.slice(i,i+100)); if(error){ avisarErroSalvar(error); return; } }
+  const s = new Set(ids); (c.wvAval||[]).forEach(r=>{ if(s.has(r.id)){ r.decisao = decisao; r.decidido_em = decisao==='pendente'?null:agora; } });
+  toastSalvo(ids.length>1 ? ids.length+' itens: '+WV_DEC[decisao].t : WV_DEC[decisao].t); render();
+}
+function baixarAvaliacaoWvetro(c, modo){
+  const rows = modo==='alimentar' ? (c.wvAval||[]).filter(r=>r.decisao==='alimentar') : wvAvalFiltrados(c);
+  if(!rows.length){ alert(modo==='alimentar' ? 'Nenhum item marcado como ✅ Alimentar ainda.' : 'Nenhum item no filtro.'); return; }
+  const aoa = [['Código WVetro','Descrição WVetro','UN','Fabricante (WVetro)','No Banco FC (linha não contratada)','Decisão','Preço (cotação)']]
+    .concat(rows.map(r=>[r.codigo, r.descricao||'', r.un||'', r.fab||'', r.outra_linha||'', WV_DEC[r.decisao].t, '']));
+  const ws = XLSX.utils.aoa_to_sheet(aoa); ws['!cols'] = [{wch:18},{wch:50},{wch:6},{wch:20},{wch:24},{wch:14},{wch:14}]; ws['!autofilter'] = {ref:'A1:G'+aoa.length};
+  const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, modo==='alimentar'?'Para cotação':'Em avaliação');
+  XLSX.writeFile(wb, (c.nome||'cliente').replace(/[^\w]+/g,'_')+(modo==='alimentar'?'_cotacao_fora_do_banco.xlsx':'_em_avaliacao.xlsx'));
+}
+
 function renderWvetroBox(c, contratadas){
   if(!ehAdminEspelho() || STATE.verComoEquipe) return '';
   const tem = contratadas.filter(l=>usaWvetroLinha(c, l));
@@ -4713,6 +4809,7 @@ function renderClienteComponentes(c){
   const db = verTodasLinhas ? null : PRICE_DB[linhaAtiva];
   return `
   ${renderWvetroBox(c, contratadas)}
+  ${renderAvaliacaoWvetro(c)}
   <div class="panel">
     <div class="panel-head">
       <div><h3>${icon('box')} Linhas contratadas</h3><div class="desc">Cada linha tem seu próprio checklist e seu próprio aviso automático de progresso. Escolha "Todas" pra ver e buscar os itens de todas as linhas contratadas juntos — útil na conferência, quando você busca por códigos aleatórios sem saber de qual linha eles são.</div></div>
@@ -6855,6 +6952,7 @@ function wireEvents(){
         const {error} = await sb.from('impl_cliente_itens').update({linha:v}).eq('id', it._id); if(error){ avisarErroSalvar(error); return; } it.linha = v||''; toastSalvo('Linha salva'); };
       return;
     }
+    if(action==='wv-av-busca'){ el.oninput=(e)=>{ STATE.wvAvFiltro.busca=e.target.value; STATE.wvAvLim=200; clearTimeout(window.__wvaT); window.__wvaT=setTimeout(()=>{ render(); const n=document.querySelector('[data-action="wv-av-busca"]'); if(n){ n.focus(); n.setSelectionRange(n.value.length,n.value.length); } },250); }; return; }
     if(action==='wv-importar'){
       el.onchange = async (e)=>{ const c = CLIENTS.find(x=>x.id===STATE.clientId); const f = e.target.files && e.target.files[0]; e.target.value=''; if(c && f) await importarWvetro(c, f); };
       return;
@@ -7706,6 +7804,11 @@ function wireEvents(){
         const c = CLIENTS.find(x=>x.id===STATE.clientId); if(!c) return;
         liberarLinhaPrecos(c, el.dataset.key, el.dataset.v==='1'); return;
       }
+      if(action==='wv-av-filtro'){ STATE.wvAvFiltro[el.dataset.k]=el.dataset.v; STATE.wvAvLim=200; render(); return; }
+      if(action==='wv-av-mais'){ STATE.wvAvLim=(STATE.wvAvLim||200)+300; render(); return; }
+      if(action==='wv-av-dec'){ const c = CLIENTS.find(x=>x.id===STATE.clientId); if(c) decidirAvaliacao(c, [el.dataset.id], el.dataset.v); return; }
+      if(action==='wv-av-lote'){ const c = CLIENTS.find(x=>x.id===STATE.clientId); if(!c) return; const ids = wvAvalFiltrados(c).map(r=>r.id); if(ids.length && confirm('Marcar os '+ids.length+' itens exibidos como "'+WV_DEC[el.dataset.v].t+'"?')) decidirAvaliacao(c, ids, el.dataset.v); return; }
+      if(action==='wv-av-baixar'){ const c = CLIENTS.find(x=>x.id===STATE.clientId); if(c) baixarAvaliacaoWvetro(c, el.dataset.modo); return; }
       if(action==='wv-baixar'){ const c = CLIENTS.find(x=>x.id===STATE.clientId); if(c) baixarRelatorioWvetro(c); return; }
       if(action==='wv-remover'){ const c = CLIENTS.find(x=>x.id===STATE.clientId); if(c) removerWvetro(c); return; }
       if(action==='ver-como-equipe'){ STATE.verComoEquipe = !STATE.verComoEquipe; render(); return; }
