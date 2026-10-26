@@ -359,7 +359,7 @@ tbody tr:hover{background:var(--panel-2);}
       <button class="navitem" id="btn-logout"><i data-lucide="log-out"></i> Sair</button>
     </div>
     <div class="sidebar-foot">
-      Painel de implantação — dados salvos em banco de dados real (Supabase), acesso restrito à equipe.<br><b>Versão 17/10x — aviso de atualizar só quando a matriz pedir</b>
+      Painel de implantação — dados salvos em banco de dados real (Supabase), acesso restrito à equipe.<br><b>Versão 25/10b — laranja + valor alimentado</b>
     </div>
   </nav>
   <div class="mobile-topbar">
@@ -567,7 +567,7 @@ async function carregarClientes(){
         if(r.precisa_cotacao) (cotacaoComponentes[r.linha] = cotacaoComponentes[r.linha]||{})[r.codigo] = true;
       }
     });
-    const perfisMetro = metroRows.filter(r=>r.cliente_id===c.id).map(r=>({_id:r.id, codigo:r.codigo, descricao:r.descricao||'', preco:Number(r.preco)||0, alimentado:!!r.alimentado, orcId:r.orcamento_aluminio_id||null, codigoSistema:r.codigo_sistema||'', emRevisao:!!r.em_revisao, revisaoObs:r.revisao_obs||'', revisaoEm:r.revisao_em||null}));
+    const perfisMetro = metroRows.filter(r=>r.cliente_id===c.id).map(r=>({_id:r.id, codigo:r.codigo, descricao:r.descricao||'', preco:Number(r.preco)||0, alimentado:!!r.alimentado, orcId:r.orcamento_aluminio_id||null, codigoSistema:r.codigo_sistema||'', emRevisao:!!r.em_revisao, revisaoObs:r.revisao_obs||'', revisaoEm:r.revisao_em||null, usadoSemPreco:!!r.usado_sem_preco, valorAlimentado:(r.valor_alimentado==null?null:Number(r.valor_alimentado)), valorAlimentadoRef:r.valor_alimentado_ref||'', valorAlimentadoEm:r.valor_alimentado_em||null}));
     const perfisMetroPdfs = metroPdfRows.filter(r=>r.cliente_id===c.id).map(r=>({
       _id:r.id, nome:r.nome_arquivo, storagePath:r.storage_path,
       data: r.created_at ? new Date(r.created_at).toLocaleDateString('pt-BR') : '',
@@ -992,7 +992,7 @@ function componentesProgressoGeral(client){
 // marcado direto na tabela do cliente, seja porque foi marcado dentro de um orçamento implantado.
 function progressoImplantacaoTotal(client){
   const comp = componentesProgressoGeral(client);
-  const metro = client.perfisMetro || [];
+  const metro = (client.perfisMetro || []).filter(metroContaProgresso);
   const metroAlimentados = metro.filter(it=>it.alimentado).length;
   let orcTotal = 0, orcAlimentados = 0;
   (client.orcamentos||[]).forEach(o=>{
@@ -1022,7 +1022,7 @@ function categoriaProgress(client, key){
     return { total: itens.length, alimentados, pct: itens.length ? Math.round(alimentados/itens.length*100) : 0 };
   }
   if(key==='perfis_metro'){
-    const itens = client.perfisMetro || [];
+    const itens = (client.perfisMetro || []).filter(metroContaProgresso);
     const alimentados = itens.filter(it=>it.alimentado).length;
     return { total: itens.length, alimentados, pct: itens.length ? Math.round(alimentados/itens.length*100) : 0 };
   }
@@ -1620,7 +1620,26 @@ function precoLiquidoMetro(it, descontoPct){
   return valorComDesconto(valorAjustado(it.preco, ajusteDoItemMetro(it)), it && it.orcId ? descontoPct : 0);
 }
 // Vista atual da tabela de metro linear: 'precos' (itens do banco de alumínio) ou 'orcamento' (orçamento exclusivo do cliente).
-function itemNaVistaMetro(it){ return (STATE.metroVista||'precos')==='precos' ? !!it.orcId : !it.orcId; }
+function itemNaVistaMetro(it){ return (STATE.metroVista||'precos')==='precos' ? (!!it.orcId || !!it.usadoSemPreco) : (!it.orcId && !it.usadoSemPreco); }
+// Usado sem preço: código usado nos orçamentos/pedidos do cliente que ainda não tem preço para alimentar. Fica em laranja e fora do % de progresso até ter preço.
+function ehUsadoSemPrecoPendente(it){ return !!(it && it.usadoSemPreco && !it.alimentado); }
+function metroContaProgresso(it){ return !(it && it.usadoSemPreco && !(Number(it.preco)>0)); }
+// Valor alimentado: o preço que está de fato lançado no sistema do cliente (WVetro/CEM) para esse código e cor.
+function situacaoValorAlimentado(it, descontoPct){
+  if(it.valorAlimentado==null) return 'vazio';
+  const ref = Math.round(Number(precoLiquidoMetro(it, descontoPct))*100)/100;
+  return Math.abs(Number(it.valorAlimentado)-ref)<0.005 ? 'igual' : 'difere';
+}
+function celulaValorAlimentado(it, idx, descontoPct){
+  const s = situacaoValorAlimentado(it, descontoPct);
+  const cor = s==='igual' ? '#15803d' : s==='difere' ? '#b91c1c' : 'var(--text-3)';
+  const bg = s==='igual' ? '#f0fdf4' : s==='difere' ? '#fef2f2' : 'transparent';
+  const dif = s==='difere' ? (Number(it.valorAlimentado) - Math.round(Number(precoLiquidoMetro(it, descontoPct))*100)/100) : 0;
+  const tip = (it.valorAlimentadoRef?'Origem: '+it.valorAlimentadoRef:'')+(it.valorAlimentadoEm?' · lido em '+new Date(it.valorAlimentadoEm).toLocaleDateString('pt-BR'):'');
+  return '<input class="editable-price" style="width:78px; color:'+cor+'; background:'+bg+'; font-weight:700;" value="'+(it.valorAlimentado==null?'':fmtPrecoInput(it.valorAlimentado))+'" placeholder="—" data-action="edit-valor-alimentado" data-idx="'+idx+'" title="'+escapeHtml(tip)+'">'
+    + (s==='difere' ? '<div style="font-size:10.5px; color:#b91c1c; white-space:nowrap;">'+(dif>0?'+':'')+dif.toFixed(2).replace('.',',')+' vs líquido</div>' : '')
+    + (it.valorAlimentadoRef ? '<div style="font-size:10.5px; color:var(--text-3); white-space:nowrap; max-width:150px; overflow:hidden; text-overflow:ellipsis;" title="'+escapeHtml(it.valorAlimentadoRef)+'">'+escapeHtml(it.valorAlimentadoRef)+'</div>' : '');
+}
 function fmtAjuste(a){ return (a>0?'+':'')+String(a).replace('.',',')+'%'; }
 function valorMetroLinear(it, descontoPct, ajustePct){
   if(it.valorBarra==null) return null;
@@ -5323,7 +5342,7 @@ function renderPerfisMetroLinear(c, vista){
   vista = vista || 'precos';
   STATE.metroVista = vista;
   const ehPrecos = vista==='precos';
-  const itens = (c.perfisMetro || []).filter(it=> ehPrecos ? !!it.orcId : !it.orcId);
+  const itens = (c.perfisMetro || []).filter(it=> itemNaVistaMetro(it));
   const pdfs = c.perfisMetroPdfs || [];
   const descontoPct = ehPrecos ? (c.perfisMetroDescontoPct||0) : 0;
   const temReajuste = itens.some(it=>ajusteDoItemMetro(it));
@@ -5340,10 +5359,13 @@ function renderPerfisMetroLinear(c, vista){
   const mb = STATE.metroBusca;
   if(mb.clienteId!==c.id){ mb.clienteId=c.id; mb.termo=''; mb.status='todos'; }
   const termoBusca = normalizeText(mb.termo.trim());
-  const visiveis = (c.perfisMetro||[]).map((it,idx)=>({it,idx})).filter(({it})=> ehPrecos ? !!it.orcId : !it.orcId).filter(({it})=>{
+  const visiveis = (c.perfisMetro||[]).map((it,idx)=>({it,idx})).filter(({it})=> itemNaVistaMetro(it)).filter(({it})=>{
     if(mb.status==='pendentes' && it.alimentado) return false;
     if(mb.status==='alimentados' && !it.alimentado) return false;
     if(mb.status==='revisao' && !it.emRevisao) return false;
+    if(mb.status==='usado' && !it.usadoSemPreco) return false;
+    if(mb.status==='va-difere' && situacaoValorAlimentado(it, descontoPct)!=='difere') return false;
+    if(mb.status==='va-vazio' && situacaoValorAlimentado(it, descontoPct)!=='vazio') return false;
     return bateBuscaItem(it.codigo, (it.codigoSistema||'')+' '+(it.descricao||''), mb.termo);
   });
   // Ordem da tabela (só a exibição; não muda nada no banco). Fica lembrada neste navegador.
@@ -5387,8 +5409,10 @@ function renderPerfisMetroLinear(c, vista){
   `}
   <div class="panel">
     <div class="panel-head">
-      <div class="desc">${itens.length} item(ns) ${ehPrecos?'dos preços do banco':'do orçamento exclusivo'} · ${alimentadosCount} alimentado(s) (${pctAlimentado}%)${duplicadosCount ? ` · <span style="color:#a16207; font-weight:600;">${duplicadosCount} duplicado(s) (mesmo código e descrição)</span>` : ''}${selecionadosCount ? ` · <span style="color:var(--accent-dark); font-weight:600;">${selecionadosCount} selecionado(s)</span>` : ''}</div>
+      <div class="desc">${itens.length} item(ns) ${ehPrecos?'dos preços do banco':'do orçamento exclusivo'} · ${alimentadosCount} alimentado(s) (${pctAlimentado}%)${itens.some(ehUsadoSemPrecoPendente) ? ` · <span style="color:#c2410c; font-weight:700;">🟠 ${itens.filter(ehUsadoSemPrecoPendente).length} usado(s) sem preço</span>` : ''}${duplicadosCount ? ` · <span style="color:#a16207; font-weight:600;">${duplicadosCount} duplicado(s) (mesmo código e descrição)</span>` : ''}${selecionadosCount ? ` · <span style="color:var(--accent-dark); font-weight:600;">${selecionadosCount} selecionado(s)</span>` : ''}</div>
       <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        ${ehPrecos ? `<button class="btn btn-sm" style="border-color:#fdba74; background:#fff7ed; color:#c2410c;" data-action="usado-sem-preco-adicionar" title="Lança códigos usados nos orçamentos/pedidos do cliente que ainda não têm preço">🟠 Adicionar usados sem preço</button>` : ''}
+        ${selecionadosCount ? `<button class="btn btn-sm" style="border-color:#fdba74; background:#fff7ed; color:#c2410c;" data-action="usado-sem-preco-marcar" data-marcar="1">🟠 Marcar ${selecionadosCount} como usado sem preço</button><button class="btn btn-sm" data-action="usado-sem-preco-marcar" data-marcar="0">Tirar laranja de ${selecionadosCount}</button>` : ''}
         ${selecionadosCount ? `<button class="btn btn-sm" style="border-color:#f1c27d; background:#fff7e6; color:#8a5a12;" data-action="revisao-selecionados-metro">🔎 Enviar ${selecionadosCount} para revisão</button>` : ''}
         ${selecionadosCount ? `<button class="btn btn-sm btn-danger-ghost" data-action="excluir-selecionados-metro">${icon('trash-2')} Excluir ${selecionadosCount} selecionado(s)</button>` : ''}
         ${duplicadosCount ? `<button class="btn btn-sm btn-danger-ghost" data-action="remover-duplicados-metro">${icon('trash-2')} Remover ${duplicadosCount} duplicado(s)</button>` : ''}
@@ -5404,6 +5428,8 @@ function renderPerfisMetroLinear(c, vista){
         <option value="todos" ${mb.status==='todos'?'selected':''}>Todos</option>
         <option value="pendentes" ${mb.status==='pendentes'?'selected':''}>Só pendentes</option>
         <option value="alimentados" ${mb.status==='alimentados'?'selected':''}>Só alimentados</option>
+        <option value="usado" ${mb.status==='usado'?'selected':''}>🟠 Usados sem preço (${itens.filter(it=>it.usadoSemPreco).length})</option>
+        ${ehPrecos?`<option value="va-difere" ${mb.status==='va-difere'?'selected':''}>🔴 Valor alimentado diferente (${itens.filter(it=>situacaoValorAlimentado(it, descontoPct)==='difere').length})</option><option value="va-vazio" ${mb.status==='va-vazio'?'selected':''}>Sem valor alimentado (${itens.filter(it=>situacaoValorAlimentado(it, descontoPct)==='vazio').length})</option>`:''}
         <option value="revisao" ${mb.status==='revisao'?'selected':''}>🔎 Só em revisão (${itens.filter(it=>it.emRevisao).length})</option>
       </select>
       <select class="select-inline" data-action="ordem-metro" title="Ordem dos códigos na tabela">
@@ -5417,10 +5443,10 @@ function renderPerfisMetroLinear(c, vista){
     ${itens.length===0 ? (ehPrecos ? emptyState('table','Nenhum preço importado ainda','Clique em "Importar do banco" acima, escolha o orçamento do fornecedor no banco de alumínio e marque os perfis que este cliente vai usar.') : emptyState('table','Nenhum item ainda','Clique em "Novo item" ou anexe o PDF do orçamento acima pra detectar os itens automaticamente.')) : visiveis.length===0 ? emptyState('search','Nada encontrado','Nenhum item bate com a pesquisa. Ajuste o termo ou limpe o filtro.') : `
     <div style="overflow-x:auto;">
     <table>
-      <thead><tr><th style="width:40px;"><input type="checkbox" data-action="toggle-selecao-metro-todos" ${visiveis.length>0 && visiveis.every(({it})=>it._selecionado)?'checked':''}></th><th style="width:80px;">Alimentado <input type="checkbox" class="chk" title="Marcar todos os itens exibidos como alimentados" data-action="marcar-todos-metro-alimentado" ${visiveis.length>0 && visiveis.filter(({it})=>Number(it.preco)>0||it.alimentado).every(({it})=>it.alimentado) && visiveis.some(({it})=>Number(it.preco)>0||it.alimentado)?'checked':''}></th><th style="width:58px;">Foto</th><th><button type="button" data-action="ordem-metro-th" title="Clique para classificar" style="all:unset; cursor:pointer; font:inherit; text-transform:inherit; letter-spacing:inherit; color:inherit; display:inline-flex; gap:4px; align-items:center;">Código ${ordemMetro==='az'?'▲ A–Z':ordemMetro==='za'?'▼ Z–A':'⇅'}</button></th><th title="Código usado no sistema do cliente (Wvetro/Cem) quando for diferente do código do fornecedor">Código sistema</th><th>Descrição</th><th class="tright">Preço tabela (R$/m)</th>${temReajuste?'<th class="tright">Reajuste</th>':''}${temLiquido?'<th class="tright">Preço líquido (R$/m)</th>':''}<th class="tcenter" style="width:90px;" title="Não encontrado no sistema: vai para a aba Revisão de implantação">🔎 Revisão</th><th></th></tr></thead>
+      <thead><tr><th style="width:40px;"><input type="checkbox" data-action="toggle-selecao-metro-todos" ${visiveis.length>0 && visiveis.every(({it})=>it._selecionado)?'checked':''}></th><th style="width:80px;">Alimentado <input type="checkbox" class="chk" title="Marcar todos os itens exibidos como alimentados" data-action="marcar-todos-metro-alimentado" ${visiveis.length>0 && visiveis.filter(({it})=>Number(it.preco)>0||it.alimentado).every(({it})=>it.alimentado) && visiveis.some(({it})=>Number(it.preco)>0||it.alimentado)?'checked':''}></th><th style="width:58px;">Foto</th><th><button type="button" data-action="ordem-metro-th" title="Clique para classificar" style="all:unset; cursor:pointer; font:inherit; text-transform:inherit; letter-spacing:inherit; color:inherit; display:inline-flex; gap:4px; align-items:center;">Código ${ordemMetro==='az'?'▲ A–Z':ordemMetro==='za'?'▼ Z–A':'⇅'}</button></th><th title="Código usado no sistema do cliente (Wvetro/Cem) quando for diferente do código do fornecedor">Código sistema</th><th>Descrição</th><th class="tright">Preço tabela (R$/m)</th>${temReajuste?'<th class="tright">Reajuste</th>':''}${temLiquido?'<th class="tright">Preço líquido (R$/m)</th>':''}${ehPrecos?'<th class="tright" title="Preço que está lançado no sistema do cliente para esse código e cor. Verde = igual ao preço líquido; vermelho = diferente. Dá para editar.">Valor alimentado (sistema)</th>':''}<th class="tcenter" style="width:90px;" title="Não encontrado no sistema: vai para a aba Revisão de implantação">🔎 Revisão</th><th></th></tr></thead>
       <tbody>
       ${visiveis.map(({it,idx})=>`
-        <tr${it.emRevisao?' style="background:#fff7e6;"':''}>
+        <tr${ehUsadoSemPrecoPendente(it)?' style="background:#ffedd5; box-shadow:inset 4px 0 0 #f97316;" title="Usado no sistema do cliente e ainda sem preço para alimentar"':(it.emRevisao?' style="background:#fff7e6;"':'')}>
           <td class="tcenter"><input type="checkbox" class="chk" ${it._selecionado?'checked':''} data-action="toggle-selecao-metro-item" data-idx="${idx}"></td>
           <td class="tcenter"><input type="checkbox" class="chk" ${it.alimentado?'checked':''} ${(!it.alimentado && !(Number(it.preco)>0))?'disabled title="Sem preço — não pode ser marcado como alimentado"':''} data-action="toggle-metro-item-alimentado" data-idx="${idx}"></td>
           ${fotoCelula(it._base||it.codigo)}
@@ -5429,7 +5455,7 @@ function renderPerfisMetroLinear(c, vista){
           <td><textarea class="editable-price" style="text-align:left; width:100%; white-space:pre-wrap; word-break:break-word; resize:vertical; min-height:38px; line-height:1.4;" rows="2" data-action="edit-metro-item" data-campo="descricao" data-idx="${idx}">${escapeHtml(it.descricao||'')}</textarea></td>
           <td class="tright"><input class="editable-price" value="${fmtPrecoInput(it.preco)}" data-action="edit-metro-item" data-campo="preco" data-idx="${idx}"></td>
           ${temReajuste?`<td class="tright mono">${ajusteDoItemMetro(it)?fmtAjuste(ajusteDoItemMetro(it)):'—'}</td>`:''}
-          ${temLiquido?`<td class="tright mono"><b>${fmtMoney(precoLiquidoMetro(it, descontoPct))}</b></td>`:''}
+          ${temLiquido?`<td class="tright mono"><b>${fmtMoney(precoLiquidoMetro(it, descontoPct))}</b></td>`:''}${ehPrecos?`<td class="tright">${celulaValorAlimentado(it, idx, descontoPct)}</td>`:''}
           <td class="tcenter"><input type="checkbox" class="chk" ${it.emRevisao?'checked':''} data-action="toggle-revisao-metro" data-idx="${idx}" title="Não encontrado no sistema: enviar para Revisão de implantação"></td>
           <td class="tright"><button class="iconbtn" data-action="excluir-metro-item" data-idx="${idx}" title="Excluir">${icon('trash-2')}</button></td>
         </tr>`).join('')}
@@ -6727,6 +6753,19 @@ function wireEvents(){
       };
       return;
     }
+    if(action==='edit-valor-alimentado'){
+      el.onchange = (e)=>{
+        const c = CLIENTS.find(x=>x.id===STATE.clientId); if(!c) return;
+        const item = (c.perfisMetro||[])[parseInt(el.dataset.idx,10)]; if(!item) return;
+        const txt = e.target.value.trim();
+        let v = txt==='' ? null : parseFloat(txt.replace(/\./g,'').replace(',','.'));
+        if(v!=null && isNaN(v)) v = null;
+        item.valorAlimentado = v; item.valorAlimentadoRef = v==null ? '' : 'digitado no painel'; item.valorAlimentadoEm = new Date().toISOString();
+        render();
+        salvarMetroItem(item._id, {valor_alimentado: v, valor_alimentado_ref: item.valorAlimentadoRef||null, valor_alimentado_em: item.valorAlimentadoEm});
+      };
+      return;
+    }
     if(action==='edit-metro-item'){
       el.onchange = (e)=>{
         const c = CLIENTS.find(x=>x.id===STATE.clientId);
@@ -7688,6 +7727,49 @@ function wireEvents(){
             if(await claudeSalvarBase(r, {cod_site:x.c, desc_site:x.n, preco:x.p, img:x.i||null, unidade:x.u||null, status: r.status==='nao_encontrado' ? 'parecido' : r.status})){ await claudeAplicarPreco(r); toastSalvo('Variação escolhida: '+x.c); } }
           if(action==='cl-excluir'){ const ex = el.dataset.v==='1';
             if(await claudeSalvarBase(r, {excluido:ex})){ await claudeAplicarPreco(r); toastSalvo(ex ? 'Excluído da base Claude' : 'Restaurado'); } }
+          render();
+        })();
+        return;
+      }
+      if(action==='usado-sem-preco-marcar'){
+        const c = CLIENTS.find(x=>x.id===STATE.clientId); if(!c) return;
+        const marcar = el.dataset.marcar==='1';
+        const sel = (c.perfisMetro||[]).filter(it=>it._selecionado && itemNaVistaMetro(it));
+        if(!sel.length) return;
+        sel.forEach(it=>{ it.usadoSemPreco = marcar; it._selecionado = false; });
+        render();
+        (async()=>{ const ids = sel.map(it=>it._id).filter(Boolean); let erro = null;
+          for(let i=0;i<ids.length;i+=100){ const {error} = await sb.from('impl_perfis_metro').update({usado_sem_preco:marcar}).in('id', ids.slice(i,i+100)); if(error){ erro = error; break; } }
+          if(erro) avisarErroSalvar(erro); else toastSalvo(sel.length+' item(ns) '+(marcar?'marcados como usados sem preço':'sem a marca laranja')); })();
+        return;
+      }
+      if(action==='usado-sem-preco-adicionar'){
+        const c = CLIENTS.find(x=>x.id===STATE.clientId); if(!c) return;
+        const txt = prompt('Códigos usados nos orçamentos/pedidos de '+c.nome+' que ainda não têm preço.\nSepare por vírgula ou espaço (ex: LG023, LG053, LG054):', '');
+        if(txt===null) return;
+        const cods = [...new Set(txt.split(/[\s,;]+/).map(s=>s.trim()).filter(Boolean))];
+        if(!cods.length) return;
+        const existentes = c.perfisMetro || [];
+        const novos = [], marcados = [];
+        cods.forEach(cod=>{
+          const iguais = existentes.filter(it=>normalizeCodigo(it.codigo)===normalizeCodigo(cod));
+          if(iguais.length){ iguais.forEach(it=>{ if(!it.usadoSemPreco){ it.usadoSemPreco = true; marcados.push(it); } }); }
+          else novos.push({_id:null, codigo:cod, descricao:'USADO NO SISTEMA — SEM PREÇO NO BANCO FC', preco:0, alimentado:false, orcId:null, usadoSemPreco:true, valorAlimentado:null, valorAlimentadoRef:''});
+        });
+        if(!novos.length && !marcados.length){ alert('Esses códigos já estão marcados como usados sem preço.'); return; }
+        c.perfisMetro = existentes.concat(novos);
+        STATE.metroBusca.status = 'usado';
+        render();
+        (async()=>{
+          let erro = null;
+          if(novos.length){
+            const {data, error} = await sb.from('impl_perfis_metro').insert(novos.map(n=>({cliente_id:c.id, codigo:n.codigo, descricao:n.descricao, preco:0, usado_sem_preco:true}))).select('id');
+            if(error) erro = error; else (data||[]).forEach((r,i)=>{ if(novos[i]) novos[i]._id = r.id; });
+          }
+          const ids = marcados.map(it=>it._id).filter(Boolean);
+          if(!erro && ids.length){ const {error} = await sb.from('impl_perfis_metro').update({usado_sem_preco:true}).in('id', ids); if(error) erro = error; }
+          if(erro){ avisarErroSalvar(erro); return; }
+          toastSalvo((novos.length?novos.length+' código(s) lançado(s)':'')+(novos.length&&marcados.length?' · ':'')+(marcados.length?marcados.length+' já existente(s) marcado(s)':'')+' em laranja');
           render();
         })();
         return;
