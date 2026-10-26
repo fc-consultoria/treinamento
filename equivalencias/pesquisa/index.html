@@ -100,10 +100,13 @@ function nCod(s){return semCor(s).replace(/[^A-Z0-9]/g,'').replace(/([A-Z]+)0+(\
 const sa=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
 const LOTE=400,FOT={},carregando={};
-const PRM=new URLSearchParams(location.search),VER='20261026a';
+const PRM=new URLSearchParams(location.search),VER='20261026b';
+/* Fornecedores liberados para este cliente (definidos no painel da FC). Sem lista, mostra só o WVetro. */
+const FK=['wvetro','guapore','alcoa','fermax','udinese','rotofermax','mettallfleck','vitrasul','texa','selta','fbk','ecoalumi','perfileve','cda','prontoaluminio','aluminioscorso','alueste','pereirabrito','vidromax','aluvid'];
+const LIB=(PRM.has('f')?PRM.get('f'):'wvetro').split(',').filter(k=>FK.includes(k));
 {const n=PRM.get('n');if(n)document.getElementById('sub').textContent=n+' · perfis e componentes';}
 function linhaDe(it){
-  const c=(it.mk||it.w||it.g||'').toUpperCase(),d=it.d;
+  const c=(it.mk||it._mk||it.w||it.g||'').toUpperCase(),d=it.d;
   if(it.t==='componente'){if(/TEMPERADO|\bBOX\b/.test(d))return 'Temperado e box';if(/SUPREMA/.test(d))return 'Suprema';if(/\bGOLD\b/.test(d))return 'Gold';return 'Outras'}
   if(/^SU[\s-]?\d/.test(c)||/SUPREMA/.test(d))return 'Suprema';
   if(/^LG[\s-]?\d/.test(c)||/\bGOLD\b/.test(d))return 'Gold';
@@ -124,8 +127,10 @@ function tagsOrigem(o){const p=o.split(/ · | \(/).map(x=>x.replace(/\)$/,'').tr
 async function lote(i){if(FOT['L'+i]||carregando[i])return carregando[i];carregando[i]=fetch('fotos'+i+'.json?v='+VER).then(r=>r.json()).then(j=>{Object.assign(FOT,j);FOT['L'+i]=1}).catch(()=>{});return carregando[i]}
 async function carrega(){
   try{
-    const d=await fetch('dados.json?v='+VER).then(r=>r.json());
-    D=d.itens.map(it=>{const g=(it.c.find(c=>c[0]==='Guaporé')||[])[1]||'',w=(it.c.find(c=>c[0]==='WVetro')||[])[1]||'';
+    const [d,...cs]=await Promise.all([fetch('b.json?v='+VER).then(r=>r.json()),...LIB.map(k=>fetch('c-'+k+'.json?v='+VER).then(r=>r.json()).catch(()=>[]))]);
+    const C=d.itens.map(()=>[]);cs.flat().forEach(([i,pos,...c])=>C[i].push([pos,c]));
+    const semAlcoa=!LIB.includes('alcoa');
+    D=d.itens.map((it,i)=>({...it,c:C[i].sort((a,b)=>a[0]-b[0]).map(x=>x[1])})).filter(it=>it.c.length).map(it=>{if(semAlcoa)it={...it,mk:'',_mk:it.mk};const g=(it.c.find(c=>c[0]==='Guaporé')||[])[1]||'',w=(it.c.find(c=>c[0]==='WVetro')||[])[1]||'';
       const x={...it,g,w};x.l=nomeLinha(it.l||linhaDe(x));x.k=it.c.map(c=>nCod(c[1]));
       x.os=new Set(it.c.flatMap(c=>tagsOrigem(c[0])));
       x.pal=sa([it.d,it.mk||'',...it.c.map(c=>c[2]||'')].join(' ')).split(/[^a-z0-9]+/).filter(Boolean);return x});
@@ -158,9 +163,9 @@ const abertos=new Set();
 function blocoCods(x,q){
   const lin=[],vis=new Set();
   const gua=x.c.filter(c=>c[0]==='Guaporé').map(c=>semCor(c[1]));const dupG=new Set(gua).size>1;
-  if(!x.c.some(c=>c[0]==='WVetro'))lin.push({o:'WVetro',v:'',g:0});
+  if(LIB.includes('wvetro')&&!x.c.some(c=>c[0]==='WVetro'))lin.push({o:'WVetro',v:'',g:0});
   x.c.forEach(([o,v,d])=>{if(!v)return;const key=o+'|'+nCod(v);if(vis.has(key))return;vis.add(key);lin.push({o,v,d:d&&sa(d)!==sa(x.d)?d:'',g:grupoDe(o),dup:o==='Guaporé'&&dupG})});
-  if(!x.c.some(c=>c[0]==='Guaporé'))lin.push({o:'Guaporé',v:'',g:0});
+  if(LIB.includes('guapore')&&!x.c.some(c=>c[0]==='Guaporé'))lin.push({o:'Guaporé',v:'',g:0});
   lin.sort((a,b)=>a.g-b.g||((a.o==='WVetro'?0:1)-(b.o==='WVetro'?0:1)));
   const id=x.c.map(c=>c[1]).join('|');const N=7;
   const aberto=abertos.has(id)||(q&&lin.slice(N).some(l=>l.v&&nCod(l.v).includes(q)));
