@@ -79,8 +79,7 @@ button:focus-visible,select:focus-visible{outline:2px solid var(--teal);outline-
     <button id="limpaq" aria-label="Limpar busca">×</button>
   </div>
   <div class="filtros">
-        <label for="fl">Linha<select id="fl"><option value="">Todas</option></select></label>
-    <label for="fo">Fornecedor / cadastro<select id="fo"><option value="">Todos</option></select></label>
+            <label for="fo">Fornecedor / cadastro<select id="fo"><option value="">Todos</option></select></label>
     <label for="ff">Foto<select id="ff"><option value="">Com e sem foto</option><option value="1">Só com foto</option><option value="0">Só sem foto</option></select></label>
   </div>
   <p class="aviso"><strong>Imagens ilustrativas.</strong> Em caso de dúvida, consulte o catálogo do fornecedor.</p>
@@ -99,7 +98,7 @@ function nCod(s){return semCor(s).replace(/[^A-Z0-9]/g,'').replace(/([A-Z]+)0+(\
 const sa=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
 const LOTE=400,FOT={},carregando={};
-const PRM=new URLSearchParams(location.search),VER='20261026c';
+const PRM=new URLSearchParams(location.search),VER='20261026d';
 /* Fornecedores liberados para este cliente (definidos no painel da FC). Sem lista, mostra só o WVetro. */
 const FK=['wvetro','guapore','alcoa','fermax','udinese','rotofermax','mettallfleck','vitrasul','texa','selta','fbk','ecoalumi','perfileve','cda','prontoaluminio','aluminioscorso','alueste','pereirabrito','vidromax','aluvid'];
 const LIB=(PRM.has('f')?PRM.get('f'):'wvetro').split(',').filter(k=>FK.includes(k));
@@ -134,21 +133,21 @@ async function carrega(){
       x.os=new Set(it.c.flatMap(c=>tagsOrigem(c[0])));
       x.pal=sa([it.d,it.mk||'',...it.c.map(c=>c[2]||'')].join(' ')).split(/[^a-z0-9]+/).filter(Boolean);return x});
     const ls=[...new Set(D.map(x=>x.l))].sort((a,b)=>a==='Outras'?1:b==='Outras'?-1:a.localeCompare(b));
-    $('fl').insertAdjacentHTML('beforeend',ls.map(l=>`<option>${esc(l)}</option>`).join(''));
+    
     const cont={};D.forEach(x=>x.os.forEach(o=>cont[o]=(cont[o]||0)+1));
     const PRI=['WVetro','Guaporé','Vitrasul','Roto Fermax','Fermax','Udinese','MettallFleck','Alutec','STAM','Alcoa'];
     const os=Object.keys(cont).filter(o=>cont[o]>=5).sort((a,b)=>{const i=PRI.indexOf(a),j=PRI.indexOf(b);return (i<0?99:i)-(j<0?99:j)||a.localeCompare(b)});
     $('fo').insertAdjacentHTML('beforeend',os.map(o=>`<option value="${esc(o)}">${esc(o)} (${cont[o].toLocaleString('pt-BR')})</option>`).join(''));
-    try{const s=JSON.parse(localStorage.getItem('pesqCod')||'{}');['fl','fo','ff'].forEach(i=>{if(s[i]!=null&&[...$(i).options].some(o=>o.value===s[i]))$(i).value=s[i]})}catch(e){}
+    try{const s=JSON.parse(localStorage.getItem('pesqCod')||'{}');['fo','ff'].forEach(i=>{if(s[i]!=null&&[...$(i).options].some(o=>o.value===s[i]))$(i).value=s[i]})}catch(e){}
     render();
   }catch(e){$('lista').innerHTML='<p class="vazio">Não foi possível carregar a base. Recarregue a página.</p>'}
 }
 function filtra(){
   const raw=$('q').value.trim(),q=nCod(raw),pals=sa(raw).split(/[^a-z0-9]+/).filter(Boolean);
-  const fl=$('fl').value,fo=$('fo').value,ff=$('ff').value;
+  const fo=$('fo').value,ff=$('ff').value;
   const okO=o=>!fo||tagsOrigem(o).includes(fo);
   const lst=D.filter(x=>{
-    if(fl&&x.l!==fl)return false; if(fo&&!x.os.has(fo))return false;
+    if(fo&&!x.os.has(fo))return false;
     if(ff==='1'&&!x.f)return false; if(ff==='0'&&x.f)return false;
     if(!raw)return true;
     if(q&&x.k.some((k,i)=>okO(x.c[i][0])&&k.includes(q)))return true;
@@ -182,7 +181,7 @@ function fotoHtml(x){
 }
 function render(){
   const {q,raw,lst}=filtra();
-  try{localStorage.setItem('pesqCod',JSON.stringify({fl:$('fl').value,fo:$('fo').value,ff:$('ff').value}))}catch(e){}
+  try{localStorage.setItem('pesqCod',JSON.stringify({fo:$('fo').value,ff:$('ff').value}))}catch(e){}
   $('cont').textContent=lst.length.toLocaleString('pt-BR')+(lst.length===1?' item':' itens')+(raw?` para “${raw}”`:'');
   if(!lst.length){$('lista').innerHTML='<p class="vazio">Nenhum item com esse código ou descrição. Confira o código ou tente parte da descrição.</p>';return}
   const pag=lst.slice(0,vis);
@@ -196,9 +195,9 @@ function render(){
 }
 let t;
 $('q').addEventListener('input',()=>{clearTimeout(t);t=setTimeout(()=>{vis=40;render()},150)});
-['fl','fo','ff'].forEach(i=>$(i).addEventListener('change',()=>{vis=40;render()}));
+['fo','ff'].forEach(i=>$(i).addEventListener('change',()=>{vis=40;render()}));
 $('limpaq').onclick=()=>{$('q').value='';vis=40;render();$('q').focus()};
-$('limpa').onclick=()=>{['q','fl','fo','ff'].forEach(i=>$(i).value='');vis=40;render()};
+$('limpa').onclick=()=>{['q','fo','ff'].forEach(i=>$(i).value='');vis=40;render()};
 $('lista').addEventListener('click',e=>{
   const b=e.target.closest('.cp');
   if(b){const c=b.dataset.c;const ok=()=>{b.textContent='Copiado';b.classList.add('ok');setTimeout(()=>{b.textContent='Copiar';b.classList.remove('ok')},1400)};
