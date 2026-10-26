@@ -359,7 +359,7 @@ tbody tr:hover{background:var(--panel-2);}
       <button class="navitem" id="btn-logout"><i data-lucide="log-out"></i> Sair</button>
     </div>
     <div class="sidebar-foot">
-      Painel de implantação — dados salvos em banco de dados real (Supabase), acesso restrito à equipe.<br><b>Versão 25/10d — tabela de perfis cabe na tela</b>
+      Painel de implantação — dados salvos em banco de dados real (Supabase), acesso restrito à equipe.<br><b>Versão 26/10 — botão Atualizar % do acompanhamento</b>
     </div>
   </nav>
   <div class="mobile-topbar">
@@ -3552,6 +3552,7 @@ function renderClienteDetail(){
         <span data-presenca="${c.id}"></span>
       </div>
       <div style="display:flex; gap:8px;">
+        ${PORTAIS[c.id] && PORTAIS[c.id].ativo ? `<button class="btn btn-sm" style="border-color:#99d6d3; background:#effaf9; color:#0a6d6f; font-weight:650;" data-action="atualizar-pct-portal" title="Publica agora no link do cliente o % alimentado de hoje (a atualização automática das 08:00 de Sinop continua)">${icon('refresh-cw')} Atualizar % do acompanhamento</button>` : ''}
         <button class="btn btn-sm" data-action="editar-cliente">${icon('pencil')} Editar</button>
         <button class="btn btn-sm btn-danger-ghost" data-action="excluir-cliente">${icon('trash-2')} Excluir cliente</button>
       </div>
@@ -8008,6 +8009,15 @@ function wireEvents(){
         el.disabled = true; el.textContent = 'Publicando…';
         copiarTexto(txt, 'Relatório copiado');
         publicarPortalAgora(c).then(ok=>{ if(ok) toastSalvo('Link atualizado · relatório copiado'); render(); });
+        return;
+      }
+      if(action==='atualizar-pct-portal'){
+        const c = CLIENTS.find(x=>x.id===STATE.clientId); if(!c) return;
+        el.disabled = true; const txtOrig = el.innerHTML; el.textContent = 'Atualizando…';
+        publicarPortalAgora(c).then(ok=>{
+          el.disabled = false; el.innerHTML = txtOrig;
+          if(ok) toastSalvo('% do acompanhamento atualizado · '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}));
+        });
         return;
       }
       if(action==='copiar-texto-link-portal'){
