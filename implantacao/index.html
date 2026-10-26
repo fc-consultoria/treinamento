@@ -359,7 +359,7 @@ tbody tr:hover{background:var(--panel-2);}
       <button class="navitem" id="btn-logout"><i data-lucide="log-out"></i> Sair</button>
     </div>
     <div class="sidebar-foot">
-      Painel de implantação — dados salvos em banco de dados real (Supabase), acesso restrito à equipe.<br><b>Versão 26/10 — botão Atualizar % do acompanhamento</b>
+      Painel de implantação — dados salvos em banco de dados real (Supabase), acesso restrito à equipe.<br><b>Versão 26/10b — fotos de todos os perfis da base</b>
     </div>
   </nav>
   <div class="mobile-topbar">
@@ -2189,7 +2189,7 @@ const CLAUDE_FORN = 'Claude (site Vitrasul)';
 let FOTOS_INFO = {}, FOTOS = {}, FOTOS_OK = false;
 const fotoRank = st => ({foto_cat:0, ok:1, foto:1, foto_tec:1.5, parecido:2, foto_sim:3})[st] ?? 2;
 async function carregarFotos(){
-  try{ const {data, error} = await sb.from('impl_claude_base').select('codigo,img,variantes,excluido,status,cod_site,desc_site').limit(5000); if(error) return;
+  try{ let data = [], error = null; for(let de=0; de<20000; de+=1000){ const r = await sb.from('impl_claude_base').select('codigo,img,variantes,excluido,status,cod_site,desc_site').range(de, de+999); if(r.error){ error = r.error; break; } data = data.concat(r.data||[]); if((r.data||[]).length<1000) break; } if(error && !data.length) return;
     const F = {}; FOTOS_INFO = {}; (data||[]).sort((a,b)=>fotoRank(a.status)-fotoRank(b.status)).forEach(r=>{ if(r.excluido) return; let im = r.img && !/sem-imagem/.test(r.img) ? r.img : null;
       if(!im) (r.variantes||[]).some(v=>{ if(v.i && !/sem-imagem/.test(v.i)){ im = v.i; return true; } return false; });
       if(im){ const k = normalizeCodigo(r.codigo); if(k && !F[k]){ F[k] = im.startsWith('~') ? CLAUDE_IMG + im.slice(1) : im; FOTOS_INFO[k] = {sim: r.status==='foto_sim', cat: r.status==='foto_cat' || r.status==='foto_tec', cs: r.cod_site||'', ds: r.desc_site||''}; } } });
