@@ -818,5 +818,6 @@ document.addEventListener('click',async e=>{const b=e.target.closest&&e.target.c
   const r=await sb.rpc('compra_forn_lib',{p_emp:EMP,p_lista:L.length===FC_.length?[]:L});b.disabled=false;
   if(r.error||!r.data){m.textContent='Não salvou: '+((r.error&&r.error.message)||'sem acesso');return;}DADOS.lib=L.length===FC_.length?[]:L;m.textContent='✓ Salvo: o cliente vê '+(L.length===FC_.length?'todos os fornecedores':L.map(f=>IDX.forn[f]).join(', '));});
 </script>
+<script src="../volta-painel.js"></script>
 </body>
 </html>
