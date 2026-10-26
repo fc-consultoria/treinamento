@@ -101,28 +101,66 @@
 </style>
 <div class="cg-top"><div><div class="eyebrow">Central do Gestor · ${h(e.nome)}</div><h2>${nome?sd+', '+h(nome):'Visão geral da empresa'}</h2></div>
   <span class="nota">${D?`👥 ${S.usaram_hoje||0} de ${P.length} da equipe usaram hoje · atualizado ${new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}`:carregando?'Carregando…':''}</span>
-  <button class="btn" type="button" id="cgAt">↻ Atualizar</button></div>
+  <button class="btn" type="button" id="cgTour">❓ Como usar</button><button class="btn" type="button" id="cgAt">↻ Atualizar</button></div>
 ${erro?`<div class="box" style="background:var(--warn-soft)">${h(erro)}</div>`:''}
-<div class="cg-lbl">Precisa de você${PD.length?' · '+PD.length:''}</div>
+<div class="cg-lbl" id="cgT1">Precisa de você${PD.length?' · '+PD.length:''}</div>
 ${!D?'<div class="nota">Carregando…</div>':PD.length?`<div class="cg-pd">${PD.map(p=>`<div><span aria-hidden="true">${p[0]}</span><span>${h(p[1])}</span><button class="btn" type="button" data-cgab="${p[2]}">Ver →</button></div>`).join('')}</div>`:'<div class="cg-ok0">✓ Tudo em dia. Nenhuma decisão esperando por você.</div>'}
-<div class="cg-lbl">Números da semana · últimos 7 dias comparados aos 7 anteriores</div>
+<div class="cg-lbl" id="cgT2">Números da semana · últimos 7 dias comparados aos 7 anteriores</div>
 <div class="cg-nm">${nums().map(([l,v,d])=>`<div><small>${h(l)}</small><b>${h(v)}</b> ${d}</div>`).join('')}</div>
-<div class="cg-lbl">Setores</div>
+<div class="cg-lbl" id="cgT3">Setores</div>
 <div class="cg-grid">${SET.map(c=>setor(c,e)).join('')}</div>
 <div style="text-align:center;margin-top:14px"><button class="btn" type="button" id="cgTools">🧰 Ver todas as ferramentas</button></div>
 ${ADM()&&D?`<div class="cg-wa"><b>📲 Resumo semanal para o gestor</b> <span class="nota">· só a FC vê este quadro. Envie na segunda pelo WhatsApp.</span>
   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><button class="btn pri" type="button" id="cgWaCop">Copiar resumo</button><a class="btn" style="text-decoration:none" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(resumoTxt(e))}">Abrir no WhatsApp</a></div></div>`:''}
-<details class="box cg-mais"><summary><b>👥 Equipe</b> <span class="muted" style="font-size:13px">· ${P.filter(p=>p.online).length} online agora</span></summary>
+<details class="box cg-mais" id="cgT5"><summary><b>👥 Equipe</b> <span class="muted" style="font-size:13px">· ${P.filter(p=>p.online).length} online agora</span></summary>
   <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">${P.map(p=>`<span class="cg-p"><i class="${p.online?'on':''}" aria-hidden="true"></i>${h(p.nome)} <small>· ${h(PAPEL[p.papel]||p.papel)} · ${p.online?'online':quando(p.ultimo)}</small></span>`).join('')}</div></details>
 <details class="box cg-mais"><summary><b>🕘 Atividade recente</b> <span class="muted" style="font-size:13px">· ${EV.length} registro${EV.length===1?'':'s'}</span></summary>
   <ul>${EV.length?EV.slice(0,60).map(linhaEv).join(''):'<li class="nota">Nada registrado ainda.</li>'}</ul></details>`;}
 
+
+  /* 26/10/2026 · tutorial guiado do gestor: abre sozinho no 1º acesso e depois pelo botão "❓ Como usar" */
+  const PASSOS=[
+    [null,0,'👋 Bem-vindo à Central do Gestor','Aqui você acompanha a empresa em 1 minuto por dia, sem precisar procurar nada. São 6 passos rápidos.'],
+    ['#cgT1',1,'1 · Precisa de você','Aparece só o que depende da sua decisão: descontos acima do limite parados há mais de 24h, pedidos esperando o financeiro há mais de 2 dias e estoque sem atualizar há mais de 7 dias. Toque em "Ver →" para resolver. Se estiver verde ("Tudo em dia"), não há nada pendente.'],
+    ['#cgT2',1,'2 · Números da semana','Últimos 7 dias comparados aos 7 anteriores. ▲ verde = subiu, ▼ vermelho = caiu. Conversão = pedidos fechados ÷ orçamentos feitos.'],
+    ['#cgT3',1,'3 · Setores','Vendas, Compras e estoque, Equipe e treinamento, FC e catálogo. A etiqueta mostra "Em dia" ou "Atenção"; o número em amarelo é o motivo. Os botões do rodapé de cada card abrem a ferramenta daquele setor.'],
+    ['#cgTools',0,'4 · Todas as ferramentas','Abre a barra com todas as abas liberadas: planilhas, estoque, catálogo, Treinamento 3D e outras. Para voltar, toque em "🏠 Central do Gestor".'],
+    ['#cgT5',1,'5 · Equipe e atividade','Toque para abrir: veja quem está online, o último acesso de cada pessoa e o que a equipe fez no painel (orçamentos, aprovações de desconto, estudos).'],
+    ['#fcvBtn',0,'6 · Falar com a FC','Use o botão 💬 Conversas para falar com a FC ou com alguém da equipe. Atendimento de segunda a sexta, 8h às 11h e 13h às 17h. Toda segunda você também recebe o resumo da semana pelo WhatsApp.'],
+    [null,0,'✅ Pronto!','Para ver este tutorial de novo, toque em "❓ Como usar" no topo da Central.']];
+  let TI=-1;
+  const chaveTour=()=>'cg-tour-v1-'+((PESSOA&&(PESSOA.login||PESSOA.id))||'fc');
+  function limpaHl(){document.querySelectorAll('.cg-hl').forEach(x=>x.classList.remove('cg-hl'));}
+  function fechaTour(){TI=-1;limpaHl();const c=document.getElementById('cgTourBox');if(c)c.remove();try{localStorage.setItem(chaveTour(),'1');}catch(_){}}
+  function passo(i,fixo){const [sel,prox,tit,txt]=PASSOS[i];TI=i;limpaHl();
+    let c=document.getElementById('cgTourBox');
+    if(!c){c=document.createElement('div');c.id='cgTourBox';c.setAttribute('role','dialog');c.setAttribute('aria-live','polite');document.body.appendChild(c);}
+    const el=sel&&document.querySelector(sel);
+    if(el){el.classList.add('cg-hl');if(prox&&el.nextElementSibling)el.nextElementSibling.classList.add('cg-hl');
+      if(!fixo){const y=el.getBoundingClientRect().top+window.scrollY-90;window.scrollTo({top:Math.max(0,y),behavior:'smooth'});}}
+    else if(i===0&&!fixo)window.scrollTo({top:0,behavior:'smooth'});
+    const ult=i===PASSOS.length-1;
+    c.innerHTML=`<div class="cg-tb-n">${i&&!ult?i+' de '+(PASSOS.length-2):''}</div><b>${tit}</b><p>${txt}</p>
+      <div class="cg-tb-b">${ult?'':'<button class="btn" type="button" id="cgTX">Pular</button>'}<span style="flex:1"></span>
+      ${i?'<button class="btn" type="button" id="cgTV">← Voltar</button>':''}<button class="btn pri" type="button" id="cgTP">${ult?'Concluir':i?'Próximo →':'Começar →'}</button></div>`;
+    const q=x=>document.getElementById(x);
+    if(q('cgTX'))q('cgTX').onclick=fechaTour;if(q('cgTV'))q('cgTV').onclick=()=>passo(i-1);
+    q('cgTP').onclick=()=>{if(ult){fechaTour();return;}let n=i+1;while(n<PASSOS.length-1&&PASSOS[n][0]&&!document.querySelector(PASSOS[n][0]))n++;passo(n);};
+    if(!fixo)q('cgTP').focus();}
+  function tourCss(){if(document.getElementById('cgTourCss'))return;const st=document.createElement('style');st.id='cgTourCss';
+    st.textContent=`.cg-hl{outline:3px solid var(--accent)!important;outline-offset:5px;border-radius:12px;scroll-margin-top:90px}
+#cgTourBox{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);width:min(460px,calc(100vw - 24px));z-index:9998;background:var(--surface);color:var(--fg);border:2px solid var(--accent);border-radius:16px;padding:14px 16px;box-shadow:0 12px 32px rgba(10,20,26,.28)}
+#cgTourBox b{font-size:16px}#cgTourBox p{margin:6px 0 12px;font-size:14.5px;line-height:1.5}.cg-tb-n{font-size:12px;color:var(--muted);font-weight:600}
+.cg-tb-b{display:flex;gap:8px;align-items:center}.cg-tb-b .btn{font-size:13.5px;padding:7px 12px}`;document.head.appendChild(st);}
   function wire(){const b=document.getElementById('cgAt');if(b)b.onclick=()=>{D=null;carregar();ficha();};
     document.querySelectorAll('[data-cgab]').forEach(x=>x.onclick=()=>{tab=x.dataset.cgab;ficha();window.scrollTo({top:0,behavior:'smooth'});});
     /* gestor: na Central, a barra de abas fica recolhida até tocar em "Ver todas as ferramentas" */
     const tg=document.querySelector('.tabg'),tb=document.getElementById('cgTools');
     if(tg&&tb){const esc=!ADM()&&tab==='cen';tg.style.display=esc?'none':'';tb.style.display=esc?'':'none';
       tb.onclick=()=>{tg.style.display='';tb.style.display='none';tg.scrollIntoView({behavior:'smooth',block:'start'});};}
+    tourCss();const bt=document.getElementById('cgTour');if(bt)bt.onclick=()=>passo(0);
+    if(TI>=0)setTimeout(()=>passo(TI,true),50);
+    else if(!ADM()&&D&&tab==='cen'){let visto='1';try{visto=localStorage.getItem(chaveTour());}catch(_){}if(!visto)setTimeout(()=>{if(TI<0)passo(0);},600);}
     const wc=document.getElementById('cgWaCop');if(wc)wc.onclick=async()=>{try{await navigator.clipboard.writeText(resumoTxt(E[at]));wc.textContent='✓ Copiado';setTimeout(()=>wc.textContent='Copiar resumo',2000);}catch(_){prompt('Copie o resumo:',resumoTxt(E[at]));}};}
 
   /* liga a aba "🏠 Central do Gestor" quando quem entrou é o gestor */
