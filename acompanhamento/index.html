@@ -31,14 +31,14 @@ h1,h2,h3{font-family:var(--display);margin:0;letter-spacing:-.01em}
 .top .upd{font-size:13px;color:var(--silver);margin-top:4px}
 .wrap{max-width:880px;margin:-10px auto 0;padding:0 16px 48px;position:relative}
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
-.kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .kpi{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
 .kpi .l{font-size:12.5px;color:var(--muted)}
 .kpi .v{font-family:var(--display);font-size:28px;font-weight:600;line-height:1.15;margin-top:4px}
 .kpi .v small{font-size:15px;color:var(--muted);font-weight:500}
 .kpi.hi{background:var(--teal);border-color:var(--teal);color:#fff}
 .kpi.hi .l,.kpi.hi .v small{color:#d5f1f0}
-@media (max-width:620px){.kpis{grid-template-columns:1fr 1fr}.kpi.hi{grid-column:1 / -1}}
+@media (max-width:620px){.kpis{grid-template-columns:1fr 1fr}}
 .sec{margin-top:16px}
 .sec h2{font-size:17px;margin-bottom:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .ritmo{display:flex;gap:8px;flex-wrap:wrap}
@@ -413,7 +413,6 @@ function render(r){
     ${atual.dados.tipo_cliente==='ativo'?`<div class="liberado rev" style="margin:0 0 12px">🔄 <b>Seu sistema está em revisão de preços.</b> Ele continua funcionando normalmente: nossa equipe está conferindo e atualizando os preços linha a linha. Os itens já revisados aparecem abaixo.</div>`:''}
     <div class="kpis">
       <div class="kpi hi"><div class="l">${atual.dados.tipo_cliente==='ativo'?'Preços revisados':'Alimentação concluída'}</div><div class="v">${pctGeral}%</div><div class="l" style="margin-top:2px">somando todas as linhas</div></div>
-      <div class="kpi"><div class="l">Avanço nesta atualização</div><div class="v">${ant?avancoGeral:'—'}</div></div>
       <div class="kpi"><div class="l">Etapas concluídas</div><div class="v">${etAll.filter(e=>e.feita).length} <small>de ${etAll.length||10}</small></div></div>
     </div>
     ${concluida?`<section class="festa" role="status"><div class="fx">🎉</div><h2>${atual.dados.tipo_cliente==='ativo'?'Revisão concluída!':'Implantação concluída!'}</h2><p>Todas as linhas contratadas foram alimentadas, conferidas e com margem ajustada. Obrigado pela parceria. Qualquer dúvida no uso do sistema, fale com a FC.</p></section>`:''}
