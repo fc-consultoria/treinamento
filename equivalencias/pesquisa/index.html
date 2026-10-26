@@ -1,0 +1,213 @@
+<!doctype html><html lang="pt-BR"><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Pesquisa de Código e Conversor</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: barra de busca fixa no topo + lista de fichas de produto (foto à esquerda, códigos à direita) */
+:root{
+  --bg:#f3f6f6; --card:#ffffff; --fg:#13232e; --muted:#5d6b76; --line:#d9e1e4;
+  --teal:#0f6b70; --teal-soft:#e2f0f0; --amber:#c8820f; --amber-soft:#fbf0dc; --hl:#fff1b8;
+  --f-disp:'Space Grotesk',system-ui,sans-serif; --f-body:'Inter',system-ui,sans-serif; --f-mono:'JetBrains Mono',ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0d1619; --card:#152227; --fg:#e4eef0; --muted:#93a6ad; --line:#26383e;
+  --teal:#4fb8bc; --teal-soft:#16363a; --amber:#e3a74a; --amber-soft:#3a2c14; --hl:#4a3f12; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0d1619; --card:#152227; --fg:#e4eef0; --muted:#93a6ad; --line:#26383e;
+  --teal:#4fb8bc; --teal-soft:#16363a; --amber:#e3a74a; --amber-soft:#3a2c14; --hl:#4a3f12; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font:15px/1.5 var(--f-body)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--card)}
+.wrap{max-width:980px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--card);border-bottom:1px solid var(--line)}
+header.top .wrap{padding-block:14px 12px;display:grid;gap:10px}
+.marca{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.marca h1{margin:0;font:700 20px/1.2 var(--f-disp);letter-spacing:-.01em;text-wrap:balance}
+.marca h1 span{color:var(--teal)}
+.marca small{color:var(--muted);font-size:12px;letter-spacing:.04em;text-transform:uppercase}
+.busca{position:relative}
+.busca input{width:100%;height:48px;border:1.5px solid var(--line);border-radius:10px;padding:0 44px 0 14px;font:500 17px var(--f-body);background:var(--bg);color:var(--fg)}
+.busca input:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px var(--teal-soft)}
+.busca button{position:absolute;right:6px;top:6px;height:36px;width:36px;border:0;background:transparent;color:var(--muted);font-size:20px;cursor:pointer;border-radius:8px}
+.filtros{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.filtros label{display:grid;gap:2px;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.busca input::-webkit-search-cancel-button{-webkit-appearance:none;appearance:none}
+.filtros label{min-width:0}
+.filtros select{width:100%;min-width:0;height:36px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--fg);font:500 14px var(--f-body);padding:0 8px}
+.info{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+.info button{border:1px solid var(--line);background:var(--card);color:var(--fg);border-radius:8px;padding:4px 10px;font:500 13px var(--f-body);cursor:pointer}
+main .wrap{padding-block:16px 40px;display:grid;gap:10px}
+.ficha{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;display:grid;grid-template-columns:132px minmax(0,1fr);gap:14px;align-items:start}
+.foto{width:132px;height:110px;border-radius:8px;background:#fff;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:zoom-in}
+.foto img{max-width:100%;max-height:100%;object-fit:contain}
+.foto.vazia{cursor:default;background:var(--bg);color:var(--muted);font-size:11px;text-align:center;padding:6px}
+.desc{margin:0;font:600 15px/1.35 var(--f-disp);text-wrap:balance}
+.meta{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 8px}
+.tag{font-size:11px;padding:2px 8px;border-radius:99px;background:var(--teal-soft);color:var(--teal);font-weight:600;letter-spacing:.02em}
+.tag.am{background:var(--amber-soft);color:var(--amber)}
+.cods{display:grid;gap:0}
+.cod{display:grid;grid-template-columns:118px minmax(0,1fr) auto;align-items:center;gap:8px;padding:6px 0;border-top:1px solid var(--line)}
+.cod .o{font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+.cod .v{font:500 15px var(--f-mono);overflow-wrap:anywhere}
+.cod .v.vz{color:var(--muted);font:400 13px var(--f-body)}
+.cod .v mark{background:var(--hl);color:inherit;border-radius:3px;padding:0 1px}
+.cp{border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:6px;font-size:12px;padding:3px 8px;cursor:pointer}
+.cp.ok{color:var(--teal);border-color:var(--teal)}
+.sep{font-size:11px;font-weight:600;color:var(--teal);text-transform:uppercase;letter-spacing:.08em;padding:10px 0 2px}
+.ver{margin-top:6px;border:0;background:transparent;color:var(--teal);font:600 13px var(--f-body);cursor:pointer;padding:4px 0}
+.cod .o{overflow-wrap:anywhere}
+.aviso{margin:0;padding:7px 12px;border-radius:8px;background:var(--amber-soft);color:var(--amber);font-size:13px;line-height:1.4}
+.aviso strong{font-weight:600}
+.zoom .nota{display:block;color:#8a5a08;font:500 12px var(--f-body);margin-top:4px}
+.cod .dv{display:block;font:400 12px/1.35 var(--f-body);color:var(--muted);margin-top:1px}
+.vazio{text-align:center;color:var(--muted);padding:40px 12px}
+.mais{justify-self:center;border:1px solid var(--teal);color:var(--teal);background:transparent;border-radius:10px;padding:10px 20px;font:600 14px var(--f-body);cursor:pointer}
+.zoom{position:fixed;inset:0;z-index:20;background:rgba(8,18,22,.72);display:flex;align-items:center;justify-content:center;padding:24px}
+.zoom figure{margin:0;background:#fff;border-radius:12px;padding:16px;max-width:min(420px,92vw);text-align:center}
+.zoom img{width:100%;image-rendering:auto}
+.zoom figcaption{color:#13232e;font:600 13px var(--f-body);margin-top:8px}
+footer{color:var(--muted);font-size:12px;text-align:center;padding-block:8px 28px}
+button:focus-visible,select:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+@media (max-width:520px){.ficha{grid-template-columns:96px minmax(0,1fr);gap:10px}.foto{width:96px;height:84px}.cod{grid-template-columns:74px minmax(0,1fr) auto}}
+</style>
+
+<header class="top"><div class="wrap">
+  <div class="marca"><h1>Pesquisa de código e conversor <span>FC Consultoria</span></h1><small id="sub">Perfis e componentes</small></div>
+  <div class="busca">
+    <input id="q" type="search" autocomplete="off" placeholder="Código ou descrição: fec16, bra702, lg 026, e-566, roldana" aria-label="Buscar código ou descrição">
+    <button id="limpaq" aria-label="Limpar busca">×</button>
+  </div>
+  <div class="filtros">
+    <label for="ft">Tipo<select id="ft"><option value="">Todos</option><option value="perfil">Perfis</option><option value="componente">Componentes</option></select></label>
+    <label for="fl">Linha<select id="fl"><option value="">Todas</option></select></label>
+    <label for="fo">Fornecedor / cadastro<select id="fo"><option value="">Todos</option></select></label>
+    <label for="ff">Foto<select id="ff"><option value="">Com e sem foto</option><option value="1">Só com foto</option><option value="0">Só sem foto</option></select></label>
+  </div>
+  <p class="aviso"><strong>Imagens ilustrativas.</strong> Em caso de dúvida, consulte o catálogo do fornecedor.</p>
+  <div class="info"><span id="cont">Carregando…</span><button id="limpa">Limpar filtros</button></div>
+</div></header>
+
+<main><div class="wrap" id="lista"><p class="vazio">Carregando a base de códigos…</p></div></main>
+<footer class="wrap">Cor, traço, espaço e zero à esquerda são ignorados na busca. Imagens ilustrativas; equivalências e pesos são demonstrativos. Em caso de dúvida, consulte o catálogo do fornecedor.<br>© FC Consultoria em Esquadria · uso exclusivo</footer>
+<div class="zoom" id="zoom" hidden><figure><img id="zimg" alt=""><figcaption id="zcap"></figcaption></figure></div>
+
+<script>
+const CORES='CER|CE|ZBR|ZPR|PR|BRANCO|BRANCA|PRETO|PRETA|BRONZE|FOSCO|NATURAL|BRILHANTE|CEREJEIRA|AMADEIRADO|BCO|PTO|PTA|BRI|FCO|BZE|BRZ|NAT|BR|PT|BC|BZ|NT|FS|FC';
+const reSep=new RegExp('[\\s\\-_.,/]+('+CORES+')$'), reCola=new RegExp('(\\d)('+CORES+')$');
+function semCor(s){let x=String(s||'').toUpperCase().trim().replace(/\s*\(.*\)$/,'');x=x.replace(/[\-_.\s]?[PA]-?0\d\d$/,'');x=x.replace(reSep,'').replace(reCola,'$1');return x}
+function nCod(s){return semCor(s).replace(/[^A-Z0-9]/g,'').replace(/([A-Z]+)0+(\d)/g,'$1$2')}
+const sa=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
+const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+const LOTE=400,FOT={},carregando={};
+const PRM=new URLSearchParams(location.search),VER='20261026a';
+{const n=PRM.get('n');if(n)document.getElementById('sub').textContent=n+' · perfis e componentes';}
+function linhaDe(it){
+  const c=(it.mk||it.w||it.g||'').toUpperCase(),d=it.d;
+  if(it.t==='componente'){if(/TEMPERADO|\bBOX\b/.test(d))return 'Temperado e box';if(/SUPREMA/.test(d))return 'Suprema';if(/\bGOLD\b/.test(d))return 'Gold';return 'Outras'}
+  if(/^SU[\s-]?\d/.test(c)||/SUPREMA/.test(d))return 'Suprema';
+  if(/^LG[\s-]?\d/.test(c)||/\bGOLD\b/.test(d))return 'Gold';
+  if(/^25-/.test(c)||/LINHA 25/.test(d))return 'Linha 25';
+  if(/^30-/.test(c)||/LINHA 30/.test(d))return 'Linha 30';
+  if(/^CHR/.test(c)||/CHROMA/.test(d))return 'Chroma';
+  if(/TEMPERADO|\bBOX\b/.test(d))return 'Temperado e box';
+  if(/^VZ|^US\d|VENEZIANA|LAMBRI/.test(c+' '+d))return 'Veneziana e lambril';
+  return 'Outras';
+}
+function nomeLinha(l){return ({'Suprema-Gold-Temperado':'Suprema, Gold e temperado','Chroma-Ecoline':'Chroma e Ecoline'})[l]||l}
+let D=[],vis=40;const $=id=>document.getElementById(id);
+const DIST=['Pronto Alumínio','Alumínios Corso','Alueste','Pereira Brito','Vidromax','Aluvid'];
+const EXT=['Texa','Selta','FBK','Ecoalumi','Perfileve','CDA'];
+function grupoDe(o){if(o==='WVetro'||o==='Guaporé')return 0;if(o==='Alcoa')return 1;if(/^(Vitrasul|Roto Fermax|MettallFleck)/.test(o))return 2;if(DIST.includes(o))return 4;return 3}
+const ROT=['','Código de mercado','Fornecedores de componentes','Extrusoras','Distribuidoras de perfis'];
+function tagsOrigem(o){const p=o.split(/ · | \(/).map(x=>x.replace(/\)$/,'').trim());const r=[p[0]];if(p[1]&&!/cód/.test(p[1]))r.push(p[1]);return r}
+async function lote(i){if(FOT['L'+i]||carregando[i])return carregando[i];carregando[i]=fetch('fotos'+i+'.json?v='+VER).then(r=>r.json()).then(j=>{Object.assign(FOT,j);FOT['L'+i]=1}).catch(()=>{});return carregando[i]}
+async function carrega(){
+  try{
+    const d=await fetch('dados.json?v='+VER).then(r=>r.json());
+    D=d.itens.map(it=>{const g=(it.c.find(c=>c[0]==='Guaporé')||[])[1]||'',w=(it.c.find(c=>c[0]==='WVetro')||[])[1]||'';
+      const x={...it,g,w};x.l=nomeLinha(it.l||linhaDe(x));x.k=it.c.map(c=>nCod(c[1]));
+      x.os=new Set(it.c.flatMap(c=>tagsOrigem(c[0])));
+      x.pal=sa([it.d,it.mk||'',...it.c.map(c=>c[2]||'')].join(' ')).split(/[^a-z0-9]+/).filter(Boolean);return x});
+    const ls=[...new Set(D.map(x=>x.l))].sort((a,b)=>a==='Outras'?1:b==='Outras'?-1:a.localeCompare(b));
+    $('fl').insertAdjacentHTML('beforeend',ls.map(l=>`<option>${esc(l)}</option>`).join(''));
+    const cont={};D.forEach(x=>x.os.forEach(o=>cont[o]=(cont[o]||0)+1));
+    const PRI=['WVetro','Guaporé','Vitrasul','Roto Fermax','Fermax','Udinese','MettallFleck','Alutec','STAM','Alcoa'];
+    const os=Object.keys(cont).filter(o=>cont[o]>=5).sort((a,b)=>{const i=PRI.indexOf(a),j=PRI.indexOf(b);return (i<0?99:i)-(j<0?99:j)||a.localeCompare(b)});
+    $('fo').insertAdjacentHTML('beforeend',os.map(o=>`<option value="${esc(o)}">${esc(o)} (${cont[o].toLocaleString('pt-BR')})</option>`).join(''));
+    try{const s=JSON.parse(localStorage.getItem('pesqCod')||'{}');['ft','fl','fo','ff'].forEach(i=>{if(s[i]!=null&&[...$(i).options].some(o=>o.value===s[i]))$(i).value=s[i]})}catch(e){}
+    render();
+  }catch(e){$('lista').innerHTML='<p class="vazio">Não foi possível carregar a base. Recarregue a página.</p>'}
+}
+function filtra(){
+  const raw=$('q').value.trim(),q=nCod(raw),pals=sa(raw).split(/[^a-z0-9]+/).filter(Boolean);
+  const ft=$('ft').value,fl=$('fl').value,fo=$('fo').value,ff=$('ff').value;
+  const okO=o=>!fo||tagsOrigem(o).includes(fo);
+  const lst=D.filter(x=>{
+    if(ft&&x.t!==ft)return false; if(fl&&x.l!==fl)return false; if(fo&&!x.os.has(fo))return false;
+    if(ff==='1'&&!x.f)return false; if(ff==='0'&&x.f)return false;
+    if(!raw)return true;
+    if(q&&x.k.some((k,i)=>okO(x.c[i][0])&&k.includes(q)))return true;
+    return pals.length&&pals.every(p=>x.pal.some(w=>w.startsWith(p)));
+  });
+  if(q)lst.sort((a,b)=>(a.k.includes(q)?0:1)-(b.k.includes(q)?0:1)||(b.c.length-a.c.length));
+  return {q,raw,lst};
+}
+function marca(cod,q){const v=esc(semCor(cod));return q&&nCod(cod).includes(q)?`<mark>${v}</mark>`:v}
+const abertos=new Set();
+function blocoCods(x,q){
+  const lin=[],vis=new Set();
+  const gua=x.c.filter(c=>c[0]==='Guaporé').map(c=>semCor(c[1]));const dupG=new Set(gua).size>1;
+  if(!x.c.some(c=>c[0]==='WVetro'))lin.push({o:'WVetro',v:'',g:0});
+  x.c.forEach(([o,v,d])=>{if(!v)return;const key=o+'|'+nCod(v);if(vis.has(key))return;vis.add(key);lin.push({o,v,d:d&&sa(d)!==sa(x.d)?d:'',g:grupoDe(o),dup:o==='Guaporé'&&dupG})});
+  if(!x.c.some(c=>c[0]==='Guaporé'))lin.push({o:'Guaporé',v:'',g:0});
+  lin.sort((a,b)=>a.g-b.g||((a.o==='WVetro'?0:1)-(b.o==='WVetro'?0:1)));
+  const id=x.c.map(c=>c[1]).join('|');const N=7;
+  const aberto=abertos.has(id)||(q&&lin.slice(N).some(l=>l.v&&nCod(l.v).includes(q)));
+  const mostra=aberto?lin:lin.slice(0,N);let html='',gAnt=0;
+  mostra.forEach(l=>{if(l.g!==gAnt&&l.g>0){html+=`<div class="sep">${ROT[l.g]}</div>`;gAnt=l.g}
+    html+=l.v?`<div class="cod"><span class="o">${esc(l.o)}</span><span class="v">${marca(l.v,q)}${l.dup?' <span class="tag am">duplicado</span>':''}${l.d?`<span class="dv">${esc(l.d)}</span>`:''}</span><button class="cp" data-c="${esc(semCor(l.v))}">Copiar</button></div>`
+             :`<div class="cod"><span class="o">${l.o}</span><span class="v vz">não cadastrado</span><span></span></div>`});
+  if(lin.length>N)html+=`<button class="ver" data-id="${esc(id)}">${aberto?'Mostrar menos':'Ver todos os '+lin.length+' códigos'}</button>`;
+  return html;
+}
+function fotoHtml(x){
+  if(x.f==null)return '<div class="foto vazia">sem foto</div>';
+  const cap=esc(semCor(x.w||x.g||x.mk||x.c[0][1]));
+  return FOT[x.f]?`<div class="foto" data-f="${x.f}" data-cap="${cap}"><img src="${FOT[x.f]}" alt="Foto ${cap}" loading="lazy"></div>`:`<div class="foto vazia" data-espera="${x.f}">carregando…</div>`;
+}
+function render(){
+  const {q,raw,lst}=filtra();
+  try{localStorage.setItem('pesqCod',JSON.stringify({ft:$('ft').value,fl:$('fl').value,fo:$('fo').value,ff:$('ff').value}))}catch(e){}
+  $('cont').textContent=lst.length.toLocaleString('pt-BR')+(lst.length===1?' item':' itens')+(raw?` para “${raw}”`:'');
+  if(!lst.length){$('lista').innerHTML='<p class="vazio">Nenhum item com esse código ou descrição. Confira o código ou tente parte da descrição.</p>';return}
+  const pag=lst.slice(0,vis);
+  $('lista').innerHTML=pag.map(x=>`<article class="ficha">${fotoHtml(x)}
+    <div style="min-width:0"><p class="desc">${esc(x.d)}</p>
+      <div class="meta"><span class="tag">${x.t==='perfil'?'Perfil':'Componente'}</span>${x.l!=='Outras'?`<span class="tag am">${esc(x.l)}</span>`:''}${x.p?`<span class="tag am">${String(x.p).replace('.',',')} kg/m</span>`:''}</div>
+      <div class="cods">${blocoCods(x,q)}</div>
+    </div></article>`).join('')+(lst.length>vis?`<button class="mais" id="mais">Mostrar mais ${Math.min(40,lst.length-vis)} de ${(lst.length-vis).toLocaleString('pt-BR')} restantes</button>`:'');
+  const precisa=[...new Set(pag.filter(x=>x.f!=null&&!FOT[x.f]).map(x=>Math.floor(+x.f/LOTE)))];
+  if(precisa.length)Promise.all(precisa.map(lote)).then(()=>{document.querySelectorAll('[data-espera]').forEach(el=>{const f=el.dataset.espera;if(FOT[f]){el.outerHTML=`<div class="foto" data-f="${f}" data-cap=""><img src="${FOT[f]}" alt="Foto do item"></div>`}})});
+}
+let t;
+$('q').addEventListener('input',()=>{clearTimeout(t);t=setTimeout(()=>{vis=40;render()},150)});
+['ft','fl','fo','ff'].forEach(i=>$(i).addEventListener('change',()=>{vis=40;render()}));
+$('limpaq').onclick=()=>{$('q').value='';vis=40;render();$('q').focus()};
+$('limpa').onclick=()=>{['q','ft','fl','fo','ff'].forEach(i=>$(i).value='');vis=40;render()};
+$('lista').addEventListener('click',e=>{
+  const b=e.target.closest('.cp');
+  if(b){const c=b.dataset.c;const ok=()=>{b.textContent='Copiado';b.classList.add('ok');setTimeout(()=>{b.textContent='Copiar';b.classList.remove('ok')},1400)};
+    if(navigator.clipboard)navigator.clipboard.writeText(c).then(ok).catch(()=>{const r=document.createRange();r.selectNodeContents(b.previousElementSibling);getSelection().removeAllRanges();getSelection().addRange(r)});return}
+  if(e.target.id==='mais'){vis+=40;render();return}
+  const v=e.target.closest('.ver');if(v){const id=v.dataset.id;abertos.has(id)?abertos.delete(id):abertos.add(id);render();return}
+  const f=e.target.closest('.foto[data-f]');
+  if(f){const ficha=f.closest('.ficha');const cap=f.dataset.cap||(ficha.querySelector('.desc')||{}).textContent||'';$('zimg').src=FOT[f.dataset.f];$('zcap').innerHTML=esc(cap)+'<span class="nota">Imagem ilustrativa. Em caso de dúvida, consulte o catálogo do fornecedor.</span>';$('zoom').hidden=false}
+});
+$('zoom').onclick=()=>{$('zoom').hidden=true};
+document.addEventListener('keydown',e=>{if(e.key==='Escape')$('zoom').hidden=true});
+for(let i=0;i<3;i++)lote(i);
+carrega();
+</script>
+
+</body></html>

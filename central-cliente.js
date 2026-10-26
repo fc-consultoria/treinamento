@@ -20,7 +20,7 @@
   const dBR=t=>t?new Date(t).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}):'—';
   const ON=3*60e3,online=t=>!!t&&(Date.now()-Date.parse(t))<ON;
   const PAPEL={gestor:'Gestor',compras:'Compras',vendas:'Vendas',gerente:'Gerente comercial',marketing:'Marketing',fabrica:'Fábrica'};
-  const ABA={orc:'Orçamento e Pedidos',est:'o Estoque',cat:'o Catálogo',esq:'o Treinamento 3D',comp:'Onde comprar',dist:'Distribuidoras',conv:'a Conversão de códigos',pla:'as Planilhas',sol:'as Solicitações',age:'a Agenda',proc:'o Fluxo do processo',acao:'o Plano de ação',cen:'a Central do Gestor',dia:'o Diário',ori:'a Orientação',dem:'as Entregas',gal:'a Galeria',mkt:'o Marketing',div:'a Divulgação'};
+  const ABA={orc:'Orçamento e Pedidos',est:'o Estoque',cat:'o Catálogo',esq:'o Treinamento 3D',comp:'Onde comprar',dist:'Distribuidoras',conv:'a Conversão de códigos',pcod:'a Pesquisa de código',pla:'as Planilhas',sol:'as Solicitações',age:'a Agenda',proc:'o Fluxo do processo',acao:'o Plano de ação',cen:'a Central do Gestor',dia:'o Diário',ori:'a Orientação',dem:'as Entregas',gal:'a Galeria',mkt:'o Marketing',div:'a Divulgação'};
   const STI={em_andamento:'Em implantação',concluido:'Implantação concluída',concluida:'Implantação concluída',pausado:'Implantação pausada',cancelado:'Implantação cancelada'};
   const SIT={fornecedor:'Aguardando fornecedor',cliente:'Aguardando equipe do cliente',suporte:'Aguardando suporte do sistema',externo:'Equipe em atendimento externo'};
   /* chave do quadro do acessos-todos → empresa da consultoria */

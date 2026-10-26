@@ -44,7 +44,7 @@
       ['Valor fechado',kmil(S.fv1),delta(S.fv1,S.fv0)],['Conversão',c1==null?'—':c1+'%',c1==null||c0==null?'':delta(c1,c0,1)]];}
   /* setores: [id, ícone, título, abas de origem, linhas(e) -> [[valor, rótulo, alerta?]]] */
   const SET=[
-    ['ven','🏪','Vendas',['orc'],e=>{const o=(D&&D.orc)||{},S=(D&&D.sem)||{};
+    ['ven','🏪','Vendas',['orc','pcod'],e=>{const o=(D&&D.orc)||{},S=(D&&D.sem)||{};
       return [[o.mes_n||0,'orçamentos no mês'],[kmil(o.mes_total),'valor no mês'],[S.abertos7||0,'abertos há +7 dias',S.abertos7>0],[o.desc_pend||0,'descontos para aprovar',o.desc_pend>0],[(D&&D.vend_ativos)||0,'vendedores ativos']];}],
     ['cmp','🛒','Compras e estoque',['est','comp','dist','conv','pla'],e=>{const s=(D&&D.estoque)||{},d=estDias();
       return [[s.em?dBR(s.em):'—','estoque atualizado',d!=null&&d>7],[s.itens||0,'itens no estoque']];}],

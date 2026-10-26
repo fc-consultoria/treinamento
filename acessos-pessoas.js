@@ -4,7 +4,7 @@
 const PAPEIS=[['gestor','Gestor geral','Vê todas as abas liberadas da empresa'],['compras','Compras','Onde comprar, distribuidoras, estoque, planilhas, conversor, agenda, solicitações'],
  ['vendas','Vendas','Entra direto no Painel de Vendas como vendedor'],['gerente','Gerente comercial','Painel de Vendas (visão gestor) e catálogo'],
  ['marketing','Marketing','Catálogo'],['fabrica','Fábrica','Treinamento 3D e catálogo']];
-const PADRAO={gestor:null,compras:['comp','dist','est','pla','conv','age','sol'],vendas:['orc'],gerente:['orc','cat'],marketing:['cat'],fabrica:['esq','cat']};
+const PADRAO={gestor:null,compras:['comp','dist','est','pla','conv','age','sol'],vendas:['orc','pcod'],gerente:['orc','cat','pcod'],marketing:['cat'],fabrica:['esq','cat']};
 const PN=Object.fromEntries(PAPEIS.map(p=>[p[0],p[1]]));
 const LINK=e=>'https://fc-consultoria.github.io/treinamento/consultorias.html?e='+encodeURIComponent(e);
 const h=t=>String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
