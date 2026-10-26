@@ -1,0 +1,511 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<link rel="icon" href="/img/logo-fc-160.jpg">
+<style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
+<style>
+.rgate{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;background:#e9f0f0;padding:16px}.rgate[hidden]{display:none}
+.rgate form{width:min(360px,100%);background:#fff;color:#13232e;border:1px solid #d6e1e1;border-radius:14px;padding:26px 22px;display:flex;flex-direction:column;gap:12px;font-family:Inter,system-ui,sans-serif}
+.rgate h1{margin:0;font:700 24px "Space Grotesk",system-ui,sans-serif;color:#13262a}.rgate small{color:#5a6e72;font-size:12px;letter-spacing:.06em;text-transform:uppercase}
+.rgate label{display:flex;flex-direction:column;gap:5px;font-weight:600;font-size:14px}.rgate input{font-size:15px;padding:9px 10px;border:1px solid #c4ccd2;border-radius:8px;background:#fff;color:#13232e}
+.rgate button{background:#0e6b6b;color:#fff;border:0;border-radius:9px;padding:11px;font-weight:700;font-size:15px;cursor:pointer}
+.rgate p{margin:0;color:#b42318;font-size:13px;min-height:1em}
+</style>
+</head>
+<body>
+<title>Apresentação de Obra FC</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: faixa da obra no topo (cadastro único) · seletor de tipologia · palco 3D da tipologia escolhida · comparativo das duas lado a lado */
+:root{
+  --bg:#edf2f2; --surface:#ffffff; --sunk:#f4f7f7; --fg:#13232e; --muted:#5a6b72; --line:#d3dfe0;
+  --teal:#0e6b6b; --tealInk:#ffffff; --amber:#f2a51e; --amberInk:#2a1b00; --good:#1f7a4d;
+  --display:"Space Grotesk",system-ui,sans-serif; --body:"Inter",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0c161b;--surface:#13222a;--sunk:#0f1c23;--fg:#e6eef0;--muted:#93a5ab;--line:#24363e;--teal:#3fb3ad;--tealInk:#04201f;--good:#5cc28d;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0c161b;--surface:#13222a;--sunk:#0f1c23;--fg:#e6eef0;--muted:#93a5ab;--line:#24363e;--teal:#3fb3ad;--tealInk:#04201f;--good:#5cc28d;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:14px}
+.wrap{max-width:1400px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+.brand{display:flex;align-items:center;gap:12px;min-width:0}
+.mono{width:44px;height:44px;border-radius:9px;background:var(--teal);color:var(--tealInk);display:grid;place-items:center;font:700 1.15rem var(--display);position:relative;flex:none}
+.mono::after{content:"";position:absolute;left:8px;right:8px;bottom:7px;height:3px;border-radius:2px;background:var(--amber)}
+h1{font-family:var(--display);font-size:1.3rem;margin:0;line-height:1.15;text-wrap:balance}
+h1 small{display:block;font-family:var(--body);font-weight:500;font-size:.74rem;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;margin-top:3px}
+.hbtns{display:flex;gap:6px;flex-wrap:wrap}
+.btn{font:600 .82rem var(--body);border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:7px;padding:8px 12px;cursor:pointer}
+.btn.big{background:var(--amber);border-color:var(--amber);color:var(--amberInk);font-weight:800}
+.btn:focus-visible,select:focus-visible,input:focus-visible,.tipo:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+
+/* faixa da obra */
+.obra{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+.obra-top{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px}
+.eyebrow{font:700 .72rem var(--display);letter-spacing:.09em;text-transform:uppercase;color:var(--teal)}
+.obra-nome{font:700 1.05rem var(--display)}
+.obra-nome span{font:500 .8rem var(--body);color:var(--muted);margin-left:6px}
+.fields{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px 10px}
+.f{display:flex;flex-direction:column;gap:3px;min-width:0}
+.f.w2{grid-column:span 2}
+@media (max-width:520px){.f.w2{grid-column:span 1}}
+.f label{font-size:.7rem;color:var(--muted)}
+select,input{font:500 .84rem var(--body);padding:7px 8px;border-radius:7px;border:1px solid var(--line);background:var(--sunk);color:var(--fg);width:100%;min-width:0}
+input{font-variant-numeric:tabular-nums}
+.obra-actions{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.obra-actions .note{margin-left:auto}
+.note{font-size:.7rem;color:var(--muted);line-height:1.45;margin:0}
+.obra.min .fields,.obra.min .obra-actions{display:none}
+
+/* tipologias */
+.tipos{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+@media (max-width:640px){.tipos{grid-template-columns:minmax(0,1fr)}}
+.tipo{text-align:left;font:inherit;color:inherit;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 14px;cursor:pointer;display:grid;grid-template-columns:1fr auto;gap:2px 12px;align-items:center}
+.tipo b{font:700 1rem var(--display)}
+.tipo small{color:var(--muted);font-size:.72rem;letter-spacing:.04em;text-transform:uppercase}
+.tipo .kg{grid-row:1/3;grid-column:2;text-align:right;font:700 1.15rem var(--display);font-variant-numeric:tabular-nums}
+.tipo .kg i{display:block;font:500 .66rem var(--body);font-style:normal;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+.tipo[aria-pressed="true"]{border-color:var(--teal);box-shadow:inset 0 -4px 0 var(--amber);background:color-mix(in srgb,var(--teal) 8%,var(--surface))}
+
+/* palco */
+.palco{position:relative;border-radius:10px;overflow:hidden;background:var(--sunk);border:1px solid var(--line)}
+.palco iframe{display:block;width:100%;height:min(calc(100vh - 120px),940px);min-height:620px;border:0;background:var(--bg)}
+.palco iframe[hidden]{display:none}
+.load{position:absolute;inset:0;display:grid;place-items:center;font:600 .85rem var(--body);color:var(--muted);pointer-events:none}
+
+/* comparativo */
+.cmp{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+.cmp h2{font:700 1rem var(--display);margin:0}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.8rem}
+th{font:700 .66rem var(--display);letter-spacing:.07em;text-transform:uppercase;color:var(--muted);text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+th.n,td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+td{padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+td.sel,th.sel{background:color-mix(in srgb,var(--teal) 8%,transparent)}
+.bar{height:8px;border-radius:4px;background:var(--line);overflow:hidden;min-width:80px;margin-top:4px}
+.bar span{display:block;height:100%;background:var(--teal)}
+.bar.a span{background:var(--amber)}
+.low{color:var(--good);font-weight:700}
+.lists{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media (max-width:900px){.lists{grid-template-columns:minmax(0,1fr)}}
+details{border-top:1px solid var(--line);padding-top:8px}
+summary{cursor:pointer;font:600 .82rem var(--body)}
+.lists h3{font:700 .8rem var(--display);margin:8px 0 4px}
+.lists td.c{font:700 .72rem var(--display);white-space:nowrap}
+.lists table{font-size:.74rem}
+.x{font-size:.64rem;color:var(--amberInk);background:color-mix(in srgb,var(--amber) 30%,transparent);border-radius:4px;padding:0 5px;margin-left:4px}
+.foot{font-size:.7rem;color:var(--muted);text-align:center}
+.wm{font:600 .62rem var(--body);letter-spacing:.12em;color:var(--muted);text-align:right}
+
+/* respostas das variáveis */
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{font:600 .78rem var(--body);background:var(--surface);color:var(--fg);border:0;padding:7px 12px;cursor:pointer}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--teal);color:var(--tealInk)}
+.seg button[disabled]{color:var(--muted);cursor:not-allowed}
+.rbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between}
+.rbar .acts{display:flex;flex-wrap:wrap;gap:6px}
+.vk{display:inline-block;min-width:34px;text-align:center;font:700 .74rem var(--display);color:var(--tealInk);background:var(--teal);border-radius:5px;padding:2px 6px}
+.vk.x{background:var(--amber);color:var(--amberInk)}
+tr.na td{color:var(--muted)}
+tr.na .vk{background:var(--line);color:var(--muted)}
+.ans{font:700 .86rem var(--display);font-variant-numeric:tabular-nums}
+.ans small{display:block;font:500 .72rem var(--body);color:var(--muted)}
+.ok{font-size:.72rem;color:var(--good);font-weight:600}
+
+/* relatório */
+.rep{position:fixed;inset:0;z-index:20;background:rgba(8,18,22,.62);overflow:auto;padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) 24px max(16px,env(safe-area-inset-left,0px))}
+.rep-tools{max-width:820px;margin:0 auto 10px;display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end}
+.sheet{max-width:820px;margin:0 auto;background:#fff;color:#13232e;border-radius:6px;padding:34px 38px;font-size:12px;line-height:1.45;position:relative;overflow:hidden}
+.sheet::before{content:"SIMULAÇÃO";position:absolute;left:50%;top:42%;transform:translate(-50%,-50%) rotate(-28deg);font:700 110px "Space Grotesk",sans-serif;color:rgba(14,107,107,.06);pointer-events:none;white-space:nowrap}
+.sh-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;border-bottom:3px solid #0e6b6b;padding-bottom:12px}
+.sh-brand{display:flex;gap:10px;align-items:center}
+.sh-mono{width:40px;height:40px;border-radius:8px;background:#0e6b6b;color:#fff;display:grid;place-items:center;font:700 1rem "Space Grotesk",sans-serif;position:relative}
+.sh-mono::after{content:"";position:absolute;left:7px;right:7px;bottom:6px;height:3px;border-radius:2px;background:#f2a51e}
+.sh-head h2{font:700 1.15rem "Space Grotesk",sans-serif;margin:0}
+.sh-head p{margin:2px 0 0;color:#5a6b72;font-size:11px}
+.sh-meta{text-align:right;font-size:11px;color:#5a6b72}
+.sh-meta b{color:#13232e}
+.sh-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:14px 0}
+.sh-grid div{border:1px solid #d3dfe0;border-radius:6px;padding:7px 9px}
+.sh-grid span{display:block;font-size:9.5px;color:#5a6b72;text-transform:uppercase;letter-spacing:.06em}
+.sh-grid b{font:700 12.5px "Space Grotesk",sans-serif}
+.sheet h3{font:700 12px "Space Grotesk",sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#0e6b6b;margin:16px 0 6px}
+.sheet table{font-size:11px}
+.sheet th{color:#5a6b72;border-bottom:1px solid #b9c3c6;padding:5px 6px}
+.sheet td{border-bottom:1px solid #e3eaeb;padding:5px 6px}
+.sheet .tot td{font-weight:700;border-bottom:0}
+.sh-warn{margin-top:16px;border:1px solid #f2a51e;background:#fff6e4;border-radius:6px;padding:8px 10px;font-size:10.5px}
+.sh-foot{margin-top:12px;display:flex;justify-content:space-between;font-size:9.5px;color:#5a6b72;letter-spacing:.06em}
+@media (max-width:640px){.sheet{padding:20px 16px}.sh-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media print{@page{size:A4;margin:12mm}body{background:#fff;padding:0}.wrap,.rep-tools{display:none!important}.rep{position:static;background:none;padding:0;overflow:visible}.sheet{max-width:none;padding:0;border-radius:0}.sheet tr{break-inside:avoid}}
+
+/* simulação de vento */
+.chip{font:700 .64rem var(--display);letter-spacing:.08em;text-transform:uppercase;color:var(--amberInk);background:var(--amber);border-radius:5px;padding:3px 8px;white-space:nowrap}
+.warn{border:1px solid var(--amber);background:color-mix(in srgb,var(--amber) 13%,var(--surface));border-radius:8px;padding:9px 12px;font-size:.78rem;line-height:1.5}
+.warn b{font-family:var(--display)}
+.vgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:14px;align-items:start}
+@media (max-width:860px){.vgrid{grid-template-columns:minmax(0,1fr)}}
+.vfields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 10px}
+.vfields .f.w2{grid-column:1/-1}
+.res{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.res div{border:1px solid var(--line);border-radius:9px;padding:9px 11px;min-width:0;background:var(--sunk)}
+.res span{display:block;font-size:.64rem;color:var(--muted);letter-spacing:.07em;text-transform:uppercase}
+.res b{font:700 1.08rem var(--display);font-variant-numeric:tabular-nums}
+.res small{display:block;font-size:.7rem;color:var(--muted)}
+.vsvg svg{width:100%;height:auto;display:block}
+.scale{position:relative;height:10px;border-radius:5px;background:linear-gradient(90deg,color-mix(in srgb,var(--teal) 55%,transparent),var(--amber));margin:18px 0 4px}
+.scale i{position:absolute;top:-6px;width:3px;height:22px;background:var(--fg);border-radius:2px;transform:translateX(-50%)}
+.scale-l{display:flex;justify-content:space-between;font-size:.66rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.disc{font:600 .7rem var(--body);color:var(--muted);text-align:center;letter-spacing:.04em}
+
+/* tutorial guiado */
+.tour-hl{position:fixed;z-index:30;border-radius:10px;box-shadow:0 0 0 3px var(--amber),0 0 0 9999px rgba(8,18,22,.58);pointer-events:none;transition:all .35s ease}
+.tour-card{position:fixed;z-index:31;width:min(400px,calc(100vw - 32px));background:var(--surface);color:var(--fg);border:1px solid var(--line);border-top:4px solid var(--amber);border-radius:10px;box-shadow:0 14px 40px rgba(0,0,0,.35);padding:14px 16px;display:flex;flex-direction:column;gap:9px;transition:top .35s ease,left .35s ease}
+.tour-card h3{font:700 1rem var(--display);margin:0;text-wrap:balance}
+.tour-card p{margin:0;font-size:.86rem;line-height:1.5}
+.tour-top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.tour-step{font:700 .66rem var(--display);letter-spacing:.08em;text-transform:uppercase;color:var(--teal)}
+.tour-prog{height:4px;border-radius:2px;background:var(--line);overflow:hidden}
+.tour-prog span{display:block;height:100%;background:var(--amber);transition:width .3s}
+.tour-ctl{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.tour-ctl .btn{padding:6px 10px;font-size:.78rem}
+.tour-ctl label{font-size:.74rem;color:var(--muted);display:flex;gap:5px;align-items:center;margin-left:auto}
+.tour-ctl input{width:auto}
+.tour-sub{font-size:.68rem;color:var(--muted)}
+@media (prefers-reduced-motion:reduce){.tour-hl,.tour-card{transition:none}}
+
+/* modo apresentação */
+body.show .obra,body.show .cmp details{display:none}
+body.show .palco iframe{height:calc(100vh - 150px)}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="mono" aria-hidden="true">FC</div>
+      <h1>Apresentação de Obra<small>Orientativo FC 3D · uma obra, duas tipologias, a mesma simulação</small></h1>
+    </div>
+    <div class="hbtns">
+      <button class="btn" id="bTour" type="button">🎧 Como usar</button>
+      <button class="btn" id="bMin" type="button">Recolher a obra</button>
+      <button class="btn big" id="bShow" type="button">▶ Modo apresentação</button>
+    </div>
+  </header>
+
+  <section class="obra" id="obra" aria-label="Cadastro da obra">
+    <div class="obra-top">
+      <span class="eyebrow">Obra · cadastre uma vez</span>
+      <div class="obra-nome" id="obraNome"></div>
+    </div>
+    <form class="fields" id="fObra" autocomplete="off">
+      <div class="f w2"><label for="o_nome">Nome da obra</label><input id="o_nome" data-k="nome" type="text" placeholder="Ex.: Prédio comercial Av. das Itaúbas"></div>
+      <div class="f w2"><label for="o_cli">Cliente / arquiteto / engenheiro</label><input id="o_cli" data-k="cli" type="text" placeholder="Para quem é a apresentação"></div>
+      <div class="f"><label for="o_L">Largura total do vão (mm)</label><input id="o_L" data-k="L" type="number" min="800" max="15000" step="10"></div>
+      <div class="f"><label for="o_H">Altura total do vão (mm)</label><input id="o_H" data-k="H" type="number" min="800" max="9000" step="10"></div>
+      <div class="f"><label for="o_v">Vãos / quadros na largura</label><input id="o_v" data-k="vaos" type="number" min="1" max="8" step="1"></div>
+      <div class="f"><label for="o_l">Linhas de vidro na altura</label><input id="o_l" data-k="linhas" type="number" min="1" max="4" step="1"></div>
+      <div class="f w2"><label for="o_vid">Vidro Habitat (Cebrace)</label><select id="o_vid" data-k="VID">
+        <option value="n-incolor">Neutro incolor</option><option value="n-verde">Neutro verde</option><option value="n-cinza">Neutro cinza</option>
+        <option value="r-cinza">Refletivo cinza</option><option value="r-azul">Refletivo azul</option><option value="r-esmeralda">Refletivo esmeralda</option><option value="r-champanhe">Refletivo champanhe</option></select></div>
+      <div class="f"><label for="o_esp">Espessura</label><select id="o_esp" data-k="ESP"><option value="6">6 mm</option><option value="8">8 mm</option><option value="10">10 mm</option></select></div>
+      <div class="f"><label for="o_cor">Acabamento</label><select id="o_cor" data-k="COR"><option value="natural">Natural fosco</option><option value="branco">Branco</option><option value="preto">Preto</option><option value="bronze">Bronze</option></select></div>
+      <div class="f w2"><label for="o_cen">Cenário</label><select id="o_cen" data-k="CEN"><option value="1">Obra (modelo da foto)</option><option value="2">Loja moderna</option><option value="0">Sem cenário</option></select></div>
+    </form>
+    <div class="obra-actions">
+      <button class="btn" id="bRef" type="button">Carregar obra de referência</button>
+      <p class="note" id="obraNote">A obra fica salva neste navegador. As duas tipologias recebem as mesmas medidas.</p>
+    </div>
+  </section>
+
+  <div class="tipos" role="group" aria-label="Tipologia em exibição">
+    <button class="tipo" type="button" data-t="cortina" aria-pressed="true"><b>Fachada Cortina</b><small>Coluna 40 × 80 · tampa e presilha</small><span class="kg" id="kg_cortina">—<i>alumínio</i></span></button>
+    <button class="tipo" type="button" data-t="atlanta" aria-pressed="false"><b>Pele de Vidro Atlanta</b><small>Quadros colados · colunas e marcos</small><span class="kg" id="kg_atlanta">—<i>alumínio</i></span></button>
+  </div>
+
+  <div class="palco">
+    <div class="load" id="load">Montando a fachada…</div>
+    <iframe id="if_cortina" src="cortina.html" title="Fachada Cortina em 3D"></iframe>
+    <iframe id="if_atlanta" src="atlanta.html" title="Pele de Vidro Atlanta em 3D" hidden></iframe>
+  </div>
+
+  <section class="cmp" aria-label="Comparativo das tipologias">
+    <div class="obra-top"><h2>Comparativo na mesma obra</h2><span class="note" id="cmpArea"></span></div>
+    <div class="tw"><table id="tCmp"></table></div>
+    <details id="dList"><summary>Lista de materiais das duas tipologias</summary><div class="lists" id="lists"></div></details>
+    <p class="note">Pesos e quantidades saem das fórmulas de cada tipologia com as medidas da obra. Valores demonstrativos; confirme com o fornecedor (matrizes diferentes mudam o peso).</p>
+    <div class="wm">FC CONSULTORIA EM ESQUADRIA · uso exclusivo</div>
+  </section>
+  <section class="cmp" aria-label="Respostas para o sistema de cálculo">
+    <div class="rbar">
+      <div><h2>Respostas para o sistema de cálculo</h2><p class="note" id="rSub"></p></div>
+      <div class="seg" role="group" aria-label="Base do sistema">
+        <button type="button" aria-pressed="true" id="bBaseW">Base W</button>
+        <button type="button" aria-pressed="false" disabled title="Em preparação">Base C · em breve</button>
+      </div>
+    </div>
+    <div class="tw"><table id="tVar"></table></div>
+    <div class="rbar">
+      <p class="note">Ao lançar a tipologia no orçamento, responda as variáveis com os valores acima. Variáveis cinza não se aplicam com as escolhas atuais; as marcadas como extra são só da simulação 3D.</p>
+      <div class="acts"><span class="ok" id="cpOk" hidden>Copiado</span><button class="btn" id="bCopy" type="button">Copiar respostas</button><button class="btn big" id="bRep" type="button">Relatório de materiais</button></div>
+    </div>
+  </section>
+
+  <section class="cmp" aria-label="Simulação de pressão de vento">
+    <div class="obra-top"><h2>Simulação de pressão de vento</h2><span class="chip">Simulação ilustrativa</span></div>
+    <p class="warn"><b>Apresentação comercial e simulação.</b> Este quadro não é cálculo estrutural, laudo nem especificação. A velocidade do vento da cidade, os fatores S1, S2 e S3 e a pressão de projeto da esquadria devem ser definidos pelo engenheiro ou projetista responsável, conforme as normas técnicas vigentes (NBR 6123 e NBR 10821).</p>
+    <div class="vgrid">
+      <div style="display:flex;flex-direction:column;gap:10px;min-width:0">
+        <form class="vfields" id="fVento" autocomplete="off">
+          <div class="f w2"><label for="w_v0">Velocidade básica do vento na região (V0)</label><select id="w_v0" data-k="v0">
+            <option value="30">30 m/s · 108 km/h</option><option value="35">35 m/s · 126 km/h</option><option value="40">40 m/s · 144 km/h</option><option value="45">45 m/s · 162 km/h</option><option value="50">50 m/s · 180 km/h</option></select></div>
+          <div class="f"><label for="w_s1">S1 · topografia</label><input id="w_s1" data-k="s1" type="number" min="0.5" max="2" step="0.01"></div>
+          <div class="f"><label for="w_s2">S2 · terreno e altura</label><input id="w_s2" data-k="s2" type="number" min="0.5" max="2" step="0.01"></div>
+          <div class="f"><label for="w_s3">S3 · uso da edificação</label><input id="w_s3" data-k="s3" type="number" min="0.5" max="2" step="0.01"></div>
+          <div class="f" style="justify-content:end"><button class="btn" id="bVreset" type="button">Voltar fatores para 1,00</button></div>
+        </form>
+        <p class="note">O V0 da cidade sai do mapa de isopletas da NBR 6123 (no Brasil, de 30 a 50 m/s). Sem os valores do projeto, deixe os fatores em 1,00: a simulação mostra só a ordem de grandeza.</p>
+        <div><div class="scale" aria-hidden="true"><i id="wMark"></i></div><div class="scale-l"><span>30 m/s</span><span>35</span><span>40</span><span>45</span><span>50 m/s</span></div></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;min-width:0">
+        <div class="res" id="wRes"></div>
+        <div class="vsvg" id="wSvg"></div>
+      </div>
+    </div>
+    <p class="disc">SIMULAÇÃO PARA APRESENTAÇÃO · NÃO SUBSTITUI CÁLCULO ESTRUTURAL · FC CONSULTORIA EM ESQUADRIA</p>
+  </section>
+  <p class="foot">© FC Consultoria em Esquadria · Orientativo FC 3D · apresentação comercial e simulação, valores demonstrativos</p>
+</div>
+
+<div class="tour-hl" id="tourHl" hidden></div>
+<div class="tour-card" id="tourCard" hidden role="dialog" aria-live="polite" aria-label="Tutorial da Apresentação de Obra">
+  <div class="tour-top"><span class="tour-step" id="tourStep"></span><button class="btn" id="tourX" type="button" aria-label="Sair do tutorial">✕</button></div>
+  <div class="tour-prog"><span id="tourProg"></span></div>
+  <h3 id="tourT"></h3><p id="tourP"></p>
+  <div class="tour-ctl">
+    <button class="btn" id="tourPrev" type="button">◀ Voltar</button>
+    <button class="btn" id="tourPause" type="button">⏸ Pausar</button>
+    <button class="btn big" id="tourNext" type="button">Próximo ▶</button>
+    <label><input type="checkbox" id="tourVoz" checked> Voz</label>
+    <label style="margin-left:0"><input type="checkbox" id="tourAuto" checked> Avançar sozinho</label>
+  </div>
+  <span class="tour-sub" id="tourSub">Setas do teclado também navegam · Esc para sair</span>
+</div>
+
+<div class="rep" id="rep" hidden role="dialog" aria-modal="true" aria-label="Relatório de materiais">
+  <div class="rep-tools"><button class="btn big" id="bPrint" type="button" hidden>Imprimir</button><span class="note" id="printNote" style="align-self:center;color:#fff"></span><button class="btn" id="bRepClose" type="button">Fechar</button></div>
+  <div class="sheet" id="sheet"></div>
+</div>
+
+<script>
+(function(){
+const REF={nome:'Prédio comercial (obra de referência)',cli:'',L:10860,H:5630,vaos:4,linhas:2,VID:'n-incolor',ESP:8,COR:'branco',CEN:1};
+let O={...REF};
+try{const s=JSON.parse(localStorage.getItem('fc-obra')||'null');if(s)O={...REF,...s};}catch(_){}
+const save=()=>{try{localStorage.setItem('fc-obra',JSON.stringify(O));}catch(_){}};
+const NAMES={cortina:'Fachada Cortina',atlanta:'Pele de Vidro Atlanta'};
+const IF={cortina:document.getElementById('if_cortina'),atlanta:document.getElementById('if_atlanta')};
+const R={},ready={};let cur='cortina';
+try{const t=localStorage.getItem('fc-obra-tipo');if(t&&IF[t])cur=t;}catch(_){}
+const nf=(n,d=0)=>isFinite(n)?n.toLocaleString('pt-BR',{minimumFractionDigits:d,maximumFractionDigits:d}):'—';
+const qf=n=>Number.isInteger(Math.round(n*100)/100)?nf(n,0):nf(n,2);
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* ===== obra ===== */
+const form=document.getElementById('fObra');
+function fill(){form.querySelectorAll('[data-k]').forEach(el=>{el.value=O[el.dataset.k]??'';});head();}
+function head(){document.getElementById('obraNome').innerHTML=esc(O.nome||'Obra sem nome')+(O.cli?`<span>· ${esc(O.cli)}</span>`:'');
+  document.getElementById('cmpArea').textContent=`Vão ${nf(O.L/1000,2)} × ${nf(O.H/1000,2)} m · ${nf(O.L*O.H/1e6,2)} m² de fachada`;}
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+function msg(){return{type:'fc-obra',L:clamp(+O.L||0,800,15000),H:clamp(+O.H||0,800,9000),vaos:clamp(Math.round(+O.vaos||1),1,8),linhas:clamp(Math.round(+O.linhas||1),1,4),VID:O.VID,ESP:+O.ESP,COR:O.COR,CEN:+O.CEN};}
+function send(t){const f=IF[t];if(ready[t]&&f.contentWindow)f.contentWindow.postMessage(msg(),'*');}
+const sendAll=()=>{send('cortina');send('atlanta');};
+let tmo=null;
+form.addEventListener('input',e=>{const el=e.target,k=el.dataset.k;if(!k)return;O[k]=el.type==='number'?Number(el.value):el.value;save();head();
+  if(k==='nome'||k==='cli')return;clearTimeout(tmo);tmo=setTimeout(sendAll,el.type==='number'?450:60);});
+form.addEventListener('submit',e=>e.preventDefault());
+document.getElementById('bRef').onclick=()=>{O={...REF};save();fill();sendAll();};
+
+/* ===== troca de tipologia ===== */
+function pick(t){cur=t;try{localStorage.setItem('fc-obra-tipo',t);}catch(_){}
+  document.querySelectorAll('.tipo').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.t===t)));
+  Object.entries(IF).forEach(([k,f])=>f.hidden=k!==t);document.getElementById('load').hidden=!!ready[t];renderCmp();}
+document.querySelectorAll('.tipo').forEach(b=>b.onclick=()=>pick(b.dataset.t));
+
+/* ===== mensagens das tipologias ===== */
+addEventListener('message',e=>{const d=e.data;if(!d||!d.tipo||!IF[d.tipo])return;if(e.source!==IF[d.tipo].contentWindow)return;
+  if(d.type==='fc-pronto'){ready[d.tipo]=true;send(d.tipo);if(d.tipo===cur)document.getElementById('load').hidden=true;}
+  if(d.type==='fc-resumo'){R[d.tipo]=d;document.getElementById('kg_'+d.tipo).innerHTML=nf(d.kg,1)+' kg<i>alumínio</i>';renderCmp();}});
+
+/* ===== comparativo ===== */
+function renderCmp(){const a=R.cortina,b=R.atlanta,fa=O.L*O.H/1e6;
+  const th=t=>`<th class="n${cur===t?' sel':''}">${NAMES[t]}</th>`;
+  const max=Math.max(a?a.kg:0,b?b.kg:0)||1;
+  const low=(x,y,lowGood)=>x&&y&&isFinite(x)&&isFinite(y)&&x!==y&&(lowGood?x<y:x>y);
+  const cell=(t,html,extra)=>`<td class="n${cur===t?' sel':''}">${html}${extra||''}</td>`;
+  const row=(lab,fa_,fb_,va,vb,lowGood)=>`<tr><td>${lab}</td>${cell('cortina',a?`<span class="${lowGood!=null&&low(va,vb,lowGood)?'low':''}">${fa_}</span>`:'—')}${cell('atlanta',b?`<span class="${lowGood!=null&&low(vb,va,lowGood)?'low':''}">${fb_}</span>`:'—')}<td class="n">${a&&b&&isFinite(va)&&isFinite(vb)&&lowGood!=null?dif(va,vb):''}</td></tr>`;
+  const dif=(x,y)=>{if(!y)return'';const p=(x-y)/y*100;return(p>0?'+':'')+nf(p,0)+'% cortina × Atlanta';};
+  const kgBar=(r,cls)=>r?`<div class="bar${cls}"><span style="width:${(r.kg/max*100).toFixed(1)}%"></span></div>`:'';
+  let h=`<thead><tr><th>Item</th>${th('cortina')}${th('atlanta')}<th class="n">Diferença</th></tr></thead><tbody>`;
+  h+=`<tr><td>Peso de alumínio</td>${cell('cortina',a?nf(a.kg,1)+' kg':'—',kgBar(a,''))}${cell('atlanta',b?nf(b.kg,1)+' kg':'—',kgBar(b,' a'))}<td class="n">${a&&b?dif(a.kg,b.kg):''}</td></tr>`;
+  h+=row('Alumínio por m² de fachada',a?nf(a.kg/fa,2)+' kg/m²':'',b?nf(b.kg/fa,2)+' kg/m²':'',a&&a.kg/fa,b&&b.kg/fa,true);
+  h+=row('Vidro',a?nf(a.area,2)+' m²':'',b?nf(b.area,2)+' m²':'',a&&a.area,b&&b.area,false);
+  h+=row('Peças de vidro',a?a.pecas+' peças':'',b?b.pecas+' peças':'',0,0,null);
+  h+=row('Medida de cada vidro',a?nf(a.vidro[0],0)+' × '+nf(a.vidro[1],0)+' mm':'',b?nf(b.vidro[0],0)+' × '+nf(b.vidro[1],0)+' mm':'',0,0,null);
+  h+=row('Estrutura vertical',a?esc(a.colTxt):'',b?esc(b.colTxt):'',0,0,null);
+  h+=row('Itens na lista',a?(new Set(a.perfis.map(r=>r.c)).size)+' perfis · '+a.aces.length+' acessórios':'',b?(new Set(b.perfis.map(r=>r.c)).size)+' perfis · '+b.aces.length+' acessórios':'',0,0,null);
+  h+=row('Cenário da obra',a?'Sim':'',b?'Em breve':'',0,0,null);
+  document.getElementById('tCmp').innerHTML=h+'</tbody>';
+  document.getElementById('lists').innerHTML=['cortina','atlanta'].map(t=>{const r=R[t];if(!r)return`<div><h3>${NAMES[t]}</h3><p class="note">Carregando…</p></div>`;
+    return `<div style="min-width:0"><h3>${NAMES[t]} · perfis</h3><div class="tw"><table><thead><tr><th>Código</th><th>Descrição</th><th class="n">Qtd</th><th class="n">Medida</th><th class="n">kg</th></tr></thead><tbody>`+
+      r.perfis.map(p=>`<tr><td class="c">${esc(p.c)}</td><td>${esc(p.d)}${p.x?'<span class="x">extra</span>':''}</td><td class="n">${qf(p.q)}</td><td class="n">${nf(p.m,0)}</td><td class="n">${nf(p.kg,2)}</td></tr>`).join('')+
+      `</tbody><tfoot><tr><td colspan="4"><b>Total de alumínio</b></td><td class="n"><b>${nf(r.kg,1)}</b></td></tr></tfoot></table></div>
+      <h3>${NAMES[t]} · acessórios</h3><div class="tw"><table><thead><tr><th>Código</th><th>Descrição</th><th class="n">Qtd</th></tr></thead><tbody>`+
+      r.aces.map(p=>`<tr><td class="c">${esc(p.c)}</td><td>${esc(p.d)}</td><td class="n">${qf(p.q)}</td></tr>`).join('')+`</tbody></table></div></div>`;}).join('');renderVento();renderVars();}
+
+/* ===== respostas das variáveis (Base W) ===== */
+function varLines(r){return r.vars.filter(v=>!v.x&&v.show).map(v=>`${v.k} = ${v.val}`);}
+function renderVars(){const r=R[cur],t=document.getElementById('tVar');
+  document.getElementById('rSub').textContent=r?`${NAMES[cur]} · tipologia ${r.cod} · na ordem do cadastro`:'Carregando a tipologia…';
+  if(!r||!r.vars){t.innerHTML='';return;}
+  let i=0;t.innerHTML='<thead><tr><th>#</th><th>Variável</th><th>Pergunta</th><th>Resposta</th><th>Situação</th></tr></thead><tbody>'+
+    r.vars.map(v=>{const n=v.x?'—':++i;const num=String(v.txt)===String(v.val);return `<tr class="${v.show?'':'na'}"><td class="n">${n}</td><td><span class="vk${v.x?' x':''}">${esc(v.k)}</span></td><td>${esc(v.lab)}<br><span class="note">${esc(v.g)}</span></td>
+      <td><span class="ans">${esc(v.val)}${num?'':`<small>${esc(v.txt)}</small>`}</span></td><td>${v.x?'Extra · só no 3D':v.show?'Responder':'Não se aplica'}</td></tr>`;}).join('')+'</tbody>';}
+document.getElementById('bCopy').onclick=async()=>{const r=R[cur];if(!r)return;const txt=`${NAMES[cur]} (${r.cod})\n`+varLines(r).join('\n');const ok=document.getElementById('cpOk');
+  try{await navigator.clipboard.writeText(txt);ok.textContent='Copiado';}catch(_){ok.textContent='Selecione a tabela e copie com Ctrl+C';}ok.hidden=false;setTimeout(()=>ok.hidden=true,2600);};
+
+/* ===== relatório de materiais ===== */
+const canPrint=(()=>{try{return window.top===window;}catch(_){return false;}})();
+function openRep(){const r=R[cur];if(!r)return;const d=new Date(),fa=O.L*O.H/1e6;
+  const kgP=r.perfis.reduce((s,p)=>s+(isFinite(p.kg)?p.kg:0),0);
+  const vidN={'n-incolor':'Neutro incolor','n-verde':'Neutro verde','n-cinza':'Neutro cinza','r-cinza':'Refletivo cinza','r-azul':'Refletivo azul','r-esmeralda':'Refletivo esmeralda','r-champanhe':'Refletivo champanhe'}[O.VID]||O.VID;
+  const corN={natural:'Natural fosco',branco:'Branco',preto:'Preto',bronze:'Bronze'}[O.COR]||O.COR;
+  document.getElementById('sheet').innerHTML=`
+  <div class="sh-head"><div class="sh-brand"><div class="sh-mono">FC</div><div><h2>Relatório de materiais</h2><p>${esc(NAMES[cur])} · tipologia ${esc(r.cod)} · simulação para apresentação</p></div></div>
+    <div class="sh-meta"><b>${esc(O.nome||'Obra sem nome')}</b><br>${O.cli?esc(O.cli)+'<br>':''}${d.toLocaleDateString('pt-BR')}</div></div>
+  <div class="sh-grid"><div><span>Vão total</span><b>${nf(O.L,0)} × ${nf(O.H,0)} mm</b></div><div><span>Área de fachada</span><b>${nf(fa,2)} m²</b></div>
+    <div><span>Vidro</span><b>${+O.ESP} mm · ${esc(vidN)}</b></div><div><span>Acabamento</span><b>${esc(corN)}</b></div></div>
+  <h3>Respostas das variáveis</h3>
+  <table><thead><tr><th>Variável</th><th>Pergunta</th><th>Resposta</th></tr></thead><tbody>${r.vars.filter(v=>v.show).map(v=>`<tr><td><b>${esc(v.k)}</b>${v.x?' (extra)':''}</td><td>${esc(v.lab)}</td><td><b>${esc(v.val)}</b>${String(v.txt)!==String(v.val)?' · '+esc(v.txt):''}</td></tr>`).join('')}</tbody></table>
+  <h3>Perfis</h3>
+  <table><thead><tr><th>Código</th><th>Descrição</th><th class="n">Corte</th><th class="n">Qtd</th><th class="n">Medida (mm)</th><th class="n">kg</th></tr></thead><tbody>
+    ${r.perfis.map(p=>`<tr><td><b>${esc(p.c)}</b></td><td>${esc(p.d)}${p.ref?' · ref. '+esc(p.ref):''}${p.x?' (extra)':''}</td><td class="n">${esc(p.ct||'')}</td><td class="n">${qf(p.q)}</td><td class="n">${nf(p.m,0)}</td><td class="n">${nf(p.kg,2)}</td></tr>`).join('')}
+    <tr class="tot"><td colspan="5">Peso total de alumínio</td><td class="n">${nf(kgP,1)} kg</td></tr></tbody></table>
+  <h3>Componentes</h3>
+  <table><thead><tr><th>Código</th><th>Descrição</th><th class="n">Qtd</th></tr></thead><tbody>${r.aces.map(a=>`<tr><td><b>${esc(a.c)}</b></td><td>${esc(a.d)}</td><td class="n">${qf(a.q)}</td></tr>`).join('')}</tbody></table>
+  <h3>Vidros</h3>
+  <table><thead><tr><th>Descrição</th><th class="n">Peças</th><th class="n">Medida (mm)</th><th class="n">Área</th></tr></thead><tbody><tr><td>Vidro ${+O.ESP} mm · ${esc(vidN)}</td><td class="n">${r.pecas}</td><td class="n">${nf(r.vidro[0],0)} × ${nf(r.vidro[1],0)}</td><td class="n">${nf(r.area,2)} m²</td></tr></tbody></table>
+  <p class="sh-warn"><b>Apresentação comercial e simulação.</b> Quantidades, medidas e pesos saem das fórmulas da tipologia com as medidas informadas e são demonstrativos. Confirme com o fornecedor (matrizes diferentes mudam o peso) e com o projeto da obra antes de qualquer compra ou fabricação.</p>
+  <div class="sh-foot"><span>FC CONSULTORIA EM ESQUADRIA · uso exclusivo</span><span>© FC Consultoria em Esquadria · Orientativo FC 3D</span></div>`;
+  document.getElementById('bPrint').hidden=!canPrint;document.getElementById('printNote').textContent=canPrint?'':'A impressão fica disponível quando a página estiver na plataforma FC.';
+  document.getElementById('rep').hidden=false;document.getElementById('bRepClose').focus();}
+document.getElementById('bRep').onclick=openRep;
+document.getElementById('bRepClose').onclick=()=>{document.getElementById('rep').hidden=true;};
+document.getElementById('bPrint').onclick=()=>{try{window.print();}catch(_){}};
+document.addEventListener('keydown',e=>{if(e.key==='Escape')document.getElementById('rep').hidden=true;});
+
+/* ===== simulação de vento (fórmula pública q = 0,613 · Vk²) ===== */
+const W0={v0:30,s1:1,s2:1,s3:1};let WV={...W0};
+try{const s=JSON.parse(localStorage.getItem('fc-vento')||'null');if(s)WV={...W0,...s};}catch(_){}
+const fV=document.getElementById('fVento');
+function fillV(){fV.querySelectorAll('[data-k]').forEach(el=>el.value=WV[el.dataset.k]);}
+fV.addEventListener('input',e=>{const k=e.target.dataset.k;if(!k)return;const v=Number(e.target.value);if(!isFinite(v)||v<=0)return;WV[k]=v;try{localStorage.setItem('fc-vento',JSON.stringify(WV));}catch(_){}renderVento();});
+fV.addEventListener('submit',e=>e.preventDefault());
+document.getElementById('bVreset').onclick=()=>{WV={...WV,s1:1,s2:1,s3:1};try{localStorage.setItem('fc-vento',JSON.stringify(WV));}catch(_){}fillV();renderVento();};
+function renderVento(){
+  const vk=WV.v0*WV.s1*WV.s2*WV.s3,q=0.613*vk*vk,kgf=q/9.80665,r=R[cur];
+  document.getElementById('wMark').style.left=Math.max(0,Math.min(100,(WV.v0-30)/20*100))+'%';
+  const g=r&&r.vidro?r.vidro:[0,0],ag=g[0]*g[1]/1e6,fa=O.L*O.H/1e6;
+  document.getElementById('wRes').innerHTML=[
+    ['Vento simulado (Vk)',nf(vk,1)+' m/s',nf(vk*3.6,0)+' km/h'],
+    ['Pressão dinâmica (q)',nf(q,0)+' Pa',nf(kgf,1)+' kgf/m²'],
+    ['Esforço ilustrativo em cada vidro',r?nf(kgf*ag,0)+' kgf':'—',r?nf(g[0],0)+' × '+nf(g[1],0)+' mm · '+NAMES[cur]:''],
+    ['Esforço ilustrativo na fachada',nf(kgf*fa,0)+' kgf',nf(fa,2)+' m² de vão']
+  ].map(([a,b,c])=>`<div><span>${a}</span><b>${b}</b><small>${c}</small></div>`).join('');
+  // fachada com setas de vento proporcionais à pressão
+  const n=Math.max(1,Math.min(8,Math.round(+O.vaos||1))),l=Math.max(1,Math.min(4,Math.round(+O.linhas||1))),W=360,H=Math.max(120,Math.min(230,W*O.H/O.L)),x0=110,y0=14;
+  const len=18+Math.min(1,(q-500)/1100)*62;let s=`<svg viewBox="0 0 ${x0+W+12} ${H+40}" role="img" aria-label="Vento atuando na fachada, ilustração"><defs><marker id="wa" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0L10,5L0,10z" fill="var(--amber)"/></marker></defs>`;
+  for(let i=0;i<6;i++){const y=y0+H*(i+.5)/6;s+=`<line x1="${x0-12-len}" y1="${y}" x2="${x0-12}" y2="${y}" stroke="var(--amber)" stroke-width="2.4" marker-end="url(#wa)"/>`;}
+  s+=`<rect x="${x0}" y="${y0}" width="${W}" height="${H}" fill="color-mix(in srgb,var(--teal) 14%,transparent)" stroke="var(--fg)" stroke-width="2"/>`;
+  for(let i=1;i<n;i++)s+=`<line x1="${x0+W*i/n}" y1="${y0}" x2="${x0+W*i/n}" y2="${y0+H}" stroke="var(--fg)" stroke-width="1.6"/>`;
+  for(let j=1;j<l;j++)s+=`<line x1="${x0}" y1="${y0+H*j/l}" x2="${x0+W}" y2="${y0+H*j/l}" stroke="var(--fg)" stroke-width="1.2"/>`;
+  s+=`<text x="${x0+W/2}" y="${y0+H+18}" text-anchor="middle" font-size="11" fill="var(--muted)" font-family="Inter,sans-serif">${nf(O.L,0)} × ${nf(O.H,0)} mm · ${nf(kgf,1)} kgf/m² (simulação)</text>`;
+  s+=`<text x="${x0-14}" y="${y0-2}" text-anchor="end" font-size="10" fill="var(--muted)" font-family="Inter,sans-serif">vento</text></svg>`;
+  document.getElementById('wSvg').innerHTML=s;}
+
+/* ===== recolher / apresentação ===== */
+const obraEl=document.getElementById('obra'),bMin=document.getElementById('bMin');
+bMin.onclick=()=>{obraEl.classList.toggle('min');bMin.textContent=obraEl.classList.contains('min')?'Editar a obra':'Recolher a obra';};
+const bShow=document.getElementById('bShow');
+bShow.onclick=()=>{const on=document.body.classList.toggle('show');bShow.textContent=on?'■ Sair da apresentação':'▶ Modo apresentação';
+  try{if(on&&document.documentElement.requestFullscreen)document.documentElement.requestFullscreen().catch(()=>{});else if(!on&&document.fullscreenElement)document.exitFullscreen().catch(()=>{});}catch(_){}};
+document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement&&document.body.classList.contains('show')){document.body.classList.remove('show');bShow.textContent='▶ Modo apresentação';}});
+
+
+/* ===== tutorial guiado com voz ===== */
+const cmd=(t,sel)=>{const f=IF[t];if(f&&f.contentWindow)f.contentWindow.postMessage({type:'fc-cmd',sel},'*');};
+const STEPS=[
+ {el:'header',t:'Bem-vindo à Apresentação de Obra',p:'Esta página é para o vendedor abrir na frente do cliente: arquiteto, engenheiro ou dono da obra. Você cadastra a obra uma vez e mostra as tipologias em 3D na mesma simulação.',in:()=>{pick('cortina');if(obraEl.classList.contains('min'))bMin.click();}},
+ {el:'#obra',t:'1. Cadastre a obra',p:'Na faixa da obra você coloca o nome, o cliente, a largura e a altura do vão, a quantidade de vãos, as linhas de vidro, o vidro, a espessura, o acabamento e o cenário. Tudo fica salvo neste navegador.'},
+ {el:'#bRef',t:'Obra de referência',p:'Este botão carrega a obra de exemplo, com dez metros e oitenta e seis de largura por cinco metros e sessenta e três de altura, em quatro vãos.'},
+ {el:'.tipos',t:'2. Troque a tipologia',p:'Aqui você alterna entre a Fachada Cortina e a Pele de Vidro Atlanta. As duas recebem as mesmas medidas da obra, e cada cartão já mostra o peso de alumínio.'},
+ {el:'.palco',t:'3. O 3D da obra',p:'Arraste com o mouse para girar, use a rodinha para aproximar. Passe o mouse sobre uma peça para ver o perfil em 3D, com o código e a referência do fornecedor. Os campos marcados como obra são definidos na faixa de cima.',in:()=>cmd('cortina','#vExt')},
+ {el:'.palco',t:'Desmontar a fachada',p:'O botão Desmontar a fachada abre o vão inteiro em camadas, com etiquetas e setas mostrando cada perfil, guarnição, presilha e tampa na ordem de montagem.',in:()=>cmd('cortina','#bWhole'),out:()=>cmd('cortina','#bWhole'),wait:2500},
+ {el:'.palco',t:'Detalhe do encontro',p:'O Detalhe do encontro mostra de perto onde a coluna cruza com a travessa, com os parafusos da presilha. É o ponto que o engenheiro mais pergunta.',in:()=>cmd('cortina','#bDesm'),out:()=>cmd('cortina','#bDesm'),wait:2500},
+ {el:'.palco',t:'Corte e materiais',p:'Na lateral do 3D ficam as abas Variáveis, Corte e Materiais. O corte mostra a seção em escala, e a lista de materiais é recalculada a cada mudança.',in:()=>cmd('cortina','.tabs button[data-t="mat"]'),out:()=>cmd('cortina','.tabs button[data-t="var"]')},
+ {el:'#tCmp',t:'4. Comparativo na mesma obra',p:'O comparativo coloca as duas tipologias lado a lado: peso de alumínio, quilos por metro quadrado, vidro, peças e estrutura. O valor mais baixo aparece em verde.'},
+ {el:'#dList',t:'Lista de materiais lado a lado',p:'Aqui abre a lista completa de perfis e acessórios das duas tipologias, para comparar item por item.',in:()=>{document.getElementById('dList').open=true;},out:()=>{document.getElementById('dList').open=false;}},
+ {el:'#tVar',t:'5. Respostas para o sistema de cálculo',p:'Esta tabela mostra as respostas das variáveis da tipologia, na ordem do cadastro. Use o botão Copiar respostas para lançar o orçamento no sistema de cálculo com rapidez.'},
+ {el:'#sheet',t:'6. Relatório de materiais',p:'O relatório reúne a obra, as variáveis, os perfis, os componentes e os vidros em uma folha A4, sempre com o aviso de simulação. Na plataforma da FC ele pode ser impresso.',in:()=>openRep(),out:()=>{document.getElementById('rep').hidden=true;}},
+ {el:'#fVento',t:'7. Simulação de vento',p:'Escolha a velocidade do vento da região e veja a pressão e o esforço ilustrativo em cada vidro. Os fatores começam em um. É só uma simulação: o cálculo oficial é do engenheiro da obra.',in:()=>document.getElementById('fVento').closest('section').scrollIntoView({block:'center'})},
+ {el:'#bShow',t:'8. Modo apresentação',p:'Antes de mostrar ao cliente, recolha a obra e entre no Modo apresentação. A tela fica cheia, só com o 3D e o comparativo.'},
+ {el:'header',t:'Pronto para apresentar',p:'Lembre sempre: esta é uma apresentação comercial e uma simulação. Medidas, pesos e quantidades são demonstrativos e devem ser confirmados com o fornecedor e com o projeto da obra.'}
+];
+let ti=-1,timer=null,paused=false;const hl=document.getElementById('tourHl'),card=document.getElementById('tourCard');
+const vozOn=()=>document.getElementById('tourVoz').checked&&'speechSynthesis' in window,autoOn=()=>document.getElementById('tourAuto').checked;
+let voice=null;function pickVoice(){try{const v=speechSynthesis.getVoices();voice=v.find(x=>/pt[-_]BR/i.test(x.lang))||v.find(x=>/^pt/i.test(x.lang))||null;}catch(_){}}
+if('speechSynthesis' in window){pickVoice();try{speechSynthesis.onvoiceschanged=pickVoice;}catch(_){}}
+function speak(text,done){try{speechSynthesis.cancel();}catch(_){}if(!vozOn()){timer=setTimeout(done,Math.max(5000,text.length*55));return;}
+  const parts=text.match(/[^.!?]+[.!?]*/g)||[text];let k=0;const next=()=>{if(k>=parts.length){done();return;}const u=new SpeechSynthesisUtterance(parts[k++].trim());u.lang='pt-BR';if(voice)u.voice=voice;u.rate=1.02;u.onend=()=>{if(ti>=0)next();};u.onerror=()=>{if(ti>=0)next();};speechSynthesis.speak(u);};next();}
+function place(){if(ti<0)return;const s=STEPS[ti],el=document.querySelector(s.el);if(!el)return;const r=el.getBoundingClientRect(),pad=6;
+  Object.assign(hl.style,{left:(r.left-pad)+'px',top:(r.top-pad)+'px',width:(r.width+pad*2)+'px',height:(r.height+pad*2)+'px'});
+  const cw=card.offsetWidth,ch=card.offsetHeight,vw=innerWidth,vh=innerHeight;let top=r.bottom+14;if(top+ch>vh-10)top=r.top-ch-14;if(top<10)top=Math.min(vh-ch-10,Math.max(10,r.top+20));
+  let left=Math.min(vw-cw-16,Math.max(16,r.left+r.width/2-cw/2));card.style.top=top+'px';card.style.left=left+'px';}
+function go(i){clearTimeout(timer);try{speechSynthesis.cancel();}catch(_){}
+  if(ti>=0&&STEPS[ti].out)STEPS[ti].out();if(i<0)i=0;if(i>=STEPS.length){endTour();return;}ti=i;const s=STEPS[ti];paused=false;document.getElementById('tourPause').textContent='⏸ Pausar';
+  if(s.in)s.in();const el=document.querySelector(s.el);if(el&&!s.in)el.scrollIntoView({block:'center',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});
+  else if(el&&s.el!=='#fVento')el.scrollIntoView({block:'center'});
+  document.getElementById('tourStep').textContent=`Passo ${ti+1} de ${STEPS.length}`;document.getElementById('tourProg').style.width=((ti+1)/STEPS.length*100)+'%';
+  document.getElementById('tourT').textContent=s.t;document.getElementById('tourP').textContent=s.p;document.getElementById('tourPrev').disabled=ti===0;
+  document.getElementById('tourNext').textContent=ti===STEPS.length-1?'Concluir ✓':'Próximo ▶';
+  setTimeout(()=>speak(s.p,()=>{if(ti===i&&autoOn()&&!paused)timer=setTimeout(()=>go(ti+1),900);}),s.wait?600:250);}
+function loopPlace(){if(ti<0)return;place();requestAnimationFrame(loopPlace);}
+function startTour(){if(document.body.classList.contains('show'))bShow.click();hl.hidden=false;card.hidden=false;ti=-1;go(0);loopPlace();}
+function endTour(){clearTimeout(timer);try{speechSynthesis.cancel();}catch(_){}if(ti>=0&&STEPS[ti].out)STEPS[ti].out();ti=-1;hl.hidden=true;card.hidden=true;scrollTo({top:0});document.getElementById('bTour').focus();}
+document.getElementById('bTour').onclick=startTour;
+document.getElementById('tourX').onclick=endTour;
+document.getElementById('tourNext').onclick=()=>go(ti+1);
+document.getElementById('tourPrev').onclick=()=>go(ti-1);
+document.getElementById('tourPause').onclick=()=>{const b=document.getElementById('tourPause');if(!paused){paused=true;clearTimeout(timer);try{speechSynthesis.pause();}catch(_){}b.textContent='▶ Continuar';}
+  else{paused=false;b.textContent='⏸ Pausar';try{if(speechSynthesis.paused)speechSynthesis.resume();else go(ti);}catch(_){go(ti);}}};
+document.getElementById('tourVoz').onchange=()=>{if(!vozOn())try{speechSynthesis.cancel();}catch(_){}};
+document.addEventListener('keydown',e=>{if(ti<0)return;if(e.key==='ArrowRight'){e.preventDefault();go(ti+1);}else if(e.key==='ArrowLeft'){e.preventDefault();go(ti-1);}else if(e.key==='Escape'){endTour();}});
+if(!('speechSynthesis' in window)){document.getElementById('tourVoz').checked=false;document.getElementById('tourVoz').disabled=true;document.getElementById('tourSub').textContent='Este navegador não tem voz; o texto avança sozinho.';}
+
+fill();fillV();pick(cur);renderCmp();
+})();
+</script>
+
+<div class="rgate" id="gate"><form id="gateForm"><small>FC Consultoria · Matriz</small><h1>🏢 Apresentação de Obra</h1>
+<label>Login<input name="login" autocomplete="username" required placeholder="matriz"></label>
+<label>Senha<input name="senha" type="password" autocomplete="current-password" required></label>
+<button type="submit">Entrar</button><p id="gateMsg" role="alert"></p></form></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="../atualiza.js"></script>
+<script src="../auth.js"></script>
+<script>gateUI(()=>{},{soMatriz:true});</script>
+</body>
+</html>
