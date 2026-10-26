@@ -282,19 +282,26 @@ function showTab(){
   if (espelho) mostrarBarraEspelho();
   pingSoon();
 }
-const sortedModels = () => Object.entries(models).sort((a,b)=>(a[1].ordem||0)-(b[1].ordem||0));
+const sortedModels = () => Object.entries(models).filter(([,x])=>!x.salvo).sort((a,b)=>(a[1].ordem||0)-(b[1].ordem||0));
+const savedModels = () => Object.entries(models).filter(([,x])=>x.salvo).sort((a,b)=>String(b[1].salvoEm||"").localeCompare(String(a[1].salvoEm||"")));
+/* Re-render só depois do clique: se o campo perde o foco porque a pessoa clicou na foto, o clique não se perde */
+let ptrDown=false, renderPend=false;
+document.addEventListener("pointerdown",()=>{ ptrDown=true; },true);
+document.addEventListener("pointerup",()=>{ ptrDown=false; if(renderPend){ renderPend=false; setTimeout(renderSheet,0); } },true);
+document.addEventListener("pointercancel",()=>{ ptrDown=false; if(renderPend){ renderPend=false; setTimeout(renderSheet,0); } },true);
+const renderSoon = () => { if(ptrDown) renderPend=true; else renderSheet(); };
 
 /* ---------- planilha ---------- */
-function curModel(){ if(!models[ui.model]) ui.model = sortedModels()[0]?.[0]||null; return models[ui.model]||null; }
+function curModel(){ if(!models[ui.model] || models[ui.model].salvo) ui.model = sortedModels()[0]?.[0]||null; return models[ui.model]||null; }
 function curGroup(m){ if(!m) return null; let g=m.grupos.find(x=>x.id===ui.group); if(!g){ g=m.grupos[0]; ui.group=g?.id; } return g||null; }
 
 function renderSheet(){
   const v=$("#v-planilha");
   if (!loaded){ v.innerHTML = `<div class="empty"><h2>Carregando os modelos de kit…</h2></div>`; return; }
-  if (!Object.keys(models).length){ v.innerHTML = `<div class="empty"><h2>Nenhum modelo de kit ainda</h2><p class="note">Crie um modelo (por exemplo, Frontal e Canto Redondo) e adicione os perfis pelo catálogo.</p><button class="btn primary" id="newModel">Novo modelo</button></div>`; $("#newModel").onclick=addModel; return; }
+  if (!sortedModels().length){ const ns=savedModels().length; v.innerHTML = `<div class="empty"><h2>Nenhum modelo de kit aberto</h2><p class="note">Crie um modelo (por exemplo, Frontal e Canto Redondo) e adicione os perfis pelo catálogo${ns?", ou abra um modelo salvo":""}.</p><div class="row" style="justify-content:center"><button class="btn primary" id="newModel">Novo modelo</button>${ns?`<button class="btn" id="openSaved">📂 Modelos salvos (${ns})</button>`:""}</div></div>`; $("#newModel").onclick=addModel; const os=$("#openSaved"); if(os) os.onclick=openSaved; return; }
   const m=curModel(), g=curGroup(m); saveUi(); if(m && renderSheet.ultimo!==ui.model){ renderSheet.ultimo=ui.model; evento("modelo",{modelo:m.nome}); }
   const ins = m.insumos||[];
-  let h = `<div class="row" style="justify-content:space-between"><div class="chips" role="group" aria-label="Modelos">${sortedModels().map(([id,x])=>`<button class="chip" data-m="${id}" aria-pressed="${id===ui.model}" ${travas[id]?`title="Em edição por ${esc(travas[id])}"`:""}>${esc(x.nome)}${travas[id]?" 🔒":""}</button>`).join("")}<button class="chip add" id="newModel">+ Modelo</button></div></div>`;
+  let h = `<div class="row" style="justify-content:space-between"><div class="chips" role="group" aria-label="Modelos">${sortedModels().map(([id,x])=>`<button class="chip" data-m="${id}" aria-pressed="${id===ui.model}" ${travas[id]?`title="Em edição por ${esc(travas[id])}"`:""}>${esc(x.nome)}${travas[id]?" 🔒":""}</button>`).join("")}<button class="chip add" id="newModel">+ Modelo</button></div><div class="row"><button class="btn" id="saveModel" title="Guarda uma cópia deste modelo para abrir depois">💾 Salvar modelo</button><button class="btn" id="openSaved">📂 Modelos salvos (${savedModels().length})</button></div></div>`;
   h += `<div class="params">
     <label class="param"><span class="lbl">Nome do modelo</span><input id="p-nome" value="${esc(m.nome)}"></label>
     <label class="param"><span class="lbl">Custo kg alumínio</span><span class="in"><input id="p-alu" class="num" value="${n2(m.aluminio)}"><span class="unit">R$/kg</span></span></label>
@@ -341,16 +348,17 @@ function travarTela(v){
   const por=travas[ui.model]; v.classList.toggle("travado",!!por);
   if(!por) return;
   v.insertAdjacentHTML("afterbegin",`<div class="trava" role="status">🔒 Este kit está em edição por <b>${esc(por)}</b>. Você pode olhar; quando terminar, aparece o aviso para atualizar.</div>`);
-  v.querySelectorAll("input,select,button").forEach(e=>{ if(!e.matches("[data-m],[data-g],#newModel")) e.disabled=true; });
+  v.querySelectorAll("input,select,button").forEach(e=>{ if(!e.matches("[data-m],[data-g],#newModel,#saveModel,#openSaved")) e.disabled=true; });
 }
 
 function confirmBtn(btn, fn){ if(btn.dataset.armed){ fn(); return; } btn.dataset.armed="1"; const t=btn.textContent; btn.textContent="Clique de novo para confirmar"; setTimeout(()=>{ if(btn.isConnected){ btn.textContent=t; delete btn.dataset.armed; } },3000); }
 
 function bindSheet(v,m,g){
-  const id=ui.model, ch=()=>{ touch(id); renderSheet(); };
+  const id=ui.model, ch=()=>{ touch(id); renderSoon(); };
   v.querySelectorAll("[data-m]").forEach(b=>b.onclick=()=>{ ui.model=b.dataset.m; ui.group=null; renderSheet(); });
   v.querySelectorAll("[data-g]").forEach(b=>b.onclick=()=>{ ui.group=b.dataset.g; renderSheet(); });
   $("#newModel",v).onclick=addModel;
+  { const sm=$("#saveModel",v); if(sm) sm.onclick=()=>saveModelCopy(m); const os=$("#openSaved",v); if(os) os.onclick=openSaved; }
   const on=(sel,fn)=>{ const e=$(sel,v); if(e) e.onchange=()=>{ fn(e.value); ch(); }; };
   on("#p-nome", x=>m.nome=x.trim()||m.nome);
   on("#p-alu", x=>m.aluminio=pnum(x)??0);
@@ -368,7 +376,10 @@ function bindSheet(v,m,g){
   const L = k => g.linhas.find(l=>l.id===k), K = k => g.kits.find(x=>x.id===k);
   const each=(attr,fn)=>v.querySelectorAll(`[data-${attr}]`).forEach(e=>e.onchange=()=>{ fn(e, e.dataset[attr]); ch(); });
   each("lf",(e,k)=>L(k).funcao=e.value);
-  each("lc",(e,k)=>{ const l=L(k); l.codigo=e.value.trim(); const c=CAT_BY_CODE[norm(l.codigo)]; l.catId=c?c.id:null; if(c && !(+l.peso)) l.peso=c.p; });
+  each("lc",(e,k)=>{ const l=L(k); l.codigo=e.value.trim(); const nc=norm(l.codigo);
+    const atual=l.catId && CAT_BY_ID[l.catId], c=(atual && norm(atual.c)===nc) ? atual : CAT_BY_CODE[nc];
+    if(c){ l.catId=c.id; l.peso=c.p; if(!l.funcao) l.funcao=c.n; }
+    else { l.catId=null; if(nc) toast("Código "+l.codigo+" não está no catálogo: digite o peso kg/m manualmente."); } });
   each("lp",(e,k)=>L(k).peso=pnum(e.value)??0);
   each("lm",(e,k)=>L(k).medida=e.value);
   each("lq",(e,k)=>L(k).qtd=pnum(e.value)??0);
@@ -391,6 +402,34 @@ function bindSheet(v,m,g){
 async function addModel(){
   const id=uid(); models[id]={nome:"Novo modelo", ordem:Date.now(), aluminio:0, embalagem:0, insumos:[], grupos:[{id:uid(), nome:"Grupo 1", acessorio:0, ipi:0, linhas:[], kits:[{id:uid(), rotulo:"1000x1900", L:1, H:1.9, venda:null}]}]};
   ui.model=id; ui.group=null; touch(id); renderSheet();
+}
+/* ---------- modelos salvos ---------- */
+const dataBR = iso => { try{ return new Date(iso).toLocaleString("pt-BR",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"}); }catch(e){ return ""; } };
+function saveModelCopy(m){
+  if(!m) return; const md=$("#modal");
+  md.innerHTML = `<div class="box" role="dialog" aria-modal="true" aria-label="Salvar modelo" style="width:min(480px,100%)"><div class="row" style="justify-content:space-between"><h2>Salvar modelo</h2><button class="btn" id="sv-x">Fechar</button></div>
+    <p class="note">Guarda uma cópia de <b>${esc(m.nome)}</b> como está agora (perfis, insumos, grupos e tamanhos). Depois você abre em <b>📂 Modelos salvos</b>.</p>
+    <label class="param"><span class="lbl">Nome para salvar</span><input id="sv-nome" value="${esc(m.nome)}"></label>
+    <div class="row" style="justify-content:flex-end;margin-top:12px"><button class="btn primary" id="sv-ok">💾 Salvar</button></div></div>`;
+  md.hidden=false; md.onclick=e=>{ if(e.target===md) closeModal(); }; $("#sv-x",md).onclick=closeModal;
+  const inp=$("#sv-nome",md); inp.focus(); inp.select();
+  const ok=()=>{ const nome=inp.value.trim()||m.nome; const id=uid(); const c=JSON.parse(JSON.stringify(m));
+    Object.assign(c,{nome, salvo:true, salvoEm:new Date().toISOString(), salvoPor:(sess&&(sess.usuario||sess.nome))||"", ordem:Date.now()});
+    models[id]=c; pending.set(id,true); setSave("Salvando…"); flush(); closeModal(); renderSheet(); toast("Modelo salvo: "+nome); evento("salvar_modelo",{modelo:nome}); };
+  $("#sv-ok",md).onclick=ok; inp.onkeydown=e=>{ if(e.key==="Enter") ok(); };
+}
+function openSaved(){
+  const md=$("#modal");
+  const draw=()=>{ const list=savedModels();
+    md.innerHTML = `<div class="box" role="dialog" aria-modal="true" aria-label="Modelos salvos" style="width:min(640px,100%)"><div class="row" style="justify-content:space-between"><h2>📂 Modelos salvos</h2><button class="btn" id="os-x">Fechar</button></div>
+      ${list.length?`<p class="note">Abrir cria uma aba nova com uma cópia; o modelo salvo continua guardado.</p><div class="aplist">${list.map(([id,x])=>`<div class="btn" style="display:flex;justify-content:space-between;gap:10px;align-items:center;cursor:default"><span><b>${esc(x.nome)}</b><br><small class="muted">${dataBR(x.salvoEm)}${x.salvoPor?" · "+esc(x.salvoPor):""} · ${(x.grupos||[]).length} grupo(s)</small></span><span class="row"><button class="btn primary" data-os-open="${id}">Abrir</button><button class="btn ghost danger" data-os-del="${id}">Excluir</button></span></div>`).join("")}</div>`
+        :`<p class="muted">Nenhum modelo salvo ainda. Use <b>💾 Salvar modelo</b> na planilha.</p>`}</div>`;
+    $("#os-x",md).onclick=closeModal;
+    md.querySelectorAll("[data-os-open]").forEach(b=>b.onclick=()=>{ const s0=models[b.dataset.osOpen]; if(!s0) return; const id=uid(); const c=JSON.parse(JSON.stringify(s0));
+      delete c.salvo; delete c.salvoEm; delete c.salvoPor; c.ordem=Date.now(); models[id]=c; ui.model=id; ui.group=null; ui.tab="planilha"; saveUi(); closeModal(); touch(id); showTab(); toast("Modelo aberto: "+c.nome); evento("abrir_modelo",{modelo:c.nome}); });
+    md.querySelectorAll("[data-os-del]").forEach(b=>b.onclick=()=>confirmBtn(b, async ()=>{ const sid=b.dataset.osDel; delete models[sid]; draw(); renderSheet(); try{ await rpc("precif_excluir",{p_token:sess.token, p_id:sid}); }catch(err){ toast("Não foi possível excluir: "+err.message); load(); } }));
+  };
+  md.hidden=false; md.onclick=e=>{ if(e.target===md) closeModal(); }; draw();
 }
 
 /* ---------- catálogo (somente leitura, conforme catálogo TEXA) ---------- */
@@ -428,7 +467,7 @@ function openPicker(onPick){
 }
 function applyCat(l,c){ l.catId=c.id; l.codigo=c.c; l.peso=c.p; if(!l.funcao) l.funcao=c.n; }
 function openApply(c){
-  const md=$("#modal"); if(!Object.keys(models).length){ toast("Cadastre um modelo na aba Planilha primeiro."); return; }
+  const md=$("#modal"); if(!sortedModels().length){ toast("Cadastre um modelo na aba Planilha primeiro."); return; }
   let mid = models[ui.model] ? ui.model : sortedModels()[0][0], gid = null;
   const draw=()=>{
     const m=models[mid]; let g=m.grupos.find(x=>x.id===gid)||m.grupos[0]; gid=g?.id;
@@ -453,7 +492,7 @@ document.addEventListener("keydown",e=>{ if(e.key==="Escape" && !$("#modal").hid
 
 /* ---------- relatório ---------- */
 function repSel(){
-  if(!models[ui.rModel]) ui.rModel = ui.model && models[ui.model] ? ui.model : sortedModels()[0]?.[0];
+  if(!models[ui.rModel] || models[ui.rModel].salvo) ui.rModel = ui.model && models[ui.model] && !models[ui.model].salvo ? ui.model : sortedModels()[0]?.[0];
   const m=models[ui.rModel]; if(!m) return {};
   let g=m.grupos.find(x=>x.id===ui.rGroup); if(!g){ g=m.grupos[0]; ui.rGroup=g?.id; }
   if (g && ui.rKit!=="all" && !g.kits.find(k=>k.id===ui.rKit)) ui.rKit="all";
