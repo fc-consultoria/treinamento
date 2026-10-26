@@ -231,3 +231,7 @@ grant execute on function public.emp_central(text, text) to anon, authenticated;
 -- emp_central devolve também 'sem': últimos 7 dias x 7 anteriores (n, v = orçamentos/valor; f, fv = pedidos fechados
 -- (status aguardando/aprovado, data pelo hist ou atualizado_em); p1 perdidos; abertos7; desc24 (desconto pendente > 24h);
 -- fin48 (aguardando financeiro > 48h); usaram7 / usaram_hoje (pessoas com evento).
+
+-- ===== 26/10/2026 · Senha visível para a Matriz (migração emp_pessoas_senha_visivel) =====
+-- emp_pessoas.senha_ver: cópia legível da senha, gravada por emp_pessoa_salvar; só emp_pessoas_lista (admin) devolve ('senha').
+-- Senhas criadas antes disso ficam sem cópia: gerar nova em Editar para aparecer.
