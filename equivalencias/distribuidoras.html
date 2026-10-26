@@ -66,6 +66,7 @@ h2.t{margin:4px 0 0;font:800 22px var(--f-d)}
 <script src="../atualiza.js"></script>
 <script src="../auth.js"></script>
 <script src="foto-busca.js?v=2"></script>
+<script src="cliente-codigos.js?v=1"></script>
 <script>
 const $=s=>document.querySelector(s),esc=t=>String(t??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const KEY=new URLSearchParams(location.search).get('k')||'';
@@ -80,14 +81,20 @@ async function carrega(){D=await fetch('distribuidoras/dados.json?v=2',{cache:'n
   D.g.forEach((g,i)=>{g.i=i;const ks=new Set([g.k]);g.m.forEach(m=>{ks.add(nk(m[1]));if(m[6])ks.add(nk(m[6]));});if(g.mk)ks.add(nk(g.mk));ks.forEach(k=>(BY[k]=BY[k]||[]).push(i));});
   /* código de extrusora (Texa, FBK, Ecoalumi…) leva ao grupo de mercado da Conversão de códigos */
   if(IDX)IDX.g.forEach(x=>{const gs=D.g.filter(g=>g.l===x.l&&g.gk===x.k);if(!gs.length)return;x.m.forEach(m=>{const k=nk(m[1]);gs.forEach(g=>{if(!(BY[k]||[]).includes(g.i))(BY[k]=BY[k]||[]).push(g.i);});});});}
-function busca(q){return [...new Set(BY[nk(q)]||[])].map(i=>D.g[i]);}
+function busca(q){/* código próprio do cliente (ex.: Guaporé PLK544 = Texa TBXL028) leva ao perfil que ele compra hoje */
+  const cl=window.FCCli?FCCli.acha(q).flatMap(e=>e.f.map(f=>nk(f[1]))):[];const ids=[];
+  cl.forEach(c=>(BY[c]||[]).forEach(i=>{if(!ids.includes(i))ids.push(i);}));(BY[nk(q)]||[]).forEach(i=>{if(!ids.includes(i))ids.push(i);});
+  return ids.map(i=>D.g[i]);}
+function cliBanner(q){if(!window.FCCli||!FCCli.ativo())return '';const E=FCCli.acha(q);if(!E.length)return '';
+  return E.map(e=>`<div class="box" style="margin-top:16px;border:2px solid var(--tl,#0f6b70)"><small style="font-weight:700;color:var(--tl,#0f6b70)">🔁 Código ${esc(e.cli)}</small><div style="font-size:18px;margin:4px 0 6px"><b>${esc(e.c)}</b> <span style="opacity:.6">= hoje compra na extrusora</span></div><div class="ext">${e.f.length?e.f.map(f=>`<a href="comprar.html${KEY?'?k='+encodeURIComponent(KEY):''}#${encodeURIComponent(f[1])}">${esc(IDX&&IDX.forn[f[0]]||f[0].toUpperCase())} · <b>${esc(f[1])}</b>${f[2]?' <small>('+esc(f[2])+')</small>':''}</a>`).join(''):'<i>sem código de fornecedor na planilha</i>'}</div>${e.obs?`<p class="sub" style="font-size:13px;margin:6px 0 0">⚠️ ${esc(e.obs)}</p>`:''}<p class="sub" style="font-size:13px;margin:6px 0 0">Conforme a planilha de precificação do cliente (sem a cor). Abaixo, as distribuidoras com o mesmo perfil. Para comparar preço por kg na extrusora, clique no código acima (Onde comprar).</p></div>`).join('');}
+function semDist(q){return window.FCCli&&FCCli.acha(q).length?`<div class="box" style="margin-top:16px"><p class="vazio">Nenhuma distribuidora da base tem este perfil cadastrado ainda.</p></div>`:'';}
 function tela(){const r=Q?busca(Q):[];const tot={};D.g.forEach(g=>g.m.forEach(m=>tot[m[0]]=(tot[m[0]]||0)+1));
   const multi=D.g.filter(g=>new Set(g.m.map(m=>m[0])).size>1).length;
-  let h=`<section class="box"><h1 class="t">Compras com distribuidora</h1><p class="sub">Digite o código de qualquer distribuidora, o código de mercado (ex.: SU-001) ou até o código da extrusora. Aparecem todas as distribuidoras que têm o mesmo perfil, com o código de cada uma, o desenho e o peso (quando a distribuidora informa). Barras de 6 m.</p>
+  let h=`<section class="box"><h1 class="t">Compras com distribuidora</h1><p class="sub">Digite o código de qualquer distribuidora, o código de mercado (ex.: SU-001) ou até o código da extrusora.${window.FCCli&&FCCli.ativo()?` <b>Também aceita o código da ${esc(FCCli.nome())}</b>, sem a cor.`:''} Aparecem todas as distribuidoras que têm o mesmo perfil, com o código de cada uma, o desenho e o peso (quando a distribuidora informa). Barras de 6 m.</p>
   <form class="sb" id="fb"><input id="q" value="${esc(Q)}" placeholder="Ex.: SU-001, CM-151, 25-506, LG-017" autocomplete="off" aria-label="Código"><button>Procurar</button></form>
   <div class="kp"><div><b>${Object.keys(D.dist).length}</b><span>distribuidoras na base</span></div><div><b>${D.g.reduce((a,g)=>a+g.m.length,0).toLocaleString('pt-BR')}</b><span>códigos lidos dos catálogos</span></div><div><b>${multi.toLocaleString('pt-BR')}</b><span>perfis em 2 ou mais distribuidoras</span></div></div>
   <div class="chips">${Object.entries(D.dist).map(([k,n])=>`<button type="button" data-df="${k}" class="${DF===k?'on':''}">${esc(n)}<small>${tot[k]||0}</small></button>`).join('')}</div></section>`;
-  h+=`<div id="resBox">${Q?(r.length?resultado(r):sugestoes(Q)):(DF?lista(DF):'')}</div>`;
+  h+=`<div id="resBox">${Q?cliBanner(Q)+(r.length?resultado(r):(semDist(Q)||sugestoes(Q))):(DF?lista(DF):'')}</div>`;
   $('#app').innerHTML=h;}
 function resultado(r){
   if(!r.length)return `<div class="box" style="margin-top:16px"><p class="vazio">Não achei <b>${esc(Q.toUpperCase())}</b> nos catálogos das distribuidoras.</p></div>`;
@@ -112,17 +119,18 @@ function sugestoes(q){const k=norm(q);if(k.length<2)return '';
   if(!L.length)return resultado([]);
   return `<div class="box" style="margin-top:16px"><b style="font-size:15px">Códigos que começam com ${esc(q.toUpperCase())}:</b><div class="chips">${L.map(([,o])=>`<button type="button" data-q="${esc(o.c)}">${esc(o.c)} <small>${o.d?esc(D.dist[o.d]):o.f&&IDX?esc(IDX.forn[o.f])+' (extrusora)':'mercado'}</small></button>`).join('')}</div></div>`;}
 let digT=null;
-document.addEventListener('input',e=>{if(e.target.id!=='q')return;clearTimeout(digT);const v=e.target.value;digT=setTimeout(()=>{Q=v.trim();history.replaceState(null,'','#'+encodeURIComponent(Q));const r=Q?busca(Q):[];const b=$('#resBox');if(b)b.innerHTML=Q?(r.length?resultado(r):sugestoes(Q)):(DF?lista(DF):'');},250);});
+document.addEventListener('input',e=>{if(e.target.id!=='q')return;clearTimeout(digT);const v=e.target.value;digT=setTimeout(()=>{Q=v.trim();history.replaceState(null,'','#'+encodeURIComponent(Q));const r=Q?busca(Q):[];const b=$('#resBox');if(b)b.innerHTML=Q?cliBanner(Q)+(r.length?resultado(r):(semDist(Q)||sugestoes(Q))):(DF?lista(DF):'');},250);});
 document.addEventListener('submit',e=>{if(e.target.id==='fb'){e.preventDefault();Q=$('#q').value.trim();history.replaceState(null,'','#'+encodeURIComponent(Q));tela();}});
 document.addEventListener('click',e=>{const t=e.target.closest('[data-df],[data-q],[data-zoom]');if(!t)return;const d=t.dataset;
   if(d.df){DF=DF===d.df?'':d.df;Q='';tela();}else if(d.q){Q=d.q;tela();window.scrollTo(0,0);}else if(d.zoom){$('#zmI').src=d.zoom;$('#zmT').textContent=d.t||'';$('#zm').hidden=false;}});
 $('#zmX').onclick=()=>$('#zm').hidden=true;$('#zm').onclick=e=>{if(e.target.id==='zm')$('#zm').hidden=true;};
-async function iniciar(){await carrega();Q=decodeURIComponent(location.hash.slice(1)||'');tela();}
-(async()=>{if(KEY){let ok=false;try{const r=await sb.rpc('cons_portal_ver',{p_chave:KEY});ok=!r.error&&!!r.data;}catch(_){}
+let CLINOME='',CLITODOS=false;
+async function iniciar(){await carrega();if(window.FCCli)await FCCli.liga(CLINOME,CLITODOS);Q=decodeURIComponent(location.hash.slice(1)||'');tela();}
+(async()=>{if(KEY){let ok=false;try{const r=await sb.rpc('cons_portal_ver',{p_chave:KEY});ok=!r.error&&!!r.data;if(ok)CLINOME=r.data.nome||'';}catch(_){}
   if(!ok){$('#app').innerHTML='<p class="vazio">Link inválido ou expirado. Fale com a FC Consultoria.</p>';return;}marca('uso exclusivo do cliente');iniciar();}
  else gateUI(async()=>{try{const r=await sb.rpc('trein_is_admin');ADM=!!r.data;}catch(_){}
   if(!ADM){$('#app').innerHTML='<p class="vazio">Esta área é da FC Consultoria. O cliente entra pelo link do portal.</p>';return;}
-  marca('uso interno');const a=document.createElement('a');a.className='vt';a.href='/treinamento/painel.html';a.textContent='← Painel matriz';if(window.top===window.self)$('header.top .w').appendChild(a);
+  marca('uso interno');CLITODOS=true;const a=document.createElement('a');a.className='vt';a.href='/treinamento/painel.html';a.textContent='← Painel matriz';if(window.top===window.self)$('header.top .w').appendChild(a);
   if(window.FCFoto)FCFoto.ligar({idx:'foto-dist.json',tem:c=>!!BY[nk(c)],ir:c=>{$('#q').value=c;$('#fb').requestSubmit();},forn:f=>(D&&D.dist&&D.dist[f])||f});iniciar();});})();
 </script>
 </body>

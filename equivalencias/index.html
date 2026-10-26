@@ -154,18 +154,26 @@ function descRes(q){const ws=sa(q).split(/\s+/).filter(w=>w.length>1);if(!ws.len
  const R=[];IDXD.g.forEach(g=>{if(g.l==='tc'||!g.n||!LINHAS[g.l])return;const t=sa(g.n+' '+IDXD.linhas[g.l].n);if(ws.every(w=>t.includes(w)))R.push(g);});
  R.sort((a,b)=>(a.l===LIN?0:1)-(b.l===LIN?0:1)||a.l.localeCompare(b.l)||a.k.localeCompare(b.k,'pt',{numeric:true}));return R;}
 function descImg(g){const m=g.m[0];if(!m)return '';if(m[4])return m[4];const L=IDXD.linhas[g.l];const pasta=(m[3]==='base'&&!g.sp)?'alcoa':m[0];return L.img+pasta+'/'+encodeURIComponent(m[1])+'.webp?v=3';}
-function descTela(q){const nf=`<div class="card" style="margin-top:16px"><b style="font:800 22px var(--f-d)">Código não encontrado: ${esc(q)}</b><span class="ob">Confira se digitou certo. Confira também a outra linha nas abas acima.</span></div>`;
+function descTela(q){const nf=`<div class="card" style="margin-top:16px"><b style="font:800 22px var(--f-d)">Código não encontrado: ${esc(q)}</b><span class="ob">Procurei em todas as linhas e no catálogo Texa completo. Confira se digitou certo.</span></div>`;
  if(!IDXD){idxD().then(j=>{if(j&&Q===q)tela();});return '<div class="card" style="margin-top:16px"><p class="ob">Procurando em todas as linhas…</p></div>';}
  const cl=crossLin(q);if(cl)return cl;
  if(!/[a-zà-ú]{3,}/i.test(q))return nf;
  return descLista(q);}
 function naoAchou(Q){const cl=crossLin(Q);if(cl)return cl;
  return (TX&&(TX.by[norm(Q)]||(TX.alc[norm(Q)]||[])[0]||TX.rf[norm(Q)]))?(TX.by[norm(Q)]?txDetalhe(TX.by[norm(Q)]):(TX.alc[norm(Q)]||[])[0]?txAlc(Q):txDetalhe(TX.rf[norm(Q)])):descTela(Q);}
+/* busca universal: o código é procurado em TODAS as linhas, qualquer que seja a aba marcada
+   (sem traço/espaço, sem zeros à esquerda e sem a cor no fim: TBX009 = TBX-0009 = TBX009.BCO) */
+const zk=c=>norm(c).replace(/\d+/g,d=>String(+d));
+function chavesQ(q){const u=String(q||'').toUpperCase().trim();const L=[u,u.replace(/[.\-\s_]*(BRANCO|PRETO|FOSCO|NATURAL|BRONZE|BCO|PTO|PT0|FCO|NAT|CER|BRZ)$/,'')];return [...new Set(L.map(zk).filter(Boolean))];}
+function linhasCom(q,menos){const K=chavesQ(q),ls=[];if(!IDXD||!K.length||K[0].length<3)return ls;
+ IDXD.g.forEach(g=>{if(g.l===menos||!LINHAS[g.l]||ls.includes(g.l))return;if(K.includes(zk(g.k))||g.m.some(m=>K.includes(zk(m[1]))))ls.push(g.l);});return ls;}
+function outrasLin(q){if(!IDXD){idxD().then(j=>{if(j&&Q===q)tela();});return '';}const ls=linhasCom(q,LIN);if(!ls.length)return '';
+ return `<div class="card" style="margin-top:12px;padding:10px 14px"><b>${esc(q.toUpperCase())} também aparece em ${ls.length===1?'outra linha':ls.length+' outras linhas'}:</b><div class="chips" style="margin-top:6px">${ls.map(l=>`<button type="button" data-ir="${esc(l+'|'+q)}">${esc(LINHAS[l].n)}</button>`).join('')}</div></div>`;}
 function crossLin(q){if(!IDXD){idxD().then(j=>{if(j&&Q===q)tela();});return '';}
  /* código de outra linha: troca de linha sozinho */
- const nq=norm(q),ls=[];if(nq.length>=3)IDXD.g.forEach(g=>{if(g.l===LIN||!LINHAS[g.l])return;if(norm(g.k)===nq||g.m.some(m=>norm(m[1])===nq)){if(!ls.includes(g.l))ls.push(g.l);}});
- if(ls.length===1){setTimeout(()=>irLinha(ls[0],q),0);return `<div class="card" style="margin-top:16px"><p class="ob">${esc(q.toUpperCase())} está na linha <b>${esc(LINHAS[ls[0]].n)}</b>. Abrindo…</p></div>`;}
- if(ls.length>1)return `<div class="card" style="margin-top:16px"><b style="font:800 22px var(--f-d)">${esc(q.toUpperCase())} aparece em ${ls.length} linhas</b><span class="ob">Escolha a linha:</span><div class="chips" style="margin-top:8px">${ls.map(l=>`<button type="button" data-ir="${esc(l+'|'+q)}">${esc(LINHAS[l].n)}</button>`).join('')}</div></div>`;
+ const ls=linhasCom(q,LIN);
+ if(ls.length===1&&window.__pulo!==norm(q)+'|'+ls[0]){window.__pulo=norm(q)+'|'+ls[0];setTimeout(()=>irLinha(ls[0],q),0);return `<div class="card" style="margin-top:16px"><p class="ob">${esc(q.toUpperCase())} está na linha <b>${esc(LINHAS[ls[0]].n)}</b>. Abrindo…</p></div>`;}
+ if(ls.length>=1)return `<div class="card" style="margin-top:16px"><b style="font:800 22px var(--f-d)">${esc(q.toUpperCase())} aparece em ${ls.length} linhas</b><span class="ob">Escolha a linha:</span><div class="chips" style="margin-top:8px">${ls.map(l=>`<button type="button" data-ir="${esc(l+'|'+q)}">${esc(LINHAS[l].n)}</button>`).join('')}</div></div>`;
  return '';}
 function descLista(q){
  const R=descRes(q);if(!R.length)return `<div class="card" style="margin-top:16px"><b style="font:800 22px var(--f-d)">Nada encontrado para “${esc(q)}”</b><span class="ob">Tente uma palavra só (ex.: trilho, marco, montante, arremate) ou digite o código.</span></div>`;
@@ -181,6 +189,10 @@ document.addEventListener('click',ev=>{const t=ev.target.closest('[data-ir]');if
 function achar(q){const n=norm(q);if(!n)return null;
  for(const r of D.perfis){if(norm(r.c)===n)return {r};for(const e of r.eq){if(norm(e.c)===n||norm(e.cc)===n)return {r,e};}}
  for(const f of FS())for(const s of (D.semPar[f]||[]))if(norm(s.c)===n||norm(s.cc)===n)return {sp:s,f};
+ /* mesmo código sem zeros à esquerda ou com a cor no fim (TBX09, TBX009.BCO) */
+ const K=chavesQ(q),ik=c=>c&&K.includes(zk(c));
+ for(const r of D.perfis){if(ik(r.c))return {r};for(const e of r.eq){if(ik(e.c)||ik(e.cc))return {r,e};}}
+ for(const f of FS())for(const s of (D.semPar[f]||[]))if(ik(s.c)||ik(s.cc))return {sp:s,f};
  if(LIN==='suprema'){const m=/^(?:25CL?|SU|ESU|FASU0?)(\d{3})/.exec(n);if(m){const r=D.perfis.find(x=>x.c==='SU-'+m[1]);if(r)return {r};}}
  else{const m=/^(?:FLG|ELG|LG)0*(\d{1,3})$/.exec(n);if(m){const r=D.perfis.find(x=>/^LG-/.test(x.c)&&+x.c.slice(3)===+m[1]);if(r)return {r};}}
  return null;}
@@ -239,7 +251,7 @@ function tela(){if(LN().med){$('#app').innerHTML=`<section class="busca"><div cl
   <form class="sb" id="fb"><input id="q" value="${esc(Q)}" placeholder="${LN().ph}" autocomplete="off" aria-label="Código do perfil"><button>Converter</button></form>
   <div class="chips"><button type="button" data-f="todos" class="${FIL==='todos'?'on':''}">Todos os perfis (${D.perfis.length})</button><button type="button" data-f="baixa" class="${FIL==='baixa'?'on':''}">Para revisar (${cont.baixa})</button><button type="button" data-f="sem" class="${FIL==='sem'?'on':''}">Sem par</button>${TX?`<button type="button" data-f="texa" class="${FIL==='texa'?'on':''} txchip">📚 Catálogo Texa completo (${TX.p.length.toLocaleString('pt-BR')})</button>`:''}${Q?'<button type="button" data-limpa="1">✕ Limpar busca</button>':''}</div>
   <div class="leg"><span class="lgA"><span class="nv alta">Confirmado</span> <span class="lgAt">mesmo código e peso (até 3% de diferença)</span></span><span class="lgP"><span class="nv media">Provável</span> mesmo código, peso difere de 3 a 10%, versão leve ou variante</span><span class="lgR"><span class="nv baixa">Revisar</span> peso difere mais de 10% ou o desenho parece diferente</span></div></section>
-  ${Q?(x?detalhe(x):naoAchou(Q)):(FIL==='texa'&&TX?txTela():lista())}
+  ${Q?(x?outrasLin(Q)+detalhe(x):naoAchou(Q)):(FIL==='texa'&&TX?txTela():lista())}
   <p class="nota">Base: ${D.notaGrupo?esc(D.notaGrupo).replace(/\.$/,''):LIN==='cx'?'catálogo Geral da Perfileve (machos, conexões e contramarcos) como referência; FBK (Conexões e Contramarcos), Ecoalumi (Conexões e Contramarcos) e Texa (site FinderPro). Pares pelo código de mercado (CM e CL) e pelo desenho':LIN==='box'?'box frisado, liso, acrílico e temperado de Texa (site FinderPro), Selta (Box/Varanda), FBK (Box acrílico e temperado), Ecoalumi (Box temperado e acrílico) e Perfileve (Box frisado e liso). Grupos montados pela FC pela medida, pelo desenho e pelo código BX citado pelos fornecedores':LIN==='gold'?'catálogo Gold da Alcoa (2004); Texa (City 3.2 e site FinderPro), Selta (19/09/2024), FBK (Construção Civil, linha 32), Ecoalumi (Catálogo Técnico, linha Ouro) e Perfileve (Catálogo Geral, linha Dior)':'catálogo Suprema da Alcoa; Texa (City 2.5), Selta (19/09/2024), FBK (Construção Civil, linha FASU), Ecoalumi (Catálogo Técnico) e Perfileve (Catálogo Geral)'}. Equivalências montadas pela FC a partir do código, do peso e do desenho de cada catálogo. Confira sempre o desenho antes de fechar a compra. © FC Consultoria em Esquadria.</p>`;
  $('#fb').onsubmit=ev=>{ev.preventDefault();Q=$('#q').value.trim();tela();history.replaceState(null,'','#'+encodeURIComponent(Q));};}
 document.addEventListener('click',async ev=>{const t=ev.target.closest('[data-q],[data-f],[data-limpa],[data-zoom],[data-ok],[data-ed],[data-novo]');if(!t)return;const d=t.dataset;

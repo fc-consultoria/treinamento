@@ -167,6 +167,7 @@ tr.hl td{background:#fff3c4!important;transition:background .4s}
 <script src="../auth.js"></script>
 <script src="foto-busca.js?v=2"></script>
 <script src="importa-lista.js?v=5"></script>
+<script src="cliente-codigos.js?v=1"></script>
 <script>
 const $=s=>document.querySelector(s),esc=t=>String(t??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const KEY=new URLSearchParams(location.search).get('k')||'';const EMPFIX=new URLSearchParams(location.search).get('emp')||'';
@@ -214,10 +215,13 @@ async function carregaIndice(){
   if(!ADM){try{const r=await sb.rpc('equiv_ok_lista',{p_chave:KEY});(r.data||[]).forEach(k=>OK[k]=true);}catch(_){}}
   BY={};IDX.g.forEach((g,i)=>{g.i=i;g.m.forEach(m=>{(BY[norm(m[1])]=BY[norm(m[1])]||[]).push(i);});if(g.mc)(BY[norm(g.k)]=BY[norm(g.k)]||[]).push(i);});
 }
-const visivel=(g,m)=>{if(!ADM&&LIB()&&m[3]!=='base'&&m[0]!==REFF&&!LIB().includes(m[0]))return false;return ADM||m[3]==='base'||m[3]==='alta'||OK[g.k+'|'+m[1]];};
+const CLIV=new Set();/* códigos que o cliente já compra (planilha dele): sempre visíveis */
+const visivel=(g,m)=>{if(CLIV.has(norm(m[1])))return true;if(!ADM&&LIB()&&m[3]!=='base'&&m[0]!==REFF&&!LIB().includes(m[0]))return false;return ADM||m[3]==='base'||m[3]==='alta'||OK[g.k+'|'+m[1]];};
 function imgDe(g,m){if(m[4])return m[4];if(g.l==='tc')return '';const L=IDX.linhas[g.l];const pasta=(m[3]==='base'&&!g.sp)?'alcoa':m[0];return L.img+pasta+'/'+encodeURIComponent(m[1])+'.webp?v=3';}
 const linhaF=(g,f)=>((IDX.lnf[g.l]||{})[f])||IDX.linhas[g.l].n;
 function buscar(q){const k=norm(q);if(!k)return [];
+  /* código próprio do cliente (ex.: Guaporé PLK544 = Texa TBXL028): grupos do código que ele compra vêm primeiro */
+  const cl=window.FCCli?FCCli.cods(q):[];const cid=[];cl.forEach(c=>(BY[c]||[]).forEach(i=>{if(!cid.includes(i))cid.push(i);}));
   let ids=[...new Set(BY[k]||[])];
   if(!ids.length){/* código digitado sem os zeros (PTQ013 = PTQ-0013) ou com a cor no fim (PTQ013.FCO) */
     const z=c=>c.replace(/\d+/g,d=>String(+d));
@@ -228,6 +232,7 @@ function buscar(q){const k=norm(q);if(!k)return [];
     const ns=(q.match(/\d+(?:[.,]\d+)?/g)||[]).map(x=>+x.replace(',','.'));
     if(ns.length>=2)ids=IDX.g.filter(g=>{if(g.l!=='tc')return false;const gn=(g.k.match(/\d+(?:,\d+)?/g)||[]).map(x=>+x.replace(',','.'));
       return ns.length===2?(gn.length===2&&Math.abs(gn[0]-ns[0])<.06&&Math.abs(gn[1]-ns[1])<.06):(gn.length===3&&ns.every((v,i)=>Math.abs(gn[i]-v)<.06));}).map(g=>g.i);}
+  ids=[...cid,...ids.filter(i=>!cid.includes(i))];
   return ids.map(i=>IDX.g[i]).filter(g=>g.m.some(m=>visivel(g,m)));}
 
 /* ===== preço ===== */
@@ -243,7 +248,7 @@ function classe(g,q){const A=DADOS.abc||{};const k=Object.keys(A).find(c=>norm(c
   for(const m of g.m){const k2=Object.keys(A).find(c=>norm(c)===norm(m[1]));if(k2)return A[k2];}if(A[g.k])return A[g.k];return null;}
 function linhasDe(g,q){
   const L=g.m.filter(m=>visivel(g,m)).map(m=>calc(g,m));
-  const qk=norm(q);let ref=L.find(o=>norm(o.c)===qk);
+  const qk=norm(q);const qc=window.FCCli?FCCli.cods(q):[];let ref=L.find(o=>norm(o.c)===qk)||L.find(o=>qc.includes(norm(o.c)));
   const com=L.filter(o=>!o.sem),sem=L.filter(o=>o.sem);
   const key=MODO==='min'?'vmin':'vb';com.sort((a,b)=>a[key]-b[key]||a.vb-b.vb);
   if(!ref)ref=com[0]||L[0];
@@ -282,12 +287,15 @@ function espelhoSim(){if(VSIM==null||!SIM[VSIM])return '';const x=SIM[VSIM];if(n
   return `<div class="esp noprint"><div><small>ESPELHO DA SIMULAÇÃO · PROVA REAL</small><b>${esc(x.orig||x.q)} · ${esc(CORN[sCor(x)])} · ${x.b} barras de ${String(sM(x)).replace('.',',')} m</b><span>${ch}. Abaixo, a pesquisa completa deste perfil em todos os fornecedores (preço natural, barra de 6 m).</span></div><button type="button" class="bt p" data-voltasim>← Voltar para Simular pedido</button></div>`;}
 function telaBusca(){
   const r=Q?buscar(Q):[];if(r.length&&(!SEL||!r.includes(SEL)))SEL=r[0];
-  return `${espelhoSim()}<section class="box"><h1 class="t">Onde comprar</h1><p class="sub">Digite o código de qualquer fornecedor (Texa, Selta, FBK, Ecoalumi, Perfileve ou CDA), o código de mercado (Alcoa) ou a medida do tubo (ex.: 25,4 x 1,58). A ferramenta junta os equivalentes e mostra onde a barra de 6 m sai mais barata. A Alcoa aparece só como 📘 referência, para conferir o desenho e o peso.</p>
+  return `${espelhoSim()}<section class="box"><h1 class="t">Onde comprar</h1><p class="sub">Digite o código de qualquer fornecedor (Texa, Selta, FBK, Ecoalumi, Perfileve ou CDA), o código de mercado (Alcoa) ou a medida do tubo (ex.: 25,4 x 1,58). A ferramenta junta os equivalentes e mostra onde a barra de 6 m sai mais barata. A Alcoa aparece só como 📘 referência, para conferir o desenho e o peso.${window.FCCli&&FCCli.ativo()?` <b>Também aceita o código da ${esc(FCCli.nome())}</b>, sem a cor (ex.: PLK544, SU-049, LG-028).`:''}</p>
   <form class="sb" id="fb"><input id="q" value="${esc(Q)}" placeholder="Ex.: SU-001, TBX028, VT-0161, PMB-0001" autocomplete="off" aria-label="Código"><button>Comparar</button></form>
   <div class="opc"><div class="g"><span>Acabamento</span><div class="chips">${CORES.map(([k,t,c])=>`<button type="button" data-cor="${k}" class="${COR===k?'on':''}"><span class="dot" style="background:${c}"></span>${t}</button>`).join('')}</div></div>
   <div class="g"><span>Ordenar por</span><div class="chips"><button type="button" data-modo="barra" class="${MODO==='barra'?'on':''}">Melhor preço por barra</button><button type="button" data-modo="min" class="${MODO==='min'?'on':''}">Melhor compra mínima</button></div></div></div>
   ${semPrecos()?`<div class="aviso">Nenhum preço cadastrado ainda. A comparação de peso já funciona; para comparar valores, preencha a aba <button type="button" class="bt" data-aba="precos" style="padding:3px 10px">💲 Preços dos fornecedores</button></div>`:''}
-  </section><div id="resBox">${Q?(r.length?resultado(r):sugestoes(Q)):''}</div>`;}
+  </section><div id="resBox">${Q?cliBanner(Q)+(r.length?resultado(r):(window.FCCli&&FCCli.acha(Q).length?'':sugestoes(Q))):''}</div>`;}
+function cliBanner(q){if(!window.FCCli||!FCCli.ativo())return '';const E=FCCli.acha(q);if(!E.length)return '';
+  return E.map(e=>{const nf=e.f.length?e.f.map(f=>{const tem=!!BY[norm(f[1])];return `<button type="button" class="bt" data-sug="${esc(f[1])}" title="${tem?'Ver só este código':'Fora da Conversão de códigos'}" style="padding:4px 10px;margin:2px 4px 2px 0"><b>${esc(IDX.forn[f[0]]||f[0].toUpperCase())} · ${esc(f[1])}</b>${f[2]?' <small style="opacity:.7">('+esc(f[2])+')</small>':''}${tem?'':' <small style="color:#b3541e">· sem desenho no painel</small>'}</button>`;}).join(''):'<i>sem código de fornecedor na planilha</i>';
+    return `<div class="box" style="margin-top:16px;border:2px solid var(--tl,#0f6b70);background:var(--bg,#f2f5f4)"><small style="font-weight:700;color:var(--tl,#0f6b70)">🔁 Código ${esc(e.cli)}</small><div style="font-size:18px;margin:4px 0 6px"><b>${esc(e.c)}</b>${e.p?' <small style="opacity:.7">· '+String(e.p).replace('.',',')+' kg/m</small>':''} <span style="opacity:.6">= hoje compra</span></div><div>${nf}</div>${e.obs?`<p class="sub" style="font-size:13px;margin:6px 0 0">⚠️ ${esc(e.obs)}</p>`:''}<p class="sub" style="font-size:13px;margin:6px 0 0">Conforme a planilha de precificação do cliente (sem a cor). Abaixo, as extrusoras com o mesmo perfil. <a href="distribuidoras.html${KEY?'?k='+encodeURIComponent(KEY):''}#${encodeURIComponent(e.c)}">🏬 Ver nas distribuidoras</a></p></div>`;}).join('');}
 function resultado(r){
   if(!r.length)return `<div class="box" style="margin-top:16px"><p class="vazio">Não achei <b>${esc(Q.toUpperCase())}</b> em nenhuma linha da Conversão de códigos. Confira o código ou fale com a FC para cadastrar.</p></div>`;
   const g=SEL;const R=linhasDe(g,Q);const ref=R.ref;const cl=classe(g,Q);
@@ -332,7 +340,7 @@ function sugestoes(q){const k=norm(q);if(k.length<2)return '';
   if(!L.length)return resultado([]);
   return `<div class="box" style="margin-top:16px"><b style="font-size:15px">Códigos que começam com ${esc(q.toUpperCase())}:</b><div class="chips" style="margin-top:8px">${L.map(([,o])=>`<button type="button" data-sug="${esc(o.c)}">${esc(o.c)} <small style="opacity:.6">${o.f?esc(IDX.forn[o.f])+' · ':''}${esc(IDX.linhas[o.l].n)}</small></button>`).join('')}</div></div>`;}
 let digT=null;
-function aoDigitar(v){clearTimeout(digT);digT=setTimeout(()=>{Q=v.trim();SEL=null;history.replaceState(null,'','#'+encodeURIComponent(Q));const r=Q?buscar(Q):[];if(r.length)SEL=r[0];const b=$('#resBox');if(b)b.innerHTML=Q?(r.length?resultado(r):sugestoes(Q)):'';if(r.length)regBusca();},250);}
+function aoDigitar(v){clearTimeout(digT);digT=setTimeout(()=>{Q=v.trim();SEL=null;history.replaceState(null,'','#'+encodeURIComponent(Q));const r=Q?buscar(Q):[];if(r.length)SEL=r[0];const b=$('#resBox');if(b)b.innerHTML=Q?cliBanner(Q)+(r.length?resultado(r):(window.FCCli&&FCCli.acha(Q).length?'':sugestoes(Q))):'';if(r.length)regBusca();},250);}
 document.addEventListener('input',e=>{if(e.target.id==='q')aoDigitar(e.target.value);});
 
 /* ===== preços ===== */
@@ -788,7 +796,8 @@ async function carregaDados(){
     DADOS={forn:ls.get('fc_compra_local_'+EMP,{}),abc:ls.get('fc_compra_abc_'+EMP,{}),meta:ls.get('fc_compra_meta_'+EMP,null),nome:(EMPS.find(e=>e.id===EMP)||{}).nome||''};return true;}
   if(!r||r.error||!r.data)return false;
   LOCAL=false;DADOS={forn:r.data.forn||{},abc:r.data.abc||{},meta:r.data.meta||null,nome:r.data.nome||'',lib:r.data.lib||null};EMP=r.data.emp;return true;}
-async function trocaEmp(id){EMP=id;if(!EMPFIX)ls.set('fc_compra_emp',id);REL=ls.get(RKEY(),[]);SIM=ls.get(SKEY(),[]);await carregaDados();$('#hd').textContent='Onde comprar · '+(DADOS.nome||id);}
+async function ligaCli(){CLIV.clear();if(!window.FCCli)return;await FCCli.liga(DADOS.nome||'');FCCli.todos().forEach(c=>CLIV.add(c));}
+async function trocaEmp(id){EMP=id;if(!EMPFIX)ls.set('fc_compra_emp',id);REL=ls.get(RKEY(),[]);SIM=ls.get(SKEY(),[]);await carregaDados();await ligaCli();$('#hd').textContent='Onde comprar · '+(DADOS.nome||id);}
 async function iniciar(){
   await carregaIndice();
   if(ADM){const r=await sb.from('rotina_docs').select('id,data').eq('col','consultoria');EMPS=(r.data||[]).map(x=>({id:x.id,nome:(x.data&&x.data.nome)||x.id})).sort((a,b)=>a.nome.localeCompare(b.nome,'pt'));
@@ -797,7 +806,7 @@ async function iniciar(){
     await trocaEmp(e0);}
   else{const ok=await carregaDados();if(!ok&&!LOCAL){$('#app').innerHTML='<p class="vazio">Link inválido ou expirado. Fale com a FC Consultoria.</p>';return;}
     if(LOCAL){const v=await sb.rpc('cons_portal_ver',{p_chave:KEY}).catch(()=>({}));if(!v||v.error||!v.data){$('#app').innerHTML='<p class="vazio">Link inválido ou expirado. Fale com a FC Consultoria.</p>';return;}EMP=v.data.id;DADOS.nome=v.data.nome||'';DADOS.forn=ls.get('fc_compra_local_'+EMP,{});}
-    REL=ls.get(RKEY(),[]);SIM=ls.get(SKEY(),[]);$('#hd').textContent='Onde comprar · '+(DADOS.nome||'');registrar('acesso',{});}
+    REL=ls.get(RKEY(),[]);SIM=ls.get(SKEY(),[]);await ligaCli();$('#hd').textContent='Onde comprar · '+(DADOS.nome||'');registrar('acesso',{});}
   Q=decodeURIComponent(location.hash.slice(1)||'');tela();if(Q)regBusca();}
 (async()=>{if(KEY){marca('uso exclusivo do cliente');iniciar();}
   else gateUI(async()=>{try{const r=await sb.rpc('trein_is_admin');ADM=!!r.data;}catch(_){}
