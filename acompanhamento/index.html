@@ -419,7 +419,6 @@ function render(r){
     ${concluida?`<section class="festa" role="status"><div class="fx">🎉</div><h2>${atual.dados.tipo_cliente==='ativo'?'Revisão concluída!':'Implantação concluída!'}</h2><p>Todas as linhas contratadas foram alimentadas, conferidas e com margem ajustada. Obrigado pela parceria. Qualquer dúvida no uso do sistema, fale com a FC.</p></section>`:''}
     ${situacaoHtml(atual.dados.situacao)}
     ${etapasHtml(etapasDaFoto(atual.dados))}
-    ${ritmo.some(x=>x.d>0)?`<section class="sec"><h2>Ritmo das últimas atualizações</h2><div class="ritmo">${ritmo.map((x,i)=>`<div class="dia ${i===0?'ult':''}"><div class="d">${esc(dt(x.em))}</div><div class="n">${x.txt}</div></div>`).join('')}</div></section>`:''}
     ${G?gruposHtml():`<section class="sec card"><h2>Andamento por linha <span class="muted" style="font-family:var(--body);font-size:13px;font-weight:500;margin-left:auto">${L.filter(feitaL).length} de ${L.length} ${L.length>1?'linhas concluídas':'linha concluída'}</span></h2>${seqInfo}${baseHtml(atual.dados.fornecedores)}${vis.map(linhaHtml).join('')}${proxHtml}</section>`}
     <section class="sec card" id="supSec"></section>
     <div class="foot">FC Consultoria e Representação · Atendimento de segunda a sexta, das 08:00 às 11:00 e das 13:00 às 17:00 (horário de Sinop/MT, 1 hora a menos que Brasília)</div>`;
