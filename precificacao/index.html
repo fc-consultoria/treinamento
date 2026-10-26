@@ -209,6 +209,8 @@ const uid = () => Math.random().toString(36).slice(2,9);
 const imgOf = id => "perfis/" + id + ".png";
 const CAT_BY_ID = Object.fromEntries(CAT.map(c=>[c.id,c]));
 const CAT_BY_CODE = {}; CAT.forEach(c=>{ const k=norm(c.c); (CAT_BY_CODE[k] ||= c); });
+const semCodigo = l => l && l.tipo!=="insumo" && !norm(l.codigo);
+function zerarSemCodigo(ms){ Object.values(ms||{}).forEach(m=>(m.grupos||[]).forEach(g=>(g.linhas||[]).forEach(l=>{ if(semCodigo(l)){ l.peso=0; l.catId=null; } }))); }
 const catFor = l => (l.catId && CAT_BY_ID[l.catId]) || CAT_BY_CODE[norm(l.codigo)] || null;
 
 const SB_URL="https://cpkjphodruyxfouirhpd.supabase.co", SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNwa2pwaG9kcnV5eGZvdWlyaHBkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3Mzg3NTQsImV4cCI6MjEwMjMxNDc1NH0.5OAmhWSe_4STLaCo-NfAwxGDRCGe3ICk-j5IEAMStKQ";
@@ -323,7 +325,7 @@ function renderSheet(){
     const cells = res.map(r=>{ const x=r.rows.find(z=>z.l===l); return `<td class="v">${n2(x?.v)}</td>`; }).join("");
     const first = l.tipo==="insumo"
       ? `<span class="thumb none">m</span><input class="f" data-lf="${l.id}" value="${esc(l.funcao)}"><select data-li="${l.id}">${ins.map(i=>`<option value="${i.id}" ${i.id===l.insumo?"selected":""}>${esc(i.nome)}</option>`).join("")}</select><span class="muted" style="text-align:right">R$/m</span>`
-      : `<button class="thumb ${c?"":"none"}" data-pick="${l.id}" title="Escolher no catálogo">${c?`<img src="${imgOf(c.id)}" alt="${esc(c.c)}">`:"+ foto"}</button><input class="f" data-lf="${l.id}" value="${esc(l.funcao)}"><span><input class="code" data-lc="${l.id}" value="${esc(l.codigo)}"></span><span><input class="num" data-lp="${l.id}" value="${n2(l.peso,3)}">${diff?`<button class="diff" data-lfix="${l.id}" title="Usar o peso do catálogo">catálogo ${n2(c.p,3)}</button>`:""}</span>`;
+      : `<button class="thumb ${c?"":"none"}" data-pick="${l.id}" title="Escolher no catálogo">${c?`<img src="${imgOf(c.id)}" alt="${esc(c.c)}">`:"+ foto"}</button><input class="f" data-lf="${l.id}" value="${esc(l.funcao)}"><span><input class="code" data-lc="${l.id}" value="${esc(l.codigo)}"></span><span><input class="num" data-lp="${l.id}" ${semCodigo(l)?`value="" placeholder="0,000" disabled title="Digite o código ou escolha a foto primeiro"`:`value="${n2(l.peso,3)}"`}>${diff?`<button class="diff" data-lfix="${l.id}" title="Usar o peso do catálogo">catálogo ${n2(c.p,3)}</button>`:""}</span>`;
     return `<tr><td class="stick"><div class="line">${first}<select data-lm="${l.id}"><option value="L" ${l.medida!=="H"?"selected":""}>Largura</option><option value="H" ${l.medida==="H"?"selected":""}>Altura</option></select><input class="num" data-lq="${l.id}" value="${n2(l.qtd,0)}"><button class="btn ghost danger" data-ldel="${l.id}" title="Remover linha">×</button></div></td>${cells}<td></td></tr>`;
   };
   h += `<tr class="sec"><td class="stick">Perfis de alumínio</td>${g.kits.map(()=>"<td></td>").join("")}<td></td></tr>`;
@@ -379,8 +381,8 @@ function bindSheet(v,m,g){
   each("lc",(e,k)=>{ const l=L(k); l.codigo=e.value.trim(); const nc=norm(l.codigo);
     const atual=l.catId && CAT_BY_ID[l.catId], c=(atual && norm(atual.c)===nc) ? atual : CAT_BY_CODE[nc];
     if(c){ l.catId=c.id; l.peso=c.p; if(!l.funcao) l.funcao=c.n; }
-    else { l.catId=null; if(nc) toast("Código "+l.codigo+" não está no catálogo: digite o peso kg/m manualmente."); } });
-  each("lp",(e,k)=>L(k).peso=pnum(e.value)??0);
+    else { l.catId=null; l.peso=0; if(nc) toast("Código "+l.codigo+" não está no catálogo: digite o peso kg/m manualmente."); } });
+  each("lp",(e,k)=>{ const l=L(k); l.peso = semCodigo(l) ? 0 : (pnum(e.value)??0); });
   each("lm",(e,k)=>L(k).medida=e.value);
   each("lq",(e,k)=>L(k).qtd=pnum(e.value)??0);
   each("li",(e,k)=>L(k).insumo=e.value);
@@ -577,7 +579,7 @@ async function load(){
     const rows = await rpc("precif_listar",{p_token:sess.token});
     const fresh={}; for (const r of rows||[]){ fresh[r.id]=r.dados; if(!pending.has(r.id)) vers[r.id]=r.atualizado_em; }
     for (const id of pending.keys()) if(models[id]) fresh[id]=models[id];
-    models=fresh; loaded=true; $("#who").textContent=""; $("#brandSub").textContent=(sess.nome||"")+" · FC Consultoria"; empresasFC(); $("#voltar").hidden = sess.login!=="fc"; $("#tab-acomp").hidden = sess.login!=="fc"; $("#sup").hidden = sess.login==="fc"; atualizarSuporte(); esconderAviso(); mostrarUsando(); pingSoon(); setSave(pending.size?"Salvando…":"Salvo"); renderNow();
+    zerarSemCodigo(fresh); models=fresh; loaded=true; $("#who").textContent=""; $("#brandSub").textContent=(sess.nome||"")+" · FC Consultoria"; empresasFC(); $("#voltar").hidden = sess.login!=="fc"; $("#tab-acomp").hidden = sess.login!=="fc"; $("#sup").hidden = sess.login==="fc"; atualizarSuporte(); esconderAviso(); mostrarUsando(); pingSoon(); setSave(pending.size?"Salvando…":"Salvo"); renderNow();
   }catch(e){ if(e.auth){ sess=null; try{localStorage.removeItem("cde-sessao");}catch(_){} showLogin(/Acesso cheio/.test(e.message)?e.message+".":""); } else { setSave("Sem conexão"); toast("Não foi possível carregar os dados: "+e.message); } }
 }
 $("#loginForm").addEventListener("submit", async e=>{
