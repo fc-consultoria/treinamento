@@ -58,6 +58,9 @@
       return [[fl.length?Math.round(ok/fl.length*100)+'%':'—','andamento da consultoria'],[ab,'pedidos à FC em aberto'],[nx?dBR(nx.data)+(nx.hora?' '+nx.hora:''):'—','próximo compromisso'],
         [c.ativo===false?'Pausado':(c.slug||c.dominio)?'No ar':'Em montagem','catálogo virtual',c.ativo===false]];}]
   ];
+  /* 26/10/2026 · setores ocultos por empresa (só some da Central do Gestor; nada é apagado). */
+  const OCULTA_SET={guapore:['ven','cmp']};
+  const setVis=()=>SET.filter(c=>!(OCULTA_SET[at]||[]).includes(c[0]));
   function setor([id,ic,tit,abas,fn],e){const L=fn(e),al=L.some(x=>x[2]),lib=abas.filter(k=>abasLib(e).includes(k));
     return `<section class="cg-card" aria-labelledby="cg-${id}"><header><span class="cg-ic" aria-hidden="true">${ic}</span><h3 id="cg-${id}">${h(tit)}</h3>
       <span class="cg-tag ${al?'cg-tw':'cg-tok'}">${al?'Atenção':'Em dia'}</span></header>
@@ -108,7 +111,7 @@ ${!D?'<div class="nota">Carregando…</div>':PD.length?`<div class="cg-pd">${PD.
 <div class="cg-lbl" id="cgT2">Números da semana · últimos 7 dias comparados aos 7 anteriores</div>
 <div class="cg-nm">${nums().map(([l,v,d])=>`<div><small>${h(l)}</small><b>${h(v)}</b> ${d}</div>`).join('')}</div>
 <div class="cg-lbl" id="cgT3">Setores</div>
-<div class="cg-grid">${SET.map(c=>setor(c,e)).join('')}</div>
+<div class="cg-grid">${setVis().map(c=>setor(c,e)).join('')}</div>
 <div style="text-align:center;margin-top:14px"><button class="btn" type="button" id="cgTools">🧰 Ver todas as ferramentas</button></div>
 ${ADM()&&D?`<div class="cg-wa"><b>📲 Resumo semanal para o gestor</b> <span class="nota">· só a FC vê este quadro. Envie na segunda pelo WhatsApp.</span>
   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><button class="btn pri" type="button" id="cgWaCop">Copiar resumo</button><a class="btn" style="text-decoration:none" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(resumoTxt(e))}">Abrir no WhatsApp</a></div></div>`:''}
