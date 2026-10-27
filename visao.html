@@ -43,7 +43,7 @@ tr.r{cursor:pointer}tr.r:hover td{background:#f5f8fa}tr.d>td{background:#fafbfc;
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="auth.js"></script>
-<script src="sessao.js?v=2"></script>
+<script src="sessao.js?v=3"></script>
 <script>
 const ZCFG=new Set(['colab','liberacao','sistema','gestor','chave_app','sugestao','resposta','sug_excluida','zerar','pausa']);
 function zerarFiltro(ev,zs){const Z={};(zs||ev).forEach(e=>{if(e.tipo==='zerar'){const p=(e.detalhe||{}).para,t=Date.parse(e.criado_em);if(!Z[p]||t>Z[p])Z[p]=t;}});

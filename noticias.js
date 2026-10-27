@@ -22,6 +22,11 @@
 #fcNot .ntw:hover .ntk{animation-play-state:paused}
 #fcNot .ntk a{color:#e6f6f4;text-decoration:none;font-size:14.5px}#fcNot .ntk a:hover{color:#fff;text-decoration:underline}
 #fcNot .ntk a b{color:#f6c27a;font-weight:600;margin-right:6px;font-size:12px;letter-spacing:.04em}
+#fcNot.rod{position:fixed;left:0;right:0;bottom:0;z-index:60;padding:6px 12px calc(6px + env(safe-area-inset-bottom));background:rgba(241,244,247,.92);backdrop-filter:blur(6px);box-shadow:0 -6px 18px rgba(15,30,39,.1)}
+#fcNot.rod .nbar{max-width:1280px;margin:0 auto}
+#fcNot.rod .ncard{top:auto;bottom:calc(100% + 4px);left:max(12px,calc((100vw - 1280px)/2 + 12px))}#fcNot.rod .nlab .sv{transform:rotate(180deg)}#fcNot.rod.ab .nlab .sv{transform:none}
+body.fcnot-rod{padding-bottom:64px}body.fcnot-rod .fcs-av{bottom:66px}
+@media print{#fcNot.rod{display:none}body.fcnot-rod{padding-bottom:0}}
 @keyframes fcNotRola{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 #fcNot .ncard{position:absolute;left:0;top:calc(100% + 6px);z-index:80;box-sizing:border-box;width:min(440px,100%);background:#fff;color:#13232e;border:1px solid var(--line,#d5dce1);border-radius:14px;box-shadow:0 18px 40px rgba(15,30,39,.18);padding:12px 14px}
 #fcNot .nch{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
@@ -79,6 +84,8 @@
 <div class="ncard" id="fcNotCard" hidden><div class="nch"><b>Destaques</b><small></small><button type="button" class="nx" aria-label="Fechar">✕</button></div><div class="nabas"></div><div class="nlist"></div><div class="nrod"></div></div>`;
     if(op.envolver){ /* página que redesenha o conteúdo inteiro: a faixa fica num invólucro acima dele */
       const wr=document.createElement('div');wr.id='fcNotWrap';main.parentNode.insertBefore(wr,main);wr.appendChild(w);wr.appendChild(main);
+    }else if(op.rodape){ /* faixa fixa no rodapé da tela (Painel da Matriz, 27/10) */
+      w.classList.add('rod');document.body.appendChild(w);document.body.classList.add('fcnot-rod');
     }else main.prepend(w);
     w.querySelector('.nlab').onclick=()=>abrir(!aberto);
     w.querySelector('.nx').onclick=()=>abrir(false);

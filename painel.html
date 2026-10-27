@@ -424,8 +424,8 @@ td.qd{cursor:help}td.qd:hover{background:#eef6f8;box-shadow:inset 0 -2px 0 #1f6f
 </main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="auth.js"></script>
-<script src="sessao.js?v=2"></script>
-<script src="noticias.js?v=2"></script>
+<script src="sessao.js?v=3"></script>
+<script src="noticias.js?v=3"></script>
 <script src="mapa.js?v=1792037768"></script><script src="acompanhamento-admin.js?v=15"></script><script src="compra-sim-admin.js?v=3"></script><script src="orc-suporte-admin.js?v=2"></script><script src="presenca-admin.js?v=2"></script><script src="horarios-admin.js?v=2"></script><script src="festa-admin.js?v=1"></script><script src="vitrine-admin.js?v=2"></script><script src="vitrine-convite-adm.js?v=1"></script><script src="conclusao-admin.js?v=1"></script><script src="dicas.js?v=1792028270"></script>
 <script>
 const ZCFG=new Set(['pausa','senha_forte','vit_nome','logo_mapa','logo_ok','implantacao','promo','contrato','empresa_local','gestor_in','gestor_hb','gestor_acao','colab','liberacao','sistema','gestor','chave_app','sugestao','resposta','sug_excluida','zerar','interesse','interesse_ok','cat3d','chave_cat3d','chave_cat3d_demo']);
@@ -1710,7 +1710,7 @@ document.getElementById('mpF').onsubmit=async e=>{e.preventDefault();let c=docum
   document.getElementById('mpC').value='';document.getElementById('mpN').value=1;document.getElementById('mpFi').value=0;const m=document.getElementById('mpMsg');m.textContent=MPUB?'✔ Salvo · já aparece para os alunos':'✔ Salvo · mapa em atualização (oculto)';setTimeout(()=>m.textContent='',4000);mpRender();};
 document.querySelector('#ptabs [data-tab=map]').addEventListener('click',()=>{if(MPD)setTimeout(mpRender,50);else mpCarregar();});
 if(PTAB==='map')setTimeout(mpCarregar,800);
-gateUI(()=>{try{localStorage.setItem('fc_eu','1');}catch(_){}carregar();acEuUI();try{window.FCNoticias&&FCNoticias.iniciar();}catch(_){}},{soMatriz:true});
+gateUI(()=>{try{localStorage.setItem('fc_eu','1');}catch(_){}carregar();acEuUI();try{window.FCNoticias&&FCNoticias.iniciar({rodape:true});}catch(_){}},{soMatriz:true});
 (function(){const b=document.getElementById('fcOn');let off=false;
  const draw=()=>{b.textContent=off?'⚪ Offline':'🟢 Online';b.title=off?'Os clientes veem: suporte offline. Clique para ficar online':'Os clientes veem: suporte online enquanto o painel estiver aberto. Clique para ficar offline';b.style.cssText=off?'':'background:#e6f5ec;border-color:#9fd6b4;color:#1f6b3f;font-weight:700';};
  const ld=async()=>{const {data}=await sb.from('fc_status').select('off').eq('id',1).maybeSingle();off=!!(data&&data.off);draw();};

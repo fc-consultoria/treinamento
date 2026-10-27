@@ -51,7 +51,7 @@ table.et th,table.et td{white-space:nowrap}tr.er{cursor:pointer}tr.er:hover td{b
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="auth.js"></script>
-<script src="sessao.js?v=2"></script>
+<script src="sessao.js?v=3"></script>
 <script>
 const pzL=(ev,uid,cid)=>ev.filter(e=>{const d=e.detalhe||{};return e.tipo==='pausa'&&d.para===uid&&(cid?d.cid===cid:!d.cid);}).map(e=>({on:!!(e.detalhe||{}).on,t:Date.parse(e.criado_em)})).sort((a,b)=>a.t-b.t),pzOn=P=>!!P.length&&P[P.length-1].on,pzIv=P=>{const o=[];let st=null;for(const p of P){if(p.on&&st==null)st=p.t;else if(!p.on&&st!=null){o.push([st,p.t]);st=null;}}if(st!=null)o.push([st,Date.now()]);return o;},pzMs=(P,ini,P2)=>{const I=pzIv(P).concat(P2?pzIv(P2):[]).map(([a,b])=>[Math.max(a,ini),b]).filter(([a,b])=>b>a).sort((x,y)=>x[0]-y[0]);let s=0,ca=null,cb=null;for(const [a,b] of I){if(ca==null){ca=a;cb=b;}else if(a<=cb)cb=Math.max(cb,b);else{s+=cb-ca;ca=a;cb=b;}}if(ca!=null)s+=cb-ca;return s;};
 const ZCFG=new Set(['colab','liberacao','sistema','gestor','chave_app','sugestao','resposta','sug_excluida','zerar','pausa']);
