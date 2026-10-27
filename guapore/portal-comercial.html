@@ -176,6 +176,22 @@ label{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:4
 @keyframes d3spin{to{transform:rotate(360deg)}}
 @media (max-width:640px){.d3row{grid-template-columns:1fr}}
 @media (prefers-reduced-motion:reduce){.d3cube{animation:none}}
+:root[data-accent="azul"]{--brand:#1d5fa8;--brand-soft:#dce8f6;--brand-ink:#ffffff}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"])[data-accent="azul"]{--brand:#6aa6e8;--brand-soft:#16304d;--brand-ink:#061526}}
+:root[data-theme="dark"][data-accent="azul"]{--brand:#6aa6e8;--brand-soft:#16304d;--brand-ink:#061526}
+:root[data-accent="grafite"]{--brand:#3a4654;--brand-soft:#e2e6ea;--brand-ink:#ffffff}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"])[data-accent="grafite"]{--brand:#a9b4c0;--brand-soft:#232c35;--brand-ink:#0d1217}}
+:root[data-theme="dark"][data-accent="grafite"]{--brand:#a9b4c0;--brand-soft:#232c35;--brand-ink:#0d1217}
+:root[data-accent="vinho"]{--brand:#8a2c3b;--brand-soft:#f4dfe2;--brand-ink:#ffffff}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"])[data-accent="vinho"]{--brand:#e4899a;--brand-soft:#3d1a21;--brand-ink:#1f070c}}
+:root[data-theme="dark"][data-accent="vinho"]{--brand:#e4899a;--brand-soft:#3d1a21;--brand-ink:#1f070c}
+:root[data-accent="laranja"]{--brand:#b8560f;--brand-soft:#fbe6d4;--brand-ink:#ffffff}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"])[data-accent="laranja"]{--brand:#f0a05e;--brand-soft:#3d2513;--brand-ink:#1f0f03}}
+:root[data-theme="dark"][data-accent="laranja"]{--brand:#f0a05e;--brand-soft:#3d2513;--brand-ink:#1f0f03}
+.temaop{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px}
+.temaop button{border:1px solid var(--line);background:var(--surface-2);color:var(--fg);border-radius:10px;padding:10px;display:flex;align-items:center;gap:8px;font-weight:600;font-size:13px}
+.temaop button[aria-pressed="true"]{border-color:var(--brand);background:var(--brand-soft)}
+.temaop i{width:18px;height:18px;border-radius:50%;flex:none;border:1px solid var(--line)}
 .foot{margin-top:28px;font-size:11.5px;color:var(--muted);text-align:center}
 .empty{color:var(--muted);font-size:13px;padding:12px;border:1px dashed var(--line);border-radius:10px;text-align:center}
 @media (max-width:720px){.cart{position:static}.meter{grid-template-columns:80px 1fr 32px}}
@@ -193,6 +209,7 @@ label{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:4
       <button data-role="marketing" aria-pressed="false">Marketing</button>
     </div>
     <button class="btn bell" id="bellBtn" title="Avisos de cadastro">🔔 Avisos<span class="dot" id="bellDot" hidden>0</span></button>
+    <button class="btn" id="corBtn" title="Mudar a cor da tela">🎨 Cor</button>
     <button class="btn primary" id="tourBtn">▶ Tutorial</button>
   </div>
 </header>
@@ -718,6 +735,23 @@ $('#tourBtn').onclick=()=>{
  document.querySelectorAll('[data-tour]').forEach(b=>{if(b.dataset.tour!==role)b.remove()});
  document.querySelectorAll('[data-tour]').forEach(b=>b.onclick=()=>{const auto=$('#tvAuto').checked;role=b.dataset.tour;render();tour={role,i:0,voz:auto,auto};closeModal();tourStep()});
 };
+
+/* ---------- COR DA TELA ---------- */
+const TKEY='guapore-tema';
+let tema={modo:'auto',cor:'verde'};
+try{tema=Object.assign(tema,JSON.parse(localStorage.getItem(TKEY))||{})}catch(e){}
+function aplicaTema(){const r=document.documentElement;
+ if(tema.modo==='auto')r.removeAttribute('data-theme');else r.setAttribute('data-theme',tema.modo);
+ if(tema.cor==='verde')r.removeAttribute('data-accent');else r.setAttribute('data-accent',tema.cor);
+ try{localStorage.setItem(TKEY,JSON.stringify(tema))}catch(e){}}
+aplicaTema();
+const CORES=[['verde','Verde','#0d6e66'],['azul','Azul','#1d5fa8'],['grafite','Grafite','#3a4654'],['vinho','Vinho','#8a2c3b'],['laranja','Laranja','#b8560f']];
+function temaModal(){modal(`<h2>🎨 Cor da tela</h2><p class="sub">A escolha fica salva neste aparelho.</p>
+ <h3 style="font-size:13px;margin:4px 0 8px">Fundo</h3><div class="temaop">${[['light','☀️ Claro'],['dark','🌙 Escuro'],['auto','🖥 Automático']].map(([k,n])=>`<button data-tema-modo="${k}" aria-pressed="${tema.modo===k}">${n}</button>`).join('')}</div>
+ <h3 style="font-size:13px;margin:14px 0 8px">Cor principal</h3><div class="temaop">${CORES.map(([k,n,c])=>`<button data-tema-cor="${k}" aria-pressed="${tema.cor===k}"><i style="background:${c}"></i>${n}</button>`).join('')}</div>
+ <div class="toolbar" style="margin-top:14px;justify-content:flex-end"><button class="btn primary" data-act="close">Pronto</button></div>`)}
+$('#corBtn').onclick=temaModal;
+document.addEventListener('click',e=>{const m=e.target.closest('[data-tema-modo]'),c=e.target.closest('[data-tema-cor]');if(!m&&!c)return;if(m)tema.modo=m.dataset.temaModo;if(c)tema.cor=c.dataset.temaCor;aplicaTema();temaModal()});
 addEventListener('resize',()=>{if(tour)tourStep()});
 try{speechSynthesis.getVoices()}catch(e){}
 render();
