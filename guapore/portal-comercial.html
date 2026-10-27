@@ -708,7 +708,7 @@ function tourStep(){
 }
 function endTour(){if(tour)clearTimeout(tour.timer);tour=null;try{speechSynthesis.cancel()}catch(e){}closeModal()}
 $('#tourBtn').onclick=()=>{
- modal(`<h2>▶ Tutorial guiado</h2><p class="sub">Passo a passo com legenda e narração em voz. Use no telão da apresentação ou envie para a equipe.</p>
+ modal(`<h2>▶ Tutorial guiado</h2><p class="sub">Passo a passo desta tela, com legenda e narração em voz.</p>
  <div class="list">
   <button class="row" data-tour="gestor" style="text-align:left;cursor:pointer;color:var(--fg)"><div class="who"><b>Tutorial do Gestor</b><span>${TOURS.gestor.length} passos · comandos, medidores, cadastros e orçamentos</span></div><span class="pill br">Começar</span></button>
   <button class="row" data-tour="vendedor" style="text-align:left;cursor:pointer;color:var(--fg)"><div class="who"><b>Tutorial do Vendedor</b><span>${TOURS.vendedor.length} passos · ferramentas, orçamentos recebidos e agenda</span></div><span class="pill br">Começar</span></button>
@@ -716,6 +716,7 @@ $('#tourBtn').onclick=()=>{
  </div>
  <label style="flex-direction:row;align-items:center;gap:8px;margin-top:12px;font-size:13px;color:var(--fg)"><input type="checkbox" id="tvAuto" checked style="width:auto"> Modo vídeo: avança sozinho com voz</label>
  <div class="toolbar" style="margin-top:12px;justify-content:flex-end"><button class="btn" data-act="close">Fechar</button></div>`);
+ document.querySelectorAll('[data-tour]').forEach(b=>{if(b.dataset.tour!==role)b.remove()});
  document.querySelectorAll('[data-tour]').forEach(b=>b.onclick=()=>{const auto=$('#tvAuto').checked;role=b.dataset.tour;render();tour={role,i:0,voz:auto,auto};closeModal();tourStep()});
 };
 addEventListener('resize',()=>{if(tour)tourStep()});
