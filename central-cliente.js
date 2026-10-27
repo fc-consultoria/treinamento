@@ -28,7 +28,7 @@
   const TAGSEC={'Central do Gestor':'Central do Gestor','Mostruário 3D':'Mostruário 3D','Catálogo virtual':'Catálogo','Precificação de Kits':'Precificação','Acompanhamento da implantação':'Implantação'};
   const ORDEM=['Central do Gestor','Mostruário 3D','Acompanhamento da implantação','Catálogo virtual','Precificação de Kits','Página da consultoria'];
   const FILTROS=[['todas','Todas'],['cons','Consultoria'],['impl','Em implantação'],['mostr','Mostruário 3D'],['alerta','Com alerta'],['online','Online agora']];
-  const S={emps:[],docs:{},D:{},fila:[],impl:[],portal:{},prog:{},ax:null,
+  const S={vis:{},emps:[],docs:{},D:{},fila:[],impl:[],portal:{},prog:{},ax:null,
     sel:ler('fc_ccli_emp',''),aba:'res',filtro:ler('fc_ccli_f','todas'),busca:'',xd:+ler('fc_ccli_dias','3')||3,
     carregando:false,em:null,erro:''};
 
@@ -81,7 +81,7 @@
       e.logins=L.length;e.on=L.filter(l=>online(l.ult)).length;
       const D=e.cons&&S.D[e.cons];if(D&&!L.length){const P=D.pessoas||[];e.logins=P.length;e.on=P.filter(p=>p.online).length;}
       e.ult=L.map(l=>l.ult).filter(Boolean).sort().pop()||null;
-      e.al=e.cons?alertasCons(e.cons):[];
+      {const T=e.cons?alertasCons(e.cons):[];e.alv=[];e.al=[];T.forEach(a=>{a[3]=e.cons+'|'+a[1];(S.vis[a[3]]?e.alv:e.al).push(a);});}
       if(e.impl){const p=S.prog[e.impl.id];e.pr=p&&p.tot?Math.round(p.ok/p.tot*100):null;e.pt=S.portal[e.impl.id]||null;}
       e.status=e.impl&&e.impl.status==='em_andamento'?'impl':e.cons?'cons':e.mostr?(e.mostr.ativo?'mostr':'bloq'):'outro';});
     const peso={impl:0,cons:1,mostr:2,outro:3,bloq:4};
@@ -101,6 +101,8 @@
         if(r.error)erros.push('consultorias: '+r.error.message);
         S.emps=(r.data||[]).map(x=>({id:x.id,nome:(x.data&&x.data.nome)||x.id}));
         (r.data||[]).forEach(x=>S.docs[x.id]=x.data||{});}
+      try{const rv=await sb.from('trein_eventos').select('detalhe,criado_em').eq('tipo','al_visto').order('criado_em').limit(2000);
+        S.vis={};(rv.data||[]).forEach(x=>{const d=x.detalhe||{};if(d.k)S.vis[d.k]=x.criado_em;});}catch(_){}
       const [cx,ic,ip,ax,...cs]=await Promise.all([
         sb.rpc('fc_caixa'),
         sb.from('impl_clientes').select('id,nome,status,data_inicio,data_fim,status_recebimento,emite_nota_fiscal,telefone').order('nome'),
@@ -151,7 +153,7 @@
 #ccliCard .cc-ft .on{color:var(--ok);font-weight:700}#ccliCard .cc-ft .al{color:#b26b00;font-weight:700}#ccliCard .cc-ft .bad{color:var(--bad);font-weight:700}
 #ccliCard .cc-al{display:flex;flex-direction:column;gap:6px;margin:0;padding:0;list-style:none}
 #ccliCard .cc-al li{display:flex;gap:10px;align-items:center;padding:9px 12px;border-radius:10px;font-size:14.5px;font-weight:600}
-#ccliCard .cc-al li.bad{background:var(--bad-soft);color:var(--bad)}#ccliCard .cc-al li.warn{background:#fdf3e2;color:#8a5a00}#ccliCard .cc-al li.ok{background:var(--ok-soft);color:var(--ok)}
+#ccliCard .cc-al li.bad{background:var(--bad-soft);color:var(--bad)}#ccliCard .cc-al li.warn{background:#fdf3e2;color:#8a5a00}#ccliCard .cc-al li.ok{background:var(--ok-soft);color:var(--ok)}#ccliCard .cc-al li.vis{background:#eef1f3;color:#5d6b76;font-weight:500}#ccliCard .cc-al li.vis small{font-weight:400}#ccliCard .cc-al li a{white-space:nowrap}#ccliCard .cc-vb{border:1px solid #c9d3da;background:#fff;color:#1b232a;border-radius:8px;padding:5px 10px;font:600 13px inherit;cursor:pointer;white-space:nowrap}#ccliCard .cc-vb:disabled{opacity:.6;cursor:default}
 #ccliCard .cc-al a{margin-left:auto;font-size:13px;white-space:nowrap}
 #ccliCard .cc-kp{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
 #ccliCard .cc-kp div{background:var(--bg);border-radius:10px;padding:9px 11px;display:flex;flex-direction:column}
@@ -218,7 +220,11 @@
     return o.length?`<div class="cc-at">${o.join('')}</div>`:'';}
 
   function alertasHtml(e){const id=e.cons;
-    return `<ul class="cc-al">${e.al.length?e.al.map(([n,t,k])=>`<li class="${n}"><span>${n==='bad'?'🔴':'🟠'}</span><span>${h(t)}</span>${k==='vendas'?`<a href="orcamento/?e=${encodeURIComponent(id)}" target="_blank" rel="noopener">Abrir o Painel de Vendas ↗</a>`:`<a href="consultorias.html?ver=${encodeURIComponent(id)}&abrir=acessos" target="_blank" rel="noopener">Ver acessos ↗</a>`}</li>`).join(''):'<li class="ok"><span>✅</span><span>Nada pendente nesta empresa.</span></li>'}</ul>`;}
+    const lk=k=>k==='vendas'?`<a href="orcamento/?e=${encodeURIComponent(id)}" target="_blank" rel="noopener">Abrir o Painel de Vendas ↗</a>`:`<a href="consultorias.html?ver=${encodeURIComponent(id)}&abrir=acessos" target="_blank" rel="noopener">Ver acessos ↗</a>`;
+    const hv=iso=>{const d=new Date(iso);return d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})+' às '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});};
+    const P=e.al.map(([n,t,k,key])=>`<li class="${n}"><span>${n==='bad'?'🔴':'🟠'}</span><span style="flex:1">${h(t)}</span>${lk(k)}<button type="button" class="cc-vb" data-alv="${h(key)}" title="Some do contador vermelho. Quem resolve é a equipe do cliente; volta se a situação mudar.">👁 FC já viu</button></li>`).join('');
+    const V=(e.alv||[]).map(([n,t,k,key])=>`<li class="vis"><span>👁</span><span style="flex:1">${h(t)} <small>· visto pela FC ${hv(S.vis[key])} · aguardando a equipe do cliente</small></span>${lk(k)}</li>`).join('');
+    return `<ul class="cc-al">${P||V?P+V:'<li class="ok"><span>✅</span><span>Nada pendente nesta empresa.</span></li>'}</ul>`;}
 
   function tabRes(e){const p=e.impl&&S.prog[e.impl.id];
     return `<div class="cc-kp">
@@ -287,6 +293,9 @@
     B.querySelectorAll('[data-ccf]').forEach(b=>b.onclick=()=>{S.filtro=b.dataset.ccf;grava('fc_ccli_f',S.filtro);pinta();});
     B.querySelectorAll('[data-cce]').forEach(b=>b.onclick=()=>{S.sel=b.dataset.cce;S.ver=true;S.aba='res';grava('fc_ccli_emp',S.sel);pinta();$('ccliCard').scrollIntoView({behavior:'smooth',block:'start'});});
     B.querySelectorAll('[data-cct]').forEach(b=>b.onclick=()=>{S.aba=b.dataset.cct;pinta();});
+    B.querySelectorAll('[data-alv]').forEach(b=>b.onclick=async()=>{b.disabled=true;b.textContent='Salvando…';const k=b.dataset.alv;
+      try{const {data:{session}}=await sb.auth.getSession();const r=await sb.from('trein_eventos').insert({user_id:session.user.id,tipo:'al_visto',tipologia:null,detalhe:{k}});
+        if(r.error)throw r.error;S.vis[k]=new Date().toISOString();pinta();}catch(err){b.disabled=false;b.textContent='👁 FC já viu';alert('Não foi possível salvar agora: '+(err.message||err));}});
     B.querySelectorAll('[data-ccm]').forEach(b=>b.onclick=()=>{const t=document.querySelector('#ptabs [data-tab=emp]');if(t)t.click();setTimeout(()=>FCAcessos&&FCAcessos.abrirMostr(b.dataset.ccm),150);});
     B.querySelectorAll('[data-ccg]').forEach(b=>b.onclick=()=>{try{abrirAcessos(e.cons,e.nome);}catch(_){location.href='consultorias.html?ver='+encodeURIComponent(e.cons)+'&abrir=acessos';}});
     const v=$('ccliVolta');if(v)v.onclick=()=>{S.ver=false;pinta();};
