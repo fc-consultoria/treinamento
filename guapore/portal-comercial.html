@@ -386,17 +386,15 @@ function vMarketing(){
  const days=[...Array(7)].map((_,i)=>isoDay(i));
  return `
  <span class="demo-note">Demonstração · na versão publicada, o que o marketing muda aqui vai direto para o Catálogo 3D da Guaporé</span>
- <div class="hello"><div><h1>Marketing · Catálogo e conteúdo</h1><p>Ajuste a vitrine do Catálogo 3D, crie posts com os produtos e veja o que traz cliente.</p></div>
+ <div class="hello"><div><h1>Marketing · Catálogo 3D</h1><p>Ajuste o que o cliente vê no Catálogo 3D da Guaporé e acompanhe o que ele mais olha.</p></div>
 </div>
  <div class="grid kpis" id="t-mkpis">
   <div class="kpi"><small>Visualizações de produtos</small><b>${tot}</b><em> no Catálogo 3D</em></div>
-  <div class="kpi"><small>Cadastros vindos de campanhas</small><b>${M.links.reduce((a,l)=>a+l.cad,0)}</b><em> pelos links rastreados</em></div>
-  <div class="kpi"><small>Posts na fila</small><b>${M.posts.filter(p=>p.status!=='publicado').length}</b><em> próximos 7 dias</em></div>
+  <div class="kpi"><small>Em destaque</small><b>${M.destaques.length}</b><em> aparecem primeiro</em></div>
+  <div class="kpi"><small>Com selo</small><b>${Object.keys(M.promo).length}</b><em> ex.: Pronta entrega</em></div>
   <div class="kpi"><small>Produtos visíveis</small><b>${PRODS.length-M.ocultos.length}</b><em> de ${PRODS.length} no catálogo</em></div>
  </div>
- <div class="grid cols2">
-  <section class="panel" id="t-pauta"><h2>💡 Pauta inteligente</h2><p class="sub">Sugestões montadas a partir do que os clientes olham e pedem no catálogo.</p>
-   <div class="list">${sug.map(([t,p])=>`<div class="row"><div class="who" style="font-size:13px">${t}</div>${p?`<button class="btn sm" data-act="sugpost" data-id="${p}">Criar post</button>`:''}</div>`).join('')}</div></section>
+ <div>
   <section class="panel" id="t-rank"><h2>👀 Mais vistos no Catálogo 3D</h2><p class="sub">Visualizações e pedidos de orçamento por produto.</p>
    <div class="list">${rank.map(r=>`<div class="meter"><span>${r.p.n}</span><div class="bar" style="width:${Math.max(r.v/maxV*100,4)}%"><i style="width:100%;background:var(--brand)"></i></div><span style="font-family:var(--f-mono)">${r.v}</span></div>`).join('')}</div></section>
  </div>
@@ -417,28 +415,7 @@ function vMarketing(){
    <div><div style="font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:6px">Como o cliente vê</div><div class="prevbox" id="mkPrev">${prevHTML()}</div></div>
   </div>
  </section>
- <div class="grid cols2" style="margin-top:14px">
-  <section class="panel" id="t-studio"><h2>🎨 Estúdio de posts</h2><p class="sub">Escolha o produto e o formato. A arte e a legenda saem prontas, já com a marca da Guaporé.</p>
-   <div class="form"><label>Produto<select id="psP">${PRODS.map(p=>`<option value="${p.id}" ${postSel.p===p.id?'selected':''}>${p.n}</option>`).join('')}</select></label>
-   <label>Formato<select id="psF"><option value="feed" ${postSel.f==='feed'?'selected':''}>Feed (quadrado)</option><option value="story" ${postSel.f==='story'?'selected':''}>Story (vertical)</option></select></label></div>
-   <label style="margin-top:8px">Frase da arte<input id="psT" value="${esc(postSel.t)}"></label>
-   <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:12px;align-items:flex-start">
-    <canvas id="postCv" class="postcv" aria-label="Prévia do post"></canvas>
-    <div style="flex:1;min-width:200px;display:flex;flex-direction:column;gap:8px"><div class="msg" id="psCap">${esc(capText())}</div>
-     <div class="toolbar"><button class="btn sm" data-act="copycap">Copiar legenda</button><button class="btn sm primary" data-act="schedpost">Agendar post</button></div></div>
-   </div></section>
-  <section class="panel" id="t-cal"><h2>🗓 Calendário de conteúdo</h2><p class="sub">Próximos 7 dias. Toque em um post para publicar, editar ou excluir.</p>
-   <div class="cal">${days.map(d=>`<div class="cald"><b>${fmtDay(d)}</b>${M.posts.filter(p=>p.d===d).map(p=>`<button class="post ${p.status}" data-act="verpost" data-id="${p.id}"><span>${esc(p.canal)}</span>${esc(p.tit)}</button>`).join('')||'<span class="none">—</span>'}</div>`).join('')}</div>
-   <div class="legend">${Object.values(PST).map(([n,c])=>`<span><span class="pill ${c}">${n}</span></span>`).join('')}</div></section>
- </div>
- <section class="panel" id="t-links" style="margin-top:14px">
-  <div class="ph"><div><h2>🔗 Links de campanha</h2><p class="sub">Um link para cada canal. Você vê quantos clicaram, se cadastraram e pediram orçamento.</p></div><button class="btn sm" data-act="addlink">+ Novo link</button></div>
-  <div class="tablewrap"><table><thead><tr><th>Canal</th><th>Código</th><th class="c">Cliques</th><th class="c">Cadastros</th><th class="c">Orçamentos</th><th>Funil</th></tr></thead><tbody>
-  ${M.links.map(l=>`<tr><td>${esc(l.canal)}</td><td style="font-family:var(--f-mono);font-size:12px">?origem=${esc(l.cod)}</td><td class="c">${l.cliques}</td><td class="c">${l.cad}</td><td class="c">${l.orc}</td>
-   <td style="min-width:150px"><div class="funnel"><i style="width:100%"></i><i style="width:${l.cliques?Math.max(l.cad/l.cliques*100*6,4):0}%"></i><i style="width:${l.cliques?Math.max(l.orc/l.cliques*100*6,3):0}%"></i></div></td></tr>`).join('')}
-  </tbody></table></div>
-  <div class="legend"><span><i style="background:var(--line)"></i>Cliques</span><span><i style="background:var(--brand)"></i>Cadastros</span><span><i style="background:var(--amber)"></i>Orçamentos</span></div>
- </section>`;
+`;
 }
 function wrapText(g,txt,max){const w=txt.split(' '),out=[];let l='';w.forEach(x=>{const t=l?l+' '+x:x;if(g.measureText(t).width>max&&l){out.push(l);l=x}else l=t});if(l)out.push(l);return out.slice(0,3)}
 function drawPost(){
@@ -633,12 +610,9 @@ document.addEventListener('change',e=>{
 /* ---------- TUTORIAL GUIADO (legenda + voz) ---------- */
 const TOURS={
  marketing:[
-  ['#t-mkpis','Este é o painel do Marketing da Guaporé. No topo: quantas vezes os produtos foram vistos no Catálogo 3D, quantos cadastros vieram das campanhas, os posts na fila e os produtos visíveis.'],
-  ['#t-pauta','A pauta inteligente sugere o que postar, a partir do que os clientes mais olham e pedem no catálogo. Toque em Criar post e a arte já sai pronta.'],
-  ['#t-vitrine','Na vitrine você controla o catálogo: o banner, os produtos em destaque, os selos como Pronta entrega, o que fica sob consulta e o que aparece ou não para o cliente. A prévia ao lado atualiza na hora.'],
-  ['#t-studio','No estúdio de posts você escolhe o produto e o formato, feed ou story. A arte sai com a marca da Guaporé e a legenda já vem escrita com as hashtags.'],
-  ['#t-cal','O calendário mostra os posts dos próximos sete dias. Toque em um post para marcar como publicado, editar ou excluir.'],
-  ['#t-links','Por fim, os links de campanha. Cada canal tem o seu link, e você vê quantos clicaram, se cadastraram e pediram orçamento. Assim o marketing sabe o que dá resultado.']
+  ['#t-mkpis','Este é o painel do Marketing da Guaporé, focado no Catálogo 3D. No topo: visualizações dos produtos, produtos visíveis, em destaque e com selo.'],
+  ['#t-rank','Aqui você vê o que os clientes mais olham no Catálogo 3D. Use isso para decidir o que colocar em destaque.'],
+  ['#t-vitrine','Na vitrine você controla o catálogo: o banner, os produtos em destaque, os selos como Pronta entrega, o que fica sob consulta e o que aparece ou não para o cliente. A prévia ao lado mostra como o cliente vai ver.']
  ],
  gestor:[
   ['#t-kpis','Esta é a Central do Gestor da Guaporé. No topo ficam os números do dia: cadastros novos, orçamentos em aberto, acessos da equipe e visitas ao Catálogo 3D.'],
@@ -697,7 +671,7 @@ $('#tourBtn').onclick=()=>{
  <div class="list">
   <button class="row" data-tour="gestor" style="text-align:left;cursor:pointer;color:var(--fg)"><div class="who"><b>Tutorial do Gestor</b><span>${TOURS.gestor.length} passos · comandos, medidores, cadastros e orçamentos</span></div><span class="pill br">Começar</span></button>
   <button class="row" data-tour="vendedor" style="text-align:left;cursor:pointer;color:var(--fg)"><div class="who"><b>Tutorial do Vendedor</b><span>${TOURS.vendedor.length} passos · ferramentas, orçamentos recebidos e agenda</span></div><span class="pill br">Começar</span></button>
-  <button class="row" data-tour="marketing" style="text-align:left;cursor:pointer;color:var(--fg)"><div class="who"><b>Tutorial do Marketing</b><span>${TOURS.marketing.length} passos · vitrine do catálogo, posts, calendário e campanhas</span></div><span class="pill br">Começar</span></button>
+  <button class="row" data-tour="marketing" style="text-align:left;cursor:pointer;color:var(--fg)"><div class="who"><b>Tutorial do Marketing</b><span>${TOURS.marketing.length} passos · banner, destaques, selos e o que aparece no Catálogo 3D</span></div><span class="pill br">Começar</span></button>
  </div>
  <label style="flex-direction:row;align-items:center;gap:8px;margin-top:12px;font-size:13px;color:var(--fg)"><input type="checkbox" id="tvAuto" checked style="width:auto"> Modo vídeo: avança sozinho com voz</label>
  <div class="toolbar" style="margin-top:12px;justify-content:flex-end"><button class="btn" data-act="close">Fechar</button></div>`);
