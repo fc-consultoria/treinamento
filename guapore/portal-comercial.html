@@ -209,7 +209,8 @@ label{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:4
       <button data-role="marketing" aria-pressed="false">Marketing</button>
     </div>
     <button class="btn bell" id="bellBtn" title="Avisos de cadastro">🔔 Avisos<span class="dot" id="bellDot" hidden>0</span></button>
-    <button class="btn" id="corBtn" title="Mudar a cor da tela">🎨 Cor</button>
+    <div class="seg" role="group" aria-label="Fundo da tela" id="modoSeg"><button data-modo="light" aria-pressed="true">☀️ Claro</button><button data-modo="dark" aria-pressed="false">🌙 Escuro</button></div>
+    <button class="btn" id="corBtn" title="Mudar a cor principal">🎨 Cor</button>
     <button class="btn primary" id="tourBtn">▶ Tutorial</button>
   </div>
 </header>
@@ -769,19 +770,21 @@ $('#tourBtn').onclick=()=>{
 
 /* ---------- COR DA TELA ---------- */
 const TKEY='guapore-tema';
-let tema={modo:'auto',cor:'verde'};
+let tema={modo:'light',cor:'verde'};
 try{tema=Object.assign(tema,JSON.parse(localStorage.getItem(TKEY))||{})}catch(e){}
 function aplicaTema(){const r=document.documentElement;
  if(tema.modo==='auto')r.removeAttribute('data-theme');else r.setAttribute('data-theme',tema.modo);
  if(tema.cor==='verde')r.removeAttribute('data-accent');else r.setAttribute('data-accent',tema.cor);
+ document.querySelectorAll('#modoSeg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.modo===(tema.modo==='auto'?'light':tema.modo)));
  try{localStorage.setItem(TKEY,JSON.stringify(tema))}catch(e){}}
 aplicaTema();
 const CORES=[['verde','Verde','#0d6e66'],['azul','Azul','#1d5fa8'],['grafite','Grafite','#3a4654'],['vinho','Vinho','#8a2c3b'],['laranja','Laranja','#b8560f']];
-function temaModal(){modal(`<h2>🎨 Cor da tela</h2><p class="sub">A escolha fica salva neste aparelho.</p>
- <h3 style="font-size:13px;margin:4px 0 8px">Fundo</h3><div class="temaop">${[['light','☀️ Claro'],['dark','🌙 Escuro'],['auto','🖥 Automático']].map(([k,n])=>`<button data-tema-modo="${k}" aria-pressed="${tema.modo===k}">${n}</button>`).join('')}</div>
+function temaModal(){modal(`<h2>🎨 Cores da tela</h2><p class="sub">A escolha fica salva neste aparelho.</p>
+ <h3 style="font-size:13px;margin:4px 0 8px">Fundo</h3><div class="temaop">${[['light','☀️ Claro'],['dark','🌙 Escuro']].map(([k,n])=>`<button data-tema-modo="${k}" aria-pressed="${tema.modo===k}">${n}</button>`).join('')}</div>
  <h3 style="font-size:13px;margin:14px 0 8px">Cor principal</h3><div class="temaop">${CORES.map(([k,n,c])=>`<button data-tema-cor="${k}" aria-pressed="${tema.cor===k}"><i style="background:${c}"></i>${n}</button>`).join('')}</div>
  <div class="toolbar" style="margin-top:14px;justify-content:flex-end"><button class="btn primary" data-act="close">Pronto</button></div>`)}
 $('#corBtn').onclick=temaModal;
+document.querySelectorAll('#modoSeg button').forEach(b=>b.onclick=()=>{tema.modo=b.dataset.modo;aplicaTema()});
 document.addEventListener('click',e=>{const m=e.target.closest('[data-tema-modo]'),c=e.target.closest('[data-tema-cor]');if(!m&&!c)return;if(m)tema.modo=m.dataset.temaModo;if(c)tema.cor=c.dataset.temaCor;aplicaTema();temaModal()});
 addEventListener('resize',()=>{if(tour)tourStep()});
 try{speechSynthesis.getVoices()}catch(e){}
