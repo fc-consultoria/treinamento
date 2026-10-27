@@ -167,7 +167,6 @@ label{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:4
       <button data-role="gestor" aria-pressed="true">Gestor</button>
       <button data-role="vendedor" aria-pressed="false">Vendedor</button>
       <button data-role="marketing" aria-pressed="false">Marketing</button>
-      <button data-role="cliente" aria-pressed="false">Cliente (catálogo)</button>
     </div>
     <button class="btn bell" id="bellBtn" title="Avisos de cadastro">🔔 Avisos<span class="dot" id="bellDot" hidden>0</span></button>
     <button class="btn primary" id="tourBtn">▶ Tutorial</button>
@@ -336,7 +335,7 @@ function vVendedor(){
    <div class="ic" style="font-size:20px">${m.i}</div><h3>${m.n}</h3><p>${m.d}</p></button>`}).join('')}</div>
  <div class="grid cols2" style="margin-top:14px">
   <section class="panel" id="t-meus">
-   <h2>🧾 Orçamentos para você</h2><p class="sub">O cliente escolheu você no catálogo. Responda pelo canal que ele pediu.</p>
+   <h2>🧾 Orçamentos para você</h2><p class="sub">O cliente escolheu você no Catálogo 3D. Responda pelo canal que ele pediu.</p>
    <div class="list">${meus.length?meus.map(o=>`<div class="row"><div class="who"><b>${esc(cli(o.cli).nome)} · <span style="font-family:var(--f-mono);font-weight:500">${o.id}</span></b><span>${o.itens.length} tipologia(s) · pediu retorno por ${o.canal} · ${fmtD(o.data)}</span></div>
      <span class="pill ${STAT[o.status][1]}">${STAT[o.status][0]}</span><button class="btn sm" data-act="verorc" data-id="${o.id}">Abrir</button></div>`).join(''):'<div class="empty">Nenhum orçamento ainda. Quando um cliente escolher você no Catálogo 3D, ele aparece aqui.</div>'}</div>
   </section>
@@ -386,9 +385,9 @@ function vMarketing(){
  const best=M.links.slice().sort((a,b)=>b.orc/b.cliques-a.orc/a.cliques)[0];sug.push([`O canal <b>${best.canal}</b> é o que mais vira orçamento (${(best.orc/best.cliques*100).toFixed(1)}% dos cliques). Reforce as postagens nele.`,null]);
  const days=[...Array(7)].map((_,i)=>isoDay(i));
  return `
- <span class="demo-note">Demonstração · o que o marketing muda aqui aparece na hora na tela do cliente</span>
+ <span class="demo-note">Demonstração · na versão publicada, o que o marketing muda aqui vai direto para o Catálogo 3D da Guaporé</span>
  <div class="hello"><div><h1>Marketing · Catálogo e conteúdo</h1><p>Ajuste a vitrine do Catálogo 3D, crie posts com os produtos e veja o que traz cliente.</p></div>
- <button class="btn" data-role="cliente">👁 Ver como o cliente vê</button></div>
+</div>
  <div class="grid kpis" id="t-mkpis">
   <div class="kpi"><small>Visualizações de produtos</small><b>${tot}</b><em> no Catálogo 3D</em></div>
   <div class="kpi"><small>Cadastros vindos de campanhas</small><b>${M.links.reduce((a,l)=>a+l.cad,0)}</b><em> pelos links rastreados</em></div>
@@ -699,7 +698,6 @@ $('#tourBtn').onclick=()=>{
   <button class="row" data-tour="gestor" style="text-align:left;cursor:pointer;color:var(--fg)"><div class="who"><b>Tutorial do Gestor</b><span>${TOURS.gestor.length} passos · comandos, medidores, cadastros e orçamentos</span></div><span class="pill br">Começar</span></button>
   <button class="row" data-tour="vendedor" style="text-align:left;cursor:pointer;color:var(--fg)"><div class="who"><b>Tutorial do Vendedor</b><span>${TOURS.vendedor.length} passos · ferramentas, orçamentos recebidos e agenda</span></div><span class="pill br">Começar</span></button>
   <button class="row" data-tour="marketing" style="text-align:left;cursor:pointer;color:var(--fg)"><div class="who"><b>Tutorial do Marketing</b><span>${TOURS.marketing.length} passos · vitrine do catálogo, posts, calendário e campanhas</span></div><span class="pill br">Começar</span></button>
-  <button class="row" data-tour="cliente" style="text-align:left;cursor:pointer;color:var(--fg)"><div class="who"><b>Como o cliente pede orçamento</b><span>${TOURS.cliente.length} passos · catálogo, vendedor e envio</span></div><span class="pill br">Começar</span></button>
  </div>
  <label style="flex-direction:row;align-items:center;gap:8px;margin-top:12px;font-size:13px;color:var(--fg)"><input type="checkbox" id="tvAuto" checked style="width:auto"> Modo vídeo: avança sozinho com voz</label>
  <div class="toolbar" style="margin-top:12px;justify-content:flex-end"><button class="btn" data-act="close">Fechar</button></div>`);
