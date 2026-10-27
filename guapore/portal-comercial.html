@@ -180,7 +180,7 @@ label{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:4
 (function(){
 const KEY='guapore-portal-v1';
 const MODS=[
- {k:'cat',n:'Catálogo 3D',d:'Linhas e tipologias em 3D para mostrar ao cliente.',i:'▦'},
+ {k:'cat',n:'Catálogo 3D',d:'Perfis das linhas Suprema e Gold em 3D para mostrar ao cliente.',i:'▦'},
  {k:'trein',n:'Treinamento 3D',d:'Montagem e conceitos em 3D + treinamento on-line com agenda.',i:'◈'},
  {k:'casa',n:'Monte sua Casa 3D',d:'Coloque as esquadrias na planta e apresente o projeto.',i:'⌂'},
  {k:'vento',n:'Diagrama de pressão de vento',d:'Consulta rápida de pressão por região e altura.',i:'≋'},
@@ -610,9 +610,9 @@ document.addEventListener('change',e=>{
 /* ---------- TUTORIAL GUIADO (legenda + voz) ---------- */
 const TOURS={
  marketing:[
-  ['#t-mkpis','Este é o painel do Marketing da Guaporé, focado no Catálogo 3D. No topo: visualizações dos produtos, produtos visíveis, em destaque e com selo.'],
+  ['#t-mkpis','Este é o painel do Marketing da Guaporé, focado no Catálogo 3D. No topo: visualizações dos perfis, perfis visíveis, em destaque e com selo.'],
   ['#t-rank','Aqui você vê o que os clientes mais olham no Catálogo 3D. Use isso para decidir o que colocar em destaque.'],
-  ['#t-vitrine','Na vitrine você controla o catálogo: o banner, os produtos em destaque, os selos como Pronta entrega, o que fica sob consulta e o que aparece ou não para o cliente. A prévia ao lado mostra como o cliente vai ver.']
+  ['#t-vitrine','Na vitrine você controla o catálogo: o banner, os perfis em destaque, os selos como Pronta entrega, o que fica sob consulta e o que aparece ou não para o cliente. A prévia ao lado mostra como o cliente vai ver.']
  ],
  gestor:[
   ['#t-kpis','Esta é a Central do Gestor da Guaporé. No topo ficam os números do dia: cadastros novos, orçamentos em aberto, acessos da equipe e visitas ao Catálogo 3D.'],
@@ -625,11 +625,11 @@ const TOURS={
   ['#t-agg','Por fim, a agenda do treinamento on-line. Crie turmas e acompanhe quem se inscreveu.']
  ],
  vendedor:[
-  ['#t-mods','Este é o painel do vendedor. São cinco ferramentas: Catálogo 3D, Treinamento 3D, Monte sua Casa 3D, Diagrama de pressão de vento e Solicitação com a FC. Cada acesso conta no medidor do gestor.'],
-  ['#mod-cat','Use o Catálogo 3D para mostrar as linhas e tipologias ao cliente durante o atendimento.'],
+  ['#t-mods','Este é o painel do vendedor. São cinco ferramentas: Catálogo 3D, Treinamento 3D, Monte sua Casa 3D, Diagrama de pressão de vento e Solicitação com a FC. Toque no cartão e depois em Abrir para entrar no módulo. Cada acesso conta no medidor do gestor.'],
+  ['#mod-cat','Use o Catálogo 3D para mostrar ao cliente os perfis das linhas Suprema e Gold em 3D durante o atendimento.'],
   ['#mod-casa','No Monte sua Casa 3D você coloca as esquadrias na planta e apresenta o projeto ao cliente.'],
   ['#mod-fc','Ficou com dúvida? Abra Solicitação com a FC e envie sua pergunta direto para o suporte.'],
-  ['#t-meus','Quando o cliente monta o orçamento no catálogo e escolhe você, o pedido cai aqui. Abra, copie o resumo e responda pelo WhatsApp ou e-mail que ele pediu. Depois marque a situação.'],
+  ['#t-meus','Quando o cliente se cadastra no Catálogo 3D, monta o pedido e escolhe você, o pedido cai aqui. Abra, copie o resumo e responda pelo WhatsApp ou e-mail que ele pediu. Depois marque a situação.'],
   ['#t-agv','Na agenda de treinamento on-line, toque em uma turma para se inscrever.']
  ],
  cliente:[
