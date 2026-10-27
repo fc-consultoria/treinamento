@@ -1,0 +1,685 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="robots" content="noindex"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
+<title>Porta Pivotante Ladore 3D</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+/* Layout: faixa preta da marca com os 4 modos; a porta em 3D ocupa o palco; painel lateral muda conforme o modo (Apresentar / Montagem / Desenho técnico / Acabamentos). */
+:root{
+  --ink:#141416; --paper:#f2f1ee; --panel:#ffffff; --mute:#696b70; --line:#dedcd7; --soft:#ecebe7;
+  --acc:#a8834d; --acc-ink:#1a140b; --hi:#d9b77c;
+  --stage-a:#f7f6f3; --stage-b:#cfccc5;
+  --tech-bg:#f6f5f0; --tech-line:#1d1e22; --tech-dim:#8a7552;
+  --f-d:'Poppins',system-ui,-apple-system,sans-serif; --f-m:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--ink:#f0efec;--paper:#121315;--panel:#1a1b1e;--mute:#a2a4a8;--line:#2c2d31;--soft:#232428;--acc:#c9a66b;--acc-ink:#1a140b;--hi:#e3c48f;--stage-a:#2b2c30;--stage-b:#111214;--tech-bg:#14181d;--tech-line:#dfe6ee;--tech-dim:#d6b47a;color-scheme:dark}}
+:root[data-theme="dark"]{--ink:#f0efec;--paper:#121315;--panel:#1a1b1e;--mute:#a2a4a8;--line:#2c2d31;--soft:#232428;--acc:#c9a66b;--acc-ink:#1a140b;--hi:#e3c48f;--stage-a:#2b2c30;--stage-b:#111214;--tech-bg:#14181d;--tech-line:#dfe6ee;--tech-dim:#d6b47a;color-scheme:dark}
+html,body{height:100%}
+body{background:var(--paper);color:var(--ink);font:400 14.5px/1.5 var(--f-d);overflow:hidden}
+button{font-family:inherit}
+.top{min-height:62px;background:#0d0d0e;color:#f4f3f1;display:flex;align-items:center;gap:16px;padding-block:8px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));box-sizing:border-box}
+.top img{height:36px;width:auto}
+.brand{display:flex;flex-direction:column;line-height:1.15;border-left:1px solid #2c2c30;padding-left:14px}
+.brand small{font:600 10px var(--f-m);letter-spacing:.14em;text-transform:uppercase;color:#c9a66b}
+.brand b{font:600 14px var(--f-d)}
+.sp{flex:1}
+.modos{display:flex;gap:3px;background:#1d1d20;border-radius:99px;padding:4px;overflow-x:auto;max-width:100%}
+.modos button{all:unset;cursor:pointer;padding:7px 14px;border-radius:99px;font:600 12.5px var(--f-d);color:#bdbbb6;white-space:nowrap}
+.modos button.on{background:#f4f3f1;color:#0d0d0e}
+.modos button:focus-visible{outline:2px solid #c9a66b;outline-offset:2px}
+.fcm{font:500 10.5px var(--f-m);letter-spacing:.1em;text-transform:uppercase;color:#8d8b86;white-space:nowrap}
+.app{height:calc(100% - 62px);display:grid;grid-template-columns:minmax(0,1fr) 384px}
+.stage{position:relative;min-width:0;overflow:hidden;background:radial-gradient(120% 95% at 50% 8%,var(--stage-a),var(--stage-b))}
+.stage.tech{background:var(--tech-bg)}
+.stage.tech::before{content:"";position:absolute;inset:0;background-image:linear-gradient(color-mix(in srgb,var(--tech-line) 7%,transparent) 1px,transparent 1px),linear-gradient(90deg,color-mix(in srgb,var(--tech-line) 7%,transparent) 1px,transparent 1px);background-size:24px 24px;pointer-events:none}
+#cv{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab;transition:opacity .35s}
+#cv.fade{opacity:0}
+.ov{position:absolute;pointer-events:none}.ov>*{pointer-events:auto}
+.tl{left:16px;top:14px;background:rgba(14,14,16,.74);color:#f4f3f1;border-radius:14px;padding:10px 14px;backdrop-filter:blur(8px);max-width:min(380px,calc(100% - 32px))}
+.tl small{display:block;font:600 10.5px var(--f-m);letter-spacing:.14em;text-transform:uppercase;color:#d6b47a}
+.tl b{display:block;font:700 18px/1.25 var(--f-d);letter-spacing:-.01em}
+.tl span{font-size:12.5px;color:#cfcdc8}
+.br{right:16px;bottom:16px;display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;max-width:calc(100% - 32px)}
+.chip{all:unset;cursor:pointer;font:600 12.5px var(--f-d);padding:9px 14px;border-radius:99px;background:rgba(255,255,255,.92);color:#141416;box-shadow:0 1px 3px rgba(0,0,0,.18)}
+.chip.dk{background:#141416;color:#f4f3f1}
+.chip.go{background:#c9a66b;color:#141416}
+.chip:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.chip[disabled]{opacity:.45;cursor:default}
+.tags{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.hs{all:unset;position:absolute;transform:translate(-50%,-50%);pointer-events:auto;cursor:pointer;width:30px;height:30px;border-radius:50%;background:#141416;color:#f4f3f1;font:700 12px var(--f-m);display:grid;place-items:center;border:2px solid #f4f3f1;box-shadow:0 0 0 0 rgba(201,166,107,.6);animation:pulse 2.4s infinite}
+.hs.on{background:#c9a66b;color:#141416;border-color:#141416}
+.hs:focus-visible{outline:2px solid #c9a66b;outline-offset:3px}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(201,166,107,.55)}70%{box-shadow:0 0 0 12px rgba(201,166,107,0)}100%{box-shadow:0 0 0 0 rgba(201,166,107,0)}}
+.lbl{position:absolute;transform:translate(-50%,-50%);font:600 11px var(--f-m);letter-spacing:.04em;color:var(--tech-line);background:var(--tech-bg);border:1px solid var(--tech-line);padding:2px 7px;white-space:nowrap;pointer-events:none}
+.lbl.d{border-color:var(--tech-dim);color:var(--tech-dim)}
+.cap{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);width:min(560px,calc(100% - 32px));background:rgba(14,14,16,.82);color:#f4f3f1;border-left:3px solid #c9a66b;border-radius:0 12px 12px 0;padding:12px 16px;backdrop-filter:blur(6px);transition:opacity .4s}
+.cap small{font:600 11px var(--f-m);letter-spacing:.12em;text-transform:uppercase;color:#d6b47a}
+.cap>b{display:block;font:700 17px/1.25 var(--f-d)}
+.cap p{margin:4px 0 0;font-size:13px;color:#d9d7d2}
+.cap .pg{display:flex;gap:4px;margin-top:10px}.cap .pg i{flex:1;height:3px;border-radius:2px;background:rgba(255,255,255,.22)}.cap .pg i.ok{background:#c9a66b}
+aside{background:var(--panel);border-left:1px solid var(--line);overflow:auto;min-width:0}
+.pn{padding:18px 18px 28px;display:flex;flex-direction:column;gap:18px}
+h2{margin:0;font:700 20px/1.2 var(--f-d);letter-spacing:-.01em;text-wrap:balance}
+h3{margin:0 0 8px;font:600 10.5px var(--f-m);letter-spacing:.13em;text-transform:uppercase;color:var(--mute)}
+p{margin:0}
+.nt{color:var(--mute);font-size:13px;line-height:1.5}
+.eb{font:600 10.5px var(--f-m);letter-spacing:.14em;text-transform:uppercase;color:var(--acc)}
+.ql{display:flex;flex-direction:column;gap:6px;list-style:none;margin:0;padding:0}
+.ql button{all:unset;box-sizing:border-box;width:100%;cursor:pointer;display:grid;grid-template-columns:28px minmax(0,1fr);gap:10px;align-items:start;border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.ql button i{font:700 12px var(--f-m);font-style:normal;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--soft)}
+.ql button b{display:block;font:600 14px/1.3 var(--f-d)}
+.ql button small{display:block;color:var(--mute);font-size:12.5px;line-height:1.45;margin-top:2px}
+.ql button .cd{font:600 11px var(--f-m);color:var(--acc)}
+.ql button.on{border-color:var(--ink);box-shadow:0 0 0 1px var(--ink)}
+.ql button.on i{background:var(--ink);color:var(--paper)}
+.ql button.done i{background:var(--acc);color:var(--acc-ink)}
+.ql button:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.bts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.bt{all:unset;box-sizing:border-box;cursor:pointer;text-align:center;font:600 13px var(--f-d);padding:11px 10px;border-radius:11px;border:1px solid var(--ink);color:var(--ink)}
+.bt.pri{background:var(--ink);color:var(--paper)}
+.bt.full{grid-column:1/-1}
+.bt[disabled]{opacity:.45;cursor:default}
+.bt:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.sw{display:flex;gap:8px;flex-wrap:wrap}
+.sw button{all:unset;cursor:pointer;width:44px;height:44px;border-radius:11px;border:1px solid var(--line);background-size:cover;background-position:center}
+.sw button.on{box-shadow:0 0 0 2px var(--panel),0 0 0 4px var(--ink)}
+.sw button:focus-visible{outline:2px solid var(--acc);outline-offset:3px}
+.swl{font-size:12.5px;color:var(--mute);margin-top:7px}.swl b{color:var(--ink);font-weight:600}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+label.f{display:flex;flex-direction:column;gap:4px;font:600 12px var(--f-d);color:var(--mute)}
+label.f input{font:600 15px var(--f-m);color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:9px 10px;font-variant-numeric:tabular-nums;min-width:0}
+label.f input:focus-visible{outline:2px solid var(--acc);outline-offset:1px}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{font:600 10px var(--f-m);letter-spacing:.08em;text-transform:uppercase;color:var(--mute);text-align:left;padding:6px 4px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:8px 4px;border-bottom:1px solid var(--line);vertical-align:top}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+td.n{font:600 12px var(--f-m)}
+td code{font:600 12px var(--f-m);white-space:nowrap}
+td small{display:block;color:var(--mute);font-size:11.5px}
+.box{border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--soft);font-size:13px}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.seg button{all:unset;cursor:pointer;text-align:center;border:1px solid var(--line);border-radius:10px;padding:9px 4px;font:600 12px var(--f-d)}
+.seg button.on{border-color:var(--ink);background:var(--ink);color:var(--paper)}
+.seg button:focus-visible{outline:2px solid var(--acc)}
+.foot{font:500 11px var(--f-m);letter-spacing:.04em;color:var(--mute);border-top:1px solid var(--line);padding-top:12px;line-height:1.6}
+.load{position:absolute;inset:0;display:grid;place-items:center;font:600 12px var(--f-m);letter-spacing:.1em;color:var(--mute);transition:opacity .5s;pointer-events:none}
+.load.done{opacity:0}
+@media (max-width:900px){
+  body{overflow:auto}
+  .app{grid-template-columns:1fr;grid-template-rows:64vh auto;height:auto}
+  .stage{height:64vh}
+  aside{border-left:0;border-top:1px solid var(--line)}
+  .top{flex-wrap:wrap;gap:10px}.top img{height:28px}.brand,.fcm{display:none}
+  .modos{order:3;flex-basis:100%}
+  .cap{bottom:66px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<header class="top">
+  <img src="data:image/png;base64,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" alt="Ladore">
+  <div class="brand"><small>Sistema para portas em ACM</small><b>Porta Pivotante</b></div>
+  <div class="sp"></div>
+  <nav class="modos" id="modos" aria-label="Modos">
+    <button data-m="apr" class="on">Apresentar</button>
+    <button data-m="mon">Montagem</button>
+    <button data-m="tec">Desenho técnico</button>
+    <button data-m="aca">Acabamentos</button>
+  </nav>
+  <span class="fcm">Tecnologia FC Consultoria</span>
+</header>
+
+<div class="app">
+  <div class="stage" id="stage">
+    <canvas id="cv" aria-label="Porta pivotante Ladore em 3D"></canvas>
+    <div class="tags" id="tags"></div>
+    <div class="ov tl" id="tl"><small id="tlS">Porta pivotante · ACM</small><b id="tlB">Ladore Pivot</b><span id="tlD">Gire com o dedo ou o mouse · toque nos números</span></div>
+    <div class="cap" id="cap" hidden></div>
+    <div class="ov br" id="br"></div>
+    <div class="load" id="load">CARREGANDO A PORTA…</div>
+  </div>
+  <aside><div class="pn" id="pn"></div></aside>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+(function(){
+'use strict';
+const $=s=>document.querySelector(s);
+const MM=0.001;
+const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ================== DADOS DO CATÁLOGO ================== */
+const PERFIS={
+  'PACM-11':{nome:'Largura do batente',kg:0.776,cor:'Natural',txt:'Perfil da largura do marco, com encaixe para alisares e vistas.'},
+  'PACM-12':{nome:'Altura do batente',kg:1.252,cor:'Natural',txt:'Dispensa refilo de borda do ACM, tem múltiplas vedações, fixação pelos olhais e encaixe para alisares.'},
+  'PACM-13':{nome:'Travessa lateral da folha',kg:1.333,cor:'Preto',txt:'Bitola de 60 mm, rebaixo para a fechadura multiponto e múltiplas vedações.'},
+  'PACM-14':{nome:'Travessa superior e inferior',kg:2.076,cor:'Natural',txt:'Encaixes para veda-porta, escova de vedação e pivô, com fixação pelos olhais.'},
+  'PACM-15':{nome:'Travessa auxiliar',kg:0.874,cor:'Natural',txt:'Faz o travamento da porta, com olhal para parafuso ponta guia.'}
+};
+/* Seções em mm (contorno externo + vazados), lidas dos desenhos do catálogo */
+/* Seções reais vetorizadas dos desenhos do catálogo Ladore 2025 (mm) */
+const SEC={"PACM-11":{"o":[[0.0,8.13],[0.0,0.33],[1.3,0.33],[1.3,6.18],[1.95,6.83],[39.7,6.83],[40.35,6.18],[40.35,0.33],[41.65,0.33],[41.65,6.51],[41.98,6.83],[80.05,6.83],[80.37,6.51],[80.37,0.33],[81.67,0.33],[81.67,8.13],[66.38,8.13],[65.73,8.79],[65.73,12.69],[66.06,13.02],[75.49,13.02],[75.82,13.34],[75.82,14.97],[75.49,15.29],[75.49,26.03],[75.82,27.01],[75.49,27.98],[6.18,27.98],[6.18,13.99],[5.86,13.02],[15.62,13.02],[15.94,12.69],[15.94,8.46],[15.62,8.13]],"h":[[[7.48,26.36],[7.81,26.68],[73.87,26.68],[74.52,26.03],[74.52,15.29],[73.87,14.32],[64.43,14.32],[64.43,8.79],[63.78,8.13],[17.9,8.13],[17.25,8.79],[17.25,14.32],[7.81,14.32],[7.48,14.64]]]},"PACM-12":{"o":[[5.88,68.28],[5.88,13.39],[15.35,13.39],[16.01,11.76],[17.64,11.76],[18.29,11.11],[18.29,9.15],[17.64,8.49],[0.0,8.49],[0.0,0.65],[0.33,0.33],[0.98,0.33],[0.98,6.53],[1.63,7.19],[39.86,7.19],[40.18,6.86],[40.18,0.65],[40.51,0.33],[41.49,0.65],[41.49,6.86],[41.82,7.19],[80.04,7.19],[80.37,6.86],[80.37,0.65],[80.69,0.33],[81.67,0.65],[81.67,8.49],[66.32,8.49],[65.67,9.15],[65.67,11.11],[66.32,11.76],[67.95,11.76],[68.61,13.39],[75.47,13.39],[75.79,13.72],[75.79,28.42],[59.78,28.42],[59.46,28.75],[59.46,33.0],[59.78,33.32],[61.75,33.32],[61.75,35.94],[61.09,35.94],[60.44,34.63],[59.46,34.96],[59.46,39.86],[60.44,40.18],[60.76,39.86],[60.76,38.88],[61.75,38.88],[61.75,42.8],[60.76,42.8],[60.44,41.82],[59.46,42.14],[59.46,46.72],[60.44,47.04],[60.76,46.06],[61.75,45.74],[62.07,46.06],[61.75,48.35],[12.74,48.35],[12.09,49.0],[12.09,52.6],[12.74,53.25],[14.7,53.25],[14.7,56.19],[13.72,56.19],[13.72,55.54],[13.07,54.88],[12.09,55.54],[12.09,59.78],[12.74,60.44],[13.39,60.44],[13.72,60.11],[13.72,59.13],[14.7,59.13],[14.7,63.05],[13.72,63.05],[13.39,62.07],[12.74,62.07],[12.09,62.73],[12.09,66.97],[12.41,67.3],[13.39,67.3],[13.72,66.32],[14.7,66.32],[14.7,68.28],[14.37,68.61],[6.21,68.61]],"h":[[[6.86,46.39],[7.84,47.37],[43.12,47.37],[43.78,46.72],[43.78,45.74],[43.45,45.41],[43.78,43.12],[44.1,42.8],[46.06,42.8],[46.06,43.45],[45.08,44.43],[45.08,45.08],[47.04,47.04],[47.7,47.04],[49.33,45.74],[49.98,44.43],[48.68,43.45],[48.68,42.8],[50.64,42.8],[51.29,43.78],[50.96,46.72],[51.62,47.37],[57.17,47.37],[57.82,46.72],[57.82,27.44],[73.51,27.44],[74.16,26.79],[74.16,15.35],[73.83,15.03],[67.3,15.03],[66.65,14.37],[66.65,13.39],[65.99,12.74],[63.71,12.74],[63.71,11.76],[64.03,11.76],[64.69,10.78],[62.4,8.49],[61.75,8.49],[59.78,10.45],[59.78,11.43],[60.76,12.09],[60.76,12.74],[58.8,12.74],[58.15,11.43],[58.48,8.82],[57.82,8.17],[26.14,8.17],[25.48,8.82],[25.81,11.11],[25.16,12.74],[23.2,12.74],[23.2,12.09],[24.18,11.11],[24.18,10.45],[22.22,8.49],[21.56,8.49],[19.27,10.78],[19.27,11.11],[20.25,11.76],[20.25,12.74],[17.97,12.74],[17.31,13.39],[17.31,14.37],[16.66,15.03],[7.51,15.03],[6.86,15.68]],[[7.51,67.63],[10.13,67.63],[10.78,66.97],[10.78,48.68],[10.45,48.35],[7.84,48.35],[6.86,49.33],[6.86,66.97]]]},"PACM-13":{"o":[[0.27,69.73],[0.0,69.46],[0.0,0.54],[0.54,0.27],[20.81,0.27],[21.08,0.54],[21.62,0.27],[59.46,0.27],[59.73,0.54],[59.73,25.14],[59.19,25.41],[48.65,25.41],[48.38,25.68],[48.38,30.0],[48.92,30.54],[50.54,30.54],[50.81,30.81],[50.81,32.97],[49.73,32.97],[49.73,32.16],[49.46,31.89],[48.65,31.89],[48.38,32.16],[48.38,36.76],[49.19,37.3],[49.73,36.76],[49.73,36.22],[50.81,36.22],[50.81,40.0],[50.0,40.0],[50.0,39.46],[49.46,38.92],[48.65,38.92],[48.38,39.19],[48.38,43.78],[48.65,44.05],[49.46,44.05],[50.0,43.51],[50.0,42.97],[50.81,42.97],[50.81,44.86],[50.54,45.14],[42.43,45.14],[42.43,41.89],[41.89,41.08],[18.11,41.08],[17.57,41.62],[17.57,45.14],[1.89,45.14],[1.35,45.68],[1.35,49.19],[1.89,50.0],[3.78,50.0],[4.05,52.16],[3.78,52.43],[2.97,52.43],[2.43,51.35],[1.89,51.35],[1.35,51.89],[1.35,55.95],[1.89,56.49],[2.43,56.49],[2.97,55.41],[3.78,55.41],[4.05,55.68],[4.05,59.19],[3.78,59.46],[2.97,59.46],[2.43,58.11],[1.62,58.38],[1.35,58.92],[1.35,62.97],[1.89,63.51],[2.43,63.51],[2.97,62.43],[4.05,62.43],[4.05,68.65],[3.78,68.92],[3.78,69.73]],"h":[[[2.16,42.7],[2.43,42.97],[15.14,42.97],[15.41,42.7],[15.41,39.19],[15.95,38.92],[44.05,38.92],[44.32,39.19],[44.32,42.7],[44.59,42.97],[45.95,42.97],[46.22,42.7],[46.22,23.51],[46.49,23.24],[57.03,23.24],[57.57,22.7],[57.57,2.7],[57.3,2.43],[2.7,2.43],[2.16,2.97]]]},"PACM-14":{"o":[[0.32,60.0],[0.0,59.68],[0.0,0.32],[0.97,0.32],[0.97,3.89],[1.3,4.22],[28.22,4.22],[28.54,3.89],[28.54,0.32],[29.51,0.32],[29.51,37.3],[30.16,37.95],[44.11,37.95],[44.43,37.62],[44.43,0.65],[44.76,0.32],[46.7,0.32],[46.7,1.3],[45.73,1.62],[45.73,2.27],[46.38,2.92],[50.27,2.92],[50.92,2.27],[50.92,1.62],[49.95,1.3],[49.95,0.32],[53.19,0.32],[53.19,1.3],[52.22,1.62],[52.22,2.27],[52.86,2.92],[56.76,2.92],[57.41,2.27],[57.41,1.62],[56.43,1.3],[56.43,0.32],[59.35,0.32],[59.68,0.65],[59.68,1.62],[59.35,1.95],[59.35,60.0]],"h":[[[25.95,57.73],[37.3,57.73],[37.62,57.08],[36.0,56.11],[34.7,54.16],[34.7,51.89],[35.68,50.59],[37.3,50.59],[37.3,51.24],[36.32,52.22],[36.32,53.51],[36.97,53.84],[37.95,55.14],[38.92,55.14],[40.86,53.19],[40.86,52.22],[40.22,51.89],[39.89,50.59],[41.51,50.59],[42.49,52.54],[42.49,53.51],[41.84,55.14],[40.54,56.43],[39.24,57.08],[39.57,57.73],[57.08,57.73],[57.41,57.41],[57.41,4.54],[57.08,4.22],[46.7,4.22],[46.38,4.54],[46.38,39.89],[46.05,40.22],[41.51,40.22],[41.19,40.54],[42.16,42.16],[42.16,43.14],[42.49,43.46],[42.16,45.41],[41.19,46.38],[39.89,46.38],[39.89,45.41],[40.86,44.76],[40.86,43.78],[38.92,41.84],[37.95,41.84],[36.97,43.14],[36.32,43.46],[36.32,44.76],[36.97,45.41],[36.97,46.38],[35.68,46.38],[34.7,45.08],[34.7,42.49],[36.0,40.86],[35.68,40.22],[25.95,40.22],[25.3,40.86],[25.3,49.95],[25.62,50.27],[25.3,53.19],[25.62,53.51],[25.62,57.41]],[[2.59,57.73],[19.78,57.73],[20.11,57.08],[19.14,56.43],[17.19,54.16],[17.19,51.89],[18.16,50.59],[19.46,50.59],[19.46,51.57],[18.81,52.22],[18.81,53.51],[19.46,53.84],[20.43,55.14],[21.73,55.14],[23.35,53.19],[23.35,52.22],[22.7,51.89],[22.38,50.59],[23.35,50.27],[23.35,38.27],[23.68,37.95],[27.24,37.95],[27.57,37.62],[27.57,11.68],[27.24,11.35],[22.38,11.35],[22.38,10.7],[23.35,9.73],[23.35,8.76],[21.73,6.81],[20.43,6.81],[20.11,7.46],[18.81,8.43],[18.81,9.73],[19.46,10.38],[19.46,11.35],[18.16,11.35],[17.19,10.05],[17.19,7.78],[17.51,7.14],[17.19,6.81],[2.27,6.81],[1.95,7.14],[1.95,57.08]]]},"PACM-15":{"o":[[0.0,40.18],[0.0,0.27],[59.73,0.27],[59.73,40.18]],"h":[[[1.63,38.28],[1.9,38.55],[34.75,38.55],[35.02,38.28],[35.02,34.75],[35.57,34.21],[37.47,34.21],[37.47,34.75],[36.38,35.57],[36.38,36.92],[36.92,37.19],[38.01,38.55],[39.37,38.55],[39.64,38.01],[41.0,36.92],[41.0,35.84],[40.18,35.29],[39.91,34.21],[41.81,34.21],[42.35,35.02],[42.35,37.74],[42.08,38.01],[42.35,38.55],[57.83,38.55],[58.1,38.28],[58.1,2.17],[57.83,1.9],[24.98,1.9],[24.71,2.17],[24.71,3.26],[24.98,3.53],[24.71,5.7],[23.62,6.52],[22.53,6.52],[22.26,5.7],[23.35,4.89],[23.35,3.53],[22.81,3.26],[21.72,1.9],[20.63,1.9],[19.55,3.26],[18.73,3.8],[18.73,4.62],[19.82,5.7],[19.82,6.24],[19.55,6.52],[18.46,6.52],[17.92,6.24],[17.38,5.16],[17.38,2.99],[17.65,2.71],[17.38,1.9],[1.9,1.9],[1.63,2.17]]]},"GUA-ACM01":{"o":[[1.89,20.0],[1.76,18.65],[1.35,17.3],[1.35,16.62],[0.95,15.27],[0.95,14.59],[0.54,13.24],[0.54,12.57],[0.41,12.43],[0.0,9.86],[0.14,9.73],[0.14,9.19],[0.27,9.05],[0.27,8.51],[0.41,8.38],[0.41,7.84],[0.54,7.7],[0.54,7.16],[0.68,7.03],[0.68,6.49],[0.81,6.35],[0.81,5.81],[0.95,5.68],[0.95,5.14],[1.08,5.0],[1.89,0.41],[2.03,0.14],[3.92,0.14],[3.92,2.3],[4.32,2.84],[4.59,2.97],[5.14,2.84],[5.54,2.3],[5.54,1.89],[6.49,1.89],[6.49,6.62],[5.54,6.62],[5.54,6.22],[5.0,5.54],[4.46,5.54],[4.19,5.81],[4.19,9.73],[4.32,9.86],[5.14,9.86],[5.54,9.19],[5.54,8.78],[6.49,8.78],[6.49,13.51],[5.54,13.51],[5.54,13.11],[4.86,12.3],[4.59,12.3],[4.19,12.7],[4.19,20.0]],"h":[[[2.84,16.62],[3.11,16.49],[3.11,3.78],[2.97,3.65],[2.57,3.78],[2.57,4.19],[1.62,7.57],[1.62,8.51],[1.22,9.19],[1.22,10.68],[1.35,10.81],[2.57,16.08]]]}};
+const CORES_PERFIL=[
+  {id:'preto',nome:'Preto fosco',c:'#1c1c1e',m:.55,r:.42},
+  {id:'natural',nome:'Natural anodizado',c:'#c9cbcd',m:.9,r:.32},
+  {id:'bronze',nome:'Bronze',c:'#5a4330',m:.75,r:.38},
+  {id:'champ',nome:'Champagne',c:'#bfa77f',m:.85,r:.33},
+  {id:'branco',nome:'Branco',c:'#eeeeea',m:.2,r:.5}
+];
+const CORES_ACM=[
+  {id:'granito',nome:'Cinza granito',tipo:'granito',c:'#a9a8a3'},
+  {id:'grafite',nome:'Grafite',tipo:'liso',c:'#3a3c40'},
+  {id:'preto',nome:'Preto',tipo:'liso',c:'#161618'},
+  {id:'branco',nome:'Branco',tipo:'liso',c:'#ededea'},
+  {id:'freijo',nome:'Madeira freijó',tipo:'madeira',c:'#b88a5a'},
+  {id:'nogueira',nome:'Madeira nogueira',tipo:'madeira',c:'#6b4630'},
+  {id:'corten',nome:'Corten',tipo:'corten',c:'#8a4a26'}
+];
+const S={L:1200,H:2400,perfil:'preto',acm:'granito',puxador:'preto',modo:'apr',aberta:false,q:-1,passo:-1};
+
+/* ================== QUALIDADES (modo Apresentar) ================== */
+const QUAL=[
+  {k:'pivo',t:'Pivô especial Ladore 300 kg',cd:'PIVÔ INOX',d:'Pivô em inox para folhas de até 300 kg. O eixo fica entre 20% e 25% da largura da folha, por isso a porta gira leve e equilibrada.'},
+  {k:'batente',t:'Batente que dispensa refilo do ACM',cd:'PACM-11 · PACM-12',d:'O ACM encaixa direto no perfil, sem refilo de borda. O batente já traz múltiplas vedações e encaixe para alisares e vistas.'},
+  {k:'lateral',t:'Perfil lateral robusto de 60 mm',cd:'PACM-13',d:'Bitola de 60 mm com rebaixo para a fechadura multiponto. Dá rigidez à folha alta e acabamento reto na borda.'},
+  {k:'fech',t:'Fechadura multiponto',cd:'70200 · 3 PONTOS',d:'Trava em três pontos ao longo de 2.030 mm de altura: no centro e em duas linguetas auxiliares. Mais segurança e a folha não empena.'},
+  {k:'veda',t:'Vedação completa',cd:'GUA-ACM01 · ESCOVA · VEDA-PORTA',d:'Guarnição em EPDM no batente, escova de vedação e veda-porta automático na travessa inferior. Barra vento, poeira e água.'},
+  {k:'monta',t:'Montagem sem cantoneiras',cd:'PACM-14 · PACM-15',d:'As travessas têm olhais para parafuso ponta guia e macho/cunha. A folha monta mais rápido, a 45° ou a 90°.'},
+  {k:'acm',t:'Chapa de ACM 3 ou 4 mm',cd:'ACABAMENTO',d:'Aceita ACM de 3 mm ou 4 mm em qualquer padrão: liso, madeirado, pedra ou corten, com o perfil na cor que o cliente quiser.'}
+];
+
+/* ================== PASSOS DE MONTAGEM ================== */
+const PASSOS=[
+  {k:'jamb',cd:'PACM-12',t:'Batentes laterais',d:'Os dois marcos de altura são fixados no vão com espuma expansiva ou chumbador e bucha.'},
+  {k:'head',cd:'PACM-11',t:'Batente superior',d:'O perfil da largura fecha o marco no alto e recebe o pivô superior.'},
+  {k:'gua',cd:'GUA-ACM01',t:'Guarnição em EPDM',d:'O cordão de EPDM entra no encaixe do batente e faz a primeira vedação.'},
+  {k:'piv',cd:'PIVÔ 300 KG',t:'Pivôs superior e inferior',d:'O pivô inferior vai no piso e o superior no marco, no eixo a 20–25% da largura da folha.'},
+  {k:'lat',cd:'PACM-13',t:'Laterais da folha',d:'As duas travessas laterais de 60 mm formam a altura da folha. Uma delas recebe a fechadura.'},
+  {k:'trav',cd:'PACM-14',t:'Travessas superior e inferior',d:'Fecham a folha com parafusos ponta guia nos olhais. Recebem o pivô e o veda-porta.'},
+  {k:'aux',cd:'PACM-15',t:'Travessas auxiliares',d:'Fazem o travamento interno da folha e seguram a chapa contra empenamento.'},
+  {k:'fech',cd:'70200',t:'Fechadura multiponto',d:'A caixa entra no rebaixo da PACM-13 e a testa corre a altura toda, com três pontos de trava.'},
+  {k:'veda',cd:'ESCOVA',t:'Veda-porta e escova',d:'Vão no encaixe inferior da PACM-14 e fecham a fresta junto ao piso.'},
+  {k:'acm',cd:'ACM 4 MM',t:'Chapas de ACM',d:'As chapas dobradas são coladas com fita dupla face e selante nas duas faces da folha.'},
+  {k:'pux',cd:'PUXADOR',t:'Puxador',d:'O puxador vertical é fixado por último, do lado externo.'}
+];
+
+/* ================== TEXTURAS ================== */
+function cvs(w,h){const c=document.createElement('canvas');c.width=w;c.height=h;return c}
+function rnd(seed){let s=seed;return()=>((s=Math.imul(s^s>>>15,1|s)+0x6D2B79F5|0,((s^s>>>7)>>>0)/4294967296))}
+function texACM(cor){
+  const c=cvs(512,1024),g=c.getContext('2d'),r=rnd(7);
+  g.fillStyle=cor.c;g.fillRect(0,0,512,1024);
+  if(cor.tipo==='granito'){
+    for(let i=0;i<9000;i++){const x=r()*512,y=r()*1024,s=r()*5+1,v=r();g.fillStyle=v<.5?`rgba(255,255,255,${r()*.16})`:`rgba(40,40,40,${r()*.14})`;g.beginPath();g.ellipse(x,y,s*(1+r()),s,r()*3,0,6.3);g.fill()}
+    for(let i=0;i<500;i++){g.fillStyle=`rgba(80,80,80,${r()*.25})`;g.fillRect(r()*512,r()*1024,1.5,1.5)}
+  }else if(cor.tipo==='madeira'){
+    for(let x=0;x<512;x+=2){const w=Math.sin(x*.05)*.5+Math.sin(x*.013+1)*.5;g.fillStyle=`rgba(${w>0?'255,230,200':'40,20,10'},${Math.abs(w)*.13})`;g.fillRect(x,0,2,1024)}
+    for(let i=0;i<220;i++){const x=r()*512;g.strokeStyle=`rgba(40,20,8,${r()*.22})`;g.lineWidth=r()*1.5+.3;g.beginPath();g.moveTo(x,0);for(let y=0;y<=1024;y+=32)g.lineTo(x+Math.sin(y*.01+i)*4,y);g.stroke()}
+  }else if(cor.tipo==='corten'){
+    for(let i=0;i<7000;i++){g.fillStyle=`rgba(${r()<.5?'190,95,40':'60,25,10'},${r()*.2})`;g.beginPath();g.arc(r()*512,r()*1024,r()*7+1,0,6.3);g.fill()}
+  }else{
+    for(let i=0;i<1600;i++){g.fillStyle=`rgba(255,255,255,${r()*.03})`;g.fillRect(r()*512,r()*1024,2,2)}
+  }
+  const t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;t.anisotropy=8;return t;
+}
+function swatchCSS(cor){const c=cvs(88,88),g=c.getContext('2d');g.drawImage(texACM(cor).image,0,300,180,180,0,0,88,88);return `url(${c.toDataURL()})`}
+function hatch(){
+  const c=cvs(64,64),g=c.getContext('2d');g.fillStyle='#ffffff';g.fillRect(0,0,64,64);g.strokeStyle='#000';g.lineWidth=3;
+  for(let i=-64;i<128;i+=12){g.beginPath();g.moveTo(i,64);g.lineTo(i+64,0);g.stroke()}
+  const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(48,6);return t;
+}
+
+/* ================== CENA ================== */
+const cv=$('#cv'),stage=$('#stage');
+const R=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true,preserveDrawingBuffer:true});
+R.setPixelRatio(Math.min(devicePixelRatio,2));
+R.outputEncoding=THREE.sRGBEncoding;R.toneMapping=THREE.ACESFilmicToneMapping;R.toneMappingExposure=1.05;
+R.shadowMap.enabled=true;R.shadowMap.type=THREE.PCFSoftShadowMap;
+const SC=new THREE.Scene();
+// Reflexo: gradiente de estúdio em canvas (sem fromScene)
+(function(){
+  const c=cvs(1024,512),g=c.getContext('2d');const gr=g.createLinearGradient(0,0,0,512);
+  gr.addColorStop(0,'#fbfbfa');gr.addColorStop(.42,'#e6e4df');gr.addColorStop(.5,'#9a978f');gr.addColorStop(1,'#3a3936');
+  g.fillStyle=gr;g.fillRect(0,0,1024,512);
+  g.fillStyle='rgba(255,255,255,.95)';g.fillRect(140,60,170,150);g.fillRect(640,80,240,110);
+  const t=new THREE.CanvasTexture(c);t.mapping=THREE.EquirectangularReflectionMapping;t.encoding=THREE.sRGBEncoding;
+  const pm=new THREE.PMREMGenerator(R);SC.environment=pm.fromEquirectangular(t).texture;pm.dispose();
+})();
+SC.add(new THREE.HemisphereLight(0xffffff,0x8a8278,.45));
+const sun=new THREE.DirectionalLight(0xfff4e6,1.35);sun.position.set(2.2,4.2,3.4);sun.castShadow=true;
+sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-2.5,right:2.5,top:3.5,bottom:-1,near:.5,far:12});sun.shadow.bias=-.0004;sun.shadow.normalBias=.01;
+SC.add(sun);
+const fill=new THREE.DirectionalLight(0xdfe8ff,.35);fill.position.set(-3,2,-2);SC.add(fill);
+
+const cam=new THREE.PerspectiveCamera(34,1,.02,60);cam.position.set(2.6,1.7,3.9);
+const ctl=new THREE.OrbitControls(cam,cv);ctl.enableDamping=true;ctl.dampingFactor=.08;ctl.target.set(0,1.2,0);
+ctl.minDistance=.35;ctl.maxDistance=9;ctl.maxPolarAngle=Math.PI*.52;
+const ocam=new THREE.OrthographicCamera(-1,1,1,-1,.01,20);ocam.position.set(0,6,0);ocam.up.set(0,0,-1);ocam.lookAt(0,0,0);
+const octl=new THREE.OrbitControls(ocam,cv);octl.enableRotate=false;octl.screenSpacePanning=true;octl.enabled=false;octl.zoomSpeed=1.4;
+octl.mouseButtons={LEFT:THREE.MOUSE.PAN,MIDDLE:THREE.MOUSE.DOLLY,RIGHT:THREE.MOUSE.PAN};octl.touches={ONE:THREE.TOUCH.PAN,TWO:THREE.TOUCH.DOLLY_PAN};
+let curCam=cam;
+
+// piso e parede
+const floor=new THREE.Mesh(new THREE.PlaneGeometry(14,14),new THREE.MeshStandardMaterial({color:0xa9a49a,roughness:.75,metalness:0}));
+floor.rotation.x=-Math.PI/2;floor.receiveShadow=true;SC.add(floor);
+const shadowOnly=new THREE.Mesh(new THREE.PlaneGeometry(14,14),new THREE.ShadowMaterial({opacity:.18}));
+const wallMat=new THREE.MeshStandardMaterial({color:0xd6d2ca,roughness:.9});
+const hatchMat=new THREE.MeshBasicMaterial({map:hatch(),transparent:true,opacity:.55});
+
+/* ================== MATERIAIS ================== */
+const M={
+  perfil:new THREE.MeshStandardMaterial({side:THREE.DoubleSide}),
+  acm:new THREE.MeshStandardMaterial({roughness:.55,metalness:.15}),
+  acmBorda:new THREE.MeshStandardMaterial({roughness:.55,metalness:.15}),
+  pux:new THREE.MeshStandardMaterial({color:0x151517,roughness:.38,metalness:.6}),
+  inox:new THREE.MeshStandardMaterial({color:0xd5d7d9,roughness:.22,metalness:1}),
+  borracha:new THREE.MeshStandardMaterial({color:0x101011,roughness:.85}),
+  lat:new THREE.MeshStandardMaterial({color:0xb7a46f,roughness:.3,metalness:1})
+};
+const lineMat=new THREE.LineBasicMaterial({color:0x1d1e22});
+const lineMatDim=new THREE.LineBasicMaterial({color:0x8a7552});
+function aplicaCores(){ghostCache.forEach(c=>c.dispose());ghostCache.clear();parts.forEach(p=>{if(p.gh){setGhost(p,false);p.reGh=1}});
+  const p=CORES_PERFIL.find(x=>x.id===S.perfil);M.perfil.color.set(p.c);M.perfil.metalness=p.m;M.perfil.roughness=p.r;M.perfil.needsUpdate=true;
+  const a=CORES_ACM.find(x=>x.id===S.acm);
+  if(M.acm.map)M.acm.map.dispose();
+  const t=texACM(a);t.wrapS=t.wrapT=THREE.RepeatWrapping;M.acm.map=t;M.acm.color.set(0xffffff);
+  M.acm.roughness=a.tipo==='liso'?.42:.6;M.acm.needsUpdate=true;
+  M.acmBorda.map=t;M.acmBorda.color.set(0xffffff);M.acmBorda.needsUpdate=true;
+  parts.forEach(p=>{if(p.reGh){p.reGh=0;setGhost(p,true)}});
+  const px=CORES_PERFIL.find(x=>x.id===S.puxador);M.pux.color.set(px.c);M.pux.metalness=px.m;M.pux.roughness=px.r;
+}
+
+/* ================== GEOMETRIA DOS PERFIS ================== */
+function shapeDe(code){
+  const s=SEC[code],xs=s.o.map(p=>p[0]),ys=s.o.map(p=>p[1]);
+  const cx=(Math.min(...xs)+Math.max(...xs))/2,cy=(Math.min(...ys)+Math.max(...ys))/2;
+  const sh=new THREE.Shape(s.o.map(p=>new THREE.Vector2(p[0]-cx,p[1]-cy)));
+  s.h.forEach(h=>sh.holes.push(new THREE.Path(h.map(p=>new THREE.Vector2(p[0]-cx,p[1]-cy)))));
+  return sh;
+}
+function extr(code,len){
+  const g=new THREE.ExtrudeGeometry(shapeDe(code),{depth:len,bevelEnabled:false,curveSegments:2});
+  g.translate(0,0,-len/2);g.scale(MM,MM,MM);return g;
+}
+// vertical: seção x→x, seção y→-z, comprimento→y
+function vert(code,len){const g=extr(code,len);g.rotateX(-Math.PI/2);return g}
+// horizontal: seção x→-z, seção y→y, comprimento→x
+function horiz(code,len){const g=extr(code,len);g.rotateY(Math.PI/2);return g}
+function box(w,h,d){return new THREE.BoxGeometry(w*MM,h*MM,d*MM)}
+
+/* ================== MONTA A PORTA ================== */
+let planX=[],lintel=null,door=null,leaf=null,parts=[],hot={},planLabels=[],walls=[];
+function addPart(parent,geo,mat,pos,expl,step,opt={}){
+  const m=new THREE.Mesh(geo,mat);m.castShadow=true;m.receiveShadow=true;
+  m.position.copy(pos);parent.add(m);
+  const e=new THREE.LineSegments(new THREE.EdgesGeometry(geo,opt.ang||28),opt.dim?lineMatDim:lineMat);e.visible=false;m.add(e);
+  const p={m,e,home:pos.clone(),off:expl.clone(),step,plan:!!opt.plan,code:opt.code||'',k:S.modo==='mon'?0:1};parts.push(p);return p;
+}
+function construir(){
+  if(door){SC.remove(door);door.traverse(o=>{if(o.geometry)o.geometry.dispose()})}
+  parts=[];hot={};walls=[];
+  door=new THREE.Group();SC.add(door);
+  const L=S.L,H=S.H,JW=68.15,JD=82,HH=28;
+  const V=(x,y,z)=>new THREE.Vector3(x*MM,y*MM,z*MM);
+  // parede de alvenaria em volta do vão
+  const WT=150,WW=1200,WH=H+600;
+  [[-(L/2+WW/2),WH/2,WW],[L/2+WW/2,WH/2,WW]].forEach(([x,y,w])=>{
+    const g=box(w,WH,WT),m=new THREE.Mesh(g,wallMat);m.position.copy(V(x,y,0));m.receiveShadow=true;m.castShadow=true;door.add(m);walls.push(m);
+  });
+  const lg=box(L,600,WT),lm=new THREE.Mesh(lg,wallMat);lm.position.copy(V(0,H+300,0));lm.receiveShadow=true;door.add(lm);lintel=lm;
+
+  // ---- MARCO ----
+  const jl=addPart(door,vert('PACM-12',H),M.perfil,V(-L/2+JW/2,H/2,0),V(-700,0,-250),0,{plan:true,code:'PACM-12'});
+  jl.m.geometry.rotateY(-Math.PI/2);jl.e.geometry=new THREE.EdgesGeometry(jl.m.geometry,28);
+  const jr=addPart(door,vert('PACM-12',H),M.perfil,V(L/2-JW/2,H/2,0),V(700,0,-250),0,{plan:true,code:'PACM-12'});
+  jr.m.geometry.rotateY(Math.PI/2);jr.e.geometry=new THREE.EdgesGeometry(jr.m.geometry,28);
+  const hg=horiz('PACM-11',L-2*JW);hg.scale(1,-1,1);
+  addPart(door,hg,M.perfil,V(0,H-HH/2,0),V(0,650,-200),1,{code:'PACM-11'});
+  // guarnição EPDM nos batentes
+  [-1,1].forEach(sx=>{const gg=vert('GUA-ACM01',H-HH-20);if(sx<0)gg.scale(-1,1,1);addPart(door,gg,M.borracha,V(sx*(L/2-JW-3.3),(H-HH)/2+10,-8),V(sx*420,0,320),2,{plan:true,code:'GUA-ACM01'})});
+  addPart(door,box(L-2*JW-10,6.3,20),M.borracha,V(0,H-HH-3.2,-8),V(0,420,320),2,{code:'GUA-ACM01'});
+
+  // ---- FOLHA ----
+  const gap=8,xl=-L/2+JW+gap,xr=L/2-JW-gap,W=xr-xl,yb=12,yt=H-HH-8,LH=yt-yb;
+  const px=xl+W*.22;
+  leaf=new THREE.Group();leaf.position.set(px*MM,0,0);door.add(leaf);
+  const LV=(x,y,z)=>V(x-px,y,z);
+  // pivôs (no marco/piso, mas giram junto visualmente: ficam fora da folha)
+  const pivo=(y,sg)=>{
+    const g=new THREE.Group();
+    const pl=new THREE.Mesh(box(200,6,26),M.inox);pl.castShadow=true;g.add(pl);
+    const ci=new THREE.Mesh(new THREE.CylinderGeometry(12.5*MM,12.5*MM,40*MM,24),M.inox);ci.position.y=sg*-20*MM;g.add(ci);
+    return g;
+  };
+  [[yb-3,'pivB',-1],[yt+3,'pivT',1]].forEach(([y,k,sg])=>{
+    const g=new THREE.Group();const pl=new THREE.Mesh(box(200,6,26),M.inox);pl.castShadow=true;g.add(pl);
+    const ci=new THREE.Mesh(new THREE.CylinderGeometry(12.5*MM,12.5*MM,30*MM,24),M.inox);ci.position.y=-sg*15*MM;g.add(ci);
+    const p=addPart(door,new THREE.BoxGeometry(.0001,.0001,.0001),M.inox,V(px,y,0),V(0,sg*480,260),3,{code:'PIVÔ'});
+    p.m.add(g);hot[k]=p.m;
+  });
+  // laterais PACM-13
+  const sl=addPart(leaf,vert('PACM-13',LH),M.perfil,LV(xl+30,yb+LH/2,0),V(-420,0,0),4,{plan:true,code:'PACM-13'});
+  const srg=vert('PACM-13',LH);srg.scale(-1,1,1);
+  const sr=addPart(leaf,srg,M.perfil,LV(xr-30,yb+LH/2,0),V(420,0,0),4,{plan:true,code:'PACM-13'});
+  // travessas PACM-14
+  const tb=addPart(leaf,horiz('PACM-14',W-120),M.perfil,LV((xl+xr)/2,yb+30,0),V(0,-380,0),5,{code:'PACM-14'});
+  const ttg=horiz('PACM-14',W-120);ttg.scale(1,-1,1);
+  addPart(leaf,ttg,M.perfil,LV((xl+xr)/2,yt-30,0),V(0,380,0),5,{code:'PACM-14'});
+  // auxiliares PACM-15
+  [1/3,2/3].forEach((f,i)=>addPart(leaf,horiz('PACM-15',W-120),M.perfil,LV((xl+xr)/2,yb+LH*f,0),V(0,(i?1:-1)*120,-520),6,{code:'PACM-15'}));
+  // fechadura multiponto 70200
+  const fy=yb+1044;
+  const fz=new THREE.Group();
+  const caixa=new THREE.Mesh(box(90,201,16),M.lat);fz.add(caixa);
+  [[792,139],[-845,139]].forEach(([dy,h])=>{const b=new THREE.Mesh(box(80,h,16),M.lat);b.position.set(5*MM,dy*MM,0);fz.add(b)});
+  const testa=new THREE.Mesh(box(3,2030,25),M.inox);testa.position.set(48.5*MM,(1015-1044)*MM,0);fz.add(testa);
+  const cil=new THREE.Mesh(new THREE.CylinderGeometry(9*MM,9*MM,60*MM,18),M.lat);cil.rotation.x=Math.PI/2;cil.position.set(-15*MM,-60*MM,0);fz.add(cil);
+  fz.traverse(o=>{if(o.isMesh)o.castShadow=true});
+  const fp=addPart(leaf,new THREE.BoxGeometry(.0001,.0001,.0001),M.lat,LV(xr-50,fy,0),V(520,0,180),7,{code:'70200'});fp.m.add(fz);hot.fech=fp.m;
+  // veda-porta + escova
+  addPart(leaf,box(W-130,14,22),M.borracha,LV((xl+xr)/2,yb+7,-14),V(0,-260,260),8,{code:'ESCOVA'});
+  addPart(leaf,box(W-130,10,10),M.borracha,LV((xl+xr)/2,yb+5,14),V(0,-300,340),8,{code:'VEDA-PORTA'});
+  // chapas ACM 4 mm (faces + bordas dobradas)
+  const acmF=new THREE.BoxGeometry(W*MM,LH*MM,4*MM);
+  const sc=[W/1000/1.2,LH/1000/2.4];
+  const uv=acmF.attributes.uv;for(let i=0;i<uv.count;i++)uv.setXY(i,uv.getX(i)*sc[0]*1.2/1.2,uv.getY(i)*sc[1]);
+  const af=addPart(leaf,acmF,M.acm,LV((xl+xr)/2,yb+LH/2,37),V(0,0,450),9,{plan:true,code:'ACM 4 MM',ang:40});hot.acm=af.m;
+  addPart(leaf,acmF.clone(),M.acm,LV((xl+xr)/2,yb+LH/2,-37),V(0,0,-450),9,{plan:true,code:'ACM 4 MM',ang:40});
+  [xl+2,xr-2].forEach((x,i)=>addPart(leaf,box(4,LH,70),M.acmBorda,LV(x,yb+LH/2,0),V(i?260:-260,0,450),9,{plan:true,code:'ACM'}));
+  // puxador vertical
+  const pg=new THREE.Group();
+  const bar=new THREE.Mesh(box(36,1600,36),M.pux);bar.castShadow=true;pg.add(bar);
+  [-650,650].forEach(y=>{const s=new THREE.Mesh(box(20,20,42),M.pux);s.position.set(0,y*MM,-39*MM);s.castShadow=true;pg.add(s)});
+  const pp=addPart(leaf,new THREE.BoxGeometry(.0001,.0001,.0001),M.pux,LV(xr-160,yb+LH/2,39+18+42),V(350,0,800),10,{code:'PUXADOR'});pp.m.add(pg);hot.pux=pp.m;
+  hot.batente=jr.m;hot.lateral=sr.m;hot.veda=tb.m;hot.monta=tb.m;hot.pivo=hot.pivT;
+  S.geo={L,H,W,LH,xl,xr,px,yb,yt};
+  planX=[];
+  const cg=new THREE.BufferGeometry().setFromPoints(Array.from({length:33},(_,i)=>new THREE.Vector3(Math.cos(i/32*6.2832)*12.5*MM,0,Math.sin(i/32*6.2832)*12.5*MM)));
+  const ax=new THREE.Line(cg,lineMatDim);ax.position.set(px*MM,yt*MM,0);ax.visible=S.modo==='tec';door.add(ax);planX.push(ax);
+  const cr=new THREE.BufferGeometry().setFromPoints([V(px-40,yt,0),V(px+40,yt,0),V(px,yt,-40),V(px,yt,40)]);
+  const cx=new THREE.LineSegments(cr,lineMatDim);cx.visible=S.modo==='tec';door.add(cx);planX.push(cx);
+  // offsets em metros
+  parts.forEach(p=>p.off.multiplyScalar(1));
+  aplicaEstado(true);
+  atualizaTabela&&atualizaTabela();
+}
+
+/* ================== ESTADO DE MONTAGEM ================== */
+// k=1 montado, k=0 explodido
+function aplicaEstado(inst){parts.forEach(p=>{if(inst)p.cur=p.k;posPart(p)})}
+function posPart(p){const t=ease(p.cur??p.k);p.m.position.copy(p.home).addScaledVector(p.off,1-t)}
+let anims=[];
+function animaPara(lista,dur,delayFn){
+  const t0=performance.now();
+  lista.forEach((p,i)=>{p.a={from:p.cur??p.k,to:p.k,t0:t0+(delayFn?delayFn(p,i):0),dur:RM?1:dur}});
+}
+const ghostCache=new Map();
+function ghostMat(m){if(!ghostCache.has(m)){const c=m.clone();c.transparent=true;c.opacity=.14;c.depthWrite=false;ghostCache.set(m,c)}return ghostCache.get(m)}
+function setGhost(p,on){if(!!p.gh===on)return;p.gh=on;p.m.traverse(o=>{if(!o.isMesh)return;if(on){o.userData.base=o.material;o.material=ghostMat(o.material)}else if(o.userData.base){o.material=o.userData.base;o.userData.base=null}})}
+function todosPara(k,dur){parts.forEach(p=>{p.k=k;setGhost(p,false)});animaPara(parts,dur)}
+function irPasso(n){
+  S.passo=n;
+  destaca([]);
+  parts.forEach(p=>{p.k=p.step<=n?1:0;setGhost(p,p.step>n)});
+  animaPara(parts,1500);
+  destaca(n>=0?parts.filter(p=>p.step===n).map(p=>p.m):[]);
+  if(n>=0)focoPasso(n);
+  renderPasso();
+}
+let montando=null;
+function montarTudo(){
+  pararMontagem();
+  parts.forEach(p=>{p.k=0;p.cur=0});aplicaEstado(true);
+  S.aberta=false;
+  let n=0;const tick=()=>{if(n>=PASSOS.length){montando=null;destaca([]);S.passo=PASSOS.length;renderPasso();return}irPasso(n);n++;montando=setTimeout(tick,RM?300:1650)};
+  montando=setTimeout(tick,400);
+}
+function pararMontagem(){if(montando){clearTimeout(montando);montando=null}}
+let destacados=[];
+function destaca(ms){
+  destacados.forEach(m=>m.traverse(o=>{if(o.isMesh&&o.userData.mat){o.material.dispose();o.material=o.userData.mat;o.userData.mat=null}}));
+  destacados=ms;
+  ms.forEach(m=>m.traverse(o=>{if(o.isMesh){o.userData.mat=o.material;const c=o.material.clone();c.emissive=new THREE.Color(0xc9a66b);c.emissiveIntensity=.35;o.material=c}}));
+}
+
+/* ================== ABRIR PORTA ================== */
+let ang=0,angAlvo=0;
+function abrir(v){S.aberta=v;angAlvo=v?-Math.PI*.44:0}
+
+/* ================== CÂMERA ================== */
+let tw=null;
+function voa(pos,tgt,dur=1100){tw={p0:cam.position.clone(),t0:ctl.target.clone(),p1:pos,t1:tgt,s:performance.now(),d:RM?1:dur}}
+function wp(m,dx=0,dy=0,dz=0){const v=new THREE.Vector3();m.getWorldPosition(v);v.x+=dx;v.y+=dy;v.z+=dz;return v}
+function vistaGeral(){const g=S.geo,h=g.H*MM,k=(S.modo==='mon'?1.45:1)*Math.max(1,1/cam.aspect);voa(new THREE.Vector3((1.9+g.L*MM*.6)*k,h*.62*(S.modo==='mon'?1.25:1),(3.2+h*.25)*k),new THREE.Vector3(0,h*.5,0))}
+function focoPasso(n){
+  const g=S.geo,h=g.H*MM,L=g.L*MM,k=PASSOS[n].k,V3=(a,b,c)=>new THREE.Vector3(a,b,c);
+  const mapa={
+    head:[V3(1.7,h+.6,2.3),V3(0,h-.15,0)],
+    gua:[V3(L/2+1.1,1.7,1.7),V3(L/2-.07,1.4,0)],
+    piv:[V3(1.3,.9,1.9),V3(g.px*MM,.35,0)],
+    fech:[V3(L/2+1.7,1.6,2.5),V3(L/2-.1,1.1,0)],
+    veda:[V3(1.2,.6,1.6),V3(0,.12,0)]
+  }[k]||[V3(3.1,2.0,4.4),V3(0,h*.5,0)];
+  voa(mapa[0],mapa[1],1300);
+}
+function focoQual(k){
+  const g=S.geo,h=g.H*MM,L=g.L*MM;
+  const m={
+    pivo:[new THREE.Vector3(.9,h+.15,1.3),new THREE.Vector3(g.px*MM,h-.1,0)],
+    batente:[new THREE.Vector3(L/2+.55,1.3,.75),new THREE.Vector3(L/2-.05,1.1,0)],
+    lateral:[new THREE.Vector3(L/2+.25,1.2,.65),new THREE.Vector3(L/2-.12,1.05,0)],
+    fech:[new THREE.Vector3(L/2+.6,1.2,.9),new THREE.Vector3(L/2-.12,1.05,0)],
+    veda:[new THREE.Vector3(.5,.25,.9),new THREE.Vector3(0,.04,0)],
+    monta:[new THREE.Vector3(1.5,.45,1.6),new THREE.Vector3(0,.15,0)],
+    acm:[new THREE.Vector3(.3,1.4,2.8),new THREE.Vector3(0,1.2,0)]
+  }[k];
+  if(k==='veda'||k==='monta'||k==='lateral'||k==='fech')abrir(true);
+  if(k==='acm'||k==='pivo')abrir(false);
+  if(k==='monta'){todosPara(1,1);parts.filter(p=>p.step===9).forEach(p=>{p.k=.45});animaPara(parts,900)}
+  else if(parts.some(p=>p.k!==1))todosPara(1,900);
+  voa(m[0],m[1],1200);
+}
+
+/* ================== DESENHO TÉCNICO ================== */
+const pre={folha:null,pivo:null,fech:null};
+function enquadraOrtho(cx,cz,w){
+  const r=stage.clientWidth/stage.clientHeight;const hw=w/2,hh=hw/r;
+  ocam.left=-hw;ocam.right=hw;ocam.top=hh;ocam.bottom=-hh;ocam.zoom=1;ocam.position.set(cx,6,cz);octl.target.set(cx,0,cz);ocam.updateProjectionMatrix();octl.update();
+}
+function modoTecnico(on){
+  cv.classList.add('fade');
+  setTimeout(()=>{
+    stage.classList.toggle('tech',on);
+    const lc=getComputedStyle(document.documentElement);
+    lineMat.color.set(lc.getPropertyValue('--tech-line').trim()||'#1d1e22');
+    lineMatDim.color.set(lc.getPropertyValue('--tech-dim').trim()||'#8a7552');
+    hatchMat.color.set(lc.getPropertyValue('--tech-line').trim()||'#000');
+    destaca([]);
+    if(on){abrir(false);ang=0;leaf.rotation.y=0;todosPara(1,1);parts.forEach(p=>{p.cur=1;p.a=null});aplicaEstado(true);}
+    parts.forEach(p=>{
+      p.m.material.visible=!on;
+      p.m.traverse(o=>{if(o.isMesh&&o!==p.m)o.visible=!on});
+      p.e.visible=on&&p.plan;
+    });
+    walls.forEach(w=>w.material=on?hatchMat:wallMat);planX.forEach(o=>o.visible=on);
+    floor.visible=!on;
+    curCam=on?ocam:cam;ctl.enabled=!on;octl.enabled=on;
+    if(on)enquadraOrtho(0,0,S.L*MM+.5);
+    cv.classList.remove('fade');
+  },RM?0:330);
+}
+function vistaTec(q){
+  const g=S.geo,L=g.L*MM;
+  if(q==='folha')enquadraOrtho(0,0,L+.5);
+  if(q==='pivo')enquadraOrtho(-L/2+.08,0,.36);
+  if(q==='fech')enquadraOrtho(L/2-.08,0,.36);
+  S.vt=q;renderPainel();
+}
+
+/* ================== RÓTULOS / HOTSPOTS ================== */
+const tags=$('#tags');
+function rotulos(){
+  tags.innerHTML='';
+  if(S.modo==='apr'){
+    QUAL.forEach((q,i)=>{const b=document.createElement('button');b.className='hs'+(S.q===i?' on':'');b.textContent=i+1;b.title=q.t;b.dataset.i=i;b.onclick=()=>selQual(i);tags.appendChild(b)});
+  }else if(S.modo==='tec'){
+    const g=S.geo,L=g.L;
+    const near=S.vt==='pivo'||S.vt==='fech';
+    const s=S.vt==='pivo'?-1:1;
+    let L1;
+    if(!near)L1=[['PACM-12',-L/2+34,-120],['PACM-12',L/2-34,-120],['PACM-13',g.xl+30,120],['PACM-13',g.xr-30,120],['ACM 4 mm',0,70],['ACM 4 mm',0,-70],['Alvenaria',-L/2-300,0,1],['Alvenaria',L/2+300,0,1],['Eixo do pivô · 22% da folha',g.px,-150,1]];
+    else L1=[['PACM-12 · altura do batente',s*(L/2-34),-75],['PACM-13 · lateral da folha',s>0?g.xr-30:g.xl+30,72],['GUA-ACM01',s*(L/2-68),18,1],['ACM 4 mm',s>0?g.xr-110:g.xl+110,52],['Folga 8 mm',s*(L/2-72),-26,1]];
+    L1.forEach(([t,x,z,d])=>{const e=document.createElement('div');e.className='lbl'+(d?' d':'');e.textContent=t;e.dataset.x=x;e.dataset.z=z;tags.appendChild(e)});
+  }
+  posRotulos();
+}
+const tmpV=new THREE.Vector3();
+function posRotulos(){
+  const w=stage.clientWidth,h=stage.clientHeight;
+  tags.querySelectorAll('.hs').forEach(b=>{
+    const q=QUAL[+b.dataset.i];const m=hot[q.k];if(!m)return;
+    const off={pivo:[0,.05,.05],batente:[0,.15,.06],lateral:[0,.45,.05],fech:[0,0,.06],veda:[0,0,.06],monta:[-.3,.06,.06],acm:[-.15,.25,.04],pux:[0,.3,.06]}[q.k]||[0,0,0];
+    tmpV.copy(wp(m,...off)).project(curCam);
+    b.style.left=(tmpV.x*.5+.5)*w+'px';b.style.top=(-tmpV.y*.5+.5)*h+'px';b.hidden=tmpV.z>1;
+  });
+  tags.querySelectorAll('.lbl').forEach(e=>{
+    tmpV.set(+e.dataset.x*MM,0,-(+e.dataset.z)*MM).project(ocam);
+    e.style.left=(tmpV.x*.5+.5)*w+'px';e.style.top=(-tmpV.y*.5+.5)*h+'px';
+  });
+}
+
+/* ================== PAINEL ================== */
+const pn=$('#pn'),br=$('#br'),cap=$('#cap');
+function selQual(i){S.q=i;focoQual(QUAL[i].k);destaca([]);renderPainel();rotulos();
+  const q=QUAL[i];$('#tlS').textContent=q.cd;$('#tlB').textContent=q.t;$('#tlD').textContent=`Qualidade ${i+1} de ${QUAL.length}`;}
+function renderPasso(){
+  if(S.modo!=='mon'){cap.hidden=true;return}
+  const n=S.passo;
+  if(n<0){cap.hidden=false;cap.innerHTML=`<small>Catálogo técnico em 3D</small><b>Peças separadas</b><p>Toque em <b>Montar</b> e as peças se encaixam uma a uma na posição correta.</p>`;}
+  else if(n>=PASSOS.length){cap.hidden=false;cap.innerHTML=`<small>Montagem concluída</small><b>Porta pivotante Ladore</b><p>${PASSOS.length} etapas. Toque em <b>Desenho técnico</b> para ver o corte em planta.</p><div class="pg">${PASSOS.map(()=>'<i class="ok"></i>').join('')}</div>`;}
+  else{const p=PASSOS[n];cap.hidden=false;cap.innerHTML=`<small>Etapa ${n+1} de ${PASSOS.length} · ${p.cd}</small><b>${p.t}</b><p>${p.d}</p><div class="pg">${PASSOS.map((_,i)=>`<i class="${i<=n?'ok':''}"></i>`).join('')}</div>`;}
+  pn.querySelectorAll('[data-p]').forEach(b=>{const i=+b.dataset.p;b.classList.toggle('on',i===n);b.classList.toggle('done',i<n)});
+}
+function renderPainel(){
+  const m=S.modo,g=S.geo;
+  if(m==='apr'){
+    $('#tlS').textContent='Porta pivotante · ACM';$('#tlB').textContent='Ladore Pivot';$('#tlD').textContent=`Vão ${g.L} × ${g.H} mm · toque nos números`;
+    pn.innerHTML=`<div><p class="eb">Antes de aplicar na planta</p><h2>Apresente a porta Ladore ao cliente</h2></div>
+    <p class="nt">Toque em cada qualidade (ou nos números sobre a porta). A câmera vai até o detalhe para você explicar.</p>
+    <ol class="ql">${QUAL.map((q,i)=>`<li><button data-q="${i}" class="${S.q===i?'on':''}"><i>${i+1}</i><span><span class="cd">${q.cd}</span><b>${q.t}</b>${S.q===i?`<small>${q.d}</small>`:''}</span></button></li>`).join('')}</ol>
+    <div class="bts"><button class="bt pri" id="bAbre">${S.aberta?'Fechar a porta':'Abrir a porta'}</button><button class="bt" id="bGeral">Vista geral</button>
+    <button class="bt full" disabled title="Próxima etapa do projeto">Aplicar na planta · próxima etapa</button></div>
+    <div class="foot"><span class="lic">LADORE</span> Perfis para portas em ACM · Tecnologia FC Consultoria</div>`;
+    pn.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>selQual(+b.dataset.q));
+    $('#bAbre').onclick=()=>{abrir(!S.aberta);renderPainel()};
+    $('#bGeral').onclick=()=>{S.q=-1;abrir(false);vistaGeral();renderPainel();rotulos()};
+    br.innerHTML=`<button class="chip dk" id="cAbre">${S.aberta?'Fechar':'Abrir'} porta</button>`;
+    $('#cAbre').onclick=()=>{abrir(!S.aberta);renderPainel()};
+  }
+  if(m==='mon'){
+    $('#tlS').textContent='Catálogo técnico 3D';$('#tlB').textContent='Montagem da porta pivotante';$('#tlD').textContent='As peças se encaixam devagar, na ordem de fábrica';
+    pn.innerHTML=`<div><p class="eb">Catálogo técnico · seção 06</p><h2>Montagem passo a passo</h2></div>
+    <div class="bts"><button class="bt pri" id="bMontar">Montar</button><button class="bt" id="bExpl">Separar peças</button>
+    <button class="bt" id="bAnt">◀ Anterior</button><button class="bt" id="bProx">Próxima ▶</button>
+    <button class="bt full" id="bTec">Voltar para o desenho técnico</button></div>
+    <ol class="ql">${PASSOS.map((p,i)=>`<li><button data-p="${i}"><i>${i+1}</i><span><span class="cd">${p.cd}</span><b>${p.t}</b><small>${p.d}</small></span></button></li>`).join('')}</ol>`;
+    $('#bMontar').onclick=montarTudo;
+    $('#bExpl').onclick=()=>{pararMontagem();S.passo=-1;todosPara(0,900);destaca([]);vistaGeral();renderPasso()};
+    $('#bAnt').onclick=()=>{pararMontagem();irPasso(Math.max(0,(S.passo<0?0:Math.min(S.passo,PASSOS.length))-1))};
+    $('#bProx').onclick=()=>{pararMontagem();irPasso(Math.min(PASSOS.length-1,S.passo+1))};
+    $('#bTec').onclick=()=>setModo('tec');
+    pn.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{pararMontagem();irPasso(+b.dataset.p)});
+    br.innerHTML=`<button class="chip go" id="cM">▶ Montar</button><button class="chip" id="cE">Separar</button>`;
+    $('#cM').onclick=montarTudo;$('#cE').onclick=()=>$('#bExpl').click();
+    renderPasso();
+  }
+  if(m==='tec'){
+    $('#tlS').textContent='Desenho técnico · corte horizontal';$('#tlB').textContent='Porta pivotante · planta';$('#tlD').textContent='Arraste para mover · role ou pince para ampliar';
+    const vt=S.vt||'folha';
+    pn.innerHTML=`<div><p class="eb">Catálogo técnico · seção 10</p><h2>Corte em planta da porta</h2></div>
+    <p class="nt">A porta foi cortada na horizontal, igual ao desenho do catálogo. Amplie os cantos para mostrar como o ACM encaixa nos perfis.</p>
+    <div class="seg" role="group" aria-label="Enquadramento"><button data-v="folha" class="${vt==='folha'?'on':''}">Folha inteira</button><button data-v="pivo" class="${vt==='pivo'?'on':''}">Lado do pivô</button><button data-v="fech" class="${vt==='fech'?'on':''}">Lado da fechadura</button></div>
+    <div class="bts"><button class="bt pri full" id="bVolta3d">Voltar para o 3D e montar</button></div>
+    <div><h3>Perfis da porta pivotante</h3><div class="tw"><table><thead><tr><th>Código</th><th>Função</th><th class="n">kg/m</th></tr></thead><tbody>
+    ${Object.entries(PERFIS).map(([c,p])=>`<tr><td><code>${c}</code></td><td>${p.nome}<small>${p.txt}</small></td><td class="n">${p.kg.toFixed(3).replace('.',',')}</td></tr>`).join('')}
+    </tbody></table></div></div>
+    <div id="tabCorte"></div>`;
+    pn.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>{vistaTec(b.dataset.v);rotulos()});
+    $('#bVolta3d').onclick=()=>{setModo('mon');setTimeout(montarTudo,500)};
+    br.innerHTML='';
+    atualizaTabela();
+  }
+  if(m==='aca'){
+    $('#tlS').textContent='Acabamentos';$('#tlB').textContent='Monte a porta do cliente';$('#tlD').textContent='As cores mudam na hora, em 3D';
+    const p=CORES_PERFIL.find(x=>x.id===S.perfil),a=CORES_ACM.find(x=>x.id===S.acm),x=CORES_PERFIL.find(c=>c.id===S.puxador);
+    pn.innerHTML=`<div><p class="eb">Personalização</p><h2>Cores e medidas</h2></div>
+    <div><h3>Cor da chapa de ACM</h3><div class="sw">${CORES_ACM.map(c=>`<button data-a="${c.id}" class="${c.id===S.acm?'on':''}" title="${c.nome}" aria-label="${c.nome}" style="background-image:${swatchCSS(c)}"></button>`).join('')}</div><p class="swl">Selecionado: <b>${a.nome}</b></p></div>
+    <div><h3>Cor dos perfis</h3><div class="sw">${CORES_PERFIL.map(c=>`<button data-p="${c.id}" class="${c.id===S.perfil?'on':''}" title="${c.nome}" aria-label="${c.nome}" style="background:linear-gradient(135deg,${c.c},${c.c} 55%,#ffffff55)"></button>`).join('')}</div><p class="swl">Selecionado: <b>${p.nome}</b></p></div>
+    <div><h3>Cor do puxador</h3><div class="sw">${CORES_PERFIL.map(c=>`<button data-x="${c.id}" class="${c.id===S.puxador?'on':''}" title="${c.nome}" aria-label="${c.nome}" style="background:${c.c}"></button>`).join('')}</div><p class="swl">Selecionado: <b>${x.nome}</b></p></div>
+    <div><h3>Medida do vão (mm)</h3><div class="row2"><label class="f">Largura (L)<input id="iL" type="number" inputmode="numeric" min="900" max="2000" step="10" value="${S.L}"></label><label class="f">Altura (H)<input id="iH" type="number" inputmode="numeric" min="2100" max="3200" step="10" value="${S.H}"></label></div>
+    <p class="nt" style="margin-top:8px">Folha calculada: <b>${Math.round(g.W)} × ${Math.round(g.LH)} mm</b> · eixo do pivô a <b>${Math.round(g.W*.22)} mm</b> da borda.</p></div>
+    <div id="tabCorte"></div>`;
+    pn.querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>{S.acm=b.dataset.a;aplicaCores();renderPainel()});
+    pn.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{S.perfil=b.dataset.p;aplicaCores();renderPainel()});
+    pn.querySelectorAll('[data-x]').forEach(b=>b.onclick=()=>{S.puxador=b.dataset.x;aplicaCores();renderPainel()});
+    const upd=()=>{const L=Math.round(+$('#iL').value),H=Math.round(+$('#iH').value);if(L>=900&&L<=2000&&H>=2100&&H<=3200&&(L!==S.L||H!==S.H)){S.L=L;S.H=H;construir();aplicaCores();renderPainel();vistaGeral()}};
+    $('#iL').onchange=upd;$('#iH').onchange=upd;
+    br.innerHTML=`<button class="chip dk" id="cAbre">${S.aberta?'Fechar':'Abrir'} porta</button>`;
+    $('#cAbre').onclick=()=>{abrir(!S.aberta);renderPainel()};
+    atualizaTabela();
+  }
+  pn.parentElement.scrollTop=0;
+}
+function atualizaTabela(){
+  const el=$('#tabCorte');if(!el||!S.geo)return;const g=S.geo;
+  el.innerHTML=`<h3>Medidas de corte informadas no catálogo</h3><div class="tw"><table><thead><tr><th>Peça</th><th>Fórmula</th><th class="n">Medida</th></tr></thead><tbody>
+  <tr><td>Travessa da largura</td><td>L do vão − 246 mm</td><td class="n">${g.L-246} mm</td></tr>
+  <tr><td>Travessa interna</td><td>H do vão − 175 mm</td><td class="n">${g.H-175} mm</td></tr>
+  <tr><td>Eixo do pivô</td><td>20% a 25% da largura da folha</td><td class="n">${Math.round(g.W*.2)}–${Math.round(g.W*.25)} mm</td></tr>
+  </tbody></table></div><p class="nt" style="margin-top:8px">Folgas do catálogo: 8 mm nas laterais da folha e 12 mm no batente. As demais medidas de corte não constam no catálogo e ficam em branco.</p>`;
+}
+function setModo(m){
+  const prev=S.modo;S.modo=m;pararMontagem();
+  document.querySelectorAll('#modos button').forEach(b=>b.classList.toggle('on',b.dataset.m===m));
+  if(prev==='tec'&&m!=='tec')modoTecnico(false);
+  if(m==='tec'&&prev!=='tec'){S.vt='folha';modoTecnico(true)}
+  if(m==='mon'){abrir(false);S.passo=-1;todosPara(0,900);destaca([]);setTimeout(vistaGeral,prev==='tec'?400:0)}
+  if(m==='apr'||m==='aca'){if(parts.some(p=>p.k!==1))todosPara(1,800);destaca([]);if(prev!=='apr'&&prev!=='aca')setTimeout(vistaGeral,prev==='tec'?400:0)}
+  cap.hidden=m!=='mon';
+  const sw=m!=='mon';walls.forEach(w=>w.visible=sw);if(lintel)lintel.visible=sw&&m!=='tec';
+  renderPainel();setTimeout(rotulos,m==='tec'||prev==='tec'?360:0);
+}
+document.querySelectorAll('#modos button').forEach(b=>b.onclick=()=>setModo(b.dataset.m));
+
+/* ================== LOOP ================== */
+function resize(){
+  const w=stage.clientWidth,h=stage.clientHeight;R.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix();
+  if(S.modo==='tec')vistaTec(S.vt||'folha');
+}
+new ResizeObserver(resize).observe(stage);
+function loop(t){
+  requestAnimationFrame(loop);
+  parts.forEach(p=>{if(p.a){const u=Math.min(1,Math.max(0,(t-p.a.t0)/p.a.dur));p.cur=p.a.from+(p.a.to-p.a.from)*u;posPart(p);if(u>=1)p.a=null}});
+  if(leaf){ang+=(angAlvo-ang)*(RM?1:.06);leaf.rotation.y=ang}
+  if(tw){const u=Math.min(1,(t-tw.s)/tw.d),e=ease(u);cam.position.lerpVectors(tw.p0,tw.p1,e);ctl.target.lerpVectors(tw.t0,tw.t1,e);if(u>=1)tw=null}
+  if(curCam===cam)ctl.update();else octl.update();
+  R.render(SC,curCam);posRotulos();
+}
+['pointerdown','wheel'].forEach(ev=>cv.addEventListener(ev,()=>{tw=null},{passive:true}));
+
+/* ================== INÍCIO ================== */
+parts.forEach(p=>p.k=1);
+construir();parts.forEach(p=>{p.k=1;p.cur=1});aplicaEstado(true);aplicaCores();
+resize();vistaGeral();tw&&(cam.position.copy(tw.p1),ctl.target.copy(tw.t1),tw=null);
+renderPainel();rotulos();
+requestAnimationFrame(loop);
+setTimeout(()=>$('#load').classList.add('done'),300);
+window.__lad={S,parts,setModo,irPasso,montarTudo,selQual,vistaTec,R,SC};
+})();
+</script>
+
+</body></html>
