@@ -215,6 +215,37 @@ label{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:4
 </header>
 
 <main class="wrap" id="app"></main>
+<!-- CAPA DE APRESENTAÇÃO (remover depois: apagar deste comentário até FIM CAPA) -->
+<div id="capa" role="dialog" aria-label="Abertura">
+ <div class="capa-in">
+  <div class="capa-g">G</div>
+  <h1>Guaporé Vidros</h1>
+  <p class="capa-t">Plataforma Comercial · Catálogo 3D</p>
+  <p class="capa-s">Vendas · Central do Gestor · Marketing</p>
+  <button class="capa-btn" id="capaBtn">Entrar ▶</button>
+  <div class="capa-foot"><img src="../midia/logo-fc.png" alt="FC Consultoria" class="capa-fc" onerror="this.remove()"><span>Desenvolvido por FC Consultoria em Esquadria</span></div>
+ </div>
+</div>
+<style>
+#capa{position:fixed;inset:0;z-index:100;display:grid;place-items:center;padding:24px;background:radial-gradient(circle at 30% 20%,#13857b 0%,#0a4a45 45%,#06201e 100%);color:#fff;transition:opacity .6s}
+#capa.sai{opacity:0;pointer-events:none}
+.capa-in{text-align:center;display:flex;flex-direction:column;align-items:center;gap:10px;max-width:640px}
+.capa-g{width:110px;height:110px;border-radius:28px;background:#fff;color:#0d6e66;display:grid;place-items:center;font-family:var(--f-display);font-weight:700;font-size:64px;box-shadow:0 20px 60px rgba(0,0,0,.35);animation:capaIn .9s ease both}
+#capa h1{font-size:clamp(34px,7vw,64px);color:#fff;animation:capaIn .9s .15s ease both}
+.capa-t{margin:0;font-family:var(--f-display);font-size:clamp(16px,2.6vw,22px);color:#f2c27a;animation:capaIn .9s .3s ease both}
+.capa-s{margin:0;opacity:.8;letter-spacing:.08em;text-transform:uppercase;font-size:12.5px;animation:capaIn .9s .45s ease both}
+.capa-btn{margin-top:22px;border:0;background:#f2b75a;color:#06201e;font-family:var(--f-display);font-weight:700;font-size:18px;padding:14px 34px;border-radius:14px;animation:capaIn .9s .6s ease both}
+.capa-btn:hover{background:#ffd08a}
+.capa-foot{margin-top:36px;display:flex;align-items:center;gap:10px;opacity:.85;font-size:12.5px;animation:capaIn .9s .75s ease both}
+.capa-fc{height:38px;width:auto;background:#fff;border-radius:8px;padding:4px 8px}
+@keyframes capaIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){#capa *{animation:none!important}}
+</style>
+<script>
+(function(){const c=document.getElementById('capa');function sai(){c.classList.add('sai');setTimeout(()=>c.remove(),650)}document.getElementById('capaBtn').onclick=sai;c.addEventListener('dblclick',sai);})();
+</script>
+<!-- FIM CAPA -->
+
 <div id="layer"></div>
 
 <script>
