@@ -164,6 +164,18 @@ label{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:4
 .msgb small{display:block;font-size:10px;opacity:.7;margin-top:2px;font-family:var(--f-mono)}
 .csend{display:flex;gap:8px;padding:8px;border-top:1px solid var(--line);background:var(--surface)}
 @media (max-width:640px){.chatg{grid-template-columns:1fr}.clist{flex-direction:row;overflow-x:auto}.cbtn{min-width:150px}}
+.d3row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.d3slot{position:relative;border:1.5px dashed var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:4px;min-height:150px;background:var(--surface-2)}
+.d3slot.on{border:1.5px solid var(--amber);background:var(--surface)}
+.d3slot b{font-family:var(--f-mono);font-size:16px}
+.d3slot span{font-size:12.5px}
+.d3slot small{font-size:11.5px;color:var(--muted)}
+.d3slot .btn{margin-top:auto;align-self:flex-start}
+.d3n{position:absolute;top:10px;right:12px;font-family:var(--f-mono);font-size:11px;color:var(--muted)}
+.d3cube{width:30px;height:30px;border-radius:7px;background:linear-gradient(135deg,var(--amber),var(--amber-soft));animation:d3spin 5s linear infinite;margin-bottom:4px}
+@keyframes d3spin{to{transform:rotate(360deg)}}
+@media (max-width:640px){.d3row{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){.d3cube{animation:none}}
 .foot{margin-top:28px;font-size:11.5px;color:var(--muted);text-align:center}
 .empty{color:var(--muted);font-size:13px;padding:12px;border:1px dashed var(--line);border-radius:10px;text-align:center}
 @media (max-width:720px){.cart{position:static}.meter{grid-template-columns:80px 1fr 32px}}
@@ -190,7 +202,7 @@ label{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:4
 
 <script>
 (function(){
-const KEY='guapore-portal-v1';
+const KEY='guapore-portal-v2';
 const MODS=[
  {k:'cat',n:'Catálogo 3D',d:'Perfis das linhas Suprema e Gold em 3D para mostrar ao cliente.',i:'▦'},
  {k:'trein',n:'Treinamento 3D',d:'Montagem e conceitos em 3D + treinamento on-line com agenda.',i:'◈'},
@@ -200,12 +212,16 @@ const MODS=[
 ];
 const COLORS={cat:'var(--brand)',trein:'var(--amber)',casa:'#6b7fd6',vento:'#3aa0c9',fc:'#b0627e'};
 const PRODS=[
- {id:'p1',n:'Janela de correr 2 folhas',l:'Linha Suprema',t:'janela'},
- {id:'p2',n:'Janela de correr 4 folhas',l:'Linha Suprema',t:'janela4'},
- {id:'p3',n:'Porta de correr 2 folhas',l:'Linha Gold',t:'porta'},
- {id:'p4',n:'Maxim-ar',l:'Linha Suprema',t:'maxim'},
- {id:'p5',n:'Porta de giro',l:'Linha Gold',t:'giro'},
- {id:'p6',n:'Box de banheiro',l:'Vidro temperado 8 mm',t:'box'}
+ {id:'p1',c:'SU-001',n:'Trilho superior porta/janela de correr 2 folhas',l:'Linha Suprema',g:'Trilhos superiores',kg:'0,762'},
+ {id:'p2',c:'SU-005',n:'Trilho superior porta/janela de correr 2 folhas com bandeira',l:'Linha Suprema',g:'Trilhos superiores',kg:'1,105'},
+ {id:'p3',c:'SU-010',n:'Trilho superior porta/janela de correr 3 e 6 folhas',l:'Linha Suprema',g:'Trilhos superiores',kg:'1,022'},
+ {id:'p4',c:'SU-019',n:'Trilho superior porta/janela de correr 3 folhas com bandeira',l:'Linha Suprema',g:'Trilhos superiores',kg:'1,770'},
+ {id:'p5',c:'SU-024',n:'Trilho superior porta/janela de correr camarão',l:'Linha Suprema',g:'Trilhos superiores',kg:'1,024'},
+ {id:'p6',c:'SU-121',n:'Trilho superior porta/janela de correr 4 e 8 folhas',l:'Linha Suprema',g:'Trilhos superiores',kg:'1,586'},
+ {id:'p7',c:'CX-1226',n:'Trilho superior porta de correr sobreposta',l:'Linha Suprema',g:'Trilhos superiores',kg:'0,567'},
+ {id:'p8',c:'LG-004',n:'Trilho superior porta/janela de correr 2 folhas com bandeira',l:'Linha Gold',g:'Trilhos superiores',kg:''},
+ {id:'p9',c:'LG-006',n:'Travessa da folha de correr janela/porta',l:'Linha Gold',g:'Travessas da folha',kg:''},
+ {id:'p10',c:'LG-016',n:'Batente interno porta de giro',l:'Linha Gold',g:'Arremates e complementos',kg:''}
 ];
 function day(n){const d=new Date();d.setHours(10,0,0,0);d.setDate(d.getDate()-n);return d.toISOString()}
 function seed(){
@@ -222,9 +238,9 @@ function seed(){
    {id:'c3',nome:'Eduardo Prado',empresa:'Prado Engenharia',cidade:'Várzea Grande',tel:'(65) 9 0000-0003',email:'eduardo@exemplo.com',data:day(0),visto:false}
   ],
   orc:[
-   {id:'O-1031',cli:'c1',vend:'v2',canal:'WhatsApp',data:day(1),status:'andamento',itens:[{p:'p1',l:1500,a:1200,q:4,cor:'Preto'},{p:'p3',l:2000,a:2100,q:1,cor:'Preto'}],obs:'Obra residencial, prazo 30 dias.'},
-   {id:'O-1032',cli:'c2',vend:'v1',canal:'E-mail',data:day(0),status:'novo',itens:[{p:'p4',l:600,a:600,q:3,cor:'Branco'}],obs:''},
-   {id:'O-1033',cli:'c3',vend:'v4',canal:'WhatsApp',data:day(0),status:'novo',itens:[{p:'p2',l:2400,a:1200,q:2,cor:'Bronze'},{p:'p6',l:1200,a:1900,q:2,cor:'Incolor'}],obs:'Precisa de visita técnica.'}
+   {id:'O-1031',cli:'c1',vend:'v2',canal:'WhatsApp',data:day(1),status:'andamento',itens:[{p:'p1',q:20,cor:'Preto'},{p:'p2',q:10,cor:'Preto'}],obs:'Reposição de estoque, prazo 15 dias.'},
+   {id:'O-1032',cli:'c2',vend:'v1',canal:'E-mail',data:day(0),status:'novo',itens:[{p:'p9',q:12,cor:'Branco'}],obs:''},
+   {id:'O-1033',cli:'c3',vend:'v4',canal:'WhatsApp',data:day(0),status:'novo',itens:[{p:'p6',q:10,cor:'Bronze'},{p:'p8',q:15,cor:'Bronze'}],obs:'Quer saber o prazo de entrega.'}
   ],
   slots:[
    {id:'s1',d:'Qui 29/10',h:'14:00',tema:'Catálogo 3D na venda',cap:6,ins:['v2']},
@@ -240,8 +256,8 @@ if(!S||!S.vend)S=seed();
 function isoDay(n){const d=new Date();d.setDate(d.getDate()+n);return d.toISOString().slice(0,10)}
 function seedMkt(){return {
  banner:{tit:'Esquadrias que valorizam sua obra',sub:'Veja em 3D e peça seu orçamento direto ao vendedor',cor:'brand'},
- destaques:['p1','p3'],ocultos:[],promo:{p2:'Pronta entrega'},sobConsulta:['p6'],
- views:{p1:132,p2:88,p3:104,p4:57,p5:41,p6:73},
+ destaques:['p1','p6','p8'],ocultos:[],promo:{},sobConsulta:[],
+ views:{p1:132,p2:88,p3:64,p4:41,p5:57,p6:104,p7:36,p8:97,p9:52,p10:29},
  posts:[
   {id:'P1',d:isoDay(0),canal:'Instagram · feed',p:'p1',tit:'Ventilação e luz o dia todo',status:'agendado'},
   {id:'P2',d:isoDay(1),canal:'Instagram · stories',p:'p2',tit:'Pronta entrega na Guaporé',status:'agendado'},
@@ -372,7 +388,7 @@ function vVendedor(){
  <div class="grid cols2" style="margin-top:14px">
   <section class="panel" id="t-meus">
    <h2>🧾 Orçamentos para você</h2><p class="sub">O cliente escolheu você no Catálogo 3D. Responda pelo canal que ele pediu.</p>
-   <div class="list">${meus.length?meus.map(o=>`<div class="row"><div class="who"><b>${esc(cli(o.cli).nome)} · <span style="font-family:var(--f-mono);font-weight:500">${o.id}</span></b><span>${o.itens.length} tipologia(s) · pediu retorno por ${o.canal} · ${fmtD(o.data)}</span></div>
+   <div class="list">${meus.length?meus.map(o=>`<div class="row"><div class="who"><b>${esc(cli(o.cli).nome)} · <span style="font-family:var(--f-mono);font-weight:500">${o.id}</span></b><span>${o.itens.length} perfil(is) · pediu retorno por ${o.canal} · ${fmtD(o.data)}</span></div>
      <span class="pill ${STAT[o.status][1]}">${STAT[o.status][0]}</span><button class="btn sm" data-act="verorc" data-id="${o.id}">Abrir</button></div>`).join(''):'<div class="empty">Nenhum orçamento ainda. Quando um cliente escolher você no Catálogo 3D, ele aparece aqui.</div>'}</div>
   </section>
   <section class="panel" id="t-agv">
@@ -412,46 +428,28 @@ function capText(){const p=prod(postSel.p);return `${postSel.t||p.n}\n\n${p.n} �
 function vMarketing(){
  const M=S.mkt;
  const tot=Object.values(M.views).reduce((a,b)=>a+b,0)||1;
- const rank=PRODS.map(p=>({p,v:M.views[p.id]||0,o:S.orc.filter(o=>o.itens.some(i=>i.p===p.id)).length})).sort((a,b)=>b.v-a.v);
+ const rank=PRODS.map(p=>({p,v:M.views[p.id]||0})).sort((a,b)=>b.v-a.v);
  const maxV=rank[0].v||1;
- const top=rank[0];
- const sug=[[`<b>${top.p.n}</b> é o mais visto no catálogo (${Math.round(top.v/tot*100)}% das visualizações) e aparece em ${top.o} pedido(s). Vale um post de destaque.`,top.p.id]];
- const pp=Object.keys(M.promo)[0];if(pp)sug.push([`Faça um story de <b>${prod(pp).n}</b> com o selo "${esc(M.promo[pp])}".`,pp]);
- const low=rank.filter(r=>M.destaques.includes(r.p.id)).pop();if(low&&low!==top)sug.push([`<b>${low.p.n}</b> está em destaque mas tem menos visualizações. Teste outro título ou troque o destaque.`,low.p.id]);
- const best=M.links.slice().sort((a,b)=>b.orc/b.cliques-a.orc/a.cliques)[0];sug.push([`O canal <b>${best.canal}</b> é o que mais vira orçamento (${(best.orc/best.cliques*100).toFixed(1)}% dos cliques). Reforce as postagens nele.`,null]);
- const days=[...Array(7)].map((_,i)=>isoDay(i));
+ const D=M.destaques.map(prod);
  return `
- <span class="demo-note">Demonstração · na versão publicada, o que o marketing muda aqui vai direto para o Catálogo 3D da Guaporé</span>
- <div class="hello"><div><h1>Marketing · Catálogo 3D</h1><p>Ajuste o que o cliente vê no Catálogo 3D da Guaporé e acompanhe o que ele mais olha.</p></div>
-</div>
+ <span class="demo-note">Demonstração · na versão publicada, os destaques escolhidos aqui vão direto para o Mostruário 3D da Guaporé</span>
+ <div class="hello"><div><h1>Marketing · Destaques 3D</h1><p>Escolha os perfis que aparecem em destaque no Catálogo 3D de perfis da Guaporé.</p></div></div>
  <div class="grid kpis" id="t-mkpis">
-  <div class="kpi"><small>Visualizações de produtos</small><b>${tot}</b><em> no Catálogo 3D</em></div>
-  <div class="kpi"><small>Em destaque</small><b>${M.destaques.length}</b><em> aparecem primeiro</em></div>
-  <div class="kpi"><small>Com selo</small><b>${Object.keys(M.promo).length}</b><em> ex.: Pronta entrega</em></div>
-  <div class="kpi"><small>Produtos visíveis</small><b>${PRODS.length-M.ocultos.length}</b><em> de ${PRODS.length} no catálogo</em></div>
+  <div class="kpi"><small>Visualizações de perfis</small><b>${tot}</b><em> no Catálogo 3D</em></div>
+  <div class="kpi"><small>Destaques ativos</small><b>${D.length}/3</b><em> no topo do catálogo</em></div>
+  <div class="kpi"><small>Perfil mais visto</small><b style="font-size:20px">${rank[0].p.c}</b><em> ${rank[0].v} visualizações</em></div>
  </div>
- <div>
-  <section class="panel" id="t-rank"><h2>👀 Mais vistos no Catálogo 3D</h2><p class="sub">Visualizações e pedidos de orçamento por produto.</p>
-   <div class="list">${rank.map(r=>`<div class="meter"><span>${r.p.n}</span><div class="bar" style="width:${Math.max(r.v/maxV*100,4)}%"><i style="width:100%;background:var(--brand)"></i></div><span style="font-family:var(--f-mono)">${r.v}</span></div>`).join('')}</div></section>
- </div>
- <section class="panel" id="t-vitrine" style="margin-top:14px">
-  <h2>🛍 Vitrine do catálogo</h2><p class="sub">Banner, destaques, selos e o que aparece para o cliente. A prévia ao lado atualiza enquanto você edita.</p>
-  <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr));align-items:start">
-   <div>
-    <div class="form"><label>Título do banner<input id="mkTit" value="${esc(M.banner.tit)}"></label><label>Subtítulo<input id="mkSub" value="${esc(M.banner.sub)}"></label></div>
-    <div class="toolbar" style="margin-top:8px;align-items:center"><span style="font-size:12px;color:var(--muted)">Cor do banner</span><div class="seg">${[['brand','Verde'],['amber','Âmbar'],['escuro','Escuro']].map(([k,n])=>`<button data-act="bcor" data-id="${k}" aria-pressed="${M.banner.cor===k}">${n}</button>`).join('')}</div></div>
-    <div class="tablewrap"><table><thead><tr><th>Produto</th><th class="c">Visível</th><th class="c">Destaque</th><th class="c">Sob consulta</th><th>Selo</th></tr></thead><tbody>
-    ${PRODS.map(p=>`<tr><td>${p.n}<br><span style="font-size:11px;color:var(--muted)">${p.l}</span></td>
-     <td class="c"><button class="sw" role="switch" aria-checked="${!M.ocultos.includes(p.id)}" aria-label="Visível" data-act="mvis" data-id="${p.id}"></button></td>
-     <td class="c"><button class="sw" role="switch" aria-checked="${M.destaques.includes(p.id)}" aria-label="Destaque" data-act="mdest" data-id="${p.id}"></button></td>
-     <td class="c"><button class="sw" role="switch" aria-checked="${M.sobConsulta.includes(p.id)}" aria-label="Sob consulta" data-act="msob" data-id="${p.id}"></button></td>
-     <td><input data-selo="${p.id}" value="${esc(M.promo[p.id]||'')}" placeholder="Ex.: Pronta entrega" style="min-width:130px"></td></tr>`).join('')}
-    </tbody></table></div>
-   </div>
-   <div><div style="font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:6px">Como o cliente vê</div><div class="prevbox" id="mkPrev">${prevHTML()}</div></div>
-  </div>
+ <section class="panel" id="t-vitrine">
+  <h2>★ Destaques 3D</h2><p class="sub">Ligue até 3 perfis. Eles aparecem em destaque no Catálogo 3D, com o modelo 3D, o desenho e o peso. Para trocar, desligue um e ligue outro.</p>
+  <div class="d3row">${[0,1,2].map(i=>{const p=D[i];return p?`<div class="d3slot on"><span class="d3n">${i+1}</span><div class="d3cube" aria-hidden="true"></div><b>${p.c}</b><span>${p.n}</span><small>${p.l}${p.kg?' · '+p.kg+' kg/m':''}</small><button class="btn sm" data-act="mdest" data-id="${p.id}">Tirar do destaque</button></div>`:`<div class="d3slot"><span class="d3n">${i+1}</span><b style="color:var(--muted)">Vago</b><span>Ligue um perfil na lista abaixo</span></div>`}).join('')}</div>
+  <div class="toolbar" style="margin-top:14px"><input id="mkBusca" placeholder="Buscar perfil pelo código ou nome (ex.: SU-001, trilho)" style="max-width:420px"></div>
+  <div class="tablewrap"><table id="mkTab"><thead><tr><th>Perfil</th><th>Linha · grupo</th><th class="c">Visualizações</th><th class="c">Destaque 3D</th></tr></thead><tbody>
+  ${PRODS.map(p=>`<tr data-busca="${esc((p.c+' '+p.n).toLowerCase())}"><td><b style="font-family:var(--f-mono)">${p.c}</b><br><span style="font-size:12px;color:var(--muted);white-space:normal">${p.n}</span></td><td style="font-size:12px">${p.l}<br><span style="color:var(--muted)">${p.g}</span></td><td class="c" style="font-family:var(--f-mono)">${M.views[p.id]||0}</td><td class="c"><button class="sw" role="switch" aria-checked="${M.destaques.includes(p.id)}" aria-label="Destaque 3D ${p.c}" data-act="mdest" data-id="${p.id}"></button></td></tr>`).join('')}
+  </tbody></table></div>
  </section>
-`;
+ <section class="panel" id="t-rank" style="margin-top:14px"><h2>👀 Perfis mais vistos no Catálogo 3D</h2><p class="sub">Use para escolher os destaques.</p>
+  <div class="list">${rank.map(r=>`<div class="meter" title="${esc(r.p.n)}"><span><b style="font-family:var(--f-mono)">${r.p.c}</b></span><div class="bar" style="width:${Math.max(r.v/maxV*100,4)}%"><i style="width:100%;background:${M.destaques.includes(r.p.id)?'var(--amber)':'var(--brand)'}"></i></div><span style="font-family:var(--f-mono)">${r.v}</span></div>`).join('')}</div>
+  <div class="legend"><span><i style="background:var(--amber)"></i>Em destaque</span><span><i style="background:var(--brand)"></i>Demais perfis</span></div></section>`;
 }
 function wrapText(g,txt,max){const w=txt.split(' '),out=[];let l='';w.forEach(x=>{const t=l?l+' '+x:x;if(g.measureText(t).width>max&&l){out.push(l);l=x}else l=t});if(l)out.push(l);return out.slice(0,3)}
 function drawPost(){
@@ -545,7 +543,7 @@ function closeModal(){$('#layer').innerHTML=''}
 
 function orcModal(id){
  const o=S.orc.find(x=>x.id===id);if(!o)return;const c=cli(o.cli);
- const txt=`Orçamento ${o.id} – Guaporé Vidros\nCliente: ${c.nome} (${c.empresa})\nCidade: ${c.cidade}\n\n${o.itens.map(i=>`• ${prod(i.p).n} – ${i.l}×${i.a} mm – ${i.q} un – ${i.cor}`).join('\n')}${o.obs?`\n\nObs.: ${o.obs}`:''}`;
+ const txt=`Orçamento ${o.id} – Guaporé Vidros\nCliente: ${c.nome} (${c.empresa})\nCidade: ${c.cidade}\n\n${o.itens.map(i=>`• ${prod(i.p).c} ${prod(i.p).n} – ${i.q} barra(s) de 6 m – ${i.cor}`).join('\n')}${o.obs?`\n\nObs.: ${o.obs}`:''}`;
  modal(`<div class="ph"><div><h2>Orçamento ${o.id}</h2><p class="sub">${fmtD(o.data)} · vendedor: ${esc(vName(o.vend))} · retorno por ${o.canal}</p></div><span class="pill ${STAT[o.status][1]}">${STAT[o.status][0]}</span></div>
  <p style="margin:0 0 6px"><b>${esc(c.nome)}</b> · ${esc(c.empresa)}<br><span style="color:var(--muted)">${esc(c.tel)} · ${esc(c.email)}</span></p>
  <div class="msg" id="orcTxt">${esc(txt)}</div>
@@ -606,7 +604,7 @@ document.addEventListener('click',e=>{
  const M=S.mkt;
  if(a==='bcor'){M.banner.cor=id;save();render()}
  if(a==='mvis'){const i=M.ocultos.indexOf(id);i>=0?M.ocultos.splice(i,1):M.ocultos.push(id);save();render()}
- if(a==='mdest'){const i=M.destaques.indexOf(id);i>=0?M.destaques.splice(i,1):M.destaques.push(id);save();render()}
+ if(a==='mdest'){const i=M.destaques.indexOf(id);if(i<0&&M.destaques.length>=3){toast('Já tem 3 destaques. Tire um antes de ligar outro.');return}i>=0?M.destaques.splice(i,1):M.destaques.push(id);save();render();toast(i>=0?'Perfil tirado do destaque.':'Perfil em destaque no Catálogo 3D.')}
  if(a==='msob'){const i=M.sobConsulta.indexOf(id);i>=0?M.sobConsulta.splice(i,1):M.sobConsulta.push(id);save();render()}
  if(a==='sugpost'){postSel.p=id;postSel.t=M.promo[id]?`${prod(id).n}: ${M.promo[id]}`:prod(id).n;postSel.f=M.promo[id]?'story':'feed';render();setTimeout(()=>$('#t-studio').scrollIntoView({block:'start',behavior:'smooth'}),50)}
  if(a==='copycap'){const el=$('#psCap');(navigator.clipboard?navigator.clipboard.writeText(el.textContent):Promise.reject()).then(()=>toast('Legenda copiada.'),()=>{const r=document.createRange();r.selectNodeContents(el);getSelection().removeAllRanges();getSelection().addRange(r);toast('Texto selecionado. Use Ctrl+C.')})}
@@ -625,7 +623,7 @@ function finishSend(canal,obs){
  const n=1000+S.orc.length+31;const o={id:'O-'+n,cli:S.cliSessao,vend:selVend,canal,data:new Date().toISOString(),status:'novo',itens:cart.slice(),obs};
  S.orc.push(o);S.visitas[6]++;save();
  const c=cli(o.cli);
- const txt=`Olá, ${vName(o.vend)}! Sou ${c.nome} e gostaria de um orçamento (${o.id}):\n${o.itens.map(i=>`• ${prod(i.p).n} – ${i.l}×${i.a} mm – ${i.q} un – ${i.cor}`).join('\n')}${obs?`\nObs.: ${obs}`:''}`;
+ const txt=`Olá, ${vName(o.vend)}! Sou ${c.nome} e gostaria de um orçamento (${o.id}):\n${o.itens.map(i=>`• ${prod(i.p).c} ${prod(i.p).n} – ${i.q} barra(s) de 6 m – ${i.cor}`).join('\n')}${obs?`\nObs.: ${obs}`:''}`;
  cart=[];selVend=null;render();
  modal(`<h2>Pedido enviado ✓</h2><p class="sub">${o.id} chegou no painel de ${esc(vName(o.vend))} e na Central do Gestor.</p><div class="msg" id="orcTxt">${esc(txt)}</div>
  <p style="font-size:12px;color:var(--muted)">${canal==='WhatsApp'?'Na versão publicada este texto abre direto no WhatsApp do vendedor.':'Na versão publicada este texto vai para o e-mail do vendedor, com cópia para o cliente.'}</p>
@@ -637,6 +635,7 @@ document.addEventListener('click',e=>{const t=e.target.closest('[data-act="verca
 
 document.addEventListener('input',e=>{
  const t=e.target;if(role!=='marketing')return;const M=S.mkt;
+ if(t.id==='mkBusca'){const q=t.value.trim().toLowerCase();document.querySelectorAll('#mkTab tbody tr').forEach(r=>{r.hidden=q&&!r.dataset.busca.includes(q)});return}
  if(t.id==='mkTit'||t.id==='mkSub'){M.banner[t.id==='mkTit'?'tit':'sub']=t.value;save();$('#mkPrev').innerHTML=prevHTML()}
  if(t.dataset.selo){const v=t.value.trim();if(v)M.promo[t.dataset.selo]=v;else delete M.promo[t.dataset.selo];save();$('#mkPrev').innerHTML=prevHTML();drawPost()}
  if(t.id==='psT'){postSel.t=t.value;drawPost();$('#psCap').textContent=capText()}
@@ -649,9 +648,9 @@ document.addEventListener('change',e=>{
 /* ---------- TUTORIAL GUIADO (legenda + voz) ---------- */
 const TOURS={
  marketing:[
-  ['#t-mkpis','Este é o painel do Marketing da Guaporé, focado no Catálogo 3D. No topo: visualizações dos perfis, perfis visíveis, em destaque e com selo.'],
-  ['#t-rank','Aqui você vê o que os clientes mais olham no Catálogo 3D. Use isso para decidir o que colocar em destaque.'],
-  ['#t-vitrine','Na vitrine você controla o catálogo: o banner, os perfis em destaque, os selos como Pronta entrega, o que fica sob consulta e o que aparece ou não para o cliente. A prévia ao lado mostra como o cliente vai ver.']
+  ['#t-mkpis','Este é o painel do Marketing da Guaporé. Aqui você cuida dos destaques do Catálogo 3D de perfis.'],
+  ['#t-vitrine','Escolha até três perfis para os Destaques 3D. Ligue o perfil na lista e ele aparece em destaque no catálogo. Para trocar, tire um e ligue outro. A busca ajuda a achar pelo código ou nome.'],
+  ['#t-rank','Aqui você vê os perfis mais vistos pelos clientes. Use para decidir o que colocar em destaque.']
  ],
  gestor:[
   ['#t-kpis','Esta é a Central do Gestor da Guaporé. No topo ficam os números do dia: cadastros novos, orçamentos em aberto, acessos da equipe e visitas ao Catálogo 3D.'],
@@ -712,7 +711,7 @@ $('#tourBtn').onclick=()=>{
  <div class="list">
   <button class="row" data-tour="gestor" style="text-align:left;cursor:pointer;color:var(--fg)"><div class="who"><b>Tutorial do Gestor</b><span>${TOURS.gestor.length} passos · comandos, medidores, cadastros e orçamentos</span></div><span class="pill br">Começar</span></button>
   <button class="row" data-tour="vendedor" style="text-align:left;cursor:pointer;color:var(--fg)"><div class="who"><b>Tutorial do Vendedor</b><span>${TOURS.vendedor.length} passos · ferramentas, orçamentos recebidos e agenda</span></div><span class="pill br">Começar</span></button>
-  <button class="row" data-tour="marketing" style="text-align:left;cursor:pointer;color:var(--fg)"><div class="who"><b>Tutorial do Marketing</b><span>${TOURS.marketing.length} passos · banner, destaques, selos e o que aparece no Catálogo 3D</span></div><span class="pill br">Começar</span></button>
+  <button class="row" data-tour="marketing" style="text-align:left;cursor:pointer;color:var(--fg)"><div class="who"><b>Tutorial do Marketing</b><span>${TOURS.marketing.length} passos · escolha dos Destaques 3D e perfis mais vistos</span></div><span class="pill br">Começar</span></button>
  </div>
  <label style="flex-direction:row;align-items:center;gap:8px;margin-top:12px;font-size:13px;color:var(--fg)"><input type="checkbox" id="tvAuto" checked style="width:auto"> Modo vídeo: avança sozinho com voz</label>
  <div class="toolbar" style="margin-top:12px;justify-content:flex-end"><button class="btn" data-act="close">Fechar</button></div>`);
