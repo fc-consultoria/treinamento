@@ -152,6 +152,18 @@ label{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:4
 .funnel{display:flex;flex-direction:column;gap:3px}
 .funnel i{display:block;height:6px;border-radius:3px;background:var(--line)}
 .funnel i:nth-child(2){background:var(--brand)}.funnel i:nth-child(3){background:var(--amber)}
+.chatg{display:grid;grid-template-columns:220px minmax(0,1fr);gap:12px;min-height:300px}
+.clist{display:flex;flex-direction:column;gap:6px;max-height:340px;overflow:auto}
+.cbtn{border:1px solid var(--line);background:var(--surface-2);color:var(--fg);border-radius:10px;padding:8px 10px;text-align:left}
+.cbtn b{display:block;font-size:13px}.cbtn span{font-size:11.5px;color:var(--muted)}
+.cbtn[aria-pressed="true"]{border-color:var(--brand);background:var(--brand-soft)}
+.cbox{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:12px;overflow:hidden;min-width:0}
+.cmsgs{flex:1;overflow:auto;padding:12px;display:flex;flex-direction:column;gap:8px;max-height:300px;background:var(--surface-2)}
+.msgb{align-self:flex-start;max-width:80%;background:var(--surface);border:1px solid var(--line);border-radius:12px 12px 12px 4px;padding:7px 10px;font-size:13px}
+.msgb.me{align-self:flex-end;background:var(--brand);color:var(--brand-ink);border-color:var(--brand);border-radius:12px 12px 4px 12px}
+.msgb small{display:block;font-size:10px;opacity:.7;margin-top:2px;font-family:var(--f-mono)}
+.csend{display:flex;gap:8px;padding:8px;border-top:1px solid var(--line);background:var(--surface)}
+@media (max-width:640px){.chatg{grid-template-columns:1fr}.clist{flex-direction:row;overflow-x:auto}.cbtn{min-width:150px}}
 .foot{margin-top:28px;font-size:11.5px;color:var(--muted);text-align:center}
 .empty{color:var(--muted);font-size:13px;padding:12px;border:1px dashed var(--line);border-radius:10px;text-align:center}
 @media (max-width:720px){.cart{position:static}.meter{grid-template-columns:80px 1fr 32px}}
@@ -243,8 +255,17 @@ function seedMkt(){return {
   {id:'l4',canal:'Google Meu Negócio',cod:'google',cliques:64,cad:3,orc:2}
  ]}}
 if(!S.mkt)S.mkt=seedMkt();
+function seedChat(){const t=(d,h)=>{const x=new Date();x.setDate(x.getDate()-d);x.setHours(h,15,0,0);return x.toISOString()};return [
+ {de:'v1',para:'v2',t:'Ju, você tem o contato do cliente da obra do Jardim Imperial?',h:t(1,9)},
+ {de:'v2',para:'v1',t:'Tenho sim, te passo agora.',h:t(1,9)},
+ {de:'gestor',para:'v1',t:'Carlos, o pedido O-1032 da Sandra é seu. Retorno hoje, por favor.',h:t(0,8)},
+ {de:'v1',para:'gestor',t:'Combinado, já estou montando.',h:t(0,8)},
+ {de:'v4',para:'fc',t:'Como mostro o Monte sua Casa 3D no celular do cliente?',h:t(0,10)},
+ {de:'fc',para:'v4',t:'Abra pelo cartão e gire o celular na horizontal. Qualquer dúvida, chame aqui.',h:t(0,10)}
+]}
+if(!S.chat)S.chat=seedChat();
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
-let role='gestor', cart=[], selVend=null, showCad={}, fVend='todos', fStat='todos', postSel={p:'p1',f:'feed',t:'Ventilação e luz o dia todo'};
+let chatWith='gestor', role='gestor', cart=[], selVend=null, showCad={}, fVend='todos', fStat='todos', postSel={p:'p1',f:'feed',t:'Ventilação e luz o dia todo'};
 const $=s=>document.querySelector(s);
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmtD=iso=>{const d=new Date(iso);return d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})};
@@ -254,6 +275,21 @@ const prod=id=>PRODS.find(p=>p.id===id)||{};
 const STAT={novo:['Novo','novo'],andamento:['Em atendimento','and'],enviado:['Orçamento enviado','ok']};
 function toast(t){const el=document.createElement('div');el.className='toast';el.textContent=t;document.body.appendChild(el);setTimeout(()=>el.remove(),2600)}
 function totalAc(v){return Object.values(v.ac).reduce((a,b)=>a+b,0)}
+
+/* ---------- CONVERSA DA EQUIPE ---------- */
+function cName(id){return id==='gestor'?'Gestor':id==='fc'?'FC Consultoria':vName(id)}
+function convo(a,b){return S.chat.filter(m=>(m.de===a&&m.para===b)||(m.de===b&&m.para===a))}
+function chatHTML(me){const cont=[...S.vend.filter(v=>v.id!==me).map(v=>v.id),'gestor','fc'];if(!cont.includes(chatWith))chatWith='gestor';
+ const msgs=convo(me,chatWith);
+ return `<section class="panel" id="t-chat" style="margin-top:14px"><h2>💬 Conversa da equipe</h2><p class="sub">Conversas individuais com colegas, gestor e FC. Cada conversa é só entre as duas pessoas; o gestor acompanha pelo histórico.</p>
+ <div class="chatg"><div class="clist">${cont.map(c=>{const L=convo(me,c),last=L[L.length-1];return `<button class="cbtn" aria-pressed="${c===chatWith}" data-act="chatw" data-id="${c}"><b>${esc(cName(c))}${c==='fc'?' <span class="pill br">suporte</span>':''}</b><span>${last?esc(last.t.slice(0,42)):'Sem mensagens'}</span></button>`}).join('')}</div>
+ <div class="cbox"><div class="cmsgs" id="cmsgs">${msgs.length?msgs.map(m=>`<div class="msgb ${m.de===me?'me':''}"><span>${esc(m.t)}</span><small>${fmtD(m.h)}</small></div>`).join(''):`<div class="empty">Comece a conversa com ${esc(cName(chatWith))}.</div>`}</div>
+ <form class="csend" id="cform"><input id="ctxt" placeholder="Mensagem para ${esc(cName(chatWith))}" autocomplete="off"><button class="btn primary" type="submit">Enviar</button></form></div></div></section>`}
+function histHTML(){const P={};S.chat.forEach(m=>{const k=[m.de,m.para].sort().join('|');(P[k]=P[k]||[]).push(m)});const K=Object.keys(P).sort((a,b)=>P[b][P[b].length-1].h.localeCompare(P[a][P[a].length-1].h));
+ return `<section class="panel" style="margin-top:14px" id="t-hist"><h2>💬 Histórico das conversas da equipe</h2><p class="sub">Só leitura. As conversas são individuais; aqui você acompanha todas, inclusive as com a FC.</p><div class="list">${K.length?K.map(k=>{const L=P[k],[a,b]=k.split('|'),last=L[L.length-1];return `<div class="row"><div class="who"><b>${esc(cName(a))} ↔ ${esc(cName(b))}</b><span>${esc(last.t.slice(0,70))} · ${fmtD(last.h)}</span></div><span class="pill br">${L.length} msg</span><button class="btn sm" data-act="verhist" data-id="${k}">Ler</button></div>`}).join(''):'<div class="empty">Nenhuma conversa ainda.</div>'}</div></section>`}
+document.addEventListener('submit',e=>{if(e.target.id!=='cform')return;e.preventDefault();const v=$('#ctxt').value.trim();if(!v)return;
+ const para=chatWith,me=S.me;S.chat.push({de:me,para,t:v,h:new Date().toISOString()});save();render();
+ if(para==='fc')setTimeout(()=>{S.chat.push({de:'fc',para:me,t:'Recebido! A FC responde no horário de atendimento: seg a sex, 08h–11h e 13h–17h.',h:new Date().toISOString()});save();if(role==='vendedor')render()},1200)});
 
 /* ---------- GESTOR ---------- */
 function vGestor(){
@@ -318,7 +354,7 @@ function vGestor(){
  <section class="panel" style="margin-top:14px" id="t-agg">
   <div class="ph"><div><h2>🗓 Treinamento on-line · agenda</h2><p class="sub">Turmas abertas para a equipe. O vendedor se inscreve pelo painel dele.</p></div><button class="btn sm" data-act="addslot">+ Nova turma</button></div>
   <div class="slots">${S.slots.map(s=>`<div class="slot"><b>${s.d} · ${s.h}</b><span>${esc(s.tema)}</span><br><span>${s.ins.length}/${s.cap} inscritos${s.ins.length?': '+s.ins.map(vName).join(', '):''}</span></div>`).join('')}</div>
- </section>`;
+ </section>${histHTML()}`;
 }
 
 /* ---------- VENDEDOR ---------- */
@@ -343,7 +379,7 @@ function vVendedor(){
    <h2>🗓 Treinamento on-line</h2><p class="sub">Toque em uma turma para se inscrever ou sair.</p>
    <div class="slots">${S.slots.map(s=>{const mine=s.ins.includes(me.id),full=!mine&&s.ins.length>=s.cap;return `<button class="slot ${mine?'mine':''} ${full?'full':''}" data-act="slot" data-id="${s.id}" ${full?'disabled':''}><b>${s.d} · ${s.h}</b><span>${esc(s.tema)}</span><br><span>${mine?'✓ Inscrito':(s.cap-s.ins.length)+' vagas'}</span></button>`}).join('')}</div>
   </section>
- </div>`;
+ </div>${chatHTML(me.id)}`;
 }
 
 /* ---------- CLIENTE ---------- */
@@ -500,6 +536,7 @@ function render(){
  if(role==='cliente'){drawCanvases();const g=$('#cliGrid');if(g&&innerWidth<760)g.style.gridTemplateColumns='1fr'}
  const fv=$('#fVend');if(fv)fv.onchange=e=>{fVend=e.target.value;render()};
  const fs=$('#fStat');if(fs)fs.onchange=e=>{fStat=e.target.value;render()};
+ const cm=$('#cmsgs');if(cm)cm.scrollTop=cm.scrollHeight;
  const ms=$('#meSel');if(ms)ms.onchange=e=>{S.me=e.target.value;save();render()};
 }
 
@@ -533,7 +570,7 @@ document.addEventListener('click',e=>{
  if(e.target.closest('[data-role]')){role=e.target.closest('[data-role]').dataset.role;render();scrollTo(0,0);return}
  if(!t)return;const a=t.dataset.act,id=t.dataset.id;
  if(a==='close'){if(t.classList.contains('modal')&&e.target!==t)return;closeModal();return}
- if(a==='reset'){S=seed();S.mkt=seedMkt();save();showCad={};render();toast('Dados de exemplo restaurados.')}
+ if(a==='reset'){S=seed();S.mkt=seedMkt();S.chat=seedChat();save();showCad={};render();toast('Dados de exemplo restaurados.')}
  if(a==='vercad'){showCad[id]=!showCad[id];const c=cli(id);c.visto=true;save();render()}
  if(a==='gmod'){S.modsOn[t.dataset.m]=!S.modsOn[t.dataset.m];save();render()}
  if(a==='vativo'){const v=S.vend.find(x=>x.id===id);v.ativo=!v.ativo;save();render()}
@@ -563,6 +600,8 @@ document.addEventListener('click',e=>{
  if(a==='cadok'){const n=$('#cN').value.trim();if(!n||(!$('#cT').value.trim()&&!$('#cM').value.trim())){toast('Informe nome e WhatsApp ou e-mail.');return}
   const c={id:'c'+Date.now(),nome:n,empresa:$('#cE').value.trim()||'—',cidade:$('#cC').value.trim()||'—',tel:$('#cT').value.trim()||'—',email:$('#cM').value.trim()||'—',data:new Date().toISOString(),visto:false};
   S.clientes.push(c);S.cliSessao=c.id;S.cadDia[6]++;save();toast(S.autoCadastro?'Cadastro aprovado automaticamente.':'Cadastro enviado para aprovação.');finishSend(t.dataset.c,t.dataset.obs)}
+ if(a==='chatw'){chatWith=id;render();setTimeout(()=>{const i=$('#ctxt');if(i)i.focus({preventScroll:true})},0);return}
+ if(a==='verhist'){const [x,y]=id.split('|');modal(`<h2>${esc(cName(x))} ↔ ${esc(cName(y))}</h2><p class="sub">Histórico · só leitura</p><div class="cmsgs" style="max-height:50vh">${convo(x,y).map(m=>`<div class="msgb ${m.de===x?'me':''}"><span><b style="font-size:11px;display:block">${esc(cName(m.de))}</b>${esc(m.t)}</span><small>${fmtD(m.h)}</small></div>`).join('')}</div><div class="toolbar" style="margin-top:12px;justify-content:flex-end"><button class="btn primary" data-act="close">Fechar</button></div>`)}
  /* marketing */
  const M=S.mkt;
  if(a==='bcor'){M.banner.cor=id;save();render()}
@@ -622,7 +661,8 @@ const TOURS={
   ['#t-eq','O medidor da equipe mostra quantas vezes cada vendedor abriu cada ferramenta. Assim você vê quem está usando o catálogo, o treinamento e o Monte sua Casa.'],
   ['#t-cmd','Em Comandos você libera ou bloqueia cada módulo por vendedor, pausa o acesso de alguém, liga ou desliga o aceite automático e cadastra vendedores novos.'],
   ['#t-orc','Aqui estão todos os orçamentos que os clientes pediram, com o vendedor escolhido. Filtre por vendedor ou situação, abra um pedido e, se precisar, transfira para outro vendedor.'],
-  ['#t-agg','Por fim, a agenda do treinamento on-line. Crie turmas e acompanhe quem se inscreveu.']
+  ['#t-agg','A agenda do treinamento on-line: crie turmas e acompanhe quem se inscreveu.'],
+  ['#t-hist','Por fim, o histórico das conversas da equipe. As conversas são individuais, e você acompanha todas aqui, só para leitura.']
  ],
  vendedor:[
   ['#t-mods','Este é o painel do vendedor. São cinco ferramentas: Catálogo 3D, Treinamento 3D, Monte sua Casa 3D, Diagrama de pressão de vento e Solicitação com a FC. Toque no cartão e depois em Abrir para entrar no módulo. Cada acesso conta no medidor do gestor.'],
@@ -630,7 +670,8 @@ const TOURS={
   ['#mod-casa','No Monte sua Casa 3D você coloca as esquadrias na planta e apresenta o projeto ao cliente.'],
   ['#mod-fc','Ficou com dúvida? Abra Solicitação com a FC e envie sua pergunta direto para o suporte.'],
   ['#t-meus','Quando o cliente se cadastra no Catálogo 3D, monta o pedido e escolhe você, o pedido cai aqui. Abra, copie o resumo e responda pelo WhatsApp ou e-mail que ele pediu. Depois marque a situação.'],
-  ['#t-agv','Na agenda de treinamento on-line, toque em uma turma para se inscrever.']
+  ['#t-agv','Na agenda de treinamento on-line, toque em uma turma para se inscrever.'],
+  ['#t-chat','Na conversa da equipe você fala individualmente com um colega, com o gestor ou com o suporte da FC. Escolha a pessoa na lista e escreva a mensagem.']
  ],
  cliente:[
   ['#t-prods','Esta é a visão do cliente no Catálogo 3D. Ele escolhe a esquadria e informa largura, altura, quantidade e cor.'],
