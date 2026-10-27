@@ -424,6 +424,7 @@ td.qd{cursor:help}td.qd:hover{background:#eef6f8;box-shadow:inset 0 -2px 0 #1f6f
 </main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="auth.js"></script>
+<script src="sessao.js?v=1"></script>
 <script src="noticias.js?v=2"></script>
 <script src="mapa.js?v=1792037768"></script><script src="acompanhamento-admin.js?v=15"></script><script src="compra-sim-admin.js?v=3"></script><script src="orc-suporte-admin.js?v=2"></script><script src="presenca-admin.js?v=2"></script><script src="horarios-admin.js?v=2"></script><script src="festa-admin.js?v=1"></script><script src="vitrine-admin.js?v=2"></script><script src="vitrine-convite-adm.js?v=1"></script><script src="conclusao-admin.js?v=1"></script><script src="dicas.js?v=1792028270"></script>
 <script>
@@ -1910,7 +1911,7 @@ setTimeout(()=>{if(PTAB==='cat')ui();},2500);
  await Promise.all(P.map(u=>fetch(u,{cache:'reload'}).catch(()=>{})));try{if(window.caches){const k=await caches.keys();await Promise.all(k.map(x=>caches.delete(x)));}}catch(_){}
  location.replace(location.pathname+'?v='+Date.now()+location.hash);};})();</script>
 <script src="conversa-equipe.js?v=11"></script>
-<script src="conversas.js?v=3"></script><script>setTimeout(()=>window.FCConversas&&FCConversas.matriz({semBotao:true}),2500);</script><script src="caixa-fc.js?v=4"></script><script src="acessos-todos.js?v=6"></script><script src="central-cliente.js?v=3"></script>
+<script src="conversas.js?v=4"></script><script>setTimeout(()=>window.FCConversas&&FCConversas.matriz({semBotao:true}),2500);</script><script src="caixa-fc.js?v=4"></script><script src="acessos-todos.js?v=6"></script><script src="central-cliente.js?v=3"></script>
 <script src="painel-skin.js?v=3"></script>
 <script>window.FCM_MODO="matriz";window.FCM_BARRA={sel:"header.mx .mxutil, header .acts",lado:"dir",nome:"Na barra de cima"};</script><script src="esquadrias/musica.js?v=7"></script>
 <script src="estoque-aviso.js?v=2"></script><script>setTimeout(()=>FCEstAviso.matriz(),3000);</script>

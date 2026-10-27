@@ -50,7 +50,7 @@
   <p id="quemTxt">Toque no seu nome. Seu acesso fica disponível por 3 dias a partir do primeiro acesso. Depois desse prazo o acesso é suspenso: para liberar de novo, peça ao gerente comercial da sua empresa.</p>
   <div id="quemLista" style="display:flex;flex-direction:column;gap:8px"></div>
   <p class="gmsg" id="quemMsg" role="status"></p>
-  <button type="button" id="quemSair" style="background:#fff;color:#1d3f57;border:1px solid #c9d3da">Sair</button>
+  <button type="button" id="quemSair" data-fcs-ignora style="background:#fff;color:#1d3f57;border:1px solid #c9d3da">Sair</button>
  </div></div>
 <style>.cbtn{display:flex;justify-content:space-between;align-items:center;gap:10px;text-align:left;background:#f4f7f9!important;color:#1b232a!important;border:1px solid #c9d3da!important}
 .cbtn small{font:500 12px 'IBM Plex Mono',monospace;color:#5d6b76}.cbtn.exp{background:#fbeceb!important}.cbtn.exp small{color:#b4372f}
@@ -249,6 +249,7 @@ function vigiaPrazo(uid,perfil){setInterval(()=>{if(window.ALUNO_CID)marcaCid(wi
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="auth.js"></script>
+<script src="sessao.js?v=1"></script>
 <script>
 /* Registro do andamento do aluno */
 (function(){

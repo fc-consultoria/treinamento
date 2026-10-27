@@ -261,6 +261,7 @@ button.cn-stat[data-ok]{cursor:pointer}button.cn-stat[data-ok]:hover{background:
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="auth.js"></script>
+<script src="sessao.js?v=1"></script>
 <script src="planilha.js?v=2"></script>
 <script>
 const SEED={
@@ -1345,6 +1346,7 @@ function seguirPessoa(p){
   usarPessoa(p);return true;}
 function barraPessoa(){const t=document.querySelector('#app > .top');if(!t||document.getElementById('pesBar'))return;
   t.insertAdjacentHTML('beforeend',`<div id="pesBar" style="margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span class="nota" style="color:var(--fg)">👤 <b>${esc(PESSOA.nome)}</b> · ${esc(PAPEL_NOME[PESSOA.papel]||PESSOA.papel)}</span><button class="btn" type="button" id="pesSair">Sair</button></div>`);
+  if(window.FCSessao)FCSessao.nome(PESSOA.nome);
   $('#pesSair').onclick=async()=>{try{await sb.rpc('emp_sair',{p_token:PESSOA.token});}catch(_){}try{localStorage.removeItem(tokKey());localStorage.removeItem('cons-nome');}catch(_){}location.replace(location.pathname+'?e='+EMPL);};}
 if(PUB){(async()=>{document.title='Acompanhamento da consultoria · FC Consultoria';
   document.querySelectorAll('#app > .top').forEach(t=>t.hidden=true);$('#emps').hidden=true;
@@ -1370,7 +1372,7 @@ else{/* links da Matriz: ?ver=<empresa> abre a empresa · &como=gestor abre "Com
 <script src="estoque-aviso.js?v=2"></script><script>if(PUB)FCEstAviso.cliente(KEY);</script>
 <script src="acessos-pessoas.js?v=2"></script>
 <script src="central-gestor.js?v=7"></script>
-<script src="conversas.js?v=3"></script>
+<script src="conversas.js?v=4"></script>
 <script>/* barra de baixo: ocultar / mostrar (fica lembrado neste aparelho) */
 (function(){const bar=document.getElementById('acbar'),bt=document.getElementById('acMin');if(!bar||!bt)return;
  const set=m=>{bar.classList.toggle('mini',m);bt.textContent=m?'▴ Mostrar barra':'▾';bt.title=m?'Mostrar a barra':'Ocultar esta barra';bt.setAttribute('aria-label',bt.title);try{localStorage.setItem('fc_acbar_mini',m?'1':'');}catch(_){}};

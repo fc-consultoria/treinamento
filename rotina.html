@@ -524,6 +524,7 @@ details.dist>*:not(summary){margin-top:6px}
 <button type="submit">Entrar</button><p id="gateMsg" role="alert"></p></form></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="auth.js"></script>
+<script src="sessao.js?v=1"></script>
 <script>
 /* Rotina FC dentro do Painel: o banco do artefato vira a tabela rotina_docs (só a matriz lê/grava) */
 (function(){
@@ -2028,4 +2029,5 @@ document.addEventListener('focusout',e=>{if(e.target.classList&&e.target.classLi
 
 
 <script src="conversa-equipe.js?v=11"></script>
+<script>/* Sair (27/10) */(function(){const r=document.querySelector('header.top .row');if(r&&window.FCSessao&&typeof sair==='function')FCSessao.botaoSair(r,()=>sair());})();</script>
 </body></html>

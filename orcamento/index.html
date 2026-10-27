@@ -26,6 +26,8 @@ main{max-width:1240px;margin:0 auto;padding:16px 16px 80px}
 .abas{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
 .abas button{border:1px solid var(--ln);background:#fff;border-radius:12px;padding:9px 14px;font-weight:700;cursor:pointer;color:var(--ink)}
 .abas button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.abas button.ab-conv{background:#0d5c8f;color:#fff;border-color:#0d5c8f;display:inline-flex;align-items:center;gap:7px}.abas button.ab-conv:hover{background:#0a4a74}.abas button.ab-conv .fcv-n{min-width:20px;height:20px;border-radius:99px;background:#e11d48;color:#fff;font-size:12px;display:inline-grid;place-items:center;padding:0 6px}.abas button.ab-conv .fcv-n:empty{display:none}
+html.fcv-dock .fcv-btn{display:none!important}
 .box{background:#fff;border:1px solid var(--ln);border-radius:16px;padding:16px 18px;margin-bottom:14px}
 h2.t{margin:0 0 10px;font:800 24px/1.1 var(--f-d);color:#0f4f53}h3{margin:0 0 8px;font:800 19px var(--f-d);color:#0f4f53}
 .nota{color:var(--tm);font-size:14px;margin:4px 0}
@@ -90,6 +92,7 @@ html.emb .top{display:none}html.emb main{padding-top:8px}
 <div id="imp"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="../auth.js"></script>
+<script src="../sessao.js?v=1"></script>
 <script src="../planilha.js?v=2"></script>
 <script src="../estoque-aviso.js?v=2"></script>
 <script>
@@ -147,6 +150,7 @@ async function carregar(){const d=await rpcDados();
   if(!d){$('#app').innerHTML='<p class="vazio">Link inválido ou desativado. Fale com o gestor da empresa ou com a FC Consultoria.</p>';return false;}
   D=d;EMP=d.emp;if(!FC)ADM=!!d.adm;if(DEMO)ADM=false;if(d.papel==='compras'&&!['est','cest'].includes(ABA))ABA='est';const c=d.cab||{};$('#hd').textContent='Painel de Vendas · '+(c.nome||d.nome||'');$('#hdSub').textContent=DEMO?'Demonstração · tela do vendedor':FC?'FC Consultoria · painel da matriz':GESTOR?'Gestor da empresa':'Vendedor: '+((d.vend&&d.vend.nome)||'');
   if(c.logo)$('#hdLogo').src=fotoUrl(c.logo);
+  sairBarra((d.vend&&d.vend.nome)||'');
   if(!O)O=novoOrc();if(!EQ||EQ.emp!==EMP||EQ.n!==D.itens.length){EQ=null;carregaEQ().then(e=>{e.emp=EMP;e.n=D.itens.length;if(ABA==='novo'&&O.itens.length&&document.activeElement&&document.activeElement.id!=='bq')tela();});}return true;}
 
 /* ================= TELA ================= */
@@ -159,7 +163,7 @@ function tela(){if(!D)return;const ag=D.orcs.filter(o=>o.status==='aguardando').
   if(DEMO)h=`<div class="box" style="border-color:#e0b100;background:#fff8dc"><b>👁 Demonstração: é assim que o vendedor vê.</b> <span class="nota">Ele só tem estas duas abas, não vê custo nem planilha e abre só no computador. Nesta demonstração nada é salvo.</span></div>`+h;
   if(!D.itens.length&&ABA!=='cfg')h+=`<div class="box" style="border-color:var(--or);background:var(--orc)"><b>Ainda não há itens liberados para orçamento.</b><p class="nota" style="margin:2px 0 0">${ADM?'Vá em ⚙️ Configurar e clique em "Atualizar itens da precificação".':'A FC Consultoria está preparando a lista de itens. Volte mais tarde.'}</p></div>`;
   if(['com','apr','vend','cfg','est','cli','dsc'].includes(ABA)&&!ADM)ABA='novo';if(ABA==='dsc'&&!DSC_PODE())ABA='novo';if(ABA==='cat'&&!D.cat)ABA='novo';if((ABA==='mos'||ABA==='t3d'||ABA==='msc')&&!(D.estudo&&D.estudo.on))ABA='novo';if(ABA==='mos'&&!D.estudo.mos)ABA='novo';if(ABA==='novo')h+=telaNovo();else if(ABA==='lista')h+=telaLista();else if(ABA==='dsc')h+=telaDsc();else if(ABA==='com'||ABA==='apr')h+=`<div class="${ABA==='apr'?'modoApr':'modoCom'}">`+telaCom()+'</div>';else if(ABA==='est')h+=telaEst();else if(ABA==='cest')h+=telaCest();else if(ABA==='cat')h+=telaCat();else if(ABA==='mos')h+=telaMos();else if(ABA==='t3d')h+=telaT3d();else if(ABA==='msc')h+=telaMsc();else if(ABA==='atd'||ABA==='cli')h+='<div id="atdBox"></div>';else if(window.VX&&VX.tem(ABA))h+=VX.tela(ABA);else h+=`<div class="${ABA==='vend'?'modoVend':'modoCfg'}">`+telaCfg()+'</div>';
-  $('#app').innerHTML=h;$$('[data-ab]').forEach(b=>b.onclick=()=>{ABA=b.dataset.ab;tela();});
+  $('#app').innerHTML=h;convAba();$$('[data-ab]').forEach(b=>b.onclick=()=>{ABA=b.dataset.ab;tela();});
   if(ABA==='novo')wireNovo();else if(ABA==='dsc')wireDsc();else if(ABA==='lista')wireLista();else if(ABA==='com'||ABA==='apr')wireCom();else if(ABA==='est')wireEst();else if(ABA==='cest')wireCest();else if(ABA==='cat'){}else if(ABA==='atd'||ABA==='cli'){if(window.ATD)ATD.abrir(ABA);}else if(window.VX&&VX.tem(ABA))VX.wire(ABA);else wireCfg();if(window.VX&&VX.pos)VX.pos();if(window.ATD&&!DEMO)ATD.ligar();const gf=$('#gFC');if(gf)gf.onclick=suporte;const stb=$('#supTab');if(stb)stb.onclick=suporte;}
 
 /* ---------- novo / editar ---------- */
@@ -678,6 +682,23 @@ const ABA0=Q.get('est')?'est':Q.get('aba');
 /* Vendedor: montar orçamento só no computador (20/10) */
 const MOVEL=/Android|iPhone|iPad|iPod|Mobile|Tablet/i.test(navigator.userAgent)||(/Macintosh/.test(navigator.userAgent)&&navigator.maxTouchPoints>1)||(matchMedia('(pointer:coarse)').matches&&Math.min(screen.width,screen.height)<900);
 if(VKEY&&!GESTOR&&MOVEL){const L=location.href;document.body.innerHTML=`<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:#0f1a22;font:400 16px/1.5 system-ui,sans-serif"><div style="max-width:420px;background:#fff;border-radius:16px;padding:24px;text-align:center;color:#1d2a33"><div style="font-size:46px">💻</div><h2 style="margin:6px 0 8px">Abra no computador</h2><p style="margin:0 0 14px;color:#4b5b66">O painel de orçamentos funciona só no computador. Abra este mesmo link no computador da loja para montar os orçamentos.</p><button type="button" id="mvCp" style="background:#0f6b70;color:#fff;border:0;border-radius:10px;padding:11px 16px;font-weight:700;font-size:15px;cursor:pointer;width:100%">📋 Copiar o link</button><p id="mvMsg" style="margin:10px 0 0;font-size:13px;color:#1f8a4c;min-height:18px"></p><p style="margin:8px 0 0;font-size:12px;color:#7a8a95">FC Consultoria · (66) 9 9986-7984</p></div></div>`;document.getElementById('mvCp').onclick=async()=>{try{await navigator.clipboard.writeText(L);document.getElementById('mvMsg').textContent='Link copiado. Cole no navegador do computador.';}catch(_){prompt('Copie o link:',L);}};throw new Error('vendedor no celular');}
+/* Conversas ao lado de "Novo orçamento" (27/10): usa o mesmo botão da Central de Conversas */
+function convAba(){const nv=document.querySelector('.abas [data-ab="novo"]'),fb=document.getElementById('fcvBtn');if(!nv||!fb||document.getElementById('abConv'))return;
+  const b=document.createElement('button');b.type='button';b.id='abConv';b.className='ab-conv';b.title='Conversar com a equipe e com a FC';
+  b.innerHTML='💬 Conversas <span class="fcv-n" id="abConvN"></span>';b.onclick=()=>fb.click();nv.after(b);
+  document.documentElement.classList.add('fcv-dock');const n=document.getElementById('fcvN');document.getElementById('abConvN').textContent=n?n.textContent:'';}
+new MutationObserver(()=>{if(!document.getElementById('abConv'))convAba();const n=document.getElementById('fcvN'),m=document.getElementById('abConvN');if(n&&m&&m.textContent!==n.textContent)m.textContent=n.textContent;})
+  .observe(document.documentElement,{childList:true,subtree:true,characterData:true});
+/* Botão Sair + selo On-line/Off-line (27/10) */
+function sairBarra(nome){if(DEMO||SO||document.documentElement.classList.contains('emb')||window.top!==window||!window.FCSessao)return;
+  if(nome)FCSessao.nome(nome);const w=$('header.top .w');if(!w||w.querySelector('[data-fcs-sair]'))return;
+  if(FC){FCSessao.botaoSair(w,async()=>{await sb.auth.signOut();location.replace('/treinamento/painel.html');});return;}
+  const e=EMP||Q.get('e')||'';
+  FCSessao.botaoSair(w,async()=>{if(!confirm('Sair do Painel de Vendas neste computador?\n\nPara voltar, entre de novo com o seu login e senha.'))throw 0;
+    let tk=Q.get('et')||'';try{if(!tk&&e)tk=localStorage.getItem('emp-tok-'+e)||'';}catch(_){}
+    if(tk){try{await sb.rpc('emp_sair',{p_token:tk});}catch(_){}}
+    try{if(e)localStorage.removeItem('emp-tok-'+e);localStorage.removeItem('cons-nome');}catch(_){}
+    location.replace('../consultorias.html'+(e?'?e='+encodeURIComponent(e):''));});}
 (async()=>{if(VKEY){if(GESTOR)ABA=ABA0||'com';if(await carregar()){tela();if(window.VX)VX.iniciar();}return;}
   gateUI(async()=>{try{const r=await sb.rpc('trein_is_admin');ADM=!!r.data;}catch(_){}
     if(!ADM){$('#app').innerHTML='<p class="vazio">Esta área é da FC Consultoria. O vendedor entra pelo link que recebeu.</p>';return;}FC=true;
@@ -687,7 +708,7 @@ if(VKEY&&!GESTOR&&MOVEL){const L=location.href;document.body.innerHTML=`<div sty
     let e0=Q.get('e')||(()=>{try{return localStorage.getItem('fc_orc_emp');}catch(_){return '';}})()||'cb';if(!EMPS.some(e=>e.id===e0))e0=(EMPS.find(e=>e.id==='cb')||EMPS[0]||{}).id;s.value=e0;s.onchange=()=>trocaEmp(s.value);
     if(ABA0)ABA=ABA0;await trocaEmp(e0);});})();
 </script>
-<script src="atendimentos.js?v=3"></script><script src="../conversas.js?v=3"></script><script>(function(){const q=new URLSearchParams(location.search);if(q.get('e')||q.get('ver')==='vend'||window.top!==window)return;let t=q.get('et');
+<script src="atendimentos.js?v=3"></script><script src="../conversas.js?v=4"></script><script>(function(){const q=new URLSearchParams(location.search);if(q.get('e')||q.get('ver')==='vend'||window.top!==window)return;let t=q.get('et');
   if(!t){try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(/^emp-tok-/.test(k)){t=localStorage.getItem(k);break;}}}catch(_){}}
   if(t&&window.FCConversas)FCConversas.equipe(t);})();</script><script src="vend-extra.js?v=6"></script>
 <script src="../volta-painel.js"></script>

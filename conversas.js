@@ -16,11 +16,12 @@
   const ini=n=>String(n||'?').split(/\s+/).filter(Boolean).slice(0,2).map(w=>w[0]).join('').toUpperCase();
 
   const CSS=`
-.fcv-btn{position:fixed;left:16px;bottom:16px;z-index:9990;display:flex;align-items:center;gap:8px;border:0;border-radius:99px;padding:11px 16px;background:#0d5c8f;color:#fff;font:700 14.5px system-ui,-apple-system,"Segoe UI",sans-serif;cursor:pointer;box-shadow:0 10px 26px -10px rgba(13,92,143,.7)}
+.fcv-btn{position:fixed;left:16px;bottom:16px;z-index:9990;display:flex;align-items:center;gap:10px;border:0;border-radius:99px;padding:15px 24px;background:#0d5c8f;color:#fff;font:800 17px system-ui,-apple-system,"Segoe UI",sans-serif;cursor:pointer;box-shadow:0 10px 26px -10px rgba(13,92,143,.8);border:2px solid #fff}
+.fcv-btn:hover{background:#0a4a74}.fcv-btn .fcv-n{min-width:24px;height:24px;font-size:13.5px}.fcv-btn:has(.fcv-n:not(:empty)){animation:fcvChama 1.6s ease-in-out infinite}@keyframes fcvChama{50%{box-shadow:0 0 0 7px rgba(225,29,72,.25)}}
 .fcv-btn:focus-visible,.fcv button:focus-visible{outline:3px solid #f2a51e;outline-offset:2px}
 .fcv-n{min-width:20px;height:20px;border-radius:99px;background:#e11d48;color:#fff;font-size:12px;display:inline-grid;place-items:center;padding:0 6px}
 .fcv-n:empty{display:none}
-.fcv{position:fixed;left:16px;bottom:72px;z-index:9991;width:min(760px,calc(100vw - 32px));height:min(600px,calc(100vh - 100px));background:var(--surface,#fff);color:var(--fg,#15232b);border:1px solid var(--line,#d9e1e6);border-radius:16px;box-shadow:0 24px 60px -20px rgba(15,23,42,.45);display:none;grid-template-columns:260px 1fr;overflow:hidden;font:14.5px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif}
+.fcv{position:fixed;left:16px;bottom:84px;z-index:9991;width:min(760px,calc(100vw - 32px));height:min(600px,calc(100vh - 100px));background:var(--surface,#fff);color:var(--fg,#15232b);border:1px solid var(--line,#d9e1e6);border-radius:16px;box-shadow:0 24px 60px -20px rgba(15,23,42,.45);display:none;grid-template-columns:260px 1fr;overflow:hidden;font:14.5px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif}
 .fcv.on{display:grid}
 .fcv-mat.fcv{left:50%;top:50%;bottom:auto;transform:translate(-50%,-50%);width:min(980px,calc(100vw - 32px));height:min(680px,calc(100vh - 60px));grid-template-columns:320px 1fr}
 .fcv-side{border-right:1px solid var(--line,#d9e1e6);display:flex;flex-direction:column;min-height:0;background:var(--surface-2,#f6f8f9)}
