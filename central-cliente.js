@@ -211,6 +211,7 @@
 
   function atalhos(e){const o=[];const id=e.cons,doc=id?S.docs[id]||{}:{},D=id&&S.D[id],ges=D&&(D.pessoas||[]).find(p=>p.papel==='gestor');
     if(id){o.push(at('👁 Ver como '+(ges?h(ges.nome.split(' ')[0]):'o gestor')+' vê','consultorias.html?ver='+encodeURIComponent(id)+'&como=gestor',true));
+      {const PN={compras:'Compras',gerente:'Coordenação',marketing:'Marketing',fabrica:'Fábrica'},vis={};(D&&D.pessoas||[]).forEach(p=>{if(!PN[p.papel]||vis[p.papel]||p.ativo===false)return;vis[p.papel]=1;const nm=p.papel==='gerente'?'a coordenação':h(p.nome.split(' ')[0]);o.push(at('👁 Ver como '+nm+' vê ('+PN[p.papel]+')','consultorias.html?ver='+encodeURIComponent(id)+'&como='+p.papel));});}
       o.push(at('🧭 Consultoria (fluxo, plano, visitas)','consultorias.html?ver='+encodeURIComponent(id)));
       o.push(at('🔐 Acessos e senhas','consultorias.html?ver='+encodeURIComponent(id)+'&abrir=acessos'));
       o.push(at('📚 '+(doc.catalogo?'Editar o catálogo':'Catálogos'),doc.catalogo?'catalogos.html?editar='+encodeURIComponent(doc.catalogo):'catalogos.html'));

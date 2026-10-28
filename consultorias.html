@@ -480,7 +480,7 @@ function cards(){if(PUB)return;const ks0=Object.keys(E);const M={};ks0.forEach(k
 function abrirEmpresa(k,t){at=k;openLane=null;OPEN={};if(t)tab=t;else tab='proc';render();window.scrollTo({top:0,behavior:'smooth'});}
 /* Abas que o cliente pode ver; o painel da matriz libera uma a uma (e.abasLib). Sem escolha salva, vale o que já aparecia. */
 const CLI_ABAS=['proc','acao','gal','dem','pla','est','cat','ori','esq','casa','conv','comp','dist','orc','pcod','dia','sol','age','rvi'],CLI_PADRAO=CLI_ABAS.filter(k=>k!=='rvi'&&k!=='conv'&&k!=='comp'&&k!=='dist'&&k!=='orc'&&k!=='pcod');
-const abasLib=e=>{let L=Array.isArray(e&&e.abasLib)?e.abasLib:CLI_PADRAO;if(Array.isArray(e&&e.abasLib)&&!e.casaMig&&!L.includes('casa'))L=[...L,'casa'];return (!PUB&&cli&&window.FCCentral&&e&&e===E[at]&&!L.includes('cen'))?['cen',...L]:L;};
+const abasLib=e=>{if(!PUB&&cli&&window.VCOMO&&Array.isArray(window.VCOMO.abas)&&e&&e===E[at])return window.VCOMO.abas;let L=Array.isArray(e&&e.abasLib)?e.abasLib:CLI_PADRAO;if(Array.isArray(e&&e.abasLib)&&!e.casaMig&&!L.includes('casa'))L=[...L,'casa'];return (!PUB&&cli&&window.FCCentral&&e&&e===E[at]&&!L.includes('cen'))?['cen',...L]:L;};
 const GRUPOS_ABA=[['Gerência',['proc','acao','gal','dem']],['Financeiro / Administrativo',['pla','est','rvi','comp','conv','dist']],['Suporte',['sol','age']],['Treinamento',['dia','ori','esq','casa']],['Comercial',['pcom','cat','orc','pcod']],[e=>'Com o cliente · site e produtos '+(e&&e.nome||''),['mkt','div']],['Interno FC',['dsp','vis','arq','hrs']]];
 const ABAS=[['proc','🧭 Fluxo do processo'],['acao','✅ Plano de ação durante a visita'],['pla','📊 Planilhas de precificação'],['est','📦 Estoque · importação'],['rvi','📋 Relatório de vendas · itens'],['cat','📚 Catálogo'],['pcom','🚀 Portal Comercial Guaporé'],['ori','🎓 Mostruário (Material de Consulta - Guia de Esquadrias)'],['esq','🪟 Treinamento 3D'],['casa','🏙 Monte sua Casa 3D'],['conv','🔁 Conversor de códigos de fornecedores'],['comp','🛒 Onde comprar · perfis nas extrusoras'],['dist','🏬 Compras com distribuidoras'],['orc','🏪 Painel de Vendas Atacado'],['pcod','🔎 Pesquisa de código e conversor'],['dia','🌬 Diagramas de pressão de vento'],['div','📣 Divulgação'],['mkt','💡 Dicas de marketing'],['gal','📸 Galeria do processo de mudança'],['sol','📨 Solicitações com a FC'],['age','🗓 Agenda da FC com {cli}'],['dsp','💳 Despesas'],['vis','📋 Visitas'],['dem','📦 Demandas e entregas'],['arq','📁 Arquivos'],['hrs','⏱ Horas']];
 const DESC_ABA={rvi:'Itens orçados e itens em pedidos do Painel de Vendas, somados por código e cor, para planejar as compras.',proc:'Etapas da consultoria e o que já foi concluído em cada frente.',acao:'Pontos levantados durante a visita, com responsável e prazo para resolver.',gal:'Fotos do antes e depois do processo de mudança na empresa.',dem:'O que a FC já entregou e o que está pendente de cada lado.',
@@ -1362,7 +1362,7 @@ if(PUB){(async()=>{document.title='Acompanhamento da consultoria · FC Consultor
   const ping=()=>{if(!document.hidden)sb.rpc('cons_portal_ping',{p_chave:KEY,p_nome:nomeCli()}).then(()=>{},()=>{});};ping();setInterval(ping,120000);document.addEventListener('visibilitychange',()=>{if(!document.hidden){ping();checarDivs();}});
   setTimeout(saudacaoDoDia,1000);setInterval(checarDivs,60000);$('#pubT').textContent='Acompanhamento da consultoria';if(PESSOA)barraPessoa();{const mt=(location.hash||'').match(/^#t=(\w+)/);if(mt){tab=mt[1];history.replaceState(null,'',location.pathname+location.search);}}ficha();{const m=(location.hash||'').match(/pl=([\w-]+)/);if(m){tab='pla';ficha();history.replaceState(null,'',location.pathname+location.search);setTimeout(()=>abrirPlanilha(m[1]),300);}}})();}
 else{/* links da Matriz: ?ver=<empresa> abre a empresa · &como=gestor abre "Como o cliente vê" na Central do Gestor · &abrir=acessos abre os acessos */
-  const abrirVer=()=>{const q=new URLSearchParams(location.search),v=(q.get('ver')||'').toLowerCase();if(!v||!E[v])return;const g=q.get('como')==='gestor';
+  const abrirVer=()=>{const q=new URLSearchParams(location.search),v=(q.get('ver')||'').toLowerCase();if(!v||!E[v])return;const cm=(q.get('como')||'').toLowerCase(),g=!!cm;if(cm&&cm!=='gestor')window.VCOMO_PEND=cm;
     abrirEmpresa(v,g?'cen':(q.get('t')||undefined));if(g)setCli(true);if(q.get('abrir')==='acessos'&&window.abrirAcessos)setTimeout(()=>abrirAcessos(v,E[v].nome),300);};
   gateUI(()=>Promise.resolve(carregar()).then(abrirVer),{soMatriz:true});
   $('#acbar').hidden=false;
@@ -1377,7 +1377,7 @@ else{/* links da Matriz: ?ver=<empresa> abre a empresa · &como=gestor abre "Com
 <script src="central-gestor.js?v=8"></script>
 <script src="rel-itens.js?v=1"></script>
 <script src="tour-fc.js?v=1"></script>
-<script src="plataforma-cb.js?v=2"></script>
+<script src="plataforma-cb.js?v=3"></script>
 <script src="visao-fc-cards.js?v=1"></script>
 <script src="conversas.js?v=4"></script>
 <script>/* barra de baixo: ocultar / mostrar (fica lembrado neste aparelho) */

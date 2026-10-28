@@ -31,6 +31,12 @@ const css=`
 .platVolta b{font-size:15px;color:var(--fg)}
 .platOn #cgTools{display:none!important}
 .platWm{font-size:11px;color:var(--muted);text-align:center;padding:0 0 14px}
+.platVer{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:14px 18px 0;padding:10px 12px;border:1px dashed ${COR};border-radius:12px;background:${CLARO}}
+:root[data-theme="dark"] .platVer{background:#221a4d}
+.platVer>b{font-size:13px;color:${COR2};margin-right:4px}:root[data-theme="dark"] .platVer>b{color:#c9bdf6}
+.platVer button{all:unset;cursor:pointer;border:1px solid #c9bdf6;background:var(--surface);color:var(--fg);border-radius:999px;padding:5px 12px;font-size:13px;font-weight:600}
+.platVer button.on{background:${COR};border-color:${COR};color:#fff}
+.platVer .n{font-size:12px;color:var(--muted);flex-basis:100%}
 @media (max-width:560px){.platGrid{grid-template-columns:1fr 1fr;gap:9px;padding:12px}.platK{min-height:104px;padding:12px}.platHero{margin:10px 10px 0}}`;
 const st=document.createElement('style');st.textContent=css;document.head.appendChild(st);
 
@@ -79,7 +85,9 @@ const INTRO={
  marketing:['Marketing','Este é o painel do Marketing. Aqui você acompanha o catálogo da empresa, a galeria do processo de mudança e fala com a FC.'],
  fabrica:['Fábrica','Este é o painel da Fábrica. Aqui você estuda as esquadrias no Treinamento 3D e consulta o catálogo de perfis.'],
  '':['Visão do cliente','Esta é a Plataforma Casa Bandeirante e FC 3D. Cada cartão abre uma ferramenta; vou mostrar uma por uma.']};
-const papel=()=>{try{return (typeof PESSOA!=='undefined'&&PESSOA&&PESSOA.papel)||'';}catch(_){return '';}};
+const temP=()=>{try{return typeof PESSOA!=='undefined'&&!!PESSOA;}catch(_){return false;}};
+const vc=()=>(!temP()&&window.VCOMO)?window.VCOMO:null;
+const papel=()=>{try{return (temP()&&PESSOA.papel)||(vc()&&vc().papel)||'';}catch(_){return '';}};
 const chaveTut=()=>{try{return 'plat-cb-tour-v1-'+((PESSOA&&(PESSOA.login||PESSOA.id))||'fc');}catch(_){return 'plat-cb-tour-v1-fc';}};
 function tutorial(){if(!window.FCTour)return;
   if(modo!=='home'){modo='home';homeTab=(typeof tab!=='undefined')?tab:null;pinta(true);}
@@ -92,8 +100,26 @@ function tutorial(){if(!window.FCTour)return;
   FCTour.iniciar({titulo:'Tutorial · '+nome,passos,cor:COR,aoFim:()=>{try{localStorage.setItem(chaveTut(),'1');}catch(_){}
     try{if(typeof PESSOA!=='undefined'&&PESSOA)sb.rpc('emp_registrar',{p_token:PESSOA.token,p_area:'tutorial',p_acao:'viu o tutorial da plataforma'}).then(()=>{},()=>{});}catch(_){}}});}
 let tutAuto=false;
-const nomePapel=()=>{try{return PESSOA?(PAPEL_NOME[PESSOA.papel]||PESSOA.papel):'Visão do cliente';}catch(_){return '';}};
+const nomePapel=()=>{try{if(temP())return PAPEL_NOME[PESSOA.papel]||PESSOA.papel;const v=vc();return v?(PAPEL_NOME[v.papel]||v.papel)+' · prévia da FC':'Visão do cliente';}catch(_){return '';}};
 const sair=()=>{const b=document.getElementById('pesSair');if(b)b.click();else location.reload();};
+
+/* ---------- Matriz: "Ver como" cada perfil da CB (prévia, não grava nada) ---------- */
+const ORD=['gestor','compras','gerente','marketing','fabrica'],PAD={compras:['comp','dist','est','pla','conv','age','sol'],gerente:['orc','cat','pcod'],marketing:['cat'],fabrica:['esq','cat']};
+let LISTA=null,carregando=false;
+function perfis(){const r=[];ORD.forEach(pp=>{const ps=(LISTA||[]).filter(p=>p.papel===pp&&p.ativo!==false);
+  if(!ps.length&&pp!=='fabrica')return;const p=ps[0]||{nome:'Fábrica',papel:'fabrica'};
+  const lb=pp==='gestor'?p.nome.split(' ')[0]+' · Gestor':pp==='gerente'?'Coordenação':pp==='fabrica'?'Fábrica':p.nome.split(' ')[0]+' · '+(PAPEL_NOME[pp]||pp);
+  r.push({papel:pp,nome:pp==='gerente'?'Coordenação':p.nome,lb,abas:pp==='gestor'?null:(p.abas||PAD[pp]||[]),sem:!ps.length});});return r;}
+function escolhe(v){window.VCOMO=v;modo='home';homeTab=undefined;try{render();}catch(_){pinta(true);}setTimeout(()=>{pinta(true);window.scrollTo({top:0,behavior:'smooth'});},60);}
+function barraVer(hero){
+  if(!LISTA){if(!carregando&&typeof sb!=='undefined'){carregando=true;sb.rpc('emp_pessoas_lista',{p_emp:EMP}).then(r=>{LISTA=r.data||[];carregando=false;
+      const pend=window.VCOMO_PEND;if(pend){window.VCOMO_PEND=null;const v=perfis().find(x=>x.papel===pend);if(v){escolhe(v);return;}}pinta(true);},()=>{carregando=false;});}return;}
+  const P=perfis(),at=(window.VCOMO&&window.VCOMO.papel)||'gestor';
+  const b=document.createElement('div');b.className='platVer';
+  b.innerHTML='<b>👁 Ver como:</b>'+P.map(x=>`<button type="button" data-vc="${x.papel}" class="${x.papel===at?'on':''}">${h(x.lb)}</button>`).join('')+
+    `<span class="n">Prévia da FC: mostra exatamente os cards que cada login vê. Nada é gravado e não conta como acesso da pessoa.${P.some(x=>x.sem)?' Fábrica: ninguém cadastrado ainda (cards padrão do papel).':''}</span>`;
+  b.querySelectorAll('[data-vc]').forEach(k=>k.onclick=()=>{const v=P.find(x=>x.papel===k.dataset.vc);escolhe(v&&v.papel!=='gestor'?v:(v?{papel:'gestor',nome:v.nome,abas:null}:null));});
+  hero.before(b);}
 
 function pinta(forca){
   const f=document.getElementById('ficha');if(!f||!ehCB())return;
@@ -103,17 +129,18 @@ function pinta(forca){
   const tAtual=(typeof tab!=='undefined')?tab:null;
   if(homeTab===undefined)homeTab=tAtual;
   if(modo==='home'&&tAtual!==homeTab)modo='aba';
-  f.querySelectorAll('.platHero,.platGrid,.platVolta,.platWm').forEach(x=>x.remove());
+  f.querySelectorAll('.platVer,.platHero,.platGrid,.platVolta,.platWm').forEach(x=>x.remove());
   const fh=f.querySelector('.fh'),bar=f.querySelector('.cliente-bar'),body=f.querySelector(':scope > .body');
   if(fh)fh.style.display='none';if(bar&&bar.parentElement)bar.parentElement.style.display='none';
   tg.style.display='none';
   const escuro=document.documentElement.getAttribute('data-theme')==='dark';
-  const nome=(typeof PESSOA!=='undefined'&&PESSOA)?PESSOA.nome.split(' ')[0]:'equipe';
+  const nome=temP()?PESSOA.nome.split(' ')[0]:(vc()?vc().nome.split(' ')[0]:'equipe');
   const hero=document.createElement('div');hero.className='platHero';
   hero.innerHTML=`<div class="lg">CB</div><div><h2>Olá, ${h(nome)}</h2><div class="s">Plataforma Casa Bandeirante &amp; FC 3D · ${h(nomePapel())}</div></div>
    <div class="bts"><button type="button" data-a="tut">▶ Tutorial</button><button type="button" data-a="tema">${escuro?'☀ Fundo claro':'🌙 Fundo escuro'}</button>${(typeof PESSOA!=='undefined'&&PESSOA)?'<button type="button" data-a="sair">Sair</button>':''}</div>`;
   hero.querySelector('[data-a="tema"]').onclick=tema;hero.querySelector('[data-a="tut"]').onclick=tutorial;const bs=hero.querySelector('[data-a="sair"]');if(bs)bs.onclick=sair;
   tg.before(hero);
+  if(!temP())barraVer(hero);
   const btns=[...tg.querySelectorAll('button.tab[data-t]')];
   if(modo==='home'){
     if(body)body.style.display='none';
