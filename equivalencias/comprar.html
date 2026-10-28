@@ -168,6 +168,7 @@ tr.hl td{background:#fff3c4!important;transition:background .4s}
 <script src="foto-busca.js?v=2"></script>
 <script src="importa-lista.js?v=6"></script>
 <script src="cliente-codigos.js?v=1"></script>
+<script src="parecidos.js?v=1"></script>
 <script>
 const $=s=>document.querySelector(s),esc=t=>String(t??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const KEY=new URLSearchParams(location.search).get('k')||'';const EMPFIX=new URLSearchParams(location.search).get('emp')||'';
@@ -210,7 +211,7 @@ async function carregaIndice(){
       else{const r=await sb.rpc('equiv_edits_lista',{p_chave:KEY});ed=r.data||[];}}catch(_){}
   const last={};ed.forEach(x=>{if(x&&x.f&&x.c)last[(x.l||'suprema')+'|'+x.f+'|'+x.c]=x;});
   Object.values(last).forEach(x=>{const l=x.l||'suprema';
-    IDX.g.forEach(g=>{if(g.l===l)g.m=g.m.filter(m=>!(m[0]===x.f&&m[1]===x.c&&m[3]!=='base'));});
+    IDX.g.forEach(g=>{if(g.l===l&&!(x.a&&g.k===x.a))g.m=g.m.filter(m=>!(m[0]===x.f&&m[1]===x.c&&(m[3]!=='base'||(g.sp&&x.a))));});
     if(!x.a)return;const g=IDX.g.find(y=>y.l===l&&y.k===x.a);const p=x.p!=null&&x.p!==''?+x.p:null;if(g&&p)g.m.push([x.f,x.c,p,x.n||'media',x.img||'',x.pg||'—',1]);});
   if(!ADM){try{const r=await sb.rpc('equiv_ok_lista',{p_chave:KEY});(r.data||[]).forEach(k=>OK[k]=true);}catch(_){}}
   BY={};IDX.g.forEach((g,i)=>{g.i=i;g.m.forEach(m=>{(BY[norm(m[1])]=BY[norm(m[1])]||[]).push(i);});if(g.mc)(BY[norm(g.k)]=BY[norm(g.k)]||[]).push(i);});
@@ -274,11 +275,11 @@ function frase(o,r,b){
 
 /* ===== telas ===== */
 function abas(){const n=REL.length;const A=[['busca','🔎 Pesquisar'],['precos','💲 Preços dos fornecedores'],['sim','🧮 Simular pedido'+(SIM.length?` <span class="ct">${SIM.length}</span>`:'')],['rel','📄 Relatório'+(n?` <span class="ct">${n}</span>`:'')]];
-  if(ADM)A.push(['abc','📊 Curva ABC'],['uso','👀 Acompanhamento']);
+  if(ADM)A.push(['abc','📊 Curva ABC'],['uso','👀 Acompanhamento'],['var','🔁 Varredura']);
   return `<nav class="abas noprint">${A.map(([k,t])=>`<button type="button" data-aba="${k}" class="${ABA===k?'on':''}">${t}</button>`).join('')}</nav>`;}
 function tela(){const a=$('#app');
   const demo=LOCAL?`<div class="aviso noprint">🧪 <b>Modo demonstração.</b> Os preços ficam guardados só neste aparelho até a FC ativar o banco de dados desta ferramenta.</div>`:'';
-  let h='';if(ABA==='busca')h=telaBusca();else if(ABA==='precos')h=telaPrecos();else if(ABA==='rel')h=telaRel();else if(ABA==='sim')h=telaSim();else if(ABA==='abc')h=telaAbc();else if(ABA==='uso')h='<div class="box"><p class="vazio">Carregando o acompanhamento…</p></div>';
+  let h='';if(ABA==='busca')h=telaBusca();else if(ABA==='precos')h=telaPrecos();else if(ABA==='rel')h=telaRel();else if(ABA==='sim')h=telaSim();else if(ABA==='abc')h=telaAbc();else if(ABA==='var')h=window.FCPar?FCPar.tela():'';else if(ABA==='uso')h='<div class="box"><p class="vazio">Carregando o acompanhamento…</p></div>';
   a.innerHTML=abas()+demo+h;if(ABA==='uso')telaUso();if(ABA==='busca'){const i=$('#q');if(i&&!Q)i.focus();}}
 function semPrecos(){return !FL().some(f=>DADOS.forn[f]&&+DADOS.forn[f].natural>0);}
 let VSIM=null;/* item da simulação aberto na pesquisa (espelho) */
@@ -330,6 +331,7 @@ function resultado(r){
    <div class="acoes noprint" style="margin-top:8px"><button type="button" class="bt ${naRel?'':'p'}" data-addrel ${naRel?'disabled':''}>${naRel?'✓ Está no relatório':'＋ Adicionar ao relatório'}</button><span class="simx"><select id="sxCor" aria-label="Cor do perfil">${CORES.map(([k,t])=>`<option value="${k}" ${COR===k?'selected':''}>${esc(t)}</option>`).join('')}</select><input id="sxB" inputmode="numeric" value="1" aria-label="Barras" title="Barras"><span class="sxu">barras de</span><select id="sxM" aria-label="Tamanho da barra">${MTS.map(m=>`<option value="${m}" ${m===6?'selected':''}>${String(m).replace('.',',')} m</option>`).join('')}</select><button type="button" class="bt" data-addsim>🧮 Levar para a simulação</button></span></div></div>${abcB}</div>
   ${mel}${R.L.length===1?`<div class="aviso">Este código ainda não tem equivalente ${ADM?'':'confirmado pela FC '}nos outros fornecedores.</div>`:''}
   ${linhas}
+  ${window.FCPar?FCPar.bloco(g,ref):''}
   <p class="sub" style="font-size:13px">Barra de ${BARRA} m. Compra mínima por item em kg, arredondada para barras inteiras. ${COR!=='natural'?'Preço com acabamento = natural + acréscimo da cor por kg. ':''}Os pares vêm da Conversão de códigos da FC: confira o desenho antes de fechar a compra.${meta?' '+esc(meta):''}</p></div>`;}
 
 /* ===== filtro enquanto digita ===== */
