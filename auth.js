@@ -10,12 +10,19 @@ async function perfilAtual(){
   const {data,error}=await sb.from('trein_alunos').select('user_id,login,nome,papel,ativo').eq('user_id',session.user.id).maybeSingle();
   if(error||!data)return {session,perfil:null};return {session,perfil:data};
 }
+/* Acesso desativado: aviso da nova Plataforma FC 3D com botão para o WhatsApp da FC */
+function msgEvoluiu(msg){
+  const wa='https://wa.me/5566999867984?text='+encodeURIComponent('Olá, FC! Quero conhecer a nova Plataforma FC 3D.');
+  msg.innerHTML='<div style="margin-top:10px;padding:14px;border-radius:10px;background:rgba(31,179,201,.12);border:1px solid rgba(31,179,201,.45);line-height:1.45;text-align:center">'
+   +'<b>O FC Mostruário 3D evoluiu para a Plataforma FC 3D.</b><br>Para conhecer a nova versão, fale com a FC pelo WhatsApp (66) 9 9986-7984.'
+   +'<br><a href="'+wa+'" target="_blank" rel="noopener" style="display:inline-block;margin-top:10px;padding:10px 16px;border-radius:8px;background:#25d366;color:#fff;font-weight:700;text-decoration:none">💬 Falar com a FC no WhatsApp</a></div>';
+}
 function gateUI(onOk,{soMatriz=false}={}){
   const gate=document.getElementById('gate'),form=document.getElementById('gateForm'),msg=document.getElementById('gateMsg'),btn=form.querySelector('button');
   async function check(){
     const r=await perfilAtual();
     if(!r){gate.hidden=false;return;}
-    if(r.perfil&&!r.perfil.ativo&&r.perfil.papel!=='admin'){await sb.auth.signOut();gate.hidden=false;msg.textContent='Este acesso ao FC Mostruário 3D foi encerrado. Abrindo o site da FC Consultoria…';setTimeout(()=>{location.href='https://fc-consultoria.github.io/?o=encerrado';},3500);return;}
+    if(r.perfil&&!r.perfil.ativo&&r.perfil.papel!=='admin'){await sb.auth.signOut();gate.hidden=false;msgEvoluiu(msg);return;}
     if(!r.perfil||!r.perfil.ativo){await sb.auth.signOut();gate.hidden=false;msg.textContent='Este acesso não está liberado. Fale com a FC Consultoria.';return;}
     if(soMatriz&&r.perfil.papel!=='admin'){gate.hidden=false;msg.textContent='Esta área é só da matriz.';await sb.auth.signOut();return;}
     if(r.perfil.papel!=='admin'){try{await senhaNovaPasso(r.perfil);}catch(_){}}
@@ -26,7 +33,7 @@ function gateUI(onOk,{soMatriz=false}={}){
     const {error}=await sb.auth.signInWithPassword({email:loginToEmail(form.login.value),password:form.senha.value});
     btn.disabled=false;btn.textContent='Entrar';
     if(error){let enc=false;try{const r=await sb.rpc('trein_login_encerrado',{p_login:form.login.value});enc=!r.error&&r.data===true;}catch(_){}
-      if(enc){msg.textContent='Este acesso ao FC Mostruário 3D foi encerrado. Abrindo o site da FC Consultoria…';setTimeout(()=>{location.href='https://fc-consultoria.github.io/?o=encerrado';},3500);return;}
+      if(enc){msgEvoluiu(msg);return;}
       let tr=null;try{const q=await sb.rpc('trein_login_senha_trocada',{p_login:form.login.value});if(!q.error)tr=q.data;}catch(_){}
       msg.textContent=tr?'A senha desta empresa foi trocada em '+new Date(tr).toLocaleDateString('pt-BR')+' (apareceu na tela de quem entrou primeiro). Peça a senha nova ao gestor ou à FC Consultoria: (66) 9 9986-7984.':'Login ou senha não conferem.';return;}
     check();
