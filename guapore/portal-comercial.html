@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="robots" content="noindex">
-<style>body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<style>body{margin:0}img{max-width:100%}[hidden]{display:none!important}.thn{display:block;font-size:10px;font-weight:500;line-height:1.2;white-space:normal;min-width:64px;max-width:84px;margin:2px auto 0;text-transform:none;letter-spacing:0}
+</style>
 <title>Portal Comercial Guaporé</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap">
@@ -252,7 +253,7 @@ label{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:4
 
 <script>
 (function(){
-const KEY='guapore-portal-v2';
+const KEY='guapore-portal-v3';
 const MODS=[
  {k:'cat',n:'Catálogo 3D',d:'Perfis das linhas Suprema e Gold em 3D para mostrar ao cliente.',i:'▦'},
  {k:'trein',n:'Treinamento 3D',d:'Montagem e conceitos em 3D + treinamento on-line com agenda.',i:'◈'},
@@ -274,7 +275,7 @@ const CMODS=[
 ];
 const CCOLORS={comp:'var(--brand)',dist:'#3aa0c9',conv:'#6b7fd6',pcod:'#2f8f6f',cat:'#d5604a',ori:'var(--amber)',trein:'#c98a2b',casa:'#8a6bd6',fc:'#b0627e',age:'#7a8794'};
 const cmodsAll=v=>Object.fromEntries(CMODS.map(m=>[m.k,v]));
-function seedCompras(){return [{id:'k1',nome:'João',ativo:true,mods:cmodsAll(true),ac:{comp:6,dist:9,conv:11,pcod:14,cat:4,ori:2,trein:3,casa:1,fc:1,age:1},ult:day(2)}]}
+function seedCompras(){return []}
 const COLORS={cat:'var(--brand)',trein:'var(--amber)',casa:'#6b7fd6',vento:'#3aa0c9',fc:'#b0627e'};
 const PRODS=[
  {id:'p1',c:'SU-001',n:'Trilho superior porta/janela de correr 2 folhas',l:'Linha Suprema',g:'Trilhos superiores',kg:'0,762'},
@@ -294,27 +295,15 @@ function seed(){
  return {
   modsOn:{cat:true,trein:true,casa:true,vento:true,fc:true},
   autoCadastro:true,
-  vend:[v('v1','Carlos',{cat:34,trein:12,casa:9,vento:4,fc:2}),v('v2','Juliana',{cat:41,trein:18,casa:15,vento:6,fc:3}),v('v3','Marcos',{cat:12,trein:3,casa:2,vento:1,fc:0}),v('v4','Patrícia',{cat:27,trein:9,casa:11,vento:3,fc:1})],
-  visitas:[38,44,29,51,47,22,35],
-  cadDia:[2,3,1,4,2,0,1],
-  clientes:[
-   {id:'c1',nome:'Roberto Lima',empresa:'Lima Construções',cidade:'Cuiabá',tel:'(65) 9 0000-0001',email:'roberto@exemplo.com',data:day(1),visto:true},
-   {id:'c2',nome:'Sandra Melo',empresa:'Arquiteta autônoma',cidade:'Sinop',tel:'(66) 9 0000-0002',email:'sandra@exemplo.com',data:day(0),visto:false},
-   {id:'c3',nome:'Eduardo Prado',empresa:'Prado Engenharia',cidade:'Várzea Grande',tel:'(65) 9 0000-0003',email:'eduardo@exemplo.com',data:day(0),visto:false}
-  ],
-  orc:[
-   {id:'O-1031',cli:'c1',vend:'v2',canal:'WhatsApp',data:day(1),status:'andamento',itens:[{p:'p1',q:20,cor:'Preto'},{p:'p2',q:10,cor:'Preto'}],obs:'Reposição de estoque, prazo 15 dias.'},
-   {id:'O-1032',cli:'c2',vend:'v1',canal:'E-mail',data:day(0),status:'novo',itens:[{p:'p9',q:12,cor:'Branco'}],obs:''},
-   {id:'O-1033',cli:'c3',vend:'v4',canal:'WhatsApp',data:day(0),status:'novo',itens:[{p:'p6',q:10,cor:'Bronze'},{p:'p8',q:15,cor:'Bronze'}],obs:'Quer saber o prazo de entrega.'}
-  ],
-  slots:[
-   {id:'s1',d:'Qui 29/10',h:'14:00',tema:'Catálogo 3D na venda',cap:6,ins:['v2']},
-   {id:'s2',d:'Ter 03/11',h:'09:00',tema:'Monte sua Casa 3D',cap:6,ins:[]},
-   {id:'s3',d:'Qui 05/11',h:'14:00',tema:'Pressão de vento na prática',cap:6,ins:['v1','v4']}
-  ],
+  vend:[],
+  visitas:[0,0,0,0,0,0,0],
+  cadDia:[0,0,0,0,0,0,0],
+  clientes:[],
+  orc:[],
+  slots:[],
   sol:[],
-  me:'v1', cliSessao:null,
-  compras:seedCompras(), cmodsOn:cmodsAll(true), meC:'k1'
+  me:null, cliSessao:null,
+  compras:seedCompras(), cmodsOn:cmodsAll(true), meC:null
  };
 }
 let S;try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}
@@ -323,30 +312,18 @@ function isoDay(n){const d=new Date();d.setDate(d.getDate()+n);return d.toISOStr
 function seedMkt(){return {
  banner:{tit:'Esquadrias que valorizam sua obra',sub:'Veja em 3D e peça seu orçamento direto ao vendedor',cor:'brand'},
  destaques:['p1','p6','p8'],ocultos:[],promo:{},sobConsulta:[],
- views:{p1:132,p2:88,p3:64,p4:41,p5:57,p6:104,p7:36,p8:97,p9:52,p10:29},
- posts:[
-  {id:'P1',d:isoDay(0),canal:'Instagram · feed',p:'p1',tit:'Ventilação e luz o dia todo',status:'agendado'},
-  {id:'P2',d:isoDay(1),canal:'Instagram · stories',p:'p2',tit:'Pronta entrega na Guaporé',status:'agendado'},
-  {id:'P3',d:isoDay(3),canal:'WhatsApp · status',p:'p3',tit:'Integre a sala com a varanda',status:'rascunho'},
-  {id:'P4',d:isoDay(5),canal:'Instagram · feed',p:'p6',tit:'Box sob medida para seu banheiro',status:'rascunho'}
- ],
+ views:{},
+ posts:[],
  links:[
-  {id:'l1',canal:'Instagram · bio',cod:'ig-bio',cliques:212,cad:9,orc:4},
-  {id:'l2',canal:'Instagram · stories',cod:'ig-story',cliques:148,cad:6,orc:2},
-  {id:'l3',canal:'WhatsApp · status',cod:'wa-status',cliques:96,cad:5,orc:3},
-  {id:'l4',canal:'Google Meu Negócio',cod:'google',cliques:64,cad:3,orc:2}
+  {id:'l1',canal:'Instagram · bio',cod:'ig-bio',cliques:0,cad:0,orc:0},
+  {id:'l2',canal:'Instagram · stories',cod:'ig-story',cliques:0,cad:0,orc:0},
+  {id:'l3',canal:'WhatsApp · status',cod:'wa-status',cliques:0,cad:0,orc:0},
+  {id:'l4',canal:'Google Meu Negócio',cod:'google',cliques:0,cad:0,orc:0}
  ]}}
 if(!S.mkt)S.mkt=seedMkt();
-function seedChat(){const t=(d,h)=>{const x=new Date();x.setDate(x.getDate()-d);x.setHours(h,15,0,0);return x.toISOString()};return [
- {de:'v1',para:'v2',t:'Ju, você tem o contato do cliente da obra do Jardim Imperial?',h:t(1,9)},
- {de:'v2',para:'v1',t:'Tenho sim, te passo agora.',h:t(1,9)},
- {de:'gestor',para:'v1',t:'Carlos, o pedido O-1032 da Sandra é seu. Retorno hoje, por favor.',h:t(0,8)},
- {de:'v1',para:'gestor',t:'Combinado, já estou montando.',h:t(0,8)},
- {de:'v4',para:'fc',t:'Como mostro o Monte sua Casa 3D no celular do cliente?',h:t(0,10)},
- {de:'fc',para:'v4',t:'Abra pelo cartão e gire o celular na horizontal. Qualquer dúvida, chame aqui.',h:t(0,10)}
-]}
+function seedChat(){return []}
 if(!S.chat)S.chat=seedChat();
-if(!S.compras){S.compras=seedCompras();S.cmodsOn=cmodsAll(true);S.meC='k1'}
+if(!S.compras){S.compras=seedCompras();S.cmodsOn=cmodsAll(true);S.meC=null}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 let chatWith='gestor', role='gestor', cart=[], selVend=null, showCad={}, fVend='todos', fStat='todos', postSel={p:'p1',f:'feed',t:'Ventilação e luz o dia todo'};
 const $=s=>document.querySelector(s);
@@ -386,9 +363,7 @@ function vGestor(){
  const labels=[...Array(7)].map((_,i)=>{const d=new Date();d.setDate(d.getDate()-(6-i));return d.toLocaleDateString('pt-BR',{weekday:'short'}).replace('.','')});
  let orcs=S.orc.filter(o=>(fVend==='todos'||o.vend===fVend)&&(fStat==='todos'||o.status===fStat)).sort((a,b)=>b.data.localeCompare(a.data));
  return `
- <span class="demo-note">Demonstração com dados de exemplo · nomes de vendedores e clientes são fictícios</span>
- <div class="hello"><div><h1>Central do Gestor</h1><p>Equipe comercial, acessos e pedidos que chegam pelo Catálogo 3D.</p></div>
- <button class="btn" data-act="reset">Restaurar exemplo</button></div>
+ <div class="hello"><div><h1>Central do Gestor</h1><p>Equipe comercial, acessos e pedidos que chegam pelo Catálogo 3D.</p></div></div>
  <div class="grid kpis" id="t-kpis">
   <div class="kpi ${novos?'alert':''}"><small>Cadastros novos (não vistos)</small><b>${novos}</b><em> aprovados automaticamente</em></div>
   <div class="kpi"><small>Orçamentos em aberto</small><b>${abertos}</b><em> de ${S.orc.length} recebidos</em></div>
@@ -399,7 +374,7 @@ function vGestor(){
   <section class="panel" id="t-cad">
    <div class="ph"><div><h2>🔔 Avisos de cadastro</h2><p class="sub">O cliente se cadastra no catálogo e já entra liberado. Os dados ficam ocultos até você abrir.</p></div>
    <span class="pill ${S.autoCadastro?'ok':'novo'}">${S.autoCadastro?'Aceite automático ligado':'Aceite automático desligado'}</span></div>
-   <div class="list">${S.clientes.slice().sort((a,b)=>b.data.localeCompare(a.data)).map(c=>`
+   <div class="list">${S.clientes.length?'':'<div class="empty">Nenhum cadastro ainda. Quando um cliente se cadastrar no Catálogo 3D, o aviso aparece aqui.</div>'}${S.clientes.slice().sort((a,b)=>b.data.localeCompare(a.data)).map(c=>`
     <div class="row"><div class="who">${showCad[c.id]?`<b>${esc(c.nome)} · ${esc(c.empresa)}</b><span>${esc(c.cidade)} · ${esc(c.tel)} · ${esc(c.email)}</span>`:`<b>Novo cliente cadastrado</b><span class="hidden-id">•••••• · ${esc(c.cidade)}</span>`}</div>
     <span class="pill ${c.visto?'ok':'novo'}">${c.visto?'Visto':'Novo'}</span><span style="font-size:12px;color:var(--muted)">${fmtD(c.data)}</span>
     <button class="btn sm" data-act="vercad" data-id="${c.id}">${showCad[c.id]?'Ocultar':'Ver quem cadastrou'}</button></div>`).join('')}</div>
@@ -412,12 +387,12 @@ function vGestor(){
   </section>
   <section class="panel" id="t-eq">
    <h2>👥 Medidor de acesso da equipe</h2><p class="sub">Quantas vezes cada vendedor abriu cada módulo.</p>
-   <div class="list">${S.vend.map(v=>{const t=totalAc(v);return `<div class="meter"><span><b>${esc(v.nome)}</b>${v.ativo?'':' <span class="pill novo">bloq.</span>'}</span><div class="bar" style="width:${Math.max(t/maxAc*100,4)}%">${MODS.map(m=>`<i title="${m.n}: ${v.ac[m.k]}" style="width:${t?v.ac[m.k]/t*100:0}%;background:${COLORS[m.k]}"></i>`).join('')}</div><span style="font-family:var(--f-mono)">${t}</span></div>`}).join('')}</div>
+   <div class="list">${S.vend.length?'':'<div class="empty">Nenhum vendedor cadastrado. Use "+ Cadastrar vendedor" em Comandos.</div>'}${S.vend.map(v=>{const t=totalAc(v);return `<div class="meter"><span><b>${esc(v.nome)}</b>${v.ativo?'':' <span class="pill novo">bloq.</span>'}</span><div class="bar" style="width:${Math.max(t/maxAc*100,4)}%">${MODS.map(m=>`<i title="${m.n}: ${v.ac[m.k]}" style="width:${t?v.ac[m.k]/t*100:0}%;background:${COLORS[m.k]}"></i>`).join('')}</div><span style="font-family:var(--f-mono)">${t}</span></div>`}).join('')}</div>
    <div class="legend">${MODS.map(m=>`<span><i style="background:${COLORS[m.k]}"></i>${m.n}</span>`).join('')}</div>
   </section>
   <section class="panel" id="t-cmd">
    <h2>🎛 Comandos</h2><p class="sub">Libere ou bloqueie cada módulo por vendedor. Desligar na linha "Todos" tira o módulo da equipe inteira.</p>
-   <div class="tablewrap"><table><thead><tr><th>Vendedor</th><th class="c">Acesso</th>${MODS.map(m=>`<th class="c" title="${m.n}">${m.i}</th>`).join('')}</tr></thead><tbody>
+   <div class="tablewrap"><table><thead><tr><th>Vendedor</th><th class="c">Acesso</th>${MODS.map(m=>`<th class="c" title="${m.d}">${m.i}<br><small class="thn">${m.n}</small></th>`).join('')}</tr></thead><tbody>
     <tr><td><b>Todos</b></td><td class="c">—</td>${MODS.map(m=>`<td class="c"><button class="sw" role="switch" aria-checked="${S.modsOn[m.k]}" aria-label="${m.n} para todos" data-act="gmod" data-m="${m.k}"></button></td>`).join('')}</tr>
     ${S.vend.map(v=>`<tr><td>${esc(v.nome)}</td><td class="c"><button class="sw" role="switch" aria-checked="${v.ativo}" aria-label="Acesso de ${esc(v.nome)}" data-act="vativo" data-id="${v.id}"></button></td>${MODS.map(m=>`<td class="c"><button class="sw" role="switch" aria-checked="${v.mods[m.k]&&S.modsOn[m.k]}" ${S.modsOn[m.k]?'':'disabled'} aria-label="${m.n} para ${esc(v.nome)}" data-act="vmod" data-id="${v.id}" data-m="${m.k}"></button></td>`).join('')}</tr>`).join('')}
    </tbody></table></div>
@@ -429,7 +404,7 @@ function vGestor(){
  </div>
  <section class="panel" id="t-cmp" style="margin-top:14px">
   <div class="ph"><div><h2>🛒 Setor de Compras · comandos e acesso</h2><p class="sub">Libere ou bloqueie cada módulo do Compras. O medidor mostra quantas vezes cada módulo foi aberto.</p></div><button class="btn sm" data-act="addcomp">+ Cadastrar pessoa de Compras</button></div>
-  <div class="tablewrap"><table><thead><tr><th>Pessoa</th><th class="c">Acesso</th>${CMODS.map(m=>`<th class="c" title="${m.n}">${m.i}</th>`).join('')}</tr></thead><tbody>
+  <div class="tablewrap"><table><thead><tr><th>Pessoa</th><th class="c">Acesso</th>${CMODS.map(m=>`<th class="c" title="${m.d}">${m.i}<br><small class="thn">${m.n}</small></th>`).join('')}</tr></thead><tbody>
    <tr><td><b>Todos</b></td><td class="c">—</td>${CMODS.map(m=>`<td class="c"><button class="sw" role="switch" aria-checked="${S.cmodsOn[m.k]}" aria-label="${m.n} para todo o Compras" data-act="cgmod" data-m="${m.k}"></button></td>`).join('')}</tr>
    ${S.compras.map(v=>`<tr><td>${esc(v.nome)}</td><td class="c"><button class="sw" role="switch" aria-checked="${v.ativo}" aria-label="Acesso de ${esc(v.nome)}" data-act="cativo" data-id="${v.id}"></button></td>${CMODS.map(m=>`<td class="c"><button class="sw" role="switch" aria-checked="${v.mods[m.k]&&S.cmodsOn[m.k]}" ${S.cmodsOn[m.k]?'':'disabled'} aria-label="${m.n} para ${esc(v.nome)}" data-act="cmod" data-id="${v.id}" data-m="${m.k}"></button></td>`).join('')}</tr>`).join('')}
   </tbody></table></div>
@@ -446,16 +421,17 @@ function vGestor(){
  </section>
  <section class="panel" style="margin-top:14px" id="t-agg">
   <div class="ph"><div><h2>🗓 Treinamento on-line · agenda</h2><p class="sub">Turmas abertas para a equipe. O vendedor se inscreve pelo painel dele.</p></div><button class="btn sm" data-act="addslot">+ Nova turma</button></div>
-  <div class="slots">${S.slots.map(s=>`<div class="slot"><b>${s.d} · ${s.h}</b><span>${esc(s.tema)}</span><br><span>${s.ins.length}/${s.cap} inscritos${s.ins.length?': '+s.ins.map(vName).join(', '):''}</span></div>`).join('')}</div>
+  <div class="slots">${S.slots.length?'':'<div class="empty">Nenhuma turma marcada. Use "+ Nova turma".</div>'}${S.slots.map(s=>`<div class="slot"><b>${s.d} · ${s.h}</b><span>${esc(s.tema)}</span><br><span>${s.ins.length}/${s.cap} inscritos${s.ins.length?': '+s.ins.map(vName).join(', '):''}</span></div>`).join('')}</div>
  </section>${histHTML()}`;
 }
 
 /* ---------- VENDEDOR ---------- */
 function vVendedor(){
  const me=S.vend.find(v=>v.id===S.me)||S.vend[0];
+ if(!me)return '<div class="empty">Nenhum vendedor cadastrado. O gestor cadastra na Central do Gestor, em Comandos.</div>';
  const meus=S.orc.filter(o=>o.vend===me.id).sort((a,b)=>b.data.localeCompare(a.data));
  return `
- <span class="demo-note">Demonstração · entrar como: <select id="meSel" style="width:auto;display:inline-block;padding:2px 6px">${S.vend.map(v=>`<option value="${v.id}" ${v.id===me.id?'selected':''}>${esc(v.nome)}</option>`).join('')}</select></span>
+ <span class="demo-note">Ver painel de: <select id="meSel" style="width:auto;display:inline-block;padding:2px 6px">${S.vend.map(v=>`<option value="${v.id}" ${v.id===me.id?'selected':''}>${esc(v.nome)}</option>`).join('')}</select></span>
  <div class="hello"><div><h1>Olá, ${esc(me.nome)}</h1><p>Suas ferramentas de venda e os orçamentos que os clientes enviaram para você.</p></div></div>
  ${!me.ativo?'<div class="empty" style="margin-bottom:14px">Seu acesso está pausado pelo gestor.</div>':''}
  <div class="grid mods" id="t-mods">${MODS.map(m=>{const ok=me.ativo&&me.mods[m.k]&&S.modsOn[m.k];return `
@@ -481,7 +457,7 @@ function vCompras(){
  if(!me)return '<div class="empty">Nenhuma pessoa de Compras cadastrada. O gestor cadastra na Central do Gestor.</div>';
  const grupos=[...new Set(CMODS.map(m=>m.g))];
  return `
- <span class="demo-note">Demonstração · entrar como: <select id="meCSel" style="width:auto;display:inline-block;padding:2px 6px">${S.compras.map(v=>`<option value="${v.id}" ${v.id===me.id?'selected':''}>${esc(v.nome)}</option>`).join('')}</select></span>
+ <span class="demo-note">Ver painel de: <select id="meCSel" style="width:auto;display:inline-block;padding:2px 6px">${S.compras.map(v=>`<option value="${v.id}" ${v.id===me.id?'selected':''}>${esc(v.nome)}</option>`).join('')}</select></span>
  <div class="hello"><div><h1>Olá, ${esc(me.nome)}</h1><p>Suas ferramentas de compra, conversão de códigos e treinamento.</p></div></div>
  ${!me.ativo?'<div class="empty" style="margin-bottom:14px">Seu acesso está pausado pelo gestor.</div>':''}
  <div id="t-cmods">${grupos.map(g=>`<h3 style="font-size:13px;color:var(--muted);margin:14px 0 8px;font-weight:600">${g}</h3>
@@ -533,12 +509,11 @@ const PST={rascunho:['Rascunho','novo'],agendado:['Agendado','and'],publicado:['
 function capText(){const p=prod(postSel.p);return `${postSel.t||p.n}\n\n${p.n} · ${p.l}. Veja em 3D no catálogo da Guaporé Vidros e peça seu orçamento direto ao vendedor.\n\n👉 Link na bio\n#esquadrias #esquadriasdealuminio #guaporevidros #cuiaba #sinop #arquitetura #obra`}
 function vMarketing(){
  const M=S.mkt;
- const tot=Object.values(M.views).reduce((a,b)=>a+b,0)||1;
+ const tot=Object.values(M.views).reduce((a,b)=>a+b,0);
  const rank=PRODS.map(p=>({p,v:M.views[p.id]||0})).sort((a,b)=>b.v-a.v);
  const maxV=rank[0].v||1;
  const D=M.destaques.map(prod);
  return `
- <span class="demo-note">Demonstração · na versão publicada, os destaques escolhidos aqui vão direto para o Mostruário 3D da Guaporé</span>
  <div class="hello"><div><h1>Marketing · Destaques 3D</h1><p>Escolha os perfis que aparecem em destaque no Catálogo 3D de perfis da Guaporé.</p></div><a class="btn" style="text-decoration:none;white-space:nowrap;background:var(--brand);color:var(--brand-ink);border-color:var(--brand)" target="_blank" rel="noopener" href="https://fc-consultoria.github.io/treinamento/catalogos.html">✏️ Editar perfis do catálogo</a></div><p style="margin:-6px 0 14px;color:var(--mut,#5d6b76);font-size:14px">No editor você muda o código, a descrição, o peso e a foto de cada perfil e escolhe o que fica publicado ou oculto. Entre com o login do Marketing.</p>
  <div class="grid kpis" id="t-mkpis">
   <div class="kpi"><small>Visualizações de perfis</small><b>${tot}</b><em> no Catálogo 3D</em></div>
