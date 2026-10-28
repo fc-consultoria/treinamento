@@ -1,11 +1,19 @@
-/* ===== Notícias G1 no Painel da Matriz e no Painel de Implantação (matriz e Antonia) =====
+/* ===== Notícias (G1, Só Notícias e Revista Contramarco) no Painel da Matriz e no Painel de Implantação (matriz e Antonia) =====
    Faixa de manchetes rolando no topo do painel + card de destaques por assunto (abre ao clicar em "Notícias").
    Manchetes vêm da função "noticias" do Supabase (feeds RSS públicos do G1 e do Só Notícias/Sinop). Atualiza a cada 30 min.
    © FC Consultoria em Esquadria · uso exclusivo */
 (function(){
   const URL_N='https://cpkjphodruyxfouirhpd.supabase.co/functions/v1/noticias';
-  const CATS=['Últimas','Sinop','MT','Economia','Agro'];
-  const FONTE={'Sinop':'Só Notícias'};
+  const CATS=['Últimas','Contramarco','Sinop','MT','Economia','Agro'];
+  const FONTE={'Sinop':'Só Notícias','Contramarco':'Revista Contramarco (setor de esquadrias)'};
+  /* Outros canais de informação de cada fonte (aparecem no card, na aba da fonte) */
+  const CANAIS={'Contramarco':[
+    ['🌐','Site','https://www.contramarco.com/'],
+    ['📰','Notícias','https://www.contramarco.com/blog'],
+    ['📸','Instagram','https://www.instagram.com/contramarco/'],
+    ['▶️','YouTube','https://www.youtube.com/channel/UCsUmEZ0ZWTwH1Qzcb8G59hw'],
+    ['💼','LinkedIn','https://www.linkedin.com/company/revista-contramarco/'],
+    ['👍','Facebook','https://www.facebook.com/contramarco']]};
   const ATUALIZA_MIN=30;
   const esc=v=>String(v==null?'':v).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   const LS={g(k){try{return localStorage.getItem(k);}catch(_){return null;}},s(k,v){try{localStorage.setItem(k,v);}catch(_){}}};
@@ -35,6 +43,11 @@ body.fcnot-rod{padding-bottom:64px}body.fcnot-rod .fcs-av{bottom:66px}
 #fcNot .nabas{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:4px}
 #fcNot .nabas button{all:unset;cursor:pointer;font:600 13px var(--f-body,system-ui);padding:4px 11px;border-radius:999px;border:1px solid #c9d6dd;color:#3d4c56}
 #fcNot .nabas button.on{background:#e1f3f1;border-color:#0f5f63;color:#0b4a4d}
+#fcNot .ncan{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 2px;padding:8px;border-radius:10px;background:#fff6ea;border:1px solid #f3d9b4}
+#fcNot .ncan>small{flex-basis:100%;font-size:11.5px;color:#8a5a12;font-weight:600;letter-spacing:.03em}
+#fcNot .ncan a{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:999px;background:#fff;border:1px solid #ecc994;color:#6b4208;text-decoration:none;font:600 12.5px var(--f-body,system-ui)}
+#fcNot .ncan a:hover{background:#e8912d;color:#3b2203;border-color:#e8912d}
+#fcNot .ntk a.st b{color:#ffd28f}
 #fcNot .nlist{max-height:min(420px,60vh);overflow:auto}
 #fcNot .nlist a{display:block;padding:9px 2px;border-top:1px solid #edf1f3;text-decoration:none;color:#13232e}
 #fcNot .nlist a:hover span{color:#1f6f9a;text-decoration:underline}
@@ -57,11 +70,13 @@ body.fcnot-rod{padding-bottom:64px}body.fcnot-rod .fcs-av{bottom:66px}
     const vistos=new Set(),it=[];
     CATS.forEach(c=>((dados&&dados.cats&&dados.cats[c])||[]).slice(0,5).forEach(x=>{if(!vistos.has(x.l)){vistos.add(x.l);it.push([c,x]);}}));
     if(!it.length){tk.innerHTML='<a>Manchetes indisponíveis no momento. Tentando de novo em breve.</a>';tk.style.animation='none';return;}
-    const h=it.map(([c,x])=>`${link(x)}<b>${esc(c.toUpperCase())}</b>${esc(x.t)}</a>`).join('');
+    const h=it.map(([c,x])=>`${link(x,CANAIS[c]?'st':'')}<b>${esc(c.toUpperCase())}</b>${esc(x.t)}</a>`).join('');
     tk.innerHTML=h+h;tk.style.animation='';tk.style.setProperty('--dur',Math.max(60,it.length*7)+'s');
   }
   function card(){
     const c=document.querySelector('#fcNot .ncard');if(!c)return;
+    const cn=CANAIS[cat],nc=c.querySelector('.ncan');nc.hidden=!cn;
+    nc.innerHTML=cn?'<small>CANAIS DA '+esc(cat.toUpperCase())+'</small>'+cn.map(([i,n,u])=>`<a href="${esc(u)}" target="_blank" rel="noopener noreferrer">${i} ${esc(n)}</a>`).join(''):'';
     c.querySelector('.nabas').innerHTML=CATS.map(k=>`<button type="button" class="${k===cat?'on':''}" data-k="${esc(k)}">${esc(k)}</button>`).join('');
     const l=(dados&&dados.cats&&dados.cats[cat])||[];
     c.querySelector('.nlist').innerHTML=l.length?l.map(x=>`${link(x)}<span>${esc(x.t)}</span><small>${esc(hora(x.d))}</small></a>`).join(''):'<div class="nvaz">Sem manchetes deste assunto agora.</div>';
@@ -81,7 +96,7 @@ body.fcnot-rod{padding-bottom:64px}body.fcnot-rod .fcs-av{bottom:66px}
     const st=document.createElement('style');st.textContent=css;document.head.appendChild(st);
     const w=document.createElement('section');w.id='fcNot';w.setAttribute('aria-label','Notícias');
     w.innerHTML=`<div class="nbar"><button type="button" class="nlab" aria-expanded="false" aria-controls="fcNotCard" title="Ver destaques por assunto">📰 <span class="tx">Notícias</span> <span class="sv">▼</span></button><div class="ntw"><div class="ntk"><a>Carregando manchetes…</a></div></div></div>
-<div class="ncard" id="fcNotCard" hidden><div class="nch"><b>Destaques</b><small></small><button type="button" class="nx" aria-label="Fechar">✕</button></div><div class="nabas"></div><div class="nlist"></div><div class="nrod"></div></div>`;
+<div class="ncard" id="fcNotCard" hidden><div class="nch"><b>Destaques</b><small></small><button type="button" class="nx" aria-label="Fechar">✕</button></div><div class="nabas"></div><div class="ncan" hidden></div><div class="nlist"></div><div class="nrod"></div></div>`;
     if(op.envolver){ /* página que redesenha o conteúdo inteiro: a faixa fica num invólucro acima dele */
       const wr=document.createElement('div');wr.id='fcNotWrap';main.parentNode.insertBefore(wr,main);wr.appendChild(w);wr.appendChild(main);
     }else if(op.rodape){ /* faixa fixa no rodapé da tela (Painel da Matriz, 27/10) */
