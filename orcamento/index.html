@@ -94,6 +94,7 @@ html.emb .top{display:none}html.emb main{padding-top:8px}
 <script src="../auth.js"></script>
 <script src="../sessao.js?v=3"></script>
 <script src="../planilha.js?v=2"></script>
+<script src="../orc-sync.js?v=1"></script>
 <script src="../estoque-aviso.js?v=2"></script>
 <script>
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)],esc=t=>String(t??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -428,40 +429,14 @@ async function carregaFAuto(){if(FAUTO)return FAUTO;FAUTO=await fetch('fotos-aut
 function fotoAutoDe(i,F){const toks=[...String(i.ref||'').split(/[|\/,;]+/),...String(i.cod||'').split(/[|\/,;]+/),...(/^acess/i.test(String(i.linha||''))?[]:(String(i.desc).toUpperCase().match(/\b[A-Z]{1,5}-?\d{2,6}[A-Z]?\b/g)||[]).filter(t=>!/^L-?\d{2}$/.test(t)))];for(const t of toks){const k=nk(t);if(k.length>=3&&F[k])return F[k];}return '';}
 const COR_RX=[['BRANCO','Branco'],['PRETO','Preto'],['NATURAL','Natural'],['FOSCO','Fosco'],['BRONZE','Bronze'],['CHAMPANHE','Champanhe'],['AMADEIRADO','Amadeirado'],['CEREJEIRA','Cerejeira'],['ANODIZADO','Anodizado'],['BRILHANTE','Brilhante']];
 const corDe=t=>{const u=sem(t).toUpperCase();const k=COR_RX.find(x=>u.includes(x[0]));if(k)return k[1];if(/\bBCO\b/.test(u))return 'Branco';if(/\b(PRT|PTO|PTF)\b/.test(u))return 'Preto';if(/\bNAT\b/.test(u))return 'Natural';return '';};
-function lerAba(sh,mt){const keys=Object.keys(sh.c),rows={};keys.forEach(a=>{const mm=a.match(/^([A-Z]+)(\d+)$/);if(mm)(rows[+mm[2]]=rows[+mm[2]]||[]).push(mm[1]);});
-  const R=Object.keys(rows).map(Number).sort((a,b)=>a-b),txt=(c,r)=>{const v=mt.val(sh,c+r);return v==null?'':String(v).trim();};
-  const PRC=h=>h==='preco de venda barra'||h.startsWith('valor da vara')||h==='preco de venda'||h.startsWith('valores unitario')||h.startsWith('valor unitario')||h.startsWith('valores do pacote');
-  let col=null,linha='',cor='',forn='',lastH=-9;const out=[];
-  for(const r of R){const cs=rows[r];const H={};cs.forEach(c=>{const v=mt.val(sh,c+r);if(typeof v==='string')H[c]=sem(v).replace(/\s+/g,' ').trim();});
-    const fm=Object.values(H).map(h=>h.match(/(?:fornecedor|provedor)\s*:\s*([a-z0-9-]+)/)).find(Boolean);if(fm)forn=fm[1].toUpperCase();
-    const pcs=Object.keys(H).filter(c=>PRC(H[c])).sort((a,b)=>(H[b]==='preco de venda barra')-(H[a]==='preco de venda barra')||a.length-b.length||a.localeCompare(b)),pc=pcs[0];
-    if(pc&&lastH===r-1&&col){const t=col.d?String(mt.val(sh,col.d+r)??'').trim():'';if(t&&!PRC(sem(t))&&!/^descri/.test(sem(t))){cor=corDe(t)||t;}lastH=r;continue;}
-    if(pc){lastH=r;const f=(t)=>Object.keys(H).filter(c=>t(H[c])).sort((a,b)=>a.length-b.length||a.localeCompare(b))[0];
-      const cod=f(h=>h==='codigo revenda'||h==='codigo'),des=f(h=>h==='codigo fornecedor'||h.startsWith('descricao'));
-      let dc=des;if(!dc&&cod){const nx=String.fromCharCode(cod.charCodeAt(cod.length-1)+1);dc=cod.slice(0,-1)+nx;}
-      col={p:pc,ac:/unitari|pacote/.test(H[pc]),pp:Object.keys(H).find(c=>H[c].startsWith('valores do pacote')&&c!==pc),cod,d:dc,cor:f(h=>h==='cor'),forn:f(h=>h==='nome fornecedor'),peso:f(h=>h==='peso barra'||h.startsWith('peso (p')),ref:f(h=>h.includes('sistema')||h==='cod. cem'||h==='cem')};
-      linha=(!des&&dc&&mt.val(sh,dc+r))?String(mt.val(sh,dc+r)).replace(/\s{2,}.*$/,'').replace(/^COMPONENTES P\/ ALUM[IÍ]NIO\s*-\s*/i,'Acessórios · ').trim():'';cor='';continue;}
-    if(!col)continue;const g=c=>c?mt.val(sh,c+r):null;const desc=String(g(col.d)??'').replace(/\s+/g,' ').trim(),codv=String(g(col.cod)??'').trim();let pr=g(col.p),un='BR';
-    if(/^descri/i.test(sem(desc))&&!codv)continue;
-    if(col.ac){un='UN';if(!(typeof pr==='number'&&pr>0)&&col.pp){const q=g(col.pp);if(typeof q==='number'&&q>0){pr=q;un=/rolo/i.test(desc)?'RL':'PCT';}}}
-    if(!(typeof pr==='number'&&pr>0&&isFinite(pr))){if(desc&&!codv&&desc.length<40){const c2=corDe(desc);cor=c2||desc;continue;}if(!(codv&&desc&&/[a-z]{3}/i.test(desc)))continue;pr=0;}
-    if(!desc)continue;let cod=codv;if(!cod||cod==='*'){const t=desc.toUpperCase().match(/\b[A-Z]{1,5}[- ]?\d{2,6}[A-Z]?\b/);cod=t?t[0]:'—';}
-    let cr=String(g(col.cor)??'').trim();cr=cr?cr.charAt(0).toUpperCase()+cr.slice(1).toLowerCase():(cor||corDe(desc));
-    const ref=String(g(col.ref)??'').trim();const pe=g(col.peso);
-    out.push({cod,desc,cor:cr,linha,forn:String(g(col.forn)??'').trim()||forn,ref:ref&&ref!=='-'?ref:'',un,peso:typeof pe==='number'?Math.round(pe*1000)/1000:null,preco:Math.round(pr*100)/100,sc:!(pr>0)});}
-  return out;}
+const lerAba=(sh,mt)=>FCOrcSync.lerAba(sh,mt); /* leitura da tabela fica em ../orc-sync.js */
 async function sincronizar(){const ids=[...document.querySelectorAll('#plSel input:checked')].map(x=>x.value),m=$('#plMsg');if(!ids.length){m.textContent='Marque ao menos uma planilha.';return;}m.textContent='Lendo as planilhas…';
-  const F=await carregaFAuto(),antes=Object.fromEntries((CF.itens||[]).map(i=>[i.id,i]));
-  const out=[],vistos=new Set();let dup=0,abas=[];
-  for(const pid of ids){
-  const r=FC?await sb.from('cons_planilhas').select('dados').eq('id',pid).maybeSingle():await sb.rpc('cons_portal_planilha',{p_chave:VKEY,p_id:pid});if(r.error||!r.data){m.textContent='Não consegui abrir uma das planilhas.';return;}
-  const model=r.data.dados,mt=new Planilha.Motor(model);
-  for(const sh of model.sheets){const L=lerAba(sh,mt);if(!L.length)continue;abas.push(sh.n);
-    for(const it of L){const id=(nk(it.cod)+'_'+nk(it.desc).slice(0,48)+'_'+nk(it.cor)).slice(0,90);if(vistos.has(id)){dup++;continue;}vistos.add(id);it.id=id;
-      const a=antes[id];it.foto=a&&a.foto?a.foto:fotoAutoDe(it,F);if(a&&a.fotoManual)it.fotoManual=1;if(a&&a.est!=null)it.est=a.est;if(a&&a.estCor)it.estCor=a.estCor;out.push(it);}}}
-  if(!out.length){m.textContent='Nenhum item com preço de venda encontrado nesta planilha.';return;}
-  CF.itens=out;CF.planilha_id=ids[0];CF.cab=CF.cab||{};CF.cab.plIds=ids;CF.itens_em=new Date().toISOString();const ok=await salvaCfg();
-  if(ok){m.textContent=`✓ ${out.length} itens das abas: ${abas.join(', ')}${dup?` · ${dup} repetidos ignorados`:''} · ${out.filter(i=>i.foto).length} com foto`;tela();}}
+  const r=await FCOrcSync.sincronizar({emp:FC?EMP:null,chave:FC?null:VKEY,ids});if(!r.ok){m.textContent=r.msg;return;}
+  CF.itens=r.itens;CF.planilha_id=ids[0];CF.cab=CF.cab||{};CF.cab.plIds=ids;CF.itens_em=new Date().toISOString();await carregar();
+  m.textContent=`✓ ${r.n} itens das abas: ${r.abas.join(', ')}${r.dup?` · ${r.dup} repetidos ignorados`:''} · ${r.comFoto} com foto`;tela();}
+/* Atualização automática: se a tabela de precificação mudou depois da última leitura, os itens se atualizam sozinhos ao abrir o painel */
+async function autoSync(){if(!FC&&!GESTOR)return;const r=await FCOrcSync.seVelho({emp:FC?EMP:null,chave:FC?null:VKEY});if(!r||!r.ok)return;
+  CF=null;if(await carregar())tela();toast(`🔄 Preços atualizados da tabela de precificação (${r.n} itens${r.mud?', '+r.mud+' com preço novo':''})`);}
 function wireCfg(){if(!CF)return;const q=s=>document.getElementById(s);
   if(q('plSync'))q('plSync').onclick=sincronizar;
   if(q('plImp'))q('plImp').onchange=async e=>{const f=e.target.files[0];if(!f)return;const m=q('plMsg');const nome=prompt('Nome da planilha:',f.name.replace(/\.xlsx$/i,'').replace(/_/g,' '));if(!nome){e.target.value='';return;}
@@ -677,7 +652,7 @@ async function suporte(){const t=prompt('Descreva o que você precisa no painel 
   let nm='';try{nm=localStorage.getItem('cons-nome')||'';}catch(_){}if(!nm){nm=prompt('Seu nome:')||'';try{localStorage.setItem('cons-nome',nm);}catch(_){}}
   const r=await sb.rpc('cons_portal_solicitar',{p_chave:VKEY,p_nome:nm,p_tipo:'outro',p_texto:'[Painel de orçamentos] '+t.trim()});toast(r.error||!r.data?'Não foi possível enviar. Tente de novo.':'✓ Pedido enviado para a FC');}
 /* ---------- início ---------- */
-async function trocaEmp(id){EMP=id;try{localStorage.setItem('fc_orc_emp',id);}catch(_){}D=null;O=null;CF=null;if(await carregar())tela();}
+async function trocaEmp(id){EMP=id;try{localStorage.setItem('fc_orc_emp',id);}catch(_){}D=null;O=null;CF=null;if(await carregar())tela();autoSync();}
 const ABA0=Q.get('est')?'est':Q.get('aba');
 /* Vendedor: montar orçamento só no computador (20/10) */
 const MOVEL=/Android|iPhone|iPad|iPod|Mobile|Tablet/i.test(navigator.userAgent)||(/Macintosh/.test(navigator.userAgent)&&navigator.maxTouchPoints>1)||(matchMedia('(pointer:coarse)').matches&&Math.min(screen.width,screen.height)<900);
@@ -699,7 +674,7 @@ function sairBarra(nome){if(DEMO||SO||document.documentElement.classList.contain
     if(tk){try{await sb.rpc('emp_sair',{p_token:tk});}catch(_){}}
     try{if(e)localStorage.removeItem('emp-tok-'+e);localStorage.removeItem('cons-nome');}catch(_){}
     location.replace('../consultorias.html'+(e?'?e='+encodeURIComponent(e):''));});}
-(async()=>{if(VKEY){if(GESTOR)ABA=ABA0||'com';if(await carregar()){tela();if(window.VX)VX.iniciar();}return;}
+(async()=>{if(VKEY){if(GESTOR)ABA=ABA0||'com';if(await carregar()){tela();if(window.VX)VX.iniciar();autoSync();}return;}
   gateUI(async()=>{try{const r=await sb.rpc('trein_is_admin');ADM=!!r.data;}catch(_){}
     if(!ADM){$('#app').innerHTML='<p class="vazio">Esta área é da FC Consultoria. O vendedor entra pelo link que recebeu.</p>';return;}FC=true;
     const a=document.createElement('a');a.className='vt';a.href='/treinamento/painel.html';a.textContent='← Painel matriz';$('header.top .w').appendChild(a);
