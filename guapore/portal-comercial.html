@@ -806,7 +806,7 @@ let tour=null;
 function speak(txt,cb){
  try{if(!tour||!tour.voz||!window.speechSynthesis){throw 0}
   speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(txt);u.lang='pt-BR';u.rate=1.02;
-  const v=speechSynthesis.getVoices().find(v=>/pt(-|_)BR/i.test(v.lang));if(v)u.voice=v;
+  const L=speechSynthesis.getVoices().filter(v=>/pt(-|_)BR/i.test(v.lang)),FEM=/francisca|maria|luciana|fernanda|thalita|leila|manuela|brenda|elza|giovanna|let[ií]cia|yara|camila|vit[oó]ria|raquel|joana|female|feminina|google portugu[eê]s do brasil/i,MASC=/ant[oô]nio|daniel|felipe|donato|f[aá]bio|j[uú]lio|nicolau|val[eé]rio|humberto|\bmale\b|masculin/i,v=L.find(x=>FEM.test(x.name)&&!MASC.test(x.name))||L.find(x=>!MASC.test(x.name))||L[0];if(v){u.voice=v;if(MASC.test(v.name))u.pitch=1.25;}
   u.onend=cb;u.onerror=()=>{tour&&(tour.timer=setTimeout(cb,6500))};speechSynthesis.speak(u);
  }catch(e){if(tour&&tour.auto)tour.timer=setTimeout(cb,Math.max(5000,txt.length*55))}
 }

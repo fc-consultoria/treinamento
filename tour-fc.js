@@ -16,9 +16,12 @@ const st=document.createElement('style');st.textContent=`
 document.head.appendChild(st);
 let T=null;
 const vozes=()=>{try{return speechSynthesis.getVoices();}catch(_){return [];}};vozes();
+/* voz feminina em português do Brasil: procura pelos nomes das vozes femininas mais comuns (Windows, Chrome, Android, iPhone, Mac) */
+const FEM=/francisca|maria|luciana|fernanda|thalita|leila|manuela|brenda|elza|giovanna|leticia|letícia|yara|camila|vit[oó]ria|raquel|joana|female|feminina|google portugu[eê]s do brasil/i,MASC=/antonio|antônio|daniel|felipe|donato|fabio|fábio|julio|júlio|nicolau|valerio|valério|humberto|\bmale\b|masculin/i;
+const vozFem=()=>{const L=vozes().filter(v=>/pt(-|_)BR/i.test(v.lang));return L.find(v=>FEM.test(v.name)&&!MASC.test(v.name))||L.find(v=>!MASC.test(v.name))||L[0]||null;};
 function fala(txt,cb){
   try{if(!T||!T.voz||!window.speechSynthesis)throw 0;speechSynthesis.cancel();
-    const u=new SpeechSynthesisUtterance(txt);u.lang='pt-BR';u.rate=1.02;const v=vozes().find(v=>/pt(-|_)BR/i.test(v.lang));if(v)u.voice=v;
+    const u=new SpeechSynthesisUtterance(txt);u.lang='pt-BR';u.rate=1.02;const v=vozFem();if(v){u.voice=v;if(MASC.test(v.name))u.pitch=1.25;}
     u.onend=cb;u.onerror=()=>{if(T)T.timer=setTimeout(cb,6500);};speechSynthesis.speak(u);}
   catch(_){if(T&&T.auto)T.timer=setTimeout(cb,Math.max(5000,txt.length*55));}}
 function limpa(){document.querySelectorAll('.fct-hole,.fct-cap,.fct-bg').forEach(x=>x.remove());}

@@ -1,55 +1,59 @@
-/* Plataforma Casa Bandeirante & FC 3D — visual em cards (modelo Guaporé) sobre o link real da CB.
+/* Plataforma <Cliente> & FC 3D (Casa Bandeirante e Guaporé Vidros) — visual em cards sobre o link real do cliente.
    Usa o login por pessoa e as abas liberadas de cada papel (consultorias.html?e=cb).
    Também aparece em "Como o cliente vê" na Matriz, para conferir. */
 (function(){
-const EMP='cb',COR='#5b3fc4',COR2='#3c2a8a',CLARO='#efeafd';
-const ehCB=()=>{try{return typeof E!=='undefined'&&E[at]&&at===EMP&&cli;}catch(_){return false;}};
+/* 28/10/2026 · mesma plataforma para mais empresas: cada uma com nome, sigla e cores próprias (CB roxo, Guaporé azul). */
+const PLATS={cb:{nome:'Casa Bandeirante',sig:'CB',cor:'#5b3fc4',cor2:'#3c2a8a',claro:'#efeafd',sub:'#d8cff7'},
+ gb:{nome:'Guaporé Vidros',sig:'GV',cor:'#1d5fa8',cor2:'#123f7a',claro:'#e3eefa',sub:'#cfe0f5'}};
+let EMP='cb';const CFG=()=>PLATS[EMP]||PLATS.cb;
+const cores=()=>{const c=CFG(),r=document.documentElement.style;r.setProperty('--plat',c.cor);r.setProperty('--plat2',c.cor2);r.setProperty('--platc',c.claro);r.setProperty('--plats',c.sub);};
+const ehCB=()=>{try{if(typeof E==='undefined'||!E[at]||!cli||!PLATS[at])return false;if(EMP!==at){EMP=at;LISTA=null;cores();}return true;}catch(_){return false;}};
 let modo='home',homeTab;
 const h=t=>String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
 const css=`
-#platCapa{position:fixed;inset:0;z-index:9998;background:${COR};display:flex;align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:24px;color:#fff;cursor:pointer}
-#platCapa .lg{width:92px;height:92px;border-radius:22px;background:#fff;color:${COR2};display:flex;align-items:center;justify-content:center;font:800 34px var(--f-h,inherit);margin-bottom:18px}
-#platCapa h1{color:#fff;margin:0;font-size:30px}#platCapa p{color:#d8cff7;margin:6px 0 0}
-#platCapa .bt{margin-top:28px;background:#fff;color:${COR2};border-radius:12px;padding:12px 28px;font-weight:700;font-size:15px}
+#platCapa{position:fixed;inset:0;z-index:9998;background:var(--plat);display:flex;align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:24px;color:#fff;cursor:pointer}
+#platCapa .lg{width:92px;height:92px;border-radius:22px;background:#fff;color:var(--plat2);display:flex;align-items:center;justify-content:center;font:800 34px var(--f-h,inherit);margin-bottom:18px}
+#platCapa h1{color:#fff;margin:0;font-size:30px}#platCapa p{color:var(--plats);margin:6px 0 0}
+#platCapa .bt{margin-top:28px;background:#fff;color:var(--plat2);border-radius:12px;padding:12px 28px;font-weight:700;font-size:15px}
 #platCapa .wm{position:absolute;bottom:18px;font-size:11px;letter-spacing:.06em;color:#b9acef}
-.platHero{background:${COR};color:#fff;border-radius:16px;padding:18px 20px;margin:14px 18px 0;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
-.platHero .lg{width:46px;height:46px;border-radius:12px;background:#fff;color:${COR2};display:flex;align-items:center;justify-content:center;font-weight:800;font-size:17px}
-.platHero h2{color:#fff;margin:0;font-size:19px}.platHero .s{color:#d8cff7;font-size:13px}
+.platHero{background:var(--plat);color:#fff;border-radius:16px;padding:18px 20px;margin:14px 18px 0;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.platHero .lg{width:46px;height:46px;border-radius:12px;background:#fff;color:var(--plat2);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:17px}
+.platHero h2{color:#fff;margin:0;font-size:19px}.platHero .s{color:var(--plats);font-size:13px}
 .platHero .bts{margin-left:auto;display:flex;gap:6px}.platHero button{all:unset;cursor:pointer;border:1px solid #8f7ae0;color:#fff;border-radius:999px;padding:6px 13px;font-size:13px;font-weight:600}
-.platHero button:hover{background:${COR2}}
+.platHero button:hover{background:var(--plat2)}
 .platGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px;padding:16px 18px 20px}
 .platK{all:unset;box-sizing:border-box;cursor:pointer;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:7px;min-height:118px}
-.platK:hover{border-color:${COR};transform:translateY(-1px)}
-.platK .ic{width:40px;height:40px;border-radius:10px;background:${CLARO};display:flex;align-items:center;justify-content:center;font-size:20px}
+.platK:hover{border-color:var(--plat);transform:translateY(-1px)}
+.platK .ic{width:40px;height:40px;border-radius:10px;background:var(--platc);display:flex;align-items:center;justify-content:center;font-size:20px}
 :root[data-theme="dark"] .platK .ic{background:#2b2160}
 .platK b{font-size:14.5px;color:var(--fg);line-height:1.25}.platK span.d{font-size:12.5px;color:var(--muted);line-height:1.35}
-.platK.dest{border:2px solid ${COR}}
+.platK.dest{border:2px solid var(--plat)}
 .platVolta{display:flex;align-items:center;gap:10px;padding:12px 18px 0;flex-wrap:wrap}
-.platVolta button{all:unset;cursor:pointer;border:1px solid ${COR};color:${COR};border-radius:10px;padding:7px 13px;font-weight:700;font-size:13.5px}
+.platVolta button{all:unset;cursor:pointer;border:1px solid var(--plat);color:var(--plat);border-radius:10px;padding:7px 13px;font-weight:700;font-size:13.5px}
 :root[data-theme="dark"] .platVolta button{color:#c9bdf6;border-color:#8f7ae0}
 .platVolta b{font-size:15px;color:var(--fg)}
 .platOn #cgTools{display:none!important}
 .platWm{font-size:11px;color:var(--muted);text-align:center;padding:0 0 14px}
-.platVer{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:14px 18px 0;padding:10px 12px;border:1px dashed ${COR};border-radius:12px;background:${CLARO}}
+.platVer{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:14px 18px 0;padding:10px 12px;border:1px dashed var(--plat);border-radius:12px;background:var(--platc)}
 :root[data-theme="dark"] .platVer{background:#221a4d}
-.platVer>b{font-size:13px;color:${COR2};margin-right:4px}:root[data-theme="dark"] .platVer>b{color:#c9bdf6}
+.platVer>b{font-size:13px;color:var(--plat2);margin-right:4px}:root[data-theme="dark"] .platVer>b{color:#c9bdf6}
 .platVer button{all:unset;cursor:pointer;border:1px solid #c9bdf6;background:var(--surface);color:var(--fg);border-radius:999px;padding:5px 12px;font-size:13px;font-weight:600}
-.platVer button.on{background:${COR};border-color:${COR};color:#fff}
+.platVer button.on{background:var(--plat);border-color:var(--plat);color:#fff}
 .platVer .n{font-size:12px;color:var(--muted);flex-basis:100%}
 @media (max-width:560px){.platGrid{grid-template-columns:1fr 1fr;gap:9px;padding:12px}.platK{min-height:104px;padding:12px}.platHero{margin:10px 10px 0}}`;
-const st=document.createElement('style');st.textContent=css;document.head.appendChild(st);
+const st=document.createElement('style');st.textContent=css;document.head.appendChild(st);cores();
 
 /* capa fixa: sempre aparece ao abrir o link da CB */
-try{const q=new URLSearchParams(location.search);if((q.get('e')||'').toLowerCase()===EMP){
+try{const q=new URLSearchParams(location.search),qe=(q.get('e')||'').toLowerCase();if(PLATS[qe]){EMP=qe;cores();
   const c=document.createElement('div');c.id='platCapa';c.setAttribute('role','button');c.tabIndex=0;
-  c.innerHTML=`<div class="lg">CB</div><h1>Casa Bandeirante</h1><p>Plataforma Casa Bandeirante &amp; FC 3D</p><div class="bt">Entrar</div><div class="wm">FC CONSULTORIA EM ESQUADRIA · uso exclusivo</div>`;
+  c.innerHTML=`<div class="lg">${CFG().sig}</div><h1>${CFG().nome}</h1><p>Plataforma ${CFG().nome} &amp; FC 3D</p><div class="bt">Entrar</div><div class="wm">FC CONSULTORIA EM ESQUADRIA · uso exclusivo</div>`;
   const fecha=()=>{c.remove();const u=document.getElementById('lgU');if(u)u.focus();};
   c.onclick=fecha;c.onkeydown=ev=>{if(ev.key==='Enter'||ev.key===' ')fecha();};
   (document.body?document.body.appendChild(c):document.addEventListener('DOMContentLoaded',()=>document.body.appendChild(c)));}}catch(_){}
 
-const tema=()=>{const r=document.documentElement,esc=r.getAttribute('data-theme')!=='dark';r.setAttribute('data-theme',esc?'dark':'light');try{localStorage.setItem('plat-cb-tema',esc?'dark':'light');}catch(_){}pinta(true);};
-try{const t=localStorage.getItem('plat-cb-tema');if(t&&new URLSearchParams(location.search).get('e')===EMP)document.documentElement.setAttribute('data-theme',t);}catch(_){}
+const tema=()=>{const r=document.documentElement,esc=r.getAttribute('data-theme')!=='dark';r.setAttribute('data-theme',esc?'dark':'light');try{localStorage.setItem('plat-'+EMP+'-tema',esc?'dark':'light');}catch(_){}pinta(true);};
+try{const t=localStorage.getItem('plat-'+EMP+'-tema');if(t&&PLATS[(new URLSearchParams(location.search).get('e')||'').toLowerCase()])document.documentElement.setAttribute('data-theme',t);}catch(_){}
 
 
 /* ---------- tutorial guiado por setor (mesmo formato da Guaporé) ---------- */
@@ -65,7 +69,7 @@ const CARD={
  comp:'Onde comprar mostra em quais extrusoras cada perfil é fabricado.',
  conv:'O Conversor de códigos traduz o código de um fornecedor para o código padrão, com o desenho para conferir antes de comprar.',
  dist:'Em Compras com distribuidoras ficam as cotações e comparações de preço com as distribuidoras.',
- cat:'O Catálogo mostra os perfis da Casa Bandeirante com foto, medidas e peso. As medidas e pesos são de referência: confirme sempre com o fornecedor.',
+ cat:'O Catálogo mostra os perfis da {cli} com foto, medidas e peso. As medidas e pesos são de referência: confirme sempre com o fornecedor.',
  orc:{gestor:'No Painel de Vendas Atacado você acompanha os resultados, aprova pedidos e descontos e vê o desempenho de cada vendedor.',
       gerente:'O Painel de Vendas Atacado é a principal ferramenta da coordenação. Aqui você acompanha os orçamentos da equipe e aprova os descontos acima do limite autorizado.',
       '':'No Painel de Vendas Atacado ficam os orçamentos e pedidos da empresa.'},
@@ -75,36 +79,41 @@ const CARD={
  casa:'No Monte sua Casa 3D você coloca as esquadrias na planta e apresenta o projeto ao cliente.',
  dia:'Os Diagramas de pressão de vento ajudam a escolher o perfil adequado conforme a altura e a região da obra.',
  sol:'Em Solicitações com a FC você envia pedidos e dúvidas ao suporte e acompanha a resposta.',
- age:'Na Agenda da FC aparecem as visitas, os treinamentos e os compromissos da FC com a Casa Bandeirante.',
+ age:'Na Agenda da FC aparecem as visitas, os treinamentos e os compromissos da FC com a {cli}.',
  mkt:'Nas Dicas de marketing a FC envia ideias para divulgar a empresa.',
  div:'Em Divulgação ficam os materiais prontos para divulgar a empresa.'};
 const INTRO={
- gestor:['Gestor','Bem-vindo à Plataforma Casa Bandeirante e FC 3D. Como gestor, você vê todos os setores da empresa. Cada cartão abre uma ferramenta; vou mostrar uma por uma.'],
+ gestor:['Gestor','Bem-vindo à Plataforma {cli} e FC 3D. Como gestor, você vê todos os setores da empresa. Cada cartão abre uma ferramenta; vou mostrar uma por uma.'],
  compras:['Compras','Este é o painel do Compras. Aqui estão as ferramentas para planejar e fazer as compras: relatório de vendas, estoque, onde comprar, cotações e o catálogo.'],
  gerente:['Coordenação','Este é o painel da coordenação comercial. Aqui você acompanha a equipe de vendas, aprova descontos e consulta o catálogo e os treinamentos.'],
  marketing:['Marketing','Este é o painel do Marketing. Aqui você acompanha o catálogo da empresa, a galeria do processo de mudança e fala com a FC.'],
+ estoque:['Estoque','Este é o painel do Estoque. Aqui você atualiza o estoque com a planilha do sistema, pesquisa e converte códigos, consulta o catálogo e estuda as esquadrias no treinamento.'],
  fabrica:['Fábrica','Este é o painel da Fábrica. Aqui você estuda as esquadrias no Treinamento 3D e consulta o catálogo de perfis.'],
- '':['Visão do cliente','Esta é a Plataforma Casa Bandeirante e FC 3D. Cada cartão abre uma ferramenta; vou mostrar uma por uma.']};
+ '':['Visão do cliente','Esta é a Plataforma {cli} e FC 3D. Cada cartão abre uma ferramenta; vou mostrar uma por uma.']};
 const temP=()=>{try{return typeof PESSOA!=='undefined'&&!!PESSOA;}catch(_){return false;}};
 const vc=()=>(!temP()&&window.VCOMO)?window.VCOMO:null;
 const papel=()=>{try{return (temP()&&PESSOA.papel)||(vc()&&vc().papel)||'';}catch(_){return '';}};
-const chaveTut=()=>{try{return 'plat-cb-tour-v1-'+((PESSOA&&(PESSOA.login||PESSOA.id))||'fc');}catch(_){return 'plat-cb-tour-v1-fc';}};
+const chaveTut=()=>{try{return 'plat-'+EMP+'-tour-v1-'+((PESSOA&&(PESSOA.login||PESSOA.id))||'fc');}catch(_){return 'plat-'+EMP+'-tour-v1-fc';}};
 function tutorial(){if(!window.FCTour)return;
   if(modo!=='home'){modo='home';homeTab=(typeof tab!=='undefined')?tab:null;pinta(true);}
-  const pp=papel(),[nome,intro]=INTRO[pp]||INTRO[''];
+  const pp=papel(),cl=t=>String(t).split('{cli}').join(CFG().nome),[nome,intro0]=INTRO[pp]||INTRO[''],intro=cl(intro0);
   const passos=[['.platHero .lg',intro]];
-  document.querySelectorAll('.platGrid .platK').forEach(k=>{let t=CARD[k.dataset.t];if(t&&typeof t==='object')t=t[pp]||t[''];if(t)passos.push(['.platK[data-t="'+k.dataset.t+'"]',t]);});
+  const semTx=[];document.querySelectorAll('.platGrid .platK').forEach(k=>{let t=CARD[k.dataset.t];if(t&&typeof t==='object')t=t[pp]||t[''];
+    if(!t){const nm=(k.querySelector('b')||{}).textContent||'';t='Em '+nm+' você encontra mais uma ferramenta da FC. Toque no cartão para abrir.';semTx.push(k.dataset.t);}
+    passos.push(['.platK[data-t="'+k.dataset.t+'"]',cl(t)]);});
+  /* revisão do tutorial: cartão novo sem explicação fica registrado para a FC atualizar o texto */
+  if(semTx.length){try{console.warn('Tutorial da plataforma sem texto para:',semTx.join(', '));if(temP())sb.rpc('emp_registrar',{p_token:PESSOA.token,p_area:'tutorial',p_acao:'revisar texto do tutorial: '+semTx.join(', ')}).then(()=>{},()=>{});}catch(_){}}
   passos.push(['.platHero [data-a="tema"]','Aqui você troca o fundo para claro ou escuro. A escolha fica salva neste aparelho.']);
   passos.push([null,'Dentro de qualquer ferramenta, toque em Todos os cards para voltar a esta tela.']);
   passos.push(['.platHero [data-a="tut"]','Para rever este tutorial, toque em Tutorial quando quiser. Ficou com dúvida? Abra Solicitações com a FC ou chame no WhatsApp, de segunda a sexta.']);
-  FCTour.iniciar({titulo:'Tutorial · '+nome,passos,cor:COR,aoFim:()=>{try{localStorage.setItem(chaveTut(),'1');}catch(_){}
+  FCTour.iniciar({titulo:'Tutorial · '+nome,passos,cor:CFG().cor,aoFim:()=>{try{localStorage.setItem(chaveTut(),'1');}catch(_){}
     try{if(typeof PESSOA!=='undefined'&&PESSOA)sb.rpc('emp_registrar',{p_token:PESSOA.token,p_area:'tutorial',p_acao:'viu o tutorial da plataforma'}).then(()=>{},()=>{});}catch(_){}}});}
 let tutAuto=false;
 const nomePapel=()=>{try{if(temP())return PAPEL_NOME[PESSOA.papel]||PESSOA.papel;const v=vc();return v?(PAPEL_NOME[v.papel]||v.papel)+' · prévia da FC':'Visão do cliente';}catch(_){return '';}};
 const sair=()=>{const b=document.getElementById('pesSair');if(b)b.click();else location.reload();};
 
 /* ---------- Matriz: "Ver como" cada perfil da CB (prévia, não grava nada) ---------- */
-const ORD=['gestor','compras','gerente','marketing','fabrica'],PAD={compras:['comp','dist','est','pla','conv','age','sol'],gerente:['orc','cat','pcod'],marketing:['cat'],fabrica:['esq','cat']};
+const ORD=['gestor','compras','estoque','gerente','marketing','fabrica'],PAD={compras:['comp','dist','est','pla','conv','age','sol'],estoque:['est','pcod','conv','cat','esq','ori','sol','age'],gerente:['orc','cat','pcod'],marketing:['cat'],fabrica:['esq','cat']};
 let LISTA=null,carregando=false;
 function perfis(){const r=[];ORD.forEach(pp=>{const ps=(LISTA||[]).filter(p=>p.papel===pp&&p.ativo!==false);
   if(!ps.length&&pp!=='fabrica')return;const p=ps[0]||{nome:'Fábrica',papel:'fabrica'};
@@ -136,7 +145,7 @@ function pinta(forca){
   const escuro=document.documentElement.getAttribute('data-theme')==='dark';
   const nome=temP()?PESSOA.nome.split(' ')[0]:(vc()?vc().nome.split(' ')[0]:'equipe');
   const hero=document.createElement('div');hero.className='platHero';
-  hero.innerHTML=`<div class="lg">CB</div><div><h2>Olá, ${h(nome)}</h2><div class="s">Plataforma Casa Bandeirante &amp; FC 3D · ${h(nomePapel())}</div></div>
+  hero.innerHTML=`<div class="lg">${CFG().sig}</div><div><h2>Olá, ${h(nome)}</h2><div class="s">Plataforma ${h(CFG().nome)} &amp; FC 3D · ${h(nomePapel())}</div></div>
    <div class="bts"><button type="button" data-a="tut">▶ Tutorial</button><button type="button" data-a="tema">${escuro?'☀ Fundo claro':'🌙 Fundo escuro'}</button>${(typeof PESSOA!=='undefined'&&PESSOA)?'<button type="button" data-a="sair">Sair</button>':''}</div>`;
   hero.querySelector('[data-a="tema"]').onclick=tema;hero.querySelector('[data-a="tut"]').onclick=tutorial;const bs=hero.querySelector('[data-a="sair"]');if(bs)bs.onclick=sair;
   tg.before(hero);
