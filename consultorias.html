@@ -479,11 +479,11 @@ function cards(){if(PUB)return;const ks0=Object.keys(E);const M={};ks0.forEach(k
   const red=matchMedia('(prefers-reduced-motion: reduce)').matches;document.querySelectorAll('#emps [data-cnt]').forEach(el=>{const v=el.dataset.cnt;if(v===''){return;}const n=+v;if(red||!n){el.textContent=n;return;}let t0=null;const step=t=>{t0=t0||t;const p=Math.min(1,(t-t0)/700);el.textContent=Math.round(n*(1-Math.pow(1-p,3)));if(p<1)requestAnimationFrame(step);};requestAnimationFrame(step);});}
 function abrirEmpresa(k,t){at=k;openLane=null;OPEN={};if(t)tab=t;else tab='proc';render();window.scrollTo({top:0,behavior:'smooth'});}
 /* Abas que o cliente pode ver; o painel da matriz libera uma a uma (e.abasLib). Sem escolha salva, vale o que já aparecia. */
-const CLI_ABAS=['proc','acao','gal','dem','pla','est','cat','ori','esq','casa','conv','comp','dist','orc','pcod','dia','sol','age'],CLI_PADRAO=CLI_ABAS.filter(k=>k!=='conv'&&k!=='comp'&&k!=='dist'&&k!=='orc'&&k!=='pcod');
+const CLI_ABAS=['proc','acao','gal','dem','pla','est','cat','ori','esq','casa','conv','comp','dist','orc','pcod','dia','sol','age','rvi'],CLI_PADRAO=CLI_ABAS.filter(k=>k!=='rvi'&&k!=='conv'&&k!=='comp'&&k!=='dist'&&k!=='orc'&&k!=='pcod');
 const abasLib=e=>{let L=Array.isArray(e&&e.abasLib)?e.abasLib:CLI_PADRAO;if(Array.isArray(e&&e.abasLib)&&!e.casaMig&&!L.includes('casa'))L=[...L,'casa'];return (!PUB&&cli&&window.FCCentral&&e&&e===E[at]&&!L.includes('cen'))?['cen',...L]:L;};
-const GRUPOS_ABA=[['Gerência',['proc','acao','gal','dem']],['Financeiro / Administrativo',['pla','est','comp','conv','dist']],['Suporte',['sol','age']],['Treinamento',['dia','ori','esq','casa']],['Comercial',['pcom','cat','orc','pcod']],[e=>'Com o cliente · site e produtos '+(e&&e.nome||''),['mkt','div']],['Interno FC',['dsp','vis','arq','hrs']]];
-const ABAS=[['proc','🧭 Fluxo do processo'],['acao','✅ Plano de ação durante a visita'],['pla','📊 Planilhas de precificação'],['est','📦 Estoque · importação'],['cat','📚 Catálogo'],['pcom','🚀 Portal Comercial Guaporé'],['ori','🎓 Mostruário (Material de Consulta - Guia de Esquadrias)'],['esq','🪟 Treinamento 3D'],['casa','🏙 Monte sua Casa 3D'],['conv','🔁 Conversor de códigos de fornecedores'],['comp','🛒 Onde comprar · perfis nas extrusoras'],['dist','🏬 Compras com distribuidoras'],['orc','🏪 Painel de Vendas Atacado'],['pcod','🔎 Pesquisa de código e conversor'],['dia','🌬 Diagramas de pressão de vento'],['div','📣 Divulgação'],['mkt','💡 Dicas de marketing'],['gal','📸 Galeria do processo de mudança'],['sol','📨 Solicitações com a FC'],['age','🗓 Agenda da FC com {cli}'],['dsp','💳 Despesas'],['vis','📋 Visitas'],['dem','📦 Demandas e entregas'],['arq','📁 Arquivos'],['hrs','⏱ Horas']];
-const DESC_ABA={proc:'Etapas da consultoria e o que já foi concluído em cada frente.',acao:'Pontos levantados durante a visita, com responsável e prazo para resolver.',gal:'Fotos do antes e depois do processo de mudança na empresa.',dem:'O que a FC já entregou e o que está pendente de cada lado.',
+const GRUPOS_ABA=[['Gerência',['proc','acao','gal','dem']],['Financeiro / Administrativo',['pla','est','rvi','comp','conv','dist']],['Suporte',['sol','age']],['Treinamento',['dia','ori','esq','casa']],['Comercial',['pcom','cat','orc','pcod']],[e=>'Com o cliente · site e produtos '+(e&&e.nome||''),['mkt','div']],['Interno FC',['dsp','vis','arq','hrs']]];
+const ABAS=[['proc','🧭 Fluxo do processo'],['acao','✅ Plano de ação durante a visita'],['pla','📊 Planilhas de precificação'],['est','📦 Estoque · importação'],['rvi','📋 Relatório de vendas · itens'],['cat','📚 Catálogo'],['pcom','🚀 Portal Comercial Guaporé'],['ori','🎓 Mostruário (Material de Consulta - Guia de Esquadrias)'],['esq','🪟 Treinamento 3D'],['casa','🏙 Monte sua Casa 3D'],['conv','🔁 Conversor de códigos de fornecedores'],['comp','🛒 Onde comprar · perfis nas extrusoras'],['dist','🏬 Compras com distribuidoras'],['orc','🏪 Painel de Vendas Atacado'],['pcod','🔎 Pesquisa de código e conversor'],['dia','🌬 Diagramas de pressão de vento'],['div','📣 Divulgação'],['mkt','💡 Dicas de marketing'],['gal','📸 Galeria do processo de mudança'],['sol','📨 Solicitações com a FC'],['age','🗓 Agenda da FC com {cli}'],['dsp','💳 Despesas'],['vis','📋 Visitas'],['dem','📦 Demandas e entregas'],['arq','📁 Arquivos'],['hrs','⏱ Horas']];
+const DESC_ABA={rvi:'Itens orçados e itens em pedidos do Painel de Vendas, somados por código e cor, para planejar as compras.',proc:'Etapas da consultoria e o que já foi concluído em cada frente.',acao:'Pontos levantados durante a visita, com responsável e prazo para resolver.',gal:'Fotos do antes e depois do processo de mudança na empresa.',dem:'O que a FC já entregou e o que está pendente de cada lado.',
  pla:'Planilhas para fazer a precificação: custo, impostos, despesas e margem.',comp:'Compare o preço por kg das extrusoras e veja onde a barra de 6 m sai mais barata, com compra mínima, curva ABC e simulação de pedido.',conv:'Digite o código de um fornecedor e veja o equivalente nos outros, com o desenho 2D lado a lado para conferir.',dist:'Veja quais distribuidoras têm o mesmo perfil, com o código, o desenho e o peso de cada uma.',
  sol:'Peça algo para a FC (planilha, ajuste, dúvida) e acompanhe a resposta.',age:'Datas de visitas, reuniões e treinamentos combinados com a FC.',dia:'Diagramas de pressão de vento para escolher a linha e o perfil certos para cada vão.',ori:'Material de consulta: guia de esquadrias no Mostruário 3D — veja cada linha e peça, monte, desmonte e teste seu conhecimento.',esq:'Treinamento 3D da montagem das esquadrias, passo a passo.',casa:'Monte as casas e o prédio com esquadrias Suprema e Gold em 3D.',
  pcom:'Portal da equipe comercial: painel do Vendedor, Central do Gestor (comandos, medidores, cadastros e orçamentos), Marketing (vitrine do catálogo, posts e campanhas) e a tela do cliente no Catálogo 3D, com tutorial guiado.',
@@ -558,6 +558,7 @@ function ficha(){const e=E[at];let h='';if(PESSOA&&window.__abaLog!==tab){window
  if(tab==='gal'){h+=galTabHtml(e,hero,nextc,sec);}
  if(tab==='dsp')h+=dspTabHtml(e,hero,nextc,sec);
  if(tab==='cen'&&window.FCCentral)h+=FCCentral.html(e);
+ if(tab==='rvi'&&window.FCRelItens)h+=FCRelItens.html();
  if(tab==='cat'){if(OPEN.cat===undefined)OPEN.cat='cat';h+=catTabHtml(e,hero,nextc,sec);}
  if(tab==='sol')h+=solTabHtml(e);
  if(tab==='vis'){const v=e.vis;v.ok=v.ok||{};const G=[['a','Antes da visita','preparação',v.prep||[]],['d','Durante a visita','execução',v.dur||[]],['p','Depois da visita','fechamento',v.dep||[]]];
@@ -601,7 +602,7 @@ function ficha(){const e=E[at];let h='';if(PESSOA&&window.__abaLog!==tab){window
  document.querySelectorAll('[data-fr]').forEach(b=>b.onclick=()=>{fr=+b.dataset.fr;delete OPEN.acao;ficha();});
  document.querySelectorAll('[data-sec]').forEach(b=>b.onclick=()=>{OPEN[tab]=OPEN[tab]===b.dataset.sec?'':b.dataset.sec;ficha();});
  document.querySelectorAll('[data-ff]').forEach(b=>b.onclick=()=>{frFlow=+b.dataset.ff;ficha();});
- $('#ficha').classList.toggle('fc',!cli); wirePlSol(e); if(tab==='cen'&&window.FCCentral)FCCentral.wire(); if(cli)return;
+ $('#ficha').classList.toggle('fc',!cli); wirePlSol(e); if(tab==='cen'&&window.FCCentral)FCCentral.wire(); if(tab==='rvi'&&window.FCRelItens)FCRelItens.wire(); if(cli)return;
  const g=id=>document.getElementById(id);
  if(g('lkTog'))g('lkTog').onclick=()=>{linkAberto=!linkAberto;ficha();};
  if(g('lkCriar'))g('lkCriar').onclick=async()=>{const r={empresa_id:at,chave:novaChave(),ativo:true};const {error}=await sb.from('cons_portal').insert(r);if(error){alert('Não foi possível criar: '+error.message);return;}PORT[at]=Object.assign({acessos:0},r);ficha();};
@@ -1374,6 +1375,7 @@ else{/* links da Matriz: ?ver=<empresa> abre a empresa · &como=gestor abre "Com
 <script src="estoque-aviso.js?v=2"></script><script>if(PUB)FCEstAviso.cliente(KEY);</script>
 <script src="acessos-pessoas.js?v=2"></script>
 <script src="central-gestor.js?v=7"></script>
+<script src="rel-itens.js?v=1"></script>
 <script src="plataforma-cb.js?v=1"></script>
 <script src="conversas.js?v=4"></script>
 <script>/* barra de baixo: ocultar / mostrar (fica lembrado neste aparelho) */
