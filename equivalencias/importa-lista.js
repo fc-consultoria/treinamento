@@ -1,4 +1,4 @@
-/* Onde comprar · importar a lista de perfis do cliente (Excel/CSV) para a simulação.
+/* Onde comprar · importar a lista de perfis do cliente (Excel/CSV/PDF) para a simulação.
    Lê código (com a cor abreviada no fim: .BCO, -PTO, -NAT…), cor, barras e tamanho da barra; acha o perfil em qualquer linha. */
 (function(){
   const XLSX_URL='https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
@@ -18,6 +18,21 @@
   function cab(rows){for(let i=0;i<Math.min(rows.length,30);i++){const r=rows[i].map(x=>sa(x));const ic=r.findIndex(x=>/COD|REF/.test(x)),iq=r.findIndex(x=>/TOTAL|BARRA|QTD|QUANT/.test(x)&&!/TAMANHO|COMPR|MM/.test(x));
       if(ic>=0&&iq>=0)return {i,cod:ic,qtd:iq,prod:r.findIndex(x=>/PRODUTO|DESCRI|PERFIL|NOME/.test(x)),cor:r.findIndex(x=>/^COR|ACABAMENTO|PINTURA/.test(x)),tam:r.findIndex(x=>/TAMANHO|COMPR|\(MM\)|METRO/.test(x))};}
     return null;}
+  /* PDF: lê o texto com posição (pdf.js), monta as linhas pela altura e as colunas pelo cabeçalho */
+  const PDF_URL='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js',PDF_WK='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  let carPdf=null;const libPdf=()=>window.pdfjsLib?Promise.resolve():(carPdf=carPdf||new Promise((ok,no)=>{const s=document.createElement('script');s.src=PDF_URL;s.onload=()=>{window.pdfjsLib.GlobalWorkerOptions.workerSrc=PDF_WK;ok();};s.onerror=()=>{carPdf=null;no(new Error('pdf'));};document.head.appendChild(s);}));
+  async function lerPdf(buf){await libPdf();const doc=await pdfjsLib.getDocument({data:buf}).promise;const linhas=[];
+    for(let p=1;p<=doc.numPages;p++){const pg=await doc.getPage(p);const tc=await pg.getTextContent();const its=tc.items.filter(t=>t.str&&t.str.trim()).map(t=>({x:t.transform[4],w:t.width||0,y:t.transform[5],h:Math.abs(t.transform[3])||8,s:t.str.trim()}));
+      its.sort((a,b)=>b.y-a.y||a.x-b.x);let cur=null;
+      its.forEach(t=>{if(cur&&Math.abs(cur.y-t.y)<=Math.max(2.5,t.h*.45))cur.it.push(t);else{cur={y:t.y,it:[t]};linhas.push(cur);}});}
+    linhas.forEach(l=>{l.it.sort((a,b)=>a.x-b.x);const m=[];l.it.forEach(t=>{const u=m[m.length-1];if(u&&t.x-(u.x+u.w)<Math.max(1.5,t.h*.25)){u.s+=(t.x-(u.x+u.w)>.5?' ':'')+t.s;u.w=t.x+t.w-u.x;}else m.push({...t});});l.it=m;});
+    if(!linhas.length)return [];
+    /* acha o cabeçalho e usa o centro de cada título como coluna; sem cabeçalho, cada pedaço é uma célula */
+    let hi=-1;for(let i=0;i<Math.min(linhas.length,60);i++){if(cab([linhas[i].it.map(t=>t.s)])){hi=i;break;}}
+    if(hi<0)return linhas.map(l=>l.it.map(t=>t.s));
+    const cols=linhas[hi].it.map(t=>t.x+t.w/2);const out=[linhas[hi].it.map(t=>t.s)];
+    for(let i=hi+1;i<linhas.length;i++){const r=cols.map(()=>'');linhas[i].it.forEach(t=>{const c=t.x+t.w/2;let k=0,d=1e9;cols.forEach((x,j)=>{const dd=Math.abs(x-c);if(dd<d){d=dd;k=j;}});r[k]=r[k]?r[k]+' '+t.s:t.s;});out.push(r);}
+    return out;}
   function ler(rows){rows=rows.map(r=>(r||[]).map(x=>x==null?'':String(x).trim()));let h=cab(rows),out=[];
     if(!h){/* sem cabeçalho: 1ª coluna com cara de código, depois o 1º número */
       rows.forEach((r,i)=>{const ic=r.findIndex(x=>/^[A-Za-z]{0,5}[-. ]?\d{2,5}/.test(x));if(ic<0)return;const nums=r.map((x,j)=>[j,+String(x).replace(',','.')]).filter(([j,v])=>j!==ic&&v>0&&isFinite(v));if(!nums.length)return;
@@ -49,13 +64,14 @@
   let stOk=false;
   async function arquivo(f){if(!stOk){const s=document.createElement('style');s.textContent=css;document.head.appendChild(s);stOk=true;}
     ARQ=f.name;toast('Lendo a lista…');let rows=[];
-    try{if(/\.(csv|txt)$/i.test(f.name)){const t=await f.text();rows=t.split(/\r?\n/).map(l=>l.split(/[;\t]/));}
+    try{if(/\.pdf$/i.test(f.name)||f.type==='application/pdf'){rows=await lerPdf(await f.arrayBuffer());if(!rows.length){toast('Este PDF não tem texto (é imagem/escaneado). Mande em PDF gerado pelo sistema, Excel ou CSV.');return;}}
+      else if(/\.(csv|txt)$/i.test(f.name)){const t=await f.text();rows=t.split(/\r?\n/).map(l=>l.split(/[;\t]/));}
       else{await lib();const wb=XLSX.read(await f.arrayBuffer(),{type:'array'});const ws=wb.Sheets[wb.SheetNames[0]];rows=XLSX.utils.sheet_to_json(ws,{header:1,raw:false,defval:''});}}
-    catch(_){toast('Não consegui ler este arquivo. Mande em Excel (.xlsx) ou CSV.');return;}
-    IT=monta(ler(rows));if(!IT.length){toast('Não achei código e quantidade nesta planilha.');return;}abre();
+    catch(_){toast('Não consegui ler este arquivo. Mande em Excel (.xlsx), CSV ou PDF.');return;}
+    IT=monta(ler(rows));if(!IT.length){toast('Não achei código e quantidade nesta lista.');return;}abre();
     typeof registrar==='function'&&registrar('lista_importada',{linhas:IT.length,achadas:IT.filter(x=>x.ok).length});}
   document.addEventListener('click',e=>{const t=e.target;
-    if(t.closest('[data-implista]')){let i=document.getElementById('impFile');if(!i){i=document.createElement('input');i.type='file';i.id='impFile';i.hidden=true;i.accept='.xlsx,.xls,.csv,.txt';document.body.appendChild(i);i.onchange=()=>{if(i.files[0])arquivo(i.files[0]);i.value='';};}i.click();return;}
+    if(t.closest('[data-implista]')){let i=document.getElementById('impFile');if(!i){i=document.createElement('input');i.type='file';i.id='impFile';i.hidden=true;i.accept='.xlsx,.xls,.csv,.txt,.pdf';document.body.appendChild(i);i.onchange=()=>{if(i.files[0])arquivo(i.files[0]);i.value='';};}i.click();return;}
     if(!document.getElementById('impOv'))return;
     if(t.closest('[data-impx]')||t.id==='impOv'){document.getElementById('impOv').remove();return;}
     const ok=t.closest('[data-impok]');if(ok){const U=IT.filter(x=>x.use!==false);if(!U.length){toast('Nenhum item marcado para simular.');return;}
