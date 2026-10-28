@@ -13,7 +13,8 @@
     ['📸','Instagram','https://www.instagram.com/contramarco/'],
     ['▶️','YouTube','https://www.youtube.com/channel/UCsUmEZ0ZWTwH1Qzcb8G59hw'],
     ['💼','LinkedIn','https://www.linkedin.com/company/revista-contramarco/'],
-    ['👍','Facebook','https://www.facebook.com/contramarco']]};
+    ['👍','Facebook','https://www.facebook.com/contramarco'],
+    ['🏛️','FESQUA (feira)','https://fesqua.com.br/']]};
   const ATUALIZA_MIN=30;
   const esc=v=>String(v==null?'':v).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   const LS={g(k){try{return localStorage.getItem(k);}catch(_){return null;}},s(k,v){try{localStorage.setItem(k,v);}catch(_){}}};
