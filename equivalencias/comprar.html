@@ -213,7 +213,7 @@ async function carregaIndice(){
       else{const r=await sb.rpc('equiv_edits_lista',{p_chave:KEY});ed=r.data||[];}}catch(_){}
   const last={};ed.forEach(x=>{if(x&&x.f&&x.c)last[(x.l||'suprema')+'|'+x.f+'|'+x.c]=x;});
   Object.values(last).forEach(x=>{const l=x.l||'suprema';
-    IDX.g.forEach(g=>{if(g.l===l&&!(x.a&&g.k===x.a))g.m=g.m.filter(m=>!(m[0]===x.f&&m[1]===x.c&&(m[3]!=='base'||(g.sp&&x.a))));});
+    IDX.g.forEach(g=>{if(g.l===l&&!(x.a&&g.k===x.a))g.m=g.m.filter(m=>!(m[0]===x.f&&m[1]===x.c&&(m[3]!=='base'||(g.sp&&x.a)||x.off)));});/* x.off: código desativado da pesquisa pela FC */
     if(!x.a)return;const g=IDX.g.find(y=>y.l===l&&y.k===x.a);const p=x.p!=null&&x.p!==''?+x.p:null;if(g&&p)g.m.push([x.f,x.c,p,x.n||'media',x.img||'',x.pg||'—',1]);});
   if(!ADM){try{const r=await sb.rpc('equiv_ok_lista',{p_chave:KEY});(r.data||[]).forEach(k=>OK[k]=true);}catch(_){}}
   BY={};IDX.g.forEach((g,i)=>{g.i=i;g.m.forEach(m=>{(BY[norm(m[1])]=BY[norm(m[1])]||[]).push(i);});if(g.mc)(BY[norm(g.k)]=BY[norm(g.k)]||[]).push(i);(g.al||[]).forEach(c=>{(BY[norm(c)]=BY[norm(c)]||[]).push(i);});});
