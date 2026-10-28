@@ -206,6 +206,7 @@ label{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:4
     <div class="seg" role="group" aria-label="Perfil" id="roleSeg">
       <button data-role="gestor" aria-pressed="true">Gestor</button>
       <button data-role="vendedor" aria-pressed="false">Vendedor</button>
+      <button data-role="compras" aria-pressed="false">Compras</button>
       <button data-role="marketing" aria-pressed="false">Marketing</button>
     </div>
     <button class="btn bell" id="bellBtn" title="Avisos de cadastro">🔔 Avisos<span class="dot" id="bellDot" hidden>0</span></button>
@@ -222,7 +223,7 @@ label{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:4
   <div class="capa-g">G</div>
   <h1>Guaporé Vidros</h1>
   <p class="capa-t">Plataforma Comercial · Catálogo 3D</p>
-  <p class="capa-s">Vendas · Central do Gestor · Marketing</p>
+  <p class="capa-s">Vendas · Compras · Central do Gestor · Marketing</p>
   <button class="capa-btn" id="capaBtn">Entrar ▶</button>
   <div class="capa-foot"><img src="../midia/logo-fc.png" alt="FC Consultoria" class="capa-fc" onerror="this.remove()"><span>Desenvolvido por FC Consultoria em Esquadria</span></div>
  </div>
@@ -259,6 +260,21 @@ const MODS=[
  {k:'vento',n:'Diagrama de pressão de vento',d:'Consulta rápida de pressão por região e altura.',i:'≋'},
  {k:'fc',n:'Solicitação com a FC',d:'Dúvidas e pedidos de suporte direto com a FC.',i:'✉'}
 ];
+const CMODS=[
+ {k:'comp',n:'Onde comprar',d:'Perfis nas extrusoras: quem fabrica cada linha.',i:'🛒',g:'Compras',u:'https://fc-consultoria.github.io/treinamento/equivalencias/comprar.html'},
+ {k:'dist',n:'Compras com distribuidoras',d:'Distribuidoras e os códigos que cada uma usa.',i:'🏬',g:'Compras',u:'https://fc-consultoria.github.io/treinamento/equivalencias/distribuidoras.html'},
+ {k:'conv',n:'Conversor de códigos',d:'Converta o código do fornecedor para o código de mercado.',i:'🔁',g:'Compras',u:'https://fc-consultoria.github.io/treinamento/equivalencias/'},
+ {k:'pcod',n:'Pesquisa de código',d:'Busca no cadastro WVetro e no cadastro Guaporé.',i:'🔎',g:'Compras',u:'https://fc-consultoria.github.io/treinamento/equivalencias/pesquisa/?f=wvetro,guapore'},
+ {k:'cat',n:'Catálogo 3D',d:'Perfis do catálogo da Guaporé em 3D.',i:'▦',g:'Treinamento e consulta',u:'https://fc-consultoria.github.io/catalogo/guapore-vidros'},
+ {k:'ori',n:'Mostruário',d:'Guia de esquadrias para consulta e impressão.',i:'🎓',g:'Treinamento e consulta',u:'https://fc-consultoria.github.io/treinamento/apostila/apostila-540257d2315acb84.pdf'},
+ {k:'trein',n:'Treinamento 3D',d:'Montagem e conceitos em 3D + turmas on-line.',i:'◈',g:'Treinamento e consulta',u:'https://fc-consultoria.github.io/treinamento/esquadrias/'},
+ {k:'casa',n:'Monte sua Casa 3D',d:'Coloque as esquadrias na planta.',i:'⌂',g:'Treinamento e consulta',u:'https://fc-consultoria.github.io/treinamento/esquadrias/monte-casa.html'},
+ {k:'fc',n:'Solicitação com a FC',d:'Dúvidas e pedidos de suporte direto com a FC.',i:'✉',g:'Suporte'},
+ {k:'age',n:'Agenda da FC',d:'Visitas e reuniões da FC com a Guaporé.',i:'🗓',g:'Suporte'}
+];
+const CCOLORS={comp:'var(--brand)',dist:'#3aa0c9',conv:'#6b7fd6',pcod:'#2f8f6f',cat:'#d5604a',ori:'var(--amber)',trein:'#c98a2b',casa:'#8a6bd6',fc:'#b0627e',age:'#7a8794'};
+const cmodsAll=v=>Object.fromEntries(CMODS.map(m=>[m.k,v]));
+function seedCompras(){return [{id:'k1',nome:'João',ativo:true,mods:cmodsAll(true),ac:{comp:6,dist:9,conv:11,pcod:14,cat:4,ori:2,trein:3,casa:1,fc:1,age:1},ult:day(2)}]}
 const COLORS={cat:'var(--brand)',trein:'var(--amber)',casa:'#6b7fd6',vento:'#3aa0c9',fc:'#b0627e'};
 const PRODS=[
  {id:'p1',c:'SU-001',n:'Trilho superior porta/janela de correr 2 folhas',l:'Linha Suprema',g:'Trilhos superiores',kg:'0,762'},
@@ -297,7 +313,8 @@ function seed(){
    {id:'s3',d:'Qui 05/11',h:'14:00',tema:'Pressão de vento na prática',cap:6,ins:['v1','v4']}
   ],
   sol:[],
-  me:'v1', cliSessao:null
+  me:'v1', cliSessao:null,
+  compras:seedCompras(), cmodsOn:cmodsAll(true), meC:'k1'
  };
 }
 let S;try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}
@@ -329,12 +346,14 @@ function seedChat(){const t=(d,h)=>{const x=new Date();x.setDate(x.getDate()-d);
  {de:'fc',para:'v4',t:'Abra pelo cartão e gire o celular na horizontal. Qualquer dúvida, chame aqui.',h:t(0,10)}
 ]}
 if(!S.chat)S.chat=seedChat();
+if(!S.compras){S.compras=seedCompras();S.cmodsOn=cmodsAll(true);S.meC='k1'}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 let chatWith='gestor', role='gestor', cart=[], selVend=null, showCad={}, fVend='todos', fStat='todos', postSel={p:'p1',f:'feed',t:'Ventilação e luz o dia todo'};
 const $=s=>document.querySelector(s);
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmtD=iso=>{const d=new Date(iso);return d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})};
-const vName=id=>(S.vend.find(v=>v.id===id)||{}).nome||'—';
+const vName=id=>([...S.vend,...(S.compras||[])].find(v=>v.id===id)||{}).nome||'—';
+const myId=()=>role==='compras'?S.meC:S.me;
 const cli=id=>S.clientes.find(c=>c.id===id)||{};
 const prod=id=>PRODS.find(p=>p.id===id)||{};
 const STAT={novo:['Novo','novo'],andamento:['Em atendimento','and'],enviado:['Orçamento enviado','ok']};
@@ -344,7 +363,7 @@ function totalAc(v){return Object.values(v.ac).reduce((a,b)=>a+b,0)}
 /* ---------- CONVERSA DA EQUIPE ---------- */
 function cName(id){return id==='gestor'?'Gestor':id==='fc'?'FC Consultoria':vName(id)}
 function convo(a,b){return S.chat.filter(m=>(m.de===a&&m.para===b)||(m.de===b&&m.para===a))}
-function chatHTML(me){const cont=[...S.vend.filter(v=>v.id!==me).map(v=>v.id),'gestor','fc'];if(!cont.includes(chatWith))chatWith='gestor';
+function chatHTML(me){const cont=[...S.vend,...S.compras].filter(v=>v.id!==me).map(v=>v.id).concat(['gestor','fc']);if(!cont.includes(chatWith))chatWith='gestor';
  const msgs=convo(me,chatWith);
  return `<section class="panel" id="t-chat" style="margin-top:14px"><h2>💬 Conversa da equipe</h2><p class="sub">Conversas individuais com colegas, gestor e FC. Cada conversa é só entre as duas pessoas; o gestor acompanha pelo histórico.</p>
  <div class="chatg"><div class="clist">${cont.map(c=>{const L=convo(me,c),last=L[L.length-1];return `<button class="cbtn" aria-pressed="${c===chatWith}" data-act="chatw" data-id="${c}"><b>${esc(cName(c))}${c==='fc'?' <span class="pill br">suporte</span>':''}</b><span>${last?esc(last.t.slice(0,42)):'Sem mensagens'}</span></button>`}).join('')}</div>
@@ -353,8 +372,8 @@ function chatHTML(me){const cont=[...S.vend.filter(v=>v.id!==me).map(v=>v.id),'g
 function histHTML(){const P={};S.chat.forEach(m=>{const k=[m.de,m.para].sort().join('|');(P[k]=P[k]||[]).push(m)});const K=Object.keys(P).sort((a,b)=>P[b][P[b].length-1].h.localeCompare(P[a][P[a].length-1].h));
  return `<section class="panel" style="margin-top:14px" id="t-hist"><h2>💬 Histórico das conversas da equipe</h2><p class="sub">Só leitura. As conversas são individuais; aqui você acompanha todas, inclusive as com a FC.</p><div class="list">${K.length?K.map(k=>{const L=P[k],[a,b]=k.split('|'),last=L[L.length-1];return `<div class="row"><div class="who"><b>${esc(cName(a))} ↔ ${esc(cName(b))}</b><span>${esc(last.t.slice(0,70))} · ${fmtD(last.h)}</span></div><span class="pill br">${L.length} msg</span><button class="btn sm" data-act="verhist" data-id="${k}">Ler</button></div>`}).join(''):'<div class="empty">Nenhuma conversa ainda.</div>'}</div></section>`}
 document.addEventListener('submit',e=>{if(e.target.id!=='cform')return;e.preventDefault();const v=$('#ctxt').value.trim();if(!v)return;
- const para=chatWith,me=S.me;S.chat.push({de:me,para,t:v,h:new Date().toISOString()});save();render();
- if(para==='fc')setTimeout(()=>{S.chat.push({de:'fc',para:me,t:'Recebido! A FC responde no horário de atendimento: seg a sex, 08h–11h e 13h–17h.',h:new Date().toISOString()});save();if(role==='vendedor')render()},1200)});
+ const para=chatWith,me=myId();S.chat.push({de:me,para,t:v,h:new Date().toISOString()});save();render();
+ if(para==='fc')setTimeout(()=>{S.chat.push({de:'fc',para:me,t:'Recebido! A FC responde no horário de atendimento: seg a sex, 08h–11h e 13h–17h.',h:new Date().toISOString()});save();if(role==='vendedor'||role==='compras')render()},1200)});
 
 /* ---------- GESTOR ---------- */
 function vGestor(){
@@ -408,6 +427,15 @@ function vGestor(){
    </div>
   </section>
  </div>
+ <section class="panel" id="t-cmp" style="margin-top:14px">
+  <div class="ph"><div><h2>🛒 Setor de Compras · comandos e acesso</h2><p class="sub">Libere ou bloqueie cada módulo do Compras. O medidor mostra quantas vezes cada módulo foi aberto.</p></div><button class="btn sm" data-act="addcomp">+ Cadastrar pessoa de Compras</button></div>
+  <div class="tablewrap"><table><thead><tr><th>Pessoa</th><th class="c">Acesso</th>${CMODS.map(m=>`<th class="c" title="${m.n}">${m.i}</th>`).join('')}</tr></thead><tbody>
+   <tr><td><b>Todos</b></td><td class="c">—</td>${CMODS.map(m=>`<td class="c"><button class="sw" role="switch" aria-checked="${S.cmodsOn[m.k]}" aria-label="${m.n} para todo o Compras" data-act="cgmod" data-m="${m.k}"></button></td>`).join('')}</tr>
+   ${S.compras.map(v=>`<tr><td>${esc(v.nome)}</td><td class="c"><button class="sw" role="switch" aria-checked="${v.ativo}" aria-label="Acesso de ${esc(v.nome)}" data-act="cativo" data-id="${v.id}"></button></td>${CMODS.map(m=>`<td class="c"><button class="sw" role="switch" aria-checked="${v.mods[m.k]&&S.cmodsOn[m.k]}" ${S.cmodsOn[m.k]?'':'disabled'} aria-label="${m.n} para ${esc(v.nome)}" data-act="cmod" data-id="${v.id}" data-m="${m.k}"></button></td>`).join('')}</tr>`).join('')}
+  </tbody></table></div>
+  <div class="list" style="margin-top:12px">${(()=>{const mx=Math.max(...S.compras.map(totalAc),1);return S.compras.map(v=>{const t=totalAc(v);return `<div class="meter"><span><b>${esc(v.nome)}</b>${v.ativo?'':' <span class="pill novo">bloq.</span>'}</span><div class="bar" style="width:${Math.max(t/mx*100,4)}%">${CMODS.map(m=>`<i title="${m.n}: ${v.ac[m.k]||0}" style="width:${t?(v.ac[m.k]||0)/t*100:0}%;background:${CCOLORS[m.k]}"></i>`).join('')}</div><span style="font-family:var(--f-mono)">${t}</span></div>`}).join('')})()}</div>
+  <div class="legend">${CMODS.map(m=>`<span><i style="background:${CCOLORS[m.k]}"></i>${m.n}</span>`).join('')}</div>
+ </section>
  <section class="panel" id="t-orc" style="margin-top:14px">
   <div class="ph"><div><h2>🧾 Orçamentos solicitados pelos clientes</h2><p class="sub">Tudo que o cliente enviou pelo catálogo, com o vendedor que ele escolheu.</p></div>
   <div class="toolbar"><select id="fVend" aria-label="Filtrar vendedor"><option value="todos">Todos os vendedores</option>${S.vend.map(v=>`<option value="${v.id}" ${fVend===v.id?'selected':''}>${esc(v.nome)}</option>`).join('')}</select>
@@ -445,6 +473,35 @@ function vVendedor(){
    <div class="slots">${S.slots.map(s=>{const mine=s.ins.includes(me.id),full=!mine&&s.ins.length>=s.cap;return `<button class="slot ${mine?'mine':''} ${full?'full':''}" data-act="slot" data-id="${s.id}" ${full?'disabled':''}><b>${s.d} · ${s.h}</b><span>${esc(s.tema)}</span><br><span>${mine?'✓ Inscrito':(s.cap-s.ins.length)+' vagas'}</span></button>`}).join('')}</div>
   </section>
  </div>${chatHTML(me.id)}`;
+}
+
+/* ---------- COMPRAS ---------- */
+function vCompras(){
+ const me=S.compras.find(v=>v.id===S.meC)||S.compras[0];if(me)S.meC=me.id;
+ if(!me)return '<div class="empty">Nenhuma pessoa de Compras cadastrada. O gestor cadastra na Central do Gestor.</div>';
+ const grupos=[...new Set(CMODS.map(m=>m.g))];
+ return `
+ <span class="demo-note">Demonstração · entrar como: <select id="meCSel" style="width:auto;display:inline-block;padding:2px 6px">${S.compras.map(v=>`<option value="${v.id}" ${v.id===me.id?'selected':''}>${esc(v.nome)}</option>`).join('')}</select></span>
+ <div class="hello"><div><h1>Olá, ${esc(me.nome)}</h1><p>Suas ferramentas de compra, conversão de códigos e treinamento.</p></div></div>
+ ${!me.ativo?'<div class="empty" style="margin-bottom:14px">Seu acesso está pausado pelo gestor.</div>':''}
+ <div id="t-cmods">${grupos.map(g=>`<h3 style="font-size:13px;color:var(--muted);margin:14px 0 8px;font-weight:600">${g}</h3>
+ <div class="grid mods">${CMODS.filter(m=>m.g===g).map(m=>{const ok=me.ativo&&me.mods[m.k]&&S.cmodsOn[m.k];return `
+  <button class="mod ${ok?'':'locked'}" data-act="copen" data-m="${m.k}" id="cmod-${m.k}">
+   ${m.k==='trein'?'<span class="tag new">+ on-line</span>':''}${ok?'':'<span class="tag">🔒 bloqueado</span>'}
+   <div class="ic" style="font-size:20px">${m.i}</div><h3>${m.n}</h3><p>${m.d}</p></button>`}).join('')}</div>`).join('')}</div>
+ <section class="panel" id="t-cagv" style="margin-top:14px">
+  <h2>🗓 Treinamento on-line</h2><p class="sub">Toque em uma turma para se inscrever ou sair.</p>
+  <div class="slots">${S.slots.map(s=>{const mine=s.ins.includes(me.id),full=!mine&&s.ins.length>=s.cap;return `<button class="slot ${mine?'mine':''} ${full?'full':''}" data-act="slot" data-id="${s.id}" ${full?'disabled':''}><b>${s.d} · ${s.h}</b><span>${esc(s.tema)}</span><br><span>${mine?'✓ Inscrito':(s.cap-s.ins.length)+' vagas'}</span></button>`}).join('')}</div>
+ </section>${chatHTML(me.id)}`;
+}
+function openModC(k){
+ const me=S.compras.find(v=>v.id===S.meC);const m=CMODS.find(x=>x.k===k);
+ if(!(me&&me.ativo&&me.mods[k]&&S.cmodsOn[k])){toast('Módulo bloqueado pelo gestor.');return}
+ me.ac[k]=(me.ac[k]||0)+1;me.ult=new Date().toISOString();save();
+ modal(`<h2>${m.i} ${m.n}</h2><p class="sub">Acesso registrado no medidor do gestor.</p>
+ <p>${k==='fc'?'Abre o canal de solicitações com a FC (suporte e dúvidas).':k==='age'?'As visitas e reuniões que a FC marcar com a Guaporé aparecem aqui.':k==='trein'?'Abre o Treinamento 3D. As turmas on-line ficam na agenda logo abaixo dos cartões.':'Toque em Abrir para entrar no módulo.'}</p>
+ ${m.u?`<div class="toolbar" style="justify-content:flex-end;margin-bottom:8px"><a class="btn primary" style="text-decoration:none" target="_blank" rel="noopener" href="${m.u}">↗ Abrir ${m.n}</a></div>`:''}
+ ${k==='fc'?`<label>Sua solicitação<textarea id="fcTxt" rows="3" placeholder="Descreva a dúvida ou pedido"></textarea></label><div class="toolbar" style="margin-top:10px;justify-content:flex-end"><button class="btn" data-act="close">Cancelar</button><button class="btn primary" data-act="fcsend">Enviar para a FC</button></div>`:k==='age'?`<div class="empty">Nenhuma visita marcada.</div><div class="toolbar" style="margin-top:10px;justify-content:flex-end"><button class="btn primary" data-act="close">Ok</button></div>`:`<div class="toolbar" style="justify-content:flex-end"><button class="btn primary" data-act="close">Ok</button></div>`}`);
 }
 
 /* ---------- CLIENTE ---------- */
@@ -576,7 +633,7 @@ function drawCanvasesOld(){
 function render(){
  document.querySelectorAll('#roleSeg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.role===role));
  const app=$('#app');
- app.innerHTML=(role==='gestor'?vGestor():role==='vendedor'?vVendedor():role==='marketing'?vMarketing():vCliente())+`<p class="foot">Desenvolvido por FC Consultoria em Esquadria · © FC Consultoria em Esquadria</p>`;
+ app.innerHTML=(role==='gestor'?vGestor():role==='vendedor'?vVendedor():role==='compras'?vCompras():role==='marketing'?vMarketing():vCliente())+`<p class="foot">Desenvolvido por FC Consultoria em Esquadria · © FC Consultoria em Esquadria</p>`;
  const n=S.clientes.filter(c=>!c.visto).length;$('#bellDot').hidden=!n;$('#bellDot').textContent=n;
  $('#bellBtn').hidden=role!=='gestor';
  if(role==='marketing')drawPost();
@@ -585,6 +642,7 @@ function render(){
  const fs=$('#fStat');if(fs)fs.onchange=e=>{fStat=e.target.value;render()};
  const cm=$('#cmsgs');if(cm)cm.scrollTop=cm.scrollHeight;
  const ms=$('#meSel');if(ms)ms.onchange=e=>{S.me=e.target.value;save();render()};
+ const mc=$('#meCSel');if(mc)mc.onchange=e=>{S.meC=e.target.value;save();render()};
 }
 
 function modal(html){const l=$('#layer');l.innerHTML=`<div class="modal" data-act="close"><div class="box" role="dialog" aria-modal="true">${html}</div></div>`}
@@ -617,7 +675,7 @@ document.addEventListener('click',e=>{
  if(e.target.closest('[data-role]')){role=e.target.closest('[data-role]').dataset.role;render();scrollTo(0,0);return}
  if(!t)return;const a=t.dataset.act,id=t.dataset.id;
  if(a==='close'){if(t.classList.contains('modal')&&e.target!==t)return;closeModal();return}
- if(a==='reset'){S=seed();S.mkt=seedMkt();S.chat=seedChat();save();showCad={};render();toast('Dados de exemplo restaurados.')}
+ if(a==='reset'){S=seed();S.compras=seedCompras();S.mkt=seedMkt();S.chat=seedChat();save();showCad={};render();toast('Dados de exemplo restaurados.')}
  if(a==='vercad'){showCad[id]=!showCad[id];const c=cli(id);c.visto=true;save();render()}
  if(a==='gmod'){S.modsOn[t.dataset.m]=!S.modsOn[t.dataset.m];save();render()}
  if(a==='vativo'){const v=S.vend.find(x=>x.id===id);v.ativo=!v.ativo;save();render()}
@@ -631,8 +689,14 @@ document.addEventListener('click',e=>{
  if(a==='saveorc'){const o=S.orc.find(x=>x.id===id);o.status=$('#stSel').value;const tr=$('#trf');if(tr)o.vend=tr.value;save();closeModal();render();toast('Orçamento atualizado.')}
  if(a==='copy'){const txt=$('#orcTxt').textContent;(navigator.clipboard?navigator.clipboard.writeText(txt):Promise.reject()).then(()=>toast('Resumo copiado.'),()=>{const r=document.createRange();r.selectNodeContents($('#orcTxt'));getSelection().removeAllRanges();getSelection().addRange(r);toast('Texto selecionado. Use Ctrl+C.')})}
  if(a==='open')openMod(t.dataset.m);
- if(a==='fcsend'){const v=$('#fcTxt').value.trim();if(!v){toast('Escreva a solicitação.');return}S.sol.push({v:S.me,t:v,data:new Date().toISOString()});save();closeModal();toast('Solicitação enviada para a FC.')}
- if(a==='slot'){const s=S.slots.find(x=>x.id===id),i=s.ins.indexOf(S.me);if(i>=0){s.ins.splice(i,1);toast('Inscrição cancelada.')}else{s.ins.push(S.me);toast('Inscrição confirmada.')}save();render()}
+ if(a==='copen')openModC(t.dataset.m);
+ if(a==='cgmod'){S.cmodsOn[t.dataset.m]=!S.cmodsOn[t.dataset.m];save();render()}
+ if(a==='cativo'){const v=S.compras.find(x=>x.id===id);v.ativo=!v.ativo;save();render()}
+ if(a==='cmod'){const v=S.compras.find(x=>x.id===id);v.mods[t.dataset.m]=!v.mods[t.dataset.m];save();render()}
+ if(a==='addcomp'){modal(`<h2>Cadastrar pessoa de Compras</h2><p class="sub">Ela recebe login e senha próprios.</p><div class="form"><label>Nome<input id="ncNome"></label><label>Login (e-mail ou celular)<input id="ncLogin"></label></div><div class="toolbar" style="margin-top:12px;justify-content:flex-end"><button class="btn" data-act="close">Cancelar</button><button class="btn primary" data-act="savecomp">Cadastrar</button></div>`)}
+ if(a==='savecomp'){const n=$('#ncNome').value.trim();if(!n){toast('Informe o nome.');return}S.compras.push({id:'k'+Date.now(),nome:n,ativo:true,mods:cmodsAll(true),ac:cmodsAll(0),ult:new Date().toISOString()});save();closeModal();render();toast('Pessoa de Compras cadastrada.')}
+ if(a==='fcsend'){const v=$('#fcTxt').value.trim();if(!v){toast('Escreva a solicitação.');return}S.sol.push({v:myId(),t:v,data:new Date().toISOString()});save();closeModal();toast('Solicitação enviada para a FC.')}
+ if(a==='slot'){const s=S.slots.find(x=>x.id===id),i=s.ins.indexOf(myId());if(i>=0){s.ins.splice(i,1);toast('Inscrição cancelada.')}else{s.ins.push(myId());toast('Inscrição confirmada.')}save();render()}
  if(a==='add'){const p=prod(id);modal(`<h2>${p.n}</h2><p class="sub">${p.l}</p><div class="form"><label>Largura (mm)<input id="aL" type="number" value="1500"></label><label>Altura (mm)<input id="aA" type="number" value="1200"></label><label>Quantidade<input id="aQ" type="number" value="1" min="1"></label><label>Cor<select id="aC"><option>Branco</option><option>Preto</option><option>Bronze</option><option>Natural</option><option>Incolor</option></select></label></div><div class="toolbar" style="margin-top:12px;justify-content:flex-end"><button class="btn" data-act="close">Cancelar</button><button class="btn primary" data-act="addok" data-id="${id}">Adicionar</button></div>`)}
  if(a==='addok'){S.mkt.views[id]=(S.mkt.views[id]||0)+1;save();cart.push({p:id,l:+$('#aL').value,a:+$('#aA').value,q:+$('#aQ').value||1,cor:$('#aC').value});closeModal();render();toast('Item adicionado ao orçamento.')}
  if(a==='rm'){cart.splice(+t.dataset.i,1);render()}
@@ -707,6 +771,7 @@ const TOURS={
   ['#bellBtn','O sino mostra quantos cadastros novos você ainda não viu.'],
   ['#t-cat','Este gráfico mede o acesso ao Catálogo 3D: visitas por dia, novos cadastros e quanto disso virou pedido de orçamento.'],
   ['#t-eq','O medidor da equipe mostra quantas vezes cada vendedor abriu cada ferramenta. Assim você vê quem está usando o catálogo, o treinamento e o Monte sua Casa.'],
+  ['#t-cmp','No setor de Compras você libera ou bloqueia cada módulo, pausa o acesso e acompanha no medidor quantas vezes cada ferramenta foi aberta.'],
   ['#t-cmd','Em Comandos você libera ou bloqueia cada módulo por vendedor, pausa o acesso de alguém, liga ou desliga o aceite automático e cadastra vendedores novos.'],
   ['#t-orc','Aqui estão todos os orçamentos que os clientes pediram, com o vendedor escolhido. Filtre por vendedor ou situação, abra um pedido e, se precisar, transfira para outro vendedor.'],
   ['#t-agg','A agenda do treinamento on-line: crie turmas e acompanhe quem se inscreveu.'],
@@ -720,6 +785,15 @@ const TOURS={
   ['#t-meus','Quando o cliente se cadastra no Catálogo 3D, monta o pedido e escolhe você, o pedido cai aqui. Abra, copie o resumo e responda pelo WhatsApp ou e-mail que ele pediu. Depois marque a situação.'],
   ['#t-agv','Na agenda de treinamento on-line, toque em uma turma para se inscrever.'],
   ['#t-chat','Na conversa da equipe você fala individualmente com um colega, com o gestor ou com o suporte da FC. Escolha a pessoa na lista e escreva a mensagem.']
+ ],
+ compras:[
+  ['#t-cmods','Este é o painel de Compras da Guaporé. Os módulos estão em três grupos: Compras, Treinamento e consulta, e Suporte. Toque no cartão e depois em Abrir. Cada acesso conta no medidor do gestor.'],
+  ['#cmod-comp','Em Onde comprar você vê quem fabrica cada linha de perfil nas extrusoras.'],
+  ['#cmod-conv','No Conversor de códigos você digita o código do fornecedor e vê o código de mercado equivalente.'],
+  ['#cmod-pcod','A Pesquisa de código busca no cadastro do WVetro e no cadastro da Guaporé.'],
+  ['#cmod-fc','Ficou com dúvida? Abra Solicitação com a FC e envie sua pergunta direto para o suporte.'],
+  ['#t-cagv','Na agenda de treinamento on-line, toque em uma turma para se inscrever.'],
+  ['#t-chat','Na conversa da equipe você fala individualmente com o gestor, com os vendedores ou com o suporte da FC.']
  ],
  cliente:[
   ['#t-prods','Esta é a visão do cliente no Catálogo 3D. Ele escolhe a esquadria e informa largura, altura, quantidade e cor.'],
@@ -760,6 +834,7 @@ $('#tourBtn').onclick=()=>{
  <div class="list">
   <button class="row" data-tour="gestor" style="text-align:left;cursor:pointer;color:var(--fg)"><div class="who"><b>Tutorial do Gestor</b><span>${TOURS.gestor.length} passos · comandos, medidores, cadastros e orçamentos</span></div><span class="pill br">Começar</span></button>
   <button class="row" data-tour="vendedor" style="text-align:left;cursor:pointer;color:var(--fg)"><div class="who"><b>Tutorial do Vendedor</b><span>${TOURS.vendedor.length} passos · ferramentas, orçamentos recebidos e agenda</span></div><span class="pill br">Começar</span></button>
+  <button class="row" data-tour="compras" style="text-align:left;cursor:pointer;color:var(--fg)"><div class="who"><b>Tutorial do Compras</b><span>${TOURS.compras.length} passos · ferramentas de compra, códigos e agenda</span></div><span class="pill br">Começar</span></button>
   <button class="row" data-tour="marketing" style="text-align:left;cursor:pointer;color:var(--fg)"><div class="who"><b>Tutorial do Marketing</b><span>${TOURS.marketing.length} passos · escolha dos Destaques 3D e perfis mais vistos</span></div><span class="pill br">Começar</span></button>
  </div>
  <label style="flex-direction:row;align-items:center;gap:8px;margin-top:12px;font-size:13px;color:var(--fg)"><input type="checkbox" id="tvAuto" checked style="width:auto"> Modo vídeo: avança sozinho com voz</label>
