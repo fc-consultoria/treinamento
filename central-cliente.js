@@ -19,7 +19,7 @@
     if(m<2)return 'agora';if(m<60)return 'há '+m+' min';const hr=Math.round(m/60);if(hr<24)return 'há '+hr+' h';const d=Math.round(hr/24);return d===1?'ontem':'há '+d+' dias';};
   const dBR=t=>t?new Date(t).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}):'—';
   const ON=3*60e3,online=t=>!!t&&(Date.now()-Date.parse(t))<ON;
-  const PAPEL={gestor:'Gestor',compras:'Compras',vendas:'Vendas',gerente:'Gerente comercial',marketing:'Marketing',fabrica:'Fábrica'};
+  const PAPEL={gestor:'Gestor',compras:'Compras',vendas:'Vendas',gerente:'Gerente comercial',marketing:'Marketing',fabrica:'Fábrica',estoque:'Estoque'};
   const ABA={orc:'Orçamento e Pedidos',est:'o Estoque',cat:'o Catálogo',esq:'o Treinamento 3D',comp:'Onde comprar',dist:'Distribuidoras',conv:'a Conversão de códigos',pcod:'a Pesquisa de código',pla:'as Planilhas',sol:'as Solicitações',age:'a Agenda',proc:'o Fluxo do processo',acao:'o Plano de ação',cen:'a Central do Gestor',dia:'o Diário',ori:'a Orientação',dem:'as Entregas',gal:'a Galeria',mkt:'o Marketing',div:'a Divulgação'};
   const STI={em_andamento:'Em implantação',concluido:'Implantação concluída',concluida:'Implantação concluída',pausado:'Implantação pausada',cancelado:'Implantação cancelada'};
   const SIT={fornecedor:'Aguardando fornecedor',cliente:'Aguardando equipe do cliente',suporte:'Aguardando suporte do sistema',externo:'Equipe em atendimento externo'};
@@ -211,7 +211,7 @@
 
   function atalhos(e){const o=[];const id=e.cons,doc=id?S.docs[id]||{}:{},D=id&&S.D[id],ges=D&&(D.pessoas||[]).find(p=>p.papel==='gestor');
     if(id){o.push(at('👁 Ver como '+(ges?h(ges.nome.split(' ')[0]):'o gestor')+' vê','consultorias.html?ver='+encodeURIComponent(id)+'&como=gestor',true));
-      {const PN={compras:'Compras',gerente:'Coordenação',marketing:'Marketing',fabrica:'Fábrica'},vis={};(D&&D.pessoas||[]).forEach(p=>{if(!PN[p.papel]||vis[p.papel]||p.ativo===false)return;vis[p.papel]=1;const nm=p.papel==='gerente'?'a coordenação':h(p.nome.split(' ')[0]);o.push(at('👁 Ver como '+nm+' vê ('+PN[p.papel]+')','consultorias.html?ver='+encodeURIComponent(id)+'&como='+p.papel));});}
+      {const PN={compras:'Compras',gerente:'Coordenação',marketing:'Marketing',fabrica:'Fábrica',estoque:'Estoque'},vis={};(D&&D.pessoas||[]).forEach(p=>{if(!PN[p.papel]||vis[p.papel]||p.ativo===false)return;vis[p.papel]=1;const nm=p.papel==='gerente'?'a coordenação':h(p.nome.split(' ')[0]);o.push(at('👁 Ver como '+nm+' vê ('+PN[p.papel]+')','consultorias.html?ver='+encodeURIComponent(id)+'&como='+p.papel));});}
       o.push(at('🧭 Consultoria (fluxo, plano, visitas)','consultorias.html?ver='+encodeURIComponent(id)));
       o.push(at('🔐 Acessos e senhas','consultorias.html?ver='+encodeURIComponent(id)+'&abrir=acessos'));
       o.push(at('📚 '+(doc.catalogo?'Editar o catálogo':'Catálogos'),doc.catalogo?'catalogos.html?editar='+encodeURIComponent(doc.catalogo):'catalogos.html'));

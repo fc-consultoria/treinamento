@@ -149,7 +149,7 @@ async function rpcDados(){const r=await sb.rpc('orc_dados',{p_chave:FC?null:VKEY
 async function carregar(){const d=await rpcDados();
   if(d==='sql'){$('#app').innerHTML='<div class="box"><h2 class="t">Falta rodar o SQL</h2><p class="nota">Rode o arquivo orcamentos.sql no Supabase para ativar o painel de orçamentos.</p></div>';return false;}
   if(!d){$('#app').innerHTML='<p class="vazio">Link inválido ou desativado. Fale com o gestor da empresa ou com a FC Consultoria.</p>';return false;}
-  D=d;EMP=d.emp;if(!FC)ADM=!!d.adm;if(DEMO)ADM=false;if(d.papel==='compras'&&!['est','cest'].includes(ABA))ABA='est';const c=d.cab||{};$('#hd').textContent='Painel de Vendas · '+(c.nome||d.nome||'');$('#hdSub').textContent=DEMO?'Demonstração · tela do vendedor':FC?'FC Consultoria · painel da matriz':GESTOR?'Gestor da empresa':'Vendedor: '+((d.vend&&d.vend.nome)||'');
+  D=d;EMP=d.emp;if(!FC)ADM=!!d.adm;if(DEMO)ADM=false;if((d.papel==='compras'||d.papel==='estoque')&&!['est','cest'].includes(ABA))ABA='est';const c=d.cab||{};$('#hd').textContent='Painel de Vendas · '+(c.nome||d.nome||'');$('#hdSub').textContent=DEMO?'Demonstração · tela do vendedor':FC?'FC Consultoria · painel da matriz':GESTOR?'Gestor da empresa':'Vendedor: '+((d.vend&&d.vend.nome)||'');
   if(c.logo)$('#hdLogo').src=fotoUrl(c.logo);
   sairBarra((d.vend&&d.vend.nome)||'');
   if(!O)O=novoOrc();if(!EQ||EQ.emp!==EMP||EQ.n!==D.itens.length){EQ=null;carregaEQ().then(e=>{e.emp=EMP;e.n=D.itens.length;if(ABA==='novo'&&O.itens.length&&document.activeElement&&document.activeElement.id!=='bq')tela();});}return true;}
@@ -683,7 +683,7 @@ function sairBarra(nome){if(DEMO||SO||document.documentElement.classList.contain
     let e0=Q.get('e')||(()=>{try{return localStorage.getItem('fc_orc_emp');}catch(_){return '';}})()||'cb';if(!EMPS.some(e=>e.id===e0))e0=(EMPS.find(e=>e.id==='cb')||EMPS[0]||{}).id;s.value=e0;s.onchange=()=>trocaEmp(s.value);
     if(ABA0)ABA=ABA0;await trocaEmp(e0);});})();
 </script>
-<script src="atendimentos.js?v=3"></script><script src="../conversas.js?v=4"></script><script>(function(){const q=new URLSearchParams(location.search);if(q.get('e')||q.get('ver')==='vend'||window.top!==window)return;let t=q.get('et');
+<script src="atendimentos.js?v=3"></script><script src="../conversas.js?v=5"></script><script>(function(){const q=new URLSearchParams(location.search);if(q.get('e')||q.get('ver')==='vend'||window.top!==window)return;let t=q.get('et');
   if(!t){try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(/^emp-tok-/.test(k)){t=localStorage.getItem(k);break;}}}catch(_){}}
   if(t&&window.FCConversas)FCConversas.equipe(t);})();</script><script src="vend-extra.js?v=6"></script>
 <script src="../tour-fc.js?v=1"></script><script src="tutorial-vendas.js?v=1"></script>

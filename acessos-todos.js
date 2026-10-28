@@ -11,7 +11,7 @@
   const online=t=>!!t&&(Date.now()-Date.parse(t))<ON;
   const quando=t=>{if(!t)return 'nunca entrou';const m=Math.round((Date.now()-Date.parse(t))/60000);
     if(m<2)return 'agora';if(m<60)return 'há '+m+' min';const hr=Math.round(m/60);if(hr<24)return 'há '+hr+' h';const d=Math.round(hr/24);return d===1?'ontem':'há '+d+' dias';};
-  const PAPEL={gestor:'Gestor geral',compras:'Compras',vendas:'Vendas',gerente:'Gerente comercial',marketing:'Marketing',fabrica:'Fábrica'};
+  const PAPEL={gestor:'Gestor geral',compras:'Compras',vendas:'Vendas',gerente:'Gerente comercial',marketing:'Marketing',fabrica:'Fábrica',estoque:'Estoque'};
   const CLI=[
     {k:'cb',n:'Casa Bandeirante',cor:'#0f6b70',m:s=>s==='cb'||/bandeirant/.test(s),emp:'cb'},
     {k:'cde',n:'CDE Vidros & Esquadrias',cor:'#0d5c8f',m:s=>/cde/.test(s),emp:'cde'},

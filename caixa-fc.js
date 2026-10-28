@@ -5,7 +5,7 @@
 (function(){
   if(typeof sb==='undefined')return;
   const h=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const PAPEL={gestor:'Gestor',compras:'Compras',vendas:'Vendas',gerente:'Gerente comercial',marketing:'Marketing',fabrica:'Fábrica'};
+  const PAPEL={gestor:'Gestor',compras:'Compras',vendas:'Vendas',gerente:'Gerente comercial',marketing:'Marketing',fabrica:'Fábrica',estoque:'Estoque'};
   const quando=t=>{if(!t)return '';const m=Math.round((Date.now()-new Date(t))/60000);if(m<1)return 'agora';if(m<60)return 'há '+m+' min';const hr=Math.round(m/60);if(hr<24)return 'há '+hr+' h';const d=Math.round(hr/24);return d===1?'ontem':'há '+d+' dias';};
   const TIPO={conv:['💬','Conversas das equipes','Responder'],sup:['🛟','Suporte dos vendedores','Responder'],sol:['📨','Solicitações dos clientes','Abrir'],fila:['🛒','Pedidos do site sem vendedor','Ver fila']};
   const S={d:null,ult:null,aberto:false,prim:true};

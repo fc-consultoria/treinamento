@@ -3,8 +3,8 @@
 (function(){
 const PAPEIS=[['gestor','Gestor geral','Vê todas as abas liberadas da empresa'],['compras','Compras','Onde comprar, distribuidoras, estoque, planilhas, conversor, agenda, solicitações'],
  ['vendas','Vendas','Entra direto no Painel de Vendas como vendedor'],['gerente','Gerente comercial','Painel de Vendas (visão gestor) e catálogo'],
- ['marketing','Marketing','Catálogo'],['fabrica','Fábrica','Treinamento 3D e catálogo']];
-const PADRAO={gestor:null,compras:['comp','dist','est','pla','conv','age','sol'],vendas:['orc','pcod'],gerente:['orc','cat','pcod'],marketing:['cat'],fabrica:['esq','cat']};
+ ['marketing','Marketing','Catálogo'],['fabrica','Fábrica','Treinamento 3D e catálogo'],['estoque','Estoque','Estoque (importação), pesquisa de código, conversor, catálogo, treinamento, agenda e solicitações']];
+const PADRAO={gestor:null,compras:['comp','dist','est','pla','conv','age','sol'],vendas:['orc','pcod'],gerente:['orc','cat','pcod'],marketing:['cat'],fabrica:['esq','cat'],estoque:['est','pcod','conv','cat','esq','ori','sol','age']};
 const PN=Object.fromEntries(PAPEIS.map(p=>[p[0],p[1]]));
 const LINKCAD=e=>'https://fc-consultoria.github.io/treinamento/cadastro.html?e='+encodeURIComponent(e);
 const LINK=e=>'https://fc-consultoria.github.io/treinamento/consultorias.html?e='+encodeURIComponent(e);

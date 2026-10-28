@@ -7,7 +7,7 @@
   if(typeof sb==='undefined')return;
   const h=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const lk=t=>h(t).replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank" rel="noopener">$1</a>').replace(/\n/g,'<br>');
-  const PAPEL={gestor:'Gestor geral',compras:'Compras',vendas:'Vendas',gerente:'Gerente comercial',marketing:'Marketing',fabrica:'Fábrica'};
+  const PAPEL={gestor:'Gestor geral',compras:'Compras',vendas:'Vendas',gerente:'Gerente comercial',marketing:'Marketing',fabrica:'Fábrica',estoque:'Estoque'};
   const hr=d=>{const x=new Date(d),n=new Date();return (x.toDateString()===n.toDateString()?'':x.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})+' ')+x.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});};
   /* atendimento da FC: seg–sex 08–11h e 13–17h (horário de Sinop/MT) */
   function fcAberta(){const p=new Intl.DateTimeFormat('en-US',{timeZone:'America/Cuiaba',weekday:'short',hour:'numeric',minute:'numeric',hour12:false}).formatToParts(new Date());

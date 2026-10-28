@@ -8,7 +8,7 @@
   const dBR=s=>{if(!s)return '';const t=String(s).slice(0,10).split('-');return t.length===3?t[2]+'/'+t[1]:String(s);};
   const quando=t=>{if(!t)return 'nunca entrou';const m=Math.round((Date.now()-new Date(t))/60000);
     if(m<2)return 'agora';if(m<60)return 'há '+m+' min';const hr=Math.round(m/60);if(hr<24)return 'há '+hr+' h';const d=Math.round(hr/24);return d===1?'ontem':'há '+d+' dias';};
-  const PAPEL={gestor:'Gestor geral',compras:'Compras',vendas:'Vendas',gerente:'Gerente comercial',marketing:'Marketing',fabrica:'Fábrica'};
+  const PAPEL={gestor:'Gestor geral',compras:'Compras',vendas:'Vendas',gerente:'Gerente comercial',marketing:'Marketing',fabrica:'Fábrica',estoque:'Estoque'};
   const nomeAba=k=>{const a=ABAS.find(x=>x[0]===k);return a?lblAba(a[1],E[at]):k;};
   function frase(x){const d=x.detalhe||{};
     if(x.area==='entrada')return 'entrou no painel';
