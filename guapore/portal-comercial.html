@@ -224,7 +224,7 @@ label{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:4
   <div class="capa-g">G</div>
   <h1>Guaporé Vidros</h1>
   <p class="capa-t">Plataforma Comercial · Catálogo 3D</p>
-  <p class="capa-s">Vendas · Compras · Central do Gestor · Marketing</p>
+  <p class="capa-s">Vendas · Compras · Estoque · Central do Gestor · Marketing</p>
   <button class="capa-btn" id="capaBtn">Entrar ▶</button>
   <div class="capa-foot"><img src="../midia/logo-fc.png" alt="FC Consultoria" class="capa-fc" onerror="this.remove()"><span>Desenvolvido por FC Consultoria em Esquadria</span></div>
  </div>
@@ -244,6 +244,7 @@ label{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:4
 @keyframes capaIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){#capa *{animation:none!important}}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
 (function(){const c=document.getElementById('capa');function sai(){c.classList.add('sai');setTimeout(()=>{c.hidden=true},650)}function volta(){c.hidden=false;requestAnimationFrame(()=>c.classList.remove('sai'))}document.getElementById('capaBtn').onclick=sai;c.addEventListener('dblclick',sai);const k=document.createElement('button');k.className='btn';k.id='capaVolta';k.title='Voltar para a capa de abertura';k.textContent='⏮ Capa';k.onclick=volta;const t=document.getElementById('corBtn');if(t)t.parentNode.insertBefore(k,t);})();
 </script>
@@ -253,528 +254,335 @@ label{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:4
 
 <script>
 (function(){
-const KEY='guapore-portal-v3';
-const MODS=[
- {k:'cat',n:'Catálogo 3D',d:'Perfis das linhas Suprema e Gold em 3D para mostrar ao cliente.',i:'▦'},
- {k:'trein',n:'Treinamento 3D',d:'Montagem e conceitos em 3D + treinamento on-line com agenda.',i:'◈'},
- {k:'casa',n:'Monte sua Casa 3D',d:'Coloque as esquadrias na planta e apresente o projeto.',i:'⌂'},
- {k:'vento',n:'Diagrama de pressão de vento',d:'Consulta rápida de pressão por região e altura.',i:'≋'},
- {k:'fc',n:'Solicitação com a FC',d:'Dúvidas e pedidos de suporte direto com a FC.',i:'✉'}
+/* ===== Portal Comercial Guaporé · dados reais (Supabase) =====
+   Quem entra: a Matriz (login FC) ou a pessoa da empresa (login do link da Guaporé).
+   Os comandos do gestor mudam os acessos de cada pessoa no link da empresa. */
+const EMP=(new URLSearchParams(location.search).get('emp')||'gb').toLowerCase().replace(/[^\w-]/g,'');
+const SB_URL='https://cpkjphodruyxfouirhpd.supabase.co',SB_KEY='sb_publishable_d0HEeWsaqOeZIQKGftlF-Q_B8BUOWWg';
+const LINK_EMP='/treinamento/consultorias.html?e='+EMP, LINK_CAD='https://fc-consultoria.github.io/treinamento/cadastro.html?e='+EMP;
+let sbc=null;try{sbc=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,storageKey:'trein-fc-auth'}})}catch(e){}
+const tok=()=>{try{return localStorage.getItem('emp-tok-'+EMP)}catch(e){return null}};
+async function rpc(fn,args){if(!sbc)throw new Error('sem conexão');const r=await sbc.rpc(fn,args);if(r.error)throw r.error;return r.data}
+
+const MOD={
+ cat:['📚','Catálogo 3D','Perfis e acessórios do catálogo da Guaporé em 3D para mostrar ao cliente.'],
+ ori:['🎓','Mostruário','Guia de esquadrias para consulta: cada linha e peça em 3D.'],
+ esq:['🪟','Treinamento 3D','Montagem das esquadrias passo a passo em 3D.'],
+ casa:['🏙','Monte sua Casa 3D','Coloque as esquadrias na planta e apresente o projeto.'],
+ dia:['🌬','Pressão de vento','Diagramas para escolher a linha certa para cada vão.'],
+ orc:['🏪','Painel de Vendas','Atendimentos e pedidos de cotação dos clientes.'],
+ pcod:['🔎','Pesquisa de código','Busca no cadastro do WVetro e no cadastro da Guaporé.'],
+ conv:['🔁','Conversor de códigos','Código do fornecedor para o código de mercado.'],
+ comp:['🛒','Onde comprar','Perfis nas extrusoras: quem fabrica cada linha.'],
+ dist:['🏬','Distribuidoras','Distribuidoras e os códigos que cada uma usa.'],
+ est:['📦','Estoque · importação','Importação e conferência do estoque.'],
+ pla:['📊','Planilhas de precificação','Custo, impostos, despesas e margem.'],
+ rvi:['📋','Relatório de vendas','Itens orçados e itens em pedidos.'],
+ sol:['📨','Solicitação com a FC','Peça algo à FC e acompanhe a resposta.'],
+ age:['🗓','Agenda da FC','Visitas, reuniões e treinamentos com a FC.']
+};
+const COLORS={cat:'#d5604a',ori:'var(--amber)',esq:'#c98a2b',casa:'#8a6bd6',dia:'#3aa0c9',orc:'var(--brand)',pcod:'#2f8f6f',conv:'#6b7fd6',comp:'#1d5fa8',dist:'#5aa3d6',est:'#7a5c3a',pla:'#9a7b2f',rvi:'#4a8a8a',sol:'#b0627e',age:'#7a8794'};
+/* setor: [papel, nome do setor, rótulo da aba, módulos do setor] */
+const SETORES=[
+ ['vendas','Vendas','Vendedor',['cat','ori','esq','casa','dia','orc','pcod','sol','age']],
+ ['compras','Compras','Compras',['comp','dist','conv','pcod','est','pla','cat','ori','esq','casa','sol','age']],
+ ['estoque','Estoque','Estoque',['est','pcod','conv','cat','ori','esq','sol','age']],
+ ['marketing','Marketing','Marketing',['cat','sol','age']],
+ ['gerente','Gerente comercial','Gerente',['orc','cat','pcod','ori','esq','sol','age']],
+ ['fabrica','Fábrica','Fábrica',['esq','cat','ori']]
 ];
-const CMODS=[
- {k:'comp',n:'Onde comprar',d:'Perfis nas extrusoras: quem fabrica cada linha.',i:'🛒',g:'Compras',u:'https://fc-consultoria.github.io/treinamento/equivalencias/comprar.html'},
- {k:'dist',n:'Compras com distribuidoras',d:'Distribuidoras e os códigos que cada uma usa.',i:'🏬',g:'Compras',u:'https://fc-consultoria.github.io/treinamento/equivalencias/distribuidoras.html'},
- {k:'conv',n:'Conversor de códigos',d:'Converta o código do fornecedor para o código de mercado.',i:'🔁',g:'Compras',u:'https://fc-consultoria.github.io/treinamento/equivalencias/'},
- {k:'pcod',n:'Pesquisa de código',d:'Busca no cadastro WVetro e no cadastro Guaporé.',i:'🔎',g:'Compras',u:'https://fc-consultoria.github.io/treinamento/equivalencias/pesquisa/?f=wvetro,guapore'},
- {k:'cat',n:'Catálogo 3D',d:'Perfis do catálogo da Guaporé em 3D.',i:'▦',g:'Treinamento e consulta',u:'https://fc-consultoria.github.io/catalogo/guapore-vidros'},
- {k:'ori',n:'Mostruário',d:'Guia de esquadrias para consulta e impressão.',i:'🎓',g:'Treinamento e consulta',u:'https://fc-consultoria.github.io/treinamento/apostila/apostila-540257d2315acb84.pdf'},
- {k:'trein',n:'Treinamento 3D',d:'Montagem e conceitos em 3D + turmas on-line.',i:'◈',g:'Treinamento e consulta',u:'https://fc-consultoria.github.io/treinamento/esquadrias/'},
- {k:'casa',n:'Monte sua Casa 3D',d:'Coloque as esquadrias na planta.',i:'⌂',g:'Treinamento e consulta',u:'https://fc-consultoria.github.io/treinamento/esquadrias/monte-casa.html'},
- {k:'fc',n:'Solicitação com a FC',d:'Dúvidas e pedidos de suporte direto com a FC.',i:'✉',g:'Suporte'},
- {k:'age',n:'Agenda da FC',d:'Visitas e reuniões da FC com a Guaporé.',i:'🗓',g:'Suporte'}
-];
-const CCOLORS={comp:'var(--brand)',dist:'#3aa0c9',conv:'#6b7fd6',pcod:'#2f8f6f',cat:'#d5604a',ori:'var(--amber)',trein:'#c98a2b',casa:'#8a6bd6',fc:'#b0627e',age:'#7a8794'};
-const cmodsAll=v=>Object.fromEntries(CMODS.map(m=>[m.k,v]));
-function seedCompras(){return []}
-const COLORS={cat:'var(--brand)',trein:'var(--amber)',casa:'#6b7fd6',vento:'#3aa0c9',fc:'#b0627e'};
-const PRODS=[
- {id:'p1',c:'SU-001',n:'Trilho superior porta/janela de correr 2 folhas',l:'Linha Suprema',g:'Trilhos superiores',kg:'0,762'},
- {id:'p2',c:'SU-005',n:'Trilho superior porta/janela de correr 2 folhas com bandeira',l:'Linha Suprema',g:'Trilhos superiores',kg:'1,105'},
- {id:'p3',c:'SU-010',n:'Trilho superior porta/janela de correr 3 e 6 folhas',l:'Linha Suprema',g:'Trilhos superiores',kg:'1,022'},
- {id:'p4',c:'SU-019',n:'Trilho superior porta/janela de correr 3 folhas com bandeira',l:'Linha Suprema',g:'Trilhos superiores',kg:'1,770'},
- {id:'p5',c:'SU-024',n:'Trilho superior porta/janela de correr camarão',l:'Linha Suprema',g:'Trilhos superiores',kg:'1,024'},
- {id:'p6',c:'SU-121',n:'Trilho superior porta/janela de correr 4 e 8 folhas',l:'Linha Suprema',g:'Trilhos superiores',kg:'1,586'},
- {id:'p7',c:'CX-1226',n:'Trilho superior porta de correr sobreposta',l:'Linha Suprema',g:'Trilhos superiores',kg:'0,567'},
- {id:'p8',c:'LG-004',n:'Trilho superior porta/janela de correr 2 folhas com bandeira',l:'Linha Gold',g:'Trilhos superiores',kg:''},
- {id:'p9',c:'LG-006',n:'Travessa da folha de correr janela/porta',l:'Linha Gold',g:'Travessas da folha',kg:''},
- {id:'p10',c:'LG-016',n:'Batente interno porta de giro',l:'Linha Gold',g:'Arremates e complementos',kg:''}
-];
-function day(n){const d=new Date();d.setHours(10,0,0,0);d.setDate(d.getDate()-n);return d.toISOString()}
-function seed(){
- const v=(id,nome,ac)=>({id,nome,ativo:true,mods:{cat:true,trein:true,casa:true,vento:true,fc:true},ac,ult:day(Math.floor(Math.random()*3))});
- return {
-  modsOn:{cat:true,trein:true,casa:true,vento:true,fc:true},
-  autoCadastro:true,
-  vend:[],
-  visitas:[0,0,0,0,0,0,0],
-  cadDia:[0,0,0,0,0,0,0],
-  clientes:[],
-  orc:[],
-  slots:[],
-  sol:[],
-  me:null, cliSessao:null,
-  compras:seedCompras(), cmodsOn:cmodsAll(true), meC:null
- };
-}
-let S;try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}
-if(!S||!S.vend)S=seed();
-function isoDay(n){const d=new Date();d.setDate(d.getDate()+n);return d.toISOString().slice(0,10)}
-function seedMkt(){return {
- banner:{tit:'Esquadrias que valorizam sua obra',sub:'Veja em 3D e peça seu orçamento direto ao vendedor',cor:'brand'},
- destaques:['p1','p6','p8'],ocultos:[],promo:{},sobConsulta:[],
- views:{},
- posts:[],
- links:[
-  {id:'l1',canal:'Instagram · bio',cod:'ig-bio',cliques:0,cad:0,orc:0},
-  {id:'l2',canal:'Instagram · stories',cod:'ig-story',cliques:0,cad:0,orc:0},
-  {id:'l3',canal:'WhatsApp · status',cod:'wa-status',cliques:0,cad:0,orc:0},
-  {id:'l4',canal:'Google Meu Negócio',cod:'google',cliques:0,cad:0,orc:0}
- ]}}
-if(!S.mkt)S.mkt=seedMkt();
-function seedChat(){return []}
-if(!S.chat)S.chat=seedChat();
-if(!S.compras){S.compras=seedCompras();S.cmodsOn=cmodsAll(true);S.meC=null}
-function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
-let chatWith='gestor', role='gestor', cart=[], selVend=null, showCad={}, fVend='todos', fStat='todos', postSel={p:'p1',f:'feed',t:'Ventilação e luz o dia todo'};
+const SET=Object.fromEntries(SETORES.map(s=>[s[0],s]));
+const PAPEL={gestor:'Gestor geral',vendas:'Vendas',compras:'Compras',estoque:'Estoque',marketing:'Marketing',gerente:'Gerente comercial',fabrica:'Fábrica',admin:'FC Consultoria'};
+
+let D=null, role='gestor', verComo={}, showCad={}, fVend='todos', fStat='todos', LOAD=false, PRODS=null, mkQ='';
 const $=s=>document.querySelector(s);
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const fmtD=iso=>{const d=new Date(iso);return d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})};
-const vName=id=>([...S.vend,...(S.compras||[])].find(v=>v.id===id)||{}).nome||'—';
-const myId=()=>role==='compras'?S.meC:S.me;
-const cli=id=>S.clientes.find(c=>c.id===id)||{};
-const prod=id=>PRODS.find(p=>p.id===id)||{};
-const STAT={novo:['Novo','novo'],andamento:['Em atendimento','and'],enviado:['Orçamento enviado','ok']};
-function toast(t){const el=document.createElement('div');el.className='toast';el.textContent=t;document.body.appendChild(el);setTimeout(()=>el.remove(),2600)}
-function totalAc(v){return Object.values(v.ac).reduce((a,b)=>a+b,0)}
+const fmtD=iso=>{if(!iso)return '—';const d=new Date(iso);return d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})};
+function toast(t){const el=document.createElement('div');el.className='toast';el.textContent=t;document.body.appendChild(el);setTimeout(()=>el.remove(),2800)}
+const G=()=>D&&D.eu&&D.eu.gestor;
+const pessoas=p=>(D.equipe||[]).filter(x=>x.papel===p);
+const usoDe=(pid,m)=>(D.uso||[]).filter(u=>u.p===pid&&MOD[u.m]&&(!m||u.m===m)).reduce((a,u)=>a+u.n,0);
+const nomeP=id=>(D.nomes||{})[id]||'—';
 
-/* ---------- CONVERSA DA EQUIPE ---------- */
-function cName(id){return id==='gestor'?'Gestor':id==='fc'?'FC Consultoria':vName(id)}
-function convo(a,b){return S.chat.filter(m=>(m.de===a&&m.para===b)||(m.de===b&&m.para===a))}
-function chatHTML(me){const cont=[...S.vend,...S.compras].filter(v=>v.id!==me).map(v=>v.id).concat(['gestor','fc']);if(!cont.includes(chatWith))chatWith='gestor';
- const msgs=convo(me,chatWith);
- return `<section class="panel" id="t-chat" style="margin-top:14px"><h2>💬 Conversa da equipe</h2><p class="sub">Conversas individuais com colegas, gestor e FC. Cada conversa é só entre as duas pessoas; o gestor acompanha pelo histórico.</p>
- <div class="chatg"><div class="clist">${cont.map(c=>{const L=convo(me,c),last=L[L.length-1];return `<button class="cbtn" aria-pressed="${c===chatWith}" data-act="chatw" data-id="${c}"><b>${esc(cName(c))}${c==='fc'?' <span class="pill br">suporte</span>':''}</b><span>${last?esc(last.t.slice(0,42)):'Sem mensagens'}</span></button>`}).join('')}</div>
- <div class="cbox"><div class="cmsgs" id="cmsgs">${msgs.length?msgs.map(m=>`<div class="msgb ${m.de===me?'me':''}"><span>${esc(m.t)}</span><small>${fmtD(m.h)}</small></div>`).join(''):`<div class="empty">Comece a conversa com ${esc(cName(chatWith))}.</div>`}</div>
- <form class="csend" id="cform"><input id="ctxt" placeholder="Mensagem para ${esc(cName(chatWith))}" autocomplete="off"><button class="btn primary" type="submit">Enviar</button></form></div></div></section>`}
-function histHTML(){const P={};S.chat.forEach(m=>{const k=[m.de,m.para].sort().join('|');(P[k]=P[k]||[]).push(m)});const K=Object.keys(P).sort((a,b)=>P[b][P[b].length-1].h.localeCompare(P[a][P[a].length-1].h));
- return `<section class="panel" style="margin-top:14px" id="t-hist"><h2>💬 Histórico das conversas da equipe</h2><p class="sub">Só leitura. As conversas são individuais; aqui você acompanha todas, inclusive as com a FC.</p><div class="list">${K.length?K.map(k=>{const L=P[k],[a,b]=k.split('|'),last=L[L.length-1];return `<div class="row"><div class="who"><b>${esc(cName(a))} ↔ ${esc(cName(b))}</b><span>${esc(last.t.slice(0,70))} · ${fmtD(last.h)}</span></div><span class="pill br">${L.length} msg</span><button class="btn sm" data-act="verhist" data-id="${k}">Ler</button></div>`}).join(''):'<div class="empty">Nenhuma conversa ainda.</div>'}</div></section>`}
-document.addEventListener('submit',e=>{if(e.target.id!=='cform')return;e.preventDefault();const v=$('#ctxt').value.trim();if(!v)return;
- const para=chatWith,me=myId();S.chat.push({de:me,para,t:v,h:new Date().toISOString()});save();render();
- if(para==='fc')setTimeout(()=>{S.chat.push({de:'fc',para:me,t:'Recebido! A FC responde no horário de atendimento: seg a sex, 08h–11h e 13h–17h.',h:new Date().toISOString()});save();if(role==='vendedor'||role==='compras')render()},1200)});
+async function carregar(){
+ try{D=await rpc('gpc_dados',{p_token:tok(),p_emp:EMP});}catch(e){D={erro:'rede'}}
+ if(!D||D.erro){render();return}
+ const tabs=abas();if(!tabs.some(t=>t[0]===role))role=tabs[0][0];
+ render();
+}
+function abas(){
+ if(!D||D.erro)return [];
+ const e=D.eu;
+ if(e.gestor)return [['gestor','Gestor'],['vendas','Vendedor'],['compras','Compras'],['estoque','Estoque'],['marketing','Marketing']];
+ const s=SET[e.papel];const L=[[e.papel,s?s[2]:PAPEL[e.papel]||e.papel]];
+ return L;
+}
+
+/* ---------- ENTRADA ---------- */
+function vEntrar(){
+ const rede=D&&D.erro==='rede';
+ return `<section class="panel" style="max-width:560px;margin:30px auto;text-align:center"><h2 style="justify-content:center">${rede?'Sem conexão':'Entre com o seu login'}</h2>
+ <p class="sub" style="margin-bottom:14px">${rede?'Não consegui falar com o servidor agora. Confira a internet e tente de novo.':'O Portal Comercial abre com o login de cada pessoa da equipe da Guaporé. Entre pelo link da empresa com o seu telefone (ou login) e a sua senha.'}</p>
+ ${rede?`<button class="btn primary" data-act="recarregar">Tentar de novo</button>`:`<a class="btn primary" style="text-decoration:none" target="_top" href="${LINK_EMP}">Entrar pelo link da Guaporé</a>`}</section>`;
+}
 
 /* ---------- GESTOR ---------- */
+const ST_ATD={novo:['Novo','novo'],aberto:['Aguardando vendedor','novo'],atendimento:['Em atendimento','and'],andamento:['Em atendimento','and'],enviado:['Orçamento enviado','ok'],fechado:['Fechado','ok'],concluido:['Concluído','ok'],perdido:['Perdido','novo'],cancelado:['Cancelado','novo']};
+const stAtd=a=>ST_ATD[a.status]||(a.vend?['Em atendimento','and']:['Aguardando vendedor','novo']);
+const ST_CLI={pendente:['Aguardando liberação','novo'],ativo:['Liberado','ok'],bloqueado:['Bloqueado','novo']};
 function vGestor(){
- const novos=S.clientes.filter(c=>!c.visto).length;
- const abertos=S.orc.filter(o=>o.status!=='enviado').length;
- const acEq=S.vend.reduce((a,v)=>a+totalAc(v),0);
- const vis7=S.visitas.reduce((a,b)=>a+b,0);
- const maxAc=Math.max(...S.vend.map(totalAc),1);
- const maxDay=Math.max(...S.visitas.map((v,i)=>v+S.cadDia[i]),1);
- const labels=[...Array(7)].map((_,i)=>{const d=new Date();d.setDate(d.getDate()-(6-i));return d.toLocaleDateString('pt-BR',{weekday:'short'}).replace('.','')});
- let orcs=S.orc.filter(o=>(fVend==='todos'||o.vend===fVend)&&(fStat==='todos'||o.status===fStat)).sort((a,b)=>b.data.localeCompare(a.data));
+ const C=D.contas||[],A=D.atends||[],V=D.visitas||[];
+ const novos=C.filter(c=>!c.visto).length, abertos=A.filter(a=>!['fechado','concluido','perdido','cancelado','enviado'].includes(a.status)).length;
+ const acEq=(D.uso||[]).filter(u=>MOD[u.m]).reduce((a,u)=>a+u.n,0), vis7=V.reduce((a,v)=>a+v.v,0);
+ const maxDay=Math.max(...V.map(v=>v.v+v.c),1);
+ const eq=(D.equipe||[]).filter(p=>p.papel!=='gestor');const maxAc=Math.max(...eq.map(p=>usoDe(p.id)),1);
+ const ms=[...new Set(eq.flatMap(p=>(D.uso||[]).filter(u=>u.p===p.id).map(u=>u.m)))].filter(k=>MOD[k]);
+ let orcs=A.filter(o=>(fVend==='todos'||o.vend===fVend)&&(fStat==='todos'||stAtd(o)[0]===fStat));
+ const auto=!!(D.cfg&&D.cfg.cadAuto);
  return `
- <div class="hello"><div><h1>Central do Gestor</h1><p>Equipe comercial, acessos e pedidos que chegam pelo Catálogo 3D.</p></div></div>
+ <div class="hello"><div><h1>Central do Gestor</h1><p>Equipe da Guaporé, acessos, cadastros e pedidos que chegam pelo Catálogo 3D.</p></div>${D.eu.adm?'<span class="pill br">Entrou como FC Consultoria</span>':''}</div>
  <div class="grid kpis" id="t-kpis">
-  <div class="kpi ${novos?'alert':''}"><small>Cadastros novos (não vistos)</small><b>${novos}</b><em> aprovados automaticamente</em></div>
-  <div class="kpi"><small>Orçamentos em aberto</small><b>${abertos}</b><em> de ${S.orc.length} recebidos</em></div>
-  <div class="kpi"><small>Acessos da equipe</small><b>${acEq}</b><em> nos módulos</em></div>
-  <div class="kpi"><small>Visitas ao Catálogo 3D · 7 dias</small><b>${vis7}</b><em> ${S.clientes.length} clientes cadastrados</em></div>
+  <div class="kpi ${novos?'alert':''}"><small>Cadastros novos (não vistos)</small><b>${novos}</b><em> ${C.length} clientes cadastrados</em></div>
+  <div class="kpi"><small>Pedidos de cotação em aberto</small><b>${abertos}</b><em> de ${A.length} recebidos</em></div>
+  <div class="kpi"><small>Acessos da equipe · 30 dias</small><b>${acEq}</b><em> nos módulos</em></div>
+  <div class="kpi"><small>Visitas ao Catálogo 3D · 7 dias</small><b>${vis7}</b><em> visitantes</em></div>
  </div>
  <div class="grid cols2">
   <section class="panel" id="t-cad">
-   <div class="ph"><div><h2>🔔 Avisos de cadastro</h2><p class="sub">O cliente se cadastra no catálogo e já entra liberado. Os dados ficam ocultos até você abrir.</p></div>
-   <span class="pill ${S.autoCadastro?'ok':'novo'}">${S.autoCadastro?'Aceite automático ligado':'Aceite automático desligado'}</span></div>
-   <div class="list">${S.clientes.length?'':'<div class="empty">Nenhum cadastro ainda. Quando um cliente se cadastrar no Catálogo 3D, o aviso aparece aqui.</div>'}${S.clientes.slice().sort((a,b)=>b.data.localeCompare(a.data)).map(c=>`
-    <div class="row"><div class="who">${showCad[c.id]?`<b>${esc(c.nome)} · ${esc(c.empresa)}</b><span>${esc(c.cidade)} · ${esc(c.tel)} · ${esc(c.email)}</span>`:`<b>Novo cliente cadastrado</b><span class="hidden-id">•••••• · ${esc(c.cidade)}</span>`}</div>
-    <span class="pill ${c.visto?'ok':'novo'}">${c.visto?'Visto':'Novo'}</span><span style="font-size:12px;color:var(--muted)">${fmtD(c.data)}</span>
-    <button class="btn sm" data-act="vercad" data-id="${c.id}">${showCad[c.id]?'Ocultar':'Ver quem cadastrou'}</button></div>`).join('')}</div>
+   <div class="ph"><div><h2>🔔 Avisos de cadastro</h2><p class="sub">Clientes que se cadastraram no Catálogo 3D. Os dados ficam ocultos até você abrir.</p></div>
+   <span class="pill ${auto?'ok':'novo'}">${auto?'Aceite automático ligado':'Aceite automático desligado'}</span></div>
+   <div class="list">${C.length?C.slice(0,30).map(c=>{const st=ST_CLI[c.status]||[c.status,'novo'];const dd=showCad[c.id];return `
+    <div class="row"><div class="who">${dd?`<b>${esc(dd.nome)}${dd.empresa?' · '+esc(dd.empresa):''}</b><span>${esc(dd.cidade)} · ${esc(dd.zap||'—')} · ${esc(dd.email||'—')}</span>`:`<b>Novo cliente cadastrado</b><span class="hidden-id">•••••• · ${esc(c.cidade||'—')}</span>`}${c.vend?`<span style="font-size:12px;color:var(--muted)">Vendedor: ${esc(c.vend)}</span>`:''}</div>
+    <span class="pill ${st[1]}">${st[0]}</span><span class="pill ${c.visto?'ok':'novo'}">${c.visto?'Visto':'Novo'}</span><span style="font-size:12px;color:var(--muted)">${fmtD(c.criado)}</span>
+    <button class="btn sm" data-act="vercad" data-id="${c.id}">${dd?'Ocultar':'Ver quem cadastrou'}</button>${c.status==='pendente'?`<button class="btn sm primary" data-act="liberar" data-id="${c.id}">Liberar</button>`:''}</div>`}).join(''):'<div class="empty">Nenhum cadastro ainda. Quando um cliente se cadastrar no Catálogo 3D, o aviso aparece aqui.</div>'}</div>
   </section>
   <section class="panel" id="t-cat">
-   <h2>📈 Acesso ao Catálogo 3D da Guaporé</h2><p class="sub">Visitas de clientes e novos cadastros por dia.</p>
-   <div class="chart">${S.visitas.map((v,i)=>`<div class="c"><small>${v+S.cadDia[i]}</small><div class="b" style="height:${(v+S.cadDia[i])/maxDay*100}%"><i style="height:${v/(v+S.cadDia[i]||1)*100}%;background:var(--brand);display:block"></i><i style="height:${S.cadDia[i]/(v+S.cadDia[i]||1)*100}%;background:var(--amber);display:block"></i></div></div>`).join('')}</div>
-   <div class="days">${labels.map(l=>`<span>${l}</span>`).join('')}</div>
-   <div class="legend"><span><i style="background:var(--brand)"></i>Visitas</span><span><i style="background:var(--amber)"></i>Cadastros</span><span>Conversão em orçamento: <b>${Math.round(S.orc.length/Math.max(S.clientes.length,1)*100)}%</b></span></div>
+   <h2>📈 Acesso ao Catálogo 3D da Guaporé</h2><p class="sub">Visitantes por dia e novos cadastros de clientes.</p>
+   <div class="chart">${V.map(v=>`<div class="c"><small>${v.v+v.c}</small><div class="b" style="height:${(v.v+v.c)/maxDay*100}%"><i style="height:${v.v/((v.v+v.c)||1)*100}%;background:var(--brand);display:block"></i><i style="height:${v.c/((v.v+v.c)||1)*100}%;background:var(--amber);display:block"></i></div></div>`).join('')}</div>
+   <div class="days">${V.map(v=>`<span>${new Date(v.d+'T12:00').toLocaleDateString('pt-BR',{weekday:'short'}).replace('.','')}</span>`).join('')}</div>
+   <div class="legend"><span><i style="background:var(--brand)"></i>Visitantes</span><span><i style="background:var(--amber)"></i>Cadastros</span><span>Pedidos de cotação: <b>${A.length}</b></span></div>
   </section>
   <section class="panel" id="t-eq">
-   <h2>👥 Medidor de acesso da equipe</h2><p class="sub">Quantas vezes cada vendedor abriu cada módulo.</p>
-   <div class="list">${S.vend.length?'':'<div class="empty">Nenhum vendedor cadastrado. Use "+ Cadastrar vendedor" em Comandos.</div>'}${S.vend.map(v=>{const t=totalAc(v);return `<div class="meter"><span><b>${esc(v.nome)}</b>${v.ativo?'':' <span class="pill novo">bloq.</span>'}</span><div class="bar" style="width:${Math.max(t/maxAc*100,4)}%">${MODS.map(m=>`<i title="${m.n}: ${v.ac[m.k]}" style="width:${t?v.ac[m.k]/t*100:0}%;background:${COLORS[m.k]}"></i>`).join('')}</div><span style="font-family:var(--f-mono)">${t}</span></div>`}).join('')}</div>
-   <div class="legend">${MODS.map(m=>`<span><i style="background:${COLORS[m.k]}"></i>${m.n}</span>`).join('')}</div>
+   <h2>👥 Medidor de acesso da equipe</h2><p class="sub">Quantas vezes cada pessoa abriu cada módulo nos últimos 30 dias.</p>
+   <div class="list">${eq.length?eq.map(p=>{const t=usoDe(p.id);return `<div class="meter"><span><b>${esc(p.nome.split(' ')[0])}</b> <span style="font-size:11px;color:var(--muted)">${esc(PAPEL[p.papel]||p.papel)}</span>${p.ativo?'':' <span class="pill novo">pausado</span>'}</span><div class="bar" style="width:${Math.max(t/maxAc*100,4)}%">${ms.map(k=>{const n=usoDe(p.id,k);return n?`<i title="${MOD[k][1]}: ${n}" style="width:${n/t*100}%;background:${COLORS[k]}"></i>`:''}).join('')}</div><span style="font-family:var(--f-mono)">${t}</span></div>`}).join(''):'<div class="empty">Nenhuma pessoa cadastrada ainda.</div>'}</div>
+   ${ms.length?`<div class="legend">${ms.map(k=>`<span><i style="background:${COLORS[k]}"></i>${MOD[k][1]}</span>`).join('')}</div>`:''}
   </section>
-  <section class="panel" id="t-cmd">
-   <h2>🎛 Comandos</h2><p class="sub">Libere ou bloqueie cada módulo por vendedor. Desligar na linha "Todos" tira o módulo da equipe inteira.</p>
-   <div class="tablewrap"><table><thead><tr><th>Vendedor</th><th class="c">Acesso</th>${MODS.map(m=>`<th class="c" title="${m.d}">${m.i}<br><small class="thn">${m.n}</small></th>`).join('')}</tr></thead><tbody>
-    <tr><td><b>Todos</b></td><td class="c">—</td>${MODS.map(m=>`<td class="c"><button class="sw" role="switch" aria-checked="${S.modsOn[m.k]}" aria-label="${m.n} para todos" data-act="gmod" data-m="${m.k}"></button></td>`).join('')}</tr>
-    ${S.vend.map(v=>`<tr><td>${esc(v.nome)}</td><td class="c"><button class="sw" role="switch" aria-checked="${v.ativo}" aria-label="Acesso de ${esc(v.nome)}" data-act="vativo" data-id="${v.id}"></button></td>${MODS.map(m=>`<td class="c"><button class="sw" role="switch" aria-checked="${v.mods[m.k]&&S.modsOn[m.k]}" ${S.modsOn[m.k]?'':'disabled'} aria-label="${m.n} para ${esc(v.nome)}" data-act="vmod" data-id="${v.id}" data-m="${m.k}"></button></td>`).join('')}</tr>`).join('')}
-   </tbody></table></div>
-   <div class="toolbar" style="margin-top:12px;align-items:center">
-    <button class="sw" role="switch" aria-checked="${S.autoCadastro}" data-act="auto" aria-label="Aceite automático"></button><span style="font-size:13px">Aceitar cadastro de cliente automaticamente</span>
-    <span style="flex:1"></span><button class="btn sm" data-act="addvend">+ Cadastrar vendedor</button>
-   </div>
+  <section class="panel" id="t-equipe">
+   <div class="ph"><div><h2>🧑‍🤝‍🧑 Equipe e novos acessos</h2><p class="sub">Cada pessoa faz o próprio cadastro pelo link de primeiro acesso. A FC confere e libera.</p></div><button class="btn sm primary" data-act="addpessoa">+ Cadastrar pessoa</button></div>
+   <div class="list">${(D.pendentes||[]).map(p=>`<div class="row"><div class="who"><b>${esc(p.nome)}</b><span>${esc(p.tel||'')} · pediu acesso em ${fmtD(p.criado)}</span></div><span class="pill novo">Aguardando a FC liberar</span></div>`).join('')}
+   ${(D.equipe||[]).map(p=>`<div class="row"><div class="who"><b>${esc(p.nome)}</b><span>${esc(PAPEL[p.papel]||p.papel)} · último acesso: ${p.ult?fmtD(p.ult):'ainda não entrou'}</span></div><span class="pill ${p.ativo?'ok':'novo'}">${p.ativo?'Ativo':'Pausado'}</span></div>`).join('')||'<div class="empty">Ninguém cadastrado ainda.</div>'}</div>
   </section>
  </div>
- <section class="panel" id="t-cmp" style="margin-top:14px">
-  <div class="ph"><div><h2>🛒 Setor de Compras · comandos e acesso</h2><p class="sub">Libere ou bloqueie cada módulo do Compras. O medidor mostra quantas vezes cada módulo foi aberto.</p></div><button class="btn sm" data-act="addcomp">+ Cadastrar pessoa de Compras</button></div>
-  <div class="tablewrap"><table><thead><tr><th>Pessoa</th><th class="c">Acesso</th>${CMODS.map(m=>`<th class="c" title="${m.d}">${m.i}<br><small class="thn">${m.n}</small></th>`).join('')}</tr></thead><tbody>
-   <tr><td><b>Todos</b></td><td class="c">—</td>${CMODS.map(m=>`<td class="c"><button class="sw" role="switch" aria-checked="${S.cmodsOn[m.k]}" aria-label="${m.n} para todo o Compras" data-act="cgmod" data-m="${m.k}"></button></td>`).join('')}</tr>
-   ${S.compras.map(v=>`<tr><td>${esc(v.nome)}</td><td class="c"><button class="sw" role="switch" aria-checked="${v.ativo}" aria-label="Acesso de ${esc(v.nome)}" data-act="cativo" data-id="${v.id}"></button></td>${CMODS.map(m=>`<td class="c"><button class="sw" role="switch" aria-checked="${v.mods[m.k]&&S.cmodsOn[m.k]}" ${S.cmodsOn[m.k]?'':'disabled'} aria-label="${m.n} para ${esc(v.nome)}" data-act="cmod" data-id="${v.id}" data-m="${m.k}"></button></td>`).join('')}</tr>`).join('')}
-  </tbody></table></div>
-  <div class="list" style="margin-top:12px">${(()=>{const mx=Math.max(...S.compras.map(totalAc),1);return S.compras.map(v=>{const t=totalAc(v);return `<div class="meter"><span><b>${esc(v.nome)}</b>${v.ativo?'':' <span class="pill novo">bloq.</span>'}</span><div class="bar" style="width:${Math.max(t/mx*100,4)}%">${CMODS.map(m=>`<i title="${m.n}: ${v.ac[m.k]||0}" style="width:${t?(v.ac[m.k]||0)/t*100:0}%;background:${CCOLORS[m.k]}"></i>`).join('')}</div><span style="font-family:var(--f-mono)">${t}</span></div>`}).join('')})()}</div>
-  <div class="legend">${CMODS.map(m=>`<span><i style="background:${CCOLORS[m.k]}"></i>${m.n}</span>`).join('')}</div>
+ <section class="panel" id="t-cmd" style="margin-top:14px">
+  <h2>🎛 Comandos de acesso</h2><p class="sub">Ligue ou desligue cada módulo por pessoa. "Acesso" pausa a pessoa inteira (ela não consegue entrar). Desligar na linha "Todos" tira o módulo do setor inteiro. Vale na hora, no celular de cada um.</p>
+  ${SETORES.map(s=>cmdTabela(s)).join('')}
+  <div class="toolbar" style="margin-top:12px;align-items:center">
+   <button class="sw" role="switch" aria-checked="${auto}" data-act="auto" aria-label="Aceite automático"></button><span style="font-size:13px">Aceitar cadastro de cliente no catálogo automaticamente <span style="color:var(--muted)">(o cliente cria a própria senha e já entra liberado)</span></span>
+  </div>
  </section>
  <section class="panel" id="t-orc" style="margin-top:14px">
-  <div class="ph"><div><h2>🧾 Orçamentos solicitados pelos clientes</h2><p class="sub">Tudo que o cliente enviou pelo catálogo, com o vendedor que ele escolheu.</p></div>
-  <div class="toolbar"><select id="fVend" aria-label="Filtrar vendedor"><option value="todos">Todos os vendedores</option>${S.vend.map(v=>`<option value="${v.id}" ${fVend===v.id?'selected':''}>${esc(v.nome)}</option>`).join('')}</select>
-  <select id="fStat" aria-label="Filtrar situação"><option value="todos">Todas as situações</option>${Object.entries(STAT).map(([k,v])=>`<option value="${k}" ${fStat===k?'selected':''}>${v[0]}</option>`).join('')}</select></div></div>
-  ${orcs.length?`<div class="tablewrap"><table><thead><tr><th>Nº</th><th>Data</th><th>Cliente</th><th>Vendedor</th><th>Canal</th><th class="c">Itens</th><th>Situação</th><th></th></tr></thead><tbody>
-  ${orcs.map(o=>`<tr><td style="font-family:var(--f-mono)">${o.id}</td><td>${fmtD(o.data)}</td><td>${esc(cli(o.cli).nome)}<br><span style="color:var(--muted);font-size:12px">${esc(cli(o.cli).empresa)}</span></td><td>${esc(vName(o.vend))}</td><td>${o.canal}</td><td class="c">${o.itens.reduce((a,i)=>a+ +i.q,0)}</td><td><span class="pill ${STAT[o.status][1]}">${STAT[o.status][0]}</span></td><td><button class="btn sm" data-act="verorc" data-id="${o.id}">Abrir</button></td></tr>`).join('')}
-  </tbody></table></div>`:'<div class="empty">Nenhum orçamento com esse filtro.</div>'}
+  <div class="ph"><div><h2>🧾 Pedidos de cotação dos clientes</h2><p class="sub">Tudo que o cliente enviou pelo Catálogo 3D. O atendimento é feito no Painel de Vendas.</p></div>
+  <div class="toolbar"><select id="fVend" aria-label="Filtrar vendedor"><option value="todos">Todos os vendedores</option>${[...new Set(A.map(a=>a.vend).filter(Boolean))].map(v=>`<option ${fVend===v?'selected':''}>${esc(v)}</option>`).join('')}</select>
+  <select id="fStat" aria-label="Filtrar situação"><option value="todos">Todas as situações</option>${[...new Set(A.map(a=>stAtd(a)[0]))].map(s=>`<option ${fStat===s?'selected':''}>${s}</option>`).join('')}</select></div></div>
+  ${orcs.length?`<div class="tablewrap"><table><thead><tr><th>Nº</th><th>Data</th><th>Cliente</th><th>Vendedor</th><th class="c">Itens</th><th>Situação</th></tr></thead><tbody>
+  ${orcs.map(o=>{const s=stAtd(o);return `<tr><td style="font-family:var(--f-mono)">${o.n}</td><td>${fmtD(o.criado)}</td><td>${esc(o.cli||'—')}<br><span style="color:var(--muted);font-size:12px">${esc(o.cid||'')}</span></td><td>${esc(o.vend||'—')}</td><td class="c">${o.itens}</td><td><span class="pill ${s[1]}">${s[0]}</span></td></tr>`}).join('')}
+  </tbody></table></div>`:`<div class="empty">${A.length?'Nenhum pedido com esse filtro.':'Nenhum pedido de cotação ainda.'}</div>`}
  </section>
- <section class="panel" style="margin-top:14px" id="t-agg">
-  <div class="ph"><div><h2>🗓 Treinamento on-line · agenda</h2><p class="sub">Turmas abertas para a equipe. O vendedor se inscreve pelo painel dele.</p></div><button class="btn sm" data-act="addslot">+ Nova turma</button></div>
-  <div class="slots">${S.slots.length?'':'<div class="empty">Nenhuma turma marcada. Use "+ Nova turma".</div>'}${S.slots.map(s=>`<div class="slot"><b>${s.d} · ${s.h}</b><span>${esc(s.tema)}</span><br><span>${s.ins.length}/${s.cap} inscritos${s.ins.length?': '+s.ins.map(vName).join(', '):''}</span></div>`).join('')}</div>
- </section>${histHTML()}`;
+ ${agendaHTML(true)}
+ <section class="panel" style="margin-top:14px" id="t-hist"><h2>💬 Conversa da equipe</h2><p class="sub">As conversas individuais entre a equipe, o gestor e a FC ficam no botão 💬 do link da Guaporé. O gestor acompanha todas pela aba Histórico de lá.</p></section>`;
+}
+function cmdTabela(s){
+ const [papel,nome,,base]=s;const L=pessoas(papel);
+ if(!L.length&&!['vendas','compras','estoque'].includes(papel))return '';
+ const cols=[...base,...[...new Set(L.flatMap(p=>p.abas||[]))].filter(k=>MOD[k]&&!base.includes(k))];
+ const todos=k=>L.length&&L.every(p=>(p.abas||[]).includes(k));
+ return `<h3 style="font-size:14px;margin:16px 0 6px">${esc(nome)} <span style="font-weight:500;color:var(--muted);font-size:12px">· ${L.length} pessoa(s)</span></h3>
+ ${L.length?`<div class="tablewrap"><table><thead><tr><th>Pessoa</th><th class="c">Acesso</th>${cols.map(k=>`<th class="c" title="${esc(MOD[k][2])}">${MOD[k][0]}<br><small class="thn">${MOD[k][1]}</small></th>`).join('')}</tr></thead><tbody>
+  <tr><td><b>Todos</b></td><td class="c">—</td>${cols.map(k=>`<td class="c"><button class="sw" role="switch" aria-checked="${todos(k)}" aria-label="${MOD[k][1]} para todo o setor ${esc(nome)}" data-act="gmod" data-p="${papel}" data-m="${k}"></button></td>`).join('')}</tr>
+  ${L.map(p=>`<tr><td>${esc(p.nome)}</td><td class="c"><button class="sw" role="switch" aria-checked="${p.ativo}" aria-label="Acesso de ${esc(p.nome)}" data-act="pativo" data-id="${p.id}"></button></td>${cols.map(k=>`<td class="c"><button class="sw" role="switch" aria-checked="${(p.abas||[]).includes(k)}" ${p.ativo?'':'disabled'} aria-label="${MOD[k][1]} para ${esc(p.nome)}" data-act="pmod" data-id="${p.id}" data-m="${k}"></button></td>`).join('')}</tr>`).join('')}
+ </tbody></table></div>`:`<div class="empty">Ninguém no setor ${esc(nome)} ainda. Use "+ Cadastrar pessoa".</div>`}`;
+}
+function agendaHTML(gest,me){
+ const S=(D.cfg&&D.cfg.slots)||[];
+ return `<section class="panel" style="margin-top:14px" id="${gest?'t-agg':'t-agv'}">
+  <div class="ph"><div><h2>🗓 Treinamento on-line · agenda</h2><p class="sub">${gest?'Turmas abertas para a equipe. Cada pessoa se inscreve pelo próprio painel.':'Toque em uma turma para se inscrever ou sair.'}</p></div>${gest?'<button class="btn sm" data-act="addslot">+ Nova turma</button>':''}</div>
+  <div class="slots">${S.length?S.map(s=>{const ins=s.ins||[];const mine=me&&ins.includes(me);const full=!mine&&ins.length>=(s.cap||6);
+   return gest?`<div class="slot"><b>${esc(s.d)} · ${esc(s.h)}</b><span>${esc(s.tema)}</span><br><span>${ins.length}/${s.cap||6} inscritos${ins.length?': '+ins.map(nomeP).map(n=>esc(n.split(' ')[0])).join(', '):''}</span><br><button class="btn sm" style="margin-top:6px" data-act="delslot" data-id="${esc(s.id)}">Excluir turma</button></div>`
+   :`<button class="slot ${mine?'mine':''} ${full?'full':''}" data-act="slot" data-id="${esc(s.id)}" ${full||!me?'disabled':''}><b>${esc(s.d)} · ${esc(s.h)}</b><span>${esc(s.tema)}</span><br><span>${mine?'✓ Inscrito':((s.cap||6)-ins.length)+' vagas'}</span></button>`}).join(''):`<div class="empty">Nenhuma turma marcada${gest?'. Use "+ Nova turma".':' ainda.'}</div>`}</div>
+ </section>`;
 }
 
-/* ---------- VENDEDOR ---------- */
-function vVendedor(){
- const me=S.vend.find(v=>v.id===S.me)||S.vend[0];
- if(!me)return '<div class="empty">Nenhum vendedor cadastrado. O gestor cadastra na Central do Gestor, em Comandos.</div>';
- const meus=S.orc.filter(o=>o.vend===me.id).sort((a,b)=>b.data.localeCompare(a.data));
+/* ---------- PAINEL DO SETOR (vendedor, compras, estoque...) ---------- */
+function vSetor(papel){
+ const s=SET[papel]||[papel,PAPEL[papel]||papel,papel,[]];
+ const L=pessoas(papel);
+ let me=G()?L.find(p=>p.id===verComo[papel])||L[0]:(D.equipe||[]).find(p=>p.id===D.eu.id);
+ if(!me)return `<div class="hello"><div><h1>${esc(s[1])}</h1><p>Painel do setor ${esc(s[1])}.</p></div></div><div class="empty">Ninguém no setor ${esc(s[1])} ainda. O gestor cadastra em "+ Cadastrar pessoa", na Central do Gestor.</div>`;
+ const ord=[...s[3],...(me.abas||[]).filter(k=>!s[3].includes(k))].filter(k=>MOD[k]);
+ const meus=(D.atends||[]).filter(a=>!G()||a.vend===me.nome);
  return `
- <span class="demo-note">Ver painel de: <select id="meSel" style="width:auto;display:inline-block;padding:2px 6px">${S.vend.map(v=>`<option value="${v.id}" ${v.id===me.id?'selected':''}>${esc(v.nome)}</option>`).join('')}</select></span>
- <div class="hello"><div><h1>Olá, ${esc(me.nome)}</h1><p>Suas ferramentas de venda e os orçamentos que os clientes enviaram para você.</p></div></div>
- ${!me.ativo?'<div class="empty" style="margin-bottom:14px">Seu acesso está pausado pelo gestor.</div>':''}
- <div class="grid mods" id="t-mods">${MODS.map(m=>{const ok=me.ativo&&me.mods[m.k]&&S.modsOn[m.k];return `
-  <button class="mod ${ok?'':'locked'}" data-act="open" data-m="${m.k}" id="mod-${m.k}">
-   ${m.k==='trein'?'<span class="tag new">+ on-line</span>':''}${ok?'':'<span class="tag">🔒 bloqueado</span>'}
-   <div class="ic" style="font-size:20px">${m.i}</div><h3>${m.n}</h3><p>${m.d}</p></button>`}).join('')}</div>
- <div class="grid cols2" style="margin-top:14px">
-  <section class="panel" id="t-meus">
-   <h2>🧾 Orçamentos para você</h2><p class="sub">O cliente escolheu você no Catálogo 3D. Responda pelo canal que ele pediu.</p>
-   <div class="list">${meus.length?meus.map(o=>`<div class="row"><div class="who"><b>${esc(cli(o.cli).nome)} · <span style="font-family:var(--f-mono);font-weight:500">${o.id}</span></b><span>${o.itens.length} perfil(is) · pediu retorno por ${o.canal} · ${fmtD(o.data)}</span></div>
-     <span class="pill ${STAT[o.status][1]}">${STAT[o.status][0]}</span><button class="btn sm" data-act="verorc" data-id="${o.id}">Abrir</button></div>`).join(''):'<div class="empty">Nenhum orçamento ainda. Quando um cliente escolher você no Catálogo 3D, ele aparece aqui.</div>'}</div>
-  </section>
-  <section class="panel" id="t-agv">
-   <h2>🗓 Treinamento on-line</h2><p class="sub">Toque em uma turma para se inscrever ou sair.</p>
-   <div class="slots">${S.slots.map(s=>{const mine=s.ins.includes(me.id),full=!mine&&s.ins.length>=s.cap;return `<button class="slot ${mine?'mine':''} ${full?'full':''}" data-act="slot" data-id="${s.id}" ${full?'disabled':''}><b>${s.d} · ${s.h}</b><span>${esc(s.tema)}</span><br><span>${mine?'✓ Inscrito':(s.cap-s.ins.length)+' vagas'}</span></button>`}).join('')}</div>
-  </section>
- </div>${chatHTML(me.id)}`;
-}
-
-/* ---------- COMPRAS ---------- */
-function vCompras(){
- const me=S.compras.find(v=>v.id===S.meC)||S.compras[0];if(me)S.meC=me.id;
- if(!me)return '<div class="empty">Nenhuma pessoa de Compras cadastrada. O gestor cadastra na Central do Gestor.</div>';
- const grupos=[...new Set(CMODS.map(m=>m.g))];
- return `
- <span class="demo-note">Ver painel de: <select id="meCSel" style="width:auto;display:inline-block;padding:2px 6px">${S.compras.map(v=>`<option value="${v.id}" ${v.id===me.id?'selected':''}>${esc(v.nome)}</option>`).join('')}</select></span>
- <div class="hello"><div><h1>Olá, ${esc(me.nome)}</h1><p>Suas ferramentas de compra, conversão de códigos e treinamento.</p></div></div>
- ${!me.ativo?'<div class="empty" style="margin-bottom:14px">Seu acesso está pausado pelo gestor.</div>':''}
- <div id="t-cmods">${grupos.map(g=>`<h3 style="font-size:13px;color:var(--muted);margin:14px 0 8px;font-weight:600">${g}</h3>
- <div class="grid mods">${CMODS.filter(m=>m.g===g).map(m=>{const ok=me.ativo&&me.mods[m.k]&&S.cmodsOn[m.k];return `
-  <button class="mod ${ok?'':'locked'}" data-act="copen" data-m="${m.k}" id="cmod-${m.k}">
-   ${m.k==='trein'?'<span class="tag new">+ on-line</span>':''}${ok?'':'<span class="tag">🔒 bloqueado</span>'}
-   <div class="ic" style="font-size:20px">${m.i}</div><h3>${m.n}</h3><p>${m.d}</p></button>`}).join('')}</div>`).join('')}</div>
- <section class="panel" id="t-cagv" style="margin-top:14px">
-  <h2>🗓 Treinamento on-line</h2><p class="sub">Toque em uma turma para se inscrever ou sair.</p>
-  <div class="slots">${S.slots.map(s=>{const mine=s.ins.includes(me.id),full=!mine&&s.ins.length>=s.cap;return `<button class="slot ${mine?'mine':''} ${full?'full':''}" data-act="slot" data-id="${s.id}" ${full?'disabled':''}><b>${s.d} · ${s.h}</b><span>${esc(s.tema)}</span><br><span>${mine?'✓ Inscrito':(s.cap-s.ins.length)+' vagas'}</span></button>`}).join('')}</div>
- </section>${chatHTML(me.id)}`;
-}
-function openModC(k){
- const me=S.compras.find(v=>v.id===S.meC);const m=CMODS.find(x=>x.k===k);
- if(!(me&&me.ativo&&me.mods[k]&&S.cmodsOn[k])){toast('Módulo bloqueado pelo gestor.');return}
- me.ac[k]=(me.ac[k]||0)+1;me.ult=new Date().toISOString();save();
- modal(`<h2>${m.i} ${m.n}</h2><p class="sub">Acesso registrado no medidor do gestor.</p>
- <p>${k==='fc'?'Abre o canal de solicitações com a FC (suporte e dúvidas).':k==='age'?'As visitas e reuniões que a FC marcar com a Guaporé aparecem aqui.':k==='trein'?'Abre o Treinamento 3D. As turmas on-line ficam na agenda logo abaixo dos cartões.':'Toque em Abrir para entrar no módulo.'}</p>
- ${m.u?`<div class="toolbar" style="justify-content:flex-end;margin-bottom:8px"><a class="btn primary" style="text-decoration:none" target="_blank" rel="noopener" href="${m.u}">↗ Abrir ${m.n}</a></div>`:''}
- ${k==='fc'?`<label>Sua solicitação<textarea id="fcTxt" rows="3" placeholder="Descreva a dúvida ou pedido"></textarea></label><div class="toolbar" style="margin-top:10px;justify-content:flex-end"><button class="btn" data-act="close">Cancelar</button><button class="btn primary" data-act="fcsend">Enviar para a FC</button></div>`:k==='age'?`<div class="empty">Nenhuma visita marcada.</div><div class="toolbar" style="margin-top:10px;justify-content:flex-end"><button class="btn primary" data-act="close">Ok</button></div>`:`<div class="toolbar" style="justify-content:flex-end"><button class="btn primary" data-act="close">Ok</button></div>`}`);
-}
-
-/* ---------- CLIENTE ---------- */
-function vCliente(){
- const c=S.cliSessao?cli(S.cliSessao):null;
- return `
- <span class="demo-note">Simulação da tela do cliente no Catálogo 3D da Guaporé</span>
- <div class="hello"><div><h1>Catálogo 3D · Guaporé Vidros</h1><p>Escolha as esquadrias, informe as medidas e envie para o vendedor de sua preferência.</p></div>
- ${c?`<span class="pill ok">Conectado: ${esc(c.nome)}</span>`:''}</div>
- <div class="grid" style="grid-template-columns:minmax(0,1fr) minmax(280px,340px);align-items:start" id="cliGrid">
-  <div style="min-width:0">${bannerHTML()}<div class="grid prods" id="t-prods">${visibleProds().map(p=>{const M=S.mkt,d=M.destaques.includes(p.id),sc=M.sobConsulta.includes(p.id);return `<article class="prod ${d?'dest':''}"><div style="position:relative"><canvas data-t="${p.t}" width="440" height="280" aria-label="${p.n}"></canvas>${d?'<span class="ptag d">★ Destaque</span>':''}${M.promo[p.id]?`<span class="ptag p">${esc(M.promo[p.id])}</span>`:''}</div><div class="in"><h3>${p.n}</h3><p>${p.l}${sc?' · sob consulta':''}</p><span style="flex:1"></span><button class="btn sm" data-act="add" data-id="${p.id}">${sc?'Consultar com o vendedor':'+ Adicionar ao orçamento'}</button></div></article>`}).join('')}</div></div>
-  <aside class="panel cart" id="t-cart">
-   <h2>Meu orçamento</h2><p class="sub">${cart.length} item(ns)</p>
-   ${cart.length?cart.map((it,i)=>`<div class="cartline"><span><b>${prod(it.p).n}</b><br><span style="color:var(--muted)">${it.l}×${it.a} mm · ${it.q} un · ${esc(it.cor)}</span></span><button class="btn sm" data-act="rm" data-i="${i}" aria-label="Remover">✕</button></div>`).join(''):'<div class="empty">Adicione esquadrias do catálogo.</div>'}
-   <h3 style="font-size:13px;margin:14px 0 6px">Enviar para o vendedor</h3>
-   <div class="vend" id="t-vend">${S.vend.filter(v=>v.ativo).map(v=>`<button aria-pressed="${selVend===v.id}" data-act="selv" data-id="${v.id}"><b>${esc(v.nome)}</b><br><span style="font-size:11px;color:var(--muted)">Comercial</span></button>`).join('')}</div>
-   <label style="margin-top:10px">Observação<textarea id="cliObs" rows="2" placeholder="Ex.: obra em andamento, prazo"></textarea></label>
-   <div class="toolbar" style="margin-top:10px"><button class="btn primary" data-act="send" data-c="WhatsApp">Enviar por WhatsApp</button><button class="btn" data-act="send" data-c="E-mail">Enviar por e-mail</button></div>
-  </aside>
- </div>`;
+ ${G()?`<span class="demo-note">Você está vendo o painel como gestor · ver painel de: <select id="verSel" data-p="${papel}" style="width:auto;display:inline-block;padding:2px 6px">${L.map(p=>`<option value="${p.id}" ${p.id===me.id?'selected':''}>${esc(p.nome)}</option>`).join('')}</select></span>`:''}
+ <div class="hello"><div><h1>Olá, ${esc(me.nome.split(' ')[0])}</h1><p>Suas ferramentas do setor ${esc(s[1])}.</p></div></div>
+ ${!me.ativo?'<div class="empty" style="margin-bottom:14px">Este acesso está pausado pelo gestor.</div>':''}
+ <div class="grid mods" id="t-mods">${ord.map(k=>{const ok=me.ativo&&(me.abas||[]).includes(k);return `
+  <button class="mod ${ok?'':'locked'}" data-act="open" data-m="${k}" data-ok="${ok}" id="mod-${k}">
+   ${ok?'':'<span class="tag">🔒 bloqueado</span>'}
+   <div class="ic" style="font-size:20px">${MOD[k][0]}</div><h3>${MOD[k][1]}</h3><p>${MOD[k][2]}</p></button>`}).join('')}</div>
+ ${papel==='vendas'?`<section class="panel" id="t-meus" style="margin-top:14px">
+   <h2>🧾 Pedidos de cotação ${G()?'deste vendedor':'para você'}</h2><p class="sub">O cliente pediu pelo Catálogo 3D. O atendimento é feito no Painel de Vendas.</p>
+   <div class="list">${meus.length?meus.map(o=>{const st=stAtd(o);return `<div class="row"><div class="who"><b>${esc(o.cli||'Cliente')} · <span style="font-family:var(--f-mono);font-weight:500">nº ${o.n}</span></b><span>${o.itens} item(ns) · ${fmtD(o.criado)}</span></div><span class="pill ${st[1]}">${st[0]}</span></div>`}).join(''):'<div class="empty">Nenhum pedido ainda. Quando um cliente escolher você no Catálogo 3D, ele aparece aqui.</div>'}</div>
+  </section>`:''}
+ ${agendaHTML(false,G()?null:me.id)}`;
 }
 
 /* ---------- MARKETING ---------- */
-function bannerHTML(){const b=S.mkt.banner;const st=b.cor==='amber'?'background:var(--amber);color:#fff':b.cor==='escuro'?'background:var(--fg);color:var(--bg)':'background:var(--brand);color:var(--brand-ink)';return `<div class="banner" style="${st}"><b>${esc(b.tit)}</b><span>${esc(b.sub)}</span></div>`}
-function visibleProds(){const M=S.mkt;return PRODS.filter(p=>!M.ocultos.includes(p.id)).sort((a,b)=>(M.destaques.includes(b.id)?1:0)-(M.destaques.includes(a.id)?1:0))}
-function prevHTML(){return bannerHTML()+`<div style="display:flex;flex-wrap:wrap;gap:6px">${visibleProds().map(p=>`<span class="chip">${S.mkt.destaques.includes(p.id)?'★ ':''}${p.n}${S.mkt.promo[p.id]?` · <em>${esc(S.mkt.promo[p.id])}</em>`:''}</span>`).join('')}</div>`}
-const fmtDay=s=>{const d=new Date(s+'T12:00');return d.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit'}).replace('.','')};
-const PST={rascunho:['Rascunho','novo'],agendado:['Agendado','and'],publicado:['Publicado','ok']};
-function capText(){const p=prod(postSel.p);return `${postSel.t||p.n}\n\n${p.n} · ${p.l}. Veja em 3D no catálogo da Guaporé Vidros e peça seu orçamento direto ao vendedor.\n\n👉 Link na bio\n#esquadrias #esquadriasdealuminio #guaporevidros #cuiaba #sinop #arquitetura #obra`}
+async function carregaProds(){
+ if(PRODS)return PRODS;
+ try{
+  const t=await (await fetch('/catalogo/index.html',{cache:'no-cache'})).text();
+  const i=t.indexOf('const LN=');let LN=JSON.parse(t.slice(i+9,t.indexOf('\n',i)).trim().replace(/;$/,''));
+  if(!window.LN_GUA)await new Promise((ok,no)=>{const s=document.createElement('script');s.src='/catalogo/linhas-guapore.js?v='+Date.now();s.onload=ok;s.onerror=no;document.head.appendChild(s)});
+  if(window.LN_GUA)window.LN_GUA(LN);
+  const lib=D.linhas||[],oc=new Set(D.ocultos||[]);
+  PRODS=[];LN.filter(l=>!lib.length||lib.includes(l.id)).forEach(l=>{const gn=Object.fromEntries((l.g||[]).map(g=>[g[0],g[1]]));(l.p||[]).forEach(q=>{if(q.ac||oc.has(q.c))return;PRODS.push({c:q.c,n:q.n,l:l.n,g:gn[q.g]||'',kg:q.p||''})})});
+ }catch(e){PRODS=[]}
+ return PRODS;
+}
 function vMarketing(){
- const M=S.mkt;
- const tot=Object.values(M.views).reduce((a,b)=>a+b,0);
- const rank=PRODS.map(p=>({p,v:M.views[p.id]||0})).sort((a,b)=>b.v-a.v);
- const maxV=rank[0].v||1;
- const D=M.destaques.map(prod);
+ if(!PRODS){carregaProds().then(()=>{if(role==='marketing')render()});return '<div class="empty">Carregando os perfis do catálogo…</div>'}
+ const vis=D.vistas||{};const dest=((D.vitrine||{}).it||[]).filter(x=>x.k==='p').map(x=>x.c);
+ const P=PRODS,byC=Object.fromEntries(P.map(p=>[p.c,p]));
+ const tot=Object.values(vis).reduce((a,b)=>a+b,0);
+ const rank=P.map(p=>({p,v:vis[p.c]||0})).filter(r=>r.v).sort((a,b)=>b.v-a.v).slice(0,15);const maxV=(rank[0]||{}).v||1;
+ const q=mkQ.trim().toLowerCase();const lista=P.filter(p=>!q||(p.c+' '+p.n).toLowerCase().includes(q)).slice(0,80);
  return `
- <div class="hello"><div><h1>Marketing · Destaques 3D</h1><p>Escolha os perfis que aparecem em destaque no Catálogo 3D de perfis da Guaporé.</p></div><a class="btn" style="text-decoration:none;white-space:nowrap;background:var(--brand);color:var(--brand-ink);border-color:var(--brand)" target="_blank" rel="noopener" href="https://fc-consultoria.github.io/treinamento/catalogos.html">✏️ Editar perfis do catálogo</a></div><p style="margin:-6px 0 14px;color:var(--mut,#5d6b76);font-size:14px">No editor você muda o código, a descrição, o peso e a foto de cada perfil e escolhe o que fica publicado ou oculto. Entre com o login do Marketing.</p>
+ <div class="hello"><div><h1>Marketing · Destaques 3D</h1><p>Escolha os perfis que aparecem em destaque no Catálogo 3D da Guaporé.</p></div><a class="btn" style="text-decoration:none;white-space:nowrap;background:var(--brand);color:var(--brand-ink);border-color:var(--brand)" target="_blank" rel="noopener" href="https://fc-consultoria.github.io/treinamento/catalogos.html">✏️ Editar perfis do catálogo</a></div>
+ <p style="margin:-6px 0 14px;color:var(--muted);font-size:14px">No editor você muda o código, a descrição, o peso e a foto de cada perfil e escolhe o que fica publicado ou oculto. Entre com o login do Marketing.</p>
  <div class="grid kpis" id="t-mkpis">
-  <div class="kpi"><small>Visualizações de perfis</small><b>${tot}</b><em> no Catálogo 3D</em></div>
-  <div class="kpi"><small>Destaques ativos</small><b>${D.length}/3</b><em> no topo do catálogo</em></div>
-  <div class="kpi"><small>Perfil mais visto</small><b style="font-size:20px">${rank[0].p.c}</b><em> ${rank[0].v} visualizações</em></div>
+  <div class="kpi"><small>Perfis abertos em 3D · 90 dias</small><b>${tot}</b><em> no Catálogo 3D</em></div>
+  <div class="kpi"><small>Destaques ativos</small><b>${dest.length}</b><em> perfis no catálogo (até 6)</em></div>
+  <div class="kpi"><small>Perfil mais visto</small><b style="font-size:20px">${rank[0]?esc(rank[0].p.c):'—'}</b><em> ${rank[0]?rank[0].v+' visualizações':'sem visitas ainda'}</em></div>
  </div>
  <section class="panel" id="t-vitrine">
-  <h2>★ Destaques 3D</h2><p class="sub">Ligue até 3 perfis. Eles aparecem em destaque no Catálogo 3D, com o modelo 3D, o desenho e o peso. Para trocar, desligue um e ligue outro.</p>
-  <div class="d3row">${[0,1,2].map(i=>{const p=D[i];return p?`<div class="d3slot on"><span class="d3n">${i+1}</span><div class="d3cube" aria-hidden="true"></div><b>${p.c}</b><span>${p.n}</span><small>${p.l}${p.kg?' · '+p.kg+' kg/m':''}</small><button class="btn sm" data-act="mdest" data-id="${p.id}">Tirar do destaque</button></div>`:`<div class="d3slot"><span class="d3n">${i+1}</span><b style="color:var(--muted)">Vago</b><span>Ligue um perfil na lista abaixo</span></div>`}).join('')}</div>
-  <div class="toolbar" style="margin-top:14px"><input id="mkBusca" placeholder="Buscar perfil pelo código ou nome (ex.: SU-001, trilho)" style="max-width:420px"></div>
+  <h2>★ Destaques 3D</h2><p class="sub">Ligue até 6 perfis. Eles aparecem em destaque no Catálogo 3D. Para trocar, desligue um e ligue outro. Muda na hora no catálogo.</p>
+  <div class="d3row">${[...Array(Math.max(3,dest.length)).keys()].map(i=>{const c=dest[i],p=c&&(byC[c]||{c,n:'',l:''});return p?`<div class="d3slot on"><span class="d3n">${i+1}</span><div class="d3cube" aria-hidden="true"></div><b>${esc(p.c)}</b><span>${esc(p.n)}</span><small>${esc(p.l)}${p.kg?' · '+esc(p.kg)+' kg/m':''}</small><button class="btn sm" data-act="mdest" data-id="${esc(p.c)}">Tirar do destaque</button></div>`:`<div class="d3slot"><span class="d3n">${i+1}</span><b style="color:var(--muted)">Vago</b><span>Ligue um perfil na lista abaixo</span></div>`}).join('')}</div>
+  <div class="toolbar" style="margin-top:14px"><input id="mkBusca" value="${esc(mkQ)}" placeholder="Buscar perfil pelo código ou nome (ex.: SU-001, trilho)" style="max-width:420px"></div>
   <div class="tablewrap"><table id="mkTab"><thead><tr><th>Perfil</th><th>Linha · grupo</th><th class="c">Visualizações</th><th class="c">Destaque 3D</th></tr></thead><tbody>
-  ${PRODS.map(p=>`<tr data-busca="${esc((p.c+' '+p.n).toLowerCase())}"><td><b style="font-family:var(--f-mono)">${p.c}</b><br><span style="font-size:12px;color:var(--muted);white-space:normal">${p.n}</span></td><td style="font-size:12px">${p.l}<br><span style="color:var(--muted)">${p.g}</span></td><td class="c" style="font-family:var(--f-mono)">${M.views[p.id]||0}</td><td class="c"><button class="sw" role="switch" aria-checked="${M.destaques.includes(p.id)}" aria-label="Destaque 3D ${p.c}" data-act="mdest" data-id="${p.id}"></button></td></tr>`).join('')}
-  </tbody></table></div>
+  ${lista.map(p=>`<tr><td><b style="font-family:var(--f-mono)">${esc(p.c)}</b><br><span style="font-size:12px;color:var(--muted);white-space:normal">${esc(p.n)}</span></td><td style="font-size:12px">${esc(p.l)}<br><span style="color:var(--muted)">${esc(p.g)}</span></td><td class="c" style="font-family:var(--f-mono)">${vis[p.c]||0}</td><td class="c"><button class="sw" role="switch" aria-checked="${dest.includes(p.c)}" aria-label="Destaque 3D ${esc(p.c)}" data-act="mdest" data-id="${esc(p.c)}"></button></td></tr>`).join('')}
+  </tbody></table></div>${P.length>lista.length?`<p class="sub" style="margin-top:8px">Mostrando ${lista.length} de ${P.length} perfis. Use a busca para achar os outros.</p>`:''}
  </section>
- <section class="panel" id="t-rank" style="margin-top:14px"><h2>👀 Perfis mais vistos no Catálogo 3D</h2><p class="sub">Use para escolher os destaques.</p>
-  <div class="list">${rank.map(r=>`<div class="meter" title="${esc(r.p.n)}"><span><b style="font-family:var(--f-mono)">${r.p.c}</b></span><div class="bar" style="width:${Math.max(r.v/maxV*100,4)}%"><i style="width:100%;background:${M.destaques.includes(r.p.id)?'var(--amber)':'var(--brand)'}"></i></div><span style="font-family:var(--f-mono)">${r.v}</span></div>`).join('')}</div>
+ <section class="panel" id="t-rank" style="margin-top:14px"><h2>👀 Perfis mais vistos no Catálogo 3D</h2><p class="sub">Perfis que os clientes abriram em 3D nos últimos 90 dias. Use para escolher os destaques.</p>
+  <div class="list">${rank.length?rank.map(r=>`<div class="meter" title="${esc(r.p.n)}"><span><b style="font-family:var(--f-mono)">${esc(r.p.c)}</b></span><div class="bar" style="width:${Math.max(r.v/maxV*100,4)}%"><i style="width:100%;background:${dest.includes(r.p.c)?'var(--amber)':'var(--brand)'}"></i></div><span style="font-family:var(--f-mono)">${r.v}</span></div>`).join(''):'<div class="empty">Ainda não há visitas registradas. Os números aparecem conforme os clientes abrem os perfis.</div>'}</div>
   <div class="legend"><span><i style="background:var(--amber)"></i>Em destaque</span><span><i style="background:var(--brand)"></i>Demais perfis</span></div></section>`;
-}
-function wrapText(g,txt,max){const w=txt.split(' '),out=[];let l='';w.forEach(x=>{const t=l?l+' '+x:x;if(g.measureText(t).width>max&&l){out.push(l);l=x}else l=t});if(l)out.push(l);return out.slice(0,3)}
-function drawPost(){
- const cv=$('#postCv');if(!cv)return;const p=prod(postSel.p),story=postSel.f==='story';
- cv.width=540;cv.height=story?960:540;cv.style.width=story?'200px':'260px';
- const g=cv.getContext('2d'),W=cv.width,H=cv.height;
- const gr=g.createLinearGradient(0,0,W,H);gr.addColorStop(0,'#0d6e66');gr.addColorStop(1,'#072e2b');g.fillStyle=gr;g.fillRect(0,0,W,H);
- g.fillStyle='rgba(255,255,255,.05)';for(let i=0;i<W;i+=40)g.fillRect(i,0,1,H);
- g.fillStyle='#ffffff';g.font='700 20px Sora, sans-serif';g.fillText('GUAPORÉ VIDROS',40,60);
- g.fillStyle='#f2b75a';g.font='600 16px Inter, sans-serif';g.fillText(p.l.toUpperCase(),40,88);
- g.fillStyle='#ffffff';const fs=story?44:36;g.font=`700 ${fs}px Sora, sans-serif`;
- wrapText(g,postSel.t||p.n,W-80).forEach((ln,i)=>g.fillText(ln,40,(story?170:140)+i*(fs+8)));
- drawWin(g,W/2,story?H*.6:H*.63,p.t,story?1.45:.95,'#f4f8f7','rgba(170,225,218,.45)','#f2b75a');
- g.fillStyle='#f2b75a';g.fillRect(40,H-90,W-80,52);
- g.fillStyle='#072e2b';g.font='700 19px Inter, sans-serif';g.fillText('Veja em 3D e peça seu orçamento',62,H-57);
- if(S.mkt.promo[p.id]){g.fillStyle='#ffffff';g.font='700 15px Inter, sans-serif';const t=S.mkt.promo[p.id].toUpperCase(),tw=g.measureText(t).width;g.fillRect(W-tw-64,40,tw+24,32);g.fillStyle='#0d6e66';g.fillText(t,W-tw-52,62)}
-}
-function drawWin(g,cx,cy,t,s,frame,glass,acc){
-  const isDoor=/porta|giro|box/.test(t);
-  const fw=(isDoor?150:t==='janela4'?300:t==='maxim'?150:240)*s, fh=(isDoor?230:t==='maxim'?150:160)*s;
-  const x=cx-fw/2,y=cy-fh/2;
-  g.fillStyle='rgba(0,0,0,.15)';g.fillRect(x+10*s,y+10*s,fw,fh);
-  g.fillStyle=frame;g.fillRect(x,y,fw,fh);
-  const n=t==='janela4'?4:/janela|porta/.test(t)?2:1, b=9*s;
-  const pw=(fw-2*b)/n;
-  for(let i=0;i<n;i++){
-   const px=x+b+i*pw;
-   g.fillStyle=glass;g.fillRect(px+3*s,y+b+3*s,pw-6*s,fh-2*b-6*s);
-   g.strokeStyle='rgba(255,255,255,.55)';g.lineWidth=3*s;g.beginPath();g.moveTo(px+14*s,y+b+40*s);g.lineTo(px+34*s,y+b+16*s);g.stroke();
-  }
-  g.strokeStyle=acc;g.fillStyle=acc;g.lineWidth=2*s;g.setLineDash([6*s,4*s]);
-  if(/janela|porta/.test(t)){g.beginPath();g.moveTo(cx-30*s,cy);g.lineTo(cx+30*s,cy);g.stroke();g.setLineDash([]);g.beginPath();g.moveTo(cx+30*s,cy);g.lineTo(cx+22*s,cy-6*s);g.lineTo(cx+22*s,cy+6*s);g.fill()}
-  if(t==='maxim'){g.beginPath();g.moveTo(x+b,y+b);g.lineTo(cx,y+fh-b);g.lineTo(x+fw-b,y+b);g.stroke()}
-  if(t==='giro'){g.beginPath();g.moveTo(x+fw-b,y+b);g.lineTo(x+b,cy);g.lineTo(x+fw-b,y+fh-b);g.stroke()}
-  if(t==='box'){g.beginPath();g.moveTo(cx,y+b);g.lineTo(cx,y+fh-b);g.stroke()}
-  g.setLineDash([]);
-}
-function drawCanvases(){
- document.querySelectorAll('canvas[data-t]').forEach(cv=>{
-  const g=cv.getContext('2d'),W=cv.width,H=cv.height,t=cv.dataset.t;
-  const cs=getComputedStyle(document.documentElement);
-  g.clearRect(0,0,W,H);
-  drawWin(g,W/2,H/2,t,1,cs.getPropertyValue('--fg').trim(),cs.getPropertyValue('--brand-soft').trim(),cs.getPropertyValue('--brand').trim());
- });
-}
-function drawCanvasesOld(){
- document.querySelectorAll('canvas[data-old]').forEach(cv=>{
-  const g=cv.getContext('2d'),W=cv.width,H=cv.height,t=cv.dataset.t;
-  const cs=getComputedStyle(document.documentElement);
-  const frame=cs.getPropertyValue('--fg').trim(),glass=cs.getPropertyValue('--brand-soft').trim(),acc=cs.getPropertyValue('--brand').trim();
-  g.clearRect(0,0,W,H);
-  const isDoor=/porta|giro|box/.test(t);
-  const fw=isDoor?150:t==='janela4'?300:t==='maxim'?150:240, fh=isDoor?230:t==='maxim'?150:160;
-  const x=(W-fw)/2,y=(H-fh)/2;
-  // sombra 3D simples
-  g.fillStyle='rgba(0,0,0,.08)';g.fillRect(x+10,y+10,fw,fh);
-  g.fillStyle=frame;g.fillRect(x,y,fw,fh);
-  const n=t==='janela4'?4:/janela|porta/.test(t)?2:1, b=9;
-  const pw=(fw-2*b)/n;
-  for(let i=0;i<n;i++){
-   const px=x+b+i*pw;
-   g.fillStyle=glass;g.fillRect(px+3,y+b+3,pw-6,fh-2*b-6);
-   g.strokeStyle='rgba(255,255,255,.55)';g.lineWidth=3;g.beginPath();g.moveTo(px+14,y+b+40);g.lineTo(px+34,y+b+16);g.stroke();
-  }
-  g.strokeStyle=acc;g.lineWidth=2;g.setLineDash([6,4]);
-  if(/janela|porta/.test(t)){g.beginPath();g.moveTo(x+fw/2-30,y+fh/2);g.lineTo(x+fw/2+30,y+fh/2);g.stroke();g.setLineDash([]);g.beginPath();g.moveTo(x+fw/2+30,y+fh/2);g.lineTo(x+fw/2+22,y+fh/2-6);g.lineTo(x+fw/2+22,y+fh/2+6);g.fillStyle=acc;g.fill()}
-  if(t==='maxim'){g.beginPath();g.moveTo(x+b,y+b);g.lineTo(x+fw/2,y+fh-b);g.lineTo(x+fw-b,y+b);g.stroke()}
-  if(t==='giro'){g.beginPath();g.moveTo(x+fw-b,y+b);g.lineTo(x+b,y+fh/2);g.lineTo(x+fw-b,y+fh-b);g.stroke()}
-  if(t==='box'){g.beginPath();g.moveTo(x+fw/2,y+b);g.lineTo(x+fw/2,y+fh-b);g.stroke()}
-  g.setLineDash([]);
- });
 }
 
 /* ---------- RENDER ---------- */
 function render(){
- document.querySelectorAll('#roleSeg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.role===role));
+ const seg=$('#roleSeg'),tabs=abas();
+ seg.innerHTML=tabs.map(t=>`<button data-role="${t[0]}" aria-pressed="${t[0]===role}">${t[1]}</button>`).join('');seg.hidden=tabs.length<2;
  const app=$('#app');
- app.innerHTML=(role==='gestor'?vGestor():role==='vendedor'?vVendedor():role==='compras'?vCompras():role==='marketing'?vMarketing():vCliente())+`<p class="foot">Desenvolvido por FC Consultoria em Esquadria · © FC Consultoria em Esquadria</p>`;
- const n=S.clientes.filter(c=>!c.visto).length;$('#bellDot').hidden=!n;$('#bellDot').textContent=n;
- $('#bellBtn').hidden=role!=='gestor';
- if(role==='marketing')drawPost();
- if(role==='cliente'){drawCanvases();const g=$('#cliGrid');if(g&&innerWidth<760)g.style.gridTemplateColumns='1fr'}
+ let h;if(!D)h='<div class="empty" style="margin-top:30px">Carregando…</div>';else if(D.erro)h=vEntrar();
+ else h=role==='gestor'?vGestor():role==='marketing'?vMarketing():vSetor(role);
+ app.innerHTML=h+`<p class="foot">${D&&D.eu?'👤 '+esc(D.eu.nome)+(D.eu.adm?' (Matriz)':' · '+esc(PAPEL[D.eu.papel]||D.eu.papel))+' · ':''}Desenvolvido por FC Consultoria em Esquadria · © FC Consultoria em Esquadria</p>`;
+ const n=G()?(D.contas||[]).filter(c=>!c.visto).length:0;$('#bellDot').hidden=!n;$('#bellDot').textContent=n;
+ $('#bellBtn').hidden=!(G()&&role==='gestor');
  const fv=$('#fVend');if(fv)fv.onchange=e=>{fVend=e.target.value;render()};
  const fs=$('#fStat');if(fs)fs.onchange=e=>{fStat=e.target.value;render()};
- const cm=$('#cmsgs');if(cm)cm.scrollTop=cm.scrollHeight;
- const ms=$('#meSel');if(ms)ms.onchange=e=>{S.me=e.target.value;save();render()};
- const mc=$('#meCSel');if(mc)mc.onchange=e=>{S.meC=e.target.value;save();render()};
+ const vs=$('#verSel');if(vs)vs.onchange=e=>{verComo[vs.dataset.p]=e.target.value;render()};
 }
-
 function modal(html){const l=$('#layer');l.innerHTML=`<div class="modal" data-act="close"><div class="box" role="dialog" aria-modal="true">${html}</div></div>`}
 function closeModal(){$('#layer').innerHTML=''}
+const msgBox=(t,zap)=>`<textarea class="msg" id="msgTx" readonly style="width:100%;min-height:150px;font:inherit">${esc(t)}</textarea>
+ <div class="toolbar" style="margin-top:10px;justify-content:flex-end"><button class="btn" data-act="copymsg">Copiar</button><a class="btn primary" style="text-decoration:none;background:#1f9d55;border-color:#1f9d55" target="_blank" rel="noopener" href="https://wa.me/${zap?'55'+String(zap).replace(/\D/g,'').replace(/^55(?=\d{10,11}$)/,''):''}?text=${encodeURIComponent(t)}">💬 Enviar pelo WhatsApp</a><button class="btn" data-act="close">Fechar</button></div>`;
 
-function orcModal(id){
- const o=S.orc.find(x=>x.id===id);if(!o)return;const c=cli(o.cli);
- const txt=`Orçamento ${o.id} – Guaporé Vidros\nCliente: ${c.nome} (${c.empresa})\nCidade: ${c.cidade}\n\n${o.itens.map(i=>`• ${prod(i.p).c} ${prod(i.p).n} – ${i.q} barra(s) de 6 m – ${i.cor}`).join('\n')}${o.obs?`\n\nObs.: ${o.obs}`:''}`;
- modal(`<div class="ph"><div><h2>Orçamento ${o.id}</h2><p class="sub">${fmtD(o.data)} · vendedor: ${esc(vName(o.vend))} · retorno por ${o.canal}</p></div><span class="pill ${STAT[o.status][1]}">${STAT[o.status][0]}</span></div>
- <p style="margin:0 0 6px"><b>${esc(c.nome)}</b> · ${esc(c.empresa)}<br><span style="color:var(--muted)">${esc(c.tel)} · ${esc(c.email)}</span></p>
- <div class="msg" id="orcTxt">${esc(txt)}</div>
- <div class="toolbar" style="margin-top:12px">
-  ${role==='gestor'?`<label style="flex:1;min-width:160px">Transferir para<select id="trf">${S.vend.map(v=>`<option value="${v.id}" ${v.id===o.vend?'selected':''}>${esc(v.nome)}</option>`).join('')}</select></label>`:''}
-  <label style="flex:1;min-width:160px">Situação<select id="stSel">${Object.entries(STAT).map(([k,v])=>`<option value="${k}" ${o.status===k?'selected':''}>${v[0]}</option>`).join('')}</select></label>
- </div>
- <div class="toolbar"><button class="btn" data-act="copy">Copiar resumo</button><span style="flex:1"></span><button class="btn" data-act="close">Fechar</button><button class="btn primary" data-act="saveorc" data-id="${o.id}">Salvar</button></div>`);
+async function salvaPessoa(p,ativo,abas){
+ try{const r=await rpc('gpc_pessoa',{p_token:tok(),p_emp:EMP,p_id:p.id,p_ativo:ativo,p_abas:abas});if(r&&r.erro){toast(r.erro);return false}return true}
+ catch(e){toast('Não consegui salvar. Tente de novo.');return false}
+}
+function abrirModulo(k){
+ /* dentro do link da Guaporé: abre a aba do módulo; fora dele, abre o link da empresa */
+ try{if(window.parent!==window){const b=window.parent.document.querySelector('.tab[data-t="'+k+'"]');if(b){b.click();window.parent.scrollTo({top:0,behavior:'smooth'});return}}}catch(e){}
+ if(k==='cat'&&D.slug){window.open('https://fc-consultoria.github.io/catalogo/'+D.slug,'_blank','noopener');if(!G()&&tok())rpc('gpc_uso',{p_token:tok(),p_mod:k}).catch(()=>{});return}
+ window.open(LINK_EMP,'_blank','noopener');
 }
 
-function openMod(k){
- const me=S.vend.find(v=>v.id===S.me);const m=MODS.find(x=>x.k===k);
- if(!(me.ativo&&me.mods[k]&&S.modsOn[k])){toast('Módulo bloqueado pelo gestor.');return}
- me.ac[k]++;me.ult=new Date().toISOString();save();
- modal(`<h2>${m.i} ${m.n}</h2><p class="sub">Acesso registrado no medidor do gestor.</p>
- <p>${k==='trein'?'Abre o Treinamento 3D. As turmas on-line ficam na agenda logo abaixo dos cartões.':k==='fc'?'Abre o canal de solicitações com a FC (suporte e dúvidas).':'Toque em Abrir para entrar no módulo. Na versão publicada ele abre direto, já com o login do vendedor.'}</p>
- ${({cat:'https://fc-consultoria.github.io/catalogo/guapore-vidros',trein:'https://fc-consultoria.github.io/treinamento/esquadrias/',casa:'https://fc-consultoria.github.io/treinamento/esquadrias/monte-casa.html',vento:'https://fc-consultoria.github.io/treinamento/diagramas/'})[k]?`<div class="toolbar" style="justify-content:flex-end;margin-bottom:8px"><a class="btn primary" style="text-decoration:none" target="_blank" rel="noopener" href="${({cat:'https://fc-consultoria.github.io/catalogo/guapore-vidros',trein:'https://fc-consultoria.github.io/treinamento/esquadrias/',casa:'https://fc-consultoria.github.io/treinamento/esquadrias/monte-casa.html',vento:'https://fc-consultoria.github.io/treinamento/diagramas/'})[k]}">↗ Abrir ${m.n}</a></div>`:''}${k==='fc'?`<label>Sua solicitação<textarea id="fcTxt" rows="3" placeholder="Descreva a dúvida ou pedido"></textarea></label><div class="toolbar" style="margin-top:10px;justify-content:flex-end"><button class="btn" data-act="close">Cancelar</button><button class="btn primary" data-act="fcsend">Enviar para a FC</button></div>`:`<div class="toolbar" style="justify-content:flex-end"><button class="btn primary" data-act="close">Ok</button></div>`}`);
-}
-
-document.addEventListener('click',e=>{
- const t=e.target.closest('[data-act]');
- if(e.target.closest('[data-role]')){role=e.target.closest('[data-role]').dataset.role;render();scrollTo(0,0);return}
- if(!t)return;const a=t.dataset.act,id=t.dataset.id;
+document.addEventListener('click',async e=>{
+ const rb=e.target.closest('[data-role]');if(rb){role=rb.dataset.role;render();scrollTo(0,0);return}
+ const t=e.target.closest('[data-act]');if(!t)return;const a=t.dataset.act,id=t.dataset.id;
  if(a==='close'){if(t.classList.contains('modal')&&e.target!==t)return;closeModal();return}
- if(a==='reset'){S=seed();S.compras=seedCompras();S.mkt=seedMkt();S.chat=seedChat();save();showCad={};render();toast('Dados de exemplo restaurados.')}
- if(a==='vercad'){showCad[id]=!showCad[id];const c=cli(id);c.visto=true;save();render()}
- if(a==='gmod'){S.modsOn[t.dataset.m]=!S.modsOn[t.dataset.m];save();render()}
- if(a==='vativo'){const v=S.vend.find(x=>x.id===id);v.ativo=!v.ativo;save();render()}
- if(a==='vmod'){const v=S.vend.find(x=>x.id===id);v.mods[t.dataset.m]=!v.mods[t.dataset.m];save();render()}
- if(a==='auto'){S.autoCadastro=!S.autoCadastro;save();render()}
- if(a==='addvend'){modal(`<h2>Cadastrar vendedor</h2><p class="sub">Ele recebe login e senha próprios.</p><div class="form"><label>Nome<input id="nvNome"></label><label>Login (e-mail ou celular)<input id="nvLogin"></label></div><div class="toolbar" style="margin-top:12px;justify-content:flex-end"><button class="btn" data-act="close">Cancelar</button><button class="btn primary" data-act="savevend">Cadastrar</button></div>`)}
- if(a==='savevend'){const n=$('#nvNome').value.trim();if(!n){toast('Informe o nome do vendedor.');return}S.vend.push({id:'v'+Date.now(),nome:n,ativo:true,mods:{cat:true,trein:true,casa:true,vento:true,fc:true},ac:{cat:0,trein:0,casa:0,vento:0,fc:0},ult:new Date().toISOString()});save();closeModal();render();toast('Vendedor cadastrado.')}
- if(a==='addslot'){modal(`<h2>Nova turma on-line</h2><div class="form"><label>Data<input id="nsD" placeholder="Ter 10/11"></label><label>Hora<input id="nsH" placeholder="14:00"></label><label>Tema<input id="nsT" placeholder="Tema do treinamento"></label><label>Vagas<input id="nsC" type="number" value="6"></label></div><div class="toolbar" style="margin-top:12px;justify-content:flex-end"><button class="btn" data-act="close">Cancelar</button><button class="btn primary" data-act="saveslot">Criar turma</button></div>`)}
- if(a==='saveslot'){const d=$('#nsD').value.trim(),h=$('#nsH').value.trim(),tm=$('#nsT').value.trim();if(!d||!h||!tm){toast('Preencha data, hora e tema.');return}S.slots.push({id:'s'+Date.now(),d,h,tema:tm,cap:+$('#nsC').value||6,ins:[]});save();closeModal();render();toast('Turma criada.')}
- if(a==='verorc')orcModal(id);
- if(a==='saveorc'){const o=S.orc.find(x=>x.id===id);o.status=$('#stSel').value;const tr=$('#trf');if(tr)o.vend=tr.value;save();closeModal();render();toast('Orçamento atualizado.')}
- if(a==='copy'){const txt=$('#orcTxt').textContent;(navigator.clipboard?navigator.clipboard.writeText(txt):Promise.reject()).then(()=>toast('Resumo copiado.'),()=>{const r=document.createRange();r.selectNodeContents($('#orcTxt'));getSelection().removeAllRanges();getSelection().addRange(r);toast('Texto selecionado. Use Ctrl+C.')})}
- if(a==='open')openMod(t.dataset.m);
- if(a==='copen')openModC(t.dataset.m);
- if(a==='cgmod'){S.cmodsOn[t.dataset.m]=!S.cmodsOn[t.dataset.m];save();render()}
- if(a==='cativo'){const v=S.compras.find(x=>x.id===id);v.ativo=!v.ativo;save();render()}
- if(a==='cmod'){const v=S.compras.find(x=>x.id===id);v.mods[t.dataset.m]=!v.mods[t.dataset.m];save();render()}
- if(a==='addcomp'){modal(`<h2>Cadastrar pessoa de Compras</h2><p class="sub">Ela recebe login e senha próprios.</p><div class="form"><label>Nome<input id="ncNome"></label><label>Login (e-mail ou celular)<input id="ncLogin"></label></div><div class="toolbar" style="margin-top:12px;justify-content:flex-end"><button class="btn" data-act="close">Cancelar</button><button class="btn primary" data-act="savecomp">Cadastrar</button></div>`)}
- if(a==='savecomp'){const n=$('#ncNome').value.trim();if(!n){toast('Informe o nome.');return}S.compras.push({id:'k'+Date.now(),nome:n,ativo:true,mods:cmodsAll(true),ac:cmodsAll(0),ult:new Date().toISOString()});save();closeModal();render();toast('Pessoa de Compras cadastrada.')}
- if(a==='fcsend'){const v=$('#fcTxt').value.trim();if(!v){toast('Escreva a solicitação.');return}S.sol.push({v:myId(),t:v,data:new Date().toISOString()});save();closeModal();toast('Solicitação enviada para a FC.')}
- if(a==='slot'){const s=S.slots.find(x=>x.id===id),i=s.ins.indexOf(myId());if(i>=0){s.ins.splice(i,1);toast('Inscrição cancelada.')}else{s.ins.push(myId());toast('Inscrição confirmada.')}save();render()}
- if(a==='add'){const p=prod(id);modal(`<h2>${p.n}</h2><p class="sub">${p.l}</p><div class="form"><label>Largura (mm)<input id="aL" type="number" value="1500"></label><label>Altura (mm)<input id="aA" type="number" value="1200"></label><label>Quantidade<input id="aQ" type="number" value="1" min="1"></label><label>Cor<select id="aC"><option>Branco</option><option>Preto</option><option>Bronze</option><option>Natural</option><option>Incolor</option></select></label></div><div class="toolbar" style="margin-top:12px;justify-content:flex-end"><button class="btn" data-act="close">Cancelar</button><button class="btn primary" data-act="addok" data-id="${id}">Adicionar</button></div>`)}
- if(a==='addok'){S.mkt.views[id]=(S.mkt.views[id]||0)+1;save();cart.push({p:id,l:+$('#aL').value,a:+$('#aA').value,q:+$('#aQ').value||1,cor:$('#aC').value});closeModal();render();toast('Item adicionado ao orçamento.')}
- if(a==='rm'){cart.splice(+t.dataset.i,1);render()}
- if(a==='selv'){selVend=id;render()}
- if(a==='send'){
-  if(!cart.length){toast('Adicione pelo menos uma esquadria.');return}
-  if(!selVend){toast('Escolha o vendedor que vai atender você.');return}
-  const canal=t.dataset.c;const obs=($('#cliObs')||{}).value||'';
-  if(!S.cliSessao){modal(`<h2>Cadastro rápido</h2><p class="sub">Seu cadastro é liberado na hora.</p><div class="form"><label>Nome<input id="cN"></label><label>Empresa / profissão<input id="cE"></label><label>Cidade<input id="cC"></label><label>WhatsApp<input id="cT"></label><label>E-mail<input id="cM" type="email"></label></div><div class="toolbar" style="margin-top:12px;justify-content:flex-end"><button class="btn" data-act="close">Cancelar</button><button class="btn primary" data-act="cadok" data-c="${canal}" data-obs="${esc(obs)}">Cadastrar e enviar</button></div>`);return}
-  finishSend(canal,obs);
- }
- if(a==='cadok'){const n=$('#cN').value.trim();if(!n||(!$('#cT').value.trim()&&!$('#cM').value.trim())){toast('Informe nome e WhatsApp ou e-mail.');return}
-  const c={id:'c'+Date.now(),nome:n,empresa:$('#cE').value.trim()||'—',cidade:$('#cC').value.trim()||'—',tel:$('#cT').value.trim()||'—',email:$('#cM').value.trim()||'—',data:new Date().toISOString(),visto:false};
-  S.clientes.push(c);S.cliSessao=c.id;S.cadDia[6]++;save();toast(S.autoCadastro?'Cadastro aprovado automaticamente.':'Cadastro enviado para aprovação.');finishSend(t.dataset.c,t.dataset.obs)}
- if(a==='chatw'){chatWith=id;render();setTimeout(()=>{const i=$('#ctxt');if(i)i.focus({preventScroll:true})},0);return}
- if(a==='verhist'){const [x,y]=id.split('|');modal(`<h2>${esc(cName(x))} ↔ ${esc(cName(y))}</h2><p class="sub">Histórico · só leitura</p><div class="cmsgs" style="max-height:50vh">${convo(x,y).map(m=>`<div class="msgb ${m.de===x?'me':''}"><span><b style="font-size:11px;display:block">${esc(cName(m.de))}</b>${esc(m.t)}</span><small>${fmtD(m.h)}</small></div>`).join('')}</div><div class="toolbar" style="margin-top:12px;justify-content:flex-end"><button class="btn primary" data-act="close">Fechar</button></div>`)}
- /* marketing */
- const M=S.mkt;
- if(a==='bcor'){M.banner.cor=id;save();render()}
- if(a==='mvis'){const i=M.ocultos.indexOf(id);i>=0?M.ocultos.splice(i,1):M.ocultos.push(id);save();render()}
- if(a==='mdest'){const i=M.destaques.indexOf(id);if(i<0&&M.destaques.length>=3){toast('Já tem 3 destaques. Tire um antes de ligar outro.');return}i>=0?M.destaques.splice(i,1):M.destaques.push(id);save();render();toast(i>=0?'Perfil tirado do destaque.':'Perfil em destaque no Catálogo 3D.')}
- if(a==='msob'){const i=M.sobConsulta.indexOf(id);i>=0?M.sobConsulta.splice(i,1):M.sobConsulta.push(id);save();render()}
- if(a==='sugpost'){postSel.p=id;postSel.t=M.promo[id]?`${prod(id).n}: ${M.promo[id]}`:prod(id).n;postSel.f=M.promo[id]?'story':'feed';render();setTimeout(()=>$('#t-studio').scrollIntoView({block:'start',behavior:'smooth'}),50)}
- if(a==='copycap'){const el=$('#psCap');(navigator.clipboard?navigator.clipboard.writeText(el.textContent):Promise.reject()).then(()=>toast('Legenda copiada.'),()=>{const r=document.createRange();r.selectNodeContents(el);getSelection().removeAllRanges();getSelection().addRange(r);toast('Texto selecionado. Use Ctrl+C.')})}
- if(a==='schedpost'){modal(`<h2>Agendar post</h2><p class="sub">${esc(postSel.t||prod(postSel.p).n)}</p><div class="form"><label>Dia<select id="spD">${[...Array(7)].map((_,i)=>`<option value="${isoDay(i)}">${fmtDay(isoDay(i))}</option>`).join('')}</select></label><label>Canal<select id="spC"><option>Instagram · ${postSel.f==='story'?'stories':'feed'}</option><option>Facebook</option><option>WhatsApp · status</option></select></label></div><div class="toolbar" style="margin-top:12px;justify-content:flex-end"><button class="btn" data-act="close">Cancelar</button><button class="btn primary" data-act="spok">Agendar</button></div>`)}
- if(a==='spok'){M.posts.push({id:'P'+Date.now(),d:$('#spD').value,canal:$('#spC').value,p:postSel.p,tit:postSel.t||prod(postSel.p).n,status:'agendado'});save();closeModal();render();toast('Post agendado no calendário.')}
- if(a==='verpost'){const p=M.posts.find(x=>x.id===id);modal(`<h2>${esc(p.tit)}</h2><p class="sub">${fmtDay(p.d)} · ${esc(p.canal)} · ${prod(p.p).n}</p><span class="pill ${PST[p.status][1]}">${PST[p.status][0]}</span><div class="toolbar" style="margin-top:14px;justify-content:flex-end"><button class="btn" data-act="delpost" data-id="${p.id}">Excluir</button><button class="btn" data-act="editpost" data-id="${p.id}">Abrir no estúdio</button>${p.status!=='publicado'?`<button class="btn primary" data-act="pubpost" data-id="${p.id}">Marcar como publicado</button>`:''}</div>`)}
- if(a==='pubpost'){M.posts.find(x=>x.id===id).status='publicado';save();closeModal();render();toast('Post marcado como publicado.')}
- if(a==='delpost'){M.posts=M.posts.filter(x=>x.id!==id);save();closeModal();render();toast('Post excluído.')}
- if(a==='editpost'){const p=M.posts.find(x=>x.id===id);postSel={p:p.p,f:/stories/.test(p.canal)?'story':'feed',t:p.tit};closeModal();render();setTimeout(()=>$('#t-studio').scrollIntoView({block:'start',behavior:'smooth'}),50)}
- if(a==='addlink'){modal(`<h2>Novo link de campanha</h2><p class="sub">Use um link diferente em cada canal para saber de onde vem o cliente.</p><div class="form"><label>Canal ou campanha<input id="nlC" placeholder="Ex.: Panfleto feira Sinop"></label></div><div class="toolbar" style="margin-top:12px;justify-content:flex-end"><button class="btn" data-act="close">Cancelar</button><button class="btn primary" data-act="nlok">Criar link</button></div>`)}
- if(a==='nlok'){const c=$('#nlC').value.trim();if(!c){toast('Dê um nome ao canal.');return}const cod=c.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,24);M.links.push({id:'l'+Date.now(),canal:c,cod,cliques:0,cad:0,orc:0});save();closeModal();render();toast('Link criado.')}
- if(a==='newcli'){S.cliSessao=null;save();closeModal();render()}
+ if(a==='recarregar'){D=null;render();carregar();return}
+ if(a==='copymsg'){const x=$('#msgTx');x.select();(navigator.clipboard?navigator.clipboard.writeText(x.value):Promise.reject()).then(()=>toast('Mensagem copiada.'),()=>toast('Texto selecionado. Use Ctrl+C.'));return}
+ if(a==='open'){if(t.dataset.ok!=='true'){toast('Módulo bloqueado pelo gestor.');return}if(G()&&role!=='gestor'){toast('Abrindo o módulo (o uso só conta quando a própria pessoa abre).')}abrirModulo(t.dataset.m);return}
+ if(a==='vercad'){if(showCad[id]){delete showCad[id];render();return}
+  try{const r=await rpc('gpc_conta_ver',{p_token:tok(),p_emp:EMP,p_id:id});if(r.erro){toast(r.erro);return}showCad[id]=r;const c=(D.contas||[]).find(x=>x.id===id);if(c)c.visto=true;render()}catch(x){toast('Não consegui abrir. Tente de novo.')}return}
+ if(a==='liberar'){const V=D.vends||[];modal(`<h2>Liberar cliente no catálogo</h2><p class="sub">Gera uma senha para o cliente entrar no Catálogo 3D e pedir cotação. Escolha o vendedor que vai atender.</p>
+  <div class="form"><label>Vendedor<select id="lbV"><option value="">Manter o da cidade</option>${V.map(v=>`<option value="${v.id}">${esc(v.nome)}</option>`).join('')}</select></label></div>
+  <div class="toolbar" style="margin-top:12px;justify-content:flex-end"><button class="btn" data-act="close">Cancelar</button><button class="btn primary" data-act="liberarok" data-id="${id}">Liberar e gerar senha</button></div>`);return}
+ if(a==='liberarok'){const v=$('#lbV').value||null;try{const r=await rpc('gpc_conta_liberar',{p_token:tok(),p_emp:EMP,p_id:id,p_vend:v});if(r.erro){toast(r.erro);return}
+   let dd=showCad[id];if(!dd){dd=await rpc('gpc_conta_ver',{p_token:tok(),p_emp:EMP,p_id:id});showCad[id]=dd}
+   const txt=`Olá, ${(dd.nome||'').split(' ')[0]}! Seu cadastro no Catálogo 3D da Guaporé Vidros foi liberado.\n\n🔗 https://fc-consultoria.github.io/catalogo/${D.slug||'guapore-vidros'}\n👤 Login: ${dd.email}\n🔑 Senha: ${r.senha}\n\nNo primeiro acesso o catálogo pede para você criar a sua senha.`;
+   modal(`<h2>✅ Cliente liberado</h2><p class="sub">Mande esta mensagem para o cliente. A senha não fica salva aqui.</p>${msgBox(txt,dd.zap)}`);carregar()}catch(x){toast('Não consegui liberar. Tente de novo.')}return}
+ if(a==='auto'){const v=!(D.cfg&&D.cfg.cadAuto);try{const r=await rpc('gpc_cfg_salvar',{p_token:tok(),p_emp:EMP,p_data:{cadAuto:v}});if(r.erro){toast(r.erro);return}D.cfg.cadAuto=v;render();toast(v?'Aceite automático ligado.':'Aceite automático desligado. Cada cadastro espera a sua liberação.')}catch(x){toast('Não consegui salvar.')}return}
+ if(a==='pativo'){const p=D.equipe.find(x=>x.id===id);if(!p)return;if(p.ativo&&!confirmaPausa(p))return;if(await salvaPessoa(p,!p.ativo,null)){p.ativo=!p.ativo;render();toast(p.ativo?'Acesso liberado.':'Acesso pausado. A pessoa sai do sistema na hora.')}return}
+ if(a==='pmod'){const p=D.equipe.find(x=>x.id===id);if(!p)return;const k=t.dataset.m;const ab=(p.abas||[]).includes(k)?p.abas.filter(x=>x!==k):[...(p.abas||[]),k];if(await salvaPessoa(p,null,ab)){p.abas=ab;render()}return}
+ if(a==='gmod'){const k=t.dataset.m,L=pessoas(t.dataset.p);const liga=!L.every(p=>(p.abas||[]).includes(k));let ok=0;
+  for(const p of L){const ab=liga?[...new Set([...(p.abas||[]),k])]:(p.abas||[]).filter(x=>x!==k);if(await salvaPessoa(p,null,ab)){p.abas=ab;ok++}}
+  render();toast(`${MOD[k][1]} ${liga?'liberado':'bloqueado'} para ${ok} pessoa(s).`);return}
+ if(a==='addpessoa'){const txt=`Olá! Este é o link para o seu primeiro acesso à Plataforma Guaporé & FC 3D:\n\n🔗 ${LINK_CAD}\n\nPreencha o seu nome, telefone e crie uma senha. Assim que a FC liberar, você entra pelo mesmo link com o seu telefone e a senha.`;
+  modal(`<h2>+ Cadastrar pessoa</h2><p class="sub">Mande o link de primeiro acesso para a pessoa. Ela faz o cadastro com nome, telefone e senha. A FC confere, define o setor e libera. Depois disso, os acessos dela aparecem aqui nos Comandos.</p>${msgBox(txt)}`);return}
+ if(a==='addslot'){modal(`<h2>Nova turma on-line</h2><div class="form"><label>Data<input id="nsD" placeholder="Ter 10/11"></label><label>Hora<input id="nsH" placeholder="14:00"></label><label>Tema<input id="nsT" placeholder="Tema do treinamento"></label><label>Vagas<input id="nsC" type="number" value="6" min="1"></label></div><div class="toolbar" style="margin-top:12px;justify-content:flex-end"><button class="btn" data-act="close">Cancelar</button><button class="btn primary" data-act="saveslot">Criar turma</button></div>`);return}
+ if(a==='saveslot'){const d=$('#nsD').value.trim(),h=$('#nsH').value.trim(),tm=$('#nsT').value.trim();if(!d||!h||!tm){toast('Preencha data, hora e tema.');return}
+  const S=[...((D.cfg&&D.cfg.slots)||[]),{id:'s'+Date.now(),d,h,tema:tm,cap:+$('#nsC').value||6,ins:[]}];
+  try{const r=await rpc('gpc_cfg_salvar',{p_token:tok(),p_emp:EMP,p_data:{slots:S}});if(r.erro){toast(r.erro);return}D.cfg.slots=S;closeModal();render();toast('Turma criada.')}catch(x){toast('Não consegui salvar.')}return}
+ if(a==='delslot'){if(!confirm('Excluir esta turma?'))return;const S=((D.cfg&&D.cfg.slots)||[]).filter(s=>s.id!==id);try{const r=await rpc('gpc_cfg_salvar',{p_token:tok(),p_emp:EMP,p_data:{slots:S}});if(r.erro){toast(r.erro);return}D.cfg.slots=S;render();toast('Turma excluída.')}catch(x){toast('Não consegui salvar.')}return}
+ if(a==='slot'){try{const r=await rpc('gpc_slot',{p_token:tok(),p_emp:EMP,p_slot:id});if(r.erro){toast(r.erro);return}await carregar();toast('Agenda atualizada.')}catch(x){toast('Não consegui salvar.')}return}
+ if(a==='mdest'){let dest=((D.vitrine||{}).it||[]).filter(x=>x.k==='p').map(x=>x.c);const on=dest.includes(id);
+  if(!on&&dest.length>=6){toast('Já tem 6 destaques. Tire um antes de ligar outro.');return}
+  dest=on?dest.filter(c=>c!==id):[...dest,id];
+  try{const r=await rpc('gpc_vitrine',{p_token:tok(),p_emp:EMP,p_codes:dest});if(r.erro){toast(r.erro);return}
+   const v=D.vitrine||{};v.it=[...dest.map(c=>({c,k:'p'})),...((v.it||[]).filter(x=>x.k!=='p'))];D.vitrine=v;render();toast(on?'Perfil tirado do destaque.':'Perfil em destaque no Catálogo 3D.')}catch(x){toast('Não consegui salvar.')}return}
 });
+function confirmaPausa(p){return confirm('Pausar o acesso de '+p.nome+'? A pessoa sai do sistema na hora e só volta quando você ligar de novo.')}
+document.addEventListener('input',e=>{if(e.target.id==='mkBusca'){mkQ=e.target.value;const pos=e.target.selectionStart;render();const i=$('#mkBusca');if(i){i.focus();try{i.setSelectionRange(pos,pos)}catch(_){}}}});
 
-function finishSend(canal,obs){
- const n=1000+S.orc.length+31;const o={id:'O-'+n,cli:S.cliSessao,vend:selVend,canal,data:new Date().toISOString(),status:'novo',itens:cart.slice(),obs};
- S.orc.push(o);S.visitas[6]++;save();
- const c=cli(o.cli);
- const txt=`Olá, ${vName(o.vend)}! Sou ${c.nome} e gostaria de um orçamento (${o.id}):\n${o.itens.map(i=>`• ${prod(i.p).c} ${prod(i.p).n} – ${i.q} barra(s) de 6 m – ${i.cor}`).join('\n')}${obs?`\nObs.: ${obs}`:''}`;
- cart=[];selVend=null;render();
- modal(`<h2>Pedido enviado ✓</h2><p class="sub">${o.id} chegou no painel de ${esc(vName(o.vend))} e na Central do Gestor.</p><div class="msg" id="orcTxt">${esc(txt)}</div>
- <p style="font-size:12px;color:var(--muted)">${canal==='WhatsApp'?'Na versão publicada este texto abre direto no WhatsApp do vendedor.':'Na versão publicada este texto vai para o e-mail do vendedor, com cópia para o cliente.'}</p>
- <div class="toolbar" style="justify-content:flex-end"><button class="btn" data-act="copy">Copiar mensagem</button><button class="btn" data-act="newcli">Simular outro cliente</button><button class="btn primary" data-act="close">Ok</button></div>`);
-}
-
-$('#bellBtn').onclick=()=>{const nv=S.clientes.filter(c=>!c.visto);modal(`<h2>🔔 Avisos de cadastro</h2><p class="sub">${nv.length?nv.length+' cliente(s) se cadastraram e já estão liberados.':'Nenhum cadastro novo.'}</p><div class="list">${nv.map(c=>`<div class="row"><div class="who"><b>Novo cliente · ${esc(c.cidade)}</b><span>${fmtD(c.data)}</span></div><button class="btn sm" data-act="vercad" data-id="${c.id}">Ver quem cadastrou</button></div>`).join('')}</div><div class="toolbar" style="margin-top:12px;justify-content:flex-end"><button class="btn primary" data-act="close">Fechar</button></div>`)};
+$('#bellBtn').onclick=()=>{const nv=(D.contas||[]).filter(c=>!c.visto);modal(`<h2>🔔 Avisos de cadastro</h2><p class="sub">${nv.length?nv.length+' cliente(s) se cadastraram no Catálogo 3D e você ainda não viu.':'Nenhum cadastro novo.'}</p><div class="list">${nv.map(c=>`<div class="row"><div class="who"><b>Novo cliente · ${esc(c.cidade||'—')}</b><span>${fmtD(c.criado)}</span></div><button class="btn sm" data-act="vercad" data-id="${c.id}">Ver quem cadastrou</button></div>`).join('')}</div><div class="toolbar" style="margin-top:12px;justify-content:flex-end"><button class="btn primary" data-act="close">Fechar</button></div>`)};
 document.addEventListener('click',e=>{const t=e.target.closest('[data-act="vercad"]');if(t&&t.closest('.modal'))closeModal()},true);
+/* atualiza sozinho: a cada minuto e quando a tela volta */
+setInterval(()=>{if(!document.hidden&&D&&!D.erro&&!$('#layer').innerHTML)carregar()},60000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&D&&!D.erro&&!$('#layer').innerHTML)carregar()});
+/* conversa da equipe: fora do link da Guaporé, abre o botão 💬 com o login da pessoa */
+if(window.parent===window&&tok()){const s=document.createElement('script');s.src='../conversas.js?v=5';s.onload=()=>{try{window.sb=sbc;window.FCConversas&&FCConversas.equipe(tok())}catch(e){}};window.sb=sbc;document.body.appendChild(s)}
 
-document.addEventListener('input',e=>{
- const t=e.target;if(role!=='marketing')return;const M=S.mkt;
- if(t.id==='mkBusca'){const q=t.value.trim().toLowerCase();document.querySelectorAll('#mkTab tbody tr').forEach(r=>{r.hidden=q&&!r.dataset.busca.includes(q)});return}
- if(t.id==='mkTit'||t.id==='mkSub'){M.banner[t.id==='mkTit'?'tit':'sub']=t.value;save();$('#mkPrev').innerHTML=prevHTML()}
- if(t.dataset.selo){const v=t.value.trim();if(v)M.promo[t.dataset.selo]=v;else delete M.promo[t.dataset.selo];save();$('#mkPrev').innerHTML=prevHTML();drawPost()}
- if(t.id==='psT'){postSel.t=t.value;drawPost();$('#psCap').textContent=capText()}
-});
-document.addEventListener('change',e=>{
- const t=e.target;if(role!=='marketing')return;
- if(t.id==='psP'){postSel.p=t.value;postSel.t=prod(t.value).n;$('#psT').value=postSel.t;drawPost();$('#psCap').textContent=capText()}
- if(t.id==='psF'){postSel.f=t.value;drawPost()}
-});
 /* ---------- TUTORIAL GUIADO (legenda + voz) ---------- */
 const TOURS={
- marketing:[
-  ['#t-mkpis','Este é o painel do Marketing da Guaporé. Aqui você cuida dos destaques do Catálogo 3D de perfis.'],
-  ['#t-vitrine','Escolha até três perfis para os Destaques 3D. Ligue o perfil na lista e ele aparece em destaque no catálogo. Para trocar, tire um e ligue outro. A busca ajuda a achar pelo código ou nome.'],
-  ['#t-rank','Aqui você vê os perfis mais vistos pelos clientes. Use para decidir o que colocar em destaque.']
- ],
  gestor:[
-  ['#t-kpis','Esta é a Central do Gestor da Guaporé. No topo ficam os números do dia: cadastros novos, orçamentos em aberto, acessos da equipe e visitas ao Catálogo 3D.'],
-  ['#t-cad','Quando um cliente se cadastra no catálogo, ele é aprovado na hora. Aqui chega o aviso, com os dados ocultos. Toque em Ver quem cadastrou para abrir o nome, a empresa e o contato.'],
-  ['#bellBtn','O sino mostra quantos cadastros novos você ainda não viu.'],
-  ['#t-cat','Este gráfico mede o acesso ao Catálogo 3D: visitas por dia, novos cadastros e quanto disso virou pedido de orçamento.'],
-  ['#t-eq','O medidor da equipe mostra quantas vezes cada vendedor abriu cada ferramenta. Assim você vê quem está usando o catálogo, o treinamento e o Monte sua Casa.'],
-  ['#t-cmp','No setor de Compras você libera ou bloqueia cada módulo, pausa o acesso e acompanha no medidor quantas vezes cada ferramenta foi aberta.'],
-  ['#t-cmd','Em Comandos você libera ou bloqueia cada módulo por vendedor, pausa o acesso de alguém, liga ou desliga o aceite automático e cadastra vendedores novos.'],
-  ['#t-orc','Aqui estão todos os orçamentos que os clientes pediram, com o vendedor escolhido. Filtre por vendedor ou situação, abra um pedido e, se precisar, transfira para outro vendedor.'],
-  ['#t-agg','A agenda do treinamento on-line: crie turmas e acompanhe quem se inscreveu.'],
-  ['#t-hist','Por fim, o histórico das conversas da equipe. As conversas são individuais, e você acompanha todas aqui, só para leitura.']
+  ['#t-kpis','Esta é a Central do Gestor da Guaporé. No topo ficam os números: cadastros novos de clientes, pedidos de cotação em aberto, acessos da equipe e visitas ao Catálogo 3D.'],
+  ['#t-cad','Quando um cliente se cadastra no Catálogo 3D, o aviso chega aqui com os dados ocultos. Toque em Ver quem cadastrou para abrir o nome e o contato. Se o cadastro estiver aguardando, toque em Liberar para gerar a senha e mandar pelo WhatsApp.'],
+  ['#t-cat','Este gráfico mostra quantas pessoas abriram o Catálogo 3D por dia e quantos clientes se cadastraram.'],
+  ['#t-eq','O medidor da equipe mostra quantas vezes cada pessoa abriu cada ferramenta nos últimos trinta dias.'],
+  ['#t-equipe','Aqui está a equipe. Para incluir alguém, toque em Cadastrar pessoa e mande o link de primeiro acesso. A FC confere e libera.'],
+  ['#t-cmd','Nos Comandos você liga ou desliga cada módulo por pessoa, separado por setor. A chave Acesso pausa a pessoa inteira. A linha Todos liga ou desliga o módulo para o setor todo. Vale na hora, no celular de cada um.'],
+  ['#t-orc','Aqui estão os pedidos de cotação que os clientes enviaram pelo catálogo, com o vendedor de cada um. O atendimento é feito no Painel de Vendas.'],
+  ['#t-agg','A agenda do treinamento on-line: crie turmas e acompanhe quem se inscreveu.']
  ],
- vendedor:[
-  ['#t-mods','Este é o painel do vendedor. São cinco ferramentas: Catálogo 3D, Treinamento 3D, Monte sua Casa 3D, Diagrama de pressão de vento e Solicitação com a FC. Toque no cartão e depois em Abrir para entrar no módulo. Cada acesso conta no medidor do gestor.'],
-  ['#mod-cat','Use o Catálogo 3D para mostrar ao cliente os perfis das linhas Suprema e Gold em 3D durante o atendimento.'],
-  ['#mod-casa','No Monte sua Casa 3D você coloca as esquadrias na planta e apresenta o projeto ao cliente.'],
-  ['#mod-fc','Ficou com dúvida? Abra Solicitação com a FC e envie sua pergunta direto para o suporte.'],
-  ['#t-meus','Quando o cliente se cadastra no Catálogo 3D, monta o pedido e escolhe você, o pedido cai aqui. Abra, copie o resumo e responda pelo WhatsApp ou e-mail que ele pediu. Depois marque a situação.'],
-  ['#t-agv','Na agenda de treinamento on-line, toque em uma turma para se inscrever.'],
-  ['#t-chat','Na conversa da equipe você fala individualmente com um colega, com o gestor ou com o suporte da FC. Escolha a pessoa na lista e escreva a mensagem.']
+ vendas:[
+  ['#t-mods','Este é o painel do vendedor. Cada cartão é uma ferramenta. Toque para abrir. Os cartões com cadeado foram bloqueados pelo gestor.'],
+  ['#mod-cat','Use o Catálogo 3D para mostrar ao cliente os perfis e acessórios da Guaporé em 3D.'],
+  ['#t-meus','Quando um cliente escolhe você no Catálogo 3D e pede cotação, o pedido aparece aqui. O atendimento é feito no Painel de Vendas.'],
+  ['#t-agv','Na agenda de treinamento on-line, toque em uma turma para se inscrever.']
  ],
  compras:[
-  ['#t-cmods','Este é o painel de Compras da Guaporé. Os módulos estão em três grupos: Compras, Treinamento e consulta, e Suporte. Toque no cartão e depois em Abrir. Cada acesso conta no medidor do gestor.'],
-  ['#cmod-comp','Em Onde comprar você vê quem fabrica cada linha de perfil nas extrusoras.'],
-  ['#cmod-conv','No Conversor de códigos você digita o código do fornecedor e vê o código de mercado equivalente.'],
-  ['#cmod-pcod','A Pesquisa de código busca no cadastro do WVetro e no cadastro da Guaporé.'],
-  ['#cmod-fc','Ficou com dúvida? Abra Solicitação com a FC e envie sua pergunta direto para o suporte.'],
-  ['#t-cagv','Na agenda de treinamento on-line, toque em uma turma para se inscrever.'],
-  ['#t-chat','Na conversa da equipe você fala individualmente com o gestor, com os vendedores ou com o suporte da FC.']
+  ['#t-mods','Este é o painel de Compras. Cada cartão é uma ferramenta: onde comprar, distribuidoras, conversor e pesquisa de código, entre outras. Toque para abrir.'],
+  ['#t-agv','Na agenda de treinamento on-line, toque em uma turma para se inscrever.']
  ],
- cliente:[
-  ['#t-prods','Esta é a visão do cliente no Catálogo 3D. Ele escolhe a esquadria e informa largura, altura, quantidade e cor.'],
-  ['#t-cart','Os itens vão para o orçamento ao lado.'],
-  ['#t-vend','O cliente escolhe para qual vendedor quer enviar.'],
-  ['#t-cart','E envia por WhatsApp ou e-mail. Se for a primeira vez, faz um cadastro rápido, aprovado na hora. O gestor recebe o aviso e o vendedor recebe o pedido.']
+ estoque:[
+  ['#t-mods','Este é o painel do Estoque. Aqui ficam a importação do estoque, a pesquisa de código, o conversor, o catálogo e o treinamento. Toque no cartão para abrir.'],
+  ['#t-agv','Na agenda de treinamento on-line, toque em uma turma para se inscrever.']
+ ],
+ marketing:[
+  ['#t-mkpis','Este é o painel do Marketing da Guaporé. Aqui você cuida dos destaques do Catálogo 3D.'],
+  ['#t-vitrine','Escolha até seis perfis para os Destaques 3D. Ligue o perfil na lista e ele aparece em destaque no catálogo na hora. Para trocar, tire um e ligue outro.'],
+  ['#t-rank','Aqui você vê os perfis que os clientes mais abriram em 3D. Use para decidir o que colocar em destaque.']
  ]
 };
 let tour=null;
@@ -805,17 +613,13 @@ function tourStep(){
 }
 function endTour(){if(tour)clearTimeout(tour.timer);tour=null;try{speechSynthesis.cancel()}catch(e){}closeModal()}
 $('#tourBtn').onclick=()=>{
+ const NOMES={gestor:['Tutorial do Gestor','comandos, medidores, cadastros e pedidos'],vendas:['Tutorial do Vendedor','ferramentas, pedidos e agenda'],compras:['Tutorial do Compras','ferramentas de compra e agenda'],estoque:['Tutorial do Estoque','ferramentas do estoque e agenda'],marketing:['Tutorial do Marketing','Destaques 3D e perfis mais vistos']};
+ const r=TOURS[role]?role:null;
  modal(`<h2>▶ Tutorial guiado</h2><p class="sub">Passo a passo desta tela, com legenda e narração em voz.</p>
- <div class="list">
-  <button class="row" data-tour="gestor" style="text-align:left;cursor:pointer;color:var(--fg)"><div class="who"><b>Tutorial do Gestor</b><span>${TOURS.gestor.length} passos · comandos, medidores, cadastros e orçamentos</span></div><span class="pill br">Começar</span></button>
-  <button class="row" data-tour="vendedor" style="text-align:left;cursor:pointer;color:var(--fg)"><div class="who"><b>Tutorial do Vendedor</b><span>${TOURS.vendedor.length} passos · ferramentas, orçamentos recebidos e agenda</span></div><span class="pill br">Começar</span></button>
-  <button class="row" data-tour="compras" style="text-align:left;cursor:pointer;color:var(--fg)"><div class="who"><b>Tutorial do Compras</b><span>${TOURS.compras.length} passos · ferramentas de compra, códigos e agenda</span></div><span class="pill br">Começar</span></button>
-  <button class="row" data-tour="marketing" style="text-align:left;cursor:pointer;color:var(--fg)"><div class="who"><b>Tutorial do Marketing</b><span>${TOURS.marketing.length} passos · escolha dos Destaques 3D e perfis mais vistos</span></div><span class="pill br">Começar</span></button>
- </div>
+ <div class="list">${r?`<button class="row" data-tour="${r}" style="text-align:left;cursor:pointer;color:var(--fg)"><div class="who"><b>${NOMES[r][0]}</b><span>${TOURS[r].length} passos · ${NOMES[r][1]}</span></div><span class="pill br">Começar</span></button>`:'<div class="empty">Sem tutorial para esta tela.</div>'}</div>
  <label style="flex-direction:row;align-items:center;gap:8px;margin-top:12px;font-size:13px;color:var(--fg)"><input type="checkbox" id="tvAuto" checked style="width:auto"> Modo vídeo: avança sozinho com voz</label>
  <div class="toolbar" style="margin-top:12px;justify-content:flex-end"><button class="btn" data-act="close">Fechar</button></div>`);
- document.querySelectorAll('[data-tour]').forEach(b=>{if(b.dataset.tour!==role)b.remove()});
- document.querySelectorAll('[data-tour]').forEach(b=>b.onclick=()=>{const auto=$('#tvAuto').checked;role=b.dataset.tour;render();tour={role,i:0,voz:auto,auto};closeModal();tourStep()});
+ document.querySelectorAll('[data-tour]').forEach(b=>b.onclick=()=>{const auto=$('#tvAuto').checked;tour={role:b.dataset.tour,i:0,voz:auto,auto};closeModal();tourStep()});
 };
 
 /* ---------- COR DA TELA ---------- */
@@ -838,7 +642,7 @@ document.querySelectorAll('#modoSeg button').forEach(b=>b.onclick=()=>{tema.modo
 document.addEventListener('click',e=>{const m=e.target.closest('[data-tema-modo]'),c=e.target.closest('[data-tema-cor]');if(!m&&!c)return;if(m)tema.modo=m.dataset.temaModo;if(c)tema.cor=c.dataset.temaCor;aplicaTema();temaModal()});
 addEventListener('resize',()=>{if(tour)tourStep()});
 try{speechSynthesis.getVoices()}catch(e){}
-render();
+render();carregar();
 })();
 </script>
 
