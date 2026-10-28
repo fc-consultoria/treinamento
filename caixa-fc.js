@@ -93,7 +93,7 @@
       if(k==='sol'){window.open('consultorias.html#'+encodeURIComponent(emp)+'/t=sol','_blank','noopener');return;}
       if(k==='fila'){window.open('orcamento/?e='+encodeURIComponent(emp)+'&aba=atd','_blank','noopener');return;}});
     S.d=ok.data;S.ult=S.d.itens.filter(i=>i.tipo!=='fila').reduce((m,i)=>i.em>m?i.em:m,'');S.prim=false;badge();
-    setInterval(()=>{if(!document.hidden)carregar();else badge();},30000);
+    setInterval(carregar,30000);
     setInterval(badge,5000);}  /* os contadores do painel chegam aos poucos */
   window.FCCaixa={abrir,carregar};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(iniciar,2000));else setTimeout(iniciar,2000);

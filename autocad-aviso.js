@@ -7,7 +7,9 @@
   function caixa(html){let b=document.getElementById('autocadAv');if(!html){if(b)b.remove();return;}
     if(!b){b=document.createElement('div');b.id='autocadAv';b.style.cssText='position:relative;z-index:60;margin:12px auto;max-width:1180px;width:calc(100% - 24px);background:#eef5ff;color:#0f2c4f;border:2px solid #1d5fa8;border-radius:14px;padding:14px 16px;font:400 15px/1.5 system-ui,sans-serif;box-shadow:0 6px 18px rgba(0,0,0,.12)';document.body.insertBefore(b,document.body.firstChild);}
     b.innerHTML=html;}
+  let RUN=null;
   window.FCAutocadAviso={
+    atualizar(){RUN&&RUN();},
     async matriz(){const s=(typeof sb!=='undefined'&&sb)||window.sb;if(!s)return;
       const run=async()=>{try{const r=await s.rpc('emp_pendentes_todos');if(r.error)return;const L=r.data||[];
         if(!L.length){caixa('');return;}
@@ -17,6 +19,6 @@
             <div style="flex:1;min-width:220px"><b>${esc(g.nome)}</b><div style="font-size:13.5px">${g.l.map(x=>`${esc(x.nome)} · ${esc(x.telefone||'')} · ${dt(x.em)}`).join('<br>')}</div></div>
             <a href="consultorias.html?ver=${encodeURIComponent(e)}&abrir=acessos" style="background:#1d5fa8;color:#fff;font-weight:700;padding:9px 14px;border-radius:9px;text-decoration:none">Liberar →</a></div>`).join('')}`);
       }catch(_){}};
-      await run();setInterval(run,60e3);}
+      RUN=run;await run();setInterval(run,60e3);}
   };
 })();
