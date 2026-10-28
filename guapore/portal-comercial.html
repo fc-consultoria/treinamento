@@ -294,7 +294,7 @@ const SETORES=[
 const SET=Object.fromEntries(SETORES.map(s=>[s[0],s]));
 const PAPEL={gestor:'Gestor geral',vendas:'Vendas',compras:'Compras',estoque:'Estoque',marketing:'Marketing',gerente:'Gerente comercial',fabrica:'Fábrica',admin:'FC Consultoria'};
 
-let D=null, role='gestor', verComo={}, showCad={}, fVend='todos', fStat='todos', LOAD=false, PRODS=null, mkQ='';
+let fOn=false, D=null, role='gestor', verComo={}, showCad={}, fVend='todos', fStat='todos', LOAD=false, PRODS=null, mkQ='';
 const $=s=>document.querySelector(s);
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmtD=iso=>{if(!iso)return '—';const d=new Date(iso);return d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})};
@@ -303,6 +303,12 @@ const G=()=>D&&D.eu&&D.eu.gestor;
 const pessoas=p=>(D.equipe||[]).filter(x=>x.papel===p);
 const usoDe=(pid,m)=>(D.uso||[]).filter(u=>u.p===pid&&MOD[u.m]&&(!m||u.m===m)).reduce((a,u)=>a+u.n,0);
 const nomeP=id=>(D.nomes||{})[id]||'—';
+/* on-line: a tela da pessoa avisa o servidor a cada 45 s; on-line = sinal nos últimos 2 minutos */
+const minDesde=p=>{if(!p.ping)return null;const ag=p.agora?new Date(p.agora):new Date();return Math.max(0,(ag-new Date(p.ping))/60000)};
+const online=p=>{const m=minDesde(p);return m!==null&&m<2};
+function presenca(p){if(online(p))return '<span class="pill ok" title="Com a tela aberta agora">🟢 On-line agora</span>';const m=minDesde(p);
+ const t=m===null?(p.ult?'visto '+fmtD(p.ult):'ainda não entrou'):m<60?'visto há '+Math.round(m)+' min':m<1440?'visto há '+Math.round(m/60)+' h':'visto '+fmtD(p.ping);
+ return `<span class="pill" style="background:var(--surface-2);color:var(--muted)" title="Fora do sistema">⚪ ${t}</span>`}
 
 async function carregar(){
  try{D=await rpc('gpc_dados',{p_token:tok(),p_emp:EMP});}catch(e){D={erro:'rede'}}
@@ -344,7 +350,7 @@ function vGestor(){
  <div class="grid kpis" id="t-kpis">
   <div class="kpi ${novos?'alert':''}"><small>Cadastros novos (não vistos)</small><b>${novos}</b><em> ${C.length} clientes cadastrados</em></div>
   <div class="kpi"><small>Pedidos de cotação em aberto</small><b>${abertos}</b><em> de ${A.length} recebidos</em></div>
-  <div class="kpi"><small>Acessos da equipe · 30 dias</small><b>${acEq}</b><em> nos módulos</em></div>
+  <div class="kpi"><small>Equipe on-line agora</small><b>${(D.equipe||[]).filter(online).length}</b><em> de ${(D.equipe||[]).length} pessoas · ${acEq} acessos em 30 dias</em></div>
   <div class="kpi"><small>Visitas ao Catálogo 3D · 7 dias</small><b>${vis7}</b><em> visitantes</em></div>
  </div>
  <div class="grid cols2">
@@ -368,9 +374,11 @@ function vGestor(){
    ${ms.length?`<div class="legend">${ms.map(k=>`<span><i style="background:${COLORS[k]}"></i>${MOD[k][1]}</span>`).join('')}</div>`:''}
   </section>
   <section class="panel" id="t-equipe">
-   <div class="ph"><div><h2>🧑‍🤝‍🧑 Equipe e novos acessos</h2><p class="sub">Cada pessoa faz o próprio cadastro pelo link de primeiro acesso. A FC confere e libera.</p></div><button class="btn sm primary" data-act="addpessoa">+ Cadastrar pessoa</button></div>
+   <div class="ph"><div><h2>🧑‍🤝‍🧑 Equipe e novos acessos</h2><p class="sub">Quem está on-line agora aparece primeiro. Para incluir alguém, mande o link de primeiro acesso: a FC confere e libera.</p></div><button class="btn sm primary" data-act="addpessoa">+ Cadastrar pessoa</button></div>
    <div class="list">${(D.pendentes||[]).map(p=>`<div class="row"><div class="who"><b>${esc(p.nome)}</b><span>${esc(p.tel||'')} · pediu acesso em ${fmtD(p.criado)}</span></div><span class="pill novo">Aguardando a FC liberar</span></div>`).join('')}
-   ${(D.equipe||[]).map(p=>`<div class="row"><div class="who"><b>${esc(p.nome)}</b><span>${esc(PAPEL[p.papel]||p.papel)} · último acesso: ${p.ult?fmtD(p.ult):'ainda não entrou'}</span></div><span class="pill ${p.ativo?'ok':'novo'}">${p.ativo?'Ativo':'Pausado'}</span></div>`).join('')||'<div class="empty">Ninguém cadastrado ainda.</div>'}</div>
+   ${(()=>{const L=(D.equipe||[]).slice().sort((a,b)=>(online(b)-online(a))||((minDesde(a)??1e9)-(minDesde(b)??1e9)));const V=fOn?L.filter(online):L;
+    return `<div class="toolbar" style="margin:2px 0 6px"><button class="btn sm" data-act="fon" aria-pressed="${fOn}">${fOn?'✓ ':''}Só quem está on-line (${L.filter(online).length})</button></div>`+
+    (V.map(p=>`<div class="row"><div class="who"><b>${esc(p.nome)}</b><span>${esc(PAPEL[p.papel]||p.papel)}</span></div>${presenca(p)}<span class="pill ${p.ativo?'ok':'novo'}">${p.ativo?'Ativo':'Pausado'}</span></div>`).join('')||`<div class="empty">${fOn?'Ninguém on-line agora.':'Ninguém cadastrado ainda.'}</div>`)})()}</div>
   </section>
  </div>
  <section class="panel" id="t-cmd" style="margin-top:14px">
@@ -399,7 +407,7 @@ function cmdTabela(s){
  return `<h3 style="font-size:14px;margin:16px 0 6px">${esc(nome)} <span style="font-weight:500;color:var(--muted);font-size:12px">· ${L.length} pessoa(s)</span></h3>
  ${L.length?`<div class="tablewrap"><table><thead><tr><th>Pessoa</th><th class="c">Acesso</th>${cols.map(k=>`<th class="c" title="${esc(MOD[k][2])}">${MOD[k][0]}<br><small class="thn">${MOD[k][1]}</small></th>`).join('')}</tr></thead><tbody>
   <tr><td><b>Todos</b></td><td class="c">—</td>${cols.map(k=>`<td class="c"><button class="sw" role="switch" aria-checked="${todos(k)}" aria-label="${MOD[k][1]} para todo o setor ${esc(nome)}" data-act="gmod" data-p="${papel}" data-m="${k}"></button></td>`).join('')}</tr>
-  ${L.map(p=>`<tr><td>${esc(p.nome)}</td><td class="c"><button class="sw" role="switch" aria-checked="${p.ativo}" aria-label="Acesso de ${esc(p.nome)}" data-act="pativo" data-id="${p.id}"></button></td>${cols.map(k=>`<td class="c"><button class="sw" role="switch" aria-checked="${(p.abas||[]).includes(k)}" ${p.ativo?'':'disabled'} aria-label="${MOD[k][1]} para ${esc(p.nome)}" data-act="pmod" data-id="${p.id}" data-m="${k}"></button></td>`).join('')}</tr>`).join('')}
+  ${L.map(p=>`<tr><td>${online(p)?'<span title="On-line agora">🟢</span> ':''}${esc(p.nome)}</td><td class="c"><button class="sw" role="switch" aria-checked="${p.ativo}" aria-label="Acesso de ${esc(p.nome)}" data-act="pativo" data-id="${p.id}"></button></td>${cols.map(k=>`<td class="c"><button class="sw" role="switch" aria-checked="${(p.abas||[]).includes(k)}" ${p.ativo?'':'disabled'} aria-label="${MOD[k][1]} para ${esc(p.nome)}" data-act="pmod" data-id="${p.id}" data-m="${k}"></button></td>`).join('')}</tr>`).join('')}
  </tbody></table></div>`:`<div class="empty">Ninguém no setor ${esc(nome)} ainda. Use "+ Cadastrar pessoa".</div>`}`;
 }
 function agendaHTML(gest,me){
@@ -510,6 +518,7 @@ document.addEventListener('click',async e=>{
  const rb=e.target.closest('[data-role]');if(rb){role=rb.dataset.role;render();scrollTo(0,0);return}
  const t=e.target.closest('[data-act]');if(!t)return;const a=t.dataset.act,id=t.dataset.id;
  if(a==='close'){if(t.classList.contains('modal')&&e.target!==t)return;closeModal();return}
+ if(a==='fon'){fOn=!fOn;render();return}
  if(a==='recarregar'){D=null;render();carregar();return}
  if(a==='copymsg'){const x=$('#msgTx');x.select();(navigator.clipboard?navigator.clipboard.writeText(x.value):Promise.reject()).then(()=>toast('Mensagem copiada.'),()=>toast('Texto selecionado. Use Ctrl+C.'));return}
  if(a==='open'){if(t.dataset.ok!=='true'){toast('Módulo bloqueado pelo gestor.');return}if(G()&&role!=='gestor'){toast('Abrindo o módulo (o uso só conta quando a própria pessoa abre).')}abrirModulo(t.dataset.m);return}
@@ -548,7 +557,7 @@ document.addEventListener('input',e=>{if(e.target.id==='mkBusca'){mkQ=e.target.v
 $('#bellBtn').onclick=()=>{const nv=(D.contas||[]).filter(c=>!c.visto);modal(`<h2>🔔 Avisos de cadastro</h2><p class="sub">${nv.length?nv.length+' cliente(s) se cadastraram no Catálogo 3D e você ainda não viu.':'Nenhum cadastro novo.'}</p><div class="list">${nv.map(c=>`<div class="row"><div class="who"><b>Novo cliente · ${esc(c.cidade||'—')}</b><span>${fmtD(c.criado)}</span></div><button class="btn sm" data-act="vercad" data-id="${c.id}">Ver quem cadastrou</button></div>`).join('')}</div><div class="toolbar" style="margin-top:12px;justify-content:flex-end"><button class="btn primary" data-act="close">Fechar</button></div>`)};
 document.addEventListener('click',e=>{const t=e.target.closest('[data-act="vercad"]');if(t&&t.closest('.modal'))closeModal()},true);
 /* atualiza sozinho: a cada minuto e quando a tela volta */
-setInterval(()=>{if(!document.hidden&&D&&!D.erro&&!$('#layer').innerHTML)carregar()},60000);
+setInterval(()=>{if(!document.hidden&&D&&!D.erro&&!$('#layer').innerHTML)carregar()},30000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&D&&!D.erro&&!$('#layer').innerHTML)carregar()});
 /* conversa da equipe: fora do link da Guaporé, abre o botão 💬 com o login da pessoa */
 if(window.parent===window&&tok()){const s=document.createElement('script');s.src='../conversas.js?v=5';s.onload=()=>{try{window.sb=sbc;window.FCConversas&&FCConversas.equipe(tok())}catch(e){}};window.sb=sbc;document.body.appendChild(s)}
@@ -560,7 +569,7 @@ const TOURS={
   ['#t-cad','Quando um cliente se cadastra no Catálogo 3D, o aviso chega aqui com os dados ocultos. Toque em Ver quem cadastrou para abrir o nome e o contato. Se o cadastro estiver aguardando, toque em Liberar para gerar a senha e mandar pelo WhatsApp.'],
   ['#t-cat','Este gráfico mostra quantas pessoas abriram o Catálogo 3D por dia e quantos clientes se cadastraram.'],
   ['#t-eq','O medidor da equipe mostra quantas vezes cada pessoa abriu cada ferramenta nos últimos trinta dias.'],
-  ['#t-equipe','Aqui está a equipe. Para incluir alguém, toque em Cadastrar pessoa e mande o link de primeiro acesso. A FC confere e libera.'],
+  ['#t-equipe','Aqui está a equipe. A bolinha verde mostra quem está on-line agora, e o botão Só quem está on-line filtra a lista. Para incluir alguém, toque em Cadastrar pessoa e mande o link de primeiro acesso. A FC confere e libera.'],
   ['#t-cmd','Nos Comandos você liga ou desliga cada módulo por pessoa, separado por setor. A chave Acesso pausa a pessoa inteira. A linha Todos liga ou desliga o módulo para o setor todo. Vale na hora, no celular de cada um.'],
   ['#t-orc','Aqui estão os pedidos de cotação que os clientes enviaram pelo catálogo, com o vendedor de cada um. O atendimento é feito no Painel de Vendas.'],
   ['#t-agg','A agenda do treinamento on-line: crie turmas e acompanhe quem se inscreveu.']
