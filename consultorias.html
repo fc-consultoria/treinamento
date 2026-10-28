@@ -1363,7 +1363,7 @@ if(PUB){(async()=>{document.title='Acompanhamento da consultoria · FC Consultor
   setTimeout(saudacaoDoDia,1000);setInterval(checarDivs,60000);$('#pubT').textContent='Acompanhamento da consultoria';if(PESSOA)barraPessoa();{const mt=(location.hash||'').match(/^#t=(\w+)/);if(mt){tab=mt[1];history.replaceState(null,'',location.pathname+location.search);}}ficha();{const m=(location.hash||'').match(/pl=([\w-]+)/);if(m){tab='pla';ficha();history.replaceState(null,'',location.pathname+location.search);setTimeout(()=>abrirPlanilha(m[1]),300);}}})();}
 else{/* links da Matriz: ?ver=<empresa> abre a empresa · &como=gestor abre "Como o cliente vê" na Central do Gestor · &abrir=acessos abre os acessos */
   const abrirVer=()=>{const q=new URLSearchParams(location.search),v=(q.get('ver')||'').toLowerCase();if(!v||!E[v])return;const g=q.get('como')==='gestor';
-    abrirEmpresa(v,g?'cen':undefined);if(g)setCli(true);if(q.get('abrir')==='acessos'&&window.abrirAcessos)setTimeout(()=>abrirAcessos(v,E[v].nome),300);};
+    abrirEmpresa(v,g?'cen':(q.get('t')||undefined));if(g)setCli(true);if(q.get('abrir')==='acessos'&&window.abrirAcessos)setTimeout(()=>abrirAcessos(v,E[v].nome),300);};
   gateUI(()=>Promise.resolve(carregar()).then(abrirVer),{soMatriz:true});
   $('#acbar').hidden=false;
   $('#bVoltar').onclick=()=>{at=null;cli=false;openLane=null;$('#vFC').setAttribute('aria-pressed',true);$('#vCli').setAttribute('aria-pressed',false);render();window.scrollTo({top:0,behavior:'smooth'});};

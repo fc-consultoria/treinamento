@@ -4,7 +4,7 @@
    © FC Consultoria em Esquadria · uso exclusivo */
 (function(){
   const URL_N='https://cpkjphodruyxfouirhpd.supabase.co/functions/v1/noticias';
-  const CATS=['Últimas','Contramarco','Sinop','MT','Economia','Agro'];
+  const CATS=['Contramarco','Economia','Sinop','MT','Agro','Últimas'];
   const FONTE={'Sinop':'Só Notícias','Contramarco':'Revista Contramarco (setor de esquadrias)'};
   /* Outros canais de informação de cada fonte (aparecem no card, na aba da fonte) */
   const CANAIS={'Contramarco':[
@@ -18,7 +18,7 @@
   const ATUALIZA_MIN=30;
   const esc=v=>String(v==null?'':v).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   const LS={g(k){try{return localStorage.getItem(k);}catch(_){return null;}},s(k,v){try{localStorage.setItem(k,v);}catch(_){}}};
-  let dados=null,cat=LS.g('fc-not-cat')||'Últimas',aberto=false,quando=0;
+  let dados=null,cat=LS.g('fc-not-cat')||'Contramarco',aberto=false,quando=0;
   if(!CATS.includes(cat))cat='Últimas';
 
   const css=`#fcNot{position:relative;font-family:var(--f-body,system-ui)}
@@ -68,8 +68,11 @@ body.fcnot-rod{padding-bottom:64px}body.fcnot-rod .fcs-av{bottom:66px}
 
   function faixa(){
     const tk=document.querySelector('#fcNot .ntk');if(!tk)return;
+    /* Faixa só com o que interessa à FC: Contramarco (setor) primeiro; dos outros assuntos, só manchetes com palavras do setor ou da economia/região (28/10) */
+    const SETOR=/esquadri|alum[ií]ni|vidr|janela|porta|constru|obra|im[óo]ve|habita|minha casa|cimento|a[çc]o\b|ind[úu]stri|com[ée]rcio|varej|juros|selic|cr[ée]dito|financiamento|infla|d[óo]lar|imposto|tribut|reforma|empres|neg[óo]ci|sinop|cuiab|mato grosso|\bmt\b|frete|log[íi]stic|arquitet|engenhar/i;
     const vistos=new Set(),it=[];
-    CATS.forEach(c=>((dados&&dados.cats&&dados.cats[c])||[]).slice(0,5).forEach(x=>{if(!vistos.has(x.l)){vistos.add(x.l);it.push([c,x]);}}));
+    CATS.forEach(c=>((dados&&dados.cats&&dados.cats[c])||[]).filter(x=>c==='Contramarco'||SETOR.test(x.t||'')).slice(0,c==='Contramarco'?8:4).forEach(x=>{if(!vistos.has(x.l)){vistos.add(x.l);it.push([c,x]);}}));
+    if(!it.length)['Economia','MT','Sinop'].forEach(c=>((dados&&dados.cats&&dados.cats[c])||[]).slice(0,4).forEach(x=>{if(!vistos.has(x.l)){vistos.add(x.l);it.push([c,x]);}}));
     if(!it.length){tk.innerHTML='<a>Manchetes indisponíveis no momento. Tentando de novo em breve.</a>';tk.style.animation='none';return;}
     const h=it.map(([c,x])=>`${link(x,CANAIS[c]?'st':'')}<b>${esc(c.toUpperCase())}</b>${esc(x.t)}</a>`).join('');
     tk.innerHTML=h+h;tk.style.animation='';tk.style.setProperty('--dur',Math.max(60,it.length*7)+'s');

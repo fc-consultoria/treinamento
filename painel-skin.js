@@ -134,8 +134,8 @@
       ola.textContent = (hr<12?'Bom dia':hr<18?'Boa tarde':'Boa noite')+', '+nome+' · '+d.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'}); };
     // horários dos estados (fusos do Brasil)
     const FZ=[['🏠 MT · MS · RO · RR · AM','America/Cuiaba','Seu horário (Mato Grosso). Também: Mato Grosso do Sul, Rondônia, Roraima e Amazonas (Manaus).'],
-      ['🏛 Brasília','America/Sao_Paulo','Horário de Brasília: DF, GO, TO, SP, RJ, MG, ES, PR, SC, RS, BA, todo o Nordeste, PA e AP.'],
-      ['🌳 Acre','America/Rio_Branco','Acre e o oeste do Amazonas.'],['🏝 Noronha','America/Noronha','Fernando de Noronha.']];
+      ['🏛 Brasília · Casa Bandeirante','America/Sao_Paulo','Horário de Brasília (Casa Bandeirante, Pernambuco): DF, GO, TO, SP, RJ, MG, ES, PR, SC, RS, BA, todo o Nordeste, PA e AP.'],
+      ['🌳 Manaus · CDE','America/Manaus','CDE (Manaus · AM): mesmo horário de Mato Grosso.'],['🌳 Acre','America/Rio_Branco','Acre e o oeste do Amazonas.']];
     const fz=document.createElement('span');fz.className='mxfz';fz.style.cssText='font:500 13px var(--f-display,system-ui);color:rgba(255,255,255,.85);white-space:nowrap';
     const hm=(tz,d)=>{const p=new Intl.DateTimeFormat('pt-BR',{timeZone:tz,hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(d);const H=+p.find(x=>x.type==='hour').value,M=+p.find(x=>x.type==='minute').value;return [H,M];};
     const fzTick=()=>{const d=new Date(),[h0,m0]=hm('America/Cuiaba',d);
