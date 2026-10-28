@@ -168,7 +168,7 @@ tr.hl td{background:#fff3c4!important;transition:background .4s}
 <script src="foto-busca.js?v=2"></script>
 <script src="importa-lista.js?v=6"></script>
 <script src="cliente-codigos.js?v=1"></script>
-<script src="parecidos.js?v=1"></script>
+<script src="parecidos.js?v=2"></script>
 <script>
 const $=s=>document.querySelector(s),esc=t=>String(t??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const KEY=new URLSearchParams(location.search).get('k')||'';const EMPFIX=new URLSearchParams(location.search).get('emp')||'';
@@ -205,6 +205,8 @@ const nomeQ=()=>{let n=ls.get('cons-nome-v','');if(!n){try{n=localStorage.getIte
 /* ===== índice de todas as linhas ===== */
 async function carregaIndice(){
   IDX=await fetch('indice.json?v=5',{cache:'no-cache'}).then(r=>r.json());
+  /* códigos de mercado que também acham o grupo (ex.: GS-034 = lambri tubular LB-061) */
+  try{const AP=await fetch('apelidos.json?v=1',{cache:'no-cache'}).then(r=>r.json());IDX.g.forEach(g=>{const a=AP[g.l+'|'+g.k];if(Array.isArray(a))g.al=a;});}catch(_){}
   /* edições de pares feitas pela FC na Conversão de códigos */
   let ed=[];
   try{if(ADM){const r=await sb.from('trein_eventos').select('detalhe,criado_em').eq('tipo','equiv_edit').order('criado_em');ed=(r.data||[]).map(x=>x.detalhe);}
@@ -214,7 +216,7 @@ async function carregaIndice(){
     IDX.g.forEach(g=>{if(g.l===l&&!(x.a&&g.k===x.a))g.m=g.m.filter(m=>!(m[0]===x.f&&m[1]===x.c&&(m[3]!=='base'||(g.sp&&x.a))));});
     if(!x.a)return;const g=IDX.g.find(y=>y.l===l&&y.k===x.a);const p=x.p!=null&&x.p!==''?+x.p:null;if(g&&p)g.m.push([x.f,x.c,p,x.n||'media',x.img||'',x.pg||'—',1]);});
   if(!ADM){try{const r=await sb.rpc('equiv_ok_lista',{p_chave:KEY});(r.data||[]).forEach(k=>OK[k]=true);}catch(_){}}
-  BY={};IDX.g.forEach((g,i)=>{g.i=i;g.m.forEach(m=>{(BY[norm(m[1])]=BY[norm(m[1])]||[]).push(i);});if(g.mc)(BY[norm(g.k)]=BY[norm(g.k)]||[]).push(i);});
+  BY={};IDX.g.forEach((g,i)=>{g.i=i;g.m.forEach(m=>{(BY[norm(m[1])]=BY[norm(m[1])]||[]).push(i);});if(g.mc)(BY[norm(g.k)]=BY[norm(g.k)]||[]).push(i);(g.al||[]).forEach(c=>{(BY[norm(c)]=BY[norm(c)]||[]).push(i);});});
 }
 const CLIV=new Set();/* códigos que o cliente já compra (planilha dele): sempre visíveis */
 const visivel=(g,m)=>{if(CLIV.has(norm(m[1])))return true;if(!ADM&&LIB()&&m[3]!=='base'&&m[0]!==REFF&&!LIB().includes(m[0]))return false;return ADM||m[3]==='base'||m[3]==='alta'||OK[g.k+'|'+m[1]];};
@@ -327,7 +329,7 @@ function resultado(r){
   const naRel=REL.some(x=>x.g===g.l+'|'+g.k&&norm(x.q)===norm(Q));
   return `<div class="res">${outras}
   <div class="box cab"><div class="im" data-zoom="${esc(ref.img)}" data-t="${esc(IDX.forn[ref.f]+' '+ref.c)}">${ref.img?`<img src="${esc(ref.img)}" alt="" onerror="this.replaceWith(document.createTextNode('sem desenho'))">`:'<small>sem desenho</small>'}</div>
-   <div><div class="cd">${esc(Q.toUpperCase())}</div><div class="nm">${esc(g.n||(IDX.forn[ref.f]+' '+ref.c))}</div><div class="ln">${esc(IDX.linhas[g.l].n)} · ${R.L.length} ${R.L.length===1?'código':'códigos equivalentes'} · ${esc(CORN[COR])}</div>
+   <div><div class="cd">${esc(Q.toUpperCase())}</div><div class="nm">${esc(g.n||(IDX.forn[ref.f]+' '+ref.c))}</div><div class="ln">${esc(IDX.linhas[g.l].n)}${g.al&&g.al.length?' · mercado '+esc(g.al.join(', ')):''} · ${R.L.length} ${R.L.length===1?'código':'códigos equivalentes'} · ${esc(CORN[COR])}</div>
    <div class="acoes noprint" style="margin-top:8px"><button type="button" class="bt ${naRel?'':'p'}" data-addrel ${naRel?'disabled':''}>${naRel?'✓ Está no relatório':'＋ Adicionar ao relatório'}</button><span class="simx"><select id="sxCor" aria-label="Cor do perfil">${CORES.map(([k,t])=>`<option value="${k}" ${COR===k?'selected':''}>${esc(t)}</option>`).join('')}</select><input id="sxB" inputmode="numeric" value="1" aria-label="Barras" title="Barras"><span class="sxu">barras de</span><select id="sxM" aria-label="Tamanho da barra">${MTS.map(m=>`<option value="${m}" ${m===6?'selected':''}>${String(m).replace('.',',')} m</option>`).join('')}</select><button type="button" class="bt" data-addsim>🧮 Levar para a simulação</button></span></div></div>${abcB}</div>
   ${mel}${R.L.length===1?`<div class="aviso">Este código ainda não tem equivalente ${ADM?'':'confirmado pela FC '}nos outros fornecedores.</div>`:''}
   ${linhas}
@@ -336,7 +338,7 @@ function resultado(r){
 
 /* ===== filtro enquanto digita ===== */
 let SUG=null;
-function sugIdx(){if(SUG)return SUG;const m=new Map();IDX.g.forEach(g=>{g.m.forEach(x=>{if(visivel(g,x)){const k=norm(x[1]);if(!m.has(k))m.set(k,{c:x[1],f:x[0],l:g.l});}});if(g.mc&&g.l!=='tc'){const k=norm(g.k);if(!m.has(k))m.set(k,{c:g.k,f:'',l:g.l});}});SUG=[...m.entries()];return SUG;}
+function sugIdx(){if(SUG)return SUG;const m=new Map();IDX.g.forEach(g=>{g.m.forEach(x=>{if(visivel(g,x)){const k=norm(x[1]);if(!m.has(k))m.set(k,{c:x[1],f:x[0],l:g.l});}});if(g.mc&&g.l!=='tc'){const k=norm(g.k);if(!m.has(k))m.set(k,{c:g.k,f:'',l:g.l});}(g.al||[]).forEach(c=>{const k=norm(c);if(!m.has(k))m.set(k,{c,f:'',l:g.l});});});SUG=[...m.entries()];return SUG;}
 function sugestoes(q){const k=norm(q);if(k.length<2)return '';
   const L=sugIdx().filter(([c])=>c.startsWith(k)).slice(0,30).concat(sugIdx().filter(([c])=>!c.startsWith(k)&&c.includes(k)).slice(0,10)).slice(0,30);
   if(!L.length)return resultado([]);

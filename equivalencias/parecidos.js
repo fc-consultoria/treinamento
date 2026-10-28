@@ -70,7 +70,7 @@
     const ed={l,f:mov[0],c:mov[1],a:alvo.k,p:mov[2],n:'alta',t:'padrao',o:'Confirmado pela FC por desenho e peso (Onde comprar).',pg:mov[5]||'—',img:/^https?:/.test(mov[4]||'')?mov[4]:'',em:new Date().toLocaleDateString('pt-BR')};
     const {error}=await sb.from('trein_eventos').insert({tipo:'equiv_edit',detalhe:ed});if(error){toast('Não gravou: '+error.message);return;}
     IDX.g.forEach(y=>{if(y.l===l&&y!==alvo)y.m=y.m.filter(m=>!(m[0]===mov[0]&&m[1]===mov[1]));});alvo.m.push([mov[0],mov[1],mov[2],'alta',ed.img,ed.pg,1]);
-    BY={};IDX.g.forEach((y,i)=>{y.i=i;y.m.forEach(m=>{(BY[norm(m[1])]=BY[norm(m[1])]||[]).push(i);});if(y.mc)(BY[norm(y.k)]=BY[norm(y.k)]||[]).push(i);});
+    BY={};IDX.g.forEach((y,i)=>{y.i=i;y.m.forEach(m=>{(BY[norm(m[1])]=BY[norm(m[1])]||[]).push(i);});if(y.mc)(BY[norm(y.k)]=BY[norm(y.k)]||[]).push(i);(y.al||[]).forEach(c=>{(BY[norm(c)]=BY[norm(c)]||[]).push(i);});});
     if(ABA==='busca')SEL=alvo;toast('✔ Par gravado na Conversão de códigos: '+mov[1]+' → '+alvo.k);tela();}
   document.addEventListener('click',e=>{const t=e.target.closest('[data-partol],[data-parok],[data-varq],[data-varmais],[data-pardis],[data-aba2]');if(!t)return;const d=t.dataset;
     if(d.partol){TOL=+d.partol;try{localStorage.setItem('par-tol',TOL);}catch(_){}tela();}
