@@ -108,6 +108,7 @@
 ${erro?`<div class="box" style="background:var(--warn-soft)">${h(erro)}</div>`:''}
 <div class="cg-lbl" id="cgT1">Precisa de você${PD.length?' · '+PD.length:''}</div>
 ${!D?'<div class="nota">Carregando…</div>':PD.length?`<div class="cg-pd">${PD.map(p=>`<div><span aria-hidden="true">${p[0]}</span><span>${h(p[1])}</span><button class="btn" type="button" data-cgab="${p[2]}">Ver →</button></div>`).join('')}</div>`:'<div class="cg-ok0">✓ Tudo em dia. Nenhuma decisão esperando por você.</div>'}
+${D&&(D.pendentes||[]).length?`<div class="cg-lbl">Cadastros da equipe aguardando liberação da FC · ${D.pendentes.length}</div><div class="cg-pd">${D.pendentes.map(x=>`<div><span aria-hidden="true">🕓</span><span><b>${h(x.nome)}</b> · ${h(x.telefone||'')} · ${new Date(x.em).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})}</span></div>`).join('')}</div>`:''}
 <div class="cg-lbl" id="cgT2">Números da semana · últimos 7 dias comparados aos 7 anteriores</div>
 <div class="cg-nm">${nums().map(([l,v,d])=>`<div><small>${h(l)}</small><b>${h(v)}</b> ${d}</div>`).join('')}</div>
 <div class="cg-lbl" id="cgT3">Setores</div>

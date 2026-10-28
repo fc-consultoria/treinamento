@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="pt-BR"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Primeiro acesso · FC Consultoria</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="icons/fc-192.png">
+<style>
+:root{--bg:#eef3f8;--card:#fff;--fg:#132238;--muted:#5b6b80;--line:#d5dee8;--ac:#1d5fa8;--ac2:#164c88;--ok:#1f8a4c;--okbg:#e8f6ee;--bad:#b42318;--badbg:#fdeceb}
+@media (prefers-color-scheme:dark){:root{--bg:#0d1520;--card:#152131;--fg:#e6edf5;--muted:#9aabbf;--line:#28394d;--ac:#4f93dd;--ac2:#6aa6e6;--okbg:#14301f;--badbg:#3a1714}}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:var(--bg);color:var(--fg);font:400 16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;display:flex;align-items:center;justify-content:center;padding:24px 16px}
+main{width:100%;max-width:400px;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:26px 22px}
+.mark{width:52px;height:52px;border-radius:14px;background:var(--ac);color:#fff;display:grid;place-items:center;font:700 26px/1 system-ui;margin-bottom:12px}
+.eb{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+h1{font-size:24px;margin:2px 0 4px}
+p{margin:0}.mu{color:var(--muted);font-size:14.5px}
+form{display:flex;flex-direction:column;gap:14px;margin-top:18px}
+label{display:flex;flex-direction:column;gap:5px;font-weight:600;font-size:14px}
+input{font:inherit;font-weight:400;padding:12px 13px;border:1px solid var(--line);border-radius:10px;background:transparent;color:var(--fg);width:100%}
+input:focus{outline:2px solid var(--ac);outline-offset:1px;border-color:var(--ac)}
+.pw{display:flex;gap:6px}.pw button{flex:0 0 auto;border:1px solid var(--line);background:transparent;color:var(--fg);border-radius:10px;padding:0 12px;font:inherit;font-size:14px;cursor:pointer}
+.hint{font-weight:400;font-size:12.5px;color:var(--muted)}
+.err{font-weight:500;font-size:13px;color:var(--bad);min-height:0}
+.btn{display:flex;justify-content:center;align-items:center;border:0;background:var(--ac);color:#fff;font:600 16px system-ui;padding:13px;border-radius:12px;cursor:pointer;text-decoration:none}
+.btn:hover{background:var(--ac2)}.btn[disabled]{opacity:.6;cursor:default}
+.btn.sec{background:transparent;color:var(--ac);border:1px solid var(--line)}
+.msg{border-radius:12px;padding:12px 14px;font-size:14.5px;margin-top:14px}
+.msg.ok{background:var(--okbg);color:var(--fg);border:1px solid var(--ok)}
+.msg.bad{background:var(--badbg);color:var(--fg);border:1px solid var(--bad)}
+.foot{margin-top:18px;font-size:12.5px;color:var(--muted);text-align:center}
+.foot a{color:var(--ac)}
+</style>
+</head><body>
+<main id="app" aria-live="polite">
+  <div class="mark" id="mk">FC</div>
+  <div class="eb">Primeiro acesso</div>
+  <h1 id="tit">Carregando…</h1>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+(function(){
+const sb=window.supabase.createClient('https://cpkjphodruyxfouirhpd.supabase.co','sb_publishable_d0HEeWsaqOeZIQKGftlF-Q_B8BUOWWg',{auth:{persistSession:false}});
+const EMP=(new URLSearchParams(location.search).get('e')||'').toLowerCase().replace(/[^a-z0-9_-]/g,'');
+const app=document.getElementById('app');
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const entrar='consultorias.html?e='+encodeURIComponent(EMP);
+const rodape=`<p class="foot">Dúvidas: FC Consultoria · <a href="https://wa.me/5566999867984" target="_blank" rel="noopener">(66) 9 9986-7984</a></p>`;
+const fone=v=>{let d=v.replace(/\D/g,'').slice(0,11);if(d.length<3)return d;const a=d.slice(0,2),r=d.slice(2);
+  if(r.length<=4)return `(${a}) ${r}`;if(d.length===11)return `(${a}) ${r[0]} ${r.slice(1,5)}-${r.slice(5)}`;return `(${a}) ${r.slice(0,4)}-${r.slice(4)}`;};
+function topo(nome){const ini=(nome||'FC').trim()[0].toUpperCase();return `<div class="mark">${esc(ini)}</div><div class="eb">Primeiro acesso</div><h1>${esc(nome)}</h1>`;}
+function fechado(t){app.innerHTML=`<div class="mark">FC</div><div class="eb">Primeiro acesso</div><h1>Link indisponível</h1><p class="mu">${t}</p>`+rodape;}
+function feito(nome,tel){app.innerHTML=topo(nome)+`<div class="msg ok"><b>Cadastro enviado ✓</b><br>Agora é só aguardar a liberação. Você recebe um aviso pelo WhatsApp no número <b>${esc(tel)}</b>.</div>
+  <p class="mu" style="margin-top:14px">Depois de liberado, entre com o seu <b>telefone</b> e a <b>senha</b> que você criou.</p>
+  <a class="btn sec" style="margin-top:14px" href="${entrar}">Ir para a entrada</a>`+rodape;}
+async function iniciar(){
+  if(!EMP){fechado('Este link está incompleto. Peça o link certo para a FC Consultoria.');return;}
+  const {data:inf}=await sb.rpc('emp_info',{p_emp:EMP});
+  if(!inf){fechado('Este link não está ativo. Fale com a FC Consultoria.');return;}
+  if(!inf.autocad){fechado('O cadastro por este link não está aberto para '+esc(inf.nome)+'. Fale com a FC Consultoria.');return;}
+  document.title='Primeiro acesso · '+inf.nome+' · FC Consultoria';
+  app.innerHTML=topo(inf.nome)+`<p class="mu">Preencha seus dados para pedir acesso à área da equipe. A liberação é feita pela FC Consultoria.</p>
+  <form id="f" novalidate>
+    <label>Nome completo<input id="n" autocomplete="name" autocapitalize="words" maxlength="80" required><span class="err" id="eN"></span></label>
+    <label>Telefone com DDD (WhatsApp)<input id="t" type="tel" inputmode="numeric" autocomplete="tel" placeholder="(66) 9 9999-9999" required><span class="err" id="eT"></span></label>
+    <label>Crie uma senha<span class="pw"><input id="s" type="password" autocomplete="new-password" minlength="4" required><button type="button" id="ver" aria-label="Mostrar senha">Ver</button></span><span class="hint">Pelo menos 4 caracteres. Guarde bem: é com ela que você vai entrar.</span><span class="err" id="eS"></span></label>
+    <button class="btn" id="b" type="submit">Enviar cadastro</button>
+    <div id="m"></div>
+  </form>
+  <p class="mu" style="margin-top:14px;text-align:center">Já tem cadastro? <a href="${entrar}" style="color:var(--ac)">Entrar</a></p>`+rodape;
+  const $=id=>document.getElementById(id);
+  $('t').addEventListener('input',e=>{e.target.value=fone(e.target.value);$('eT').textContent='';});
+  $('n').addEventListener('input',()=>{$('eN').textContent='';});
+  $('s').addEventListener('input',()=>{$('eS').textContent='';});
+  $('ver').onclick=()=>{const s=$('s'),v=s.type==='password';s.type=v?'text':'password';$('ver').textContent=v?'Ocultar':'Ver';$('ver').setAttribute('aria-label',v?'Ocultar senha':'Mostrar senha');};
+  $('f').onsubmit=async ev=>{ev.preventDefault();$('m').innerHTML='';
+    const n=$('n').value.trim(),t=$('t').value,s=$('s').value,dg=t.replace(/\D/g,'');let ok=true;
+    if(n.length<3){$('eN').textContent='Informe seu nome completo.';ok=false;}
+    if(dg.length<10){$('eT').textContent='Informe o telefone com DDD.';ok=false;}
+    if(s.length<4){$('eS').textContent='A senha precisa ter pelo menos 4 caracteres.';ok=false;}
+    if(!ok)return;
+    const b=$('b');b.disabled=true;b.textContent='Enviando…';
+    const {data:r,error}=await sb.rpc('emp_autocadastro',{p_emp:EMP,p_nome:n,p_tel:t,p_senha:s,p_ua:navigator.userAgent});
+    b.disabled=false;b.textContent='Enviar cadastro';
+    if(error||!r){$('m').innerHTML='<div class="msg bad">Não foi possível enviar agora. Confira a internet e tente de novo.</div>';return;}
+    if(r.ok){feito(inf.nome,fone(t));return;}
+    const M={pendente:'Este telefone já tem um cadastro aguardando liberação. Aguarde o aviso pelo WhatsApp.',
+      existe:`Este telefone já tem acesso. <a href="${entrar}" style="color:inherit;font-weight:600">Entre por aqui</a> com o seu telefone e senha.`,
+      telefone:'Telefone inválido. Use o DDD e o número, por exemplo (66) 9 9999-9999.',nome:'Informe seu nome completo.',
+      senha:'A senha precisa ter pelo menos 4 caracteres.',limite:'Muitos cadastros em pouco tempo. Tente de novo mais tarde.',fechado:'O cadastro por este link está fechado. Fale com a FC Consultoria.'};
+    $('m').innerHTML=`<div class="msg bad">${M[r.erro]||'Não foi possível enviar. Tente de novo.'}</div>`;};
+  $('n').focus();
+}
+iniciar().catch(()=>fechado('Não foi possível carregar. Confira a internet e tente de novo.'));
+})();
+</script>
+</body></html>
