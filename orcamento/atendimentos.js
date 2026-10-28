@@ -113,7 +113,7 @@
     if(ac==='liberar'&&!vend&&A.vends.length){toast('Escolha o vendedor da rota antes de liberar.');return;}
     const r=await sb.rpc('atd_conta',args({p_id:id,p_acao:ac,p_vend:vend}));if(r.error||!r.data||r.data.erro){toast((r.data&&r.data.erro)||'Não salvou.');return;}
     if(r.data.senha){const link=(D.cat||'')+(D.cat?(D.cat.includes('?')?'&':'?')+'loja=1':'');
-      const msg=`Olá, ${c.nome.split(' ')[0]}! Seu acesso à área do cliente da ${D.nome||'loja'} foi liberado.\n\nEntre em: ${link}\nE-mail: ${c.email}\nSenha: ${r.data.senha}\n\nNo primeiro acesso você cria a sua senha. Qualquer dúvida, é só chamar.`;
+      const msg=`Olá, ${c.nome.split(' ')[0]}! Seu acesso à área do cliente da ${D.nome||'loja'} foi liberado.\n\nEntre em: ${link}\nLogin: ${c.zap||c.email||''} (seu WhatsApp)\nSenha: ${r.data.senha}\n\nNo primeiro acesso você cria a sua senha. Qualquer dúvida, é só chamar.`;
       A.senha={nome:c.nome,s:r.data.senha,zap:c.zap?'https://wa.me/55'+String(c.zap).replace(/\D/g,'').replace(/^55/,'')+'?text='+encodeURIComponent(msg):''};}
     else A.senha=null;
     await Promise.all([carregaCli(),lista()]);desenhaCli();toast(ac==='bloquear'?'Acesso bloqueado.':'Salvo.');}
