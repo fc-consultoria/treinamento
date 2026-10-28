@@ -1,0 +1,652 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Orçamentos de Obra · Painel da Matriz</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap">
+<style>
+/* Layout: tela inicial com cards de obra + card "Novo orçamento"; dentro da obra, abas com tabela à esquerda e formação de preço à direita */
+:root{
+  --bg:#f3f6f6; --surface:#ffffff; --surface2:#e8eeee; --line:#d3dddd;
+  --fg:#16262a; --muted:#5b6d70; --teal:#0d5c63; --teal-ink:#ffffff; --teal-soft:#d6ebec;
+  --amber:#c9831a; --amber-soft:#fbefd9; --ok:#1f7a4a; --warn:#a45a00; --bad:#b3261e;
+  --display:"Space Grotesk",system-ui,sans-serif; --body:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f1719; --surface:#162226; --surface2:#1d2c30; --line:#2c3f44;
+  --fg:#e3eced; --muted:#93a6a9; --teal:#2a8b93; --teal-ink:#ffffff; --teal-soft:#183a3e;
+  --amber:#e7a33e; --amber-soft:#3a2c14; --ok:#52b783; --warn:#e3a14a; --bad:#ef7a72; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1719; --surface:#162226; --surface2:#1d2c30; --line:#2c3f44;
+  --fg:#e3eced; --muted:#93a6a9; --teal:#2a8b93; --teal-ink:#ffffff; --teal-soft:#183a3e;
+  --amber:#e7a33e; --amber-soft:#3a2c14; --ok:#52b783; --warn:#e3a14a; --bad:#ef7a72; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:14px;line-height:1.45}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--teal)}
+.wrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));max-width:1320px;margin:0 auto}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0}
+.num{font-variant-numeric:tabular-nums}
+header.top{background:var(--teal);color:var(--teal-ink)}
+header.top .wrap{padding-block:18px 14px;display:flex;flex-wrap:wrap;gap:12px 28px;align-items:flex-end;justify-content:space-between}
+.eyebrow{font-size:11px;letter-spacing:.12em;text-transform:uppercase;opacity:.8}
+header.top h1{font-size:24px;font-weight:700}
+.meta{font-size:13px;opacity:.88}
+.back{font:600 13px var(--body);color:var(--teal-ink);background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);border-radius:6px;padding:4px 10px;cursor:pointer;margin-bottom:8px}
+.kpis{display:flex;gap:10px;flex-wrap:wrap}
+.kpi{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);border-radius:8px;padding:8px 14px;min-width:150px}
+.kpi b{display:block;font-family:var(--display);font-size:19px}
+.kpi.sale{background:var(--amber);border-color:var(--amber);color:#1b1205}
+nav.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--line)}
+nav.tabs .wrap{display:flex;gap:2px;overflow-x:auto}
+nav.tabs button{font:600 14px var(--body);color:var(--muted);background:none;border:0;border-bottom:3px solid transparent;padding:13px 14px;cursor:pointer;white-space:nowrap}
+nav.tabs button[aria-selected="true"]{color:var(--teal);border-bottom-color:var(--amber)}
+nav.tabs button:focus-visible{outline:2px solid var(--amber);outline-offset:-2px}
+main .wrap{padding-block:20px 40px}
+.panel-grid{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:20px;align-items:start}
+@media (max-width:900px){.panel-grid{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px}
+.card-h{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--line)}
+.card-h h2{font-size:17px}
+.card-b{padding:14px 16px}
+.hint{color:var(--muted);font-size:12.5px}
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;font-weight:600;font-size:11.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);padding:9px 10px;border-bottom:1px solid var(--line);background:var(--surface2);white-space:nowrap}
+td{padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
+td.r,th.r{text-align:right}
+tr.group td{background:var(--teal-soft);color:var(--teal);font-weight:600;font-size:12px;letter-spacing:.03em}
+:root:not([data-theme="light"]) tr.group td{color:var(--fg)}
+tr.off td{opacity:.55}tr.off td.code{text-decoration:line-through}
+input.chk{width:18px;height:18px;accent-color:var(--teal);cursor:pointer}
+tr.nop td.price input{border-color:var(--amber);background:var(--amber-soft)}
+td.code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;white-space:nowrap}
+input.in,select.in,textarea.in{font:inherit;color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:6px 8px}
+input.in:focus,select.in:focus,textarea.in:focus{outline:2px solid var(--teal);outline-offset:0;border-color:var(--teal)}
+input.money{width:110px;text-align:right}
+input.pct{width:80px;text-align:right}
+input.big{width:100%;font-size:16px;text-align:right;padding:9px 10px}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden;flex-wrap:wrap}
+.seg button{font:500 13px var(--body);background:var(--surface);color:var(--muted);border:0;padding:6px 11px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--teal);color:var(--teal-ink)}
+.btn{font:600 13px var(--body);border:1px solid var(--teal);background:var(--teal);color:var(--teal-ink);border-radius:7px;padding:8px 13px;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--teal)}
+.btn.danger{background:var(--bad);border-color:var(--bad);color:#fff}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn:focus-visible,.seg button:focus-visible,.back:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+.price-panel{position:sticky;top:64px}
+.pp-h{background:var(--teal);color:var(--teal-ink);border-radius:10px 10px 0 0;padding:12px 16px}
+.pp-h h3{font-size:15px}
+.pp-b{padding:14px 16px;display:grid;gap:12px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.row label{color:var(--muted);font-size:13px}
+.cost{font-family:var(--display);font-size:20px;font-weight:600}
+.formula{font-size:12px;color:var(--muted);background:var(--surface2);border-radius:6px;padding:8px 10px}
+.sale-box{background:var(--amber-soft);border:1px solid var(--amber);border-radius:8px;padding:12px}
+.sale-box .v{font-family:var(--display);font-size:24px;font-weight:700;color:var(--fg)}
+.err{color:var(--bad);font-size:12.5px;font-weight:600}
+.chip{display:inline-block;font-size:11.5px;font-weight:600;border-radius:999px;padding:2px 9px;background:var(--surface2);color:var(--muted)}
+.chip.warn{background:var(--amber-soft);color:var(--warn)}
+.chip.ok{background:var(--teal-soft);color:var(--teal)}
+.split{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.stat{background:var(--surface2);border-radius:8px;padding:10px 12px;display:grid;gap:6px}
+.stack{display:grid;gap:20px}
+.sum-table td,.sum-table th{padding:10px 12px}
+.sum-table tfoot td{font-weight:700;font-family:var(--display);font-size:15px;background:var(--surface2)}
+.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.fields label{display:grid;gap:4px;font-size:12.5px;color:var(--muted)}
+/* tela inicial */
+.home-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+.ocard{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;display:grid;gap:10px;align-content:start}
+.ocard .n{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;color:var(--teal);font-weight:600}
+.ocard h3{font-size:17px;line-height:1.25}
+.ocard .cl{font-size:12.5px;color:var(--muted)}
+.ocard .chips{display:flex;flex-wrap:wrap;gap:6px}
+.ocard .vals{display:grid;grid-template-columns:1fr 1fr;gap:8px;border-top:1px solid var(--line);padding-top:10px}
+.ocard .vals span{display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.ocard .vals b{font-family:var(--display);font-size:16px}
+.ocard .vals .sale b{color:var(--amber)}
+.ocard .acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.newcard{border:2px dashed var(--teal);background:var(--teal-soft);border-radius:12px;padding:18px;cursor:pointer;display:grid;gap:8px;align-content:center;justify-items:start;min-height:200px;text-align:left;font:inherit;color:var(--fg)}
+.newcard .plus{font-family:var(--display);font-size:34px;line-height:1;color:var(--teal);font-weight:700}
+.newcard h3{font-size:18px;color:var(--teal)}
+.newcard:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+.drop{border:2px dashed var(--line);border-radius:10px;padding:22px;text-align:center;display:grid;gap:8px;justify-items:center;cursor:pointer;background:var(--surface2)}
+.drop.over{border-color:var(--teal);background:var(--teal-soft)}
+.slots{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+.slot{border:1px solid var(--line);border-radius:8px;padding:10px 12px;display:grid;gap:3px}
+.slot b{font-family:var(--display)}
+.slot.done{border-color:var(--teal);background:var(--teal-soft)}
+.slot .st{font-size:12.5px;color:var(--muted)}
+/* apresentação */
+.pres{background:var(--surface);border:1px solid var(--line);border-radius:10px;max-width:960px;margin:0 auto;overflow:hidden}
+.pres-h{display:flex;flex-wrap:wrap;justify-content:space-between;gap:14px;padding:22px 24px;border-bottom:3px solid var(--amber)}
+.brand{font-family:var(--display);font-weight:700;color:var(--teal);font-size:20px;letter-spacing:.01em}
+.brand small{display:block;font-family:var(--body);font-weight:500;font-size:11px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase}
+.pres-h .doc{text-align:right}
+.pres-h .doc h2{font-size:22px}
+.pres-info{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:6px 20px;padding:14px 24px;background:var(--surface2);font-size:13px}
+.pres-info span{color:var(--muted)}
+.loc{padding:14px 24px 4px;font-family:var(--display);font-weight:600;color:var(--teal);font-size:14px;letter-spacing:.06em;text-transform:uppercase}
+.tip{display:grid;grid-template-columns:170px minmax(0,1fr) 170px;gap:16px;align-items:center;padding:14px 24px;border-bottom:1px solid var(--line)}
+.tip svg{width:100%;height:auto;max-height:120px}
+.tip .t-name{font-family:var(--display);font-weight:600;font-size:15px}
+.tip .t-desc{font-size:12.5px;color:var(--muted);margin-top:2px}
+.tip .t-dims{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12.5px;margin-top:6px}
+.tip .t-price{text-align:right}
+.tip .t-price .u{font-size:12px;color:var(--muted)}
+.tip .t-price .tot{font-family:var(--display);font-weight:700;font-size:17px}
+@media (max-width:640px){.tip{grid-template-columns:110px minmax(0,1fr)}.tip .t-price{grid-column:1/-1;text-align:left;display:flex;gap:14px;align-items:baseline}}
+.pres-total{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;padding:20px 24px;background:var(--teal);color:var(--teal-ink)}
+.pres-total b{font-family:var(--display);font-size:26px}
+.pres-foot{padding:16px 24px 22px;display:grid;gap:8px;font-size:12.5px;color:var(--muted)}
+.pres-foot .wm{font-size:11px;letter-spacing:.1em;text-transform:uppercase;text-align:center;padding-top:10px;border-top:1px solid var(--line)}
+svg .fr{fill:none;stroke:var(--fg);stroke-width:1.6}
+svg .pn{fill:var(--teal-soft);stroke:var(--fg);stroke-width:1}
+svg .sym{fill:none;stroke:var(--muted);stroke-width:.9}
+svg text{fill:var(--muted);font:600 8px var(--body)}
+.wm-app{text-align:center;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:18px 0 4px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<style>.rgate{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;background:#e9f0f0;padding:16px;font-family:system-ui,sans-serif}.rgate[hidden]{display:none}.rgate form{width:min(360px,100%);background:#fff;border:1px solid #d6e1e1;border-radius:14px;padding:26px 22px;display:flex;flex-direction:column;gap:12px}.rgate h1{margin:0;font:700 24px system-ui;color:#13262a}.rgate small{color:#5a6e72;font-size:12px;letter-spacing:.06em;text-transform:uppercase}.rgate label{display:flex;flex-direction:column;gap:5px;font-weight:600;font-size:14px;color:#13262a}.rgate input{font:15px system-ui;padding:9px 10px;border:1px solid #c4ccd2;border-radius:8px}.rgate button{background:#0d5c63;color:#fff;border:0;border-radius:9px;padding:11px;font:700 15px system-ui;cursor:pointer}.rgate p{margin:0;color:#b42318;font-size:14px}
+.tomatriz{display:inline-block;font:600 13px var(--body);color:var(--teal-ink);background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);border-radius:6px;padding:4px 10px;text-decoration:none;margin-bottom:8px}</style>
+</head>
+<body>
+<div class="rgate" id="gate"><form id="gateForm"><small>FC Consultoria · Matriz</small><h1>Orçamentos de obra</h1>
+<label>Login<input name="login" autocomplete="username" required placeholder="matriz"></label>
+<label>Senha<input name="senha" type="password" autocomplete="current-password" required></label>
+<button type="submit">Entrar</button><p id="gateMsg" role="alert"></p></form></div>
+<header class="top"><div class="wrap" id="hdr"></div></header>
+<nav class="tabs" id="tabs" aria-label="Painéis do orçamento" hidden>
+  <div class="wrap" role="tablist">
+    <button role="tab" data-tab="comp" aria-selected="true">Componentes</button>
+    <button role="tab" data-tab="alu" aria-selected="false">Alumínio</button>
+    <button role="tab" data-tab="vid" aria-selected="false">Vidros</button>
+    <button role="tab" data-tab="res" aria-selected="false">Resumo</button>
+    <button role="tab" data-tab="apr" aria-selected="false">Apresentação</button>
+  </div>
+</nav>
+<main><div class="wrap">
+  <section id="view-home"></section>
+  <section id="view-obra" hidden></section>
+  <div class="wm-app">FC Consultoria em Esquadria · uso exclusivo · © FC Consultoria em Esquadria</div>
+</div></main>
+
+<script>
+function iniciarOrcamentos(){(function(){
+// ===== PARSER SmartCEM (texto do pdf.js) =====
+function pRows(page){
+ const its=page.filter(i=>i.s&&i.s.trim()).map(i=>({x:i.x,y:i.y,s:i.s.trim()})).sort((a,b)=>b.y-a.y||a.x-b.x);
+ const rows=[];its.forEach(it=>{const r=rows.find(r=>Math.abs(r.y-it.y)<=2.6);if(r)r.it.push(it);else rows.push({y:it.y,it:[it]})});
+ rows.forEach(r=>r.it.sort((a,b)=>a.x-b.x));rows.sort((a,b)=>b.y-a.y);return rows;
+}
+const pNum=s=>{const x=parseFloat(String(s).replace(/\./g,"").replace(",","."));return isFinite(x)?x:0};
+const FOOT=/TEXA ALUMINIO|SmartCEM|^Aten[cç][aã]o|^\d+\s*\/\s*\d+$|Alumisoft/i;
+function pDetect(pages){const t=pages[0].map(i=>i.s).join(" ");
+ if(/Componentes da Obra/i.test(t))return "comp";
+ if(/Rela[cç][aã]o de Materiais/i.test(t))return "perfis";
+ if(/Proposta/i.test(t)&&/Item:/i.test(pages.map(p=>p.map(i=>i.s).join(" ")).join(" ")))return "croqui";
+ return null}
+function pHeader(pages){
+ const rows=pRows(pages[0]);const h={numero:"",obra:"",cliente:"",cor:"",data:""};
+ const all=pages[0].map(i=>i.s).join(" ");
+ const m=all.match(/\b[A-Z0-9]{1,6}_\d{2}\/\d{2}_\d{2,4}_\d{2}\b/);if(m)h.numero=m[0];
+ rows.forEach(r=>r.it.forEach((it,k)=>{const nx=r.it[k+1]?r.it[k+1].s:"";
+  if(/^Obra:?$/i.test(it.s)&&!h.obra)h.obra=nx.replace(/^:\s*/,"");
+  if(/^Cliente:?$/i.test(it.s)&&!h.cliente)h.cliente=nx;
+  if(/Cor predominante:?$/i.test(it.s)&&!h.cor)h.cor=/Perf/i.test(nx)?(r.it[k+2]?r.it[k+2].s:""):nx;
+  if(/^Data do c[aá]lculo:?$/i.test(it.s)&&!h.data)h.data=nx;
+  if(/^Emitido por/i.test(it.s)&&!h.emit)h.emit=it.s;
+ }));
+ return h;
+}
+function pPerfis(pages){
+ let cols=null;const out=[];let total=0,last=null;
+ pages.forEach(pg=>{pRows(pg).forEach(r=>{
+  const txt=r.it.map(i=>i.s).join(" ");
+  if(/C[oó]digo/.test(txt)&&/Peso/.test(txt)){const f=w=>{const it=r.it.find(i=>new RegExp(w,"i").test(i.s));return it?it.x:null};
+   cols={code:f("^C[oó]digo"),desc:f("^Descri"),trat:f("^Tratamento"),barra:f("^Barra"),qtd:f("^Qtde"),peso:f("^Peso")};last=null;return}
+  if(!cols)return;
+  if(/^Total:?/i.test(r.it[0].s)){total=pNum((r.it.find(i=>/\d/.test(i.s))||{s:"0"}).s.replace(/Total:?/i,""));return}
+  if(r.it.some(i=>FOOT.test(i.s))||/^Obra/i.test(r.it[0].s)){last=null;return}
+  const col=x=>{if(x<cols.desc-10)return "code";if(x<cols.trat-10)return "desc";if(x<cols.barra-15)return "trat";if(x<cols.qtd-5)return "barra";if(x<cols.peso-5)return "qtd";return "peso"};
+  const rec={code:"",desc:"",trat:"",barra:"",qtd:"",peso:""};
+  r.it.forEach(i=>{const c=col(i.x);rec[c]=(rec[c]?rec[c]+" ":"")+i.s});
+  if(rec.code&&rec.peso){last={code:rec.code,desc:rec.desc,trat:rec.trat,barra:pNum(rec.barra),q:pNum(rec.qtd),peso:pNum(rec.peso)};out.push(last)}
+  else if(last&&!rec.code){if(rec.desc)last.desc=(last.desc+" "+rec.desc).trim();if(rec.trat)last.trat=(last.trat+" "+rec.trat).trim()}
+ })});
+ return {rows:out,total};
+}
+function pComp(pages){
+ let cols=null,ap="",rf="",last=null;const out=[];
+ pages.forEach(pg=>{pRows(pg).forEach(r=>{
+  const txt=r.it.map(i=>i.s).join(" ");
+  if(/^C[oó]digo/.test(r.it[0].s)&&/Qtde/.test(txt)){const f=w=>{const it=r.it.find(i=>new RegExp(w,"i").test(i.s));return it?it.x:null};
+   cols={code:f("^C[oó]digo"),desc:f("^Descri"),cor:f("^Cor$"),qtd:f("^Qtde")};last=null;return}
+  if(!cols)return;
+  if(/^Aplica[cç][aã]o:?/i.test(r.it[0].s)){ap=(r.it[1]?r.it[1].s:"").toUpperCase();last=null;return}
+  if(/^Refer[eê]ncia:?/i.test(r.it[0].s)){rf=(r.it[1]?r.it[1].s:"");last=null;return}
+  if(r.it.some(i=>FOOT.test(i.s))){last=null;return}
+  const rec={code:"",desc:"",cor:"",q:"",un:""};
+  r.it.forEach(i=>{let c;if(i.x<cols.desc-20)c="code";else if(i.x<cols.cor-10)c="desc";else if(i.x<cols.qtd-5)c="cor";else c=/^[\d.,]+$/.test(i.s)?"q":"un";
+   rec[c]=(rec[c]?rec[c]+" ":"")+i.s});
+  if(rec.code&&rec.q){last={ap:ap||"—",rf:rf||"—",code:rec.code,desc:rec.desc,cor:rec.cor,q:pNum(rec.q),un:(rec.un||"PC").toUpperCase()};out.push(last)}
+  else if(last&&!rec.code){if(rec.desc)last.desc=(last.desc+" "+rec.desc).trim();if(rec.cor&&!last.cor)last.cor=rec.cor}
+ })});
+ return out;
+}
+function pCroqui(pages){
+ const out=[];let cur=null,afterQ=false;
+ const LAB={"Item":"item","Tipo":"tipo","Linha":"linha","Quantidade":"q","Largura":"L","Altura":"H","Acabamento":"acab","Localização":"loc","Localizacao":"loc"};
+ pages.forEach(pg=>{pRows(pg).forEach(r=>{
+  const its=r.it.filter(i=>i.x>=150);if(!its.length)return;
+  if(its.some(i=>FOOT.test(i.s)))return;
+  const isLab=s=>/:$/.test(s)&&LAB[s.slice(0,-1)];
+  if(isLab(its[0].s)){
+   if(its[0].s==="Item:"){cur={item:"",tipo:"",linha:"",q:1,L:0,H:0,acab:"",loc:"",desc:""};out.push(cur);afterQ=false}
+   if(!cur)return;
+   let k=null;const tmp={};its.forEach(i=>{if(isLab(i.s)){k=LAB[i.s.slice(0,-1)];tmp[k]=""}else if(k){tmp[k]=(tmp[k]?tmp[k]+" ":"")+i.s}});
+   Object.assign(cur,tmp);
+   if(its.some(i=>i.s==="Quantidade:"))afterQ=true;
+   return}
+  if(cur&&afterQ){cur.desc=(cur.desc+" "+its.map(i=>i.s).join(" ")).trim()}
+ })});
+ return out.filter(t=>t.item!=="").map(t=>{
+  const d=(t.desc||"").toUpperCase();
+  const q=parseInt(t.q)||1,L=pNum(t.L),H=pNum(t.H);
+  let vm=d.match(/VIDRO\s+(.+?)(?:\s+-\s+|$)/);let vid=vm?vm[1].trim():"NÃO INFORMADO";
+  let kind="gen";
+  if(/PIVOTANTE/.test(d))kind="piv";else if(/CORRER/.test(d))kind="correr";else if(/GIRO|ABRIR/.test(d))kind="giro";
+  else if(/MAXIM-AR|MAXIMAR|BASCULANTE/.test(d))kind=/PEITORIL/.test(d)?"maxp":"max";else if(/FIXO/.test(d))kind="fixo";
+  const fm=d.match(/(\d+)\s*FOLHA/);const f=fm?parseInt(fm[1]):1;
+  return {item:parseInt(t.item)||t.item,tipo:t.tipo,linha:t.linha,desc:t.desc,L,H,q,loc:t.loc||"Localização não informada",acab:t.acab,vid,kind,f};
+ });
+}
+
+const SEED={"numero":"AR_10/26_025_00","obra":"DIVISÓRIAS - COWORKING CUIABÁ","cliente":"DIVISÓRIAS - COWORKING CUIABÁ","cor":"PINTURA PRETO FOSCO - RAL9005F","data":"28/10/2026 15:38:50","tips":[{"item":1,"tipo":"DV1-A","linha":"CITY 32C","desc":"FIXO 3 FOLHA(S) - VIDRO LAMINADO 10MM INCOLOR - LINHA CITY 32C","L":3720,"H":2600,"q":1,"loc":"SUBSOLO 01","acab":"PINTURA PRETO FOSCO - RAL9005F","vid":"LAMINADO 10MM INCOLOR","kind":"fixo","f":3},{"item":2,"tipo":"DV1-B","linha":"CITY 32C","desc":"FIXO 3 FOLHA(S) - VIDRO LAMINADO 10MM INCOLOR - LINHA CITY 32C","L":3700,"H":2600,"q":1,"loc":"SUBSOLO 01","acab":"PINTURA PRETO FOSCO - RAL9005F","vid":"LAMINADO 10MM INCOLOR","kind":"fixo","f":3},{"item":3,"tipo":"DV1-C","linha":"CITY 32C","desc":"FIXO 4 FOLHA(S) - VIDRO LAMINADO 10MM INCOLOR - LINHA CITY 32C","L":4460,"H":2600,"q":1,"loc":"SUBSOLO 01","acab":"PINTURA PRETO FOSCO - RAL9005F","vid":"LAMINADO 10MM INCOLOR","kind":"fixo","f":4},{"item":4,"tipo":"DV1-D","linha":"CITY 32C","desc":"FIXO 1 FOLHA(S) - VIDRO LAMINADO 10MM INCOLOR - LINHA CITY 32C","L":760,"H":2600,"q":1,"loc":"SUBSOLO 01","acab":"PINTURA PRETO FOSCO - RAL9005F","vid":"LAMINADO 10MM INCOLOR","kind":"fixo","f":1},{"item":5,"tipo":"DV1-E","linha":"CITY 32C","desc":"FIXO 4 FOLHA(S) - VIDRO LAMINADO 10MM INCOLOR - LINHA CITY 32C","L":3280,"H":2600,"q":1,"loc":"SUBSOLO 01","acab":"PINTURA PRETO FOSCO - RAL9005F","vid":"LAMINADO 10MM INCOLOR","kind":"fixo","f":4},{"item":6,"tipo":"DV1-F","linha":"CITY 32C","desc":"FIXO 2 FOLHA(S) - VIDRO LAMINADO 10MM INCOLOR - LINHA CITY 32C","L":1600,"H":2600,"q":1,"loc":"SUBSOLO 01","acab":"PINTURA PRETO FOSCO - RAL9005F","vid":"LAMINADO 10MM INCOLOR","kind":"fixo","f":2},{"item":7,"tipo":"DV1-G","linha":"CITY 32C","desc":"FIXO 3 FOLHA(S) - VIDRO LAMINADO 10MM INCOLOR - LINHA CITY 32C","L":2400,"H":2600,"q":1,"loc":"SUBSOLO 01","acab":"PINTURA PRETO FOSCO - RAL9005F","vid":"LAMINADO 10MM INCOLOR","kind":"fixo","f":3},{"item":8,"tipo":"DV1-H","linha":"CITY 32C","desc":"FIXO 3 FOLHA(S) - VIDRO LAMINADO 10MM INCOLOR - LINHA CITY 32C","L":2650,"H":2600,"q":1,"loc":"SUBSOLO 01","acab":"PINTURA PRETO FOSCO - RAL9005F","vid":"LAMINADO 10MM INCOLOR","kind":"fixo","f":3},{"item":9,"tipo":"DV2-A","linha":"CITY 32C","desc":"FIXO 10 FOLHA(S) - VIDRO LAMINADO 10MM INCOLOR - LINHA CITY 32C","L":10740,"H":3000,"q":1,"loc":"SUBSOLO 01","acab":"PINTURA PRETO FOSCO - RAL9005F","vid":"LAMINADO 10MM INCOLOR","kind":"fixo","f":10},{"item":10,"tipo":"DV2-B","linha":"CITY 32C","desc":"FIXO 4 FOLHA(S) - VIDRO LAMINADO 10MM INCOLOR - LINHA CITY 32C","L":3950,"H":3000,"q":1,"loc":"SUBSOLO 01","acab":"PINTURA PRETO FOSCO - RAL9005F","vid":"LAMINADO 10MM INCOLOR","kind":"fixo","f":4},{"item":11,"tipo":"DV4","linha":"CITY 32C","desc":"FIXO 3 FOLHA(S) - VIDRO TEMPERADO 10MM INCOLOR - LINHA CITY 32C","L":3140,"H":1400,"q":1,"loc":"SUBSOLO 01","acab":"PINTURA PRETO FOSCO - RAL9005F","vid":"TEMPERADO 10MM INCOLOR","kind":"fixo","f":3},{"item":12,"tipo":"DV5-A","linha":"FAMILY 32","desc":"MAXIM-AR 5 FOLHA(S) - C/ PEITORIL FIXO - VIDRO LAMINADO 8MM INCOLOR - LINHA FAMILY 32","L":5580,"H":1400,"q":1,"loc":"SUBSOLO 01","acab":"PINTURA PRETO FOSCO - RAL9005F","vid":"LAMINADO 8MM INCOLOR","kind":"maxp","f":5},{"item":13,"tipo":"DV5-B","linha":"FAMILY 32","desc":"MAXIM-AR 3 FOLHA(S) - C/ PEITORIL FIXO - VIDRO LAMINADO 8MM INCOLOR - LINHA FAMILY 32","L":3140,"H":1400,"q":1,"loc":"SUBSOLO 01","acab":"PINTURA PRETO FOSCO - RAL9005F","vid":"LAMINADO 8MM INCOLOR","kind":"maxp","f":3},{"item":14,"tipo":"DV5-C","linha":"FAMILY 32","desc":"MAXIM-AR 2 FOLHA(S) - C/ PEITORIL FIXO - VIDRO LAMINADO 8MM INCOLOR - LINHA FAMILY 32","L":2380,"H":1400,"q":1,"loc":"SUBSOLO 01","acab":"PINTURA PRETO FOSCO - RAL9005F","vid":"LAMINADO 8MM INCOLOR","kind":"maxp","f":2},{"item":15,"tipo":"DV5-D","linha":"FAMILY 32","desc":"MAXIM-AR 5 FOLHA(S) - C/ PEITORIL FIXO - VIDRO LAMINADO 8MM INCOLOR - LINHA FAMILY 32","L":5740,"H":1400,"q":1,"loc":"SUBSOLO 01","acab":"PINTURA PRETO FOSCO - RAL9005F","vid":"LAMINADO 8MM INCOLOR","kind":"maxp","f":5},{"item":16,"tipo":"DV5-E","linha":"FAMILY 32","desc":"MAXIM-AR 5 FOLHA(S) - C/ PEITORIL FIXO - VIDRO LAMINADO 8MM INCOLOR - LINHA FAMILY 32","L":5700,"H":1400,"q":1,"loc":"SUBSOLO 01","acab":"PINTURA PRETO FOSCO - RAL9005F","vid":"LAMINADO 8MM INCOLOR","kind":"maxp","f":5},{"item":17,"tipo":"DV5-F","linha":"FAMILY 32","desc":"MAXIM-AR 3 FOLHA(S) - C/ PEITORIL FIXO - VIDRO LAMINADO 8MM INCOLOR - LINHA FAMILY 32","L":2970,"H":1400,"q":1,"loc":"SUBSOLO 01","acab":"PINTURA PRETO FOSCO - RAL9005F","vid":"LAMINADO 8MM INCOLOR","kind":"maxp","f":3},{"item":18,"tipo":"DV5-G","linha":"FAMILY 32","desc":"MAXIM-AR 5 FOLHA(S) - C/ PEITORIL FIXO - VIDRO LAMINADO 8MM INCOLOR - LINHA FAMILY 32","L":5340,"H":1400,"q":1,"loc":"SUBSOLO 01","acab":"PINTURA PRETO FOSCO - RAL9005F","vid":"LAMINADO 8MM INCOLOR","kind":"maxp","f":5},{"item":19,"tipo":"DV5-H","linha":"FAMILY 32","desc":"MAXIM-AR 4 FOLHA(S) - C/ PEITORIL FIXO - VIDRO LAMINADO 8MM INCOLOR - LINHA FAMILY 32","L":4180,"H":1400,"q":1,"loc":"SUBSOLO 01","acab":"PINTURA PRETO FOSCO - RAL9005F","vid":"LAMINADO 8MM INCOLOR","kind":"maxp","f":4},{"item":20,"tipo":"PV1","linha":"LINHA 42","desc":"PORTA DE GIRO - 1 FOLHA - VIDRO LAMINADO 8MM INCOLOR - LINHA 42","L":880,"H":2600,"q":6,"loc":"SUBSOLO 01","acab":"PINTURA PRETO FOSCO - RAL9005F","vid":"LAMINADO 8MM INCOLOR","kind":"giro","f":1},{"item":21,"tipo":"PV2","linha":"LINHA 42","desc":"PORTA DE GIRO - 1 FOLHA - VIDRO LAMINADO 8MM INCOLOR - LINHA 42","L":1080,"H":3000,"q":2,"loc":"SUBSOLO 01","acab":"PINTURA PRETO FOSCO - RAL9005F","vid":"LAMINADO 8MM INCOLOR","kind":"giro","f":1},{"item":22,"tipo":"DV1-I","linha":"CITY 32C","desc":"FIXO 3 FOLHA(S) - VIDRO LAMINADO 10MM INCOLOR - LINHA CITY 32C","L":2630,"H":2600,"q":1,"loc":"SUBSOLO 02","acab":"PINTURA PRETO FOSCO - RAL9005F","vid":"LAMINADO 10MM INCOLOR","kind":"fixo","f":3},{"item":23,"tipo":"DV1-J","linha":"CITY 32C","desc":"FIXO 4 FOLHA(S) - VIDRO LAMINADO 10MM INCOLOR - LINHA CITY 32C","L":3750,"H":2600,"q":1,"loc":"SUBSOLO 02","acab":"PINTURA PRETO FOSCO - RAL9005F","vid":"LAMINADO 10MM INCOLOR","kind":"fixo","f":4},{"item":24,"tipo":"DV1-K","linha":"CITY 32C","desc":"FIXO 1 FOLHA(S) - VIDRO LAMINADO 10MM INCOLOR - LINHA CITY 32C","L":920,"H":2600,"q":1,"loc":"SUBSOLO 02","acab":"PINTURA PRETO FOSCO - RAL9005F","vid":"LAMINADO 10MM INCOLOR","kind":"fixo","f":1},{"item":25,"tipo":"DV1-L","linha":"CITY 32C","desc":"FIXO 1 FOLHA(S) - VIDRO LAMINADO 10MM INCOLOR - LINHA CITY 32C","L":930,"H":2600,"q":1,"loc":"SUBSOLO 02","acab":"PINTURA PRETO FOSCO - RAL9005F","vid":"LAMINADO 10MM INCOLOR","kind":"fixo","f":1},{"item":26,"tipo":"DV5-I","linha":"FAMILY 32","desc":"MAXIM-AR 6 FOLHA(S) - C/ PEITORIL FIXO - VIDRO LAMINADO 8MM INCOLOR - LINHA FAMILY 32","L":6410,"H":1400,"q":1,"loc":"SUBSOLO 02","acab":"PINTURA PRETO FOSCO - RAL9005F","vid":"LAMINADO 8MM INCOLOR","kind":"maxp","f":6},{"item":27,"tipo":"DV5-J","linha":"FAMILY 32","desc":"MAXIM-AR 2 FOLHA(S) - C/ PEITORIL FIXO - VIDRO LAMINADO 8MM INCOLOR - LINHA FAMILY 32","L":2380,"H":1400,"q":1,"loc":"SUBSOLO 02","acab":"PINTURA PRETO FOSCO - RAL9005F","vid":"LAMINADO 8MM INCOLOR","kind":"maxp","f":2},{"item":28,"tipo":"DV5-K","linha":"FAMILY 32","desc":"MAXIM-AR 3 FOLHA(S) - C/ PEITORIL FIXO - VIDRO LAMINADO 8MM INCOLOR - LINHA FAMILY 32","L":3140,"H":1400,"q":1,"loc":"SUBSOLO 02","acab":"PINTURA PRETO FOSCO - RAL9005F","vid":"LAMINADO 8MM INCOLOR","kind":"maxp","f":3},{"item":29,"tipo":"DV5-L","linha":"FAMILY 32","desc":"MAXIM-AR 5 FOLHA(S) - C/ PEITORIL FIXO - VIDRO LAMINADO 8MM INCOLOR - LINHA FAMILY 32","L":5340,"H":1400,"q":1,"loc":"SUBSOLO 02","acab":"PINTURA PRETO FOSCO - RAL9005F","vid":"LAMINADO 8MM INCOLOR","kind":"maxp","f":5},{"item":30,"tipo":"DV6","linha":"FAMILY 32","desc":"MAXIM-AR 4 FOLHA(S) - VIDRO LAMINADO 8MM INCOLOR - LINHA FAMILY 32","L":2880,"H":600,"q":1,"loc":"SUBSOLO 02","acab":"PINTURA PRETO FOSCO - RAL9005F","vid":"LAMINADO 8MM INCOLOR","kind":"max","f":4},{"item":31,"tipo":"PV1-B","linha":"LINHA 42","desc":"PORTA DE GIRO - 1 FOLHA - VIDRO LAMINADO 8MM INCOLOR - LINHA 42","L":880,"H":2600,"q":4,"loc":"SUBSOLO 02","acab":"PINTURA PRETO FOSCO - RAL9005F","vid":"LAMINADO 8MM INCOLOR","kind":"giro","f":1},{"item":32,"tipo":"PV3","linha":"VIDRO TEMPERADO","desc":"PORTA PIVOTANTE 1 FOLHA COM 1 FIXO LATERAL - VIDRO TEMPERADO","L":1000,"H":2400,"q":1,"loc":"SUBSOLO 02","acab":"PINTURA PRETO FOSCO - RAL9005F","vid":"TEMPERADO","kind":"piv","f":1},{"item":33,"tipo":"PV4","linha":"GOLD","desc":"PORTA DE CORRER POR TRÁS DA PAREDE- ACOPLADO COM MAXIM-AR - VIDRO LAMINADO 8MM - 1 FOLHA - LINHA CITY 32C Validade da Proposta:","L":2970,"H":2400,"q":1,"loc":"Localização não informada","acab":"PINTURA PRETO FOSCO - RAL9005F","vid":"LAMINADO 8MM","kind":"correr","f":1}],"perfis":[{"code":"CL006","desc":"CONEXAO","trat":"","barra":3000,"q":6,"peso":20.034},{"code":"CL011","desc":"CUNHA","trat":"","barra":3000,"q":12,"peso":11.52},{"code":"CM200","desc":"CONTRA MARCO","trat":"","barra":6000,"q":50,"peso":59.4},{"code":"TCL-006","desc":"CONEXAO","trat":"","barra":6000,"q":2,"peso":13.356},{"code":"TCL-011","desc":"CUNHA","trat":"","barra":6000,"q":4,"peso":7.68},{"code":"TFM-100","desc":"CONTRAMARCO 25x25 mm","trat":"","barra":6000,"q":26,"peso":35.256},{"code":"32C-111","desc":"TRILHO INFERIOR DE ALUMINIO","trat":"ANODIZADO FOSCO-1000 (A23)","barra":6000,"q":2,"peso":1.152},{"code":"32C-001","desc":"MARCO","trat":"PINTURA PRETO FOSCO - RAL9005F","barra":6000,"q":23,"peso":88.182},{"code":"32C-002","desc":"MARCO","trat":"PINTURA PRETO FOSCO - RAL9005F","barra":6500,"q":37,"peso":181.818},{"code":"32C-005","desc":"MARCO INFERIOR PORTA DE CORRER","trat":"PINTURA PRETO FOSCO - RAL9005F","barra":6000,"q":1,"peso":2.724},{"code":"32C-006","desc":"LARGURA DA FOLHA DE CORRER","trat":"PINTURA PRETO FOSCO - RAL9005F","barra":6000,"q":1,"peso":4.056},{"code":"32C-010","desc":"FOLHA","trat":"PINTURA PRETO FOSCO - RAL9005F","barra":6000,"q":1,"peso":5.802},{"code":"32C-013","desc":"FOLHA","trat":"PINTURA PRETO FOSCO - RAL9005F","barra":6000,"q":1,"peso":7.374},{"code":"32C-019","desc":"MONTANTE LATERAL DA FOLHA JANELA DE CORRER","trat":"PINTURA PRETO FOSCO - RAL9005F","barra":6000,"q":1,"peso":4.902},{"code":"32C-024","desc":"TRILHO INFERIOR DE 2 PLANOS","trat":"PINTURA PRETO FOSCO - RAL9005F","barra":6000,"q":1,"peso":4.596},{"code":"32C-026","desc":"BAGUETE ARREDONDADO","trat":"PINTURA PRETO FOSCO - RAL9005F","barra":6000,"q":4,"peso":9.696},{"code":"32C-041","desc":"MAO DE AMIGO","trat":"PINTURA PRETO FOSCO - RAL9005F","barra":5000,"q":1,"peso":2.755},{"code":"32C-085","desc":"MONTANTE FOLHA 45°","trat":"PINTURA PRETO FOSCO - RAL9005F","barra":6000,"q":2,"peso":4.512},{"code":"BG037","desc":"BAGUETE","trat":"PINTURA PRETO FOSCO - RAL9005F","barra":6000,"q":13,"peso":16.224},{"code":"BG057","desc":"BAGUETE","trat":"PINTURA PRETO FOSCO - RAL9005F","barra":6000,"q":65,"peso":66.3},{"code":"LG077","desc":"INVERSOR","trat":"PINTURA PRETO FOSCO - RAL9005F","barra":6000,"q":4,"peso":7.824},{"code":"LG083","desc":"MARCO","trat":"PINTURA PRETO FOSCO - RAL9005F","barra":6000,"q":62,"peso":152.148},{"code":"LG092","desc":"PINGADEIRA","trat":"PINTURA PRETO FOSCO - RAL9005F","barra":6000,"q":1,"peso":0.948},{"code":"LG157","desc":"TRILHO INFERIOR","trat":"PINTURA PRETO FOSCO - RAL9005F","barra":6000,"q":2,"peso":3.012},{"code":"P-12-EX","desc":"PERFIL U 15,9X15,9","trat":"PINTURA PRETO FOSCO - RAL9005F","barra":6000,"q":1,"peso":0.906},{"code":"P-222-EX","desc":"CADEIRINHA (10MM)","trat":"PINTURA PRETO FOSCO - RAL9005F","barra":6000,"q":1,"peso":0.984},{"code":"P-227-EX","desc":"CANTONEIRA DE 5/8\" (E 1,2MM)","trat":"PINTURA PRETO FOSCO - RAL9005F","barra":6000,"q":1,"peso":0.612},{"code":"RM005","desc":"ARREMATE (ANTIGO MP347)","trat":"PINTURA PRETO FOSCO - RAL9005F","barra":6100,"q":49,"peso":60.378},{"code":"T30-570","desc":"TRAVESSA","trat":"PINTURA PRETO FOSCO - RAL9005F","barra":6000,"q":18,"peso":128.736},{"code":"T42-012","desc":"MARCO","trat":"PINTURA PRETO FOSCO - RAL9005F","barra":6000,"q":14,"peso":70.476},{"code":"T42-014","desc":"BATEDEIRA","trat":"PINTURA PRETO FOSCO - RAL9005F","barra":6000,"q":6,"peso":13.284},{"code":"T42-610","desc":"PERFIL DE FOLHA - PORTA DE GIRO - LINHA 42","trat":"PINTURA PRETO FOSCO - RAL9005F","barra":6000,"q":15,"peso":135.72},{"code":"TCT-005","desc":"CANTONEIRA COM ABAS IGUAIS - 15,88 X 15,88 X 1,59MM","trat":"PINTURA PRETO FOSCO - RAL9005F","barra":6000,"q":2,"peso":1.536},{"code":"TFM-135","desc":"ARREMATE","trat":"PINTURA PRETO FOSCO - RAL9005F","barra":6000,"q":26,"peso":73.788},{"code":"TFM-310","desc":"BAGUETE DO MARCO FIXO - FAMILY 200","trat":"PINTURA PRETO FOSCO - RAL9005F","barra":6000,"q":22,"peso":28.38},{"code":"TFM-350","desc":"MARCO DO MAXIM-AR","trat":"PINTURA PRETO FOSCO - RAL9005F","barra":6000,"q":40,"peso":88.32},{"code":"TFM-351","desc":"MARCO DA PORTA - FAMILY 300","trat":"PINTURA PRETO FOSCO - RAL9005F","barra":6000,"q":25,"peso":90.6},{"code":"TFM-355","desc":"FOLHA DO MAXIM-AR","trat":"PINTURA PRETO FOSCO - RAL9005F","barra":6000,"q":36,"peso":133.92},{"code":"TFM-360","desc":"PINGADEIRA - MAXIM-AR","trat":"PINTURA PRETO FOSCO - RAL9005F","barra":6000,"q":10,"peso":7.44},{"code":"TFM-370","desc":"MONTANTE VERTICAL - MAXIM-AR","trat":"PINTURA PRETO FOSCO - RAL9005F","barra":6000,"q":10,"peso":38.7},{"code":"TFM-372","desc":"MONTANTE VERTICAL - FAMILY 300","trat":"PINTURA PRETO FOSCO - RAL9005F","barra":6000,"q":10,"peso":69.96},{"code":"TTQ-009","desc":"TUBO QUADRADO - A 25,4 - E 1,58 MM","trat":"PINTURA PRETO FOSCO - RAL9005F","barra":6000,"q":1,"peso":2.436}],"pesoTotal":1657.447,"comps":[{"ap":"FÁBRICA","rf":"ANUDAL","code":"1918","desc":"CONEXÃO DE FIXAÇÃO MONTANTE L45 18.7X17.7X38.2MM","cor":"NATURAL","q":96,"un":"PC"},{"ap":"FÁBRICA","rf":"ANUDAL","code":"81-28010C","desc":"CONEXOES ALLEN RET. 28.0x10.0 TFM-320","cor":"-","q":396,"un":"PC"},{"ap":"FÁBRICA","rf":"FERMAX","code":"CFE29A005","desc":"CONTRA FECHO LATERAL","cor":"PRETO","q":1,"un":"PC"},{"ap":"FÁBRICA","rf":"FERMAX","code":"FMA99A105","desc":"FECHO FRONTAL SATURNO DIREITO MANIPULO 117MM","cor":"PRETO","q":54,"un":"PC"},{"ap":"FÁBRICA","rf":"FERMAX","code":"FMA99A205","desc":"FECHO FRONTAL SATURNO ESQUERDO MANIPULO 117 MM","cor":"PRETO","q":54,"un":"PC"},{"ap":"FÁBRICA","rf":"FERMAX","code":"GUI30012","desc":"(NYL396) GUIA E STOP SUPERIOR","cor":"PRETO","q":4,"un":"PC"},{"ap":"FÁBRICA","rf":"FERMAX","code":"SRG01A005","desc":"ARTICULACAO PROGRESSIVA 342MM CAIXA 15MM CARGA MAX 22KG","cor":"PRETO","q":6,"un":"PR"},{"ap":"FÁBRICA","rf":"FERMAX","code":"SRG02A005","desc":"ARTICULACAO PROGRESSIVA 600MM CAIXA 15MM CARGA MAX 30KG","cor":"PRETO","q":48,"un":"PR"},{"ap":"FÁBRICA","rf":"MERCADO","code":"BUCH00753CZA","desc":"(BUC7530000) - BUCHA DE NYLON S-6","cor":"CINZA","q":7,"un":"PC"},{"ap":"FÁBRICA","rf":"MERCADO","code":"CALCO10MM","desc":"CALÇO DE 10MM PARA REGULAGEM DO VIDRO","cor":"NATURAL","q":2,"un":"PC"},{"ap":"FÁBRICA","rf":"MERCADO","code":"CONX10083PTO","desc":"ESQUADRO EM NYLON P/ CONTRAMARCO – 240MM","cor":"PRETO","q":6,"un":"PC"},{"ap":"FÁBRICA","rf":"MERCADO","code":"FITAS050X070PT","desc":"FITA VEDADORA SEM BARREIRA PLASTICA 5X7 MM (FIT-210)","cor":"PRETO","q":103.996,"un":"MT"},{"ap":"FÁBRICA","rf":"MERCADO","code":"GUAR10134PTO","desc":"GUARNIÇÃO VEDAÇÃO FOLHA EPDM 6,7MM X 4,8MM","cor":"PRETO","q":264.744,"un":"MT"},{"ap":"FÁBRICA","rf":"MERCADO","code":"PARFIACP03928N","desc":"PARAF INOX 304 A. ATARR CAB CHATA PHILIPS 3,9X28MM","cor":"NATURAL","q":7,"un":"PC"},{"ap":"FÁBRICA","rf":"MERCADO","code":"PARFIACP04216P","desc":"PARAF INOX 304 A. ATARR CAB CHATA PHILIPS 4,2X16MM","cor":"PRETO","q":93,"un":"PC"},{"ap":"FÁBRICA","rf":"MERCADO","code":"PARFIACP04222N","desc":"PARAF INOX 304 A. ATARR CAB CHATA PHILIPS 4,2X22MM","cor":"NATURAL","q":444,"un":"PC"},{"ap":"FÁBRICA","rf":"MERCADO","code":"PARFIACP04225P","desc":"PARAF INOX 304 A. ATARR CAB CHATA PHILIPS 4,2X25MM","cor":"PRETO","q":54,"un":"PC"},{"ap":"FÁBRICA","rf":"MERCADO","code":"PARFIAPP03595N","desc":"PARAF INOX 304 A. ATARR CAB PANELA PHILIPS 3,5X9,5MM","cor":"NATURAL","q":9,"un":"PC"},{"ap":"FÁBRICA","rf":"MERCADO","code":"PARFIAPP04213N","desc":"PARAF INOX 304 A. ATARR CAB PANELA PHILIPS 4,2X13MM","cor":"NATURAL","q":13,"un":"PC"},{"ap":"FÁBRICA","rf":"MERCADO","code":"PARFIAPP04225N","desc":"PARAF INOX 304 A. ATARR CAB PANELA PHILIPS 4,2X25MM","cor":"NATURAL","q":982,"un":"PC"},{"ap":"FÁBRICA","rf":"MERCADO","code":"PARFIAPP04295P","desc":"PARAF INOX 304 A. ATARR CAB PANELA PHILIPS 4,2X9,5MM","cor":"PRETO","q":6,"un":"PC"},{"ap":"FÁBRICA","rf":"MERCADO","code":"PARFIBPP03513N","desc":"PARAF INOX 304 A. BROCANTE CAB PANELA PHILIPS 3,5X13MM","cor":"NATURAL","q":96,"un":"PC"},{"ap":"FÁBRICA","rf":"MERCADO","code":"PARFIBPP04219N","desc":"PARAF INOX 304 A. BROCANTE CAB PANELA PHILIPS 4,2X19MM","cor":"NATURAL","q":384,"un":"PC"},{"ap":"FÁBRICA","rf":"MERCADO","code":"PARFIPPP04832N","desc":"PARAF INOX 304 A. ATARR CAB PANELA PHILIPS 4,8X32MM PONTA GUIA","cor":"NATURAL","q":276,"un":"PC"},{"ap":"FÁBRICA","rf":"MERCADO","code":"PARFIPPP04850N","desc":"PARAF INOX 304 A. ATARR CAB PANELA PHILIPS 4,8X50MM PONTA GUIA","cor":"NATURAL","q":6,"un":"PC"},{"ap":"FÁBRICA","rf":"MERCADO","code":"REBTAPA04010NA","desc":"REBITE POP DE ALUMINIO 4,0 X 10MM C. ABAULADA NATURAL","cor":"FOSCO","q":24,"un":"PC"},{"ap":"FÁBRICA","rf":"MERCADO","code":"SILC000NTINC","desc":"SILICONE NEUTRO – RENDIMENTO CÁLC. APROX. 300ML 5MM 4MM - 15 METROS LINEAR","cor":"INCOLOR","q":6.4,"un":"MT"},{"ap":"FÁBRICA","rf":"MERCADO","code":"SILC000NTPTO","desc":"SILICONE NEUTRO – RENDIMENTO CÁLC. APROX. 300ML 5MM 4MM - 15 METROS LINEAR","cor":"PRETO","q":3.6,"un":"MT"},{"ap":"FÁBRICA","rf":"ROTO FERMAX","code":"ADF04042","desc":"CALÇO VEDANTE","cor":"PRETO","q":4,"un":"PC"},{"ap":"FÁBRICA","rf":"ROTO FERMAX","code":"ARM01U","desc":"(CAL945) ARREMATE TAPA CANAL","cor":"PRETO","q":12,"un":"PC"},{"ap":"FÁBRICA","rf":"ROTO FERMAX","code":"BTD10012","desc":"(NYL398) BATEDEIRA","cor":"PRETO","q":2,"un":"PC"},{"ap":"FÁBRICA","rf":"ROTO FERMAX","code":"BTF01U","desc":"BOTAO TAPA FURO ( NYL042 ) - PCT 1000 PÇS","cor":"PRETO","q":482,"un":"PC"},{"ap":"FÁBRICA","rf":"ROTO FERMAX","code":"CAL08BU","desc":"(CON436) CALCO E ARREMATE DA TRAVESSA","cor":"BRANCO","q":4,"un":"PC"},{"ap":"FÁBRICA","rf":"ROTO FERMAX","code":"CMF03P022","desc":"MAÇANETA 460/470/480 (MAQ.: “MMF01”)","cor":"PRETO","q":12,"un":"PC"},{"ap":"FÁBRICA","rf":"ROTO FERMAX","code":"CNA01U","desc":"(CON433) CONEXAO DE ALINHAMENTO DA FOLHA","cor":"PRETO","q":12,"un":"PC"},{"ap":"FÁBRICA","rf":"ROTO FERMAX","code":"CTE15P022","desc":"CONTRA TESTA PARA PORTAS DE GIRO SEM LADO LINHAS GOLD CHROMA E MEGA 32","cor":"PRETO","q":12,"un":"PC"},{"ap":"FÁBRICA","rf":"ROTO FERMAX","code":"DOB41R085","desc":"DOBRADIÇA COM ROL 3\" X 2 1/3\" X 2MM CANTO RETO INOX ESCOVADO","cor":"INOX ESCOVADO","q":48,"un":"PC"},{"ap":"FÁBRICA","rf":"ROTO FERMAX","code":"FEC45P022","desc":"FECHO CONCHA C/CHAVE","cor":"PRETO","q":1,"un":"PC"},{"ap":"FÁBRICA","rf":"ROTO FERMAX","code":"FNB01REU","desc":"FECHADURA EXT NBR55 LINGUETA CANTO RETO ÚNICA","cor":"NATURAL","q":12,"un":"CJ"},{"ap":"FÁBRICA","rf":"ROTO FERMAX","code":"LIN04042","desc":"LINGUETA 31MM CURVA PARA FEC95 E 96","cor":"NATURAL","q":1,"un":"PC"},{"ap":"FÁBRICA","rf":"ROTO FERMAX","code":"ROL81N041","desc":"ROLDANA MAX STRONG DUPLA COM ROLAMENTO, REGULAGEM E SUPORTE EM INOX 260KG POR FOLHA","cor":"FOSCO","q":2,"un":"PC"},{"ap":"FÁBRICA","rf":"UDINESE","code":"CON434PRTE10","desc":"CONEXAO MONTANTE TRAVA MAX-AR GOLD NYL PRT C/10PCS (CON434)","cor":"PRETO","q":12,"un":"PC"},{"ap":"FÁBRICA","rf":"UDINESE","code":"FIT201UDPRT","desc":"FITA VEDADORA 5X5 PB48500 3P S/B PRT C/50MT (FIT201) **","cor":"PRETO","q":2.4,"un":"MT"},{"ap":"FÁBRICA","rf":"UDINESE","code":"FIT206UDPRT","desc":"FITA VEDADORA 5X6 PB48600 3P S/B PRT C/50MT (FIT206) **","cor":"PRETO","q":9.512,"un":"MT"},{"ap":"FÁBRICA","rf":"UDINESE","code":"FIT223UDPRT","desc":"FITA VEDADORA 7X8 FS69800 4P C/B PRT C/50MT (FIT223) **","cor":"PRETO","q":11.904,"un":"MT"},{"ap":"FÁBRICA","rf":"UDINESE","code":"GUA007BTPRT","desc":"GUARNICAO EPDM PINGADEIRA 11MM BT506 PRT C/50MT (GUA007) **","cor":"PRETO","q":2.965,"un":"MT"},{"ap":"FÁBRICA","rf":"UDINESE","code":"GUA239BTPRT","desc":"GUARNICAO EPDM MARCO SD2533 BT534 PRT C/50MT (GUA239) **","cor":"PRETO","q":14.532,"un":"MT"},{"ap":"FÁBRICA","rf":"UDINESE","code":"GUA374UDPRT","desc":"GUARNICAO EPDM PINGADEIRA PRT C/50MT (GUA374) **","cor":"PRETO","q":2.965,"un":"MT"},{"ap":"OBRA","rf":"MERCADO","code":"BUCH00755FCO","desc":"(BUC7550000) - BUCHA DE NYLON P/ FIXACAO S-8","cor":"FOSCO","q":13,"un":"PC"},{"ap":"OBRA","rf":"MERCADO","code":"ESPMA170X100PT","desc":"ESPUMA ADESIVA 17X10 POLIETILENO","cor":"PRETO","q":145.16,"un":"MT"},{"ap":"OBRA","rf":"MERCADO","code":"ESPMA290X120PT","desc":"ESPUMA ADESIVA 29X12 POLIETILENO","cor":"PRETO","q":290.32,"un":"MT"},{"ap":"OBRA","rf":"MERCADO","code":"GUAR00038PTO","desc":"(GUA0380000) - GUARNIÇÃO CUNHA 11X1,6MM(1FRISO)(50MT)","cor":"PRETO","q":410.988,"un":"MT"},{"ap":"OBRA","rf":"MERCADO","code":"GUAR10132PTO","desc":"GUARNIÇÃO EXTERNA DO VIDRO EM EPDM 13,4MM x 3.3MM","cor":"PRETO","q":53.052,"un":"MT"},{"ap":"OBRA","rf":"MERCADO","code":"PARFIAPP04216N","desc":"PARAF INOX 304 A. ATARR CAB PANELA PHILIPS 4,2X16MM","cor":"NATURAL","q":1073,"un":"PC"},{"ap":"OBRA","rf":"MERCADO","code":"PARFIAPP04850N","desc":"PARAF INOX 304 A. ATARR CAB PANELA PHILIPS 4,8X50MM","cor":"NATURAL","q":13,"un":"PC"},{"ap":"OBRA","rf":"MERCADO","code":"SILC000ACINC","desc":"SILICONE ACETICO – RENDIMENTO CÁLC. APROX. 300ML ÷ 5MM ÷ 4MM - 15 METROS LINEAR","cor":"INCOLOR","q":145.16,"un":"MT"},{"ap":"OBRA","rf":"ROTO FERMAX","code":"538303","desc":"CALÇO PARA TRAVAMENTO DO VIDRO 100 X 15 X 3 VERMELHO","cor":"VERMELHO","q":594,"un":"PC"},{"ap":"OBRA","rf":"ROTO FERMAX","code":"BOR04100M","desc":"BORRACHA DO VIDRO INT. 4 MM","cor":"PRETO","q":53.052,"un":"MT"},{"ap":"OBRA","rf":"ROTO FERMAX","code":"CNA01U","desc":"(CON433) CONEXAO DE ALINHAMENTO DA FOLHA","cor":"PRETO","q":52,"un":"PC"},{"ap":"OBRA","rf":"ROTO FERMAX","code":"PRE05N012","desc":"PRESILHA DO FIXAÇÃO DO ARREMATE - PCT C/ 500 PEÇAS INJ. PRETO","cor":"PRETO","q":1073,"un":"PC"},{"ap":"OBRA","rf":"UDINESE","code":"CHU838UD","desc":"CHUMBADOR ALUMINIO MULTI USO (CHU838) **","cor":"NATURAL","q":1073,"un":"PC"},{"ap":"OBRA","rf":"UDINESE","code":"GUA132UDPRT","desc":"GUARNICAO EPDM ACABAMENTO PVC 100/2 PRT C/50MT (GUA132) **","cor":"PRETO","q":2.4,"un":"MT"},{"ap":"OBRA","rf":"UDINESE","code":"GUA171UDPRT","desc":"GUARNICAO ESPUMA ADESIVA PVC 11,2X3MM PRT C/50MT (GUA171) **","cor":"PRETO","q":82.512,"un":"MT"},{"ap":"OBRA","rf":"UDINESE","code":"GUA172UDPRT","desc":"GUARNICAO ESPUMA ADESIVA PVC 11X2MM PRT C/50MT (GUA172) **","cor":"PRETO","q":238.396,"un":"MT"},{"ap":"OBRA","rf":"UDINESE","code":"GUA256BTPRT","desc":"GUARNICAO EPDM CUNHA SD626 BT PRT C/50MT (GUA256) **","cor":"PRETO","q":82.512,"un":"MT"},{"ap":"OBRA","rf":"UDINESE","code":"GUA259BTPRT","desc":"GUARNICAO EPDM CUNHA SD631 BT PRT C/50MT (GUA259) **","cor":"PRETO","q":395.14,"un":"MT"},{"ap":"OBRA","rf":"UDINESE","code":"GUA304UDPRT","desc":"GUARNICAO ESPUMA ADESIVA PVC 14X6MM PRT C/50MT (GUA304) **","cor":"PRETO","q":33.83,"un":"MT"},{"ap":"OBRA","rf":"UDINESE","code":"GUA306UDPRT","desc":"GUARNICAO ESPUMA ADESIVA PVC 14X4,8MM PRT C/50MT (GUA306) **","cor":"PRETO","q":361.31,"un":"MT"},{"ap":"OBRA","rf":"UDINESE","code":"GUA309UDPRT","desc":"GUARNICAO EPDM 6,5MM PRT C/50MT (GUA309) **","cor":"PRETO","q":2.4,"un":"MT"}]};
+
+// ---------- UTIL ----------
+const n=v=>{if(v===null||v===undefined)return 0;const s=String(v).trim().replace(/\s/g,"");if(!s)return 0;const x=parseFloat(s.includes(",")?s.replace(/\./g,"").replace(",","."):s);return isFinite(x)?x:0};
+const brl=v=>v.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+const num=(v,d=3)=>v.toLocaleString("pt-BR",{minimumFractionDigits:d,maximumFractionDigits:d});
+const pct=v=>num(v,1)+"%";
+const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
+const $=id=>document.getElementById(id);
+const uid=()=>"o"+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const glassName=k=>{const s=String(k).toLowerCase().replace(/(\d+)\s*mm/g,"$1 mm");return "Vidro "+s};
+function pv(cost,m){const i=n(m.imp)/100,d=n(m.desp)/100,g=n(m.mg)/100;const div=1-i-d-g;if(div<=0)return {ok:false,div,v:0};return {ok:true,div,v:cost/div}}
+const blankMg=()=>({imp:"",desp:"",mg:""});
+
+// ---------- BANCO LOCAL ----------
+const KEY="fc-orcamentos-v2";
+let DB=null;
+try{const s=localStorage.getItem(KEY);if(s)DB=JSON.parse(s)}catch(e){}
+function newState(o,lib){
+ const st={hide:{},comp:{},aluPeso:num(o.pesoTotal||o.perfis.reduce((s,p)=>s+p.peso,0)),aluKg:lib.aluKg||"",aluAdd:lib.aluAdd||"",vidPrice:{},vidM2:{},
+  outros:[{d:"Mão de obra de fabricação",v:""},{d:"Instalação",v:""},{d:"Frete / transporte",v:""},{d:"",v:""}],
+  mg:{comp:Object.assign(blankMg(),lib.mg&&lib.mg.comp),alu:Object.assign(blankMg(),lib.mg&&lib.mg.alu),vid:Object.assign(blankMg(),lib.mg&&lib.mg.vid),out:Object.assign(blankMg(),lib.mg&&lib.mg.out)},
+  rateio:"area",validade:"",cond:"",prazo:"",obs:""};
+ o.comps.forEach(c=>{if(lib.comp&&lib.comp[c.code])st.comp[c.code]=lib.comp[c.code]});
+ [...new Set(o.tips.map(t=>t.vid))].forEach(k=>{if(lib.vid&&lib.vid[k])st.vidPrice[k]=lib.vid[k]});
+ return st;
+}
+if(!DB||!Array.isArray(DB.obras)){
+ DB={v:2,obras:[],lib:{comp:{},vid:{},aluKg:"",aluAdd:"",mg:{}}};
+ const o=Object.assign({id:uid(),criado:new Date().toISOString()},JSON.parse(JSON.stringify(SEED)));
+ o.st=newState(o,DB.lib);
+ // traz os preços já digitados na versão anterior desta obra
+ try{const old=JSON.parse(localStorage.getItem("fc-orc-AR_10-26-025-00")||"null");if(old){
+  ["comp","hide","outros","mg","rateio","validade","cond","prazo","obs","aluPeso","aluKg","aluAdd"].forEach(k=>{if(old[k]!==undefined)o.st[k]=old[k]});
+  const map={L10:["LAMINADO 10MM INCOLOR"],T10:["TEMPERADO 10MM INCOLOR"],L8:["LAMINADO 8MM INCOLOR","LAMINADO 8MM"],TPV:["TEMPERADO"]};
+  Object.keys(map).forEach(k=>map[k].forEach(nk=>{if(old.vidPrice&&old.vidPrice[k])o.st.vidPrice[nk]=old.vidPrice[k];if(old.vidM2&&old.vidM2[k]&&map[k].length===1)o.st.vidM2[nk]=old.vidM2[k]}));
+  Object.assign(DB.lib.comp,old.comp||{});
+ }}catch(e){}
+ DB.obras.push(o);
+}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(DB))}catch(e){}}
+save();
+
+// ---------- CÁLCULOS POR OBRA ----------
+const isHid=(O,i)=>!!(O.st.hide&&O.st.hide[i]);
+const compCost=O=>O.comps.reduce((s,r,i)=>s+(isHid(O,i)?0:r.q*n(O.st.comp[r.code])),0);
+const aluCost=O=>n(O.st.aluPeso)*(n(O.st.aluKg)+n(O.st.aluAdd));
+const itemM2=t=>t.L*t.H*t.q/1e6;
+const itemPer=t=>2*(t.L+t.H)*t.q/1000;
+const gKeys=O=>[...new Set(O.tips.map(t=>t.vid))];
+const autoM2=(O,k)=>O.tips.filter(t=>t.vid===k).reduce((s,t)=>s+itemM2(t),0);
+const m2Of=(O,k)=>{const o=n(O.st.vidM2[k]);return o>0?o:autoM2(O,k)};
+const vidCostOf=(O,k)=>m2Of(O,k)*n(O.st.vidPrice[k]);
+const vidCost=O=>gKeys(O).reduce((s,k)=>s+vidCostOf(O,k),0);
+const outCost=O=>O.st.outros.reduce((s,o)=>s+n(o.v),0);
+function groups(O){return [
+ {k:"comp",name:"Componentes",cost:compCost(O)},{k:"alu",name:"Alumínio",cost:aluCost(O)},
+ {k:"vid",name:"Vidros",cost:vidCost(O)},{k:"out",name:"Outros custos",cost:outCost(O)}
+].map(g=>Object.assign(g,{p:pv(g.cost,O.st.mg[g.k])}))}
+const totals=O=>{const gs=groups(O);return {c:gs.reduce((s,g)=>s+g.cost,0),v:gs.reduce((s,g)=>s+(g.p.ok?g.p.v:0),0),gs}};
+
+// ================= TELA INICIAL =================
+let NEW=null; // estado do formulário de novo orçamento
+function showHome(){
+ location.hash=""; $("tabs").hidden=true; $("view-obra").hidden=true; $("view-home").hidden=false;
+ const tot=DB.obras.reduce((s,o)=>s+totals(o).v,0);
+ $("hdr").innerHTML=`<div><a class="tomatriz" href="../painel.html">← Painel da Matriz</a><div class="eyebrow">FC Consultoria em Esquadria</div><h1>Orçamentos de obra</h1><div class="meta">Lance um orçamento a partir dos PDFs do sistema: croqui, lista de perfis e lista de componentes.</div></div>
+  <div class="kpis"><div class="kpi"><span class="eyebrow">Obras</span><b class="num">${DB.obras.length}</b></div><div class="kpi sale"><span class="eyebrow">Total em propostas</span><b class="num">${brl(tot)}</b></div></div>`;
+ if(NEW){renderNew();return}
+ const cards=DB.obras.slice().reverse().map(o=>{const t=totals(o);const nP=o.comps.filter((c,i)=>!isHid(o,i)&&!(n(o.st.comp[c.code])>0)).length;
+  const lines=[...new Set(o.tips.map(x=>x.linha))].slice(0,4).join(" · ");
+  return `<article class="ocard"><div class="n">${esc(o.numero||"Sem número")}</div><h3>${esc(o.obra||"Obra sem nome")}</h3>
+  <div class="cl">${esc(o.cliente&&o.cliente!==o.obra?o.cliente+" · ":"")}${esc(lines)}</div>
+  <div class="chips"><span class="chip">${o.tips.length} tipologias</span><span class="chip">${o.perfis.length} perfis</span><span class="chip ${nP?"warn":"ok"}">${nP?nP+" componentes sem preço":"componentes com preço"}</span></div>
+  <div class="vals"><div><span>Custo</span><b class="num">${brl(t.c)}</b></div><div class="sale"><span>Venda</span><b class="num">${brl(t.v)}</b></div></div>
+  <div class="acts" id="acts-${o.id}"><button class="btn" data-open="${o.id}">Abrir orçamento</button><button class="btn ghost" data-dup="${o.id}">Duplicar</button><button class="btn ghost" data-del="${o.id}">Excluir</button></div>
+  <div class="hint">Criado em ${new Date(o.criado).toLocaleDateString("pt-BR")}</div></article>`}).join("");
+ $("view-home").innerHTML=`<div class="home-grid"><button class="newcard" id="b-new"><span class="plus">+</span><h3>Novo orçamento</h3><span class="hint">Selecione os 3 PDFs do sistema (croqui, perfis e componentes). Os preços já usados em outras obras entram automaticamente.</span></button>${cards}</div>
+ <div class="card" style="margin-top:24px"><div class="card-h"><div><h2>Backup</h2><div class="hint">Os orçamentos ficam salvos neste navegador. Para levar a outro aparelho, copie os dados e cole lá.</div></div></div>
+ <div class="card-b toolbar"><button class="btn" id="b-copy">Copiar todos os dados</button><textarea class="in" id="b-paste" rows="1" style="flex:1;min-width:200px" placeholder="Cole aqui os dados copiados"></textarea><button class="btn ghost" id="b-load">Carregar dados colados</button><span class="hint" id="b-msg"></span></div></div>`;
+ $("b-new").onclick=()=>{NEW={files:{},h:{numero:"",obra:"",cliente:"",cor:""},msg:""};renderNew()};
+ $("view-home").onclick=e=>{const b=e.target.closest("button");if(!b)return;
+  if(b.dataset.open)openObra(b.dataset.open);
+  if(b.dataset.dup){const o=DB.obras.find(x=>x.id===b.dataset.dup);const c=JSON.parse(JSON.stringify(o));c.id=uid();c.criado=new Date().toISOString();c.obra=(c.obra||"")+" (cópia)";DB.obras.push(c);save();showHome()}
+  if(b.dataset.del){const box=$("acts-"+b.dataset.del);box.innerHTML=`<span class="err">Excluir este orçamento?</span><button class="btn danger" data-delok="${b.dataset.del}">Sim, excluir</button><button class="btn ghost" data-cancel="1">Não</button>`}
+  if(b.dataset.delok){DB.obras=DB.obras.filter(x=>x.id!==b.dataset.delok);save();showHome()}
+  if(b.dataset.cancel)showHome();
+ };
+ $("b-copy").onclick=()=>{const txt=JSON.stringify(DB);const fb=()=>{$("b-paste").value=txt;$("b-paste").select();$("b-msg").textContent="Copie o texto selecionado (Ctrl+C)."};
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(txt).then(()=>$("b-msg").textContent="Dados copiados.").catch(fb);else fb()};
+ $("b-load").onclick=()=>{try{const d=JSON.parse($("b-paste").value);if(!d.obras)throw 0;DB=d;save();showHome()}catch(e){$("b-msg").textContent="Não foi possível ler os dados. Cole o texto completo copiado."}};
+}
+
+// ---------- NOVO ORÇAMENTO ----------
+let pdfReady=null;
+function loadPdfJs(){if(pdfReady)return pdfReady;
+ const add=src=>new Promise((res,rej)=>{const s=document.createElement("script");s.src=src;s.onload=res;s.onerror=()=>rej(new Error("load"));document.head.appendChild(s)});
+ const base="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/";
+ pdfReady=add(base+"pdf.worker.min.js").then(()=>add(base+"pdf.min.js")).then(()=>window.pdfjsLib);
+ pdfReady.catch(()=>{pdfReady=null});return pdfReady}
+async function readPdf(file){
+ const lib=await loadPdfJs();const buf=new Uint8Array(await file.arrayBuffer());
+ const d=await lib.getDocument({data:buf}).promise;const P=[];
+ for(let p=1;p<=d.numPages;p++){const tc=await (await d.getPage(p)).getTextContent();P.push(tc.items.map(i=>({x:i.transform[4],y:i.transform[5],s:i.str})))}
+ return P;
+}
+async function addFiles(list){
+ for(const f of list){
+  if(!/\.pdf$/i.test(f.name)&&f.type!=="application/pdf"){NEW.msg=`"${f.name}" não é PDF.`;continue}
+  NEW.msg=`Lendo ${f.name}…`;renderNew();
+  try{const P=await readPdf(f);const t=pDetect(P);
+   if(!t){NEW.msg=`Não reconheci "${f.name}". Use os relatórios Proposta (croqui), Relação de Materiais (perfis) ou Componentes da Obra.`;continue}
+   const h=pHeader(P);let data;
+   if(t==="croqui")data=pCroqui(P);else if(t==="perfis")data=pPerfis(P);else data=pComp(P);
+   NEW.files[t]={name:f.name,h,data};
+   ["numero","obra","cliente","cor"].forEach(k=>{if(!NEW.h[k]&&h[k])NEW.h[k]=h[k]});
+   if(t==="croqui"&&!NEW.h.obra&&h.cliente)NEW.h.obra=h.cliente;
+   NEW.msg="";
+  }catch(e){NEW.msg=String(e&&e.message)==="load"?"Não consegui carregar o leitor de PDF. Verifique a internet e tente de novo.":`Erro ao ler "${f.name}".`}
+ }
+ renderNew();
+}
+function renderNew(){
+ const F=NEW.files;
+ const slot=(k,label,info)=>`<div class="slot ${F[k]?"done":""}"><b>${label}</b><span class="st">${F[k]?esc(F[k].name)+"<br>"+info:"Aguardando PDF"}</span></div>`;
+ const pi=F.perfis?`${F.perfis.data.rows.length} códigos · ${num(F.perfis.data.rows.reduce((s,p)=>s+p.peso,0))} kg`+(F.perfis.data.total?(Math.abs(F.perfis.data.total-F.perfis.data.rows.reduce((s,p)=>s+p.peso,0))<0.01?" · confere com o total do PDF":` · <span class="err">PDF diz ${num(F.perfis.data.total)} kg</span>`):""):"";
+ const nums=[...new Set(Object.values(F).map(f=>f.h.numero).filter(Boolean))];
+ const ready=Object.keys(F).length>0;
+ $("view-home").innerHTML=`<div class="card"><div class="card-h"><div><h2>Novo orçamento</h2><div class="hint">Pode selecionar os 3 PDFs de uma vez. O tipo de cada arquivo é reconhecido sozinho.</div></div><button class="btn ghost" id="n-cancel">Cancelar</button></div>
+ <div class="card-b stack">
+  <label class="drop" id="n-drop" for="n-file"><b style="font-family:var(--display);font-size:16px">Arraste os PDFs aqui ou toque para escolher</b><span class="hint">Croqui (Proposta) · Relação de Materiais (perfis) · Componentes da Obra</span><input type="file" id="n-file" accept="application/pdf,.pdf" multiple hidden></label>
+  ${NEW.msg?`<div class="${/Lendo/.test(NEW.msg)?"hint":"err"}">${esc(NEW.msg)}</div>`:""}
+  <div class="slots">${slot("croqui","Croqui",F.croqui?F.croqui.data.length+" tipologias · "+F.croqui.data.reduce((s,t)=>s+t.q,0)+" peças":"")}${slot("perfis","Lista de perfis",pi)}${slot("comp","Lista de componentes",F.comp?F.comp.data.length+" itens":"")}</div>
+  ${nums.length>1?`<div class="chip warn">Atenção: os arquivos têm números diferentes (${nums.map(esc).join(" · ")}). Confira se são da mesma obra.</div>`:""}
+  <div class="fields">
+   <label>Número da proposta<input class="in" id="n-numero" value="${esc(NEW.h.numero)}"></label>
+   <label>Obra<input class="in" id="n-obra" value="${esc(NEW.h.obra)}"></label>
+   <label>Cliente<input class="in" id="n-cliente" value="${esc(NEW.h.cliente)}"></label>
+   <label>Acabamento predominante<input class="in" id="n-cor" value="${esc(NEW.h.cor)}"></label>
+  </div>
+  <div class="toolbar"><button class="btn" id="n-create" ${ready?"":"disabled"}>Criar orçamento</button><span class="hint">${ready&&Object.keys(F).length<3?"Faltou algum PDF? Dá para criar assim mesmo; a parte que faltar fica vazia.":""}</span></div>
+ </div></div>`;
+ const drop=$("n-drop");
+ ["dragenter","dragover"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add("over")}));
+ ["dragleave","drop"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove("over")}));
+ drop.addEventListener("drop",e=>addFiles([...e.dataTransfer.files]));
+ $("n-file").onchange=e=>addFiles([...e.target.files]);
+ ["numero","obra","cliente","cor"].forEach(k=>$("n-"+k).oninput=e=>NEW.h[k]=e.target.value);
+ $("n-cancel").onclick=()=>{NEW=null;showHome()};
+ $("n-create").onclick=()=>{
+  const o={id:uid(),criado:new Date().toISOString(),numero:NEW.h.numero,obra:NEW.h.obra,cliente:NEW.h.cliente,cor:NEW.h.cor,data:"",
+   tips:F.croqui?F.croqui.data:[],perfis:F.perfis?F.perfis.data.rows:[],pesoTotal:F.perfis?F.perfis.data.total:0,comps:F.comp?F.comp.data:[]};
+  o.st=newState(o,DB.lib);DB.obras.push(o);save();NEW=null;openObra(o.id);
+ };
+}
+
+// ================= OBRA =================
+let O=null,st=null,compFilter="all";
+function openObra(id){
+ O=DB.obras.find(x=>x.id===id);if(!O){showHome();return}st=O.st;compFilter="all";
+ location.hash="obra-"+O.id;
+ $("view-home").hidden=true;$("view-obra").hidden=false;$("tabs").hidden=false;
+ const lines=[...new Set(O.tips.map(t=>t.linha))].join(", ");
+ $("hdr").innerHTML=`<div><button class="back" id="b-back">← Orçamentos</button><div class="eyebrow">Orçamento de obra · ${esc(O.numero||"sem número")}</div><h1>${esc(O.obra||"Obra sem nome")}</h1>
+  <div class="meta">${esc(O.cor||"")}${O.cor&&lines?" · ":""}${esc(lines)} · ${O.tips.length} itens</div></div>
+  <div class="kpis"><div class="kpi"><span class="eyebrow">Custo total</span><b class="num" id="k-cost">R$ 0,00</b></div><div class="kpi sale"><span class="eyebrow">Preço de venda</span><b class="num" id="k-sale">R$ 0,00</b></div></div>`;
+ $("b-back").onclick=showHome;
+ buildObra();
+ let tab="comp";try{tab=localStorage.getItem(KEY+"-tab")||"comp"}catch(e){}
+ selectTab(tab);
+}
+function selectTab(t){const b=document.querySelector(`#tabs button[data-tab="${t}"]`)||document.querySelector('#tabs button');
+ document.querySelectorAll("#tabs button").forEach(x=>x.setAttribute("aria-selected",x===b));
+ document.querySelectorAll("#view-obra .tab").forEach(s=>s.hidden=s.id!=="tab-"+b.dataset.tab);
+ try{localStorage.setItem(KEY+"-tab",b.dataset.tab)}catch(e){}}
+$("tabs").addEventListener("click",e=>{const b=e.target.closest("button[data-tab]");if(b)selectTab(b.dataset.tab)});
+
+function buildObra(){
+ $("view-obra").innerHTML=`
+<section id="tab-comp" class="tab"><div class="panel-grid">
+ <div class="card"><div class="card-h"><div><h2>Componentes da obra</h2><div class="hint">Digite o custo unitário (por PC, PR, CJ ou MT). Desmarque "Cotar" para ocultar o item: ele sai da cotação e do custo.</div></div>
+  <div class="toolbar"><div class="seg" id="comp-filter"><button aria-pressed="true" data-f="all">Todos</button><button aria-pressed="false" data-f="FÁBRICA">Fábrica</button><button aria-pressed="false" data-f="OBRA">Obra</button><button aria-pressed="false" data-f="nop">Sem preço</button><button aria-pressed="false" data-f="hid" id="f-hid">Ocultos (0)</button></div>
+  <input class="in" id="comp-search" type="search" placeholder="Buscar código ou descrição" aria-label="Buscar componente"></div></div>
+  <div class="tbl-wrap"><table><thead><tr><th>Cotar</th><th>Código</th><th>Descrição</th><th>Cor</th><th class="r">Qtde</th><th>Un</th><th class="r">Custo unit. R$</th><th class="r">Custo total</th></tr></thead>
+  <tbody id="comp-body"></tbody><tfoot><tr><td colspan="8"><div class="toolbar" style="justify-content:space-between"><span class="hint" id="comp-count"></span><button class="btn ghost" id="comp-showall" hidden>Voltar todos para a cotação</button></div></td></tr></tfoot></table></div></div>
+ <div id="pp-comp"></div></div></section>
+
+<section id="tab-alu" class="tab" hidden><div class="panel-grid"><div class="stack">
+ <div class="card"><div class="card-h"><h2>Alumínio da obra</h2><span class="chip ok">Lista de perfis: ${O.perfis.length} códigos</span></div>
+  <div class="card-b split">
+   <label class="stat">Peso bruto da obra (kg)<input class="in big num" id="alu-peso" inputmode="decimal"></label>
+   <label class="stat">Custo do alumínio R$/kg<input class="in big num" id="alu-kg" inputmode="decimal" placeholder="0,00"></label>
+   <label class="stat">Acréscimo R$/kg (opcional)<input class="in big num" id="alu-add" inputmode="decimal" placeholder="pintura, frete…"></label>
+  </div><div class="card-b" style="padding-top:0"><div class="hint" id="alu-hint"></div></div></div>
+ <div class="card"><div class="card-h"><h2>Peso por perfil</h2><div class="hint">Referência da lista de perfis (barra, quantidade e peso bruto).</div></div>
+  <div class="tbl-wrap"><table><thead><tr><th>Código</th><th>Descrição</th><th>Tratamento / cor</th><th class="r">Barra</th><th class="r">Qtde</th><th class="r">Peso bruto kg</th><th class="r">Custo</th></tr></thead>
+  <tbody id="alu-body"></tbody><tfoot><tr><td colspan="5"><b>Total da lista</b></td><td class="r num"><b id="alu-listsum"></b></td><td class="r num"><b id="alu-listcost"></b></td></tr></tfoot></table></div></div>
+ </div><div id="pp-alu"></div></div></section>
+
+<section id="tab-vid" class="tab" hidden><div class="panel-grid"><div class="stack">
+ <div class="card"><div class="card-h"><div><h2>Vidros por tipo</h2><div class="hint">m² calculado pela área do vão (L × H × qtde) do croqui. Se tiver o m² real do vidro, digite em "m² ajustado".</div></div></div>
+  <div class="tbl-wrap"><table><thead><tr><th>Tipo de vidro</th><th class="r">Peças</th><th class="r">m² pelo vão</th><th class="r">m² ajustado</th><th class="r">Custo R$/m²</th><th class="r">Custo total</th></tr></thead>
+  <tbody id="vid-body"></tbody><tfoot><tr><td><b>Total</b></td><td></td><td class="r num"><b id="vid-m2"></b></td><td></td><td></td><td class="r num"><b id="vid-cost"></b></td></tr></tfoot></table></div></div>
+ <div class="card"><div class="card-h"><h2>Área por item</h2></div><div class="tbl-wrap"><table><thead><tr><th>Item</th><th>Tipo</th><th>Vidro</th><th class="r">L × H</th><th class="r">Qtde</th><th class="r">m²</th></tr></thead><tbody id="vid-items"></tbody></table></div></div>
+ </div><div id="pp-vid"></div></div></section>
+
+<section id="tab-res" class="tab" hidden><div class="stack">
+ <div class="card"><div class="card-h"><h2>Resumo da obra</h2><div class="hint">PV = Custo ÷ (1 − impostos − despesas − margem), por grupo.</div></div>
+  <div class="tbl-wrap"><table class="sum-table"><thead><tr><th>Grupo</th><th class="r">Custo</th><th class="r">Impostos</th><th class="r">Despesas</th><th class="r">Margem</th><th class="r">Preço de venda</th><th class="r">Lucro R$</th><th class="r">% da venda</th></tr></thead>
+  <tbody id="res-body"></tbody><tfoot><tr><td>Total da obra</td><td class="r num" id="res-c"></td><td></td><td></td><td></td><td class="r num" id="res-v"></td><td class="r num" id="res-l"></td><td class="r num">100%</td></tr></tfoot></table></div></div>
+ <div class="panel-grid"><div class="card"><div class="card-h"><div><h2>Outros custos</h2><div class="hint">Opcional. Entra no resumo e no preço das tipologias.</div></div></div>
+  <div class="tbl-wrap"><table><thead><tr><th>Descrição</th><th class="r">Custo R$</th></tr></thead><tbody id="out-body"></tbody></table></div></div><div id="pp-out"></div></div>
+ <div class="card"><div class="card-h"><h2>Dados da proposta</h2></div><div class="card-b fields">
+  <label>Número da proposta<input class="in" id="f-numero"></label><label>Obra<input class="in" id="f-obra"></label><label>Cliente<input class="in" id="f-cliente"></label><label>Acabamento<input class="in" id="f-cor"></label>
+  <label>Rateio de alumínio, componentes e outros por tipologia<select class="in" id="f-rateio"><option value="area">Pela área do vão (m²)</option><option value="per">Pelo perímetro do vão (m)</option></select></label>
+  <label>Validade da proposta<input class="in" id="f-validade" placeholder="ex.: 15 dias"></label><label>Condições e forma de pagamento<input class="in" id="f-cond" placeholder="ex.: 50% entrada + 50% na entrega"></label>
+  <label>Prazo de entrega<input class="in" id="f-prazo"></label><label style="grid-column:1/-1">Observações<textarea class="in" id="f-obs" rows="2"></textarea></label>
+ </div></div>
+</div></section>
+
+<section id="tab-apr" class="tab" hidden><div class="pres">
+ <div class="pres-h"><div class="brand">FC Consultoria<small>e Representação</small></div><div class="doc"><div class="eyebrow" style="color:var(--muted)">Proposta comercial</div><h2 id="p-num"></h2><div class="hint" id="p-date"></div></div></div>
+ <div class="pres-info"><div><span>Cliente: </span><b id="p-cli"></b></div><div><span>Obra: </span><b id="p-obra"></b></div><div><span>Acabamento: </span><b id="p-cor"></b></div><div><span>Itens: </span>${O.tips.length} tipologias · <span id="p-pecas"></span> peças</div></div>
+ <div id="p-list"></div><div class="pres-total"><span>Valor total da obra</span><b class="num" id="p-total">R$ 0,00</b></div><div class="pres-foot" id="p-foot"></div>
+</div></section>`;
+ ["comp","alu","vid","out"].forEach(k=>pricePanel(k,{comp:"Componentes",alu:"Alumínio",vid:"Vidros",out:"Outros custos"}[k]));
+ wireComp();buildComp();buildAlu();buildVid();buildOut();wireFields();refresh();
+}
+function touch(){save()}
+
+// ---------- PAINEL DE PREÇO ----------
+function pricePanel(key,title){
+ $("pp-"+key).innerHTML=`<div class="card price-panel"><div class="pp-h"><div class="eyebrow">Formação de preço</div><h3>${title}</h3></div><div class="pp-b">
+  <div class="row"><label>Custo</label><span class="cost num" id="pp-${key}-c">R$ 0,00</span></div>
+  <div class="row"><label for="pp-${key}-imp">Impostos %</label><input class="in pct num" id="pp-${key}-imp" inputmode="decimal" placeholder="0"></div>
+  <div class="row"><label for="pp-${key}-desp">Despesas %</label><input class="in pct num" id="pp-${key}-desp" inputmode="decimal" placeholder="0"></div>
+  <div class="row"><label for="pp-${key}-mg">Margem %</label><input class="in pct num" id="pp-${key}-mg" inputmode="decimal" placeholder="0"></div>
+  <div class="formula">PV = Custo ÷ (1 − impostos − despesas − margem)<br>Divisor: <b class="num" id="pp-${key}-div">1,0000</b></div>
+  <div class="sale-box"><div class="eyebrow" style="color:var(--muted)">Preço de venda</div><div class="v num" id="pp-${key}-v">R$ 0,00</div><div class="hint">Lucro: <b class="num" id="pp-${key}-l">R$ 0,00</b></div></div>
+  <div class="err" id="pp-${key}-err" hidden>A soma de impostos, despesas e margem precisa ficar abaixo de 100%.</div></div></div>`;
+ ["imp","desp","mg"].forEach(f=>{const el=$(`pp-${key}-${f}`);el.value=st.mg[key][f]||"";el.addEventListener("input",()=>{st.mg[key][f]=el.value;DB.lib.mg[key]=Object.assign({},st.mg[key]);touch();refresh()})});
+}
+function paintPanel(g){
+ $(`pp-${g.k}-c`).textContent=brl(g.cost);$(`pp-${g.k}-div`).textContent=num(g.p.div,4);
+ $(`pp-${g.k}-v`).textContent=g.p.ok?brl(g.p.v):"—";
+ $(`pp-${g.k}-l`).textContent=g.p.ok?brl(g.p.v*n(st.mg[g.k].mg)/100):"—";
+ $(`pp-${g.k}-err`).hidden=g.p.ok;
+}
+
+// ---------- COMPONENTES ----------
+function buildComp(){
+ const q=$("comp-search").value.trim().toUpperCase();let html="",la="",lr="";
+ O.comps.forEach((r,i)=>{
+  const price=n(st.comp[r.code]),hid=isHid(O,i);
+  if(compFilter==="hid"){if(!hid)return}else{if(hid)return;if(compFilter==="nop"&&price>0)return;if(compFilter!=="all"&&compFilter!=="nop"&&r.ap!==compFilter)return}
+  if(q&&!(r.code.toUpperCase().includes(q)||r.desc.toUpperCase().includes(q)))return;
+  if(r.ap!==la||r.rf!==lr){html+=`<tr class="group"><td colspan="8">${esc(r.ap)} · ${esc(r.rf)}</td></tr>`;la=r.ap;lr=r.rf}
+  html+=`<tr class="${hid?"off":price>0?"":"nop"}"><td><input type="checkbox" class="chk" data-idx="${i}" id="ch-${i}" ${hid?"":"checked"} aria-label="Cotar ${esc(r.code)}"></td><td class="code">${esc(r.code)}</td><td>${esc(r.desc)}</td><td>${esc(r.cor)}</td><td class="r num">${num(r.q,r.un==="MT"?3:0)}</td><td>${esc(r.un)}</td>
+  <td class="r price"><input class="in money num" data-code="${esc(r.code)}" id="cp-${i}" inputmode="decimal" placeholder="0,00" value="${esc(st.comp[r.code]||"")}" aria-label="Custo unitário ${esc(r.code)}"></td>
+  <td class="r num" id="ct-${i}">${hid?"fora":price>0?brl(r.q*price):"—"}</td></tr>`;
+ });
+ const nh=O.comps.filter((r,i)=>isHid(O,i)).length;
+ $("comp-body").innerHTML=html||`<tr><td colspan="8" class="hint">${!O.comps.length?"Esta obra não tem lista de componentes.":compFilter==="hid"?"Nenhum item oculto.":"Nenhum componente encontrado."}</td></tr>`;
+ $("f-hid").textContent=`Ocultos (${nh})`;
+ $("comp-count").textContent=`${O.comps.length-nh} itens na cotação`+(nh?` · ${nh} oculto${nh>1?"s":""}`:"");
+ $("comp-showall").hidden=!nh;
+}
+function wireComp(){
+ $("comp-body").addEventListener("change",e=>{const el=e.target;if(el.dataset.idx===undefined)return;if(!st.hide)st.hide={};
+  if(el.checked)delete st.hide[el.dataset.idx];else st.hide[el.dataset.idx]=true;touch();buildComp();refresh()});
+ $("comp-showall").onclick=()=>{st.hide={};touch();buildComp();refresh()};
+ $("comp-body").addEventListener("input",e=>{const el=e.target;if(!el.dataset.code)return;
+  st.comp[el.dataset.code]=el.value;DB.lib.comp[el.dataset.code]=el.value;touch();
+  O.comps.forEach((r,i)=>{if(r.code!==el.dataset.code)return;const p=n(el.value),hid=isHid(O,i);const td=$("ct-"+i),inp=$("cp-"+i);
+   if(td)td.textContent=hid?"fora":p>0?brl(r.q*p):"—";if(inp&&inp!==el)inp.value=el.value;if(inp)inp.closest("tr").className=hid?"off":p>0?"":"nop"});
+  refresh()});
+ $("comp-filter").onclick=e=>{const b=e.target.closest("button");if(!b)return;compFilter=b.dataset.f;[...$("comp-filter").children].forEach(x=>x.setAttribute("aria-pressed",x===b));buildComp()};
+ $("comp-search").oninput=buildComp;
+}
+
+// ---------- ALUMÍNIO ----------
+function buildAlu(){
+ const ls=O.perfis.reduce((s,p)=>s+p.peso,0);
+ $("alu-body").innerHTML=O.perfis.map((p,i)=>`<tr><td class="code">${esc(p.code)}</td><td>${esc(p.desc)}</td><td>${esc(p.trat||"—")}</td><td class="r num">${p.barra||""}</td><td class="r num">${p.q}</td><td class="r num">${num(p.peso)}</td><td class="r num" id="ac-${i}">—</td></tr>`).join("")||`<tr><td colspan="7" class="hint">Esta obra não tem lista de perfis. Digite o peso bruto acima.</td></tr>`;
+ $("alu-listsum").textContent=num(ls);
+ const map={peso:"aluPeso",kg:"aluKg",add:"aluAdd"};
+ Object.keys(map).forEach(f=>{const el=$("alu-"+f);el.value=st[map[f]]||"";el.oninput=()=>{st[map[f]]=el.value;if(f!=="peso")DB.lib[map[f]]=el.value;touch();refresh()}});
+}
+function paintAlu(){
+ const kg=n(st.aluKg)+n(st.aluAdd),ls=O.perfis.reduce((s,p)=>s+p.peso,0);
+ O.perfis.forEach((p,i)=>$("ac-"+i).textContent=kg>0?brl(p.peso*kg):"—");
+ $("alu-listcost").textContent=kg>0?brl(ls*kg):"—";
+ const diff=n(st.aluPeso)-ls;
+ $("alu-hint").innerHTML=`Custo/kg aplicado: <b class="num">${brl(kg)}</b> · Peso da lista: <b class="num">${num(ls)} kg</b>`+(!O.perfis.length?"":Math.abs(diff)>0.0005?` · <span class="chip warn">Peso digitado difere da lista em ${num(diff)} kg</span>`:` · <span class="chip ok">Peso confere com a lista</span>`);
+}
+
+// ---------- VIDROS ----------
+function buildVid(){
+ const ks=gKeys(O);
+ $("vid-body").innerHTML=ks.map((k,j)=>`<tr><td>${esc(glassName(k))}</td><td class="r num">${O.tips.filter(t=>t.vid===k).reduce((s,t)=>s+t.q,0)}</td><td class="r num">${num(autoM2(O,k))}</td>
+  <td class="r"><input class="in money num" id="vm-${j}" inputmode="decimal" placeholder="—" value="${esc(st.vidM2[k]||"")}" aria-label="m² ajustado ${esc(glassName(k))}"></td>
+  <td class="r"><input class="in money num" id="vp-${j}" inputmode="decimal" placeholder="0,00" value="${esc(st.vidPrice[k]||"")}" aria-label="Custo por m² ${esc(glassName(k))}"></td><td class="r num" id="vc-${j}">—</td></tr>`).join("")||`<tr><td colspan="6" class="hint">Esta obra não tem croqui.</td></tr>`;
+ ks.forEach((k,j)=>{$("vm-"+j).oninput=e=>{st.vidM2[k]=e.target.value;touch();refresh()};$("vp-"+j).oninput=e=>{st.vidPrice[k]=e.target.value;DB.lib.vid[k]=e.target.value;touch();refresh()}});
+ $("vid-items").innerHTML=O.tips.map(t=>`<tr><td class="num">${esc(t.item)}</td><td><b>${esc(t.tipo)}</b></td><td>${esc(glassName(t.vid))}</td><td class="r num">${t.L} × ${t.H}</td><td class="r num">${t.q}</td><td class="r num">${num(itemM2(t))}</td></tr>`).join("");
+}
+function paintVid(){let m=0;gKeys(O).forEach((k,j)=>{m+=m2Of(O,k);const c=vidCostOf(O,k);$("vc-"+j).textContent=c>0?brl(c):"—"});$("vid-m2").textContent=num(m)+" m²";$("vid-cost").textContent=brl(vidCost(O))}
+
+// ---------- OUTROS / CAMPOS ----------
+function buildOut(){
+ $("out-body").innerHTML=st.outros.map((o,i)=>`<tr><td><input class="in" style="width:100%" id="od-${i}" value="${esc(o.d)}" placeholder="Descrição" aria-label="Descrição do custo ${i+1}"></td><td class="r"><input class="in money num" id="ov-${i}" inputmode="decimal" placeholder="0,00" value="${esc(o.v)}" aria-label="Valor do custo ${i+1}"></td></tr>`).join("");
+ st.outros.forEach((o,i)=>{$("od-"+i).oninput=e=>{st.outros[i].d=e.target.value;touch()};$("ov-"+i).oninput=e=>{st.outros[i].v=e.target.value;touch();refresh()}});
+}
+function wireFields(){
+ [["f-numero","numero",O],["f-obra","obra",O],["f-cliente","cliente",O],["f-cor","cor",O]].forEach(([id,k,obj])=>{const el=$(id);el.value=obj[k]||"";el.oninput=()=>{obj[k]=el.value;touch();paintApr(groups(O))}});
+ [["f-rateio","rateio"],["f-validade","validade"],["f-cond","cond"],["f-prazo","prazo"],["f-obs","obs"]].forEach(([id,k])=>{const el=$(id);el.value=st[k]||(k==="rateio"?"area":"");el[el.tagName==="SELECT"?"onchange":"oninput"]=()=>{st[k]=el.value;touch();refresh()}});
+}
+
+// ---------- RESUMO ----------
+function paintRes(gs){
+ const totV=gs.reduce((s,g)=>s+(g.p.ok?g.p.v:0),0),totC=gs.reduce((s,g)=>s+g.cost,0);
+ $("res-body").innerHTML=gs.map(g=>{const m=st.mg[g.k];return `<tr><td><b>${g.name}</b></td><td class="r num">${brl(g.cost)}</td><td class="r num">${pct(n(m.imp))}</td><td class="r num">${pct(n(m.desp))}</td><td class="r num">${pct(n(m.mg))}</td>
+  <td class="r num">${g.p.ok?brl(g.p.v):'<span class="err">verificar %</span>'}</td><td class="r num">${g.p.ok?brl(g.p.v*n(m.mg)/100):"—"}</td><td class="r num">${totV>0&&g.p.ok?pct(g.p.v/totV*100):"—"}</td></tr>`}).join("");
+ const lucro=gs.reduce((s,g)=>s+(g.p.ok?g.p.v*n(st.mg[g.k].mg)/100:0),0);
+ $("res-c").textContent=brl(totC);$("res-v").textContent=brl(totV);$("res-l").textContent=brl(lucro);
+ $("k-cost").textContent=brl(totC);$("k-sale").textContent=brl(totV);
+}
+
+// ---------- APRESENTAÇÃO ----------
+function sketch(t){
+ const W=150,maxH=110;let w=W,h=t.L?W*t.H/t.L:80;if(h>maxH){h=maxH;w=t.H?h*t.L/t.H:W}if(h<34)h=34;if(!isFinite(w)||w<20)w=60;
+ const x0=5,y0=5;let s=`<svg viewBox="0 0 ${w+10} ${h+10}" role="img" aria-label="Croqui ${esc(t.tipo)}"><rect class="fr" x="${x0}" y="${y0}" width="${w}" height="${h}"/>`;
+ const panel=(x,y,pw,ph,label,sym)=>{let r=`<rect class="pn" x="${x+2}" y="${y+2}" width="${Math.max(pw-4,1)}" height="${Math.max(ph-4,1)}"/>`;
+  if(sym==="max")r+=`<polyline class="sym" points="${x+3},${y+3} ${x+pw/2},${y+ph-3} ${x+pw-3},${y+3}"/>`;
+  if(sym==="giro")r+=`<polyline class="sym" points="${x+pw-3},${y+3} ${x+3},${y+ph/2} ${x+pw-3},${y+ph-3}"/>`;
+  if(label)r+=`<text x="${x+pw/2}" y="${y+ph/2+3}" text-anchor="middle">${label}</text>`;return r};
+ const f=Math.max(1,Math.min(t.f||1,12));
+ if(t.kind==="fixo"){const pw=w/f;for(let i=0;i<f;i++)s+=panel(x0+i*pw,y0,pw,h,"F")}
+ else if(t.kind==="maxp"||t.kind==="max"){const top=t.kind==="maxp"?h*0.7:h,pw=w/f;for(let i=0;i<f;i++){s+=panel(x0+i*pw,y0,pw,top,"","max");if(t.kind==="maxp")s+=panel(x0+i*pw,y0+top,pw,h-top,"F")}}
+ else if(t.kind==="giro"){if(f>=2){s+=panel(x0,y0,w/2,h,"","giro");s+=`<g transform="translate(${2*x0+w},0) scale(-1,1)">${panel(x0,y0,w/2,h,"","giro")}</g>`}else s+=panel(x0,y0,w,h,"","giro")}
+ else if(t.kind==="piv"){const a=w*0.45;s+=panel(x0,y0,a,h,"F");s+=panel(x0+a,y0,w-a,h,"","giro")}
+ else if(t.kind==="correr"){const pw=w/Math.max(f,2);for(let i=0;i<Math.max(f,2);i++)s+=panel(x0+i*pw,y0,pw,h,"");s+=`<path class="sym" d="M${x0+8} ${y0+h/2}h${pw-18}m-6 -4l6 4l-6 4"/>`}
+ else s+=panel(x0,y0,w,h,"");
+ return s+"</svg>";
+}
+function paintApr(gs){
+ const g=Object.fromEntries(gs.map(x=>[x.k,x]));const sale=k=>g[k].p.ok?g[k].p.v:0;
+ const shared=sale("comp")+sale("alu")+sale("out");
+ const w=t=>st.rateio==="per"?itemPer(t):itemM2(t);const wTot=O.tips.reduce((s,t)=>s+w(t),0);
+ const vS=sale("vid"),vC=vidCost(O);
+ const vidItem=t=>{const c=vidCostOf(O,t.vid),a=autoM2(O,t.vid);if(!c||!vC||!a)return 0;return vS*(c/vC)*(itemM2(t)/a)};
+ let html="",ll="",total=0,pecas=0;
+ O.tips.forEach(t=>{const v=(wTot?shared*w(t)/wTot:0)+vidItem(t);total+=v;pecas+=t.q;
+  if(t.loc!==ll){html+=`<div class="loc">${esc(t.loc)}</div>`;ll=t.loc}
+  html+=`<div class="tip"><div>${sketch(t)}</div><div><div class="t-name">Item ${esc(t.item)} · ${esc(t.tipo)}</div><div class="t-desc">${esc(t.desc)}</div>
+   <div class="t-dims num"><span>Linha: <b>${esc(t.linha)}</b></span><span>L × H: <b>${t.L} × ${t.H} mm</b></span><span>Qtde: <b>${t.q}</b></span></div></div>
+   <div class="t-price"><div class="u num">${t.q>1&&v>0?"Unit. "+brl(v/t.q):"&nbsp;"}</div><div class="tot num">${v>0?brl(v):"—"}</div></div></div>`});
+ if(!O.tips.length)html=`<div class="card-b hint">Esta obra não tem croqui. O total abaixo soma os grupos do resumo.</div>`,total=gs.reduce((s,x)=>s+(x.p.ok?x.p.v:0),0);
+ $("p-list").innerHTML=html;$("p-total").textContent=brl(total);$("p-pecas").textContent=pecas;
+ $("p-num").textContent=O.numero||"—";$("p-cli").textContent=O.cliente||"—";$("p-obra").textContent=O.obra||"—";$("p-cor").textContent=O.cor||"—";
+ $("p-date").textContent="Emitida em "+new Date().toLocaleDateString("pt-BR");
+ const f=[];if(st.validade)f.push(`<div><b>Validade da proposta:</b> ${esc(st.validade)}</div>`);if(st.cond)f.push(`<div><b>Condições de pagamento:</b> ${esc(st.cond)}</div>`);
+ if(st.prazo)f.push(`<div><b>Prazo de entrega:</b> ${esc(st.prazo)}</div>`);if(st.obs)f.push(`<div><b>Observações:</b> ${esc(st.obs)}</div>`);
+ f.push(`<div>Medidas e quantidades conforme croqui. Valores sujeitos a conferência de medidas na obra.</div>`);
+ f.push(`<div class="wm">FC Consultoria em Esquadria · uso exclusivo · © FC Consultoria em Esquadria</div>`);
+ $("p-foot").innerHTML=f.join("");
+}
+
+function refresh(){const gs=groups(O);gs.forEach(paintPanel);paintAlu();paintVid();paintRes(gs);paintApr(gs)}
+
+// ---------- INÍCIO ----------
+const h=location.hash.replace("#","");
+if(h.startsWith("obra-")&&DB.obras.some(o=>"obra-"+o.id===h))openObra(h.slice(5));else showHome();
+window.addEventListener("hashchange",()=>{const k=location.hash.replace("#","");if(!k&&O&&!$("view-obra").hidden){O=null;showHome()}});
+})();}
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="../auth.js"></script>
+<script>gateUI(()=>iniciarOrcamentos(),{soMatriz:true});</script>
+</body>
+</html>
