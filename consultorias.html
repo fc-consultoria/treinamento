@@ -1336,6 +1336,11 @@ async function entrarPessoa(){
       <p class="nota" style="margin:0">Esqueceu a senha? Fale com a FC Consultoria: <a href="https://wa.me/5566999867984" target="_blank" rel="noopener">(66) 9 9986-7984</a>.</p></form></div>`;
     $('#lgU').focus();
     $('#lgF').onsubmit=async ev=>{ev.preventDefault();const b=$('#lgB'),m=$('#lgM');b.disabled=true;m.textContent='Entrando…';
+      /* Atalho da Matriz: login "matriz" + senha do Painel da Matriz abre esta empresa na visão da FC (como o gestor vê) */
+      if($('#lgU').value.trim().toLowerCase()==='matriz'){const {error}=await sb.auth.signInWithPassword({email:MATRIZ_EMAIL,password:$('#lgS').value});
+        if(error){b.disabled=false;m.textContent='Login ou senha incorretos.';$('#lgS').select();return;}
+        const pf=await perfilAtual();if(!pf||!pf.perfil||pf.perfil.papel!=='admin'){await sb.auth.signOut();b.disabled=false;m.textContent='Esta entrada é só da Matriz.';return;}
+        m.textContent='Abrindo como Matriz…';location.replace(location.pathname+'?ver='+encodeURIComponent(EMPL)+'&como=gestor');return;}
       const r=await sb.rpc('emp_entrar',{p_emp:EMPL,p_login:$('#lgU').value.trim(),p_senha:$('#lgS').value,p_ua:navigator.userAgent});b.disabled=false;
       const d=r.data;if(r.error||!d){m.textContent='Não foi possível entrar agora. Tente de novo.';return;}
       if(d.erro==='bloqueado'){m.textContent='Muitas tentativas erradas. Aguarde 15 minutos ou fale com a FC.';return;}
