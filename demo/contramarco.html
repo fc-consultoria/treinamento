@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Revista Contramarco nos canais da FC</title>
+<meta name="description" content="Demonstração: como a FC Consultoria em Esquadria indicaria a Revista Contramarco como fonte de informação do setor.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="../icons/fc-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{--teal:#0f5f63;--teal2:#0b4a4d;--tealbg:#e1f3f1;--amber:#e8912d;--amberbg:#fff6ea;--ink:#13232e;--mut:#5d6b76;--line:#d5dce1;--bg:#f1f4f7;--card:#fff;--fd:'Space Grotesk',system-ui,sans-serif;--fb:'Inter',system-ui,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15.5px/1.55 var(--fb)}
+a{color:inherit}
+.wrap{max-width:1040px;margin:0 auto;padding:0 16px}
+header.top{background:var(--teal);color:#fff;padding:28px 0 64px;position:relative;overflow:hidden}
+header.top:after{content:"";position:absolute;right:-60px;top:-40px;width:320px;height:320px;border:38px solid rgba(232,145,45,.22);border-radius:28px;transform:rotate(18deg)}
+.brand{display:flex;align-items:center;gap:12px;font:700 15px var(--fd);letter-spacing:.02em}
+.brand img{width:40px;height:40px;border-radius:10px;background:#fff}
+.brand small{display:block;font:500 12.5px var(--fb);opacity:.8;letter-spacing:0}
+header h1{font:700 clamp(28px,4.6vw,44px)/1.1 var(--fd);margin:34px 0 12px;max-width:760px;position:relative;z-index:1}
+header h1 em{font-style:normal;color:#ffc982}
+header p.lead{max-width:680px;margin:0;font-size:17px;opacity:.92;position:relative;z-index:1}
+.tag{display:inline-block;background:var(--amber);color:#3b2203;font:700 12px var(--fd);letter-spacing:.08em;padding:5px 11px;border-radius:999px;text-transform:uppercase}
+main{margin-top:-36px;position:relative;z-index:2}
+section.blk{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:26px 24px;margin-bottom:22px;box-shadow:0 10px 30px rgba(15,30,39,.06)}
+.blk h2{font:700 22px/1.2 var(--fd);margin:6px 0 6px}
+.blk>p.sub{margin:0 0 18px;color:var(--mut)}
+.num{font:700 12px var(--fd);color:var(--teal);letter-spacing:.1em;text-transform:uppercase}
+/* --- tela simulada do painel --- */
+.tela{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--bg)}
+.tela .barra{display:flex;align-items:center;gap:6px;padding:9px 12px;background:#e7ecf0;border-bottom:1px solid var(--line);font-size:12.5px;color:var(--mut)}
+.tela .barra i{width:10px;height:10px;border-radius:50%;background:#c9d2d9;display:inline-block}
+.tela .barra span{margin-left:10px;background:#fff;border-radius:6px;padding:3px 10px;flex:1;max-width:420px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.tela .corpo{padding:18px;display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;min-height:150px}
+.fake{height:52px;border-radius:12px;background:#fff;border:1px solid #e3e8ec;display:flex;align-items:center;gap:10px;padding:0 12px}
+.fake b{width:26px;height:26px;border-radius:8px;background:#eef1f3;flex:none}
+.fake s{height:9px;border-radius:5px;background:#e3e8ec;flex:1;text-decoration:none}
+/* --- faixa + card (mesmo visual do painel real) --- */
+.not{position:relative;padding:10px 12px 12px;background:rgba(241,244,247,.95);border-top:1px solid var(--line)}
+.nbar{display:flex;align-items:stretch;background:var(--teal);border-radius:12px;overflow:hidden;min-height:40px}
+.nlab{all:unset;cursor:pointer;flex:none;display:flex;align-items:center;gap:6px;padding:0 14px;background:var(--amber);color:#3b2203;font:700 13.5px var(--fd);letter-spacing:.03em}
+.nlab:hover,.nlab:focus-visible{background:#f0a447}
+.ntw{flex:1;overflow:hidden;display:flex;align-items:center;mask-image:linear-gradient(90deg,transparent,#000 24px,#000 calc(100% - 24px),transparent)}
+.ntk{display:flex;gap:44px;white-space:nowrap;padding-left:18px;animation:rola var(--dur,70s) linear infinite}
+.ntw:hover .ntk{animation-play-state:paused}
+.ntk a{color:#e6f6f4;text-decoration:none;font-size:14.5px}.ntk a:hover{color:#fff;text-decoration:underline}
+.ntk a b{color:#ffd28f;font-weight:600;margin-right:6px;font-size:12px;letter-spacing:.04em}
+@keyframes rola{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.ncard{margin:0 0 10px;width:min(460px,100%);background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 18px 40px rgba(15,30,39,.16);padding:12px 14px}
+.ncard[hidden]{display:none}
+.nch{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+.nch b{font:700 15px var(--fd)}.nch small{font-size:12px;color:var(--mut)}
+.nabas{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:4px}
+.nabas span{font:600 13px var(--fb);padding:4px 11px;border-radius:999px;border:1px solid #c9d6dd;color:#8796a0}
+.nabas span.on{background:var(--tealbg);border-color:var(--teal);color:var(--teal2)}
+.ncan{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 2px;padding:8px;border-radius:10px;background:var(--amberbg);border:1px solid #f3d9b4}
+.ncan>small{flex-basis:100%;font-size:11.5px;color:#8a5a12;font-weight:600;letter-spacing:.03em}
+.ncan a{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:999px;background:#fff;border:1px solid #ecc994;color:#6b4208;text-decoration:none;font:600 12.5px var(--fb)}
+.ncan a:hover{background:var(--amber);color:#3b2203;border-color:var(--amber)}
+.nlist{max-height:300px;overflow:auto}
+.nlist a{display:block;padding:9px 2px;border-top:1px solid #edf1f3;text-decoration:none}
+.nlist a:hover span{color:#1f6f9a;text-decoration:underline}
+.nlist a span{display:block;font-size:14.5px;line-height:1.35}.nlist a small{font-size:12px;color:var(--mut)}
+.nrod{font-size:11.5px;color:#7a8892;margin-top:6px}
+.dica{display:flex;gap:8px;align-items:flex-start;margin-top:14px;font-size:13.5px;color:var(--mut)}
+.dica:before{content:"👆";flex:none}
+/* --- site: notícias do setor --- */
+.site{border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.site .hd{background:linear-gradient(135deg,var(--teal),#14797e);color:#fff;padding:20px 20px 18px;display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;align-items:flex-end}
+.site .hd h3{margin:4px 0 0;font:700 22px var(--fd)}
+.site .hd p{margin:4px 0 0;opacity:.88;font-size:14px;max-width:520px}
+.site .hd .ver{background:#fff;color:var(--teal2);text-decoration:none;font:700 13.5px var(--fd);padding:9px 14px;border-radius:10px;white-space:nowrap}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;padding:16px;background:#fafbfc}
+.mat{display:flex;flex-direction:column;justify-content:space-between;gap:12px;background:#fff;border:1px solid #e3e8ec;border-radius:12px;padding:14px;text-decoration:none;min-height:150px;transition:border-color .15s,transform .15s}
+.mat:hover{border-color:var(--amber);transform:translateY(-2px)}
+.mat span{font:600 16px/1.35 var(--fd)}
+.mat small{display:flex;justify-content:space-between;gap:8px;font-size:12.5px;color:var(--mut)}
+.mat small b{color:#8a5a12;font-weight:600}
+.site .can{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:12px 16px 16px;background:#fafbfc;border-top:1px dashed #e3e8ec;font-size:13px;color:var(--mut)}
+.site .can a{display:inline-flex;gap:4px;align-items:center;padding:5px 11px;border-radius:999px;background:#fff;border:1px solid var(--line);text-decoration:none;font:600 12.5px var(--fb);color:var(--ink)}
+.site .can a:hover{border-color:var(--amber)}
+/* --- compromissos --- */
+.comp{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:0;padding:0;list-style:none}
+.comp li{background:var(--bg);border-radius:12px;padding:14px 14px 14px 46px;position:relative;font-size:14.5px}
+.comp li:before{content:"✓";position:absolute;left:14px;top:13px;width:22px;height:22px;border-radius:50%;background:var(--teal);color:#fff;display:grid;place-items:center;font:700 12px var(--fb)}
+.comp li b{display:block;font:600 15px var(--fd);margin-bottom:2px}
+.contato{display:flex;flex-wrap:wrap;gap:10px;margin-top:6px}
+.contato a{display:inline-flex;align-items:center;gap:6px;text-decoration:none;font:600 14px var(--fb);padding:10px 16px;border-radius:12px;border:1px solid var(--line);background:#fff}
+.contato a.pri{background:var(--teal);color:#fff;border-color:var(--teal)}
+footer{text-align:center;color:#7a8892;font-size:12.5px;padding:10px 16px 34px}
+@media(max-width:640px){section.blk{padding:20px 16px}.tela .corpo{grid-template-columns:1fr 1fr;padding:12px}.fake:nth-child(n+5){display:none}.ntk a{font-size:13.5px}}
+@media(prefers-reduced-motion:reduce){.ntk{animation:none}.ntw{overflow-x:auto}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <div class="brand"><img src="../icons/fc-192.png" alt="FC"><div>FC Consultoria em Esquadria<small>Sinop · MT</small></div></div>
+    <h1>A <em>Revista Contramarco</em> como fonte de informação do setor, nos canais da FC</h1>
+    <p class="lead">Demonstração de como a FC indicaria a Contramarco aos clientes, distribuidores e serralherias que atende: só a manchete, com o crédito da revista e o clique levando ao site de vocês.</p>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="blk">
+    <div class="num">1 · No painel da FC</div>
+    <h2>Faixa de notícias com aba própria da Contramarco</h2>
+    <p class="sub">É o painel que a FC usa no dia a dia. As manchetes da revista passam na faixa e ganham uma aba própria, com atalho para todos os canais de vocês.</p>
+    <div class="tela">
+      <div class="barra"><i></i><i></i><i></i><span>Painel FC Consultoria em Esquadria</span></div>
+      <div class="corpo" aria-hidden="true">
+        <div class="fake"><b></b><s></s></div><div class="fake"><b></b><s></s></div><div class="fake"><b></b><s></s></div>
+        <div class="fake"><b></b><s></s></div><div class="fake"><b></b><s></s></div><div class="fake"><b></b><s></s></div>
+      </div>
+      <div class="not">
+        <div class="ncard" id="ncard">
+          <div class="nch"><b>Destaques</b><small id="atu"></small></div>
+          <div class="nabas"><span>Últimas</span><span class="on">Contramarco</span><span>Economia</span><span>Agro</span></div>
+          <div class="ncan"><small>CANAIS DA CONTRAMARCO</small><span id="can1" style="display:contents"></span></div>
+          <div class="nlist" id="lista"><div style="padding:12px 2px;color:#5d6b76">Carregando manchetes…</div></div>
+          <div class="nrod">Fonte: Revista Contramarco · abre o site da revista em nova aba</div>
+        </div>
+        <div class="nbar"><button type="button" class="nlab" id="nlab" aria-expanded="true" aria-controls="ncard">📰 Notícias <span id="sv">▼</span></button><div class="ntw"><div class="ntk" id="ntk"><a>Carregando manchetes…</a></div></div></div>
+      </div>
+    </div>
+    <p class="dica">As manchetes desta demonstração são reais e atualizadas automaticamente a partir do site da Contramarco. Clique em qualquer uma para ver: ela abre no site de vocês.</p>
+  </section>
+
+  <section class="blk">
+    <div class="num">2 · No site da FC</div>
+    <h2>Seção “Notícias do setor”</h2>
+    <p class="sub">No site público da FC, uma seção indica a Contramarco como leitura recomendada para quem trabalha com esquadrias.</p>
+    <div class="site">
+      <div class="hd">
+        <div><span class="tag">Notícias do setor</span><h3>Fique por dentro com a Revista Contramarco</h3><p>Indicação da FC: a revista do setor de esquadrias, fachadas e vidro.</p></div>
+        <a class="ver" href="https://www.contramarco.com/blog" target="_blank" rel="noopener">Ver todas na Contramarco →</a>
+      </div>
+      <div class="cards" id="cards"></div>
+      <div class="can">Acompanhe também:<span id="can2" style="display:contents"></span></div>
+    </div>
+  </section>
+
+  <section class="blk">
+    <div class="num">3 · Como funciona</div>
+    <h2>O conteúdo continua sendo da Contramarco</h2>
+    <p class="sub">A ideia é ser uma indicação, não uma cópia.</p>
+    <ul class="comp">
+      <li><b>Só a manchete</b>A FC mostra apenas o título e a data. O texto das matérias não é reproduzido.</li>
+      <li><b>Crédito sempre visível</b>O nome Revista Contramarco aparece junto das manchetes.</li>
+      <li><b>O leitor vai até vocês</b>Todo clique abre a matéria no site da Contramarco, gerando visitas para a revista.</li>
+      <li><b>Fonte oficial</b>As manchetes vêm do feed de notícias que o próprio site da revista publica.</li>
+      <li><b>Sem custo e sem anúncios</b>A FC não cobra nem vende nada em cima do conteúdo da revista.</li>
+      <li><b>Retirada a qualquer momento</b>Se a Contramarco preferir, ajustamos ou retiramos a indicação assim que pedirem.</li>
+    </ul>
+  </section>
+
+  <section class="blk">
+    <div class="num">Contato</div>
+    <h2>Fernando Carvalho · FC Consultoria em Esquadria</h2>
+    <p class="sub">Qualquer ajuste no formato, fico à disposição.</p>
+    <div class="contato">
+      <a class="pri" href="https://wa.me/5566999867984" target="_blank" rel="noopener">💬 WhatsApp (66) 9 9986-7984</a>
+      <a href="mailto:FCconsultoria25@hotmail.com">✉️ FCconsultoria25@hotmail.com</a>
+      <a href="https://fc-consultoria.github.io" target="_blank" rel="noopener">🌐 fc-consultoria.github.io</a>
+    </div>
+  </section>
+</main>
+<footer>Demonstração de proposta · © FC Consultoria em Esquadria · Marca e conteúdo das matérias pertencem à Revista Contramarco.</footer>
+
+<script>
+(function(){
+  const URL_N='https://cpkjphodruyxfouirhpd.supabase.co/functions/v1/noticias';
+  const CANAIS=[['🌐','Site','https://www.contramarco.com/'],['📰','Notícias','https://www.contramarco.com/blog'],['📸','Instagram','https://www.instagram.com/contramarco/'],['▶️','YouTube','https://www.youtube.com/channel/UCsUmEZ0ZWTwH1Qzcb8G59hw'],['💼','LinkedIn','https://www.linkedin.com/company/revista-contramarco/'],['👍','Facebook','https://www.facebook.com/contramarco']];
+  const esc=v=>String(v==null?'':v).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const ok=u=>/^https:\/\/www\.contramarco\.com\//.test(u);
+  const a=(u,cls)=>`<a href="${esc(u)}" target="_blank" rel="noopener noreferrer"${cls?` class="${cls}"`:''}>`;
+  const can=CANAIS.map(([i,n,u])=>`${a(u)}${i} ${esc(n)}</a>`).join('');
+  document.getElementById('can1').innerHTML=can;document.getElementById('can2').innerHTML=can;
+  function data(iso){if(!iso)return '';const d=new Date(iso);return d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});}
+  function mostra(l){
+    const tk=document.getElementById('ntk'),li=document.getElementById('lista'),cd=document.getElementById('cards');
+    if(!l.length){const m='Manchetes indisponíveis no momento. Veja em contramarco.com/blog';tk.innerHTML=`<a>${m}</a>`;tk.style.animation='none';li.innerHTML=`<div style="padding:12px 2px;color:#5d6b76">${m}</div>`;cd.innerHTML='';return;}
+    const h=l.slice(0,8).map(x=>`${a(x.l)}<b>CONTRAMARCO</b>${esc(x.t)}</a>`).join('');
+    tk.innerHTML=h+h;tk.style.setProperty('--dur',Math.max(50,Math.min(l.length,8)*9)+'s');
+    li.innerHTML=l.map(x=>`${a(x.l)}<span>${esc(x.t)}</span><small>${esc(data(x.d))}</small></a>`).join('');
+    cd.innerHTML=l.slice(0,3).map(x=>`${a(x.l,'mat')}<span>${esc(x.t)}</span><small><b>Revista Contramarco</b>${esc(data(x.d))}</small></a>`).join('');
+  }
+  fetch(URL_N,{cache:'no-store'}).then(r=>r.ok?r.json():null).then(d=>{
+    const l=((d&&d.cats&&d.cats.Contramarco)||[]).filter(x=>x&&x.t&&ok(x.l));
+    document.getElementById('atu').textContent=l.length?'atualizado agora':'';mostra(l);
+  }).catch(()=>mostra([]));
+  const b=document.getElementById('nlab'),c=document.getElementById('ncard');
+  b.onclick=()=>{const v=c.hidden;c.hidden=!v;b.setAttribute('aria-expanded',String(v));document.getElementById('sv').textContent=v?'▼':'▲';};
+})();
+</script>
+</body>
+</html>
