@@ -172,7 +172,7 @@ ${ADM()&&D?`<div class="cg-wa"><b>📲 Resumo semanal para o gestor</b> <span cl
       tb.onclick=()=>{tg.style.display='';tb.style.display='none';tg.scrollIntoView({behavior:'smooth',block:'start'});};}
     tourCss();const bt=document.getElementById('cgTour');if(bt)bt.onclick=()=>passo(0);const bv=document.getElementById('cgVid');if(bv)bv.onclick=abreVideo;
     if(TI>=0)setTimeout(()=>passo(TI,true),50);
-    else if(!ADM()&&D&&tab==='cen'){let visto='1';try{visto=localStorage.getItem(chaveTour());}catch(_){}if(!visto)setTimeout(()=>{if(TI<0)passo(0);},600);}
+    else if(!ADM()&&D&&tab==='cen'){let visto='1';try{visto=localStorage.getItem(chaveTour());}catch(_){}if(!visto)setTimeout(()=>{if(TI<0&&!document.querySelector('.platOn'))passo(0);},600);}
     const wc=document.getElementById('cgWaCop');if(wc)wc.onclick=async()=>{try{await navigator.clipboard.writeText(resumoTxt(E[at]));wc.textContent='✓ Copiado';setTimeout(()=>wc.textContent='Copiar resumo',2000);}catch(_){prompt('Copie o resumo:',resumoTxt(E[at]));}};}
 
   /* liga a aba "🏠 Central do Gestor" quando quem entrou é o gestor */

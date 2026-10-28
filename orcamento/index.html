@@ -163,7 +163,7 @@ function tela(){if(!D)return;const ag=D.orcs.filter(o=>o.status==='aguardando').
   if(DEMO)h=`<div class="box" style="border-color:#e0b100;background:#fff8dc"><b>👁 Demonstração: é assim que o vendedor vê.</b> <span class="nota">Ele só tem estas duas abas, não vê custo nem planilha e abre só no computador. Nesta demonstração nada é salvo.</span></div>`+h;
   if(!D.itens.length&&ABA!=='cfg')h+=`<div class="box" style="border-color:var(--or);background:var(--orc)"><b>Ainda não há itens liberados para orçamento.</b><p class="nota" style="margin:2px 0 0">${ADM?'Vá em ⚙️ Configurar e clique em "Atualizar itens da precificação".':'A FC Consultoria está preparando a lista de itens. Volte mais tarde.'}</p></div>`;
   if(['com','apr','vend','cfg','est','cli','dsc'].includes(ABA)&&!ADM)ABA='novo';if(ABA==='dsc'&&!DSC_PODE())ABA='novo';if(ABA==='cat'&&!D.cat)ABA='novo';if((ABA==='mos'||ABA==='t3d'||ABA==='msc')&&!(D.estudo&&D.estudo.on))ABA='novo';if(ABA==='mos'&&!D.estudo.mos)ABA='novo';if(ABA==='novo')h+=telaNovo();else if(ABA==='lista')h+=telaLista();else if(ABA==='dsc')h+=telaDsc();else if(ABA==='com'||ABA==='apr')h+=`<div class="${ABA==='apr'?'modoApr':'modoCom'}">`+telaCom()+'</div>';else if(ABA==='est')h+=telaEst();else if(ABA==='cest')h+=telaCest();else if(ABA==='cat')h+=telaCat();else if(ABA==='mos')h+=telaMos();else if(ABA==='t3d')h+=telaT3d();else if(ABA==='msc')h+=telaMsc();else if(ABA==='atd'||ABA==='cli')h+='<div id="atdBox"></div>';else if(window.VX&&VX.tem(ABA))h+=VX.tela(ABA);else h+=`<div class="${ABA==='vend'?'modoVend':'modoCfg'}">`+telaCfg()+'</div>';
-  $('#app').innerHTML=h;convAba();$$('[data-ab]').forEach(b=>b.onclick=()=>{ABA=b.dataset.ab;tela();});
+  $('#app').innerHTML=h;convAba();if(window.VTUT&&!DEMO)VTUT();$$('[data-ab]').forEach(b=>b.onclick=()=>{ABA=b.dataset.ab;tela();});
   if(ABA==='novo')wireNovo();else if(ABA==='dsc')wireDsc();else if(ABA==='lista')wireLista();else if(ABA==='com'||ABA==='apr')wireCom();else if(ABA==='est')wireEst();else if(ABA==='cest')wireCest();else if(ABA==='cat'){}else if(ABA==='atd'||ABA==='cli'){if(window.ATD)ATD.abrir(ABA);}else if(window.VX&&VX.tem(ABA))VX.wire(ABA);else wireCfg();if(window.VX&&VX.pos)VX.pos();if(window.ATD&&!DEMO)ATD.ligar();const gf=$('#gFC');if(gf)gf.onclick=suporte;const stb=$('#supTab');if(stb)stb.onclick=suporte;}
 
 /* ---------- novo / editar ---------- */
@@ -711,6 +711,7 @@ function sairBarra(nome){if(DEMO||SO||document.documentElement.classList.contain
 <script src="atendimentos.js?v=3"></script><script src="../conversas.js?v=4"></script><script>(function(){const q=new URLSearchParams(location.search);if(q.get('e')||q.get('ver')==='vend'||window.top!==window)return;let t=q.get('et');
   if(!t){try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(/^emp-tok-/.test(k)){t=localStorage.getItem(k);break;}}}catch(_){}}
   if(t&&window.FCConversas)FCConversas.equipe(t);})();</script><script src="vend-extra.js?v=6"></script>
+<script src="../tour-fc.js?v=1"></script><script src="tutorial-vendas.js?v=1"></script>
 <script src="../volta-painel.js"></script>
 </body>
 </html>

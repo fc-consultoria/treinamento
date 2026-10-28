@@ -45,6 +45,53 @@ try{const q=new URLSearchParams(location.search);if((q.get('e')||'').toLowerCase
 const tema=()=>{const r=document.documentElement,esc=r.getAttribute('data-theme')!=='dark';r.setAttribute('data-theme',esc?'dark':'light');try{localStorage.setItem('plat-cb-tema',esc?'dark':'light');}catch(_){}pinta(true);};
 try{const t=localStorage.getItem('plat-cb-tema');if(t&&new URLSearchParams(location.search).get('e')===EMP)document.documentElement.setAttribute('data-theme',t);}catch(_){}
 
+
+/* ---------- tutorial guiado por setor (mesmo formato da Guaporé) ---------- */
+const CARD={
+ cen:'A Central do Gestor é o resumo da semana: quem da equipe entrou, o que fez e o que está pendente em cada setor. Comece o dia por aqui.',
+ proc:'No Fluxo do processo você acompanha as etapas da consultoria da FC e o que já foi concluído em cada frente.',
+ acao:'O Plano de ação traz os pontos levantados na visita, com responsável e prazo para resolver.',
+ gal:'Na Galeria ficam as fotos do antes e depois do processo de mudança da empresa.',
+ dem:'Em Demandas e entregas você vê o que foi pedido à FC e o que já foi entregue.',
+ pla:'Nas Planilhas de precificação ficam os custos e as tabelas de preço. As fórmulas ficam travadas; você só preenche o que estiver liberado.',
+ est:'Em Estoque e importação você atualiza o estoque da plataforma com a planilha do sistema da empresa.',
+ rvi:'O Relatório de vendas mostra os itens orçados e os itens em pedidos, somados por código e cor. Escolha o período, a linha e a cor, e baixe em Excel para planejar as compras.',
+ comp:'Onde comprar mostra em quais extrusoras cada perfil é fabricado.',
+ conv:'O Conversor de códigos traduz o código de um fornecedor para o código padrão, com o desenho para conferir antes de comprar.',
+ dist:'Em Compras com distribuidoras ficam as cotações e comparações de preço com as distribuidoras.',
+ cat:'O Catálogo mostra os perfis da Casa Bandeirante com foto, medidas e peso. As medidas e pesos são de referência: confirme sempre com o fornecedor.',
+ orc:{gestor:'No Painel de Vendas Atacado você acompanha os resultados, aprova pedidos e descontos e vê o desempenho de cada vendedor.',
+      gerente:'O Painel de Vendas Atacado é a principal ferramenta da coordenação. Aqui você acompanha os orçamentos da equipe e aprova os descontos acima do limite autorizado.',
+      '':'No Painel de Vendas Atacado ficam os orçamentos e pedidos da empresa.'},
+ pcod:'Na Pesquisa de código você encontra um perfil pelo código de qualquer fornecedor.',
+ ori:'O Mostruário é o guia de consulta de esquadrias: tipologias, componentes e como cada uma funciona. Use quando surgir uma dúvida no atendimento.',
+ esq:'No Treinamento 3D você estuda as esquadrias em 3D, peça por peça, no seu ritmo.',
+ casa:'No Monte sua Casa 3D você coloca as esquadrias na planta e apresenta o projeto ao cliente.',
+ dia:'Os Diagramas de pressão de vento ajudam a escolher o perfil adequado conforme a altura e a região da obra.',
+ sol:'Em Solicitações com a FC você envia pedidos e dúvidas ao suporte e acompanha a resposta.',
+ age:'Na Agenda da FC aparecem as visitas, os treinamentos e os compromissos da FC com a Casa Bandeirante.',
+ mkt:'Nas Dicas de marketing a FC envia ideias para divulgar a empresa.',
+ div:'Em Divulgação ficam os materiais prontos para divulgar a empresa.'};
+const INTRO={
+ gestor:['Gestor','Bem-vindo à Plataforma Casa Bandeirante e FC 3D. Como gestor, você vê todos os setores da empresa. Cada cartão abre uma ferramenta; vou mostrar uma por uma.'],
+ compras:['Compras','Este é o painel do Compras. Aqui estão as ferramentas para planejar e fazer as compras: relatório de vendas, estoque, onde comprar, cotações e o catálogo.'],
+ gerente:['Coordenação','Este é o painel da coordenação comercial. Aqui você acompanha a equipe de vendas, aprova descontos e consulta o catálogo e os treinamentos.'],
+ marketing:['Marketing','Este é o painel do Marketing. Aqui você acompanha o catálogo da empresa, a galeria do processo de mudança e fala com a FC.'],
+ fabrica:['Fábrica','Este é o painel da Fábrica. Aqui você estuda as esquadrias no Treinamento 3D e consulta o catálogo de perfis.'],
+ '':['Visão do cliente','Esta é a Plataforma Casa Bandeirante e FC 3D. Cada cartão abre uma ferramenta; vou mostrar uma por uma.']};
+const papel=()=>{try{return (typeof PESSOA!=='undefined'&&PESSOA&&PESSOA.papel)||'';}catch(_){return '';}};
+const chaveTut=()=>{try{return 'plat-cb-tour-v1-'+((PESSOA&&(PESSOA.login||PESSOA.id))||'fc');}catch(_){return 'plat-cb-tour-v1-fc';}};
+function tutorial(){if(!window.FCTour)return;
+  if(modo!=='home'){modo='home';homeTab=(typeof tab!=='undefined')?tab:null;pinta(true);}
+  const pp=papel(),[nome,intro]=INTRO[pp]||INTRO[''];
+  const passos=[['.platHero .lg',intro]];
+  document.querySelectorAll('.platGrid .platK').forEach(k=>{let t=CARD[k.dataset.t];if(t&&typeof t==='object')t=t[pp]||t[''];if(t)passos.push(['.platK[data-t="'+k.dataset.t+'"]',t]);});
+  passos.push(['.platHero [data-a="tema"]','Aqui você troca o fundo para claro ou escuro. A escolha fica salva neste aparelho.']);
+  passos.push([null,'Dentro de qualquer ferramenta, toque em Todos os cards para voltar a esta tela.']);
+  passos.push(['.platHero [data-a="tut"]','Para rever este tutorial, toque em Tutorial quando quiser. Ficou com dúvida? Abra Solicitações com a FC ou chame no WhatsApp, de segunda a sexta.']);
+  FCTour.iniciar({titulo:'Tutorial · '+nome,passos,cor:COR,aoFim:()=>{try{localStorage.setItem(chaveTut(),'1');}catch(_){}
+    try{if(typeof PESSOA!=='undefined'&&PESSOA)sb.rpc('emp_registrar',{p_token:PESSOA.token,p_area:'tutorial',p_acao:'viu o tutorial da plataforma'}).then(()=>{},()=>{});}catch(_){}}});}
+let tutAuto=false;
 const nomePapel=()=>{try{return PESSOA?(PAPEL_NOME[PESSOA.papel]||PESSOA.papel):'Visão do cliente';}catch(_){return '';}};
 const sair=()=>{const b=document.getElementById('pesSair');if(b)b.click();else location.reload();};
 
@@ -64,8 +111,8 @@ function pinta(forca){
   const nome=(typeof PESSOA!=='undefined'&&PESSOA)?PESSOA.nome.split(' ')[0]:'equipe';
   const hero=document.createElement('div');hero.className='platHero';
   hero.innerHTML=`<div class="lg">CB</div><div><h2>Olá, ${h(nome)}</h2><div class="s">Plataforma Casa Bandeirante &amp; FC 3D · ${h(nomePapel())}</div></div>
-   <div class="bts"><button type="button" data-a="tema">${escuro?'☀ Fundo claro':'🌙 Fundo escuro'}</button>${(typeof PESSOA!=='undefined'&&PESSOA)?'<button type="button" data-a="sair">Sair</button>':''}</div>`;
-  hero.querySelector('[data-a="tema"]').onclick=tema;const bs=hero.querySelector('[data-a="sair"]');if(bs)bs.onclick=sair;
+   <div class="bts"><button type="button" data-a="tut">▶ Tutorial</button><button type="button" data-a="tema">${escuro?'☀ Fundo claro':'🌙 Fundo escuro'}</button>${(typeof PESSOA!=='undefined'&&PESSOA)?'<button type="button" data-a="sair">Sair</button>':''}</div>`;
+  hero.querySelector('[data-a="tema"]').onclick=tema;hero.querySelector('[data-a="tut"]').onclick=tutorial;const bs=hero.querySelector('[data-a="sair"]');if(bs)bs.onclick=sair;
   tg.before(hero);
   const btns=[...tg.querySelectorAll('button.tab[data-t]')];
   if(modo==='home'){
@@ -77,6 +124,7 @@ function pinta(forca){
       return `<button type="button" class="platK${k==='cen'?' dest':''}" data-t="${h(k)}"><span class="ic" aria-hidden="true">${h(ic)}</span><b>${h(lb)}</b>${d?`<span class="d">${h(d)}</span>`:''}</button>`;}).join('');
     g.querySelectorAll('.platK').forEach(k=>k.onclick=()=>{modo='aba';const o=btns.find(b=>b.dataset.t===k.dataset.t);if(o)o.click();else pinta(true);window.scrollTo({top:0,behavior:'smooth'});});
     hero.after(g);
+    if(!tutAuto&&typeof PESSOA!=='undefined'&&PESSOA){tutAuto=true;let visto='1';try{visto=localStorage.getItem(chaveTut());}catch(_){}if(!visto)setTimeout(()=>{if(!window.FCTour||!FCTour.ativo())tutorial();},900);}
     const wm=document.createElement('div');wm.className='platWm';wm.textContent='© FC Consultoria em Esquadria';g.after(wm);
   }else{
     if(body)body.style.display='';
@@ -89,5 +137,5 @@ function pinta(forca){
 }
 const ob=new MutationObserver(()=>pinta(false));
 const liga=()=>{const f=document.getElementById('ficha');if(f)ob.observe(f,{childList:true});else setTimeout(liga,200);};liga();
-window.FCPlataformaCB={home:()=>{modo='home';homeTab=(typeof tab!=='undefined')?tab:null;pinta(true);}};
+window.FCPlataformaCB={tutorial:()=>tutorial(),home:()=>{modo='home';homeTab=(typeof tab!=='undefined')?tab:null;pinta(true);}};
 })();
