@@ -84,7 +84,7 @@ main{padding:18px 0 80px}
 .cfg input[type=color]{height:40px;width:100%;padding:2px;cursor:pointer}.cfg input,.cfg select,.cfg textarea{border:1px solid #c9d3d8;border-radius:8px;padding:8px 10px;color:var(--tx);font-weight:500}
 .tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px}.tools input[type=search]{flex:1;min-width:200px;border:1.5px solid #c9d3d8;border-radius:10px;padding:8px 12px}
 table.pf{width:100%;border-collapse:collapse;font-size:14px}table.pf th{text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--tm);padding:6px;border-bottom:1px solid var(--ln);background:#fff}
-table.pf td{padding:6px;border-bottom:1px solid #edf1f3;vertical-align:middle}.fto{white-space:nowrap}.fto .btn{padding:2px 6px;margin-left:2px;vertical-align:middle}table.pf img{width:64px;height:44px;object-fit:contain;background:#f7f9fa;border-radius:6px}
+table.pf td{padding:6px;border-bottom:1px solid #edf1f3;vertical-align:middle}.ck{width:30px;text-align:center}.ck input{width:17px;height:17px;cursor:pointer}tr.sel td{background:#eef6fb}.lote{position:sticky;top:0;z-index:4;display:flex;gap:6px;align-items:center;flex-wrap:wrap;background:#eef2f4;color:#1b232a;border-radius:10px;padding:8px 10px;margin:0 0 8px}.lote.on{background:#1b232a;color:#fff}.lote .btn{background:#fff}.lote .btn:disabled{opacity:.45;cursor:default}.pesog{display:flex;align-items:center;gap:8px;margin:0 0 10px;flex-wrap:wrap}.fto{white-space:nowrap}.fto .btn{padding:2px 6px;margin-left:2px;vertical-align:middle}table.pf img{width:64px;height:44px;object-fit:contain;background:#f7f9fa;border-radius:6px}
 table.pf input[type=text]{width:100%;border:1px solid transparent;border-radius:6px;padding:4px 6px;background:transparent}table.pf input[type=text]:hover,table.pf input[type=text]:focus{border-color:#c9d3d8;background:#fff}
 .cores{display:flex;gap:4px;flex-wrap:wrap}.cor{width:20px;height:20px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px #c9d3d8;cursor:pointer;opacity:.25}.cor.on{opacity:1;box-shadow:0 0 0 2px var(--tl)}
 .sw{position:relative;display:inline-block;width:38px;height:22px}.sw input{opacity:0;width:0;height:0}.sw span{position:absolute;inset:0;background:#c9d3d8;border-radius:12px;cursor:pointer;transition:.2s}.sw span:before{content:'';position:absolute;width:16px;height:16px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s}.sw input:checked+span{background:#1f8a4c}.sw input:checked+span:before{transform:translateX(16px)}.sw input:disabled+span{opacity:.4}
@@ -104,12 +104,12 @@ const esc=v=>String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').rep
 const nz=s=>String(s||'').toUpperCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[\s\-\/.]/g,'');
 const slugify=t=>String(t||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
 const pubUrl=c=>c.dominio?'https://'+c.dominio.replace(/^https?:\/\//,'').replace(/\/$/,'')+'/':PUB+c.slug;
-let MKT=false,ADM=false,UID=null,CL=[],IT={},CUR=null,LI='sup',Q='',FL='todos',VIEW='lista';
+let SEL=new Set(),MKT=false,ADM=false,UID=null,CL=[],IT={},CUR=null,LI='sup',Q='',FL='todos',VIEW='lista';
 const $=s=>document.querySelector(s),cc=()=>$('#cc');
 const st=t=>{let e=$('.st');if(!e){e=document.createElement('div');e.className='st';document.body.appendChild(e);}e.textContent=t;e.hidden=!t;clearTimeout(st.t);if(t)st.t=setTimeout(()=>e.hidden=true,2200);};
 async function carregar(){const r=await sb.from('cat_clientes').select('*').order('nome');CL=r.data||[];if(r.error)st('Erro: '+r.error.message);
  const it=await sb.from('cat_itens').select('*');IT={};(it.data||[]).forEach(x=>{(IT[x.cliente_id]=IT[x.cliente_id]||{})[x.base]=x;});}
-const itemOf=(c,q)=>Object.assign({c:'',n:'',p:'',foto:'',cores:null,sc:true,obs:false,txt:'',oc:false},(IT[c.id]||{})[q.c]||{});
+const itemOf=(c,q)=>Object.assign({c:'',n:'',p:'',foto:'',pe_oc:false,cores:null,sc:true,obs:false,txt:'',oc:false},(IT[c.id]||{})[q.c]||{});
 const linhasDo=c=>BASE.filter(l=>(c.linhas||[]).includes(l.id));
 /* ---------- MATRIZ ---------- */
 function lista(){const h=`<div class="ph"><div class="w"><div><small>FC Mostruário 3D · Painel da Matriz</small><h1>📚 Catálogos dos clientes</h1></div><div class="acts"><a class="btn" href="painel.html">← Painel da Matriz</a><button class="btn or" data-a="novo">＋ Novo catálogo de cliente</button></div></div></div>
@@ -187,12 +187,14 @@ function editor(){const c=CUR,L=linhasDo(c);if(!L.length){cc().innerHTML='<p sty
   <div class="tools">${L.map(l=>`<button class="btn sm ${l.id===LI?'pri':''}" data-li="${l.id}">${esc(l.n)}</button>`).join('')}<input type="search" id="gq" placeholder="Buscar código ou nome" value="${esc(Q)}">
   <select id="gf" style="border:1px solid #c9d3d8;border-radius:8px;padding:6px"><option value="todos">Todos</option><option value="sc" ${FL==='sc'?'selected':''}>Só sob consulta</option><option value="oc" ${FL==='oc'?'selected':''}>Só ocultos</option></select>
   <button class="btn sm" data-a="allsc">Todos “sob consulta”</button><button class="btn sm" data-a="nosc">Tirar “sob consulta” de todos</button></div>
+  ${MKT?'':`<label class="pesog"><label class="sw"><input type="checkbox" data-pesog ${c.peso_oc?'':'checked'}><span></span></label> <b>Mostrar o peso dos perfis no catálogo</b> <span class="note">(desligado, nenhum perfil mostra o peso para o cliente)</span></label>`}
+  <div class="lote ${SEL.size?'on':''}"><b>${SEL.size?SEL.size+' selecionado'+(SEL.size===1?'':'s'):'Marque os perfis na 1ª coluna para mudar vários de uma vez'}</b><button class="btn sm" data-lote="pub" ${SEL.size?'':'disabled'}>✅ Publicar</button><button class="btn sm" data-lote="nopub" ${SEL.size?'':'disabled'}>🚫 Não publicar</button><button class="btn sm" data-lote="sc" ${SEL.size?'':'disabled'}>Sob consulta</button><button class="btn sm" data-lote="nosc" ${SEL.size?'':'disabled'}>Pronta entrega</button><button class="btn sm" data-lote="peso" ${SEL.size?'':'disabled'}>⚖️ Mostrar peso</button><button class="btn sm" data-lote="nopeso" ${SEL.size?'':'disabled'}>Ocultar peso</button><span style="flex:1"></span><button class="btn sm" data-a="selall">Selecionar todos (todas as linhas)</button><button class="btn sm" data-a="selnone">Limpar seleção</button></div>
   <p class="note" style="margin:0 0 8px">Clique no código ou no nome para editar (salva sozinho). <b>Sob consulta</b> já vem ligado em todos; em cada perfil você escolhe se a observação aparece para o cliente.</p>
-  <div style="overflow:auto"><table class="pf"><thead><tr><th>Foto</th><th>Código no seu catálogo</th><th>Descrição</th><th>Peso (kg/m)</th><th class="hm">Cores</th><th>Sob consulta</th><th>Mostrar observação</th><th>Publicado</th></tr></thead><tbody>
-  ${rows.map(q=>{const e=itemOf(c,q),k=esc(q.c),cs=e.cores||pc;return `<tr class="${e.oc?'oc':''}"><td class="fto"><img src="${esc(e.foto||(q.d3?IMG+q.i+'.webp':(q.im||IMG+'c'+q.i+'.webp')))}" alt="" loading="lazy"><label class="btn sm" title="Trocar a foto que aparece no catálogo">📷<input type="file" accept="image/*" data-ft="${k}" hidden></label>${e.foto?`<button class="btn sm" data-fx="${k}" title="Voltar para a imagem 3D">↺</button>`:''}</td>
+  <div style="overflow:auto"><table class="pf"><thead><tr><th class="ck"><input type="checkbox" data-selvis title="Selecionar todos desta lista" ${rows.length&&rows.every(q=>SEL.has(q.c))?'checked':''}></th><th>Foto</th><th>Código no seu catálogo</th><th>Descrição</th><th>Peso (kg/m)</th><th class="hm">Cores</th><th>Sob consulta</th><th>Mostrar observação</th><th>Publicado</th></tr></thead><tbody>
+  ${rows.map(q=>{const e=itemOf(c,q),k=esc(q.c),cs=e.cores||pc;return `<tr class="${e.oc?'oc':''} ${SEL.has(q.c)?'sel':''}"><td class="ck"><input type="checkbox" data-sel="${k}" ${SEL.has(q.c)?'checked':''}></td><td class="fto"><img src="${esc(e.foto||(q.d3?IMG+q.i+'.webp':(q.im||IMG+'c'+q.i+'.webp')))}" alt="" loading="lazy"><label class="btn sm" title="Trocar a foto que aparece no catálogo">📷<input type="file" accept="image/*" data-ft="${k}" hidden></label>${e.foto?`<button class="btn sm" data-fx="${k}" title="Voltar para a imagem 3D">↺</button>`:''}</td>
    <td><input type="text" data-e="c" data-q="${k}" value="${esc(e.c||q.c)}"><div class="note" style="font-size:11.5px;padding-left:6px">mercado: ${k}</div></td>
    <td><input type="text" data-e="n" data-q="${k}" value="${esc(e.n||q.n)}"></td>
-   <td style="min-width:86px"><input type="text" inputmode="decimal" data-e="p" data-q="${k}" value="${esc(e.p||q.p||'')}"></td>
+   <td style="min-width:86px"><input type="text" inputmode="decimal" data-e="p" data-q="${k}" value="${esc(e.p||q.p||'')}">${e.pe_oc||c.peso_oc?'<div class="note" style="font-size:11px;padding-left:6px">oculto no catálogo</div>':''}</td>
    <td class="hm"><div class="cores">${CORES.map(([id,nm,hx])=>`<span class="cor ${cs.includes(id)?'on':''}" title="${nm}" style="background:${hx}" data-cor="${id}" data-q="${k}"></span>`).join('')}</div></td>
    <td><label class="sw"><input type="checkbox" data-e="sc" data-q="${k}" ${e.sc!==false?'checked':''}><span></span></label></td>
    <td><label class="sw"><input type="checkbox" data-e="obs" data-q="${k}" ${e.obs?'checked':''} ${e.sc!==false?'':'disabled'}><span></span></label>${e.obs&&e.sc!==false?`<input type="text" data-e="txt" data-q="${k}" value="${esc(e.txt||'')}" placeholder="usa a observação padrão" style="font-size:12.5px">`:''}</td>
@@ -269,22 +271,24 @@ function vitBind(){const A=document.getElementById('vitC');if(!A)return;const V=
    let img='';try{if(f)img=await vitFoto(f);}catch(x){st('Erro na foto: '+(x.message||x));b.disabled=false;b.textContent='＋ Oferta';return;}V.it.push({k:'o',t,img});}
   if(!V.on&&V.it.length)V.on=true;await vitSalva(V);draw();});
  const of=$('#vitOf');if(of)of.onchange=()=>{$('#vitOn').textContent=of.files[0]?'📎 '+of.files[0].name:'';};}
-async function salvaItem(base,patch){const c=CUR,q=BASE.flatMap(l=>l.p).find(x=>x.c===base),e=itemOf(c,q);const row=Object.assign({cliente_id:c.id,base,c:e.c||null,n:e.n||null,cores:e.cores,sc:e.sc!==false,obs:!!e.obs,txt:e.txt||null,oc:!!e.oc,p:e.p||null,foto:e.foto||null},patch,{atualizado:new Date().toISOString()});
+async function salvaItem(base,patch){const c=CUR,q=BASE.flatMap(l=>l.p).find(x=>x.c===base),e=itemOf(c,q);const row=Object.assign({cliente_id:c.id,base,c:e.c||null,n:e.n||null,cores:e.cores,sc:e.sc!==false,obs:!!e.obs,txt:e.txt||null,oc:!!e.oc,p:e.p||null,foto:e.foto||null,pe_oc:!!e.pe_oc},patch,{atualizado:new Date().toISOString()});
  const r=await sb.from('cat_itens').upsert(row);if(r.error){st('Erro ao salvar: '+r.error.message);return false;}(IT[c.id]=IT[c.id]||{})[base]=row;st('✓ Salvo');return true;}
 async function salvaCli(patch){const r=await sb.from('cat_clientes').update(patch).eq('id',CUR.id);if(r.error){st('Erro: '+r.error.message);return;}Object.assign(CUR,patch);st('✓ Salvo');}
 function draw(){if(VIEW==='lista')lista();else editor();bind();}
 function bind(){const A=cc();
  A.querySelectorAll('[data-a]').forEach(b=>b.onclick=async()=>{const a=b.dataset.a;
   if(a==='novo')formCli(null);if(a==='config')formCli(CL.find(x=>x.id===b.dataset.c));
-  if(a==='editar'){CUR=CL.find(x=>x.id===b.dataset.c);VIEW='ed';LI='sup';Q='';FL='todos';draw();scrollTo(0,0);}
+  if(a==='editar'){SEL.clear();CUR=CL.find(x=>x.id===b.dataset.c);VIEW='ed';LI='sup';Q='';FL='todos';draw();scrollTo(0,0);}
   if(a==='salvaMarca'){b.disabled=true;const d={};A.querySelectorAll('[data-k]').forEach(i=>d[i.dataset.k]=i.value);await salvaCli(d);b.disabled=false;const m=$('#msgMarca');if(m)m.textContent='✓ Salvo às '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});}
   if(a==='apSalva'){b.disabled=true;await salvaCli({apres:apLer()});b.disabled=false;const m=$('#msgAp');if(m)m.textContent='✓ Salvo às '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})+(CUR.apres.on?'':' · ligue “Mostrar as páginas” para aparecer no catálogo');}
   if(a==='voltar'){VIEW='lista';await carregar();draw();}
   if(a==='copiar'){navigator.clipboard&&navigator.clipboard.writeText(b.dataset.u);b.textContent='✓ Link copiado';}
   if(a==='upload'){const f=$('#upF').files[0],nm=$('#upNome').value.trim();if(!f){st('Escolha o arquivo');return;}b.disabled=true;b.textContent='Enviando…';
    const r=await sb.storage.from('catalogos').upload(Date.now()+'_'+slugify(nm||'linha')+'_'+f.name.replace(/[^\w.\-]/g,'_'),f);b.disabled=false;b.textContent='Enviar';st(r.error?'Erro: '+r.error.message:'✓ Arquivo enviado. A FC vai processar a nova linha.');listarArquivos();}
+  if(a==='selall'){const L2=linhasDo(CUR);L2.forEach(l=>l.p.forEach(q=>SEL.add(q.c)));draw();return;}
+  if(a==='selnone'){SEL.clear();draw();return;}
   if(a==='allsc'||a==='nosc'){if(!confirm(a==='allsc'?'Marcar todos os perfis da linha como “sob consulta”?':'Tirar o “sob consulta” de todos os perfis da linha?'))return;b.disabled=true;const lin=BASE.find(l=>l.id===LI);
-   const rows=lin.p.map(q=>{const e=itemOf(CUR,q);return {cliente_id:CUR.id,base:q.c,c:e.c||null,n:e.n||null,cores:e.cores,sc:a==='allsc',obs:!!e.obs,txt:e.txt||null,oc:!!e.oc,p:e.p||null,foto:e.foto||null,atualizado:new Date().toISOString()};});
+   const rows=lin.p.map(q=>{const e=itemOf(CUR,q);return {cliente_id:CUR.id,base:q.c,c:e.c||null,n:e.n||null,cores:e.cores,sc:a==='allsc',obs:!!e.obs,txt:e.txt||null,oc:!!e.oc,p:e.p||null,foto:e.foto||null,pe_oc:!!e.pe_oc,atualizado:new Date().toISOString()};});
    const r=await sb.from('cat_itens').upsert(rows);if(r.error)st('Erro: '+r.error.message);else{rows.forEach(x=>{(IT[CUR.id]=IT[CUR.id]||{})[x.base]=x;});st('✓ Salvo');}draw();}});
  A.querySelectorAll('[data-li]').forEach(b=>b.onclick=()=>{LI=b.dataset.li;draw();});
  const q=$('#gq');if(q)q.oninput=e=>{Q=e.target.value;clearTimeout(window.__t);window.__t=setTimeout(()=>{draw();const n=$('#gq');n.focus();n.setSelectionRange(n.value.length,n.value.length);},300);};
@@ -302,6 +306,14 @@ function bind(){const A=cc();
  A.querySelectorAll('[data-ft]').forEach(i=>i.onchange=async()=>{const f=i.files[0];if(!f)return;st('Enviando a foto…');try{const u=await perfilFoto(f,i.dataset.ft);if(await salvaItem(i.dataset.ft,{foto:u}))draw();}catch(e){st('Erro ao enviar: '+(e.message||e));}});
  A.querySelectorAll('[data-fx]').forEach(b=>b.onclick=async()=>{if(await salvaItem(b.dataset.fx,{foto:null}))draw();});
  vitBind();
+ A.querySelectorAll('[data-sel]').forEach(i=>i.onchange=()=>{i.checked?SEL.add(i.dataset.sel):SEL.delete(i.dataset.sel);draw();});
+ A.querySelectorAll('[data-selvis]').forEach(i=>i.onchange=()=>{A.querySelectorAll('[data-sel]').forEach(x=>{i.checked?SEL.add(x.dataset.sel):SEL.delete(x.dataset.sel);});draw();});
+ A.querySelectorAll('[data-pesog]').forEach(i=>i.onchange=async()=>{await salvaCli({peso_oc:!i.checked});draw();});
+ A.querySelectorAll('[data-lote]').forEach(b=>b.onclick=async()=>{const a=b.dataset.lote,N=SEL.size;if(!N)return;
+  const P={pub:{oc:false},nopub:{oc:true},sc:{sc:true},nosc:{sc:false},peso:{pe_oc:false},nopeso:{pe_oc:true}}[a],T={pub:'publicar',nopub:'NÃO publicar',sc:'marcar como “sob consulta”',nosc:'marcar como pronta entrega',peso:'mostrar o peso de',nopeso:'ocultar o peso de'}[a];
+  if(!confirm(`Confirma ${T} ${N} perfi${N===1?'l':'s'}?`))return;b.disabled=true;const all=BASE.flatMap(l=>l.p),agora=new Date().toISOString();
+  const rows=[...SEL].map(base=>{const q=all.find(x=>x.c===base);if(!q)return null;const e=itemOf(CUR,q);return Object.assign({cliente_id:CUR.id,base,c:e.c||null,n:e.n||null,cores:e.cores,sc:e.sc!==false,obs:!!e.obs,txt:e.txt||null,oc:!!e.oc,p:e.p||null,foto:e.foto||null,pe_oc:!!e.pe_oc},P,{atualizado:agora});}).filter(Boolean);
+  const r=await sb.from('cat_itens').upsert(rows);if(r.error){st('Erro: '+r.error.message);b.disabled=false;return;}rows.forEach(x=>{(IT[CUR.id]=IT[CUR.id]||{})[x.base]=x;});st(`✓ ${rows.length} perfis atualizados`);SEL.clear();draw();});
  A.querySelectorAll('[data-cor]').forEach(s=>s.onclick=async()=>{const base=s.dataset.q,e=itemOf(CUR,q0(base)),cs=(e.cores||CUR.cores||['branco','preto','natural']).slice(),k=s.dataset.cor,n=cs.includes(k)?cs.filter(x=>x!==k):cs.concat(k);if(await salvaItem(base,{cores:n}))s.classList.toggle('on');});}
 gateUI(async({session,perfil})=>{UID=session.user.id;ADM=perfil.papel==='admin';await carregar();
  if(ADM){VIEW='lista';const ed=new URLSearchParams(location.search).get('editar');const cx=ed&&CL.find(x=>x.id===ed);if(cx){CUR=cx;VIEW='ed';LI='sup';Q='';FL='todos';}}else{CUR=CL.find(x=>x.gestor_uid===UID)||CL.find(x=>(x.editores||[]).includes(UID));MKT=!!CUR&&CUR.gestor_uid!==UID;if(!CUR){cc().innerHTML='<div style="padding:40px;text-align:center">Este login não tem catálogo de cliente. Fale com a FC Consultoria: WhatsApp (66) 9 9986-7984.<br><br><button class="btn" onclick="sair()">Sair</button></div>';return;}VIEW='ed';}
