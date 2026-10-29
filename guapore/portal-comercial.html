@@ -330,8 +330,39 @@ function abas(){
 function vEntrar(){
  const rede=D&&D.erro==='rede';
  return `<section class="panel" style="max-width:560px;margin:30px auto;text-align:center"><h2 style="justify-content:center">${rede?'Sem conexão':'Entre com o seu login'}</h2>
- <p class="sub" style="margin-bottom:14px">${rede?'Não consegui falar com o servidor agora. Confira a internet e tente de novo.':'O Portal Comercial abre com o login de cada pessoa da equipe da Guaporé. Entre pelo link da empresa com o seu telefone (ou login) e a sua senha.'}</p>
- ${rede?`<button class="btn primary" data-act="recarregar">Tentar de novo</button>`:`<a class="btn primary" style="text-decoration:none" target="_top" href="${LINK_EMP}">Entrar pelo link da Guaporé</a>`}</section>`;
+ <p class="sub" style="margin-bottom:14px">${rede?'Não consegui falar com o servidor agora. Confira a internet e tente de novo.':'Entre com o seu telefone (ou login) e a sua senha.'}</p>
+ ${rede?`<button class="btn primary" data-act="recarregar">Tentar de novo</button>`:`<form id="pLgF" autocomplete="on" style="display:flex;flex-direction:column;gap:10px;text-align:left;max-width:360px;margin:0 auto">
+  <label>Telefone ou login<input id="pLgU" name="username" autocomplete="username" autocapitalize="none" required></label>
+  <label>Senha<input id="pLgS" name="password" type="password" autocomplete="current-password" required></label>
+  <button class="btn primary" id="pLgB" type="submit" style="justify-content:center">Entrar</button>
+  <p id="pLgM" role="status" style="margin:0;min-height:1.2em;font-size:13px;color:var(--muted)"></p>
+  <a class="btn" style="text-decoration:none;justify-content:center" href="${LINK_CAD}" target="_blank" rel="noopener">Primeiro acesso? Faça seu cadastro</a>
+  <p style="margin:0;font-size:12.5px;color:var(--muted)">Esqueceu a senha? Fale com a FC Consultoria: (66) 9 9986-7984.</p></form>`}</section>`;
+}
+/* 29/10/2026 · login direto no portal (sem passar pelo link da empresa / Painel da Matriz).
+   Equipe: telefone ou login + senha. FC: login "matriz" + senha do Painel da Matriz. */
+const MATRIZ_EMAIL='painel.fc@fcconsultoria.com';
+document.addEventListener('submit',async ev=>{
+ if(!ev.target||ev.target.id!=='pLgF')return;ev.preventDefault();
+ const b=$('#pLgB'),m=$('#pLgM'),u=$('#pLgU').value.trim(),pw=$('#pLgS').value;b.disabled=true;m.textContent='Entrando…';
+ try{
+  if(u.toLowerCase()==='matriz'){
+   const {error}=await sbc.auth.signInWithPassword({email:MATRIZ_EMAIL,password:pw});
+   if(error){b.disabled=false;m.textContent='Login ou senha incorretos.';return}
+   try{localStorage.removeItem('emp-tok-'+EMP)}catch(_){}
+  }else{
+   const d=await rpc('emp_entrar',{p_emp:EMP,p_login:u,p_senha:pw,p_ua:navigator.userAgent});
+   if(!d){b.disabled=false;m.textContent='Não foi possível entrar agora. Tente de novo.';return}
+   if(d.erro==='bloqueado'){b.disabled=false;m.textContent='Muitas tentativas erradas. Aguarde 15 minutos ou fale com a FC.';return}
+   if(d.erro==='pendente'){b.disabled=false;m.textContent='Seu cadastro está aguardando liberação.';return}
+   if(d.erro||!d.token){b.disabled=false;m.textContent='Login ou senha incorretos.';return}
+   try{localStorage.setItem('emp-tok-'+EMP,d.token);localStorage.setItem('cons-nome',d.nome||'')}catch(_){}
+  }
+  m.textContent='Abrindo…';D=null;render();await carregar();
+  if(D&&D.erro)toast('Entrou, mas este login não tem acesso ao Portal Comercial.');
+ }catch(x){b.disabled=false;m.textContent='Não foi possível entrar agora. Tente de novo.'}
+});
+function _fimEntrar(){
 }
 
 /* ---------- GESTOR ---------- */
@@ -429,13 +460,16 @@ function agendaHTML(gest,me){
 function vSetor(papel){
  const s=SET[papel]||[papel,PAPEL[papel]||papel,papel,[]];
  const L=pessoas(papel);
- let me=G()?L.find(p=>p.id===verComo[papel])||L[0]:(D.equipe||[]).find(p=>p.id===D.eu.id);
+ /* 29/10/2026 · opção "Matriz · FC" no ver painel de: a FC entra com todos os módulos do setor e abre cada um com o login da Matriz (pode editar) */
+ const ADM=!!(D.eu&&D.eu.adm),FCP={id:'__fc',nome:'Matriz · FC',ativo:true,abas:Object.keys(MOD)};
+ if(ADM&&!verComo[papel])verComo[papel]='__fc';
+ let me=G()?(verComo[papel]==='__fc'&&ADM?FCP:L.find(p=>p.id===verComo[papel])||L[0]):(D.equipe||[]).find(p=>p.id===D.eu.id);
  if(!me)return `<div class="hello"><div><h1>${esc(s[1])}</h1><p>Painel do setor ${esc(s[1])}.</p></div></div><div class="empty">Ninguém no setor ${esc(s[1])} ainda. O gestor cadastra em "+ Cadastrar pessoa", na Central do Gestor.</div>`;
  const ord=[...s[3],...(me.abas||[]).filter(k=>!s[3].includes(k))].filter(k=>MOD[k]);
- const meus=(D.atends||[]).filter(a=>!G()||a.vend===me.nome);
+ const meus=(D.atends||[]).filter(a=>!G()||me.id==='__fc'||a.vend===me.nome);
  return `
- ${G()?`<span class="demo-note">Você está vendo o painel como gestor · ver painel de: <select id="verSel" data-p="${papel}" style="width:auto;display:inline-block;padding:2px 6px">${L.map(p=>`<option value="${p.id}" ${p.id===me.id?'selected':''}>${esc(p.nome)}</option>`).join('')}</select></span>`:''}
- <div class="hello"><div><h1>Olá, ${esc(me.nome.split(' ')[0])}</h1><p>Suas ferramentas do setor ${esc(s[1])}.</p></div></div>
+ ${G()?`<span class="demo-note">Você está vendo o painel como gestor · ver painel de: <select id="verSel" data-p="${papel}" style="width:auto;display:inline-block;padding:2px 6px">${ADM?`<option value="__fc" ${me.id==='__fc'?'selected':''}>🏢 Matriz · FC (você)</option>`:''}${L.map(p=>`<option value="${p.id}" ${p.id===me.id?'selected':''}>${esc(p.nome)}</option>`).join('')}</select></span>`:''}
+ <div class="hello"><div><h1>${me.id==='__fc'?'Matriz · setor '+esc(s[1]):'Olá, '+esc(me.nome.split(' ')[0])}</h1><p>${me.id==='__fc'?'Você abre cada ferramenta com o login da FC: vê, simula, faz pedidos e edita o que a equipe fez.':'Suas ferramentas do setor '+esc(s[1])+'.'}</p></div></div>
  ${!me.ativo?'<div class="empty" style="margin-bottom:14px">Este acesso está pausado pelo gestor.</div>':''}
  <div class="grid mods" id="t-mods">${ord.map(k=>{const ok=me.ativo&&(me.abas||[]).includes(k);return `
   <button class="mod ${ok?'':'locked'}" data-act="open" data-m="${k}" data-ok="${ok}" id="mod-${k}">
@@ -516,7 +550,9 @@ function abrirModulo(k){
  /* dentro do link da Guaporé: abre a aba do módulo; fora dele, abre o link da empresa */
  try{if(window.parent!==window){const b=window.parent.document.querySelector('.tab[data-t="'+k+'"]');if(b){b.click();window.parent.scrollTo({top:0,behavior:'smooth'});return}}}catch(e){}
  if(k==='cat'&&D.slug){window.open('https://fc-consultoria.github.io/catalogo/'+D.slug,'_blank','noopener');if(!G()&&tok())rpc('gpc_uso',{p_token:tok(),p_mod:k}).catch(()=>{});return}
- window.open(LINK_EMP,'_blank','noopener');
+ /* 29/10/2026 · abre direto na ferramenta, sem cair na tela inicial do Painel da Matriz */
+ if(D&&D.eu&&D.eu.adm){const v=verComo[role],q='/treinamento/consultorias.html?ver='+EMP+'&t='+k+(role!=='gestor'&&v&&v!=='__fc'?'&como='+role:'');window.open(q,'_blank','noopener');return}
+ window.open(LINK_EMP+'#t='+k,'_blank','noopener');
 }
 
 document.addEventListener('click',async e=>{
@@ -526,7 +562,7 @@ document.addEventListener('click',async e=>{
  if(a==='fon'){fOn=!fOn;render();return}
  if(a==='recarregar'){D=null;render();carregar();return}
  if(a==='copymsg'){const x=$('#msgTx');x.select();(navigator.clipboard?navigator.clipboard.writeText(x.value):Promise.reject()).then(()=>toast('Mensagem copiada.'),()=>toast('Texto selecionado. Use Ctrl+C.'));return}
- if(a==='open'){if(t.dataset.ok!=='true'){toast('Módulo bloqueado pelo gestor.');return}if(G()&&role!=='gestor'){toast('Abrindo o módulo (o uso só conta quando a própria pessoa abre).')}abrirModulo(t.dataset.m);return}
+ if(a==='open'){if(t.dataset.ok!=='true'){toast('Módulo bloqueado pelo gestor.');return}if(G()&&role!=='gestor'&&verComo[role]!=='__fc'){toast('Abrindo como esse setor vê (o uso só conta quando a própria pessoa abre).')}abrirModulo(t.dataset.m);return}
  if(a==='vercad'){if(showCad[id]){delete showCad[id];render();return}
   try{const r=await rpc('gpc_conta_ver',{p_token:tok(),p_emp:EMP,p_id:id});if(r.erro){toast(r.erro);return}showCad[id]=r;const c=(D.contas||[]).find(x=>x.id===id);if(c)c.visto=true;render()}catch(x){toast('Não consegui abrir. Tente de novo.')}return}
  if(a==='liberar'){const V=D.vends||[];modal(`<h2>Liberar cliente no catálogo</h2><p class="sub">Gera uma senha para o cliente entrar no Catálogo 3D e pedir cotação. Escolha o vendedor que vai atender.</p>
@@ -633,7 +669,7 @@ $('#sairBtn').onclick=async()=>{
  if(tk){try{await rpc('emp_sair',{p_token:tk})}catch(_){}}
  try{localStorage.removeItem('emp-tok-'+EMP);localStorage.removeItem('cons-nome')}catch(_){}
  try{if(sbc)await sbc.auth.signOut()}catch(_){}
- try{window.top.location.href=LINK_EMP}catch(_){location.href=LINK_EMP}
+ D={erro:'saiu'};render();toast('Você saiu.')
 };
 $('#tourBtn').onclick=()=>{
  const NOMES={gestor:['Tutorial do Gestor','comandos, medidores, cadastros e pedidos'],vendas:['Tutorial do Vendedor','ferramentas, pedidos e agenda'],compras:['Tutorial do Compras','ferramentas de compra e agenda'],estoque:['Tutorial do Estoque','ferramentas do estoque e agenda'],marketing:['Tutorial do Marketing','Destaques 3D e perfis mais vistos']};
