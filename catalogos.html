@@ -110,7 +110,8 @@ const $=s=>document.querySelector(s),cc=()=>$('#cc');
 const st=t=>{let e=$('.st');if(!e){e=document.createElement('div');e.className='st';document.body.appendChild(e);}e.textContent=t;e.hidden=!t;clearTimeout(st.t);if(t)st.t=setTimeout(()=>e.hidden=true,2200);};
 async function carregar(){const r=await sb.from('cat_clientes').select('*').order('nome');CL=r.data||[];if(r.error)st('Erro: '+r.error.message);
  const it=await sb.from('cat_itens').select('*');IT={};(it.data||[]).forEach(x=>{(IT[x.cliente_id]=IT[x.cliente_id]||{})[x.base]=x;});}
-const itemOf=(c,q)=>Object.assign({c:'',n:'',p:'',foto:'',pe_oc:false,cores:null,sc:true,obs:false,txt:'',oc:false},(IT[c.id]||{})[q.c]||{});
+const itemOf=(c,q)=>Object.assign({c:'',cg:'',n:'',p:'',foto:'',pe_oc:false,cores:null,sc:true,obs:false,txt:'',oc:false},(IT[c.id]||{})[q.c]||{});
+const codRot=c=>'Código '+(String(c.nome||'da empresa').replace(/\b(vidros?|vidra[çc]aria|esquadrias?|alum[ií]nio|ltda|me|eireli)\b/gi,'').replace(/[&·\-]/g,' ').replace(/\s+/g,' ').trim()||'da empresa');
 const linhasDo=c=>BASE.filter(l=>(c.linhas||[]).includes(l.id));
 /* ---------- MATRIZ ---------- */
 function lista(){const h=`<div class="ph"><div class="w"><div><small>FC Mostruário 3D · Painel da Matriz</small><h1>📚 Catálogos dos clientes</h1></div><div class="acts"><a class="btn" href="painel.html">← Painel da Matriz</a><button class="btn or" data-a="novo">＋ Novo catálogo de cliente</button></div></div></div>
@@ -174,7 +175,7 @@ function mostraMsg(t){const m=modal(`<h2 style="margin:0 0 8px;font:800 22px var
  m.querySelector('[data-cp]').onclick=()=>navigator.clipboard&&navigator.clipboard.writeText(t);m.querySelector('[data-x]').onclick=()=>m.remove();}
 /* ---------- EDITOR (gestor) ---------- */
 function editor(){const c=CUR,L=linhasDo(c);if(!L.length){cc().innerHTML='<p style="padding:30px">Nenhuma linha liberada.</p>';return;}const lin=L.find(l=>l.id===LI)||L[0];LI=lin.id;const t=nz(Q);
- const rows=lin.p.filter(q=>{const e=itemOf(c,q);if(t&&!nz((e.c||q.c)+' '+q.c+' '+(e.n||q.n)).includes(t))return false;if(FL==='sc')return e.sc!==false;if(FL==='oc')return e.oc;return true;});
+ const rows=lin.p.filter(q=>{const e=itemOf(c,q);if(t&&!nz((e.c||q.c)+' '+q.c+' '+(e.cg||'')+' '+(e.n||q.n)).includes(t))return false;if(FL==='sc')return e.sc!==false;if(FL==='oc')return e.oc;return true;});
  const pc=c.cores||['branco','preto','natural'];
  cc().innerHTML=`<div class="ph" style="background:${esc(c.cor)}"><div class="w"><div><small>${MKT?'Painel do Marketing · Catálogo 3D':'Painel do gestor · catálogo virtual'}</small><h1>${esc(c.nome)}</h1></div><div class="acts">${ADM?'<button class="btn" data-a="voltar">← Catálogos dos clientes</button>':''}<a class="btn or" target="_blank" rel="noopener" href="${esc(pubUrl(c))}">👁 Ver como o cliente vê</a><a class="btn" target="_blank" rel="noopener" href="${esc(PUB+c.slug)}?print=1">🖨 Imprimir catálogo</a><button class="btn" onclick="sair()">Sair</button></div></div></div>
  <main><div class="w">${LIM?'':`<div class="card"><h2>Sua marca no catálogo</h2><div class="lk" style="margin-bottom:10px">🔗 Link do catálogo: <b>${esc(pubUrl(c))}</b></div><div class="cfg">
@@ -190,10 +191,11 @@ function editor(){const c=CUR,L=linhasDo(c);if(!L.length){cc().innerHTML='<p sty
   <button class="btn sm" data-a="allsc">Todos “sob consulta”</button><button class="btn sm" data-a="nosc">Tirar “sob consulta” de todos</button></div>
   ${LIM?'':`<label class="pesog"><label class="sw"><input type="checkbox" data-pesog ${c.peso_oc?'':'checked'}><span></span></label> <b>Mostrar o peso dos perfis no catálogo</b> <span class="note">(desligado, nenhum perfil mostra o peso para o cliente)</span></label>`}
   <div class="lote ${SEL.size?'on':''}"><b>${SEL.size?SEL.size+' selecionado'+(SEL.size===1?'':'s'):'Marque os perfis na 1ª coluna para mudar vários de uma vez'}</b><button class="btn sm" data-lote="pub" ${SEL.size?'':'disabled'}>✅ Publicar</button><button class="btn sm" data-lote="nopub" ${SEL.size?'':'disabled'}>🚫 Não publicar</button><button class="btn sm" data-lote="sc" ${SEL.size?'':'disabled'}>Sob consulta</button><button class="btn sm" data-lote="nosc" ${SEL.size?'':'disabled'}>Pronta entrega</button><button class="btn sm" data-lote="peso" ${SEL.size?'':'disabled'}>⚖️ Mostrar peso</button><button class="btn sm" data-lote="nopeso" ${SEL.size?'':'disabled'}>Ocultar peso</button><span style="flex:1"></span><button class="btn sm" data-a="selall">Selecionar todos (todas as linhas)</button><button class="btn sm" data-a="selnone">Limpar seleção</button></div>
-  <p class="note" style="margin:0 0 8px">Clique no código ou no nome para editar (salva sozinho). <b>Sob consulta</b> já vem ligado em todos; em cada perfil você escolhe se a observação aparece para o cliente.</p>
-  <div style="overflow:auto"><table class="pf"><thead><tr><th class="ck"><input type="checkbox" data-selvis title="Selecionar todos desta lista" ${rows.length&&rows.every(q=>SEL.has(q.c))?'checked':''}></th><th>Foto</th><th>Código no seu catálogo</th><th>Descrição</th><th>Peso (kg/m)</th><th class="hm">Cores</th><th>Sob consulta</th><th>Mostrar observação</th><th>Publicado</th></tr></thead><tbody>
+  <p class="note" style="margin:0 0 8px">Clique no código ou no nome para editar (salva sozinho). Se a empresa preencher o <b>${esc(codRot(c))}</b>, é ele que aparece no catálogo, na cotação e no WhatsApp, e a busca acha pelos dois códigos. <b>Sob consulta</b> já vem ligado em todos; em cada perfil você escolhe se a observação aparece para o cliente.</p>
+  <div style="overflow:auto"><table class="pf"><thead><tr><th class="ck"><input type="checkbox" data-selvis title="Selecionar todos desta lista" ${rows.length&&rows.every(q=>SEL.has(q.c))?'checked':''}></th><th>Foto</th><th>Código no seu catálogo</th><th>${esc(codRot(c))}</th><th>Descrição</th><th>Peso (kg/m)</th><th class="hm">Cores</th><th>Sob consulta</th><th>Mostrar observação</th><th>Publicado</th></tr></thead><tbody>
   ${rows.map(q=>{const e=itemOf(c,q),k=esc(q.c),cs=e.cores||q.cor0||pc;return `<tr class="${e.oc?'oc':''} ${SEL.has(q.c)?'sel':''}"><td class="ck"><input type="checkbox" data-sel="${k}" ${SEL.has(q.c)?'checked':''}></td><td class="fto"><img src="${esc(e.foto||(q.d3?IMG+q.i+'.webp':(q.im||IMG+'c'+q.i+'.webp')))}" alt="" loading="lazy"><label class="btn sm" title="Trocar a foto que aparece no catálogo">📷<input type="file" accept="image/*" data-ft="${k}" hidden></label>${e.foto?`<button class="btn sm" data-fx="${k}" title="Voltar para a imagem 3D">↺</button>`:''}</td>
    <td><input type="text" data-e="c" data-q="${k}" value="${esc(e.c||q.c)}"><div class="note" style="font-size:11.5px;padding-left:6px">mercado: ${k}</div></td>
+   <td style="min-width:110px"><input type="text" data-e="cg" data-q="${k}" value="${esc(e.cg||'')}" placeholder="código da empresa">${e.cg?'<div class="note" style="font-size:11px;padding-left:6px;color:#1d7a46">vale no catálogo</div>':''}</td>
    <td><input type="text" data-e="n" data-q="${k}" value="${esc(e.n||q.n)}"></td>
    <td style="min-width:86px"><input type="text" inputmode="decimal" data-e="p" data-q="${k}" value="${esc(e.p||q.p||'')}">${e.pe_oc||c.peso_oc?'<div class="note" style="font-size:11px;padding-left:6px">oculto no catálogo</div>':''}</td>
    <td class="hm"><div class="cores">${CORES.map(([id,nm,hx])=>`<span class="cor ${cs.includes(id)?'on':''}" title="${nm}" style="background:${hx}" data-cor="${id}" data-q="${k}"></span>`).join('')}</div></td>
@@ -272,7 +274,7 @@ function vitBind(){const A=document.getElementById('vitC');if(!A)return;const V=
    let img='';try{if(f)img=await vitFoto(f);}catch(x){st('Erro na foto: '+(x.message||x));b.disabled=false;b.textContent='＋ Oferta';return;}V.it.push({k:'o',t,img});}
   if(!V.on&&V.it.length)V.on=true;await vitSalva(V);draw();});
  const of=$('#vitOf');if(of)of.onchange=()=>{$('#vitOn').textContent=of.files[0]?'📎 '+of.files[0].name:'';};}
-async function salvaItem(base,patch){const c=CUR,q=BASE.flatMap(l=>l.p).find(x=>x.c===base),e=itemOf(c,q);const row=Object.assign({cliente_id:c.id,base,c:e.c||null,n:e.n||null,cores:e.cores,sc:e.sc!==false,obs:!!e.obs,txt:e.txt||null,oc:!!e.oc,p:e.p||null,foto:e.foto||null,pe_oc:!!e.pe_oc},patch,{atualizado:new Date().toISOString()});
+async function salvaItem(base,patch){const c=CUR,q=BASE.flatMap(l=>l.p).find(x=>x.c===base),e=itemOf(c,q);const row=Object.assign({cliente_id:c.id,base,c:e.c||null,cg:e.cg||null,n:e.n||null,cores:e.cores,sc:e.sc!==false,obs:!!e.obs,txt:e.txt||null,oc:!!e.oc,p:e.p||null,foto:e.foto||null,pe_oc:!!e.pe_oc},patch,{atualizado:new Date().toISOString()});
  const r=await sb.from('cat_itens').upsert(row);if(r.error){st('Erro ao salvar: '+r.error.message);return false;}(IT[c.id]=IT[c.id]||{})[base]=row;st('✓ Salvo');return true;}
 async function salvaCli(patch){const r=await sb.from('cat_clientes').update(patch).eq('id',CUR.id);if(r.error){st('Erro: '+r.error.message);return;}Object.assign(CUR,patch);st('✓ Salvo');}
 function draw(){if(VIEW==='lista')lista();else editor();bind();}
@@ -289,7 +291,7 @@ function bind(){const A=cc();
   if(a==='selall'){const L2=linhasDo(CUR);L2.forEach(l=>l.p.forEach(q=>SEL.add(q.c)));draw();return;}
   if(a==='selnone'){SEL.clear();draw();return;}
   if(a==='allsc'||a==='nosc'){if(!confirm(a==='allsc'?'Marcar todos os perfis da linha como “sob consulta”?':'Tirar o “sob consulta” de todos os perfis da linha?'))return;b.disabled=true;const lin=BASE.find(l=>l.id===LI);
-   const rows=lin.p.map(q=>{const e=itemOf(CUR,q);return {cliente_id:CUR.id,base:q.c,c:e.c||null,n:e.n||null,cores:e.cores,sc:a==='allsc',obs:!!e.obs,txt:e.txt||null,oc:!!e.oc,p:e.p||null,foto:e.foto||null,pe_oc:!!e.pe_oc,atualizado:new Date().toISOString()};});
+   const rows=lin.p.map(q=>{const e=itemOf(CUR,q);return {cliente_id:CUR.id,base:q.c,c:e.c||null,cg:e.cg||null,n:e.n||null,cores:e.cores,sc:a==='allsc',obs:!!e.obs,txt:e.txt||null,oc:!!e.oc,p:e.p||null,foto:e.foto||null,pe_oc:!!e.pe_oc,atualizado:new Date().toISOString()};});
    const r=await sb.from('cat_itens').upsert(rows);if(r.error)st('Erro: '+r.error.message);else{rows.forEach(x=>{(IT[CUR.id]=IT[CUR.id]||{})[x.base]=x;});st('✓ Salvo');}draw();}});
  A.querySelectorAll('[data-li]').forEach(b=>b.onclick=()=>{LI=b.dataset.li;draw();});
  const q=$('#gq');if(q)q.oninput=e=>{Q=e.target.value;clearTimeout(window.__t);window.__t=setTimeout(()=>{draw();const n=$('#gq');n.focus();n.setSelectionRange(n.value.length,n.value.length);},300);};
@@ -302,8 +304,8 @@ function bind(){const A=cc();
  A.querySelectorAll('[data-pc]').forEach(s=>s.onclick=async()=>{const pc=(CUR.cores||['branco','preto','natural']).slice(),k=s.dataset.pc,n=pc.includes(k)?pc.filter(x=>x!==k):pc.concat(k);await salvaCli({cores:n});draw();});
  const q0=k=>BASE.flatMap(l=>l.p).find(x=>x.c===k);
  A.querySelectorAll('[data-e]').forEach(i=>i.onchange=async()=>{const base=i.dataset.q,k=i.dataset.e,q=q0(base);let p={};
-  if(k==='c')p.c=i.value.trim()===base?null:i.value.trim();else if(k==='n')p.n=i.value.trim()===q.n?null:i.value.trim();else if(k==='p'){const v=i.value.trim().replace('.',',');p.p=!v||v===q.p?null:v;}else if(k==='txt')p.txt=i.value.trim();else if(k==='vis')p.oc=!i.checked;else p[k]=i.checked;
-  const ok=await salvaItem(base,p);if(ok&&!['c','n','txt','p'].includes(k))draw();});
+  if(k==='cg')p.cg=i.value.trim()||null;else if(k==='c')p.c=i.value.trim()===base?null:i.value.trim();else if(k==='n')p.n=i.value.trim()===q.n?null:i.value.trim();else if(k==='p'){const v=i.value.trim().replace('.',',');p.p=!v||v===q.p?null:v;}else if(k==='txt')p.txt=i.value.trim();else if(k==='vis')p.oc=!i.checked;else p[k]=i.checked;
+  const ok=await salvaItem(base,p);if(ok&&(k==='cg'||!['c','n','txt','p'].includes(k)))draw();});
  A.querySelectorAll('[data-ft]').forEach(i=>i.onchange=async()=>{const f=i.files[0];if(!f)return;st('Enviando a foto…');try{const u=await perfilFoto(f,i.dataset.ft);if(await salvaItem(i.dataset.ft,{foto:u}))draw();}catch(e){st('Erro ao enviar: '+(e.message||e));}});
  A.querySelectorAll('[data-fx]').forEach(b=>b.onclick=async()=>{if(await salvaItem(b.dataset.fx,{foto:null}))draw();});
  vitBind();
@@ -313,7 +315,7 @@ function bind(){const A=cc();
  A.querySelectorAll('[data-lote]').forEach(b=>b.onclick=async()=>{const a=b.dataset.lote,N=SEL.size;if(!N)return;
   const P={pub:{oc:false},nopub:{oc:true},sc:{sc:true},nosc:{sc:false},peso:{pe_oc:false},nopeso:{pe_oc:true}}[a],T={pub:'publicar',nopub:'NÃO publicar',sc:'marcar como “sob consulta”',nosc:'marcar como pronta entrega',peso:'mostrar o peso de',nopeso:'ocultar o peso de'}[a];
   if(!confirm(`Confirma ${T} ${N} perfi${N===1?'l':'s'}?`))return;b.disabled=true;const all=BASE.flatMap(l=>l.p),agora=new Date().toISOString();
-  const rows=[...SEL].map(base=>{const q=all.find(x=>x.c===base);if(!q)return null;const e=itemOf(CUR,q);return Object.assign({cliente_id:CUR.id,base,c:e.c||null,n:e.n||null,cores:e.cores,sc:e.sc!==false,obs:!!e.obs,txt:e.txt||null,oc:!!e.oc,p:e.p||null,foto:e.foto||null,pe_oc:!!e.pe_oc},P,{atualizado:agora});}).filter(Boolean);
+  const rows=[...SEL].map(base=>{const q=all.find(x=>x.c===base);if(!q)return null;const e=itemOf(CUR,q);return Object.assign({cliente_id:CUR.id,base,c:e.c||null,cg:e.cg||null,n:e.n||null,cores:e.cores,sc:e.sc!==false,obs:!!e.obs,txt:e.txt||null,oc:!!e.oc,p:e.p||null,foto:e.foto||null,pe_oc:!!e.pe_oc},P,{atualizado:agora});}).filter(Boolean);
   const r=await sb.from('cat_itens').upsert(rows);if(r.error){st('Erro: '+r.error.message);b.disabled=false;return;}rows.forEach(x=>{(IT[CUR.id]=IT[CUR.id]||{})[x.base]=x;});st(`✓ ${rows.length} perfis atualizados`);SEL.clear();draw();});
  A.querySelectorAll('[data-cor]').forEach(s=>s.onclick=async()=>{const base=s.dataset.q,e=itemOf(CUR,q0(base)),cs=(e.cores||CUR.cores||['branco','preto','natural']).slice(),k=s.dataset.cor,n=cs.includes(k)?cs.filter(x=>x!==k):cs.concat(k);if(await salvaItem(base,{cores:n}))s.classList.toggle('on');});}
 /* link exclusivo de cada cliente: catalogos.html?c=<slug> abre direto o editor daquele cliente */
