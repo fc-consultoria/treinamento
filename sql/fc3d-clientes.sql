@@ -95,4 +95,4 @@ create table if not exists public.pfc_ajustes_3d(
   dx numeric not null default 0, dy numeric not null default 0, dz numeric not null default 0,
   atualizado timestamptz not null default now(), primary key(tipologia,peca));
 alter table public.pfc_ajustes_3d enable row level security;
--- funções pfc_ajustes_3d_ler(token) e pfc_ajuste_3d_salvar(token,tipologia,peca,dx,dy,dz): aplicadas pela migração pfc_ajustes_3d
+-- colunas rx, ry, rz (giro em graus) e funções pfc_ajustes_3d_ler(token) e pfc_ajuste_3d_salvar(token,tipologia,peca,dx,dy,dz,rx,ry,rz): migrações pfc_ajustes_3d e pfc_ajustes_3d_giro
