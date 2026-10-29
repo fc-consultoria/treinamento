@@ -9,15 +9,30 @@
     for(const [k,L] of Object.entries(AB))if(L.some(x=>x.length>=4&&t.startsWith(x)))return k;
     if(/^ANOD/.test(t))return 'fosco';if(/CROM/.test(t))return 'brilhante';return null;};
   const corNoTexto=t=>{const s=sa(t);for(const [k,L] of Object.entries(AB))for(const x of L)if(x.length>=3&&new RegExp('(^|[^A-Z])'+x+'([^A-Z]|$)').test(s))return k;return null;};
-  function separa(raw){const s=sa(raw).replace(/\s+/g,'');const m=s.match(/^(.+?)[.\-_\/ ]([A-Z]{2,10})$/);if(m){const c=corDe(m[2]);if(c)return {base:m[1],cor:c};}return {base:s,cor:null};}
+  function separa(raw){const s=sa(raw).replace(/\s+/g,'');const m=s.match(/^(.+?)[.,\-_\/ ]([A-Z]{2,10})$/);if(m){const c=corDe(m[2]);if(c)return {base:m[1],cor:c};}
+    /* cor colada no número, sem separador: PLR-054PTO */
+    const g=s.match(/^(.*\d)([A-Z]{3,9})$/);if(g){const c=corDe(g[2]);if(c)return {base:g[1],cor:c};}return {base:s,cor:null};}
   function variantes(c){const n=norm(c),out=[n];const m=n.match(/^([A-Z]+)(\d+)([A-Z]?)$/);if(m){const d=String(+m[2]);[d,d.padStart(3,'0'),d.padStart(4,'0'),d.padStart(5,'0')].forEach(x=>out.push(m[1]+x+m[3]));}
     if(/^T[A-Z]{2}\d/.test(n))out.push(n.slice(1));return [...new Set(out)];}
   function acha(base,desc){for(const v of variantes(base)){const r=buscar(v);if(r.length)return {g:r[0],cod:v,n:r.length};}
     const t=sa(desc).split(/\s+/)[0];if(t&&t!==sa(base)){for(const v of variantes(t)){const r=buscar(v);if(r.length)return {g:r[0],cod:v,n:r.length};}}return null;}
   let carregando=null;const lib=()=>window.XLSX?Promise.resolve():(carregando=carregando||new Promise((ok,no)=>{const s=document.createElement('script');s.src=XLSX_URL;s.onload=ok;s.onerror=()=>{carregando=null;no(new Error('xlsx'));};document.head.appendChild(s);}));
-  function cab(rows){for(let i=0;i<Math.min(rows.length,30);i++){const r=rows[i].map(x=>sa(x));const ic=r.findIndex(x=>/COD|REF/.test(x)),iq=r.findIndex(x=>/TOTAL|BARRA|QTD|QUANT/.test(x)&&!/TAMANHO|COMPR|MM/.test(x));
-      if(ic>=0&&iq>=0)return {i,cod:ic,qtd:iq,prod:r.findIndex(x=>/PRODUTO|DESCRI|PERFIL|NOME/.test(x)),cor:r.findIndex(x=>/^COR|ACABAMENTO|PINTURA/.test(x)),tam:r.findIndex(x=>/TAMANHO|COMPR|\(MM\)|METRO/.test(x))};}
+  /* cabeçalho: código (prefere o da empresa, ex.: CÓD GUAPORÉ), descrição, cor, tamanho da barra (T.B) e quantidade de barras (COMPRAS).
+     Colunas de peso, sugestão e venda nunca contam como quantidade. */
+  function cab(rows){for(let i=0;i<Math.min(rows.length,30);i++){const r=rows[i].map(x=>sa(x).replace(/\s+/g,' '));
+      const pc=[x=>/COD|REF/.test(x)&&/GUAPOR|CLIENTE|EMPRESA|INTERNO/.test(x),x=>/^(COD|CODIGO|REF)\b/.test(x)&&!/FORNEC|FABRIC|BARRAS|EAN/.test(x),x=>/COD|REF/.test(x)&&!/FORNEC|FABRIC/.test(x),x=>/COD|REF/.test(x)];
+      let ic=-1;for(const f of pc){ic=r.findIndex(f);if(ic>=0)break;}
+      const nq=x=>!/PESO|KG|SUGEST|VENDA|MEDIA|ESTOQUE|COBERT|TAMANHO|COMPR(I|\b)|\bMM\b|\bTB\b|T\.B/.test(x);
+      const pq=[x=>/^(COMPRA|COMPRAS|QTD|QTDE|QUANTIDADE|BARRAS|QTD BARRAS|QTD\. BARRAS)$/.test(x),x=>/QTD|QUANT|BARRAS/.test(x)&&nq(x),x=>/COMPRA|TOTAL|BARRA/.test(x)&&nq(x)];
+      let iq=-1;for(const f of pq){iq=r.findIndex((x,j)=>j!==ic&&f(x));if(iq>=0)break;}
+      if(ic>=0&&iq>=0)return {i,cod:ic,qtd:iq,forte:/^(COMPRA|COMPRAS|QTD|QTDE|QUANTIDADE|BARRAS)/.test(r[iq]),prod:r.findIndex(x=>/PRODUTO|DESCRI|PERFIL|NOME/.test(x)),cor:r.findIndex(x=>/^COR\b|ACABAMENTO|PINTURA/.test(x)),
+        tam:r.findIndex(x=>/^T\.? ?B\.?$|^TB\b|TAM.*BARRA|TAMANHO|COMPRIMENTO|\(MM\)|METRO/.test(x)&&!/PESO/.test(x))};}
     return null;}
+  /* várias abas: usa a que tem código + quantidade de barras e mais itens com compra (a mais enxuta em empate) */
+  function escolheAba(wb){let best=null;wb.SheetNames.forEach((n,ix)=>{const rows=XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,raw:false,defval:''});const h=cab(rows.map(r=>(r||[]).map(x=>x==null?'':String(x).trim())));if(!h)return;
+      const L=ler(rows),cols=rows[h.i].filter(x=>String(x).trim()).length,sc=L.length*10+(h.forte?5:0)-cols*0.01;if(L.length&&(!best||sc>best.sc))best={n,rows,sc};});
+    if(best){ABA_LIDA=best.n;return best.rows;}ABA_LIDA=wb.SheetNames[0];return XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,raw:false,defval:''});}
+  let ABA_LIDA='';
   /* PDF: lê o texto com posição (pdf.js), monta as linhas pela altura e as colunas pelo cabeçalho */
   const PDF_URL='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js',PDF_WK='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
   let carPdf=null;const libPdf=()=>window.pdfjsLib?Promise.resolve():(carPdf=carPdf||new Promise((ok,no)=>{const s=document.createElement('script');s.src=PDF_URL;s.onload=()=>{window.pdfjsLib.GlobalWorkerOptions.workerSrc=PDF_WK;ok();};s.onerror=()=>{carPdf=null;no(new Error('pdf'));};document.head.appendChild(s);}));
@@ -37,7 +52,7 @@
     if(!h){/* sem cabeçalho: 1ª coluna com cara de código, depois o 1º número */
       rows.forEach((r,i)=>{const ic=r.findIndex(x=>/^[A-Za-z]{0,5}[-. ]?\d{2,5}/.test(x));if(ic<0)return;const nums=r.map((x,j)=>[j,+String(x).replace(',','.')]).filter(([j,v])=>j!==ic&&v>0&&isFinite(v));if(!nums.length)return;
         const q=nums[0][1],tm=nums.find(([,v])=>v>=1000||(v>=2&&v<=9&&v!==q));out.push({lin:i+1,raw:r[ic],prod:r.filter((x,j)=>j!==ic&&isNaN(+String(x).replace(',','.'))).join(' '),corTxt:'',q,tam:tm?tm[1]:null});});return out;}
-    for(let i=h.i+1;i<rows.length;i++){const r=rows[i];const raw=r[h.cod];if(!raw)continue;const q=+String(r[h.qtd]).replace(/\./g,'').replace(',','.');if(!(q>0))continue;
+    for(let i=h.i+1;i<rows.length;i++){const r=rows[i];const raw=r[h.cod];if(!raw)continue;const qs=String(r[h.qtd]).trim(),q=/^\d{1,3}(,\d{3})+$/.test(qs)?+qs.replace(/,/g,''):/,/.test(qs)?+qs.replace(/\./g,'').replace(',','.'):+qs;if(!(q>0))continue;
       out.push({lin:i+1,raw,prod:h.prod>=0?r[h.prod]:'',corTxt:h.cor>=0?r[h.cor]:'',q,tam:h.tam>=0?+String(r[h.tam]).replace(',','.'):null});}
     return out;}
   function monta(L){return L.map(x=>{const s=separa(x.raw);const cor=corDe(x.corTxt)||s.cor||corNoTexto(x.prod)||COR;let mt=x.tam>0?(x.tam>=100?x.tam/1000:x.tam):BARRA;mt=Math.round(mt*100)/100;
@@ -63,10 +78,10 @@
   .imp-t small{color:#5d6b76}`;
   let stOk=false;
   async function arquivo(f){if(!stOk){const s=document.createElement('style');s.textContent=css;document.head.appendChild(s);stOk=true;}
-    ARQ=f.name;toast('Lendo a lista…');let rows=[];
+    ARQ=f.name;ABA_LIDA='';toast('Lendo a lista…');let rows=[];
     try{if(/\.pdf$/i.test(f.name)||f.type==='application/pdf'){rows=await lerPdf(await f.arrayBuffer());if(!rows.length){toast('Este PDF não tem texto (é imagem/escaneado). Mande em PDF gerado pelo sistema, Excel ou CSV.');return;}}
       else if(/\.(csv|txt)$/i.test(f.name)){const t=await f.text();rows=t.split(/\r?\n/).map(l=>l.split(/[;\t]/));}
-      else{await lib();const wb=XLSX.read(await f.arrayBuffer(),{type:'array'});const ws=wb.Sheets[wb.SheetNames[0]];rows=XLSX.utils.sheet_to_json(ws,{header:1,raw:false,defval:''});}}
+      else{await lib();const wb=XLSX.read(await f.arrayBuffer(),{type:'array'});rows=escolheAba(wb);if(wb.SheetNames.length>1)ARQ=f.name+' · aba '+ABA_LIDA;}}
     catch(_){toast('Não consegui ler este arquivo. Mande em Excel (.xlsx), CSV ou PDF.');return;}
     IT=monta(ler(rows));if(!IT.length){toast('Não achei código e quantidade nesta lista.');return;}abre();
     typeof registrar==='function'&&registrar('lista_importada',{linhas:IT.length,achadas:IT.filter(x=>x.ok).length});}
