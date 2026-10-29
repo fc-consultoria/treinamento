@@ -53,7 +53,9 @@
 .fcv-lgpd{font-size:11.5px;color:var(--muted,#5d6f7a);padding:6px 12px 10px}
 .fcv-sup{margin:8px;padding:9px 10px;border-radius:10px;background:#fff8e8;border:1px solid #f2a51e;font-size:13px;color:#7a4a00;cursor:pointer;text-align:left}
 .fcv-tb{display:inline-flex;align-items:center;gap:6px}
-.fcv-form .fcv-clip{background:var(--surface-2,#f6f8f9);color:inherit;border:1px solid var(--line,#d9e1e6);font-size:19px;padding:0 11px}.fcv-form .fcv-clip:hover{background:var(--accent-soft,#e3eef6)}
+.fcv-form .fcv-clip{background:var(--surface-2,#f6f8f9);color:inherit;border:1px solid var(--line,#d9e1e6);font:700 13px inherit;padding:0 10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;line-height:1.1;white-space:nowrap}.fcv-form .fcv-clip i{font-style:normal;font-size:17px}.fcv-form .fcv-clip:hover{background:var(--accent-soft,#e3eef6)}
+.fcv-form .fcv-cola{border-color:#0d5c8f;color:#0d5c8f}
+@media(max-width:700px){.fcv-form .fcv-clip span{display:none}}
 .fcv-pend:empty{display:none}.fcv-pend{display:flex;align-items:center;gap:10px;margin:0 10px;padding:8px 10px;border:1px dashed #0d5c8f;border-bottom:0;border-radius:10px 10px 0 0;background:var(--accent-soft,#e3eef6);font-size:13px}
 .fcv-pend img{width:46px;height:46px;object-fit:cover;border-radius:6px;flex:none}.fcv-pend .ic{font-size:28px;flex:none}.fcv-pend span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .fcv-pend button{border:0;background:none;color:inherit;font-size:17px;cursor:pointer;padding:2px 6px;border-radius:6px}
@@ -103,12 +105,16 @@
       const x=await axGet(b.dataset.ax,busca);if(!x){if(w)w.close();alert('Não consegui abrir o anexo.');return;}
       if(pdf){if(w)w.location.href=x.url;else window.open(x.url,'_blank');}else lightbox(x);});}
   /* formulário com 📎: botão, Ctrl+V de print e arrastar arquivo */
-  function formHtml(ph,aria){return `<div class="fcv-pend" id="fcvP"></div><form class="fcv-form" id="fcvF"><button type="button" class="fcv-clip" id="fcvClip" title="Anexar print ou PDF (ou cole um print com Ctrl+V)" aria-label="Anexar print ou PDF">📎</button><input type="file" id="fcvFile" accept="image/*,application/pdf" hidden><textarea id="fcvT" rows="1" placeholder="${h(ph)}" aria-label="${h(aria)}"></textarea><button type="submit">Enviar</button></form>`;}
+  function formHtml(ph,aria){return `<div class="fcv-pend" id="fcvP"></div><form class="fcv-form" id="fcvF"><button type="button" class="fcv-clip fcv-cola" id="fcvCola" title="Colar o print que você copiou (ou clique na caixa e aperte Ctrl+V)" aria-label="Colar print"><i>📋</i><span>Colar print</span></button><button type="button" class="fcv-clip" id="fcvClip" title="Anexar imagem ou PDF do computador/celular" aria-label="Anexar arquivo"><i>📎</i><span>Anexar</span></button><input type="file" id="fcvFile" accept="image/*,application/pdf" hidden><textarea id="fcvT" rows="1" placeholder="${h(ph)}" aria-label="${h(aria)}"></textarea><button type="submit">Enviar</button></form>`;}
   function formAnexo(S,main){const p=document.getElementById('fcvP'),fi=document.getElementById('fcvFile'),t=document.getElementById('fcvT');if(!p)return;
     const pinta=()=>{const a=S.pend;p.innerHTML=a?`${a.url?`<img src="${a.url}" alt="">`:'<span class="ic">📄</span>'}<span><b>${h(a.nome)}</b> · ${kb(a.tam)}</span><button type="button" aria-label="Tirar anexo" title="Tirar anexo">✕</button>`:'';
       const x=p.querySelector('button');if(x)x.onclick=()=>{S.pend=null;pinta();t.focus();};};
     const usa=async(f,col)=>{const a=await prepArq(f,col);if(a){S.pend=a;pinta();t.focus();}};
-    document.getElementById('fcvClip').onclick=()=>fi.click();fi.onchange=()=>{usa(fi.files[0]);fi.value='';};
+    document.getElementById('fcvClip').onclick=()=>fi.click();
+    const dica=()=>{t.focus();alert('Para colar o print: clique na caixa de mensagem e aperte Ctrl+V.\n(No celular, use o 📎 Anexar e escolha a imagem.)');};
+    document.getElementById('fcvCola').onclick=async()=>{if(!navigator.clipboard||!navigator.clipboard.read){dica();return;}
+      try{const L=await navigator.clipboard.read();for(const it of L){const ty=it.types.find(x=>x.startsWith('image/'));if(ty){const bl=await it.getType(ty);usa(new File([bl],'print',{type:ty}),true);return;}}
+        alert('Não encontrei print copiado.\nTire o print (Windows + Shift + S ou a tecla Print Screen) e clique em 📋 Colar print de novo.');}catch(_){dica();}};fi.onchange=()=>{usa(fi.files[0]);fi.value='';};
     t.onpaste=e=>{const it=[...((e.clipboardData||{}).items||[])].find(i=>i.kind==='file');if(it){e.preventDefault();usa(it.getAsFile(),true);}};
     main.ondragover=e=>{if([...e.dataTransfer.types].includes('Files')){e.preventDefault();main.classList.add('drop');}};
     main.ondragleave=e=>{if(!main.contains(e.relatedTarget))main.classList.remove('drop');};

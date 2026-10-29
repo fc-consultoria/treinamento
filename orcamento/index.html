@@ -687,7 +687,7 @@ function sairBarra(nome){if(DEMO||SO||document.documentElement.classList.contain
     let e0=Q.get('e')||(()=>{try{return localStorage.getItem('fc_orc_emp');}catch(_){return '';}})()||'cb';if(!EMPS.some(e=>e.id===e0))e0=(EMPS.find(e=>e.id==='cb')||EMPS[0]||{}).id;s.value=e0;s.onchange=()=>trocaEmp(s.value);
     if(ABA0)ABA=ABA0;await trocaEmp(e0);});})();
 </script>
-<script src="atendimentos.js?v=5"></script><script src="../conversas.js?v=6"></script><script>(function(){const q=new URLSearchParams(location.search);if(q.get('e')||q.get('ver')==='vend'||window.top!==window)return;let t=q.get('et');
+<script src="atendimentos.js?v=5"></script><script src="../conversas.js?v=7"></script><script>(function(){const q=new URLSearchParams(location.search);if(q.get('e')||q.get('ver')==='vend'||window.top!==window)return;let t=q.get('et');
   if(!t){try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(/^emp-tok-/.test(k)){t=localStorage.getItem(k);break;}}}catch(_){}}
   if(t&&window.FCConversas)FCConversas.equipe(t);})();</script><script src="vend-extra.js?v=6"></script>
 <script src="../tour-fc.js?v=2"></script><script src="tutorial-vendas.js?v=1"></script>
