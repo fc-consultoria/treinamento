@@ -96,3 +96,4 @@ create table if not exists public.pfc_ajustes_3d(
   atualizado timestamptz not null default now(), primary key(tipologia,peca));
 alter table public.pfc_ajustes_3d enable row level security;
 -- colunas rx, ry, rz (giro em graus) e funções pfc_ajustes_3d_ler(token) e pfc_ajuste_3d_salvar(token,tipologia,peca,dx,dy,dz,rx,ry,rz): migrações pfc_ajustes_3d e pfc_ajustes_3d_giro
+-- coluna oculto (boolean, peça ou acessório escondido para as empresas; a Matriz vê em vermelho transparente): migração pfc_ajustes_3d_ocultar. pfc_ajuste_3d_salvar recebe p_oculto
