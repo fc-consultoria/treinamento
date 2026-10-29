@@ -59,7 +59,7 @@
       <button type="button" class="btn pri" data-apegar="${a.id}" style="font-size:16px;padding:12px 18px">✋ Atender este cliente</button></div></div>`;
     const c=a.cli,orcs=(D&&D.orcs||[]).slice(0,30);
     return `<div class="atd-cv"><div class="atd-h"><div><span class="nm">${esc(c.nome)}${c.empresa?' · '+esc(c.empresa):''}</span><br><span class="nota">${esc(c.cidade||'')}${c.doc?' · '+esc(c.doc):''}${c.zap?' · WhatsApp '+esc(c.zap):''}${c.email?' · '+esc(c.email):''}</span></div></div>
-     <div class="atd-t"><button type="button" class="btn" data-aorc>🧾 Transformar em orçamento</button>
+     <div class="atd-t">${(typeof SEMORC==='function'&&SEMORC())?'':'<button type="button" class="btn" data-aorc>🧾 Transformar em orçamento</button>'}
       ${orcs.length?`<select id="aOrc" aria-label="Enviar orçamento"><option value="">📎 Enviar resumo de um orçamento…</option>${orcs.map(o=>`<option value="${o.id}">nº ${o.numero} · ${esc((o.cliente&&o.cliente.nome)||'')} · R$ ${Number(o.total||0).toLocaleString('pt-BR',{minimumFractionDigits:2})}</option>`).join('')}</select>`:''}
       <select id="aSt" aria-label="Situação">${Object.entries(ST).map(([k,v])=>`<option value="${k}" ${a.status===k?'selected':''}>${v[0]}</option>`).join('')}</select>
       ${A.vends.length?`<select id="aVd" aria-label="Vendedor"><option value="">${a.vend_id?'↪ Passar para…':'Escolher vendedor…'}</option>${A.vends.filter(v=>v.id!==a.vend_id).map(v=>`<option value="${v.id}">${esc(v.nome)}</option>`).join('')}</select>`:''}
