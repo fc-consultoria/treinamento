@@ -565,7 +565,7 @@ document.addEventListener('click',e=>{const t=e.target.closest('[data-act="verca
 setInterval(()=>{if(!document.hidden&&D&&!D.erro&&!$('#layer').innerHTML)carregar()},30000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&D&&!D.erro&&!$('#layer').innerHTML)carregar()});
 /* conversa da equipe: fora do link da Guaporé, abre o botão 💬 com o login da pessoa */
-if(window.parent===window&&tok()){const s=document.createElement('script');s.src='../conversas.js?v=5';s.onload=()=>{try{window.sb=sbc;window.FCConversas&&FCConversas.equipe(tok())}catch(e){}};window.sb=sbc;document.body.appendChild(s)}
+if(window.parent===window&&tok()){const s=document.createElement('script');s.src='../conversas.js?v=6';s.onload=()=>{try{window.sb=sbc;window.FCConversas&&FCConversas.equipe(tok())}catch(e){}};window.sb=sbc;document.body.appendChild(s)}
 
 /* ---------- TUTORIAL GUIADO (legenda + voz) ---------- */
 const TOURS={

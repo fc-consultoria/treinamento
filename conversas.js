@@ -53,17 +53,74 @@
 .fcv-lgpd{font-size:11.5px;color:var(--muted,#5d6f7a);padding:6px 12px 10px}
 .fcv-sup{margin:8px;padding:9px 10px;border-radius:10px;background:#fff8e8;border:1px solid #f2a51e;font-size:13px;color:#7a4a00;cursor:pointer;text-align:left}
 .fcv-tb{display:inline-flex;align-items:center;gap:6px}
+.fcv-form .fcv-clip{background:var(--surface-2,#f6f8f9);color:inherit;border:1px solid var(--line,#d9e1e6);font-size:19px;padding:0 11px}.fcv-form .fcv-clip:hover{background:var(--accent-soft,#e3eef6)}
+.fcv-pend:empty{display:none}.fcv-pend{display:flex;align-items:center;gap:10px;margin:0 10px;padding:8px 10px;border:1px dashed #0d5c8f;border-bottom:0;border-radius:10px 10px 0 0;background:var(--accent-soft,#e3eef6);font-size:13px}
+.fcv-pend img{width:46px;height:46px;object-fit:cover;border-radius:6px;flex:none}.fcv-pend .ic{font-size:28px;flex:none}.fcv-pend span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fcv-pend button{border:0;background:none;color:inherit;font-size:17px;cursor:pointer;padding:2px 6px;border-radius:6px}
+.fcv-ax{all:unset;box-sizing:border-box;display:block;cursor:pointer;margin:2px 0 4px;border-radius:8px}.fcv-ax:focus-visible{outline:3px solid #f2a51e}
+.fcv-ax.img img{display:block;max-width:260px;max-height:220px;min-width:120px;min-height:70px;border-radius:8px;background:rgba(127,127,127,.18);object-fit:contain}
+.fcv-ax.pdf{display:flex;align-items:center;gap:9px;padding:8px 10px;background:rgba(127,127,127,.12);border:1px solid rgba(127,127,127,.25);max-width:280px}
+.fcv-ax.pdf b{font-size:24px;line-height:1}.fcv-ax.pdf span{display:flex;flex-direction:column;min-width:0}.fcv-ax.pdf span i{font-style:normal;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fcv-ax.pdf small{margin:0}
+.fcv-main.drop{outline:3px dashed #0d5c8f;outline-offset:-8px}
+.fcv-lb{position:fixed;inset:0;z-index:10000;background:rgba(10,20,28,.86);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:20px}
+.fcv-lb img{max-width:100%;max-height:calc(100vh - 110px);border-radius:8px;background:#fff}
+.fcv-lb div{display:flex;gap:10px}.fcv-lb a,.fcv-lb button{border:0;border-radius:10px;padding:9px 16px;font:700 14px system-ui,sans-serif;cursor:pointer;text-decoration:none;background:#fff;color:#15232b}.fcv-lb a{background:#0d5c8f;color:#fff}
 @media(max-width:700px){.fcv,.fcv-mat.fcv{left:0;top:0;bottom:0;transform:none;width:100vw;height:100dvh;border-radius:0;grid-template-columns:1fr}
  .fcv.chat .fcv-side{display:none}.fcv:not(.chat) .fcv-main{display:none}.fcv-back{display:block}.fcv-btn{bottom:12px;left:12px}}
 @media (prefers-color-scheme:dark){.fcv-sup{background:#3a2a12;color:#f0c27a}}`;
   function css(){if(document.getElementById('fcvCss'))return;const s=document.createElement('style');s.id='fcvCss';s.textContent=CSS;document.head.appendChild(s);}
   function bip(){try{const a=new (window.AudioContext||window.webkitAudioContext)(),o=a.createOscillator(),g=a.createGain();o.frequency.value=880;g.gain.value=.06;o.connect(g);g.connect(a.destination);o.start();setTimeout(()=>{o.frequency.value=1175},120);setTimeout(()=>{o.stop();a.close()},260);}catch(_){}}
 
+  /* ===== anexos (print/foto e PDF) ===== */
+  const MAXB=5*1024*1024,AXC={};
+  const kb=n=>n>=1048576?(n/1048576).toFixed(1).replace('.',',')+' MB':Math.max(1,Math.round(n/1024))+' KB';
+  const b64=bl=>new Promise((ok,er)=>{const r=new FileReader();r.onload=()=>ok(String(r.result).split(',')[1]);r.onerror=er;r.readAsDataURL(bl);});
+  async function prepArq(file,colado){if(!file)return null;const t=file.type||'';
+    if(t==='application/pdf'){if(file.size>MAXB){alert('Esse PDF tem '+kb(file.size)+'. O limite é 5 MB.');return null;}return {nome:file.name||'documento.pdf',tipo:t,b64:await b64(file),tam:file.size,url:null};}
+    if(!/^image\//.test(t)){alert('Dá para anexar print/foto (imagem) ou PDF.');return null;}
+    const base=colado||!file.name?'print-'+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}).replace(':','h'):file.name.replace(/\.[^.]+$/,'');
+    if(t==='image/gif'){if(file.size>MAXB){alert('Imagem acima de 5 MB.');return null;}return {nome:base+'.gif',tipo:t,b64:await b64(file),tam:file.size,url:URL.createObjectURL(file)};}
+    const u=URL.createObjectURL(file);const img=await new Promise((ok,er)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=er;i.src=u;}).catch(()=>null);URL.revokeObjectURL(u);
+    if(!img){alert('Não consegui ler essa imagem.');return null;}
+    const k=Math.min(1,1600/Math.max(img.naturalWidth,img.naturalHeight)),cv=document.createElement('canvas');cv.width=Math.round(img.naturalWidth*k);cv.height=Math.round(img.naturalHeight*k);
+    const g=cv.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,cv.width,cv.height);g.drawImage(img,0,0,cv.width,cv.height);
+    const bl=await new Promise(ok=>cv.toBlob(ok,'image/jpeg',.88));if(!bl||bl.size>MAXB){alert('Imagem grande demais.');return null;}
+    return {nome:base+'.jpg',tipo:'image/jpeg',b64:await b64(bl),tam:bl.size,url:URL.createObjectURL(bl)};}
+  async function axGet(id,busca){if(AXC[id])return AXC[id];const r=await busca(id);if(r.error||!r.data)return null;
+    const s=atob(r.data.b64.replace(/\s/g,'')),u8=new Uint8Array(s.length);for(let i=0;i<s.length;i++)u8[i]=s.charCodeAt(i);
+    return AXC[id]={url:URL.createObjectURL(new Blob([u8],{type:r.data.tipo})),tipo:r.data.tipo,nome:r.data.nome};}
+  function axHtml(a){if(!a||!a.id)return '';
+    if(a.tipo==='application/pdf')return `<button type="button" class="fcv-ax pdf" data-ax="${a.id}" title="Abrir PDF"><b>📄</b><span><i>${h(a.nome)}</i><small>PDF · ${kb(a.tamanho||0)} · abrir</small></span></button>`;
+    return `<button type="button" class="fcv-ax img" data-ax="${a.id}" title="Ver imagem"><img alt="${h(a.nome)}" ${AXC[a.id]?`src="${AXC[a.id].url}"`:''} data-axi="${a.id}"></button>`;}
+  function lightbox(x){const d=document.createElement('div');d.className='fcv-lb';d.setAttribute('role','dialog');d.setAttribute('aria-label',x.nome);
+    d.innerHTML=`<img src="${x.url}" alt="${h(x.nome)}"><div><a href="${x.url}" download="${h(x.nome)}">⬇ Baixar</a><button type="button">Fechar</button></div>`;
+    const fecha=()=>{d.remove();document.removeEventListener('keydown',esc);},esc=e=>{if(e.key==='Escape')fecha();};
+    d.onclick=e=>{if(e.target===d||e.target.tagName==='BUTTON')fecha();};document.addEventListener('keydown',esc);document.body.appendChild(d);d.querySelector('button').focus();}
+  /* liga as miniaturas e os cliques dos anexos já desenhados */
+  function axLigar(root,busca){root.querySelectorAll('img[data-axi]:not([src])').forEach(async im=>{const x=await axGet(im.dataset.axi,busca);if(x){im.src=x.url;im.onload=()=>{const ms=im.closest('.fcv-msgs');if(ms&&ms.scrollHeight-ms.scrollTop-ms.clientHeight<im.height+60)ms.scrollTop=ms.scrollHeight;};}else im.alt='Imagem indisponível';});
+    root.querySelectorAll('[data-ax]').forEach(b=>b.onclick=async()=>{const pdf=b.classList.contains('pdf');const w=pdf?window.open('','_blank'):null;
+      const x=await axGet(b.dataset.ax,busca);if(!x){if(w)w.close();alert('Não consegui abrir o anexo.');return;}
+      if(pdf){if(w)w.location.href=x.url;else window.open(x.url,'_blank');}else lightbox(x);});}
+  /* formulário com 📎: botão, Ctrl+V de print e arrastar arquivo */
+  function formHtml(ph,aria){return `<div class="fcv-pend" id="fcvP"></div><form class="fcv-form" id="fcvF"><button type="button" class="fcv-clip" id="fcvClip" title="Anexar print ou PDF (ou cole um print com Ctrl+V)" aria-label="Anexar print ou PDF">📎</button><input type="file" id="fcvFile" accept="image/*,application/pdf" hidden><textarea id="fcvT" rows="1" placeholder="${h(ph)}" aria-label="${h(aria)}"></textarea><button type="submit">Enviar</button></form>`;}
+  function formAnexo(S,main){const p=document.getElementById('fcvP'),fi=document.getElementById('fcvFile'),t=document.getElementById('fcvT');if(!p)return;
+    const pinta=()=>{const a=S.pend;p.innerHTML=a?`${a.url?`<img src="${a.url}" alt="">`:'<span class="ic">📄</span>'}<span><b>${h(a.nome)}</b> · ${kb(a.tam)}</span><button type="button" aria-label="Tirar anexo" title="Tirar anexo">✕</button>`:'';
+      const x=p.querySelector('button');if(x)x.onclick=()=>{S.pend=null;pinta();t.focus();};};
+    const usa=async(f,col)=>{const a=await prepArq(f,col);if(a){S.pend=a;pinta();t.focus();}};
+    document.getElementById('fcvClip').onclick=()=>fi.click();fi.onchange=()=>{usa(fi.files[0]);fi.value='';};
+    t.onpaste=e=>{const it=[...((e.clipboardData||{}).items||[])].find(i=>i.kind==='file');if(it){e.preventDefault();usa(it.getAsFile(),true);}};
+    main.ondragover=e=>{if([...e.dataTransfer.types].includes('Files')){e.preventDefault();main.classList.add('drop');}};
+    main.ondragleave=e=>{if(!main.contains(e.relatedTarget))main.classList.remove('drop');};
+    main.ondrop=e=>{e.preventDefault();main.classList.remove('drop');const f=e.dataTransfer.files[0];if(f)usa(f);};
+    pinta();}
+  const erroEnvio=r=>{const m=(r.error&&r.error.message)||'';return /MB|tipo|vazio/.test(m)?m:'Não foi possível enviar. Tente de novo.';};
+
   /* desenha a conversa aberta (comum aos dois modos) */
   function msgsHtml(L,euId,euFc,lidoOutro){if(!L.length)return '<div class="fcv-vazio">Nenhuma mensagem ainda. Escreva a primeira abaixo.</div>';let dia='',o='';
     const ult=[...L].reverse().find(m=>euFc?m.fc:m.de===euId);
     L.forEach(m=>{const d=new Date(m.em).toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit'});if(d!==dia){dia=d;o+=`<div class="fcv-dia">${h(d)}</div>`;}
-      const eu=euFc?m.fc:m.de===euId;o+=`<div class="fcv-m ${eu?'eu':''}">${eu?'':`<span class="q">${h(m.nome)}</span>`}${lk(m.texto)}<small>${new Date(m.em).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}${eu&&ult&&m.id===ult.id&&lidoOutro>=m.id?' · ✓✓ lida':''}</small></div>`;});return o;}
+      const eu=euFc?m.fc:m.de===euId;o+=`<div class="fcv-m ${eu?'eu':''}">${eu?'':`<span class="q">${h(m.nome)}</span>`}${axHtml(m.anexo)}${lk(m.texto)}<small>${new Date(m.em).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}${eu&&ult&&m.id===ult.id&&lidoOutro>=m.id?' · ✓✓ lida':''}</small></div>`;});return o;}
 
   /* ================= EQUIPE ================= */
   async function equipe(token){if(!token||document.getElementById('fcvBtn'))return;
@@ -93,23 +150,26 @@
       box.querySelectorAll('[data-ab]').forEach(b=>b.onclick=()=>{S.aba=b.dataset.ab;S.conv=null;S.cv=null;box.classList.remove('chat');pinta();});
       box.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>abrir(b.dataset.k));
       if(S.cv)chat();}
-    async function abrir(k){S.conv=k;let id;if(k.startsWith('h:'))id=k.slice(2);else{const r=await sb.rpc('emp_chat_abrir',{p_token:S.tok,p_com:k});id=r.data;}
+    async function abrir(k){S.conv=k;S.pend=null;let id;if(k.startsWith('h:'))id=k.slice(2);else{const r=await sb.rpc('emp_chat_abrir',{p_token:S.tok,p_com:k});id=r.data;}
       if(!id)return;const r=await sb.rpc('emp_chat_msgs',{p_token:S.tok,p_conversa:id});if(!r.data)return;S.cv=r.data;S.cvId=id;box.classList.add('chat');pinta();badge();}
     function chat(){const C=S.cv,c=C.conversa,eu=S.d.eu,m=document.getElementById('fcvMain');const fcC=c.tipo==='fc'&&c.a.id===eu.id,aberta=fcAberta();
       const tit=S.conv.startsWith('h:')?nomeConv(c):fcC?'FC Consultoria':nomeConv(c);
       const sub=S.conv.startsWith('h:')?'Histórico · somente leitura':fcC?(aberta?'🟢 Online · seg a sex, 08–11h e 13–17h':'⚪ Offline agora · sua mensagem fica guardada e a FC responde no próximo horário'):(()=>{const p=S.d.contatos.find(x=>x.id===S.conv);return p?(PAPEL[p.papel]||p.papel)+(p.online?' · online agora':''):'';})();
       m.innerHTML=`<div class="fcv-top"><button type="button" class="fcv-back" aria-label="Voltar">←</button><span class="fcv-av ${fcC?'fc':''}">${fcC?'FC':h(ini(tit))}</span><div style="min-width:0"><b>${h(tit)}</b><small>${h(sub)}</small></div></div>
         <div class="fcv-msgs" id="fcvMs">${msgsHtml(C.msgs,eu.id,false,C.lido_outro||0)}</div>
-        ${C.pode_escrever?`<form class="fcv-form" id="fcvF"><textarea id="fcvT" rows="1" placeholder="Escreva uma mensagem…" aria-label="Mensagem"></textarea><button type="submit">Enviar</button></form>`:'<div class="fcv-ro">👁 Você está vendo o histórico desta conversa. Para falar com a pessoa, use "Minhas conversas".</div>'}`;
-      const ms=document.getElementById('fcvMs');ms.scrollTop=ms.scrollHeight;
-      m.querySelector('.fcv-back').onclick=()=>{box.classList.remove('chat');S.cv=null;S.conv=null;lista();};
-      const f=document.getElementById('fcvF');if(f){const t=document.getElementById('fcvT');t.focus();
+        ${C.pode_escrever?formHtml('Escreva uma mensagem… (Ctrl+V cola um print)','Mensagem'):'<div class="fcv-ro">👁 Você está vendo o histórico desta conversa. Para falar com a pessoa, use "Minhas conversas".</div>'}`;
+      const ms=document.getElementById('fcvMs');ms.scrollTop=ms.scrollHeight;axLigar(ms,busca);
+      m.querySelector('.fcv-back').onclick=()=>{box.classList.remove('chat');S.cv=null;S.conv=null;S.pend=null;lista();};
+      const f=document.getElementById('fcvF');if(f){const t=document.getElementById('fcvT');t.focus();formAnexo(S,m);
         t.onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();f.requestSubmit();}};
-        f.onsubmit=async e=>{e.preventDefault();const tx=t.value.trim();if(!tx)return;const b=f.querySelector('button');b.disabled=true;
-          const r=await sb.rpc('emp_chat_enviar',{p_token:S.tok,p_conversa:S.cvId,p_texto:tx});b.disabled=false;if(r.error||!r.data){alert('Não foi possível enviar. Tente de novo.');return;}
-          t.value='';await recarregar();t.focus();};}}
-    async function recarregar(){if(!S.cvId||!box.classList.contains('on'))return;const r=await sb.rpc('emp_chat_msgs',{p_token:S.tok,p_conversa:S.cvId});if(!r.data)return;
-      const mud=r.data.msgs.length!==S.cv.msgs.length||r.data.lido_outro!==S.cv.lido_outro;S.cv=r.data;if(mud){const t=document.getElementById('fcvT'),v=t?t.value:'';chat();const t2=document.getElementById('fcvT');if(t2){t2.value=v;}}}
+        f.onsubmit=async e=>{e.preventDefault();const tx=t.value.trim(),a=S.pend;if(!tx&&!a)return;const b=f.querySelector('button[type=submit]');b.disabled=true;b.textContent=a?'Enviando…':'Enviar';
+          const r=a?await sb.rpc('emp_chat_enviar_anexo',{p_token:S.tok,p_conversa:S.cvId,p_texto:tx,p_nome:a.nome,p_tipo:a.tipo,p_b64:a.b64})
+                   :await sb.rpc('emp_chat_enviar',{p_token:S.tok,p_conversa:S.cvId,p_texto:tx});
+          b.disabled=false;b.textContent='Enviar';if(r.error||!r.data){alert(erroEnvio(r));return;}
+          t.value='';S.pend=null;await recarregar(true);const t2=document.getElementById('fcvT');if(t2)t2.focus();};}}
+    const busca=id=>sb.rpc('emp_chat_anexo',{p_token:S.tok,p_id:+id});
+    async function recarregar(forca){if(!S.cvId||!box.classList.contains('on'))return;const r=await sb.rpc('emp_chat_msgs',{p_token:S.tok,p_conversa:S.cvId});if(!r.data)return;
+      const mud=forca||r.data.msgs.length!==S.cv.msgs.length||r.data.lido_outro!==S.cv.lido_outro;S.cv=r.data;if(mud){const t=document.getElementById('fcvT'),v=t?t.value:'';chat();const t2=document.getElementById('fcvT');if(t2){t2.value=v;}}}
     badge();setInterval(()=>{if(document.hidden)return;badge();if(box.classList.contains('on')){if(S.cvId)recarregar();}},15000);}
 
   /* ================= MATRIZ (FC) ================= */
@@ -144,20 +204,23 @@
       const sp=document.getElementById('fcvSup');if(sp)sp.onclick=()=>{box.classList.remove('on');try{ptab('sim');}catch(_){}const c=document.getElementById('osupCard');if(c)c.scrollIntoView({behavior:'smooth'});};
       if(S.cv)chat();}
     window.FCConversas=window.FCConversas||{};window.FCConversas.abrirMatriz=async id=>{box.classList.add('on');await lista();if(id)await abrir(id);};
-    async function abrir(id){S.conv=id;const r=await sb.rpc('emp_chat_fc_msgs',{p_conversa:id});if(!r.data)return;S.cv=r.data;box.classList.add('chat');
+    async function abrir(id){S.conv=id;S.pend=null;const r=await sb.rpc('emp_chat_fc_msgs',{p_conversa:id});if(!r.data)return;S.cv=r.data;box.classList.add('chat');
       const c=S.d.conversas.find(x=>x.id===id);if(c)c.nao_lidas=0;pinta();badge();}
     function chat(){const C=S.cv,c=C.conversa,m=document.getElementById('fcvMain');
       m.innerHTML=`<div class="fcv-top"><button type="button" class="fcv-back" aria-label="Voltar">←</button><span class="fcv-av" style="${c.tipo==='dm'?'background:#7a4bc4':''}">${h(ini(c.a.nome))}</span><div style="min-width:0"><b>${h(nomeConv(c))}</b><small>${h(nomeEmp(c.emp))}${c.tipo==='dm'?' · conversa entre colaboradores · só leitura':''}</small></div></div>
         ${c.tipo==='fc'&&!fcAberta()?'<div class="fcv-aviso">Fora do horário de atendimento: a equipe vê a FC como offline.</div>':''}
         <div class="fcv-msgs" id="fcvMs">${msgsHtml(C.msgs,null,c.tipo==='fc',C.lido_outro||0)}</div>
-        ${C.pode_escrever?`<form class="fcv-form" id="fcvF"><textarea id="fcvT" rows="1" placeholder="Responder ${h(c.a.nome)}…" aria-label="Resposta"></textarea><button type="submit">Enviar</button></form>`:'<div class="fcv-ro">👁 Histórico entre colaboradores. A FC só acompanha.</div>'}`;
-      const ms=document.getElementById('fcvMs');ms.scrollTop=ms.scrollHeight;
-      m.querySelector('.fcv-back').onclick=()=>{box.classList.remove('chat');S.cv=null;S.conv=null;pinta();};
-      const f=document.getElementById('fcvF');if(f){const t=document.getElementById('fcvT');t.focus();
+        ${C.pode_escrever?formHtml('Responder '+c.a.nome+'… (Ctrl+V cola um print)','Resposta'):'<div class="fcv-ro">👁 Histórico entre colaboradores. A FC só acompanha.</div>'}`;
+      const ms=document.getElementById('fcvMs');ms.scrollTop=ms.scrollHeight;axLigar(ms,busca);
+      m.querySelector('.fcv-back').onclick=()=>{box.classList.remove('chat');S.cv=null;S.conv=null;S.pend=null;pinta();};
+      const f=document.getElementById('fcvF');if(f){const t=document.getElementById('fcvT');t.focus();formAnexo(S,m);
         t.onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();f.requestSubmit();}};
-        f.onsubmit=async e=>{e.preventDefault();const tx=t.value.trim();if(!tx)return;const b=f.querySelector('button');b.disabled=true;
-          const r=await sb.rpc('emp_chat_fc_enviar',{p_conversa:S.conv,p_texto:tx});b.disabled=false;if(r.error||!r.data){alert('Não foi possível enviar.');return;}
-          t.value='';const r2=await sb.rpc('emp_chat_fc_msgs',{p_conversa:S.conv});if(r2.data){S.cv=r2.data;chat();}lista();};}}
+        f.onsubmit=async e=>{e.preventDefault();const tx=t.value.trim(),a=S.pend;if(!tx&&!a)return;const b=f.querySelector('button[type=submit]');b.disabled=true;b.textContent=a?'Enviando…':'Enviar';
+          const r=a?await sb.rpc('emp_chat_fc_enviar_anexo',{p_conversa:S.conv,p_texto:tx,p_nome:a.nome,p_tipo:a.tipo,p_b64:a.b64})
+                   :await sb.rpc('emp_chat_fc_enviar',{p_conversa:S.conv,p_texto:tx});
+          b.disabled=false;b.textContent='Enviar';if(r.error||!r.data){alert(erroEnvio(r));return;}
+          t.value='';S.pend=null;const r2=await sb.rpc('emp_chat_fc_msgs',{p_conversa:S.conv});if(r2.data){S.cv=r2.data;chat();}lista();};}}
+    const busca=id=>sb.rpc('emp_chat_fc_anexo',{p_id:+id});
     badge();setInterval(()=>{badge();if(box.classList.contains('on')&&S.conv&&!document.hidden)sb.rpc('emp_chat_fc_msgs',{p_conversa:S.conv}).then(r=>{if(r.data&&(r.data.msgs.length!==S.cv.msgs.length||r.data.lido_outro!==S.cv.lido_outro)){const t=document.getElementById('fcvT'),v=t?t.value:'';S.cv=r.data;chat();const t2=document.getElementById('fcvT');if(t2)t2.value=v;}});},20000);}
 
   window.FCConversas=Object.assign(window.FCConversas||{},{equipe,matriz});
