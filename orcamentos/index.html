@@ -330,7 +330,11 @@ const r2=v=>Math.round(v*100)/100;
 // preço da embalagem com IPI e ST rateado pela quantidade cotada
 const cotPreco=it=>r2(it[6]*(1+it[7]/100)+(it[5]?it[8]/it[5]:0));
 // Catálogos de fotos (imagens publicadas junto com a página)
-const CATS={"udinese-family-2-12":{nome:"Udinese · Texa Family · catálogo técnico v2.12 (jul/2026)",base:"catalogos/udinese-family-2-12/"}};
+const CATS={"udinese-family-2-12":{nome:"Udinese · Texa Family · catálogo técnico v2.12 (jul/2026)",base:"catalogos/udinese-family-2-12/",thumb:"t_"},
+ "icilegel":{nome:"Icilegel · guarnições, fitas e espumas",base:"catalogos/icilegel/"},
+ "sealway":{nome:"Sealway · guarnições EPDM, espumas e fitas",base:"catalogos/sealway/"}};
+// referência de mercado (GUA239, FIT201...) tirada da descrição do fornecedor ou do sistema
+const mktRef=b=>{for(const t of [b.descForn||"",b.desc||""]){const m=t.match(/\b(GUA|FIT)[\s-]?(\d{3})(?!\d)/);if(m)return m[1]+m[2]}return ""};
 const CATIDX={};
 // Foto por código CEM: exata (mesmo código Udinese) ou ilustrativa (produto do mesmo tipo no catálogo Family)
 const FOTOMAP={CNA01U:["p38_1.jpg",1],PRE05N012:["p42_1.jpg",1],FMA99A105:["p24_1.jpg",0],FMA99A205:["p24_1.jpg",0],GUI30012:["p18_0.jpg",0],
@@ -387,9 +391,10 @@ function bSync(){DB.obras.forEach(o=>o.comps.forEach(r=>bEnsure(r.code,r)))}
 Object.keys((DB.lib&&DB.lib.comp)||{}).forEach(c=>{const b=bEnsure(c);if(!b.preco)b.preco=DB.lib.comp[c];if(DB.lib.emb&&DB.lib.emb[c])b.emb=DB.lib.emb[c]});
 bSync();
 function bSetPreco(code,preco,emb){const b=bEnsure(code);if(preco!==undefined)b.preco=preco;if(emb)b.emb=Object.assign({},emb);b.atual=new Date().toISOString()}
-function fotoUrl(b){if(!b||!b.foto)return "";if(b.foto.data)return b.foto.data;const c=CATS[b.foto.cat];return c?c.base+"t_"+b.foto.img:""}
+function fotoUrl(b){if(!b||!b.foto)return "";if(b.foto.data)return b.foto.data;const c=CATS[b.foto.cat];return c?c.base+(c.thumb||"")+b.foto.img:""}
 function autoFotos(){let n=0;Object.values(DB.banco).forEach(b=>{if(b.foto)return;
   if(b.ref){const m=catByCode(b.ref);if(m){b.foto={cat:m.cat,img:m.img,tit:m.tit,auto:1};n++;return}}
+  const mr=mktRef(b);if(mr){const m=catByCode(mr);if(m){b.foto={cat:m.cat,img:m.img,tit:m.tit,auto:1};n++;return}}
   const f=FOTOMAP[b.code];if(f){const it=(CATIDX["udinese-family-2-12"]||[]).find(x=>x.img===f[0]);if(it){b.foto={cat:"udinese-family-2-12",img:f[0],tit:it.tit+(it.sub?" "+it.sub:""),auto:1,sim:f[1]?0:1};n++}}});if(n)save();return n}
 save();
 
@@ -694,7 +699,7 @@ function aplicarCot(c){
   st.emb[it[0]]={t:it[3],q:it[4]};st.comp[it[0]]=num(p,2);
   const b=bEnsure(it[0]);bSetPreco(it[0],st.comp[it[0]],st.emb[it[0]]);Object.assign(b,{forn:c.forn,ref:it[1],descForn:it[2],base:it[6],ipi:it[7],stl:it[8],qcot:it[5],doc:c.doc,data:c.data});
   if(!b.foto){const m=catByCode(it[1]);if(m)b.foto={cat:m.cat,img:m.img,tit:m.tit,auto:1}}});
- st.cotAplic[c.doc]=new Date().toISOString();touch();buildCot();buildComp();refresh();
+ st.cotAplic[c.doc]=new Date().toISOString();autoFotos();touch();buildCot();buildComp();refresh();
 }
 function buildForn(){
  const cnt={};O.comps.forEach((r,i)=>{if(isHid(O,i))return;const k=cotOf(r.code);const f=k?k.c.forn:"Sem cotação";cnt[f]=(cnt[f]||0)+1});
