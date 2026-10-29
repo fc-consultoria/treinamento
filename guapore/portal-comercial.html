@@ -465,8 +465,8 @@ function vMarketing(){
  const rank=P.map(p=>({p,v:vis[p.c]||0})).filter(r=>r.v).sort((a,b)=>b.v-a.v).slice(0,15);const maxV=(rank[0]||{}).v||1;
  const q=mkQ.trim().toLowerCase();const lista=P.filter(p=>!q||(p.c+' '+p.n).toLowerCase().includes(q)).slice(0,80);
  return `
- <div class="hello"><div><h1>Marketing · Destaques 3D</h1><p>Escolha os perfis que aparecem em destaque no Catálogo 3D da Guaporé.</p></div><a class="btn" style="text-decoration:none;white-space:nowrap;background:var(--brand);color:var(--brand-ink);border-color:var(--brand)" target="_blank" rel="noopener" href="https://fc-consultoria.github.io/treinamento/catalogos.html">✏️ Editar perfis do catálogo</a></div>
- <p style="margin:-6px 0 14px;color:var(--muted);font-size:14px">No editor você muda o código, a descrição, o peso e a foto de cada perfil e escolhe o que fica publicado ou oculto. Entre com o login do Marketing.</p>
+ <div class="hello"><div><h1>Marketing · Destaques 3D</h1><p>Escolha os perfis que aparecem em destaque no Catálogo 3D da Guaporé.</p></div><a class="btn" style="text-decoration:none;white-space:nowrap;background:var(--brand);color:var(--brand-ink);border-color:var(--brand)" target="_blank" rel="noopener" href="https://fc-consultoria.github.io/treinamento/catalogos.html?c=guapore-vidros">✏️ Editar catálogo</a></div>
+ <p style="margin:-6px 0 14px;color:var(--muted);font-size:14px">No editor você muda todo o catálogo: marca, logo, capa, vitrine e, em cada perfil, código, descrição, peso, cores e foto. Entre com o login do Marketing.</p>
  <div class="grid kpis" id="t-mkpis">
   <div class="kpi"><small>Perfis abertos em 3D · 90 dias</small><b>${tot}</b><em> no Catálogo 3D</em></div>
   <div class="kpi"><small>Destaques ativos</small><b>${dest.length}</b><em> perfis no catálogo (até 6)</em></div>
