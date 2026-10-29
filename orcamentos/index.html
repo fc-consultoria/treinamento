@@ -49,6 +49,8 @@ nav.tabs button:focus-visible{outline:2px solid var(--amber);outline-offset:-2px
 main .wrap{padding-block:20px 40px}
 .panel-grid{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:20px;align-items:start}
 @media (max-width:900px){.panel-grid{grid-template-columns:minmax(0,1fr)}}
+.panel-grid>*,.stack>*{min-width:0}
+#comp-body td:nth-child(4){min-width:280px}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:10px}
 .card-h{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--line)}
 .card-h h2{font-size:17px}
@@ -123,6 +125,23 @@ input.big{width:100%;font-size:16px;text-align:right;padding:9px 10px}
 .slot b{font-family:var(--display)}
 .slot.done{border-color:var(--teal);background:var(--teal-soft)}
 .slot .st{font-size:12.5px;color:var(--muted)}
+/* banco e fotos */
+.thumb{width:44px;height:44px;border-radius:6px;border:1px solid var(--line);background:var(--surface2) center/contain no-repeat;display:inline-grid;place-items:center;cursor:pointer;font-size:10px;color:var(--muted);padding:0;vertical-align:middle}
+.thumb.big{width:64px;height:64px}
+.thumb:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+.hseg{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
+.hseg button{font:600 14px var(--body);border:1px solid var(--line);background:var(--surface);color:var(--muted);border-radius:999px;padding:8px 16px;cursor:pointer}
+.hseg button[aria-pressed="true"]{background:var(--teal);border-color:var(--teal);color:var(--teal-ink)}
+.modal{position:fixed;inset:0;z-index:50;background:rgba(10,20,22,.55);display:grid;place-items:center;padding:16px}
+.modal[hidden]{display:none}
+.modal .box{background:var(--surface);border-radius:12px;width:min(980px,100%);max-height:90vh;display:flex;flex-direction:column;overflow:hidden}
+.modal .mh{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.modal .mb{overflow:auto;padding:14px 16px}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.pitem{border:1px solid var(--line);border-radius:8px;overflow:hidden;cursor:pointer;background:#fff;text-align:left;padding:0;font:inherit;color:#16262a}
+.pitem img{display:block;width:100%;height:130px;object-fit:contain;background:#fff}
+.pitem div{padding:6px 8px;font-size:12px;border-top:1px solid #e3e9e9}
+.pitem.sel{outline:3px solid var(--amber)}
 /* apresentação */
 .pres{background:var(--surface);border:1px solid var(--line);border-radius:10px;max-width:960px;margin:0 auto;overflow:hidden}
 .pres-h{display:flex;flex-wrap:wrap;justify-content:space-between;gap:14px;padding:22px 24px;border-bottom:3px solid var(--amber)}
@@ -270,6 +289,51 @@ function pCroqui(pages){
 }
 
 const SEED={"numero":"AR_10/26_025_00","obra":"DIVISÓRIAS - COWORKING CUIABÁ","cliente":"DIVISÓRIAS - COWORKING CUIABÁ","cor":"PINTURA PRETO FOSCO - RAL9005F","data":"28/10/2026 15:38:50","tips":[{"item":1,"tipo":"DV1-A","linha":"CITY 32C","desc":"FIXO 3 FOLHA(S) - VIDRO LAMINADO 10MM INCOLOR - LINHA CITY 32C","L":3720,"H":2600,"q":1,"loc":"SUBSOLO 01","acab":"PINTURA PRETO FOSCO - RAL9005F","vid":"LAMINADO 10MM INCOLOR","kind":"fixo","f":3},{"item":2,"tipo":"DV1-B","linha":"CITY 32C","desc":"FIXO 3 FOLHA(S) - VIDRO LAMINADO 10MM INCOLOR - LINHA CITY 32C","L":3700,"H":2600,"q":1,"loc":"SUBSOLO 01","acab":"PINTURA PRETO FOSCO - RAL9005F","vid":"LAMINADO 10MM INCOLOR","kind":"fixo","f":3},{"item":3,"tipo":"DV1-C","linha":"CITY 32C","desc":"FIXO 4 FOLHA(S) - VIDRO LAMINADO 10MM INCOLOR - LINHA CITY 32C","L":4460,"H":2600,"q":1,"loc":"SUBSOLO 01","acab":"PINTURA PRETO FOSCO - RAL9005F","vid":"LAMINADO 10MM INCOLOR","kind":"fixo","f":4},{"item":4,"tipo":"DV1-D","linha":"CITY 32C","desc":"FIXO 1 FOLHA(S) - VIDRO LAMINADO 10MM INCOLOR - LINHA CITY 32C","L":760,"H":2600,"q":1,"loc":"SUBSOLO 01","acab":"PINTURA PRETO FOSCO - RAL9005F","vid":"LAMINADO 10MM INCOLOR","kind":"fixo","f":1},{"item":5,"tipo":"DV1-E","linha":"CITY 32C","desc":"FIXO 4 FOLHA(S) - VIDRO LAMINADO 10MM INCOLOR - LINHA CITY 32C","L":3280,"H":2600,"q":1,"loc":"SUBSOLO 01","acab":"PINTURA PRETO FOSCO - RAL9005F","vid":"LAMINADO 10MM INCOLOR","kind":"fixo","f":4},{"item":6,"tipo":"DV1-F","linha":"CITY 32C","desc":"FIXO 2 FOLHA(S) - VIDRO LAMINADO 10MM INCOLOR - LINHA CITY 32C","L":1600,"H":2600,"q":1,"loc":"SUBSOLO 01","acab":"PINTURA PRETO FOSCO - RAL9005F","vid":"LAMINADO 10MM INCOLOR","kind":"fixo","f":2},{"item":7,"tipo":"DV1-G","linha":"CITY 32C","desc":"FIXO 3 FOLHA(S) - VIDRO LAMINADO 10MM INCOLOR - LINHA CITY 32C","L":2400,"H":2600,"q":1,"loc":"SUBSOLO 01","acab":"PINTURA PRETO FOSCO - RAL9005F","vid":"LAMINADO 10MM INCOLOR","kind":"fixo","f":3},{"item":8,"tipo":"DV1-H","linha":"CITY 32C","desc":"FIXO 3 FOLHA(S) - VIDRO LAMINADO 10MM INCOLOR - LINHA CITY 32C","L":2650,"H":2600,"q":1,"loc":"SUBSOLO 01","acab":"PINTURA PRETO FOSCO - RAL9005F","vid":"LAMINADO 10MM INCOLOR","kind":"fixo","f":3},{"item":9,"tipo":"DV2-A","linha":"CITY 32C","desc":"FIXO 10 FOLHA(S) - VIDRO LAMINADO 10MM INCOLOR - LINHA CITY 32C","L":10740,"H":3000,"q":1,"loc":"SUBSOLO 01","acab":"PINTURA PRETO FOSCO - RAL9005F","vid":"LAMINADO 10MM INCOLOR","kind":"fixo","f":10},{"item":10,"tipo":"DV2-B","linha":"CITY 32C","desc":"FIXO 4 FOLHA(S) - VIDRO LAMINADO 10MM INCOLOR - LINHA CITY 32C","L":3950,"H":3000,"q":1,"loc":"SUBSOLO 01","acab":"PINTURA PRETO FOSCO - RAL9005F","vid":"LAMINADO 10MM INCOLOR","kind":"fixo","f":4},{"item":11,"tipo":"DV4","linha":"CITY 32C","desc":"FIXO 3 FOLHA(S) - VIDRO TEMPERADO 10MM INCOLOR - LINHA CITY 32C","L":3140,"H":1400,"q":1,"loc":"SUBSOLO 01","acab":"PINTURA PRETO FOSCO - RAL9005F","vid":"TEMPERADO 10MM INCOLOR","kind":"fixo","f":3},{"item":12,"tipo":"DV5-A","linha":"FAMILY 32","desc":"MAXIM-AR 5 FOLHA(S) - C/ PEITORIL FIXO - VIDRO LAMINADO 8MM INCOLOR - LINHA FAMILY 32","L":5580,"H":1400,"q":1,"loc":"SUBSOLO 01","acab":"PINTURA PRETO FOSCO - RAL9005F","vid":"LAMINADO 8MM INCOLOR","kind":"maxp","f":5},{"item":13,"tipo":"DV5-B","linha":"FAMILY 32","desc":"MAXIM-AR 3 FOLHA(S) - C/ PEITORIL FIXO - VIDRO LAMINADO 8MM INCOLOR - LINHA FAMILY 32","L":3140,"H":1400,"q":1,"loc":"SUBSOLO 01","acab":"PINTURA PRETO FOSCO - RAL9005F","vid":"LAMINADO 8MM INCOLOR","kind":"maxp","f":3},{"item":14,"tipo":"DV5-C","linha":"FAMILY 32","desc":"MAXIM-AR 2 FOLHA(S) - C/ PEITORIL FIXO - VIDRO LAMINADO 8MM INCOLOR - LINHA FAMILY 32","L":2380,"H":1400,"q":1,"loc":"SUBSOLO 01","acab":"PINTURA PRETO FOSCO - RAL9005F","vid":"LAMINADO 8MM INCOLOR","kind":"maxp","f":2},{"item":15,"tipo":"DV5-D","linha":"FAMILY 32","desc":"MAXIM-AR 5 FOLHA(S) - C/ PEITORIL FIXO - VIDRO LAMINADO 8MM INCOLOR - LINHA FAMILY 32","L":5740,"H":1400,"q":1,"loc":"SUBSOLO 01","acab":"PINTURA PRETO FOSCO - RAL9005F","vid":"LAMINADO 8MM INCOLOR","kind":"maxp","f":5},{"item":16,"tipo":"DV5-E","linha":"FAMILY 32","desc":"MAXIM-AR 5 FOLHA(S) - C/ PEITORIL FIXO - VIDRO LAMINADO 8MM INCOLOR - LINHA FAMILY 32","L":5700,"H":1400,"q":1,"loc":"SUBSOLO 01","acab":"PINTURA PRETO FOSCO - RAL9005F","vid":"LAMINADO 8MM INCOLOR","kind":"maxp","f":5},{"item":17,"tipo":"DV5-F","linha":"FAMILY 32","desc":"MAXIM-AR 3 FOLHA(S) - C/ PEITORIL FIXO - VIDRO LAMINADO 8MM INCOLOR - LINHA FAMILY 32","L":2970,"H":1400,"q":1,"loc":"SUBSOLO 01","acab":"PINTURA PRETO FOSCO - RAL9005F","vid":"LAMINADO 8MM INCOLOR","kind":"maxp","f":3},{"item":18,"tipo":"DV5-G","linha":"FAMILY 32","desc":"MAXIM-AR 5 FOLHA(S) - C/ PEITORIL FIXO - VIDRO LAMINADO 8MM INCOLOR - LINHA FAMILY 32","L":5340,"H":1400,"q":1,"loc":"SUBSOLO 01","acab":"PINTURA PRETO FOSCO - RAL9005F","vid":"LAMINADO 8MM INCOLOR","kind":"maxp","f":5},{"item":19,"tipo":"DV5-H","linha":"FAMILY 32","desc":"MAXIM-AR 4 FOLHA(S) - C/ PEITORIL FIXO - VIDRO LAMINADO 8MM INCOLOR - LINHA FAMILY 32","L":4180,"H":1400,"q":1,"loc":"SUBSOLO 01","acab":"PINTURA PRETO FOSCO - RAL9005F","vid":"LAMINADO 8MM INCOLOR","kind":"maxp","f":4},{"item":20,"tipo":"PV1","linha":"LINHA 42","desc":"PORTA DE GIRO - 1 FOLHA - VIDRO LAMINADO 8MM INCOLOR - LINHA 42","L":880,"H":2600,"q":6,"loc":"SUBSOLO 01","acab":"PINTURA PRETO FOSCO - RAL9005F","vid":"LAMINADO 8MM INCOLOR","kind":"giro","f":1},{"item":21,"tipo":"PV2","linha":"LINHA 42","desc":"PORTA DE GIRO - 1 FOLHA - VIDRO LAMINADO 8MM INCOLOR - LINHA 42","L":1080,"H":3000,"q":2,"loc":"SUBSOLO 01","acab":"PINTURA PRETO FOSCO - RAL9005F","vid":"LAMINADO 8MM INCOLOR","kind":"giro","f":1},{"item":22,"tipo":"DV1-I","linha":"CITY 32C","desc":"FIXO 3 FOLHA(S) - VIDRO LAMINADO 10MM INCOLOR - LINHA CITY 32C","L":2630,"H":2600,"q":1,"loc":"SUBSOLO 02","acab":"PINTURA PRETO FOSCO - RAL9005F","vid":"LAMINADO 10MM INCOLOR","kind":"fixo","f":3},{"item":23,"tipo":"DV1-J","linha":"CITY 32C","desc":"FIXO 4 FOLHA(S) - VIDRO LAMINADO 10MM INCOLOR - LINHA CITY 32C","L":3750,"H":2600,"q":1,"loc":"SUBSOLO 02","acab":"PINTURA PRETO FOSCO - RAL9005F","vid":"LAMINADO 10MM INCOLOR","kind":"fixo","f":4},{"item":24,"tipo":"DV1-K","linha":"CITY 32C","desc":"FIXO 1 FOLHA(S) - VIDRO LAMINADO 10MM INCOLOR - LINHA CITY 32C","L":920,"H":2600,"q":1,"loc":"SUBSOLO 02","acab":"PINTURA PRETO FOSCO - RAL9005F","vid":"LAMINADO 10MM INCOLOR","kind":"fixo","f":1},{"item":25,"tipo":"DV1-L","linha":"CITY 32C","desc":"FIXO 1 FOLHA(S) - VIDRO LAMINADO 10MM INCOLOR - LINHA CITY 32C","L":930,"H":2600,"q":1,"loc":"SUBSOLO 02","acab":"PINTURA PRETO FOSCO - RAL9005F","vid":"LAMINADO 10MM INCOLOR","kind":"fixo","f":1},{"item":26,"tipo":"DV5-I","linha":"FAMILY 32","desc":"MAXIM-AR 6 FOLHA(S) - C/ PEITORIL FIXO - VIDRO LAMINADO 8MM INCOLOR - LINHA FAMILY 32","L":6410,"H":1400,"q":1,"loc":"SUBSOLO 02","acab":"PINTURA PRETO FOSCO - RAL9005F","vid":"LAMINADO 8MM INCOLOR","kind":"maxp","f":6},{"item":27,"tipo":"DV5-J","linha":"FAMILY 32","desc":"MAXIM-AR 2 FOLHA(S) - C/ PEITORIL FIXO - VIDRO LAMINADO 8MM INCOLOR - LINHA FAMILY 32","L":2380,"H":1400,"q":1,"loc":"SUBSOLO 02","acab":"PINTURA PRETO FOSCO - RAL9005F","vid":"LAMINADO 8MM INCOLOR","kind":"maxp","f":2},{"item":28,"tipo":"DV5-K","linha":"FAMILY 32","desc":"MAXIM-AR 3 FOLHA(S) - C/ PEITORIL FIXO - VIDRO LAMINADO 8MM INCOLOR - LINHA FAMILY 32","L":3140,"H":1400,"q":1,"loc":"SUBSOLO 02","acab":"PINTURA PRETO FOSCO - RAL9005F","vid":"LAMINADO 8MM INCOLOR","kind":"maxp","f":3},{"item":29,"tipo":"DV5-L","linha":"FAMILY 32","desc":"MAXIM-AR 5 FOLHA(S) - C/ PEITORIL FIXO - VIDRO LAMINADO 8MM INCOLOR - LINHA FAMILY 32","L":5340,"H":1400,"q":1,"loc":"SUBSOLO 02","acab":"PINTURA PRETO FOSCO - RAL9005F","vid":"LAMINADO 8MM INCOLOR","kind":"maxp","f":5},{"item":30,"tipo":"DV6","linha":"FAMILY 32","desc":"MAXIM-AR 4 FOLHA(S) - VIDRO LAMINADO 8MM INCOLOR - LINHA FAMILY 32","L":2880,"H":600,"q":1,"loc":"SUBSOLO 02","acab":"PINTURA PRETO FOSCO - RAL9005F","vid":"LAMINADO 8MM INCOLOR","kind":"max","f":4},{"item":31,"tipo":"PV1-B","linha":"LINHA 42","desc":"PORTA DE GIRO - 1 FOLHA - VIDRO LAMINADO 8MM INCOLOR - LINHA 42","L":880,"H":2600,"q":4,"loc":"SUBSOLO 02","acab":"PINTURA PRETO FOSCO - RAL9005F","vid":"LAMINADO 8MM INCOLOR","kind":"giro","f":1},{"item":32,"tipo":"PV3","linha":"VIDRO TEMPERADO","desc":"PORTA PIVOTANTE 1 FOLHA COM 1 FIXO LATERAL - VIDRO TEMPERADO","L":1000,"H":2400,"q":1,"loc":"SUBSOLO 02","acab":"PINTURA PRETO FOSCO - RAL9005F","vid":"TEMPERADO","kind":"piv","f":1},{"item":33,"tipo":"PV4","linha":"GOLD","desc":"PORTA DE CORRER POR TRÁS DA PAREDE- ACOPLADO COM MAXIM-AR - VIDRO LAMINADO 8MM - 1 FOLHA - LINHA CITY 32C Validade da Proposta:","L":2970,"H":2400,"q":1,"loc":"Localização não informada","acab":"PINTURA PRETO FOSCO - RAL9005F","vid":"LAMINADO 8MM","kind":"correr","f":1}],"perfis":[{"code":"CL006","desc":"CONEXAO","trat":"","barra":3000,"q":6,"peso":20.034},{"code":"CL011","desc":"CUNHA","trat":"","barra":3000,"q":12,"peso":11.52},{"code":"CM200","desc":"CONTRA MARCO","trat":"","barra":6000,"q":50,"peso":59.4},{"code":"TCL-006","desc":"CONEXAO","trat":"","barra":6000,"q":2,"peso":13.356},{"code":"TCL-011","desc":"CUNHA","trat":"","barra":6000,"q":4,"peso":7.68},{"code":"TFM-100","desc":"CONTRAMARCO 25x25 mm","trat":"","barra":6000,"q":26,"peso":35.256},{"code":"32C-111","desc":"TRILHO INFERIOR DE ALUMINIO","trat":"ANODIZADO FOSCO-1000 (A23)","barra":6000,"q":2,"peso":1.152},{"code":"32C-001","desc":"MARCO","trat":"PINTURA PRETO FOSCO - RAL9005F","barra":6000,"q":23,"peso":88.182},{"code":"32C-002","desc":"MARCO","trat":"PINTURA PRETO FOSCO - RAL9005F","barra":6500,"q":37,"peso":181.818},{"code":"32C-005","desc":"MARCO INFERIOR PORTA DE CORRER","trat":"PINTURA PRETO FOSCO - RAL9005F","barra":6000,"q":1,"peso":2.724},{"code":"32C-006","desc":"LARGURA DA FOLHA DE CORRER","trat":"PINTURA PRETO FOSCO - RAL9005F","barra":6000,"q":1,"peso":4.056},{"code":"32C-010","desc":"FOLHA","trat":"PINTURA PRETO FOSCO - RAL9005F","barra":6000,"q":1,"peso":5.802},{"code":"32C-013","desc":"FOLHA","trat":"PINTURA PRETO FOSCO - RAL9005F","barra":6000,"q":1,"peso":7.374},{"code":"32C-019","desc":"MONTANTE LATERAL DA FOLHA JANELA DE CORRER","trat":"PINTURA PRETO FOSCO - RAL9005F","barra":6000,"q":1,"peso":4.902},{"code":"32C-024","desc":"TRILHO INFERIOR DE 2 PLANOS","trat":"PINTURA PRETO FOSCO - RAL9005F","barra":6000,"q":1,"peso":4.596},{"code":"32C-026","desc":"BAGUETE ARREDONDADO","trat":"PINTURA PRETO FOSCO - RAL9005F","barra":6000,"q":4,"peso":9.696},{"code":"32C-041","desc":"MAO DE AMIGO","trat":"PINTURA PRETO FOSCO - RAL9005F","barra":5000,"q":1,"peso":2.755},{"code":"32C-085","desc":"MONTANTE FOLHA 45°","trat":"PINTURA PRETO FOSCO - RAL9005F","barra":6000,"q":2,"peso":4.512},{"code":"BG037","desc":"BAGUETE","trat":"PINTURA PRETO FOSCO - RAL9005F","barra":6000,"q":13,"peso":16.224},{"code":"BG057","desc":"BAGUETE","trat":"PINTURA PRETO FOSCO - RAL9005F","barra":6000,"q":65,"peso":66.3},{"code":"LG077","desc":"INVERSOR","trat":"PINTURA PRETO FOSCO - RAL9005F","barra":6000,"q":4,"peso":7.824},{"code":"LG083","desc":"MARCO","trat":"PINTURA PRETO FOSCO - RAL9005F","barra":6000,"q":62,"peso":152.148},{"code":"LG092","desc":"PINGADEIRA","trat":"PINTURA PRETO FOSCO - RAL9005F","barra":6000,"q":1,"peso":0.948},{"code":"LG157","desc":"TRILHO INFERIOR","trat":"PINTURA PRETO FOSCO - RAL9005F","barra":6000,"q":2,"peso":3.012},{"code":"P-12-EX","desc":"PERFIL U 15,9X15,9","trat":"PINTURA PRETO FOSCO - RAL9005F","barra":6000,"q":1,"peso":0.906},{"code":"P-222-EX","desc":"CADEIRINHA (10MM)","trat":"PINTURA PRETO FOSCO - RAL9005F","barra":6000,"q":1,"peso":0.984},{"code":"P-227-EX","desc":"CANTONEIRA DE 5/8\" (E 1,2MM)","trat":"PINTURA PRETO FOSCO - RAL9005F","barra":6000,"q":1,"peso":0.612},{"code":"RM005","desc":"ARREMATE (ANTIGO MP347)","trat":"PINTURA PRETO FOSCO - RAL9005F","barra":6100,"q":49,"peso":60.378},{"code":"T30-570","desc":"TRAVESSA","trat":"PINTURA PRETO FOSCO - RAL9005F","barra":6000,"q":18,"peso":128.736},{"code":"T42-012","desc":"MARCO","trat":"PINTURA PRETO FOSCO - RAL9005F","barra":6000,"q":14,"peso":70.476},{"code":"T42-014","desc":"BATEDEIRA","trat":"PINTURA PRETO FOSCO - RAL9005F","barra":6000,"q":6,"peso":13.284},{"code":"T42-610","desc":"PERFIL DE FOLHA - PORTA DE GIRO - LINHA 42","trat":"PINTURA PRETO FOSCO - RAL9005F","barra":6000,"q":15,"peso":135.72},{"code":"TCT-005","desc":"CANTONEIRA COM ABAS IGUAIS - 15,88 X 15,88 X 1,59MM","trat":"PINTURA PRETO FOSCO - RAL9005F","barra":6000,"q":2,"peso":1.536},{"code":"TFM-135","desc":"ARREMATE","trat":"PINTURA PRETO FOSCO - RAL9005F","barra":6000,"q":26,"peso":73.788},{"code":"TFM-310","desc":"BAGUETE DO MARCO FIXO - FAMILY 200","trat":"PINTURA PRETO FOSCO - RAL9005F","barra":6000,"q":22,"peso":28.38},{"code":"TFM-350","desc":"MARCO DO MAXIM-AR","trat":"PINTURA PRETO FOSCO - RAL9005F","barra":6000,"q":40,"peso":88.32},{"code":"TFM-351","desc":"MARCO DA PORTA - FAMILY 300","trat":"PINTURA PRETO FOSCO - RAL9005F","barra":6000,"q":25,"peso":90.6},{"code":"TFM-355","desc":"FOLHA DO MAXIM-AR","trat":"PINTURA PRETO FOSCO - RAL9005F","barra":6000,"q":36,"peso":133.92},{"code":"TFM-360","desc":"PINGADEIRA - MAXIM-AR","trat":"PINTURA PRETO FOSCO - RAL9005F","barra":6000,"q":10,"peso":7.44},{"code":"TFM-370","desc":"MONTANTE VERTICAL - MAXIM-AR","trat":"PINTURA PRETO FOSCO - RAL9005F","barra":6000,"q":10,"peso":38.7},{"code":"TFM-372","desc":"MONTANTE VERTICAL - FAMILY 300","trat":"PINTURA PRETO FOSCO - RAL9005F","barra":6000,"q":10,"peso":69.96},{"code":"TTQ-009","desc":"TUBO QUADRADO - A 25,4 - E 1,58 MM","trat":"PINTURA PRETO FOSCO - RAL9005F","barra":6000,"q":1,"peso":2.436}],"pesoTotal":1657.447,"comps":[{"ap":"FÁBRICA","rf":"ANUDAL","code":"1918","desc":"CONEXÃO DE FIXAÇÃO MONTANTE L45 18.7X17.7X38.2MM","cor":"NATURAL","q":96,"un":"PC"},{"ap":"FÁBRICA","rf":"ANUDAL","code":"81-28010C","desc":"CONEXOES ALLEN RET. 28.0x10.0 TFM-320","cor":"-","q":396,"un":"PC"},{"ap":"FÁBRICA","rf":"FERMAX","code":"CFE29A005","desc":"CONTRA FECHO LATERAL","cor":"PRETO","q":1,"un":"PC"},{"ap":"FÁBRICA","rf":"FERMAX","code":"FMA99A105","desc":"FECHO FRONTAL SATURNO DIREITO MANIPULO 117MM","cor":"PRETO","q":54,"un":"PC"},{"ap":"FÁBRICA","rf":"FERMAX","code":"FMA99A205","desc":"FECHO FRONTAL SATURNO ESQUERDO MANIPULO 117 MM","cor":"PRETO","q":54,"un":"PC"},{"ap":"FÁBRICA","rf":"FERMAX","code":"GUI30012","desc":"(NYL396) GUIA E STOP SUPERIOR","cor":"PRETO","q":4,"un":"PC"},{"ap":"FÁBRICA","rf":"FERMAX","code":"SRG01A005","desc":"ARTICULACAO PROGRESSIVA 342MM CAIXA 15MM CARGA MAX 22KG","cor":"PRETO","q":6,"un":"PR"},{"ap":"FÁBRICA","rf":"FERMAX","code":"SRG02A005","desc":"ARTICULACAO PROGRESSIVA 600MM CAIXA 15MM CARGA MAX 30KG","cor":"PRETO","q":48,"un":"PR"},{"ap":"FÁBRICA","rf":"MERCADO","code":"BUCH00753CZA","desc":"(BUC7530000) - BUCHA DE NYLON S-6","cor":"CINZA","q":7,"un":"PC"},{"ap":"FÁBRICA","rf":"MERCADO","code":"CALCO10MM","desc":"CALÇO DE 10MM PARA REGULAGEM DO VIDRO","cor":"NATURAL","q":2,"un":"PC"},{"ap":"FÁBRICA","rf":"MERCADO","code":"CONX10083PTO","desc":"ESQUADRO EM NYLON P/ CONTRAMARCO – 240MM","cor":"PRETO","q":6,"un":"PC"},{"ap":"FÁBRICA","rf":"MERCADO","code":"FITAS050X070PT","desc":"FITA VEDADORA SEM BARREIRA PLASTICA 5X7 MM (FIT-210)","cor":"PRETO","q":103.996,"un":"MT"},{"ap":"FÁBRICA","rf":"MERCADO","code":"GUAR10134PTO","desc":"GUARNIÇÃO VEDAÇÃO FOLHA EPDM 6,7MM X 4,8MM","cor":"PRETO","q":264.744,"un":"MT"},{"ap":"FÁBRICA","rf":"MERCADO","code":"PARFIACP03928N","desc":"PARAF INOX 304 A. ATARR CAB CHATA PHILIPS 3,9X28MM","cor":"NATURAL","q":7,"un":"PC"},{"ap":"FÁBRICA","rf":"MERCADO","code":"PARFIACP04216P","desc":"PARAF INOX 304 A. ATARR CAB CHATA PHILIPS 4,2X16MM","cor":"PRETO","q":93,"un":"PC"},{"ap":"FÁBRICA","rf":"MERCADO","code":"PARFIACP04222N","desc":"PARAF INOX 304 A. ATARR CAB CHATA PHILIPS 4,2X22MM","cor":"NATURAL","q":444,"un":"PC"},{"ap":"FÁBRICA","rf":"MERCADO","code":"PARFIACP04225P","desc":"PARAF INOX 304 A. ATARR CAB CHATA PHILIPS 4,2X25MM","cor":"PRETO","q":54,"un":"PC"},{"ap":"FÁBRICA","rf":"MERCADO","code":"PARFIAPP03595N","desc":"PARAF INOX 304 A. ATARR CAB PANELA PHILIPS 3,5X9,5MM","cor":"NATURAL","q":9,"un":"PC"},{"ap":"FÁBRICA","rf":"MERCADO","code":"PARFIAPP04213N","desc":"PARAF INOX 304 A. ATARR CAB PANELA PHILIPS 4,2X13MM","cor":"NATURAL","q":13,"un":"PC"},{"ap":"FÁBRICA","rf":"MERCADO","code":"PARFIAPP04225N","desc":"PARAF INOX 304 A. ATARR CAB PANELA PHILIPS 4,2X25MM","cor":"NATURAL","q":982,"un":"PC"},{"ap":"FÁBRICA","rf":"MERCADO","code":"PARFIAPP04295P","desc":"PARAF INOX 304 A. ATARR CAB PANELA PHILIPS 4,2X9,5MM","cor":"PRETO","q":6,"un":"PC"},{"ap":"FÁBRICA","rf":"MERCADO","code":"PARFIBPP03513N","desc":"PARAF INOX 304 A. BROCANTE CAB PANELA PHILIPS 3,5X13MM","cor":"NATURAL","q":96,"un":"PC"},{"ap":"FÁBRICA","rf":"MERCADO","code":"PARFIBPP04219N","desc":"PARAF INOX 304 A. BROCANTE CAB PANELA PHILIPS 4,2X19MM","cor":"NATURAL","q":384,"un":"PC"},{"ap":"FÁBRICA","rf":"MERCADO","code":"PARFIPPP04832N","desc":"PARAF INOX 304 A. ATARR CAB PANELA PHILIPS 4,8X32MM PONTA GUIA","cor":"NATURAL","q":276,"un":"PC"},{"ap":"FÁBRICA","rf":"MERCADO","code":"PARFIPPP04850N","desc":"PARAF INOX 304 A. ATARR CAB PANELA PHILIPS 4,8X50MM PONTA GUIA","cor":"NATURAL","q":6,"un":"PC"},{"ap":"FÁBRICA","rf":"MERCADO","code":"REBTAPA04010NA","desc":"REBITE POP DE ALUMINIO 4,0 X 10MM C. ABAULADA NATURAL","cor":"FOSCO","q":24,"un":"PC"},{"ap":"FÁBRICA","rf":"MERCADO","code":"SILC000NTINC","desc":"SILICONE NEUTRO – RENDIMENTO CÁLC. APROX. 300ML 5MM 4MM - 15 METROS LINEAR","cor":"INCOLOR","q":6.4,"un":"MT"},{"ap":"FÁBRICA","rf":"MERCADO","code":"SILC000NTPTO","desc":"SILICONE NEUTRO – RENDIMENTO CÁLC. APROX. 300ML 5MM 4MM - 15 METROS LINEAR","cor":"PRETO","q":3.6,"un":"MT"},{"ap":"FÁBRICA","rf":"ROTO FERMAX","code":"ADF04042","desc":"CALÇO VEDANTE","cor":"PRETO","q":4,"un":"PC"},{"ap":"FÁBRICA","rf":"ROTO FERMAX","code":"ARM01U","desc":"(CAL945) ARREMATE TAPA CANAL","cor":"PRETO","q":12,"un":"PC"},{"ap":"FÁBRICA","rf":"ROTO FERMAX","code":"BTD10012","desc":"(NYL398) BATEDEIRA","cor":"PRETO","q":2,"un":"PC"},{"ap":"FÁBRICA","rf":"ROTO FERMAX","code":"BTF01U","desc":"BOTAO TAPA FURO ( NYL042 ) - PCT 1000 PÇS","cor":"PRETO","q":482,"un":"PC"},{"ap":"FÁBRICA","rf":"ROTO FERMAX","code":"CAL08BU","desc":"(CON436) CALCO E ARREMATE DA TRAVESSA","cor":"BRANCO","q":4,"un":"PC"},{"ap":"FÁBRICA","rf":"ROTO FERMAX","code":"CMF03P022","desc":"MAÇANETA 460/470/480 (MAQ.: “MMF01”)","cor":"PRETO","q":12,"un":"PC"},{"ap":"FÁBRICA","rf":"ROTO FERMAX","code":"CNA01U","desc":"(CON433) CONEXAO DE ALINHAMENTO DA FOLHA","cor":"PRETO","q":12,"un":"PC"},{"ap":"FÁBRICA","rf":"ROTO FERMAX","code":"CTE15P022","desc":"CONTRA TESTA PARA PORTAS DE GIRO SEM LADO LINHAS GOLD CHROMA E MEGA 32","cor":"PRETO","q":12,"un":"PC"},{"ap":"FÁBRICA","rf":"ROTO FERMAX","code":"DOB41R085","desc":"DOBRADIÇA COM ROL 3\" X 2 1/3\" X 2MM CANTO RETO INOX ESCOVADO","cor":"INOX ESCOVADO","q":48,"un":"PC"},{"ap":"FÁBRICA","rf":"ROTO FERMAX","code":"FEC45P022","desc":"FECHO CONCHA C/CHAVE","cor":"PRETO","q":1,"un":"PC"},{"ap":"FÁBRICA","rf":"ROTO FERMAX","code":"FNB01REU","desc":"FECHADURA EXT NBR55 LINGUETA CANTO RETO ÚNICA","cor":"NATURAL","q":12,"un":"CJ"},{"ap":"FÁBRICA","rf":"ROTO FERMAX","code":"LIN04042","desc":"LINGUETA 31MM CURVA PARA FEC95 E 96","cor":"NATURAL","q":1,"un":"PC"},{"ap":"FÁBRICA","rf":"ROTO FERMAX","code":"ROL81N041","desc":"ROLDANA MAX STRONG DUPLA COM ROLAMENTO, REGULAGEM E SUPORTE EM INOX 260KG POR FOLHA","cor":"FOSCO","q":2,"un":"PC"},{"ap":"FÁBRICA","rf":"UDINESE","code":"CON434PRTE10","desc":"CONEXAO MONTANTE TRAVA MAX-AR GOLD NYL PRT C/10PCS (CON434)","cor":"PRETO","q":12,"un":"PC"},{"ap":"FÁBRICA","rf":"UDINESE","code":"FIT201UDPRT","desc":"FITA VEDADORA 5X5 PB48500 3P S/B PRT C/50MT (FIT201) **","cor":"PRETO","q":2.4,"un":"MT"},{"ap":"FÁBRICA","rf":"UDINESE","code":"FIT206UDPRT","desc":"FITA VEDADORA 5X6 PB48600 3P S/B PRT C/50MT (FIT206) **","cor":"PRETO","q":9.512,"un":"MT"},{"ap":"FÁBRICA","rf":"UDINESE","code":"FIT223UDPRT","desc":"FITA VEDADORA 7X8 FS69800 4P C/B PRT C/50MT (FIT223) **","cor":"PRETO","q":11.904,"un":"MT"},{"ap":"FÁBRICA","rf":"UDINESE","code":"GUA007BTPRT","desc":"GUARNICAO EPDM PINGADEIRA 11MM BT506 PRT C/50MT (GUA007) **","cor":"PRETO","q":2.965,"un":"MT"},{"ap":"FÁBRICA","rf":"UDINESE","code":"GUA239BTPRT","desc":"GUARNICAO EPDM MARCO SD2533 BT534 PRT C/50MT (GUA239) **","cor":"PRETO","q":14.532,"un":"MT"},{"ap":"FÁBRICA","rf":"UDINESE","code":"GUA374UDPRT","desc":"GUARNICAO EPDM PINGADEIRA PRT C/50MT (GUA374) **","cor":"PRETO","q":2.965,"un":"MT"},{"ap":"OBRA","rf":"MERCADO","code":"BUCH00755FCO","desc":"(BUC7550000) - BUCHA DE NYLON P/ FIXACAO S-8","cor":"FOSCO","q":13,"un":"PC"},{"ap":"OBRA","rf":"MERCADO","code":"ESPMA170X100PT","desc":"ESPUMA ADESIVA 17X10 POLIETILENO","cor":"PRETO","q":145.16,"un":"MT"},{"ap":"OBRA","rf":"MERCADO","code":"ESPMA290X120PT","desc":"ESPUMA ADESIVA 29X12 POLIETILENO","cor":"PRETO","q":290.32,"un":"MT"},{"ap":"OBRA","rf":"MERCADO","code":"GUAR00038PTO","desc":"(GUA0380000) - GUARNIÇÃO CUNHA 11X1,6MM(1FRISO)(50MT)","cor":"PRETO","q":410.988,"un":"MT"},{"ap":"OBRA","rf":"MERCADO","code":"GUAR10132PTO","desc":"GUARNIÇÃO EXTERNA DO VIDRO EM EPDM 13,4MM x 3.3MM","cor":"PRETO","q":53.052,"un":"MT"},{"ap":"OBRA","rf":"MERCADO","code":"PARFIAPP04216N","desc":"PARAF INOX 304 A. ATARR CAB PANELA PHILIPS 4,2X16MM","cor":"NATURAL","q":1073,"un":"PC"},{"ap":"OBRA","rf":"MERCADO","code":"PARFIAPP04850N","desc":"PARAF INOX 304 A. ATARR CAB PANELA PHILIPS 4,8X50MM","cor":"NATURAL","q":13,"un":"PC"},{"ap":"OBRA","rf":"MERCADO","code":"SILC000ACINC","desc":"SILICONE ACETICO – RENDIMENTO CÁLC. APROX. 300ML ÷ 5MM ÷ 4MM - 15 METROS LINEAR","cor":"INCOLOR","q":145.16,"un":"MT"},{"ap":"OBRA","rf":"ROTO FERMAX","code":"538303","desc":"CALÇO PARA TRAVAMENTO DO VIDRO 100 X 15 X 3 VERMELHO","cor":"VERMELHO","q":594,"un":"PC"},{"ap":"OBRA","rf":"ROTO FERMAX","code":"BOR04100M","desc":"BORRACHA DO VIDRO INT. 4 MM","cor":"PRETO","q":53.052,"un":"MT"},{"ap":"OBRA","rf":"ROTO FERMAX","code":"CNA01U","desc":"(CON433) CONEXAO DE ALINHAMENTO DA FOLHA","cor":"PRETO","q":52,"un":"PC"},{"ap":"OBRA","rf":"ROTO FERMAX","code":"PRE05N012","desc":"PRESILHA DO FIXAÇÃO DO ARREMATE - PCT C/ 500 PEÇAS INJ. PRETO","cor":"PRETO","q":1073,"un":"PC"},{"ap":"OBRA","rf":"UDINESE","code":"CHU838UD","desc":"CHUMBADOR ALUMINIO MULTI USO (CHU838) **","cor":"NATURAL","q":1073,"un":"PC"},{"ap":"OBRA","rf":"UDINESE","code":"GUA132UDPRT","desc":"GUARNICAO EPDM ACABAMENTO PVC 100/2 PRT C/50MT (GUA132) **","cor":"PRETO","q":2.4,"un":"MT"},{"ap":"OBRA","rf":"UDINESE","code":"GUA171UDPRT","desc":"GUARNICAO ESPUMA ADESIVA PVC 11,2X3MM PRT C/50MT (GUA171) **","cor":"PRETO","q":82.512,"un":"MT"},{"ap":"OBRA","rf":"UDINESE","code":"GUA172UDPRT","desc":"GUARNICAO ESPUMA ADESIVA PVC 11X2MM PRT C/50MT (GUA172) **","cor":"PRETO","q":238.396,"un":"MT"},{"ap":"OBRA","rf":"UDINESE","code":"GUA256BTPRT","desc":"GUARNICAO EPDM CUNHA SD626 BT PRT C/50MT (GUA256) **","cor":"PRETO","q":82.512,"un":"MT"},{"ap":"OBRA","rf":"UDINESE","code":"GUA259BTPRT","desc":"GUARNICAO EPDM CUNHA SD631 BT PRT C/50MT (GUA259) **","cor":"PRETO","q":395.14,"un":"MT"},{"ap":"OBRA","rf":"UDINESE","code":"GUA304UDPRT","desc":"GUARNICAO ESPUMA ADESIVA PVC 14X6MM PRT C/50MT (GUA304) **","cor":"PRETO","q":33.83,"un":"MT"},{"ap":"OBRA","rf":"UDINESE","code":"GUA306UDPRT","desc":"GUARNICAO ESPUMA ADESIVA PVC 14X4,8MM PRT C/50MT (GUA306) **","cor":"PRETO","q":361.31,"un":"MT"},{"ap":"OBRA","rf":"UDINESE","code":"GUA309UDPRT","desc":"GUARNICAO EPDM 6,5MM PRT C/50MT (GUA309) **","cor":"PRETO","q":2.4,"un":"MT"}]};
+// Cotações recebidas: [código CEM, ref fornecedor, descrição fornecedor, emb tipo, qtd por emb, qtde cotada, valor unit s/ IPI, % IPI, ST total da linha]
+const COTACOES=[{doc:"UDIORC1078546",forn:"Papaiz Udinese",data:"28/10/2026",cond:"UDI 28/56/84 DDL · CIF",total:13570.06,obra:"AR_10/26_025_00",itens:[
+["CFE29A005","9209436","CONTRA FECHO CONCHA/FECHADURA LATERAL GDL PTF (CON382/383)","UN",1,1,4.08,3.25,0],
+["FMA99A105","9210206","FECHO MAX-AR 735D GOLD C/ BAG C/CTF PTF (FEC495/FEC1124)","UN",1,54,18.52,3.25,0],
+["FMA99A205","9210238","FECHO MAX-AR 735E GOLD C/ BAG C/CTF PTF (FEC496/FEC1124)","UN",1,54,18.52,3.25,0],
+["GUI30012","9302371","GUIA DESLIZANTE SP812N NYL PRT (NYL396)","UN",1,4,0.83,3.25,0.50],
+["SRG01A005","9103117","BRACO UDMAX PROJETANTE DESLIZANTE CX15 350MM 22KG PTF","UN",1,6,64.54,3.25,0],
+["SRG02A005","9103122","BRACO UDMAX PROJETANTE DESLIZANTE CX15 600MM 35KG PTF","UN",1,48,79.91,3.25,0],
+["FITAS050X070PT","9900671","FITA VEDADORA 5X7 PB48700 3P S/B PRT C/50MT (FIT210)","ROLO",50,3,22.40,3.25,0],
+["ARM01U","9901074","CALCO DE VED.TRAV.NYLON PRT MAXIM AR GOLD 10PCS (CAL945)","PCT",10,2,3.71,3.25,1.12],
+["BTD10012","9301643","BATEDEIRA 398 NYL PRT C/10PCS (NYL398)","PCT",10,1,21.23,3.25,3.21],
+["BTF01U","9205319","TAMPA TAPA-FURO TPF95 PP PRT C/1000PCS (NYL042)","PCT",1000,1,102.56,3.25,15.52],
+["CAL08BU","9901107","CONEXAO MONTANTE MAX-AR NYL PRT GOLD C/10PCS (CON436)","PCT",10,1,13.14,3.25,1.99],
+["CNA01U","9301203","CONEXAO ALINHAMENTO CON433 NYL PRT C/20PCS","PCT",20,1,6.91,3.25,1.05],
+["CTE15P022","9302200","CONTRA TESTA SP797 PTF (CON386)","UN",1,12,6.17,0,10.69],
+["FEC45P022","9211473","FECHO CONCHA 7411/A/C SLIDE SEM PARAFUSO PTF","UN",1,1,19.40,6.50,3.07],
+["LIN04042","9207270","LINGUETA CONCHA S38/4,5INV/7000 INOX (TRA011)","UN",1,1,2.06,3.25,0],
+["ROL81N041","9500426","ROLDANA UDISUPER 150G DUPLA 300KG GOLD/IMPERIAL/ELG300","UN",1,2,63.52,6.50,0],
+["CON434PRTE10","9302745","CONEXAO MONTANTE TRAVA MAX-AR GOLD NYL PRT 10 PARES (CON434)","PCT",10,1,33.82,3.25,5.11],
+["FIT201UDPRT","9900497","FITA VEDADORA 5X5 PB48500 3P S/B PRT C/50MT (FIT201)","ROLO",50,1,19.42,0,0],
+["FIT206UDPRT","9900498","FITA VEDADORA 5X6 PB48600 3P S/B PRT C/50MT (FIT206)","ROLO",50,1,20.91,0,0],
+["FIT223UDPRT","9901077","FITA VEDADORA 7X8 FS69800 4P C/B PRT C/50MT (FIT223)","ROLO",50,1,45.73,3.25,0],
+["GUA007BTPRT","9902013","GUARNICAO EPDM PINGADEIRA 11MM ICG PRT C/50MT (GUA007)","ROLO",50,1,95.03,0,0],
+["GUA239BTPRT","9902000","GUARNICAO EPDM MARCO SD2533 ICG PRT C/50MT (GUA239)","ROLO",50,1,71.33,0,0],
+["GUA374UDPRT","9900757","GUARNICAO EPDM PINGADEIRA PRT C/50MT (GUA374)","ROLO",50,1,124.08,0,0],
+["GUAR00038PTO","9902012","GUARNICAO EPDM CUNHA V. 8,5X6,5 ICG PRT C/50MT (GUA038)","ROLO",50,9,57.06,0,0],
+["PRE05N012","9301863","PRESILHA ARREMATE NYL-190 NYL PRT 500PCS (NYL190)","PCT",500,3,35.83,3.25,16.26],
+["CHU838UD","9900493","CHUMBADOR ALUMINIO MULTI USO (CHU838)","UN",1,1073,3.62,3.25,0],
+["GUA132UDPRT","9900692","GUARNICAO EPDM ACABAMENTO PVC 100/2 PRT C/50MT (GUA132)","ROLO",50,1,74.21,0,0],
+["GUA171UDPRT","9900507","GUARNICAO ESPUMA ADESIVA PVC 11,2X3MM PRT C/50MT (GUA171)","ROLO",50,2,25.81,0,0],
+["GUA172UDPRT","9900508","GUARNICAO ESPUMA ADESIVA PVC 11X2MM PRT C/50MT (GUA172)","ROLO",50,5,19.26,0,0],
+["GUA256BTPRT","9901997","GUARNICAO EPDM CUNHA SD626 ICG PRT C/50MT (GUA256)","ROLO",50,2,89.91,0,0],
+["GUA259BTPRT","9901998","GUARNICAO EPDM CUNHA SD631 ICG PRT C/50MT (GUA259)","ROLO",50,8,86.39,0,0],
+["GUA304UDPRT","9900589","GUARNICAO ESPUMA ADESIVA PVC 14X6MM PRT C/50MT (GUA304)","ROLO",50,1,52.15,0,0],
+["GUA306UDPRT","9900590","GUARNICAO ESPUMA ADESIVA PVC 14X4,8MM PRT C/50MT (GUA306)","ROLO",50,8,45.22,3.25,0],
+["GUA309UDPRT","9900731","GUARNICAO EPDM 6,5MM PRT C/50MT (GUA309)","ROLO",50,1,54.22,0,0]
+]}];
+const r2=v=>Math.round(v*100)/100;
+// preço da embalagem com IPI e ST rateado pela quantidade cotada
+const cotPreco=it=>r2(it[6]*(1+it[7]/100)+(it[5]?it[8]/it[5]:0));
+// Catálogos de fotos (imagens publicadas junto com a página)
+const CATS={"udinese-family-2-12":{nome:"Udinese · Texa Family · catálogo técnico v2.12 (jul/2026)",base:"catalogos/udinese-family-2-12/"}};
+const CATIDX={};
+function loadCats(){return Promise.all(Object.keys(CATS).map(k=>CATIDX[k]?Promise.resolve():fetch(CATS[k].base+"index.json").then(r=>r.ok?r.json():[]).then(d=>{CATIDX[k]=d}).catch(()=>{CATIDX[k]=[]})))}
+function catByCode(ref){for(const k in CATIDX){const it=(CATIDX[k]||[]).find(x=>x.codes.includes(ref));if(it)return {cat:k,img:it.img,tit:it.tit+(it.sub?" "+it.sub:"")}}return null}
 
 // ---------- UTIL ----------
 const n=v=>{if(v===null||v===undefined)return 0;const s=String(v).trim().replace(/\s/g,"");if(!s)return 0;const x=parseFloat(s.includes(",")?s.replace(/\./g,"").replace(",","."):s);return isFinite(x)?x:0};
@@ -292,7 +356,7 @@ function newState(o,lib){
   outros:[{d:"Mão de obra de fabricação",v:""},{d:"Instalação",v:""},{d:"Frete / transporte",v:""},{d:"",v:""}],
   mg:{comp:Object.assign(blankMg(),lib.mg&&lib.mg.comp),alu:Object.assign(blankMg(),lib.mg&&lib.mg.alu),vid:Object.assign(blankMg(),lib.mg&&lib.mg.vid),out:Object.assign(blankMg(),lib.mg&&lib.mg.out)},
   rateio:"area",validade:"",cond:"",prazo:"",obs:""};
- o.comps.forEach(c=>{if(lib.comp&&lib.comp[c.code])st.comp[c.code]=lib.comp[c.code]});
+ st.emb={};o.comps.forEach(c=>{const b=DB.banco&&DB.banco[c.code];if(b&&b.preco){st.comp[c.code]=b.preco;st.emb[c.code]=Object.assign({},b.emb)}});
  [...new Set(o.tips.map(t=>t.vid))].forEach(k=>{if(lib.vid&&lib.vid[k])st.vidPrice[k]=lib.vid[k]});
  return st;
 }
@@ -309,12 +373,33 @@ if(!DB||!Array.isArray(DB.obras)){
  }}catch(e){}
  DB.obras.push(o);
 }
-function save(){try{localStorage.setItem(KEY,JSON.stringify(DB))}catch(e){}}
+let saveErr=false;
+function save(){try{localStorage.setItem(KEY,JSON.stringify(DB));saveErr=false}catch(e){saveErr=true}}
+// ---------- BANCO DE COMPONENTES (preço, embalagem, fornecedor e foto por código) ----------
+if(!DB.banco)DB.banco={};
+function bEnsure(code,r){let b=DB.banco[code];if(!b){b=DB.banco[code]={code,desc:r?r.desc:"",un:r?r.un:"PC",cor:r?r.cor:"",rf:r?r.rf:"",preco:"",emb:{t:"UN",q:1}};}
+ if(r&&!b.desc)b.desc=r.desc;return b}
+function bSync(){DB.obras.forEach(o=>o.comps.forEach(r=>bEnsure(r.code,r)))}
+// migra a biblioteca antiga
+Object.keys((DB.lib&&DB.lib.comp)||{}).forEach(c=>{const b=bEnsure(c);if(!b.preco)b.preco=DB.lib.comp[c];if(DB.lib.emb&&DB.lib.emb[c])b.emb=DB.lib.emb[c]});
+bSync();
+function bSetPreco(code,preco,emb){const b=bEnsure(code);if(preco!==undefined)b.preco=preco;if(emb)b.emb=Object.assign({},emb);b.atual=new Date().toISOString()}
+function fotoUrl(b){if(!b||!b.foto)return "";if(b.foto.data)return b.foto.data;const c=CATS[b.foto.cat];return c?c.base+"t_"+b.foto.img:""}
+function autoFotos(){let n=0;Object.values(DB.banco).forEach(b=>{if(!b.foto&&b.ref){const m=catByCode(b.ref);if(m){b.foto={cat:m.cat,img:m.img,tit:m.tit,auto:1};n++}}});if(n)save();return n}
 save();
 
 // ---------- CÁLCULOS POR OBRA ----------
 const isHid=(O,i)=>!!(O.st.hide&&O.st.hide[i]);
-const compCost=O=>O.comps.reduce((s,r,i)=>s+(isHid(O,i)?0:r.q*n(O.st.comp[r.code])),0);
+const embOf=(O,code)=>(O.st.emb&&O.st.emb[code])||{t:"UN",q:1};
+const embQ=e=>e.t==="UN"?1:Math.max(n(e.q),1);
+// quantidade total do código (linhas não ocultas), embalagens necessárias e custo
+function codeCalc(O,code){
+ let tq=0;O.comps.forEach((r,i)=>{if(r.code===code&&!isHid(O,i))tq+=r.q});
+ const e=embOf(O,code),qe=embQ(e),price=n(O.st.comp[code]);
+ const ne=e.t==="UN"?tq:Math.ceil(tq/qe-1e-9);
+ return {tq,e,qe,ne,price,cost:ne*price};
+}
+const compCost=O=>[...new Set(O.comps.map(r=>r.code))].reduce((s,c)=>s+codeCalc(O,c).cost,0);
 const aluCost=O=>n(O.st.aluPeso)*(n(O.st.aluKg)+n(O.st.aluAdd));
 const itemM2=t=>t.L*t.H*t.q/1e6;
 const itemPer=t=>2*(t.L+t.H)*t.q/1000;
@@ -332,6 +417,39 @@ const totals=O=>{const gs=groups(O);return {c:gs.reduce((s,g)=>s+g.cost,0),v:gs.
 
 // ================= TELA INICIAL =================
 let NEW=null; // estado do formulário de novo orçamento
+let HOMETAB="orc",BFIL="all";
+function renderBanco(){
+ bSync();const B=Object.values(DB.banco);
+ const uso={};DB.obras.forEach(o=>new Set(o.comps.map(r=>r.code)).forEach(c=>uso[c]=(uso[c]||0)+1));
+ const forns=[...new Set(B.map(b=>b.forn||"Sem fornecedor"))].sort();
+ const q=(($("bk-q")||{}).value||"").trim().toUpperCase();
+ const L=B.filter(b=>{if(BFIL==="nop"&&n(b.preco)>0)return false;if(BFIL==="nofoto"&&b.foto)return false;if(BFIL.startsWith("f:")&&(b.forn||"Sem fornecedor")!==BFIL.slice(2))return false;
+  if(q&&!((b.code+" "+b.desc+" "+(b.ref||"")+" "+(b.descForn||"")+" "+(b.forn||"")).toUpperCase().includes(q)))return false;return true})
+  .sort((a,b)=>(a.forn||"zz").localeCompare(b.forn||"zz")||a.code.localeCompare(b.code));
+ const sp=B.filter(b=>!(n(b.preco)>0)).length,sf=B.filter(b=>!b.foto).length;
+ const box=$("home-body");
+ const keepQ=q;
+ box.innerHTML=`<div class="card"><div class="card-h"><div><h2>Banco de componentes</h2><div class="hint">Um preço por código, usado em todas as obras: embalagem, fornecedor, cotação de origem e foto. Obra nova já entra com estes preços.</div></div>
+  <div class="toolbar"><div class="seg" id="bk-f"><button aria-pressed="${BFIL==="all"}" data-f="all">Todos (${B.length})</button><button aria-pressed="${BFIL==="nop"}" data-f="nop">Sem preço (${sp})</button><button aria-pressed="${BFIL==="nofoto"}" data-f="nofoto">Sem foto (${sf})</button>${forns.map(f=>`<button aria-pressed="${BFIL==="f:"+f}" data-f="f:${esc(f)}">${esc(f)}</button>`).join("")}</div>
+  <input class="in" id="bk-q" type="search" placeholder="Buscar código, descrição ou ref." value="${esc(keepQ)}"></div></div>
+  <div class="tbl-wrap"><table><thead><tr><th>Foto</th><th>Código</th><th>Descrição</th><th>Fornecedor · ref.</th><th>Embalagem</th><th class="r">Preço emb. R$</th><th class="r">Custo por un/m</th><th>Origem</th><th class="r">Obras</th></tr></thead><tbody>
+  ${L.map(b=>{const qe=b.emb&&b.emb.t!=="UN"?Math.max(n(b.emb.q),1):1;const pu=n(b.preco)/qe;
+   return `<tr class="${n(b.preco)>0?"":"nop"}"><td>${thumbBtn(b.code,1)}</td><td class="code">${esc(b.code)}</td><td>${esc(b.desc)}${b.descForn?`<div class="hint">${esc(b.descForn)}</div>`:""}</td>
+   <td>${b.forn?`<b>${esc(b.forn)}</b><div class="hint">${esc(b.ref||"")}</div>`:'<span class="hint">—</span>'}</td>
+   <td style="white-space:nowrap"><select class="in" data-bt="${esc(b.code)}" aria-label="Embalagem ${esc(b.code)}">${["UN","PCT","ROLO","CX"].map(t=>`<option ${b.emb&&b.emb.t===t?"selected":""}>${t}</option>`).join("")}</select>
+    <input class="in num" style="width:62px;text-align:right" data-bq="${esc(b.code)}" value="${b.emb&&b.emb.t!=="UN"?esc(b.emb.q):""}" ${b.emb&&b.emb.t!=="UN"?"":"hidden"} inputmode="decimal" aria-label="Quantidade por embalagem ${esc(b.code)}"></td>
+   <td class="r price"><input class="in money num" data-bp="${esc(b.code)}" value="${esc(b.preco||"")}" placeholder="0,00" inputmode="decimal" aria-label="Preço da embalagem ${esc(b.code)}"></td>
+   <td class="r num">${pu>0?"R$ "+num(pu,4):"—"}</td>
+   <td>${b.doc?`<span class="chip ok">${esc(b.doc)}</span><div class="hint">${esc(b.data||"")}${b.base!=null?` · R$ ${num(b.base,2)} + IPI ${num(b.ipi||0,2)}%${b.stl?" + ST":""}`:""}</div>`:b.atual?`<span class="hint">digitado em ${new Date(b.atual).toLocaleDateString("pt-BR")}</span>`:'<span class="hint">—</span>'}</td>
+   <td class="r num">${uso[b.code]||0}</td></tr>`}).join("")||'<tr><td colspan="9" class="hint">Nenhum componente encontrado.</td></tr>'}
+  </tbody></table></div></div>`;
+ $("bk-f").onclick=e=>{const b=e.target.closest("button");if(!b)return;BFIL=b.dataset.f;renderBanco()};
+ $("bk-q").oninput=()=>{const p=$("bk-q").selectionStart;renderBanco();const i=$("bk-q");i.focus();try{i.setSelectionRange(p,p)}catch(_){}};
+ box.querySelector("tbody").addEventListener("change",e=>{const el=e.target;
+  if(el.dataset.bt){const b=DB.banco[el.dataset.bt];b.emb={t:el.value,q:el.value==="UN"?1:(b.emb&&b.emb.t!=="UN"?b.emb.q:(el.value==="ROLO"?50:10))};b.atual=new Date().toISOString();save();renderBanco()}
+  if(el.dataset.bq){const b=DB.banco[el.dataset.bq];b.emb=Object.assign({},b.emb,{q:el.value});save();renderBanco()}
+  if(el.dataset.bp){const b=DB.banco[el.dataset.bp];b.preco=el.value;b.atual=new Date().toISOString();save();renderBanco()}});
+}
 function showHome(){
  location.hash=""; $("tabs").hidden=true; $("view-obra").hidden=true; $("view-home").hidden=false;
  const tot=DB.obras.reduce((s,o)=>s+totals(o).v,0);
@@ -346,9 +464,11 @@ function showHome(){
   <div class="vals"><div><span>Custo</span><b class="num">${brl(t.c)}</b></div><div class="sale"><span>Venda</span><b class="num">${brl(t.v)}</b></div></div>
   <div class="acts" id="acts-${o.id}"><button class="btn" data-open="${o.id}">Abrir orçamento</button><button class="btn ghost" data-dup="${o.id}">Duplicar</button><button class="btn ghost" data-del="${o.id}">Excluir</button></div>
   <div class="hint">Criado em ${new Date(o.criado).toLocaleDateString("pt-BR")}</div></article>`}).join("");
- $("view-home").innerHTML=`<div class="home-grid"><button class="newcard" id="b-new"><span class="plus">+</span><h3>Novo orçamento</h3><span class="hint">Selecione os 3 PDFs do sistema (croqui, perfis e componentes). Os preços já usados em outras obras entram automaticamente.</span></button>${cards}</div>
+ $("view-home").innerHTML=`<div class="hseg" id="hseg"><button aria-pressed="${HOMETAB==="orc"}" data-h="orc">Orçamentos (${DB.obras.length})</button><button aria-pressed="${HOMETAB==="banco"}" data-h="banco">Banco de componentes (${Object.keys(DB.banco).length})</button></div><div id="home-body"><div class="home-grid"><button class="newcard" id="b-new"><span class="plus">+</span><h3>Novo orçamento</h3><span class="hint">Selecione os 3 PDFs do sistema (croqui, perfis e componentes). Os preços já usados em outras obras entram automaticamente.</span></button>${cards}</div>
  <div class="card" style="margin-top:24px"><div class="card-h"><div><h2>Backup</h2><div class="hint">Os orçamentos ficam salvos neste navegador. Para levar a outro aparelho, copie os dados e cole lá.</div></div></div>
- <div class="card-b toolbar"><button class="btn" id="b-copy">Copiar todos os dados</button><textarea class="in" id="b-paste" rows="1" style="flex:1;min-width:200px" placeholder="Cole aqui os dados copiados"></textarea><button class="btn ghost" id="b-load">Carregar dados colados</button><span class="hint" id="b-msg"></span></div></div>`;
+ <div class="card-b toolbar"><button class="btn" id="b-copy">Copiar todos os dados</button><textarea class="in" id="b-paste" rows="1" style="flex:1;min-width:200px" placeholder="Cole aqui os dados copiados"></textarea><button class="btn ghost" id="b-load">Carregar dados colados</button><span class="hint" id="b-msg"></span></div></div></div>`;
+ $("hseg").onclick=e=>{const b=e.target.closest("button[data-h]");if(!b)return;HOMETAB=b.dataset.h;showHome()};
+ if(HOMETAB==="banco"){renderBanco();return}
  $("b-new").onclick=()=>{NEW={files:{},h:{numero:"",obra:"",cliente:"",cor:""},msg:""};renderNew()};
  $("view-home").onclick=e=>{const b=e.target.closest("button");if(!b)return;
   if(b.dataset.open)openObra(b.dataset.open);
@@ -421,7 +541,7 @@ function renderNew(){
  $("n-create").onclick=()=>{
   const o={id:uid(),criado:new Date().toISOString(),numero:NEW.h.numero,obra:NEW.h.obra,cliente:NEW.h.cliente,cor:NEW.h.cor,data:"",
    tips:F.croqui?F.croqui.data:[],perfis:F.perfis?F.perfis.data.rows:[],pesoTotal:F.perfis?F.perfis.data.total:0,comps:F.comp?F.comp.data:[]};
-  o.st=newState(o,DB.lib);DB.obras.push(o);save();NEW=null;openObra(o.id);
+  o.comps.forEach(r=>bEnsure(r.code,r));o.st=newState(o,DB.lib);DB.obras.push(o);save();NEW=null;openObra(o.id);
  };
 }
 
@@ -429,6 +549,8 @@ function renderNew(){
 let O=null,st=null,compFilter="all";
 function openObra(id){
  O=DB.obras.find(x=>x.id===id);if(!O){showHome();return}st=O.st;compFilter="all";
+ if(!st.cotAplic)st.cotAplic={};
+ COTACOES.forEach(c=>{if(c.obra&&c.obra===O.numero&&!st.cotAplic[c.doc]&&!st["cotVista_"+c.doc]){st["cotVista_"+c.doc]=1;st.__aplicar=c}});
  location.hash="obra-"+O.id;
  $("view-home").hidden=true;$("view-obra").hidden=false;$("tabs").hidden=false;
  const lines=[...new Set(O.tips.map(t=>t.linha))].join(", ");
@@ -437,6 +559,7 @@ function openObra(id){
   <div class="kpis"><div class="kpi"><span class="eyebrow">Custo total</span><b class="num" id="k-cost">R$ 0,00</b></div><div class="kpi sale"><span class="eyebrow">Preço de venda</span><b class="num" id="k-sale">R$ 0,00</b></div></div>`;
  $("b-back").onclick=showHome;
  buildObra();
+ if(st.__aplicar){const c=st.__aplicar;delete st.__aplicar;aplicarCot(c)}
  let tab="comp";try{tab=localStorage.getItem(KEY+"-tab")||"comp"}catch(e){}
  selectTab(tab);
 }
@@ -449,11 +572,12 @@ $("tabs").addEventListener("click",e=>{const b=e.target.closest("button[data-tab
 function buildObra(){
  $("view-obra").innerHTML=`
 <section id="tab-comp" class="tab"><div class="panel-grid">
- <div class="card"><div class="card-h"><div><h2>Componentes da obra</h2><div class="hint">Digite o custo unitário (por PC, PR, CJ ou MT). Desmarque "Cotar" para ocultar o item: ele sai da cotação e do custo.</div></div>
-  <div class="toolbar"><div class="seg" id="comp-filter"><button aria-pressed="true" data-f="all">Todos</button><button aria-pressed="false" data-f="FÁBRICA">Fábrica</button><button aria-pressed="false" data-f="OBRA">Obra</button><button aria-pressed="false" data-f="nop">Sem preço</button><button aria-pressed="false" data-f="hid" id="f-hid">Ocultos (0)</button></div>
+ <div class="stack"><div class="card" id="cot-card"></div>
+ <div class="card"><div class="card-h"><div><h2>Componentes da obra</h2><div class="hint">Escolha a embalagem (UN, PCT ou ROLO) e digite o preço dela. A quantidade de embalagens é arredondada para cima. Desmarque "Cotar" para tirar o item da cotação e do custo.</div></div>
+  <div class="toolbar"><div class="seg" id="comp-filter"><button aria-pressed="true" data-f="all">Todos</button><button aria-pressed="false" data-f="FÁBRICA">Fábrica</button><button aria-pressed="false" data-f="OBRA">Obra</button><button aria-pressed="false" data-f="nop">Sem preço</button><button aria-pressed="false" data-f="hid" id="f-hid">Ocultos (0)</button></div><div class="seg" id="comp-forn"></div>
   <input class="in" id="comp-search" type="search" placeholder="Buscar código ou descrição" aria-label="Buscar componente"></div></div>
-  <div class="tbl-wrap"><table><thead><tr><th>Cotar</th><th>Código</th><th>Descrição</th><th>Cor</th><th class="r">Qtde</th><th>Un</th><th class="r">Custo unit. R$</th><th class="r">Custo total</th></tr></thead>
-  <tbody id="comp-body"></tbody><tfoot><tr><td colspan="8"><div class="toolbar" style="justify-content:space-between"><span class="hint" id="comp-count"></span><button class="btn ghost" id="comp-showall" hidden>Voltar todos para a cotação</button></div></td></tr></tfoot></table></div></div>
+  <div class="tbl-wrap"><table><thead><tr><th>Cotar</th><th>Foto</th><th>Código</th><th>Descrição</th><th>Cor</th><th class="r">Qtde obra</th><th>Un</th><th>Embalagem</th><th class="r">Qtde emb.</th><th class="r">Preço emb. R$</th><th class="r">Custo total</th></tr></thead>
+  <tbody id="comp-body"></tbody><tfoot><tr><td colspan="11"><div class="toolbar" style="justify-content:space-between"><span class="hint" id="comp-count"></span><button class="btn ghost" id="comp-showall" hidden>Voltar todos para a cotação</button></div></td></tr></tfoot></table></div></div></div>
  <div id="pp-comp"></div></div></section>
 
 <section id="tab-alu" class="tab" hidden><div class="panel-grid"><div class="stack">
@@ -495,7 +619,7 @@ function buildObra(){
  <div id="p-list"></div><div class="pres-total"><span>Valor total da obra</span><b class="num" id="p-total">R$ 0,00</b></div><div class="pres-foot" id="p-foot"></div>
 </div></section>`;
  ["comp","alu","vid","out"].forEach(k=>pricePanel(k,{comp:"Componentes",alu:"Alumínio",vid:"Vidros",out:"Outros custos"}[k]));
- wireComp();buildComp();buildAlu();buildVid();buildOut();wireFields();refresh();
+ wireComp();buildCot();buildComp();buildAlu();buildVid();buildOut();wireFields();refresh();
 }
 function touch(){save()}
 
@@ -519,33 +643,104 @@ function paintPanel(g){
 }
 
 // ---------- COMPONENTES ----------
+function thumbBtn(code,big){const b=DB.banco[code];const u=fotoUrl(b);
+ return `<button class="thumb${big?" big":""}" data-foto="${esc(code)}" title="${u?"Trocar foto":"Escolher foto"}" style="${u?`background-image:url('${u.replace(/'/g,"%27")}')`:""}" aria-label="Foto de ${esc(code)}">${u?"":"+ foto"}</button>`}
+let PICK=null;
+function openPicker(code){
+ const b=bEnsure(code);PICK={code,q:(b.ref||"")||""};
+ let m=$("modal");if(!m){m=document.createElement("div");m.id="modal";m.className="modal";document.body.appendChild(m)}
+ m.hidden=false;
+ m.innerHTML=`<div class="box" role="dialog" aria-modal="true" aria-label="Foto do componente"><div class="mh"><div><b style="font-family:var(--display);font-size:16px">Foto de ${esc(code)}</b><div class="hint">${esc(b.desc||"")}${b.ref?" · "+esc(b.forn||"")+" "+esc(b.ref):""}</div></div>
+  <div class="toolbar"><input class="in" id="pk-q" type="search" placeholder="Procurar no catálogo (nome ou código)" value="${esc(PICK.q)}" style="min-width:220px"><label class="btn ghost" for="pk-up">Enviar foto</label><input type="file" id="pk-up" accept="image/*" hidden>${b.foto?'<button class="btn ghost" id="pk-rm">Remover foto</button>':''}<button class="btn" id="pk-x">Fechar</button></div></div>
+  <div class="mb"><div class="hint" id="pk-info" style="margin-bottom:10px"></div><div class="pgrid" id="pk-grid"></div></div></div>`;
+ const close=()=>{m.hidden=true;PICK=null};
+ $("pk-x").onclick=close;m.onclick=e=>{if(e.target===m)close()};
+ if($("pk-rm"))$("pk-rm").onclick=()=>{delete b.foto;save();close();afterFoto()};
+ $("pk-up").onchange=e=>{const f=e.target.files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{const im=new Image();im.onload=()=>{const W=360,sc=Math.min(1,W/Math.max(im.width,im.height));const cv=document.createElement("canvas");cv.width=Math.round(im.width*sc);cv.height=Math.round(im.height*sc);const cx=cv.getContext("2d");cx.fillStyle="#fff";cx.fillRect(0,0,cv.width,cv.height);cx.drawImage(im,0,0,cv.width,cv.height);
+   b.foto={data:cv.toDataURL("image/jpeg",.8)};save();if(saveErr){delete b.foto;save();$("pk-info").innerHTML='<span class="err">Sem espaço no navegador para guardar a foto. Use uma foto do catálogo.</span>';return}close();afterFoto()};im.src=rd.result};rd.readAsDataURL(f)};
+ const paint=()=>{const q=$("pk-q").value.trim().toUpperCase();const all=[];Object.keys(CATIDX).forEach(k=>(CATIDX[k]||[]).forEach(it=>all.push(Object.assign({k},it))));
+  const words=q.split(/\s+/).filter(Boolean);
+  const res=all.filter(it=>{const hay=(it.tit+" "+it.sub+" "+it.serie+" "+it.codes.join(" ")+" "+it.cat.join(" ")).toUpperCase();return words.every(w=>hay.includes(w))}).slice(0,60);
+  $("pk-info").textContent=all.length?`${res.length===60?"60+":res.length} produto(s) do catálogo ${Object.values(CATS).map(c=>c.nome).join(", ")}. Toque para usar a imagem.`:"Catálogo de fotos indisponível neste endereço. Use Enviar foto.";
+  $("pk-grid").innerHTML=res.map((it,j)=>`<button class="pitem ${b.foto&&b.foto.img===it.img?"sel":""}" data-j="${j}"><img loading="lazy" src="${CATS[it.k].base+it.img}" alt=""><div><b>${esc(it.tit)}</b> ${esc(it.sub)}<br><span style="color:#5b6d70">${esc(it.serie)} · pág. ${it.pag} · ${esc(it.codes.slice(0,3).join(", "))}${it.codes.length>3?"…":""}</span></div></button>`).join("");
+  $("pk-grid").onclick=e=>{const x=e.target.closest(".pitem");if(!x)return;const it=res[+x.dataset.j];b.foto={cat:it.k,img:it.img,tit:it.tit+(it.sub?" "+it.sub:"")};save();close();afterFoto()};};
+ $("pk-q").oninput=paint;loadCats().then(paint);
+}
+function afterFoto(){if(O&&!$("view-obra").hidden){buildComp()}else if(HOMETAB==="banco")renderBanco()}
+document.addEventListener("click",e=>{const t=e.target.closest("[data-foto]");if(t){e.preventDefault();openPicker(t.dataset.foto)}});
+function cotOf(code){for(const c of COTACOES){const it=c.itens.find(x=>x[0]===code);if(it)return {c,it}}return null}
+function buildCot(){
+ const box=$("cot-card");
+ const rows=COTACOES.map((c,j)=>{const nm=c.itens.filter(it=>O.comps.some(r=>r.code===it[0])).length;if(!nm)return "";
+  const ap=st.cotAplic&&st.cotAplic[c.doc];
+  return `<div class="row" style="flex-wrap:wrap"><div><b>${esc(c.forn)} · ${esc(c.doc)}</b><div class="hint">${esc(c.data)} · ${nm} itens desta obra · ${brl(c.total)} com impostos · ${esc(c.cond)}</div></div>
+  <div class="toolbar">${ap?'<span class="chip ok">Preços aplicados</span>':''}<button class="btn ${ap?"ghost":""}" data-cot="${j}">${ap?"Aplicar de novo":"Aplicar preços nesta obra"}</button></div></div>`}).filter(Boolean);
+ const nb=O.comps.filter(r=>{const b=DB.banco[r.code];return b&&n(b.preco)>0&&(b.preco!==st.comp[r.code]||JSON.stringify(b.emb)!==JSON.stringify(embOf(O,r.code)))}).length;
+ box.innerHTML=`<div class="card-h"><div><h2>Preços desta obra</h2><div class="hint">Preço por embalagem já com IPI e ST rateado. Itens fora da cotação ficam em branco para você completar. Tudo o que você digita aqui vai também para o Banco de componentes.</div></div>
+  <button class="btn ghost" id="b-frombanco" ${nb?"":"disabled"}>Puxar do banco${nb?" ("+nb+")":""}</button></div><div class="card-b stack" style="gap:12px">${rows.join("")||'<span class="hint">Nenhuma cotação cadastrada para os itens desta obra.</span>'}</div>`;
+ box.onclick=e=>{const b=e.target.closest("button");if(!b)return;
+  if(b.dataset.cot!==undefined){aplicarCot(COTACOES[+b.dataset.cot]);return}
+  if(b.id==="b-frombanco"){O.comps.forEach(r=>{const x=DB.banco[r.code];if(x&&n(x.preco)>0){st.comp[r.code]=x.preco;if(!st.emb)st.emb={};st.emb[r.code]=Object.assign({},x.emb)}});touch();buildCot();buildComp();refresh()}};
+}
+function aplicarCot(c){
+ if(!st.emb)st.emb={};if(!st.cotAplic)st.cotAplic={};
+ c.itens.forEach(it=>{if(!O.comps.some(r=>r.code===it[0]))return;const p=cotPreco(it);
+  st.emb[it[0]]={t:it[3],q:it[4]};st.comp[it[0]]=num(p,2);
+  const b=bEnsure(it[0]);bSetPreco(it[0],st.comp[it[0]],st.emb[it[0]]);Object.assign(b,{forn:c.forn,ref:it[1],descForn:it[2],base:it[6],ipi:it[7],stl:it[8],qcot:it[5],doc:c.doc,data:c.data});
+  if(!b.foto){const m=catByCode(it[1]);if(m)b.foto={cat:m.cat,img:m.img,tit:m.tit,auto:1}}});
+ st.cotAplic[c.doc]=new Date().toISOString();touch();buildCot();buildComp();refresh();
+}
+function buildForn(){
+ const cnt={};O.comps.forEach((r,i)=>{if(isHid(O,i))return;const k=cotOf(r.code);const f=k?k.c.forn:"Sem cotação";cnt[f]=(cnt[f]||0)+1});
+ const ks=Object.keys(cnt).sort((a,b)=>a==="Sem cotação"?1:b==="Sem cotação"?-1:a.localeCompare(b));
+ $("comp-forn").innerHTML=ks.map(f=>`<button aria-pressed="${compFilter==="forn:"+f}" data-f="forn:${esc(f)}">${esc(f)} (${cnt[f]})</button>`).join("");
+ $("comp-forn").hidden=!COTACOES.some(c=>c.itens.some(it=>O.comps.some(r=>r.code===it[0])));
+}
 function buildComp(){
  const q=$("comp-search").value.trim().toUpperCase();let html="",la="",lr="";
+ const dup={};O.comps.forEach((r,i)=>{if(!isHid(O,i))dup[r.code]=(dup[r.code]||0)+1});
  O.comps.forEach((r,i)=>{
-  const price=n(st.comp[r.code]),hid=isHid(O,i);
-  if(compFilter==="hid"){if(!hid)return}else{if(hid)return;if(compFilter==="nop"&&price>0)return;if(compFilter!=="all"&&compFilter!=="nop"&&r.ap!==compFilter)return}
-  if(q&&!(r.code.toUpperCase().includes(q)||r.desc.toUpperCase().includes(q)))return;
-  if(r.ap!==la||r.rf!==lr){html+=`<tr class="group"><td colspan="8">${esc(r.ap)} · ${esc(r.rf)}</td></tr>`;la=r.ap;lr=r.rf}
-  html+=`<tr class="${hid?"off":price>0?"":"nop"}"><td><input type="checkbox" class="chk" data-idx="${i}" id="ch-${i}" ${hid?"":"checked"} aria-label="Cotar ${esc(r.code)}"></td><td class="code">${esc(r.code)}</td><td>${esc(r.desc)}</td><td>${esc(r.cor)}</td><td class="r num">${num(r.q,r.un==="MT"?3:0)}</td><td>${esc(r.un)}</td>
-  <td class="r price"><input class="in money num" data-code="${esc(r.code)}" id="cp-${i}" inputmode="decimal" placeholder="0,00" value="${esc(st.comp[r.code]||"")}" aria-label="Custo unitário ${esc(r.code)}"></td>
-  <td class="r num" id="ct-${i}">${hid?"fora":price>0?brl(r.q*price):"—"}</td></tr>`;
+  const cc=codeCalc(O,r.code),price=cc.price,hid=isHid(O,i),k=cotOf(r.code);
+  if(compFilter==="hid"){if(!hid)return}else{if(hid)return;
+   if(compFilter==="nop"&&price>0)return;
+   if(compFilter.startsWith("forn:")){const f=compFilter.slice(5);if((k?k.c.forn:"Sem cotação")!==f)return}
+   else if(compFilter!=="all"&&compFilter!=="nop"&&r.ap!==compFilter)return}
+  if(q&&!(r.code.toUpperCase().includes(q)||r.desc.toUpperCase().includes(q)||(k&&(k.it[1]+" "+k.it[2]).toUpperCase().includes(q))))return;
+  if(r.ap!==la||r.rf!==lr){html+=`<tr class="group"><td colspan="11">${esc(r.ap)} · ${esc(r.rf)}</td></tr>`;la=r.ap;lr=r.rf}
+  const e=cc.e,share=cc.tq?cc.cost*r.q/cc.tq:0;
+  const falta=k&&!hid&&e.t===k.it[3]&&cc.ne>k.it[5];
+  const cotTxt=k?`<div class="hint" title="${esc(k.it[2])}">${esc(k.c.forn)} ${esc(k.it[1])} · cotado ${k.it[5]} ${k.it[3]==="UN"?"un":k.it[3].toLowerCase()} · R$ ${num(k.it[6],2)} + IPI ${num(k.it[7],2)}%${k.it[8]?" + ST":""}</div>`:"";
+  html+=`<tr class="${hid?"off":price>0?"":"nop"}"><td><input type="checkbox" class="chk" data-idx="${i}" id="ch-${i}" ${hid?"":"checked"} aria-label="Cotar ${esc(r.code)}"></td><td>${thumbBtn(r.code)}</td><td class="code">${esc(r.code)}</td><td>${esc(r.desc)}${cotTxt}</td><td>${esc(r.cor)}</td><td class="r num">${num(r.q,r.un==="MT"?3:0)}</td><td>${esc(r.un)}</td>
+  <td style="white-space:nowrap"><select class="in" data-embt="${esc(r.code)}" id="et-${i}" aria-label="Embalagem ${esc(r.code)}">${["UN","PCT","ROLO","CX"].map(t=>`<option ${e.t===t?"selected":""}>${t}</option>`).join("")}</select>
+   <input class="in num" style="width:62px;text-align:right" data-embq="${esc(r.code)}" id="eq-${i}" inputmode="decimal" value="${e.t==="UN"?"":esc(e.q)}" ${e.t==="UN"?"hidden":""} placeholder="qtd" aria-label="Quantidade por embalagem ${esc(r.code)}"><span class="hint" ${e.t==="UN"?"hidden":""}> ${r.un==="MT"?"m":"pç"}</span></td>
+  <td class="r num">${hid?"—":(e.t==="UN"?num(cc.ne,r.un==="MT"?3:0):cc.ne+" "+e.t.toLowerCase())}${!hid&&dup[r.code]>1?'<div class="hint">total do código</div>':''}${falta?`<div class="err">cotado ${k.it[5]}</div>`:""}</td>
+  <td class="r price"><input class="in money num" data-code="${esc(r.code)}" id="cp-${i}" inputmode="decimal" placeholder="0,00" value="${esc(st.comp[r.code]||"")}" aria-label="Preço da embalagem ${esc(r.code)}"></td>
+  <td class="r num" id="ct-${i}">${hid?"fora":price>0?brl(share):"—"}</td></tr>`;
  });
  const nh=O.comps.filter((r,i)=>isHid(O,i)).length;
- $("comp-body").innerHTML=html||`<tr><td colspan="8" class="hint">${!O.comps.length?"Esta obra não tem lista de componentes.":compFilter==="hid"?"Nenhum item oculto.":"Nenhum componente encontrado."}</td></tr>`;
+ $("comp-body").innerHTML=html||`<tr><td colspan="11" class="hint">${!O.comps.length?"Esta obra não tem lista de componentes.":compFilter==="hid"?"Nenhum item oculto.":"Nenhum componente encontrado."}</td></tr>`;
  $("f-hid").textContent=`Ocultos (${nh})`;
- $("comp-count").textContent=`${O.comps.length-nh} itens na cotação`+(nh?` · ${nh} oculto${nh>1?"s":""}`:"");
+ const sp=O.comps.filter((r,i)=>!isHid(O,i)&&!(n(st.comp[r.code])>0)).length;
+ $("comp-count").textContent=`${O.comps.length-nh} itens na cotação`+(nh?` · ${nh} oculto${nh>1?"s":""}`:"")+(sp?` · ${sp} sem preço`:" · todos com preço");
  $("comp-showall").hidden=!nh;
+ buildForn();
 }
 function wireComp(){
- $("comp-body").addEventListener("change",e=>{const el=e.target;if(el.dataset.idx===undefined)return;if(!st.hide)st.hide={};
-  if(el.checked)delete st.hide[el.dataset.idx];else st.hide[el.dataset.idx]=true;touch();buildComp();refresh()});
+ $("comp-body").addEventListener("change",e=>{const el=e.target;
+  if(el.dataset.idx!==undefined){if(!st.hide)st.hide={};if(el.checked)delete st.hide[el.dataset.idx];else st.hide[el.dataset.idx]=true;touch();buildComp();refresh();return}
+  if(el.dataset.embt){const c=el.dataset.embt;if(!st.emb)st.emb={};const old=embOf(O,c);st.emb[c]={t:el.value,q:el.value==="UN"?1:(old.t==="UN"?(el.value==="ROLO"?50:10):old.q)};
+   bSetPreco(c,undefined,st.emb[c]);touch();buildComp();refresh();return}
+  if(el.dataset.embq){const c=el.dataset.embq;if(!st.emb)st.emb={};st.emb[c]=Object.assign({},embOf(O,c),{q:el.value});bSetPreco(c,undefined,st.emb[c]);touch();buildComp();refresh();return}
+ });
  $("comp-showall").onclick=()=>{st.hide={};touch();buildComp();refresh()};
  $("comp-body").addEventListener("input",e=>{const el=e.target;if(!el.dataset.code)return;
-  st.comp[el.dataset.code]=el.value;DB.lib.comp[el.dataset.code]=el.value;touch();
-  O.comps.forEach((r,i)=>{if(r.code!==el.dataset.code)return;const p=n(el.value),hid=isHid(O,i);const td=$("ct-"+i),inp=$("cp-"+i);
-   if(td)td.textContent=hid?"fora":p>0?brl(r.q*p):"—";if(inp&&inp!==el)inp.value=el.value;if(inp)inp.closest("tr").className=hid?"off":p>0?"":"nop"});
+  st.comp[el.dataset.code]=el.value;bSetPreco(el.dataset.code,el.value,embOf(O,el.dataset.code));touch();
+  const cc=codeCalc(O,el.dataset.code);
+  O.comps.forEach((r,i)=>{if(r.code!==el.dataset.code)return;const hid=isHid(O,i);const td=$("ct-"+i),inp=$("cp-"+i);
+   if(td)td.textContent=hid?"fora":cc.price>0?brl(cc.tq?cc.cost*r.q/cc.tq:0):"—";if(inp&&inp!==el)inp.value=el.value;if(inp)inp.closest("tr").className=hid?"off":cc.price>0?"":"nop"});
   refresh()});
- $("comp-filter").onclick=e=>{const b=e.target.closest("button");if(!b)return;compFilter=b.dataset.f;[...$("comp-filter").children].forEach(x=>x.setAttribute("aria-pressed",x===b));buildComp()};
+ const segClick=e=>{const b=e.target.closest("button");if(!b)return;compFilter=b.dataset.f;document.querySelectorAll("#comp-filter button,#comp-forn button").forEach(x=>x.setAttribute("aria-pressed",x.dataset.f===compFilter));buildComp()};
+ $("comp-filter").onclick=segClick;$("comp-forn").onclick=segClick;
  $("comp-search").oninput=buildComp;
 }
 
@@ -639,6 +834,7 @@ function paintApr(gs){
 function refresh(){const gs=groups(O);gs.forEach(paintPanel);paintAlu();paintVid();paintRes(gs);paintApr(gs)}
 
 // ---------- INÍCIO ----------
+loadCats().then(()=>{if(autoFotos()){if(O&&!$("view-obra").hidden)buildComp();else if(HOMETAB==="banco"&&!$("view-home").hidden)renderBanco()}});
 const h=location.hash.replace("#","");
 if(h.startsWith("obra-")&&DB.obras.some(o=>"obra-"+o.id===h))openObra(h.slice(5));else showHome();
 window.addEventListener("hashchange",()=>{const k=location.hash.replace("#","");if(!k&&O&&!$("view-obra").hidden){O=null;showHome()}});
