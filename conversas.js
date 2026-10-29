@@ -126,7 +126,7 @@
   function msgsHtml(L,euId,euFc,lidoOutro){if(!L.length)return '<div class="fcv-vazio">Nenhuma mensagem ainda. Escreva a primeira abaixo.</div>';let dia='',o='';
     const ult=[...L].reverse().find(m=>euFc?m.fc:m.de===euId);
     L.forEach(m=>{const d=new Date(m.em).toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit'});if(d!==dia){dia=d;o+=`<div class="fcv-dia">${h(d)}</div>`;}
-      const eu=euFc?m.fc:m.de===euId;o+=`<div class="fcv-m ${eu?'eu':''}">${eu?'':`<span class="q">${h(m.nome)}</span>`}${axHtml(m.anexo)}${lk(m.texto)}<small>${new Date(m.em).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}${eu&&ult&&m.id===ult.id&&lidoOutro>=m.id?' · ✓✓ lida':''}</small></div>`;});return o;}
+      const eu=euFc?m.fc:m.de===euId;o+=`<div class="fcv-m ${eu?'eu':''}">${eu?'':`<span class="q">${h(m.nome)}</span>`}${axHtml(m.anexo)}${lk(m.texto)}<small>${m.sup?'🛟 pelo Suporte do Painel de Vendas · ':''}${new Date(m.em).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}${eu&&ult&&m.id===ult.id&&lidoOutro>=m.id?' · ✓✓ lida':''}</small></div>`;});return o;}
 
   /* ================= EQUIPE ================= */
   async function equipe(token){if(!token||document.getElementById('fcvBtn'))return;
@@ -215,7 +215,7 @@
     function chat(){const C=S.cv,c=C.conversa,m=document.getElementById('fcvMain');
       m.innerHTML=`<div class="fcv-top"><button type="button" class="fcv-back" aria-label="Voltar">←</button><span class="fcv-av" style="${c.tipo==='dm'?'background:#7a4bc4':''}">${h(ini(c.a.nome))}</span><div style="min-width:0"><b>${h(nomeConv(c))}</b><small>${h(nomeEmp(c.emp))}${c.tipo==='dm'?' · conversa entre colaboradores · só leitura':''}</small></div></div>
         ${c.tipo==='fc'&&!fcAberta()?'<div class="fcv-aviso">Fora do horário de atendimento: a equipe vê a FC como offline.</div>':''}
-        <div class="fcv-msgs" id="fcvMs">${msgsHtml(C.msgs,null,c.tipo==='fc',C.lido_outro||0)}</div>
+        <div class="fcv-msgs" id="fcvMs">${msgsHtml(juntaSup(C),null,c.tipo==='fc',C.lido_outro||0)}</div>
         ${C.pode_escrever?formHtml('Responder '+c.a.nome+'… (Ctrl+V cola um print)','Resposta'):'<div class="fcv-ro">👁 Histórico entre colaboradores. A FC só acompanha.</div>'}`;
       const ms=document.getElementById('fcvMs');ms.scrollTop=ms.scrollHeight;axLigar(ms,busca);
       m.querySelector('.fcv-back').onclick=()=>{box.classList.remove('chat');S.cv=null;S.conv=null;S.pend=null;pinta();};
@@ -226,8 +226,11 @@
                    :await sb.rpc('emp_chat_fc_enviar',{p_conversa:S.conv,p_texto:tx});
           b.disabled=false;b.textContent='Enviar';if(r.error||!r.data){alert(erroEnvio(r));return;}
           t.value='';S.pend=null;const r2=await sb.rpc('emp_chat_fc_msgs',{p_conversa:S.conv});if(r2.data){S.cv=r2.data;chat();}lista();};}}
-    const busca=id=>sb.rpc('emp_chat_fc_anexo',{p_id:+id});
-    badge();setInterval(()=>{badge();if(box.classList.contains('on')&&S.conv&&!document.hidden)sb.rpc('emp_chat_fc_msgs',{p_conversa:S.conv}).then(r=>{if(r.data&&(r.data.msgs.length!==S.cv.msgs.length||r.data.lido_outro!==S.cv.lido_outro)){const t=document.getElementById('fcvT'),v=t?t.value:'';S.cv=r.data;chat();const t2=document.getElementById('fcvT');if(t2)t2.value=v;}});},20000);}
+    const busca=id=>String(id).startsWith('s:')?sb.rpc('emp_chat_fc_sup_anexo',{p_id:String(id).slice(2)}):sb.rpc('emp_chat_fc_anexo',{p_id:+id});
+    /* mensagens mandadas pela aba Suporte técnico do Painel de Vendas entram na mesma linha do tempo */
+    const juntaSup=C=>!(C.sup&&C.sup.length)?C.msgs:[...C.msgs,...C.sup.map(x=>({...x,id:'s'+x.id,de:x.fc?null:'sup',sup:true}))].sort((p,q)=>new Date(p.em)-new Date(q.em));
+    const qtd=C=>C.msgs.length+((C.sup||[]).length);
+    badge();setInterval(()=>{badge();if(box.classList.contains('on')&&S.conv&&!document.hidden)sb.rpc('emp_chat_fc_msgs',{p_conversa:S.conv}).then(r=>{if(r.data&&(qtd(r.data)!==qtd(S.cv)||r.data.lido_outro!==S.cv.lido_outro)){const t=document.getElementById('fcvT'),v=t?t.value:'';S.cv=r.data;chat();const t2=document.getElementById('fcvT');if(t2)t2.value=v;}});},20000);}
 
   window.FCConversas=Object.assign(window.FCConversas||{},{equipe,matriz});
 })();

@@ -151,3 +151,8 @@ grant execute on function public.emp_chat_enviar_anexo(text,uuid,text,text,text,
 
 -- Prévia "📎 nome" também na caixa Para responder (fc_caixa) e nos avisos (fc_avisos_novos):
 -- aplicado com replace() na definição atual de cada função (migração emp_chat_anexos_previas).
+
+-- ===== 29/10/2026 · migração emp_chat_fc_inclui_suporte =====
+-- emp_chat_fc_msgs passa a devolver também 'sup': mensagens da aba Suporte técnico do Painel de Vendas (orc_sup)
+-- da mesma pessoa (mesma empresa + mesmo nome em thr_nome), e marca essas mensagens como lidas ao abrir.
+-- emp_chat_fc_sup_anexo(uuid): devolve o anexo do suporte (dados em data URL → base64) só para a FC.
