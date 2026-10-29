@@ -217,7 +217,7 @@
       o.push(at('📚 '+(doc.catalogo?'Editar o catálogo':'Catálogos'),doc.catalogo?'catalogos.html?editar='+encodeURIComponent(doc.catalogo):'catalogos.html'));
       o.push(at('🛒 Painel de Vendas','orcamento/?e='+encodeURIComponent(id)));}
     if(e.impl)o.push(at('📋 Painel de Implantação','implantacao/'));
-    if(e.mostr)o.push(`<button type="button" data-ccm="${h(e.mostr.uid)}">🎓 Abrir no Mostruário</button>`);
+    if(e.mostr)o.push(`<button type="button" data-ccm="${h(e.mostr.uid)}">🎓 Mostruário: login, senha e colaboradores</button>`);
     return o.length?`<div class="cc-at">${o.join('')}</div>`:'';}
 
   function alertasHtml(e){const id=e.cons;
@@ -240,7 +240,7 @@
 
   function tabLog(e){const secs=ORDEM.filter(s=>e.sec[s]);
     const ger=e.cons&&typeof abrirAcessos==='function'?`<button type="button" data-ccg="1" style="font-size:13px">⚙ Gerenciar logins da Central do Gestor</button>`:'';
-    const mo=e.mostr?`<button type="button" data-ccm="${h(e.mostr.uid)}" style="font-size:13px">🎓 Colaboradores no Mostruário</button>`:'';
+    const mo=e.mostr?`<button type="button" data-ccm="${h(e.mostr.uid)}" style="font-size:13px">🎓 Mostruário: login, senha e colaboradores</button>`:'';
     const out=secs.map(s=>`<div class="axs">${h(s)} · ${e.sec[s].length}</div>${FCAcessos.linhas(e.sec[s])}`).join('');
     let pe='';if(!out&&e.cons&&S.D[e.cons]){const P=S.D[e.cons].pessoas||[];
       pe=P.map(p=>`<span class="cc-p"><i class="${p.online?'on':''}" aria-hidden="true"></i>${h(p.nome)} <small>· ${h(PAPEL[p.papel]||p.papel)} · ${p.online?'online agora':quando(p.ultimo)}</small></span>`).join('');}
@@ -297,7 +297,8 @@
     B.querySelectorAll('[data-alv]').forEach(b=>b.onclick=async()=>{b.disabled=true;b.textContent='Salvando…';const k=b.dataset.alv;
       try{const {data:{session}}=await sb.auth.getSession();const r=await sb.from('trein_eventos').insert({user_id:session.user.id,tipo:'al_visto',tipologia:null,detalhe:{k}});
         if(r.error)throw r.error;S.vis[k]=new Date().toISOString();pinta();}catch(err){b.disabled=false;b.textContent='👁 FC já viu';alert('Não foi possível salvar agora: '+(err.message||err));}});
-    B.querySelectorAll('[data-ccm]').forEach(b=>b.onclick=()=>{const t=document.querySelector('#ptabs [data-tab=emp]');if(t)t.click();setTimeout(()=>FCAcessos&&FCAcessos.abrirMostr(b.dataset.ccm),150);});
+    B.querySelectorAll('[data-ccm]').forEach(b=>b.onclick=()=>{S.mo=b.dataset.ccm;const d=$('detCard'),cc=$('ccliCard');if(d&&cc){if(cc.nextElementSibling!==d)cc.after(d);d.dataset.tab='ccli';d.classList.remove('tabOff');d.classList.add('ccMode');}try{FCAcessos&&FCAcessos.abrirMostr(S.mo);}catch(err){console.warn(err);}});
+    {const d=$('detCard');if(d&&d.classList.contains('ccMode')&&(!e||!e.mostr||e.mostr.uid!==S.mo))d.hidden=true;}
     B.querySelectorAll('[data-ccg]').forEach(b=>b.onclick=()=>{try{abrirAcessos(e.cons,e.nome);}catch(_){location.href='consultorias.html?ver='+encodeURIComponent(e.cons)+'&abrir=acessos';}});
     const v=$('ccliVolta');if(v)v.onclick=()=>{S.ver=false;pinta();};
     const re=$('ccliRe');if(re)re.onclick=carregar;
