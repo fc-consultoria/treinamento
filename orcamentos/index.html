@@ -332,6 +332,9 @@ const cotPreco=it=>r2(it[6]*(1+it[7]/100)+(it[5]?it[8]/it[5]:0));
 // Catálogos de fotos (imagens publicadas junto com a página)
 const CATS={"udinese-family-2-12":{nome:"Udinese · Texa Family · catálogo técnico v2.12 (jul/2026)",base:"catalogos/udinese-family-2-12/"}};
 const CATIDX={};
+// Foto por código CEM: exata (mesmo código Udinese) ou ilustrativa (produto do mesmo tipo no catálogo Family)
+const FOTOMAP={CNA01U:["p38_1.jpg",1],PRE05N012:["p42_1.jpg",1],FMA99A105:["p24_1.jpg",0],FMA99A205:["p24_1.jpg",0],GUI30012:["p18_0.jpg",0],
+ SRG01A005:["p24_0.jpg",0],SRG02A005:["p24_0.jpg",0],BTD10012:["p19_1.jpg",0],FEC45P022:["p05_0.jpg",0],LIN04042:["p07_0.jpg",0],ROL81N041:["p33_1.jpg",0],CHU838UD:["p41_1.jpg",0]};
 function loadCats(){return Promise.all(Object.keys(CATS).map(k=>CATIDX[k]?Promise.resolve():fetch(CATS[k].base+"index.json").then(r=>r.ok?r.json():[]).then(d=>{CATIDX[k]=d}).catch(()=>{CATIDX[k]=[]})))}
 function catByCode(ref){for(const k in CATIDX){const it=(CATIDX[k]||[]).find(x=>x.codes.includes(ref));if(it)return {cat:k,img:it.img,tit:it.tit+(it.sub?" "+it.sub:"")}}return null}
 
@@ -385,7 +388,9 @@ Object.keys((DB.lib&&DB.lib.comp)||{}).forEach(c=>{const b=bEnsure(c);if(!b.prec
 bSync();
 function bSetPreco(code,preco,emb){const b=bEnsure(code);if(preco!==undefined)b.preco=preco;if(emb)b.emb=Object.assign({},emb);b.atual=new Date().toISOString()}
 function fotoUrl(b){if(!b||!b.foto)return "";if(b.foto.data)return b.foto.data;const c=CATS[b.foto.cat];return c?c.base+"t_"+b.foto.img:""}
-function autoFotos(){let n=0;Object.values(DB.banco).forEach(b=>{if(!b.foto&&b.ref){const m=catByCode(b.ref);if(m){b.foto={cat:m.cat,img:m.img,tit:m.tit,auto:1};n++}}});if(n)save();return n}
+function autoFotos(){let n=0;Object.values(DB.banco).forEach(b=>{if(b.foto)return;
+  if(b.ref){const m=catByCode(b.ref);if(m){b.foto={cat:m.cat,img:m.img,tit:m.tit,auto:1};n++;return}}
+  const f=FOTOMAP[b.code];if(f){const it=(CATIDX["udinese-family-2-12"]||[]).find(x=>x.img===f[0]);if(it){b.foto={cat:"udinese-family-2-12",img:f[0],tit:it.tit+(it.sub?" "+it.sub:""),auto:1,sim:f[1]?0:1};n++}}});if(n)save();return n}
 save();
 
 // ---------- CÁLCULOS POR OBRA ----------
@@ -434,7 +439,7 @@ function renderBanco(){
   <input class="in" id="bk-q" type="search" placeholder="Buscar código, descrição ou ref." value="${esc(keepQ)}"></div></div>
   <div class="tbl-wrap"><table><thead><tr><th>Foto</th><th>Código</th><th>Descrição</th><th>Fornecedor · ref.</th><th>Embalagem</th><th class="r">Preço emb. R$</th><th class="r">Custo por un/m</th><th>Origem</th><th class="r">Obras</th></tr></thead><tbody>
   ${L.map(b=>{const qe=b.emb&&b.emb.t!=="UN"?Math.max(n(b.emb.q),1):1;const pu=n(b.preco)/qe;
-   return `<tr class="${n(b.preco)>0?"":"nop"}"><td>${thumbBtn(b.code,1)}</td><td class="code">${esc(b.code)}</td><td>${esc(b.desc)}${b.descForn?`<div class="hint">${esc(b.descForn)}</div>`:""}</td>
+   return `<tr class="${n(b.preco)>0?"":"nop"}"><td>${thumbBtn(b.code,1)}</td><td class="code">${esc(b.code)}</td><td>${esc(b.desc)}${b.descForn?`<div class="hint">${esc(b.descForn)}</div>`:""}${b.foto&&b.foto.tit?`<div class="hint">📷 ${b.foto.sim?"similar: ":""}${esc(b.foto.tit)}</div>`:""}</td>
    <td>${b.forn?`<b>${esc(b.forn)}</b><div class="hint">${esc(b.ref||"")}</div>`:'<span class="hint">—</span>'}</td>
    <td style="white-space:nowrap"><select class="in" data-bt="${esc(b.code)}" aria-label="Embalagem ${esc(b.code)}">${["UN","PCT","ROLO","CX"].map(t=>`<option ${b.emb&&b.emb.t===t?"selected":""}>${t}</option>`).join("")}</select>
     <input class="in num" style="width:62px;text-align:right" data-bq="${esc(b.code)}" value="${b.emb&&b.emb.t!=="UN"?esc(b.emb.q):""}" ${b.emb&&b.emb.t!=="UN"?"":"hidden"} inputmode="decimal" aria-label="Quantidade por embalagem ${esc(b.code)}"></td>
@@ -644,7 +649,8 @@ function paintPanel(g){
 
 // ---------- COMPONENTES ----------
 function thumbBtn(code,big){const b=DB.banco[code];const u=fotoUrl(b);
- return `<button class="thumb${big?" big":""}" data-foto="${esc(code)}" title="${u?"Trocar foto":"Escolher foto"}" style="${u?`background-image:url('${u.replace(/'/g,"%27")}')`:""}" aria-label="Foto de ${esc(code)}">${u?"":"+ foto"}</button>`}
+ const tt=u?(b.foto.sim?"Foto ilustrativa: produto similar do catálogo ("+(b.foto.tit||"")+"). Toque para trocar.":"Foto: "+(b.foto.tit||"")+". Toque para trocar."):"Escolher foto";
+ return `<button class="thumb${big?" big":""}" data-foto="${esc(code)}" title="${esc(tt)}" style="position:relative;${u?`background-image:url('${u.replace(/'/g,"%27")}')`:""}" aria-label="Foto de ${esc(code)}">${u?(b.foto.sim?'<span style="position:absolute;right:-4px;bottom:-4px;background:var(--amber);color:#1b1205;border-radius:8px;font:700 9px var(--body);padding:1px 4px">similar</span>':""):"+ foto"}</button>`}
 let PICK=null;
 function openPicker(code){
  const b=bEnsure(code);PICK={code,q:(b.ref||"")||""};
@@ -710,7 +716,7 @@ function buildComp(){
   const e=cc.e,share=cc.tq?cc.cost*r.q/cc.tq:0;
   const falta=k&&!hid&&e.t===k.it[3]&&cc.ne>k.it[5];
   const cotTxt=k?`<div class="hint" title="${esc(k.it[2])}">${esc(k.c.forn)} ${esc(k.it[1])} · cotado ${k.it[5]} ${k.it[3]==="UN"?"un":k.it[3].toLowerCase()} · R$ ${num(k.it[6],2)} + IPI ${num(k.it[7],2)}%${k.it[8]?" + ST":""}</div>`:"";
-  html+=`<tr class="${hid?"off":price>0?"":"nop"}"><td><input type="checkbox" class="chk" data-idx="${i}" id="ch-${i}" ${hid?"":"checked"} aria-label="Cotar ${esc(r.code)}"></td><td>${thumbBtn(r.code)}</td><td class="code">${esc(r.code)}</td><td>${esc(r.desc)}${cotTxt}</td><td>${esc(r.cor)}</td><td class="r num">${num(r.q,r.un==="MT"?3:0)}</td><td>${esc(r.un)}</td>
+  html+=`<tr class="${hid?"off":price>0?"":"nop"}"><td><input type="checkbox" class="chk" data-idx="${i}" id="ch-${i}" ${hid?"":"checked"} aria-label="Cotar ${esc(r.code)}"></td><td>${thumbBtn(r.code,1)}</td><td class="code">${esc(r.code)}</td><td>${esc(r.desc)}${cotTxt}</td><td>${esc(r.cor)}</td><td class="r num">${num(r.q,r.un==="MT"?3:0)}</td><td>${esc(r.un)}</td>
   <td style="white-space:nowrap"><select class="in" data-embt="${esc(r.code)}" id="et-${i}" aria-label="Embalagem ${esc(r.code)}">${["UN","PCT","ROLO","CX"].map(t=>`<option ${e.t===t?"selected":""}>${t}</option>`).join("")}</select>
    <input class="in num" style="width:62px;text-align:right" data-embq="${esc(r.code)}" id="eq-${i}" inputmode="decimal" value="${e.t==="UN"?"":esc(e.q)}" ${e.t==="UN"?"hidden":""} placeholder="qtd" aria-label="Quantidade por embalagem ${esc(r.code)}"><span class="hint" ${e.t==="UN"?"hidden":""}> ${r.un==="MT"?"m":"pç"}</span></td>
   <td class="r num">${hid?"—":(e.t==="UN"?num(cc.ne,r.un==="MT"?3:0):cc.ne+" "+e.t.toLowerCase())}${!hid&&dup[r.code]>1?'<div class="hint">total do código</div>':''}${falta?`<div class="err">cotado ${k.it[5]}</div>`:""}</td>
