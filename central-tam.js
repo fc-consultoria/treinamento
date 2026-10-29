@@ -1,6 +1,5 @@
 /* ===== Central das consultorias · tamanho de cada painel =====
-   Cada cartão de empresa e cada quadro do lado ganham o botão ⤢ com: Compacto, Normal, Largo, Linha inteira.
-   A coluna do lado pode ser arrastada para ficar mais larga ou mais estreita. Tudo fica salvo neste navegador. */
+   Cada cartão de empresa ganha o botão ⤢ com: Compacto, Normal, Largo, Linha inteira. Tudo fica salvo neste navegador. */
 (function(){
   const KEY='fc_cx_tam';
   const ler=()=>{ try{ return JSON.parse(localStorage.getItem(KEY)||'{}'); }catch(_){ return {}; } };
@@ -24,16 +23,9 @@
   .cn-card.tz-compacto .cn-bars,.cn-card.tz-compacto .cn-now{display:none}
   .cn-box.tz-compacto{max-height:190px;overflow:auto}
   .cn-box.tz-largo,.cn-box.tz-inteiro{max-height:none}
-  .cn-grid{grid-template-columns:minmax(0,1fr) var(--tz-side,320px)!important}
-  .cn-grid.tz-sidefull{grid-template-columns:1fr!important}
-  .cn-grid.tz-sidefull .cn-side{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
-  .cn-side{position:relative}
-  .tz-drag{position:absolute;left:-13px;top:0;bottom:0;width:8px;cursor:col-resize;border-radius:6px}
-  .tz-drag::after{content:'';position:absolute;left:3px;top:50%;width:2px;height:46px;transform:translateY(-50%);border-radius:2px;background:var(--line,#c4ccd2)}
-  .tz-drag:hover::after,.tz-drag.on::after{background:var(--cx1,#1f6f9a);height:80px}
   .tz-rs{display:flex;justify-content:flex-end;margin:-4px 0 8px}
   .tz-rs button{font:600 12px system-ui;padding:4px 10px;border-radius:999px;border:1px solid var(--line,#d5dce1);background:var(--surface,#fff);color:var(--muted,#5d6b76);cursor:pointer}
-  @media(max-width:900px){.cn-card.tz-largo{grid-column:auto}.tz-drag{display:none}}`;
+  @media(max-width:900px){.cn-card.tz-largo{grid-column:auto}}`;
   const st=document.createElement('style'); st.textContent=css; document.head.appendChild(st);
 
   function idDe(el){
@@ -70,29 +62,14 @@
       }
       aplica(el,T); if(el.classList.contains('cn-box')) altura(el,T);
     });
-    // largura da coluna do lado
-    if(T.side) g.style.setProperty('--tz-side', T.side+'px');
-    g.classList.toggle('tz-sidefull', !!T.sideFull);
-    const side=g.querySelector('.cn-side');
-    if(side && !side.querySelector(':scope>.tz-drag')){
-      const d=document.createElement('div'); d.className='tz-drag'; d.title='Arraste para deixar a coluna do lado mais larga ou mais estreita (2 cliques: volta ao normal)';
-      d.addEventListener('pointerdown',e=>{ e.preventDefault(); d.classList.add('on'); d.setPointerCapture(e.pointerId); const x0=e.clientX, w0=side.getBoundingClientRect().width;
-        const mv=ev=>{ const w=Math.max(240,Math.min(g.getBoundingClientRect().width*0.6, w0-(ev.clientX-x0))); g.style.setProperty('--tz-side',Math.round(w)+'px'); };
-        const up=()=>{ d.classList.remove('on'); d.removeEventListener('pointermove',mv); d.removeEventListener('pointerup',up); const T2=ler(); T2.side=parseInt(getComputedStyle(g).getPropertyValue('--tz-side'))||320; grava(T2); };
-        d.addEventListener('pointermove',mv); d.addEventListener('pointerup',up); });
-      d.addEventListener('dblclick',()=>{ const T2=ler(); delete T2.side; grava(T2); g.style.removeProperty('--tz-side'); });
-      side.appendChild(d);
-    }
     // barra: coluna do lado embaixo / voltar tudo ao normal
     const sec=g.querySelector('.cn-sec');
     if(sec && !g.querySelector('.tz-rs')){
       const r=document.createElement('div'); r.className='tz-rs';
-      r.innerHTML='<button type="button" data-tzs>⇩ Quadros do lado embaixo</button>&nbsp;<button type="button" data-tzr>↺ Tamanhos padrão</button>';
-      r.querySelector('[data-tzs]').onclick=()=>{ const T2=ler(); T2.sideFull=!T2.sideFull; grava(T2); aplicaTudo(); };
+      r.innerHTML='<button type="button" data-tzr>↺ Tamanhos padrão</button>';
       r.querySelector('[data-tzr]').onclick=()=>{ grava({}); g.style.removeProperty('--tz-side'); g.querySelectorAll('.cn-box').forEach(b=>{b.style.maxHeight='';b.style.overflow='';}); aplicaTudo(); };
       sec.after(r);
     }
-    const bs=g.querySelector('[data-tzs]'); if(bs) bs.textContent = T.sideFull ? '⇧ Quadros do lado na coluna' : '⇩ Quadros do lado embaixo';
   }
   document.addEventListener('click',e=>{ if(menu && !menu.contains(e.target)) fecha(); });
   new MutationObserver(()=>{ const g=document.querySelector('.cn-grid'); if(g && !g.querySelector('.tz-b')) aplicaTudo(); }).observe(document.body,{childList:true,subtree:true});
