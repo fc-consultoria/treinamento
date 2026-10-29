@@ -32,7 +32,7 @@
       <b>${x.oc?esc(x.oc):'Sem nº de OC'}</b><span class="note">${esc(x.nome||'cliente')} · ${dt(x.atualizado_em)}${x.criado_em!==x.atualizado_em?' · começou '+dt(x.criado_em):''}</span>
       <span style="margin-left:auto;display:flex;gap:12px;align-items:center;flex-wrap:wrap"><span>${x.itens} itens</span><span>${n2(x.kg)} kg</span><b>${rs(x.total)}</b></span></div>
       <div class="note" style="margin-top:4px">Fornecedores: <b>${(x.forn||[]).map(esc).join(' + ')||'—'}</b>${(x.pedidos||[]).length?' · 🧾 pedido gerado para: <b>'+x.pedidos.map(esc).join(', ')+'</b>':''}</div>
-      <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap"><button type="button" data-csv="${x.id}">${ab?'▲ Fechar':'▼ Ver itens'}</button>${pend(x)?`<button type="button" data-csok="${x.id}">✔ Marcar como visto</button>`:''}${inat(x)?`<button type="button" data-csin="${x.id}|0">↩ Reativar</button>`:`<button type="button" data-csin="${x.id}|1" style="color:#b42318;border-color:#f3b4ae">🚫 Inativar</button>`}</div>
+      <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap"><button type="button" data-csv="${x.id}">${ab?'▲ Fechar':'▼ Ver itens'}</button>${pend(x)?`<button type="button" data-csok="${x.id}">✔ Marcar como visto</button>`:''}${inat(x)?`<button type="button" data-csin="${x.id}|0">↩ Reativar</button><button type="button" data-csdel="${x.id}" style="color:#fff;background:#b42318;border-color:#b42318">🗑 Excluir</button>`:`<button type="button" data-csin="${x.id}|1" style="color:#b42318;border-color:#f3b4ae">🚫 Inativar</button>`}</div>
       ${ab?`<div id="csd-${x.id}" style="margin-top:8px"><p class="note">Carregando…</p></div>`:''}</div>`;}
   async function det(id){const el=$('csd-'+id);if(!el)return;const r=await cli().from('compra_sim').select('dados').eq('id',id).single();
     const d=r.data&&r.data.dados;if(!d){el.innerHTML='<p class="note">Sem itens.</p>';return;}
@@ -49,13 +49,19 @@
     const r=await C.from('trein_eventos').insert({tipo:'equiv_edit',detalhe:ed});if(r.error){bt.disabled=false;bt.textContent='Não incluiu: '+r.error.message;return;}
     S.ED[key]=1;bt.outerHTML='<b style="color:#1f9d55">✓ incluído no catálogo (matriz e cliente)</b>';}
   async function visto(id){const x=S.L.find(y=>y.id===id);if(!x)return;const r=await cli().from('compra_sim').update({status:'visto',visto_em:new Date().toISOString()}).eq('id',id);if(!r.error){x.status='visto';desenha();}}
-  document.addEventListener('click',e=>{const t=e.target.closest('[data-cscat],[data-csv],[data-csok],[data-csin],[data-csf],#csimRe');if(!t||!t.closest('#csimCard'))return;
+  document.addEventListener('click',e=>{const t=e.target.closest('[data-cscat],[data-csv],[data-csok],[data-csin],[data-csdel],[data-csf],#csimRe');if(!t||!t.closest('#csimCard'))return;
     if(t.dataset.cscat){const [id,key]=[t.dataset.cscat.slice(0,t.dataset.cscat.indexOf('|')),t.dataset.cscat.slice(t.dataset.cscat.indexOf('|')+1)];catalogo(id,key,t);return;}
     if(t.id==='csimRe'){carrega();return;}
     if(t.dataset.csf){S.filtro=t.dataset.csf;desenha();return;}
     if(t.dataset.csok){visto(t.dataset.csok);return;}
+    if(t.dataset.csdel){excluir(t.dataset.csdel);return;}
     if(t.dataset.csin){const [id,v]=t.dataset.csin.split('|');inativar(id,v==='1');return;}
     const id=t.dataset.csv;S.aberto[id]=!S.aberto[id];desenha();if(S.aberto[id]){det(id);const x=S.L.find(y=>y.id===id);if(x&&x.status==='novo'||x&&x.status==='atualizado')visto(id).then(()=>{S.aberto[id]=true;desenha();det(id);});}});
+  async function excluir(id){const x=S.L.find(y=>y.id===id);if(!x)return;
+    if(!confirm('EXCLUIR DE VEZ o orçamento '+(x.oc||'sem nº de OC')+' de '+(x.nome||'cliente')+'?\n\nIsso apaga o orçamento e os itens. Não dá para desfazer.'))return;
+    const r=await cli().rpc('compra_sim_excluir',{p_id:id});
+    if(r.error||!r.data){alert('Não foi possível excluir. Ele precisa estar inativo.');return;}
+    S.L=S.L.filter(y=>y.id!==id);delete S.aberto[id];desenha();}
   async function inativar(id,on){const x=S.L.find(y=>y.id===id);if(!x)return;
     if(on&&!confirm('Inativar o orçamento '+(x.oc||'sem nº de OC')+' de '+(x.nome||'cliente')+'?\n\nEle sai da lista (fica em "Inativos") e pode ser reativado depois.'))return;
     const r=await cli().rpc('compra_sim_inativar',{p_id:id,p_inativo:on});

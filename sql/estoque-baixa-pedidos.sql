@@ -159,3 +159,14 @@ grant execute on function public.orc_excluir(uuid) to authenticated;
 update orc_cfg set cab = jsonb_set(coalesce(cab,'{}'::jsonb), '{estFx}',
   coalesce(cab->'estFx','{}'::jsonb) || '{"dias":7,"ini":"2026-10-24"}'::jsonb)
  where empresa_id = 'cb';
+
+-- excluir de vez simulação do cliente (quadro Novo orçamento e compra): só FC e só depois de inativada
+create or replace function public.compra_sim_excluir(p_id uuid) returns boolean
+language plpgsql security definer set search_path to 'public' as $$
+begin
+  if not public.trein_is_admin() then return false; end if;
+  delete from compra_sim where id = p_id and status = 'inativo';
+  return found;
+end $$;
+revoke all on function public.compra_sim_excluir(uuid) from public, anon;
+grant execute on function public.compra_sim_excluir(uuid) to authenticated;

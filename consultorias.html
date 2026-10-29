@@ -665,7 +665,7 @@ function voltaQ(){return 'volta='+encodeURIComponent(location.pathname+location.
 function abaNova(u){u+=(u.includes('?')?'&':'?')+voltaQ();return `<div style="display:flex;gap:8px;flex-wrap:wrap;margin:0 0 10px"><a class="btn" style="text-decoration:none" href="${u}" target="_blank" rel="noopener">↗ Abrir em nova aba</a></div>`;}
 /* ---------- CRIAÇÃO DE ORÇAMENTO (painel dos vendedores) ---------- */
 const ORCL={};
-function estTabHtml(e){if(!e)return '';const u=PUB?'orcamento/?k='+encodeURIComponent(KEY)+'&aba=est&so=1':'orcamento/?e='+encodeURIComponent(e.id)+'&aba=est&so=1';
+function estTabHtml(e){if(!e)return '';if(e.id!=='cb'&&!e.estoque)return `<div class="box" style="padding:18px"><h3 style="margin:0 0 6px">📦 Sem controle de estoque</h3><p class="muted" style="margin:0">A ${esc(e.nome||'empresa')} não tem controle de estoque na plataforma. Nada é importado nem mostrado aqui.</p></div>`;const u=PUB?'orcamento/?k='+encodeURIComponent(KEY)+'&aba=est&so=1':'orcamento/?e='+encodeURIComponent(e.id)+'&aba=est&so=1';
  return `<div style="display:flex;gap:8px;flex-wrap:wrap;margin:0 0 10px"><a class="btn" style="text-decoration:none" href="${u.replace('&so=1','')}&${voltaQ()}" target="_blank" rel="noopener">↗ Abrir em tela cheia</a></div>
  <div class="box" style="padding:0;overflow:hidden;background:#f2f6f7"><iframe src="${u}" title="Estoque" style="width:100%;height:max(820px,85vh);border:0;display:block;background:#f2f6f7" loading="lazy"></iframe></div>`;}
 function orcBotoes(u){return `<div style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 4px">

@@ -616,7 +616,7 @@ function telaCat(){return `<div class="box" style="padding:10px"><div class="row
 let EF='';
 const CIC=fx=>window.FCEstAviso?FCEstAviso.ciclo(fx):{prazo:new Date(),ini:new Date(),N:7};
 const dLong=d=>d.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'2-digit',year:'numeric'});
-function telaEst(){if(!CF){carregaCfg().then(tela);return '<p class="vazio">Carregando estoque…</p>';}
+function telaEst(){if(!CF||(CF.empresa_id&&EMP&&CF.empresa_id!==EMP)){CF=null;carregaCfg().then(tela);return '<p class="vazio">Carregando estoque…</p>';}
   const c=CF.cab||{},f=Object.assign({verm:0,lar:6,verde:8,dias:7,ini:''},c.estFx||{}),em=c.estEm?new Date(c.estEm):null,cc=CIC(f);
   const ok=em&&em>=cc.ini,h0=new Date();h0.setHours(0,0,0,0);const falta=Math.round((cc.prazo-h0)/864e5);
   const nv=i=>estNv(i)||'x',L=CF.itens,cnt={g:0,a:0,l:0,v:0,x:0};L.forEach(i=>cnt[nv(i)]++);
@@ -628,7 +628,7 @@ function telaEst(){if(!CF){carregaCfg().then(tela);return '<p class="vazio">Carr
     <p style="margin:2px 0;font-size:16px">${ok?'✅ <b>Estoque em dia</b> para o prazo de '+cc.prazo.toLocaleDateString('pt-BR'):'⚠️ <b>Importar até '+dLong(cc.prazo)+'</b>'+(falta===0?' · <b style="color:var(--bx)">é hoje</b>':falta>0?' · faltam '+falta+' dia'+(falta>1?'s':''):'')}</p>
     <p class="nota" style="margin:2px 0">${em?'Última importação: <b>'+em.toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})+'</b>':'O estoque ainda não foi importado.'}${c.estMsg?' · '+esc(c.estMsg):''}</p>
     <p class="nota" style="margin:2px 0">O Painel do Comercial mostra ao vendedor só a situação de cada item (Em estoque, No limite, Estoque baixo, Sem estoque). O saldo não aparece para ele.</p></div>
-   <div><label class="btn pri" style="cursor:pointer;font-size:16px;padding:12px 18px">📥 Importar planilha de estoque<input type="file" accept=".xlsx,.csv" id="estImp" hidden></label><p class="nota" id="estMsg" style="max-width:320px">Arquivo .xlsx ou .csv do sistema, com as colunas de <b>código</b> e <b>quantidade/saldo</b>. Serve para perfis e componentes: o painel reconhece qual é.</p></div></div></div>
+   <div><label class="btn pri" style="cursor:pointer;font-size:16px;padding:12px 18px">📥 Importar planilha de estoque<input type="file" accept=".xlsx,.csv" id="estImp" hidden></label>${FC&&(c.estEm||c.compEstEm)?`<button class="btn" type="button" id="estDel" style="display:block;margin-top:8px;color:var(--bx);border-color:#f3b4ae">🗑 Excluir planilha de estoque importada</button>`:''}<p class="nota" id="estMsg" style="max-width:320px">Arquivo .xlsx ou .csv do sistema, com as colunas de <b>código</b> e <b>quantidade/saldo</b>. Serve para perfis e componentes: o painel reconhece qual é.</p></div></div></div>
   <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(330px,1fr))">
    <div class="box"><h3>🗓 Rotina de importação</h3>
     <div class="grid"><label class="f">Importar a cada<select class="inp" id="fxD">${[[7,'7 dias (toda semana)'],[15,'15 dias'],[30,'30 dias (todo mês)']].map(([v,t])=>`<option value="${v}" ${+f.dias===v?'selected':''}>${t}</option>`).join('')}</select></label>
@@ -646,7 +646,13 @@ function telaEst(){if(!CF){carregaCfg().then(tela);return '<p class="vazio">Carr
    ${F.length?`<div style="max-height:560px;overflow:auto"><table class="it"><thead><tr><th>Código</th><th>Descrição</th><th>Cor</th><th class="n">Saldo</th><th>Situação</th></tr></thead><tbody>
    ${F.slice(0,600).map(i=>`<tr><td><b>${esc(i.cod)}</b></td><td>${esc(i.desc)}</td><td>${corTag(i.cor)}</td><td class="n">${i.est!=null?String(i.est).replace('.',','):'—'}</td>
     <td>${estTag(i)||'<span class="nota">—</span>'} <select class="inp" data-ec2="${esc(i.id)}" title="Trocar a situação à mão" style="padding:2px 4px;font-size:12px;width:auto;margin-left:4px"><option value="">Automático</option>${Object.entries(COR_EST).map(([k,[,t]])=>`<option value="${k}" ${i.estCor===k?'selected':''}>${t[0].toUpperCase()+t.slice(1)}</option>`).join('')}</select></td></tr>`).join('')}</tbody></table></div>`:'<p class="vazio">Nenhum item nesta situação.</p>'}</div>`+telaComp();}
-function wireEst(){if(!CF)return;const q=s=>document.getElementById(s);wireEstImp(q);wireComp();
+function wireEst(){if(!CF)return;const q=s=>document.getElementById(s);wireEstImp(q);
+  if(q('estDel'))q('estDel').onclick=async()=>{const c=CF.cab||{};
+    if(!confirm('Excluir a planilha de estoque importada de '+(c.nome||D.nome||'')+'?\n\nO saldo de perfis e componentes é apagado e o Painel do Comercial passa a mostrar "Sem informação" até a próxima importação. A rotina e as regras de cores continuam.'))return;
+    (CF.itens||[]).forEach(i=>{delete i.est;});
+    if(Array.isArray(CF.comp))CF.comp.forEach(i=>{delete i.est;delete i.estQ;delete i.estUn;});
+    ['estEm','estMsg','compEstEm','compEstMsg'].forEach(k=>delete c[k]);CF.cab=c;
+    if(await salvaCfg()){toast('Planilha de estoque excluída.');D=null;await carregar();}tela();};wireComp();
   $$('[data-ef]').forEach(b=>b.onclick=()=>{EF=b.dataset.ef;tela();});
   $$('[data-ec2]').forEach(s=>s.onchange=async()=>{const i=CF.itens.find(x=>x.id===s.dataset.ec2);if(!i)return;if(s.value)i.estCor=s.value;else delete i.estCor;if(await salvaCfg('Situação atualizada'))tela();});
   q('fxSalva').onclick=async()=>{CF.cab=CF.cab||{};CF.cab.estFx={verm:num(q('fxV').value),lar:num(q('fxL').value),verde:num(q('fxG').value),dias:parseInt(q('fxD').value)||7,ini:q('fxI').value||''};if(await salvaCfg('Rotina e regras salvas'))tela();};}
