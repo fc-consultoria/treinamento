@@ -357,12 +357,15 @@ function vGestor(){
  </div>
  <div class="grid cols2">
   <section class="panel" id="t-cad">
-   <div class="ph"><div><h2>🔔 Avisos de cadastro</h2><p class="sub">Clientes que se cadastraram no Catálogo 3D. Os dados ficam ocultos até você abrir.</p></div>
+   <div class="ph"><div><h2>🔔 Avisos de cadastro</h2><p class="sub">Clientes que se cadastraram no Catálogo 3D, por vendedor. O contato fica oculto até você abrir.</p></div>
    <span class="pill ${auto?'ok':'novo'}">${auto?'Aceite automático ligado':'Aceite automático desligado'}</span></div>
-   <div class="list">${C.length?C.slice(0,30).map(c=>{const st=ST_CLI[c.status]||[c.status,'novo'];const dd=showCad[c.id];return `
-    <div class="row"><div class="who">${dd?`<b>${esc(dd.nome)}${dd.empresa?' · '+esc(dd.empresa):''}</b><span>${esc(dd.cidade)} · ${esc(dd.zap||'—')} · ${esc(dd.email||'—')}</span>`:`<b>Novo cliente cadastrado</b><span class="hidden-id">•••••• · ${esc(c.cidade||'—')}</span>`}${c.vend?`<span style="font-size:12px;color:var(--muted)">Vendedor: ${esc(c.vend)}</span>`:''}</div>
+   <div class="list">${C.length?(()=>{const G={};C.slice(0,60).forEach(c=>{const k=c.vend||'Sem vendedor';(G[k]=G[k]||[]).push(c)});
+    return Object.keys(G).sort((a,b)=>a==='Sem vendedor'?1:b==='Sem vendedor'?-1:a.localeCompare(b)).map(k=>`
+    <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin:10px 2px 2px">Vendedor: ${esc(k)} · ${G[k].length} cliente${G[k].length>1?'s':''}</div>
+    ${G[k].map(c=>{const st=ST_CLI[c.status]||[c.status,'novo'];const dd=showCad[c.id];return `
+    <div class="row"><div class="who"><b>${esc(c.nome||'Cliente')}${c.empresa?' · '+esc(c.empresa):''}</b><span>${esc(c.cidade||'—')}${dd?` · ${esc(dd.zap||'—')} · ${esc(dd.email||'—')}`:` · <span class="hidden-id">contato oculto</span>`}</span></div>
     <span class="pill ${st[1]}">${st[0]}</span><span class="pill ${c.visto?'ok':'novo'}">${c.visto?'Visto':'Novo'}</span><span style="font-size:12px;color:var(--muted)">${fmtD(c.criado)}</span>
-    <button class="btn sm" data-act="vercad" data-id="${c.id}">${dd?'Ocultar':'Ver quem cadastrou'}</button>${c.status==='pendente'?`<button class="btn sm primary" data-act="liberar" data-id="${c.id}">Liberar</button>`:''}</div>`}).join(''):'<div class="empty">Nenhum cadastro ainda. Quando um cliente se cadastrar no Catálogo 3D, o aviso aparece aqui.</div>'}</div>
+    <button class="btn sm" data-act="vercad" data-id="${c.id}">${dd?'Ocultar contato':'Ver contato'}</button>${c.status==='pendente'?`<button class="btn sm primary" data-act="liberar" data-id="${c.id}">Liberar</button>`:''}</div>`}).join('')}`).join('')})():'<div class="empty">Nenhum cadastro ainda. Quando um cliente se cadastrar no Catálogo 3D, o aviso aparece aqui.</div>'}</div>
   </section>
   <section class="panel" id="t-cat">
    <h2>📈 Acesso ao Catálogo 3D da Guaporé</h2><p class="sub">Visitantes por dia e novos cadastros de clientes.</p>
@@ -556,7 +559,7 @@ document.addEventListener('click',async e=>{
 function confirmaPausa(p){return confirm('Pausar o acesso de '+p.nome+'? A pessoa sai do sistema na hora e só volta quando você ligar de novo.')}
 document.addEventListener('input',e=>{if(e.target.id==='mkBusca'){mkQ=e.target.value;const pos=e.target.selectionStart;render();const i=$('#mkBusca');if(i){i.focus();try{i.setSelectionRange(pos,pos)}catch(_){}}}});
 
-$('#bellBtn').onclick=()=>{const nv=(D.contas||[]).filter(c=>!c.visto);modal(`<h2>🔔 Avisos de cadastro</h2><p class="sub">${nv.length?nv.length+' cliente(s) se cadastraram no Catálogo 3D e você ainda não viu.':'Nenhum cadastro novo.'}</p><div class="list">${nv.map(c=>`<div class="row"><div class="who"><b>Novo cliente · ${esc(c.cidade||'—')}</b><span>${fmtD(c.criado)}</span></div><button class="btn sm" data-act="vercad" data-id="${c.id}">Ver quem cadastrou</button></div>`).join('')}</div><div class="toolbar" style="margin-top:12px;justify-content:flex-end"><button class="btn primary" data-act="close">Fechar</button></div>`)};
+$('#bellBtn').onclick=()=>{const nv=(D.contas||[]).filter(c=>!c.visto);modal(`<h2>🔔 Avisos de cadastro</h2><p class="sub">${nv.length?nv.length+' cliente(s) se cadastraram no Catálogo 3D e você ainda não viu.':'Nenhum cadastro novo.'}</p><div class="list">${nv.map(c=>`<div class="row"><div class="who"><b>${esc(c.nome||'Novo cliente')} · ${esc(c.cidade||'—')}</b><span>Vendedor: ${esc(c.vend||'—')} · ${fmtD(c.criado)}</span></div><button class="btn sm" data-act="vercad" data-id="${c.id}">Ver contato</button></div>`).join('')}</div><div class="toolbar" style="margin-top:12px;justify-content:flex-end"><button class="btn primary" data-act="close">Fechar</button></div>`)};
 document.addEventListener('click',e=>{const t=e.target.closest('[data-act="vercad"]');if(t&&t.closest('.modal'))closeModal()},true);
 /* atualiza sozinho: a cada minuto e quando a tela volta */
 setInterval(()=>{if(!document.hidden&&D&&!D.erro&&!$('#layer').innerHTML)carregar()},30000);
@@ -568,7 +571,7 @@ if(window.parent===window&&tok()){const s=document.createElement('script');s.src
 const TOURS={
  gestor:[
   ['#t-kpis','Esta é a Central do Gestor da Guaporé. No topo ficam os números: cadastros novos de clientes, pedidos de cotação em aberto, acessos da equipe e visitas ao Catálogo 3D.'],
-  ['#t-cad','Quando um cliente se cadastra no Catálogo 3D, o aviso chega aqui com os dados ocultos. Toque em Ver quem cadastrou para abrir o nome e o contato. Se o cadastro estiver aguardando, toque em Liberar para gerar a senha e mandar pelo WhatsApp.'],
+  ['#t-cad','Quando um cliente se cadastra no Catálogo 3D, o aviso chega aqui com o nome do cliente separado por vendedor. O telefone e o e-mail ficam ocultos: toque em Ver contato para abrir. Se o cadastro estiver aguardando, toque em Liberar para gerar a senha e mandar pelo WhatsApp.'],
   ['#t-cat','Este gráfico mostra quantas pessoas abriram o Catálogo 3D por dia e quantos clientes se cadastraram.'],
   ['#t-eq','O medidor da equipe mostra quantas vezes cada pessoa abriu cada ferramenta nos últimos trinta dias.'],
   ['#t-equipe','Aqui está a equipe. A bolinha verde mostra quem está on-line agora, e o botão Só quem está on-line filtra a lista. Para incluir alguém, toque em Cadastrar pessoa e mande o link de primeiro acesso. A FC confere e libera.'],
