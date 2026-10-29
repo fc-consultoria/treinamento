@@ -88,3 +88,11 @@ grant execute on function public.pfc_login(text,text), public.pfc_login_matriz(t
 
 -- a função da versão anterior lia a sessão do projeto Ladore: removida
 drop function if exists public.fc3d_cli_sessao(uuid);
+
+-- 29/10/2026 · Ajuste técnico das peças do 3D (só a Matriz grava; todas as empresas com sessão leem)
+create table if not exists public.pfc_ajustes_3d(
+  tipologia text not null, peca text not null,
+  dx numeric not null default 0, dy numeric not null default 0, dz numeric not null default 0,
+  atualizado timestamptz not null default now(), primary key(tipologia,peca));
+alter table public.pfc_ajustes_3d enable row level security;
+-- funções pfc_ajustes_3d_ler(token) e pfc_ajuste_3d_salvar(token,tipologia,peca,dx,dy,dz): aplicadas pela migração pfc_ajustes_3d
