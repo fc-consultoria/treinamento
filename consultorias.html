@@ -1363,7 +1363,8 @@ function seguirPessoa(p){
     $('#ficha').innerHTML='<div class="body"><p style="margin:0">Seu acesso agora é pela <b>Plataforma FC 3D</b>. Abrindo…</p></div>';
     location.replace(PLAT_URL+'?u='+encodeURIComponent((document.getElementById('lgU')||{}).value||''));return false;}
   if(p.papel==='vendas'){try{localStorage.setItem(tokKey(),p.token);localStorage.setItem('cons-nome',p.nome);}catch(_){}
-    if(p.vchave){location.replace('orcamento/?v='+encodeURIComponent(p.vchave)+'&et='+encodeURIComponent(p.token));return false;}
+    if(p.vchave){const ir=()=>location.replace('orcamento/?v='+encodeURIComponent(p.vchave)+'&et='+encodeURIComponent(p.token));
+      sb.rpc('orc_vend_plataforma',{p_chave:p.vchave}).then(r=>{if(r&&r.data===true){$('#ficha').innerHTML='<div class="body"><p style="margin:0">Seu acesso agora é pela <b>Plataforma FC 3D</b>. Abrindo…</p></div>';location.replace(PLAT_URL+'?u='+encodeURIComponent((document.getElementById('lgU')||{}).value||''));}else ir();},ir);return false;}
     $('#ficha').innerHTML='<div class="body"><p style="margin:0">Seu acesso de vendedor ainda não foi liberado no Painel de Vendas. Fale com a FC Consultoria.</p></div>';return false;}
   if(!p.chave){$('#ficha').innerHTML='<div class="body"><p style="margin:0">O acesso da empresa está pausado. Fale com a FC Consultoria: (66) 9 9986-7984.</p></div>';return false;}
   usarPessoa(p);return true;}

@@ -102,6 +102,9 @@ const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)],esc
 const Q=new URLSearchParams(location.search),VKEY=Q.get('v')||Q.get('k')||'',GESTOR=!Q.get('v')&&!!Q.get('k');
 (function(){const tk=Q.get('et');if(!tk)return;const ping=()=>{try{if(!document.hidden&&typeof sb!=='undefined')sb.rpc('emp_ping',{p_token:tk}).then(()=>{},()=>{});}catch(_){}};setTimeout(ping,1500);setInterval(ping,45000);document.addEventListener('visibilitychange',ping);})();
 const BASE='https://fc-consultoria.github.io/treinamento/';
+/* vendedor marcado para a Plataforma FC 3D: o painel antigo leva direto para a plataforma */
+(function(){if(!VKEY||GESTOR)return;const go=()=>{if(typeof sb==='undefined'){setTimeout(go,300);return;}
+  sb.rpc('orc_vend_plataforma',{p_chave:VKEY}).then(r=>{if(r&&r.data===true){document.body.innerHTML='<p style="font:16px system-ui;padding:40px;text-align:center">Seu acesso agora é pela <b>Plataforma FC 3D</b>. Abrindo…</p>';location.replace('https://fc-consultoria.github.io/fc3d/clientes/');}},()=>{});};go();})();
 const nk=s=>String(s||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
 const sem=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
 const n2=v=>(+v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
