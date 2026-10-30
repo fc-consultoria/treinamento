@@ -48,6 +48,33 @@ const css=`
 .platVer button{all:unset;cursor:pointer;border:1px solid #c9bdf6;background:var(--surface);color:var(--fg);border-radius:999px;padding:5px 12px;font-size:13px;font-weight:600}
 .platVer button.on{background:var(--plat);border-color:var(--plat);color:#fff}
 .platVer .n{font-size:12px;color:var(--muted);flex-basis:100%}
+.platG{display:block}
+.platTop{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin-bottom:16px}
+.platB{all:unset;box-sizing:border-box;cursor:pointer;background:var(--surface);border:2px solid var(--plat);border-radius:16px;padding:16px 18px;display:flex;flex-direction:column;gap:8px}
+.platB:hover{border-color:var(--plat2)}
+.platB .tt{display:flex;align-items:center;gap:10px}.platB .tt b{font-size:17px;color:var(--fg)}
+.platB .ic{width:42px;height:42px;border-radius:11px;background:var(--platc);display:flex;align-items:center;justify-content:center;font-size:21px}
+:root[data-theme="dark"] .platB .ic{background:#2b2160}
+.platB .d{font-size:13px;color:var(--muted)}.platB .lk{font-size:13.5px;font-weight:700;color:var(--plat)}
+:root[data-theme="dark"] .platB .lk{color:#c9bdf6}
+.platB.eq{border-color:#0f6e56}.platB.eq .lk{color:#0f6e56}:root[data-theme="dark"] .platB.eq .lk{color:#7fd8b9}
+.platKp{display:flex;gap:8px}.platKp div{flex:1;border-radius:10px;padding:7px 10px;background:var(--platc)}
+:root[data-theme="dark"] .platKp div{background:#221a4d}
+.platKp b{display:block;font-size:20px;color:var(--fg)}.platKp span{font-size:11.5px;color:var(--muted)}
+.platKp .al{background:#fff4dc}.platKp .al b{color:#8a5a00}:root[data-theme="dark"] .platKp .al{background:#3a2c0c}:root[data-theme="dark"] .platKp .al b{color:#f5c76b}
+.platP{display:flex;justify-content:space-between;gap:8px;font-size:13px;padding:6px 0;border-top:1px solid var(--line);color:var(--fg)}
+.platP small{color:var(--muted)}.platP .on{color:#0f8a5f;font-weight:700}.platP .nu{color:#c0392b}
+.platP i{display:inline-block;width:8px;height:8px;border-radius:50%;background:#c4c4c4;margin-right:6px}.platP i.o{background:#1d9e75}
+.platEq{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 16px;margin-bottom:16px}
+.platEq .fl{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px}
+.platEq .fl button{all:unset;cursor:pointer;border:1px solid var(--line);border-radius:999px;padding:4px 11px;font-size:12.5px;color:var(--fg)}
+.platEq .fl button.on{background:#0f6e56;border-color:#0f6e56;color:#fff}
+.platLb{font-size:13px;color:var(--muted);margin:2px 2px 8px;font-weight:600}
+.platGr{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+.platGp{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.platGp>b{display:block;font-size:14px;color:var(--fg);margin-bottom:6px}
+.platC{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:5px;font-size:12.5px;padding:6px 10px;border:1px solid var(--line);border-radius:9px;margin:4px 4px 0 0;color:var(--fg)}
+.platC:hover{border-color:var(--plat);color:var(--plat)}
 @media (max-width:560px){.platGrid{grid-template-columns:1fr 1fr;gap:9px;padding:12px}.platK{min-height:104px;padding:12px}.platHero{margin:10px 10px 0}}`;
 const st=document.createElement('style');st.textContent=css;document.head.appendChild(st);cores();
 
@@ -66,6 +93,7 @@ try{const t=localStorage.getItem('plat-'+EMP+'-tema');if(t&&PLATS[(new URLSearch
 /* ---------- tutorial guiado por setor (mesmo formato da Guaporé) ---------- */
 const CARD={
  cen:'A Central do Gestor é o resumo da semana: quem da equipe entrou, o que fez e o que está pendente em cada setor. Comece o dia por aqui.',
+ eq:'No Painel da Equipe você vê quem está online agora e o último acesso de cada pessoa. Toque para abrir a lista completa e filtrar por setor ou por quem nunca entrou.',
  proc:'No Fluxo do processo você acompanha as etapas da consultoria da FC e o que já foi concluído em cada frente.',
  acao:'O Plano de ação traz os pontos levantados na visita, com responsável e prazo para resolver.',
  gal:'Na Galeria ficam as fotos do antes e depois do processo de mudança da empresa.',
@@ -105,7 +133,7 @@ function tutorial(){if(!window.FCTour)return;
   if(modo!=='home'){modo='home';homeTab=(typeof tab!=='undefined')?tab:null;pinta(true);}
   const pp=papel(),cl=t=>String(t).split('{cli}').join(CFG().nome),[nome,intro0]=INTRO[pp]||INTRO[''],intro=cl(intro0);
   const passos=[['.platHero .lg',intro]];
-  const semTx=[];document.querySelectorAll('.platGrid .platK').forEach(k=>{let t=CARD[k.dataset.t];if(t&&typeof t==='object')t=t[pp]||t[''];
+  const semTx=[];{const eq=document.querySelector('.platGrid [data-eq]');if(eq)passos.push(['.platGrid [data-eq]',cl(CARD.eq)]);}document.querySelectorAll('.platGrid .platK').forEach(k=>{let t=CARD[k.dataset.t];if(t&&typeof t==='object')t=t[pp]||t[''];
     if(!t){const nm=(k.querySelector('b')||{}).textContent||'';t='Em '+nm+' você encontra mais uma ferramenta da FC. Toque no cartão para abrir.';semTx.push(k.dataset.t);}
     passos.push(['.platK[data-t="'+k.dataset.t+'"]',cl(t)]);});
   /* revisão do tutorial: cartão novo sem explicação fica registrado para a FC atualizar o texto */
@@ -139,6 +167,48 @@ function barraVer(hero){
   {const pc=b.querySelector('[data-pcom]');if(pc)pc.onclick=()=>window.open('/treinamento/guapore/portal-comercial.html?papel='+pc.dataset.pcom,'_blank','noopener');}
   hero.before(b);}
 
+/* 30/10/2026 · gestor: Central do Gestor e Painel da Equipe em destaque; demais ferramentas agrupadas em chips */
+const GRUPOS=[['🛒','Vendas',['orc','pcom','cat','rvi','pcod']],['📦','Compras e estoque',['pla','est','conv','comp','dist']],
+ ['🎓','Treinamento',['ori','esq','mos','casa','dia','e3d']],['🤝','Consultoria FC',['proc','acao','gal','dem','sol','age','mkt','div']]];
+const PAP={gestor:'Gestor',compras:'Compras',vendas:'Vendas',gerente:'Coordenação',marketing:'Marketing',fabrica:'Fábrica',estoque:'Estoque'};
+let EQ=null,EQc=false,EQab=false,EQf='';
+const quandoP=t=>{if(!t)return 'nunca entrou';const m=Math.round((Date.now()-new Date(t))/60000);if(m<60)return 'há '+Math.max(1,m)+' min';
+  const d=new Date(t),hj=new Date(),hh=d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  if(d.toDateString()===hj.toDateString())return 'hoje '+hh;const on=new Date(hj-864e5);if(d.toDateString()===on.toDateString())return 'ontem '+hh;
+  const dias=Math.floor((hj-d)/864e5);return dias<30?'há '+dias+' dias':d.toLocaleDateString('pt-BR');};
+function eqCarrega(){if(EQc||typeof sb==='undefined')return;EQc=true;
+  sb.rpc('emp_central',temP()?{p_token:PESSOA.token}:{p_token:'',p_emp:EMP}).then(r=>{EQc=false;if(r&&r.data){EQ=r.data;if(modo==='home')pinta(true);}},()=>{EQc=false;});}
+setInterval(()=>{if(!document.hidden&&modo==='home'&&document.querySelector('.platTop')){EQc=false;eqCarrega();}},60000);
+const eqPessoas=()=>((EQ&&EQ.pessoas)||[]).slice().sort((a,b)=>(b.online?1:0)-(a.online?1:0)||new Date(b.ultimo||0)-new Date(a.ultimo||0));
+const linhaP=p=>`<div class="platP"><span><i class="${p.online?'o':''}"></i>${h(p.nome)} <small>· ${h(PAP[p.papel]||p.papel)}</small></span>${p.online?'<span class="on">online</span>':p.ultimo?`<small>${h(quandoP(p.ultimo))}</small>`:'<span class="nu">nunca entrou</span>'}</div>`;
+function topoGestor(btns,abre){
+  const P=eqPessoas(),S=(EQ&&EQ.sem)||{},est=(EQ&&EQ.estoque)||{},ed=est.em?Math.floor((Date.now()-new Date(est.em))/864e5):null;
+  const pend=(S.desc24?1:0)+(S.fin48?1:0)+(ed!=null&&ed>7?1:0),onl=P.filter(p=>p.online).length;
+  const t=document.createElement('div');t.className='platTop';
+  t.innerHTML=`<button type="button" class="platB platK" data-t="cen"><span class="tt"><span class="ic" aria-hidden="true">🏠</span><b>Central do Gestor</b></span>
+    <span class="d">Resumo da empresa e o que depende de você.</span>
+    <span class="platKp"><div class="${pend?'al':''}"><b>${EQ?pend:'–'}</b><span>precisa de você</span></div><div><b>${EQ?(S.n1||0):'–'}</b><span>orçamentos na semana</span></div></span>
+    <span class="lk">Abrir a central →</span></button>
+   <button type="button" class="platB eq" data-eq="1"><span class="tt"><span class="ic" aria-hidden="true">👥</span><b>Painel da Equipe</b></span>
+    <span class="d">${EQ?onl+' online agora · '+P.length+' na equipe':'Carregando a equipe…'}</span>
+    <span style="display:block">${P.slice(0,4).map(linhaP).join('')}</span>
+    <span class="lk">${EQab?'Fechar lista ↑':'Ver toda a equipe ('+P.length+') →'}</span></button>`;
+  t.querySelector('[data-t="cen"]').onclick=()=>abre('cen');
+  t.querySelector('[data-eq]').onclick=()=>{EQab=!EQab;pinta(true);};
+  if(!EQ)eqCarrega();
+  const frag=[t];
+  if(EQab){const set=[...new Set(P.map(p=>p.papel))],nunca=P.filter(p=>!p.ultimo&&!p.online).length;
+    const L=P.filter(p=>!EQf?true:EQf==='_on'?p.online:EQf==='_nu'?(!p.ultimo&&!p.online):p.papel===EQf);
+    const e=document.createElement('div');e.className='platEq';
+    e.innerHTML=`<div class="fl"><button type="button" data-f="" class="${!EQf?'on':''}">Todos (${P.length})</button><button type="button" data-f="_on" class="${EQf==='_on'?'on':''}">Online (${onl})</button>${set.map(x=>`<button type="button" data-f="${h(x)}" class="${EQf===x?'on':''}">${h(PAP[x]||x)}</button>`).join('')}<button type="button" data-f="_nu" class="${EQf==='_nu'?'on':''}">Nunca entrou (${nunca})</button></div>${L.map(linhaP).join('')||'<div class="platP"><small>Ninguém neste filtro.</small></div>'}`;
+    e.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{EQf=b.dataset.f;pinta(true);});frag.push(e);}
+  return frag;}
+function gruposGestor(btns,abre){const ks=btns.map(b=>b.dataset.t).filter(k=>k!=='cen'),usados=new Set(),info=k=>{const b=btns.find(x=>x.dataset.t===k),tx=b.textContent.trim(),m=tx.match(/^(\S+)\s+(.*)$/),N=NOMES[k];return [N?N[0]:m?m[1]:'▪',N?N[1]:m?m[2]:tx];};
+  const G=GRUPOS.map(([ic,nm,lst])=>{const it=lst.filter(k=>ks.includes(k));it.forEach(k=>usados.add(k));return [ic,nm,it];});
+  const resto=ks.filter(k=>!usados.has(k));if(resto.length)G.push(['▪','Outras ferramentas',resto]);
+  const w=document.createElement('div');
+  w.innerHTML='<div class="platLb">Outras ferramentas</div><div class="platGr">'+G.filter(g=>g[2].length).map(([ic,nm,it])=>`<div class="platGp"><b>${ic} ${h(nm)}</b>${it.map(k=>{const [i,l]=info(k);return `<button type="button" class="platC platK" data-t="${h(k)}"><span aria-hidden="true">${h(i)}</span>${h(l)}</button>`;}).join('')}</div>`).join('')+'</div>';
+  w.querySelectorAll('.platC').forEach(c=>c.onclick=()=>abre(c.dataset.t));return w;}
 function pinta(forca){
   const f=document.getElementById('ficha');if(!f||!ehCB())return;
   const tg=f.querySelector('.tabg');if(!tg)return;
@@ -164,10 +234,12 @@ function pinta(forca){
     if(body)body.style.display='none';
     const ord=k=>k==='cen'?-1:btns.findIndex(b=>b.dataset.t===k);
     const g=document.createElement('div');g.className='platGrid';
+    const abre=t=>{if(t==='ori'){window.open(ORI_URL,'_blank','noopener');return;}modo='aba';const o=btns.find(b=>b.dataset.t===t);if(o)o.click();else pinta(true);window.scrollTo({top:0,behavior:'smooth'});};
+    if(btns.some(b=>b.dataset.t==='cen')){g.classList.add('platG');topoGestor(btns,abre).forEach(x=>g.appendChild(x));g.appendChild(gruposGestor(btns,abre));}else{
     g.innerHTML=btns.slice().sort((a,b)=>ord(a.dataset.t)-ord(b.dataset.t)).map(b=>{const k=b.dataset.t,tx=b.textContent.trim(),m=tx.match(/^(\S+)\s+(.*)$/),N=NOMES[k],ic=N?N[0]:m?m[1]:'▪',lb=N?N[1]:m?m[2]:tx;
       let d=N?N[2]:(b.getAttribute('title')||'').trim();if(d.length>70)d=d.slice(0,68).replace(/\s\S*$/,'')+'…';
       return `<button type="button" class="platK${k==='cen'?' dest':''}" data-t="${h(k)}"><span class="ic" aria-hidden="true">${h(ic)}</span><b>${h(lb)}</b>${d?`<span class="d">${h(d)}</span>`:''}</button>`;}).join('');
-    g.querySelectorAll('.platK').forEach(k=>k.onclick=()=>{if(k.dataset.t==='ori'){window.open(ORI_URL,'_blank','noopener');return;}modo='aba';const o=btns.find(b=>b.dataset.t===k.dataset.t);if(o)o.click();else pinta(true);window.scrollTo({top:0,behavior:'smooth'});});
+    g.querySelectorAll('.platK').forEach(k=>k.onclick=()=>abre(k.dataset.t));}
     hero.after(g);
     if(!tutAuto&&typeof PESSOA!=='undefined'&&PESSOA){tutAuto=true;let visto='1';try{visto=localStorage.getItem(chaveTut());}catch(_){}if(!visto)setTimeout(()=>{if(!window.FCTour||!FCTour.ativo())tutorial();},900);}
     const wm=document.createElement('div');wm.className='platWm';wm.textContent='© FC Consultoria em Esquadria';g.after(wm);
