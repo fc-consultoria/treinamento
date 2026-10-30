@@ -780,14 +780,15 @@ function abrirSemPreco(){const TODOS=semPreco();let mo=$("m-semprec");if(!mo){mo
   rows+=`<tr><td class="code">${esc(x.code)}</td><td>${esc(x.desc)}</td><td>${esc(x.cor)}</td><td class="r num">${spQ(x)}</td><td>${esc(x.un)}</td></tr>`});return rows}
  mo.innerHTML=`<div class="box" role="dialog" aria-label="Componentes sem preço"><div class="mh"><div><h2 style="font-size:17px">Componentes sem preço · <span id="sp-n"></span></h2><div class="hint">Itens marcados para cotar e ainda sem preço, com a quantidade total da obra por código. O PDF e o Excel levam só os dados dos itens: sem nome da FC, da obra ou do cliente.</div></div>
   <div class="toolbar"><select class="in" id="sp-f" aria-label="Fornecedor"><option value="">Todos os fornecedores (${TODOS.length})</option>${forns.map(f=>`<option value="${esc(f)}">${esc(f)} (${TODOS.filter(x=>x.rf===f).length})</option>`).join("")}</select>
-  <button class="btn" id="sp-pdf" type="button">⬇ Baixar PDF</button><button class="btn ghost" id="sp-xls" type="button">Excel</button><button class="btn ghost" id="sp-cp" type="button">Copiar para WhatsApp</button><button class="btn ghost" id="sp-x" type="button" aria-label="Fechar">✕</button></div></div>
+  <button class="btn" id="sp-pdf" type="button">⬇ PDF por fornecedor</button><button class="btn ghost" id="sp-xls" type="button">Excel</button><button class="btn ghost" id="sp-cp" type="button">Copiar para WhatsApp</button><button class="btn ghost" id="sp-x" type="button" aria-label="Fechar">✕</button></div></div>
   <div class="mb"><div class="hint" id="sp-msg" style="margin-bottom:8px"></div><div class="tbl-wrap"><table><thead><tr><th>Código</th><th>Descrição</th><th>Cor</th><th class="r">Qtde obra</th><th>Un</th></tr></thead><tbody id="sp-body"></tbody></table></div></div></div>`;
  const pinta=()=>{const L=lista();$("sp-n").textContent=L.length+" itens";$("sp-body").innerHTML=linhas(L)||'<tr><td colspan="5" class="hint">Todos os componentes já têm preço.</td></tr>';["sp-pdf","sp-xls","sp-cp"].forEach(id=>$(id).disabled=!L.length)};
  pinta();mo.hidden=false;$("sp-msg").textContent="";
  $("sp-f").onchange=e=>{FSEL=e.target.value;pinta()};
  const fechar=()=>{mo.hidden=true};$("sp-x").onclick=fechar;mo.onclick=e=>{if(e.target===mo)fechar()};
  $("sp-pdf").onclick=async ev=>{const bt=ev.target;bt.disabled=true;bt.textContent="Gerando…";
-  try{await spCarregarPdf();const L=lista();const {jsPDF}=window.jspdf;const d=new jsPDF({orientation:"portrait",unit:"mm",format:"a4"});
+  try{await spCarregarPdf();const grupos=FSEL?[FSEL]:forns;
+  for(let gi=0;gi<grupos.length;gi++){const FG=grupos[gi];const L=TODOS.filter(x=>x.rf===FG);const {jsPDF}=window.jspdf;const d=new jsPDF({orientation:"portrait",unit:"mm",format:"a4"});
    const W=d.internal.pageSize.getWidth();
    d.setFont("helvetica","bold");d.setFontSize(15);d.text("Solicitação de orçamento",14,18);
    d.setFont("helvetica","normal");d.setFontSize(9.5);d.setTextColor(70);
@@ -800,9 +801,10 @@ function abrirSemPreco(){const TODOS=semPreco();let mo=$("m-semprec");if(!mo){mo
     styles:{fontSize:8.5,cellPadding:1.8,valign:"middle",lineColor:[200,208,214],lineWidth:.1},headStyles:{fillColor:[13,74,72],textColor:255,fontStyle:"bold"},
     columnStyles:{0:{cellWidth:30,font:"courier",fontSize:8},1:{cellWidth:"auto"},2:{cellWidth:16,halign:"right"},3:{cellWidth:10},4:{cellWidth:20},5:{cellWidth:20},6:{cellWidth:13},7:{cellWidth:14}},margin:{left:14,right:14},
     didDrawPage:()=>{const h=d.internal.pageSize.getHeight();d.setFontSize(8);d.setTextColor(120);d.text("Página "+d.internal.getNumberOfPages(),W-14,h-8,{align:"right"})}});
-   d.save(nome()+".pdf");$("sp-msg").textContent="PDF baixado. É só anexar no WhatsApp ou no e-mail do fornecedor."}
+   d.save("solicitacao-orcamento-"+FG.replace(/[^\w-]+/g,"_")+"-"+new Date().toISOString().slice(0,10)+".pdf");if(gi<grupos.length-1)await new Promise(r=>setTimeout(r,700))}
+   $("sp-msg").textContent=grupos.length>1?grupos.length+" PDFs baixados, um por fornecedor: "+grupos.join(", ")+". Se o navegador perguntar, permita baixar vários arquivos.":"PDF baixado. É só anexar no WhatsApp ou no e-mail do fornecedor."}
   catch(e){console.warn(e);$("sp-msg").textContent="Não foi possível gerar o PDF agora. Confira a internet e tente de novo."}
-  bt.disabled=false;bt.textContent="⬇ Baixar PDF"};
+  bt.disabled=false;bt.textContent="⬇ PDF por fornecedor"};
  $("sp-xls").onclick=()=>{const L=lista(),c=v=>'"'+String(v==null?"":v).replace(/"/g,'""')+'"';
   const lin=[["Fornecedor","Código","Descrição","Cor","Qtde obra","Un","Embalagem","Preço embalagem R$","IPI %","ST R$"].map(c).join(";")].concat(L.map(x=>[x.rf,x.code,x.desc,x.cor,spQ(x),x.un,"","","",""].map(c).join(";")));
   const b=new Blob(["﻿"+lin.join("\r\n")],{type:"text/csv;charset=utf-8"});const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=nome()+".csv";document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)};
