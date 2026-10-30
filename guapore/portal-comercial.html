@@ -268,7 +268,7 @@ async function rpc(fn,args){if(!sbc)throw new Error('sem conexão');const r=awai
 
 const MOD={
  cat:['📚','Catálogo 3D','Perfis e acessórios do catálogo da Guaporé em 3D para mostrar ao cliente.'],
- ori:['🎓','Mostruário','Guia de esquadrias para consulta: cada linha e peça em 3D.'],
+ /* ori (Mostruário) oculto para todos em 29/10/2026 — confundia com o Treinamento 3D */
  esq:['🪟','Treinamento 3D','Montagem das esquadrias passo a passo em 3D.'],
  casa:['🏙','Monte sua Casa 3D','Coloque as esquadrias na planta e apresente o projeto.'],
  dia:['🌬','Pressão de vento','Diagramas para escolher a linha certa para cada vão.'],
@@ -286,12 +286,12 @@ const MOD={
 const COLORS={cat:'#d5604a',ori:'var(--amber)',esq:'#c98a2b',casa:'#8a6bd6',dia:'#3aa0c9',orc:'var(--brand)',pcod:'#2f8f6f',conv:'#6b7fd6',comp:'#1d5fa8',dist:'#5aa3d6',est:'#7a5c3a',pla:'#9a7b2f',rvi:'#4a8a8a',sol:'#b0627e',age:'#7a8794'};
 /* setor: [papel, nome do setor, rótulo da aba, módulos do setor] */
 const SETORES=[
- ['vendas','Vendas','Vendedor',['cat','ori','esq','casa','dia','orc','pcod','sol','age']],
- ['compras','Compras','Compras',['comp','dist','conv','pcod','est','pla','cat','ori','esq','casa','sol','age']],
- ['estoque','Estoque','Estoque',['est','pcod','conv','cat','ori','esq','sol','age']],
+ ['vendas','Vendas','Vendedor',['cat','esq','casa','dia','orc','pcod','sol','age']],
+ ['compras','Compras','Compras',['comp','dist','conv','pcod','est','pla','cat','esq','casa','sol','age']],
+ ['estoque','Estoque','Estoque',['est','pcod','conv','cat','esq','sol','age']],
  ['marketing','Marketing','Marketing',['cat','sol','age']],
- ['gerente','Gerente comercial','Gerente',['orc','cat','pcod','ori','esq','sol','age']],
- ['fabrica','Fábrica','Fábrica',['esq','cat','ori']]
+ ['gerente','Gerente comercial','Gerente',['orc','cat','pcod','esq','sol','age']],
+ ['fabrica','Fábrica','Fábrica',['esq','cat']]
 ];
 const SET=Object.fromEntries(SETORES.map(s=>[s[0],s]));
 const PAPEL={gestor:'Gestor geral',vendas:'Vendas',compras:'Compras',estoque:'Estoque',marketing:'Marketing',gerente:'Gerente comercial',fabrica:'Fábrica',admin:'FC Consultoria'};
