@@ -50,7 +50,12 @@ main .wrap{padding-block:20px 40px}
 .panel-grid{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:20px;align-items:start}
 @media (max-width:900px){.panel-grid{grid-template-columns:minmax(0,1fr)}}
 .panel-grid>*,.stack>*{min-width:0}
-#comp-body td:nth-child(4){min-width:280px}
+#comp-body td:nth-child(4){min-width:170px}
+#comp-body input.money{width:90px}
+#comp-body td{padding-inline:8px}
+#comp-body td.code{font-size:11.5px}
+#comp-body .embq{display:block;margin-top:3px;text-align:left}
+.qun{color:var(--muted);font-size:11.5px;margin-left:3px}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:10px}
 .card-h{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--line)}
 .card-h h2{font-size:17px}
@@ -586,8 +591,8 @@ function buildObra(){
  <div class="card"><div class="card-h"><div><h2>Componentes da obra</h2><div class="hint">Escolha a embalagem (UN, PCT ou ROLO) e digite o preço dela. A quantidade de embalagens é arredondada para cima. Desmarque "Cotar" para tirar o item da cotação e do custo.</div></div>
   <div class="toolbar"><div class="seg" id="comp-filter"><button aria-pressed="true" data-f="all">Todos</button><button aria-pressed="false" data-f="FÁBRICA">Fábrica</button><button aria-pressed="false" data-f="OBRA">Obra</button><button aria-pressed="false" data-f="nop">Sem preço</button><button aria-pressed="false" data-f="hid" id="f-hid">Ocultos (0)</button></div><div class="seg" id="comp-forn"></div>
   <input class="in" id="comp-search" type="search" placeholder="Buscar código ou descrição" aria-label="Buscar componente"></div></div>
-  <div class="tbl-wrap"><table><thead><tr><th>Cotar</th><th>Foto</th><th>Código</th><th>Descrição</th><th>Cor</th><th class="r">Qtde obra</th><th>Un</th><th>Embalagem</th><th class="r">Qtde emb.</th><th class="r">Preço emb. R$</th><th class="r">Custo total</th></tr></thead>
-  <tbody id="comp-body"></tbody><tfoot><tr><td colspan="11"><div class="toolbar" style="justify-content:space-between"><span class="hint" id="comp-count"></span><button class="btn ghost" id="comp-showall" hidden>Voltar todos para a cotação</button></div></td></tr></tfoot></table></div></div></div>
+  <div class="tbl-wrap"><table><thead><tr><th>Cotar</th><th>Foto</th><th>Código</th><th>Descrição · cor</th><th class="r">Qtde obra</th><th>Embalagem · qtde</th><th class="r">Preço emb. R$</th><th class="r">Custo total</th></tr></thead>
+  <tbody id="comp-body"></tbody><tfoot><tr><td colspan="8"><div class="toolbar" style="justify-content:space-between"><span class="hint" id="comp-count"></span><button class="btn ghost" id="comp-showall" hidden>Voltar todos para a cotação</button></div></td></tr></tfoot></table></div></div></div>
  <div id="pp-comp"></div></div></section>
 
 <section id="tab-alu" class="tab" hidden><div class="panel-grid"><div class="stack">
@@ -717,19 +722,19 @@ function buildComp(){
    if(compFilter.startsWith("forn:")){const f=compFilter.slice(5);if((k?k.c.forn:"Sem cotação")!==f)return}
    else if(compFilter!=="all"&&compFilter!=="nop"&&r.ap!==compFilter)return}
   if(q&&!(r.code.toUpperCase().includes(q)||r.desc.toUpperCase().includes(q)||(k&&(k.it[1]+" "+k.it[2]).toUpperCase().includes(q))))return;
-  if(r.ap!==la||r.rf!==lr){html+=`<tr class="group"><td colspan="11">${esc(r.ap)} · ${esc(r.rf)}</td></tr>`;la=r.ap;lr=r.rf}
+  if(r.ap!==la||r.rf!==lr){html+=`<tr class="group"><td colspan="8">${esc(r.ap)} · ${esc(r.rf)}</td></tr>`;la=r.ap;lr=r.rf}
   const e=cc.e,share=cc.tq?cc.cost*r.q/cc.tq:0;
   const falta=k&&!hid&&e.t===k.it[3]&&cc.ne>k.it[5];
   const cotTxt=k?`<div class="hint" title="${esc(k.it[2])}">${esc(k.c.forn)} ${esc(k.it[1])} · cotado ${k.it[5]} ${k.it[3]==="UN"?"un":k.it[3].toLowerCase()} · R$ ${num(k.it[6],2)} + IPI ${num(k.it[7],2)}%${k.it[8]?" + ST":""}</div>`:"";
-  html+=`<tr class="${hid?"off":price>0?"":"nop"}"><td><input type="checkbox" class="chk" data-idx="${i}" id="ch-${i}" ${hid?"":"checked"} aria-label="Cotar ${esc(r.code)}"></td><td>${thumbBtn(r.code,1)}</td><td class="code">${esc(r.code)}</td><td>${esc(r.desc)}${cotTxt}</td><td>${esc(r.cor)}</td><td class="r num">${num(r.q,r.un==="MT"?3:0)}</td><td>${esc(r.un)}</td>
+  html+=`<tr class="${hid?"off":price>0?"":"nop"}"><td><input type="checkbox" class="chk" data-idx="${i}" id="ch-${i}" ${hid?"":"checked"} aria-label="Cotar ${esc(r.code)}"></td><td>${thumbBtn(r.code,1)}</td><td class="code">${esc(r.code)}</td><td>${esc(r.desc)}${r.cor&&r.cor!=="-"?`<div class="hint">Cor: <b>${esc(r.cor)}</b></div>`:""}${cotTxt}</td><td class="r num" style="white-space:nowrap">${num(r.q,r.un==="MT"?3:0)}<span class="qun">${esc(r.un)}</span></td>
   <td style="white-space:nowrap"><select class="in" data-embt="${esc(r.code)}" id="et-${i}" aria-label="Embalagem ${esc(r.code)}">${["UN","PCT","ROLO","CX"].map(t=>`<option ${e.t===t?"selected":""}>${t}</option>`).join("")}</select>
-   <input class="in num" style="width:62px;text-align:right" data-embq="${esc(r.code)}" id="eq-${i}" inputmode="decimal" value="${e.t==="UN"?"":esc(e.q)}" ${e.t==="UN"?"hidden":""} placeholder="qtd" aria-label="Quantidade por embalagem ${esc(r.code)}"><span class="hint" ${e.t==="UN"?"hidden":""}> ${r.un==="MT"?"m":"pç"}</span></td>
-  <td class="r num">${hid?"—":(e.t==="UN"?num(cc.ne,r.un==="MT"?3:0):cc.ne+" "+e.t.toLowerCase())}${!hid&&dup[r.code]>1?'<div class="hint">total do código</div>':''}${falta?`<div class="err">cotado ${k.it[5]}</div>`:""}</td>
+   <input class="in num" style="width:62px;text-align:right" data-embq="${esc(r.code)}" id="eq-${i}" inputmode="decimal" value="${e.t==="UN"?"":esc(e.q)}" ${e.t==="UN"?"hidden":""} placeholder="qtd" aria-label="Quantidade por embalagem ${esc(r.code)}"><span class="hint" ${e.t==="UN"?"hidden":""}> ${r.un==="MT"?"m":"pç"}</span>
+   <span class="hint num embq">${hid||e.t==="UN"?"":"= "+cc.ne+" "+e.t.toLowerCase()+(dup[r.code]>1?" (total do código)":"")}</span>${falta?`<div class="err">cotado ${k.it[5]}</div>`:""}</td>
   <td class="r price"><input class="in money num" data-code="${esc(r.code)}" id="cp-${i}" inputmode="decimal" placeholder="0,00" value="${esc(st.comp[r.code]||"")}" aria-label="Preço da embalagem ${esc(r.code)}"></td>
   <td class="r num" id="ct-${i}">${hid?"fora":price>0?brl(share):"—"}</td></tr>`;
  });
  const nh=O.comps.filter((r,i)=>isHid(O,i)).length;
- $("comp-body").innerHTML=html||`<tr><td colspan="11" class="hint">${!O.comps.length?"Esta obra não tem lista de componentes.":compFilter==="hid"?"Nenhum item oculto.":"Nenhum componente encontrado."}</td></tr>`;
+ $("comp-body").innerHTML=html||`<tr><td colspan="8" class="hint">${!O.comps.length?"Esta obra não tem lista de componentes.":compFilter==="hid"?"Nenhum item oculto.":"Nenhum componente encontrado."}</td></tr>`;
  $("f-hid").textContent=`Ocultos (${nh})`;
  const sp=O.comps.filter((r,i)=>!isHid(O,i)&&!(n(st.comp[r.code])>0)).length;
  $("comp-count").textContent=`${O.comps.length-nh} itens na cotação`+(nh?` · ${nh} oculto${nh>1?"s":""}`:"")+(sp?` · ${sp} sem preço`:" · todos com preço");
