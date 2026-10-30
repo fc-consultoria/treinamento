@@ -357,7 +357,7 @@ const blankMg=()=>({imp:"",desp:"",mg:""});
 // ---------- BANCO LOCAL ----------
 const KEY="fc-orcamentos-v2";
 let DB=null;
-try{const s=localStorage.getItem(KEY);if(s)DB=JSON.parse(s)}catch(e){}
+if(window.ORC&&ORC.ativo){DB=ORC.DB}else{try{const s=localStorage.getItem(KEY);if(s)DB=JSON.parse(s)}catch(e){}}
 function newState(o,lib){
  const st={hide:{},comp:{},aluPeso:num(o.pesoTotal||o.perfis.reduce((s,p)=>s+p.peso,0)),aluKg:lib.aluKg||"",aluAdd:lib.aluAdd||"",vidPrice:{},vidM2:{},
   outros:[{d:"Mão de obra de fabricação",v:""},{d:"Instalação",v:""},{d:"Frete / transporte",v:""},{d:"",v:""}],
@@ -381,7 +381,7 @@ if(!DB||!Array.isArray(DB.obras)){
  DB.obras.push(o);
 }
 let saveErr=false;
-function save(){try{localStorage.setItem(KEY,JSON.stringify(DB));saveErr=false}catch(e){saveErr=true}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(DB));saveErr=false}catch(e){saveErr=true}if(window.orcSync)orcSync(DB)}
 // ---------- BANCO DE COMPONENTES (preço, embalagem, fornecedor e foto por código) ----------
 if(!DB.banco)DB.banco={};
 function bEnsure(code,r){let b=DB.banco[code];if(!b){b=DB.banco[code]={code,desc:r?r.desc:"",un:r?r.un:"PC",cor:r?r.cor:"",rf:r?r.rf:"",preco:"",emb:{t:"UN",q:1}};}
@@ -463,7 +463,7 @@ function renderBanco(){
 function showHome(){
  location.hash=""; $("tabs").hidden=true; $("view-obra").hidden=true; $("view-home").hidden=false;
  const tot=DB.obras.reduce((s,o)=>s+totals(o).v,0);
- $("hdr").innerHTML=`<div><a class="tomatriz" href="../painel.html">← Painel da Matriz</a><div class="eyebrow">FC Consultoria em Esquadria</div><h1>Orçamentos de obra</h1><div class="meta">Lance um orçamento a partir dos PDFs do sistema: croqui, lista de perfis e lista de componentes.</div></div>
+ $("hdr").innerHTML=`<div>${window.ORC&&ORC.papel==='orcamentista'?'':'<a class="tomatriz" href="../painel.html">← Painel da Matriz</a>'}<div class="eyebrow">FC Consultoria em Esquadria</div><h1>Orçamentos de obra</h1><div class="meta">Lance um orçamento a partir dos PDFs do sistema: croqui, lista de perfis e lista de componentes.</div></div>
   <div class="kpis"><div class="kpi"><span class="eyebrow">Obras</span><b class="num">${DB.obras.length}</b></div><div class="kpi sale"><span class="eyebrow">Total em propostas</span><b class="num">${brl(tot)}</b></div></div>`;
  if(NEW){renderNew();return}
  const cards=DB.obras.slice().reverse().map(o=>{const t=totals(o);const nP=o.comps.filter((c,i)=>!isHid(o,i)&&!(n(o.st.comp[c.code])>0)).length;
@@ -854,6 +854,7 @@ window.addEventListener("hashchange",()=>{const k=location.hash.replace("#","");
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="../auth.js"></script>
-<script>gateUI(()=>iniciarOrcamentos(),{soMatriz:true});</script>
+<script src="sync.js"></script>
+<script>gateUI(async r=>{if(await orcCarregar(r))iniciarOrcamentos()},{soMatriz:true,permitir:['orcamentista']});</script>
 </body>
 </html>

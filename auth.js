@@ -17,14 +17,17 @@ function msgEvoluiu(msg){
    +'<b>O FC Mostruário 3D evoluiu para a Plataforma FC 3D.</b><br>Para conhecer a nova versão, fale com a FC pelo WhatsApp (66) 9 9986-7984.'
    +'<br><a href="'+wa+'" target="_blank" rel="noopener" style="display:inline-block;margin-top:10px;padding:10px 16px;border-radius:8px;background:#25d366;color:#fff;font-weight:700;text-decoration:none">💬 Falar com a FC no WhatsApp</a></div>';
 }
-function gateUI(onOk,{soMatriz=false}={}){
+function gateUI(onOk,{soMatriz=false,permitir=[]}={}){
   const gate=document.getElementById('gate'),form=document.getElementById('gateForm'),msg=document.getElementById('gateMsg'),btn=form.querySelector('button');
   async function check(){
     const r=await perfilAtual();
     if(!r){gate.hidden=false;return;}
-    if(r.perfil&&!r.perfil.ativo&&r.perfil.papel!=='admin'){await sb.auth.signOut();gate.hidden=false;msgEvoluiu(msg);return;}
+    if(r.perfil&&!r.perfil.ativo&&r.perfil.papel==='aluno'){await sb.auth.signOut();gate.hidden=false;msgEvoluiu(msg);return;}
     if(!r.perfil||!r.perfil.ativo){await sb.auth.signOut();gate.hidden=false;msg.textContent='Este acesso não está liberado. Fale com a FC Consultoria.';return;}
-    if(soMatriz&&r.perfil.papel!=='admin'){gate.hidden=false;msg.textContent='Esta área é só da matriz.';await sb.auth.signOut();return;}
+    const lib=permitir.includes(r.perfil.papel);
+    /* orçamentista (equipe FC) só entra nas páginas que o liberam, hoje Orçamentos de obra */
+    if(r.perfil.papel==='orcamentista'&&!lib){await sb.auth.signOut();gate.hidden=false;msg.innerHTML='Este login é só para os Orçamentos de obra. <a href="https://fc-consultoria.github.io/treinamento/orcamentos/">Abrir Orçamentos de obra</a>';return;}
+    if(soMatriz&&r.perfil.papel!=='admin'&&!lib){gate.hidden=false;msg.textContent='Esta área é só da matriz.';await sb.auth.signOut();return;}
     if(r.perfil.papel!=='admin'){try{await senhaNovaPasso(r.perfil);}catch(_){}}
     gate.hidden=true;onOk(r);
   }

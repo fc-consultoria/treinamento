@@ -1139,7 +1139,7 @@ function wireGal(e,q){const g=id=>document.getElementById(id);let colados=[];
   q('[data-gleg]',b=>b.onclick=()=>{const f=e.gal.find(x=>x.id===b.dataset.gleg);const t=prompt('O que a foto mostra:',f.leg||'');if(t===null)return;f.leg=t.trim();ficha();salvar(at);});
   q('[data-grm]',b=>b.onclick=async()=>{const f=e.gal.find(x=>x.id===b.dataset.grm);if(!confirm('Apagar esta foto?'))return;await sb.storage.from(BK).remove([f.path]);e.gal=e.gal.filter(x=>x!==f);ficha();salvar(at);});}
 let ALUNOS=[];
-async function carregarAlunos(){const {data}=await sb.from('trein_alunos').select('user_id,login,nome,papel,ativo').neq('papel','admin').order('nome');ALUNOS=(data||[]).filter(a=>!/^gestor cat/i.test(a.nome||''));
+async function carregarAlunos(){const {data}=await sb.from('trein_alunos').select('user_id,login,nome,papel,ativo').eq('papel','aluno').order('nome');ALUNOS=(data||[]).filter(a=>!/^gestor cat/i.test(a.nome||''));
   const nn=t=>String(t||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]/g,'');const mud=[];
   Object.entries(E).forEach(([k,e])=>{if(e.Mostruário===undefined){const base=nn(e.nome.split('·')[0]),sig=nn((e.nome.split('·')[0]||'').trim().split(' ')[0]);const a=ALUNOS.find(a=>nn(a.nome)===base||nn(a.login)===base||nn(a.nome)===sig||nn(a.login).startsWith(base));if(a){e.Mostruário=a.user_id;mud.push(k);}}});
   for(const k of mud)await salvar(k);}
