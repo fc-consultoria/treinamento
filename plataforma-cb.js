@@ -9,6 +9,9 @@ let EMP='cb';const CFG=()=>PLATS[EMP]||PLATS.cb;
 const cores=()=>{const c=CFG(),r=document.documentElement.style;r.setProperty('--plat',c.cor);r.setProperty('--plat2',c.cor2);r.setProperty('--platc',c.claro);r.setProperty('--plats',c.sub);};
 const ehCB=()=>{try{if(typeof E==='undefined'||!E[at]||!cli||!PLATS[at])return false;if(EMP!==at){EMP=at;LISTA=null;cores();}return true;}catch(_){return false;}};
 let modo='home',homeTab;
+/* 29/10/2026 · link vindo do Portal Comercial (?t=<card>&como=<setor>&nome=&abas=): abre direto o card, na visão daquela pessoa */
+const QV=new URLSearchParams(location.search),T_URL=QV.get('t');let EXTRA=null;
+if(T_URL&&T_URL!=='cen'&&QV.get('como'))modo='aba';
 /* 29/10/2026 · nomes dos cards de treinamento na plataforma (a Matriz mantém os nomes antigos das abas) */
 const ORI_URL='/fc3d/clientes/orientativo/?foco=1';
 const NOMES={ori:['🎓','Treinamento · Orientativo','Guia de esquadrias da Plataforma FC 3D, com catálogo e prova final.'],
@@ -122,11 +125,12 @@ let LISTA=null,carregando=false;
 function perfis(){const r=[];ORD.forEach(pp=>{const ps=(LISTA||[]).filter(p=>p.papel===pp&&p.ativo!==false);
   if(!ps.length&&pp!=='fabrica')return;const p=ps[0]||{nome:'Fábrica',papel:'fabrica'};
   const lb=pp==='gestor'?p.nome.split(' ')[0]+' · Gestor':pp==='gerente'?'Coordenação':pp==='fabrica'?'Fábrica':p.nome.split(' ')[0]+' · '+(PAPEL_NOME[pp]||pp);
-  r.push({papel:pp,nome:pp==='gerente'?'Coordenação':p.nome,lb,abas:pp==='gestor'?null:(p.abas||PAD[pp]||[]),sem:!ps.length});});return r;}
+  r.push({papel:pp,nome:pp==='gerente'?'Coordenação':p.nome,lb,abas:pp==='gestor'?null:(p.abas||PAD[pp]||[]),sem:!ps.length});});if(EXTRA&&!r.some(x=>x.papel===EXTRA.papel))r.push(EXTRA);return r;}
 function escolhe(v){window.VCOMO=v;modo='home';homeTab=undefined;try{render();}catch(_){pinta(true);}setTimeout(()=>{pinta(true);window.scrollTo({top:0,behavior:'smooth'});},60);}
 function barraVer(hero){
   if(!LISTA){if(!carregando&&typeof sb!=='undefined'){carregando=true;sb.rpc('emp_pessoas_lista',{p_emp:EMP}).then(r=>{LISTA=r.data||[];carregando=false;
-      const pend=window.VCOMO_PEND;if(pend){window.VCOMO_PEND=null;const v=perfis().find(x=>x.papel===pend);if(v){escolhe(v);return;}}pinta(true);},()=>{carregando=false;});}return;}
+      const pend=window.VCOMO_PEND;if(pend){window.VCOMO_PEND=null;if(!perfis().some(x=>x.papel===pend)&&QV.get('abas')!=null){const nm=QV.get('nome')||(PAPEL_NOME[pend]||pend);EXTRA={papel:pend,nome:nm,lb:nm.split(' ')[0]+' · '+(PAPEL_NOME[pend]||pend),abas:QV.get('abas').split(',').filter(Boolean)};}
+      const v=perfis().find(x=>x.papel===pend);if(v){if(modo==='aba'){window.VCOMO=v;try{if(T_URL&&typeof tab!=='undefined'&&v.abas&&v.abas.includes(T_URL))tab=T_URL;render();}catch(_){}setTimeout(()=>pinta(true),60);return;}escolhe(v);return;}}pinta(true);},()=>{carregando=false;});}return;}
   const P=perfis(),at=(window.VCOMO&&window.VCOMO.papel)||'gestor';
   const b=document.createElement('div');b.className='platVer';
   b.innerHTML='<b>👁 Ver como:</b>'+P.map(x=>`<button type="button" data-vc="${x.papel}" class="${x.papel===at?'on':''}">${h(x.lb)}</button>`).join('')+

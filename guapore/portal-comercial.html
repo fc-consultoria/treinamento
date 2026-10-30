@@ -551,7 +551,10 @@ function abrirModulo(k){
  try{if(window.parent!==window){const b=window.parent.document.querySelector('.tab[data-t="'+k+'"]');if(b){b.click();window.parent.scrollTo({top:0,behavior:'smooth'});return}}}catch(e){}
  if(k==='cat'&&D.slug){window.open('https://fc-consultoria.github.io/catalogo/'+D.slug,'_blank','noopener');if(!G()&&tok())rpc('gpc_uso',{p_token:tok(),p_mod:k}).catch(()=>{});return}
  /* 29/10/2026 · abre direto na ferramenta, sem cair na tela inicial do Painel da Matriz */
- if(D&&D.eu&&D.eu.adm){const v=verComo[role],q='/treinamento/consultorias.html?ver='+EMP+'&t='+k+(role!=='gestor'&&v&&v!=='__fc'?'&como='+role:'');window.open(q,'_blank','noopener');return}
+ if(D&&D.eu&&D.eu.adm){const v=verComo[role];let q='/treinamento/consultorias.html?ver='+EMP+'&t='+k;
+  /* 29/10/2026 · leva junto quem está sendo visto (nome e cards liberados), para a Central abrir o card na visão dessa pessoa e não na do gestor */
+  if(role!=='gestor'&&v&&v!=='__fc'){const p=pessoas(role).find(x=>x.id===v),s=SET[role];q+='&como='+role+(p?'&nome='+encodeURIComponent(p.nome):'')+'&abas='+encodeURIComponent(((p&&p.abas)||(s?s[3]:[])).join(','));}
+  window.open(q,'_blank','noopener');return}
  window.open(LINK_EMP+'#t='+k,'_blank','noopener');
 }
 
