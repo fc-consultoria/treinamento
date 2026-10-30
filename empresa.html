@@ -96,7 +96,7 @@ async function gestorBV(emp,ate,nome,impl){try{
   const [c,v]=await Promise.all([sb.from('trein_eventos').select('tipo,detalhe').in('tipo',['divulga','div_art']).order('criado_em'),sb.from('trein_eventos').select('detalhe').eq('user_id',emp).eq('tipo','div_visto')]);
   let B=null;const A={};(c.data||[]).forEach(e=>{const d=e.detalhe||{};if(e.tipo==='divulga')B=d.bv||null;else A[d.id]=Object.assign({},A[d.id]||{},d);});
   if(!B||!B.on||!B.a||!A[B.a]||A[B.a].rm||!A[B.a].img)return;if(!ate&&!B.todos&&!impl)return;const ref=ate?'bv-'+ate:'bv-inicio',V=(v.data||[]).map(e=>e.detalhe||{}).filter(d=>d.cid==='gestor');
-  if(V.some(d=>d.ref===ref))return;const ren=!!ate&&V.some(d=>String(d.ref||'').startsWith('bv-')&&d.ref!=='bv-inicio');
+  if(V.some(d=>d.ref===ref))return;const ren=!!B.xr&&!!ate&&V.some(d=>String(d.ref||'').startsWith('bv-')&&d.ref!=='bv-inicio');
   await sb.from('trein_eventos').insert({user_id:emp,tipo:'div_visto',tipologia:null,detalhe:{ref,cid:'gestor',quem:'Gestor',bv:true,ren}});
   setTimeout(()=>window.fcBoasVindas({t:B.t,x:ren?B.xr:B.x,img:A[B.a].img,ren,empresa:nome,nome:'',gestor:true}),900);}catch(_){}}
 async function logoCard(emp,perfil){return;/* card da logo na vitrine tirado do painel do cliente (20/10); o convite agora sai pelo painel matriz */if(!EMPV||!window.FCM||!FCM.render2)return;const adm=perfil.papel==='admin',K=emp.slice(0,8);

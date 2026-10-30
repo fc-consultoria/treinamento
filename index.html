@@ -370,7 +370,7 @@ async function check(){if(!UID||!window.ALUNO_CID||OPEN||document.visibilityStat
 function boasVindas(){const B=CFG&&CFG.bv,cid=window.ALUNO_CID;if(!B||!B.on||!cid)return false;
   const ctr=!!(window.CONTRATO_FIM&&window.CONTRATO_ATE&&!window.IMPL_ATE);if(!ctr&&!B.todos&&!window.IMPL_ATE)return false;
   const A=B.a&&ART[B.a];if(!A||A.rm||!A.img)return false;const ref=ctr?'bv-'+window.CONTRATO_ATE:'bv-inicio';if(VISTO.has(cid+'|'+ref))return false;
-  const ren=ctr&&[...VISTO].some(k=>k.startsWith(cid+'|bv-')&&k!==cid+'|bv-inicio');VISTO.add(cid+'|'+ref);OPEN=true;
+  const ren=!!B.xr&&ctr&&[...VISTO].some(k=>k.startsWith(cid+'|bv-')&&k!==cid+'|bv-inicio');VISTO.add(cid+'|'+ref);OPEN=true;
   sb.from('trein_eventos').insert({user_id:UID,tipo:'div_visto',tipologia:null,detalhe:{ref,cid,quem:window.ALUNO_NOME||null,bv:true,ren}}).then(()=>{});
   window.fcBoasVindas({t:B.t,x:ren?B.xr:B.x,img:A.img,ren,empresa:EMP,nome:window.ALUNO_NOME||'',onClose:()=>{OPEN=false;}});return true;}
 function btnUI(L){const b=document.getElementById('dvBtn');if(!b)return;const n=(L||itens()).length;b.hidden=!n;b.textContent=n>1?`📢 Divulgação (${n})`:'📢 Divulgação';}

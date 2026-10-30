@@ -295,7 +295,7 @@ td.qd{cursor:help}td.qd:hover{background:#eef6f8;box-shadow:inset 0 -2px 0 #1f6f
      <div><button type="button" class="pri" id="nvPub">Publicar agora</button> <span class="msg" id="nvMsg"></span></div></div></div>
    <ul class="nvl" id="nvList"></ul>
    <h3 class="dvt" style="margin-top:22px">C · Boas-vindas ao cliente</h3>
-   <p class="note">Aparece uma vez para cada colaborador e para o gestor. Com contrato: na primeira entrada depois do pagamento, e na renovação aparece a mensagem de renovação. Escolhendo “Todos os acessos”, quem ainda não tem contrato também recebe na primeira entrada. Se quiser personalizar, pode usar {empresa} e {nome} no texto (opcional).</p>
+   <p class="note">Aparece uma vez para cada colaborador e para o gestor. Com contrato: na primeira entrada depois do pagamento. Escolhendo “Todos os acessos”, quem ainda não tem contrato também recebe na primeira entrada. Se quiser personalizar, pode usar {empresa} e {nome} no texto (opcional).</p>
    <div id="bvBox"></div>
    <h3 class="dvt" style="margin-top:22px">D · 🖼 Minhas artes <span class="note" id="glN" style="font-weight:500;text-transform:none;letter-spacing:0"></span></h3>
    <p class="note">Todas as artes que você enviou ficam guardadas aqui. Na sequência, na novidade e nas boas-vindas é só escolher da galeria, sem enviar de novo.</p>
@@ -1191,24 +1191,23 @@ function galUI(){const el=document.getElementById('glGrid');if(!el)return;const 
   el.querySelectorAll('[data-gd]').forEach(b=>b.onclick=()=>{const a=DART[b.dataset.gd],l=document.createElement('a');l.href=a.img;l.download=(a.nome||'arte-fc')+'.jpg';document.body.appendChild(l);l.click();l.remove();});
   el.querySelectorAll('[data-gr]').forEach(b=>b.onclick=async()=>{const id=b.dataset.gr,u=galUsos(id);if(!confirm(u.length?'Esta arte está em uso ('+u.join(', ')+'). Apagar mesmo assim? Ela sai desses lugares.':'Apagar esta arte da galeria?'))return;
     b.disabled=true;await ins('div_art',{id,rm:true});DART[id].rm=true;let mud=false;DCFG.seq.forEach((x,i)=>{if(x&&x.a===id){DCFG.seq[i]=null;mud=true;}});if(DCFG.bv&&DCFG.bv.a===id){DCFG.bv.a=null;mud=true;}if(mud)divSalvar(true);divRender();});}
-const BVPAD={on:true,a:null,t:'Seja bem-vindo à parceria!',x:'Seja muito bem-vindo ao FC Mostruário 3D. Agradecemos a confiança depositada na FC Consultoria em Esquadria. A partir de agora, sua equipe conta com o nosso apoio para conhecer as linhas de esquadrias e aplicar a orientação no sistema.',xr:'Agradecemos por renovar a parceria com a FC Consultoria em Esquadria. O acesso ao FC Mostruário 3D está liberado por mais 30 dias. Seguimos à disposição da sua equipe.'};
-function bvUI(){const el=document.getElementById('bvBox');if(!el)return;const B=DCFG.bv;
+const BVPAD={on:true,a:null,t:'Seja bem-vindo à parceria!',x:'Seja muito bem-vindo ao FC Mostruário 3D. Agradecemos a confiança depositada na FC Consultoria em Esquadria. A partir de agora, sua equipe conta com o nosso apoio para conhecer as linhas de esquadrias e aplicar a orientação no sistema.'};
+function bvUI(){const el=document.getElementById('bvBox');if(!el)return;const B=DCFG.bv;if(B&&B.xr){delete B.xr;divSalvar(true);}
   if(!B){el.innerHTML=`<div class="bvw"><div class="bvi" style="background-image:url(${BVSUG});border-style:solid"></div><div class="bvf"><b>Sugestão da FC pronta para usar</b><span class="note">Arte de boas-vindas no padrão FC com a sua foto. Ao ligar, ela entra na sua galeria e passa a aparecer para cada empresa que fechar contrato. Depois você pode trocar a arte e os textos.</span><div><button type="button" class="pri" id="bvLig">✔ Usar esta arte e ligar as boas-vindas</button> <button type="button" id="bvPv0">👁 Ver como o cliente vê</button></div><span class="msg" id="bvMsg"></span></div></div>`;
     document.getElementById('bvPv0').onclick=()=>bvPrev(Object.assign({},BVPAD),BVSUG,false);
     document.getElementById('bvLig').onclick=async e=>{e.target.disabled=true;document.getElementById('bvMsg').textContent='Salvando…';try{const bl=await (await fetch(BVSUG)).blob();const a=await galNova(new File([bl],'Boas-vindas FC.jpg',{type:'image/jpeg'}),'Boas-vindas FC');if(!a)throw 0;
       DCFG.bv=Object.assign({},BVPAD,{a:a.id});divSalvar(true);divRender();}catch(_){e.target.disabled=false;document.getElementById('bvMsg').textContent='Não consegui salvar. Tente de novo.';}};return;}
   const A=B.a&&DART[B.a]&&!DART[B.a].rm?DART[B.a]:null;
   el.innerHTML=`<div class="bvw"><div class="bvi" id="bvImg" role="button" tabindex="0" style="${A?'background-image:url('+A.img+');border-style:solid':''}">${A?'':'＋ Escolher arte'}</div><div class="bvf">
-    <div class="dvbar" style="margin:0"><span class="dvtg${B.on?' on':''}" id="bvOn"><i></i><span>${B.on?'Boas-vindas ligadas':'Boas-vindas desligadas'}</span></span><button type="button" id="bvTroca">🖼 Trocar arte</button><button type="button" id="bvPv">👁 Novo cliente</button><button type="button" id="bvPvR">👁 Renovação</button><span class="msg ok" id="bvMsg"></span></div>
+    <div class="dvbar" style="margin:0"><span class="dvtg${B.on?' on':''}" id="bvOn"><i></i><span>${B.on?'Boas-vindas ligadas':'Boas-vindas desligadas'}</span></span><button type="button" id="bvTroca">🖼 Trocar arte</button><button type="button" id="bvPv">👁 Novo cliente</button><span class="msg ok" id="bvMsg"></span></div>
     <label>Mostrar para<select id="bvPara"><option value="ctr">Só empresas com contrato (na entrada depois do pagamento)</option><option value="todos">Todos os acessos (com e sem contrato) · diferencial FC</option></select></label>
     <label>Título<input id="bvT" value="${desc(B.t)}"></label>
-    <label>Mensagem para cliente novo<textarea id="bvX" rows="3">${desc(B.x)}</textarea></label>
-    <label>Mensagem na renovação<textarea id="bvXr" rows="2">${desc(B.xr)}</textarea></label></div></div>`;
-  const sv=()=>{B.t=document.getElementById('bvT').value;B.x=document.getElementById('bvX').value;B.xr=document.getElementById('bvXr').value;divSalvar();};
-  ['bvT','bvX','bvXr'].forEach(i=>document.getElementById(i).oninput=sv);
+    <label>Mensagem para cliente novo<textarea id="bvX" rows="3">${desc(B.x)}</textarea></label></div></div>`;
+  const sv=()=>{B.t=document.getElementById('bvT').value;B.x=document.getElementById('bvX').value;divSalvar();};
+  ['bvT','bvX'].forEach(i=>document.getElementById(i).oninput=sv);
   const troca=()=>galEscolher(a=>{B.a=a.id;divSalvar(true);divRender();});document.getElementById('bvImg').onclick=troca;document.getElementById('bvTroca').onclick=troca;
   document.getElementById('bvOn').onclick=()=>{B.on=!B.on;divSalvar(true);divRender();};document.getElementById('bvPara').value=B.todos?'todos':'ctr';document.getElementById('bvPara').onchange=e=>{B.todos=e.target.value==='todos';divSalvar(true);};
-  document.getElementById('bvPv').onclick=()=>bvPrev(B,A&&A.img,false);document.getElementById('bvPvR').onclick=()=>bvPrev(B,A&&A.img,true);}
+  document.getElementById('bvPv').onclick=()=>bvPrev(B,A&&A.img,false);}
 function bvPrev(B,img,ren){const nm=(ALUNOS[0]&&(ALUNOS[0].nome||ALUNOS[0].login))||'Vidraçaria Silva';
   if(typeof window.fcBoasVindas==='function')window.fcBoasVindas({t:B.t,x:ren?B.xr:B.x,img,ren,empresa:'Vidraçaria Silva',nome:'Carlos',previa:true});}
 function cvStatus(code){const DD=window.DEMO_DATA||{EV:[]},L=DD.EV.filter(x=>x.code===code),c=L.filter(x=>x.tipo==='convite').pop();if(!c)return '';
