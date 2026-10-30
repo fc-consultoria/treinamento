@@ -44,7 +44,7 @@ const sb=window.supabase.createClient('https://cpkjphodruyxfouirhpd.supabase.co'
 const EMP=(new URLSearchParams(location.search).get('e')||'').toLowerCase().replace(/[^a-z0-9_-]/g,'');
 const app=document.getElementById('app');
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const entrar='consultorias.html?e='+encodeURIComponent(EMP);
+const entrar=['gs'].includes(EMP)?'https://fc-consultoria.github.io/fc3d/clientes/':'consultorias.html?e='+encodeURIComponent(EMP);
 const rodape=`<p class="foot">Dúvidas: FC Consultoria · <a href="https://wa.me/5566999867984" target="_blank" rel="noopener">(66) 9 9986-7984</a></p>`;
 const fone=v=>{let d=v.replace(/\D/g,'').slice(0,11);if(d.length<3)return d;const a=d.slice(0,2),r=d.slice(2);
   if(r.length<=4)return `(${a}) ${r}`;if(d.length===11)return `(${a}) ${r[0]} ${r.slice(1,5)}-${r.slice(5)}`;return `(${a}) ${r.slice(0,4)}-${r.slice(4)}`;};
