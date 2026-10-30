@@ -590,7 +590,7 @@ function buildObra(){
  <div class="stack"><div class="card" id="cot-card"></div>
  <div class="card"><div class="card-h"><div><h2>Componentes da obra</h2><div class="hint">Escolha a embalagem (UN, PCT ou ROLO) e digite o preço dela. A quantidade de embalagens é arredondada para cima. Desmarque "Cotar" para tirar o item da cotação e do custo.</div></div>
   <div class="toolbar"><div class="seg" id="comp-filter"><button aria-pressed="true" data-f="all">Todos</button><button aria-pressed="false" data-f="FÁBRICA">Fábrica</button><button aria-pressed="false" data-f="OBRA">Obra</button><button aria-pressed="false" data-f="nop">Sem preço</button><button aria-pressed="false" data-f="hid" id="f-hid">Ocultos (0)</button></div><div class="seg" id="comp-forn"></div>
-  <input class="in" id="comp-search" type="search" placeholder="Buscar código ou descrição" aria-label="Buscar componente"></div></div>
+  <input class="in" id="comp-search" type="search" placeholder="Buscar código ou descrição" aria-label="Buscar componente"><button class="btn" id="b-semprec" type="button">📋 Lista sem preço</button></div></div>
   <div class="tbl-wrap"><table><thead><tr><th>Cotar</th><th>Foto</th><th>Código</th><th>Descrição · cor</th><th class="r">Qtde obra</th><th>Embalagem · qtde</th><th class="r">Preço emb. R$</th><th class="r">Custo total</th></tr></thead>
   <tbody id="comp-body"></tbody><tfoot><tr><td colspan="8"><div class="toolbar" style="justify-content:space-between"><span class="hint" id="comp-count"></span><button class="btn ghost" id="comp-showall" hidden>Voltar todos para a cotação</button></div></td></tr></tfoot></table></div></div></div>
  <div id="pp-comp"></div></div></section>
@@ -733,6 +733,7 @@ function buildComp(){
   <td class="r price"><input class="in money num" data-code="${esc(r.code)}" id="cp-${i}" inputmode="decimal" placeholder="0,00" value="${esc(st.comp[r.code]||"")}" aria-label="Preço da embalagem ${esc(r.code)}"></td>
   <td class="r num" id="ct-${i}">${hid?"fora":price>0?brl(share):"—"}</td></tr>`;
  });
+ {const ns=semPreco().length;const bs=$("b-semprec");if(bs){bs.textContent="📋 Lista sem preço ("+ns+")";bs.disabled=!ns}}
  const nh=O.comps.filter((r,i)=>isHid(O,i)).length;
  $("comp-body").innerHTML=html||`<tr><td colspan="8" class="hint">${!O.comps.length?"Esta obra não tem lista de componentes.":compFilter==="hid"?"Nenhum item oculto.":"Nenhum componente encontrado."}</td></tr>`;
  $("f-hid").textContent=`Ocultos (${nh})`;
@@ -758,6 +759,54 @@ function wireComp(){
  const segClick=e=>{const b=e.target.closest("button");if(!b)return;compFilter=b.dataset.f;document.querySelectorAll("#comp-filter button,#comp-forn button").forEach(x=>x.setAttribute("aria-pressed",x.dataset.f===compFilter));buildComp()};
  $("comp-filter").onclick=segClick;$("comp-forn").onclick=segClick;
  $("comp-search").oninput=buildComp;
+ $("b-semprec").onclick=abrirSemPreco;
+}
+
+// ---------- LISTA DE COMPONENTES SEM PREÇO (para pedir cotação) ----------
+function semPreco(){const m={};O.comps.forEach((r,i)=>{if(isHid(O,i)||n(st.comp[r.code])>0)return;
+  const k=r.code;if(!m[k])m[k]={code:r.code,desc:r.desc,cor:r.cor&&r.cor!=="-"?r.cor:"",un:r.un,q:0,rf:r.rf||"Sem fornecedor",ap:new Set()};m[k].q+=r.q;m[k].ap.add(r.ap)});
+ return Object.values(m).sort((a,b)=>a.rf.localeCompare(b.rf)||a.code.localeCompare(b.code))}
+function spQ(x){return num(x.q,x.un==="MT"?3:0)}
+function spTexto(L){const cab="*Solicitação de orçamento*";let t=cab+"\n";let f="";
+ L.forEach(x=>{if(x.rf!==f){f=x.rf;t+="\n*"+f+"*\n"}t+="• "+x.code+" · "+x.desc+(x.cor?" · "+x.cor:"")+" · "+spQ(x)+" "+x.un+"\n"});return t+"\nFavor informar preço, embalagem, IPI, ST e prazo."}
+function spCarregarPdf(){if(window.jspdf&&window.jspdf.jsPDF&&window.jspdf.jsPDF.API.autoTable)return Promise.resolve();
+ const add=src=>new Promise((ok,er)=>{const sc=document.createElement("script");sc.src=src;sc.onload=ok;sc.onerror=er;document.head.appendChild(sc)});
+ return add("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js").then(()=>add("https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"))}
+function abrirSemPreco(){const TODOS=semPreco();let mo=$("m-semprec");if(!mo){mo=document.createElement("div");mo.className="modal";mo.id="m-semprec";document.body.appendChild(mo)}
+ const forns=[...new Set(TODOS.map(x=>x.rf))];let FSEL="";
+ const lista=()=>FSEL?TODOS.filter(x=>x.rf===FSEL):TODOS;
+ const nome=()=>"solicitacao-orcamento"+(FSEL?"-"+FSEL.replace(/[^\w-]+/g,"_"):"")+"-"+new Date().toISOString().slice(0,10);
+ function linhas(L){let f="",rows="";L.forEach(x=>{if(x.rf!==f){f=x.rf;rows+=`<tr class="group"><td colspan="5">${esc(f)} · ${L.filter(y=>y.rf===f).length} itens</td></tr>`}
+  rows+=`<tr><td class="code">${esc(x.code)}</td><td>${esc(x.desc)}</td><td>${esc(x.cor)}</td><td class="r num">${spQ(x)}</td><td>${esc(x.un)}</td></tr>`});return rows}
+ mo.innerHTML=`<div class="box" role="dialog" aria-label="Componentes sem preço"><div class="mh"><div><h2 style="font-size:17px">Componentes sem preço · <span id="sp-n"></span></h2><div class="hint">Itens marcados para cotar e ainda sem preço, com a quantidade total da obra por código. O PDF e o Excel levam só os dados dos itens: sem nome da FC, da obra ou do cliente.</div></div>
+  <div class="toolbar"><select class="in" id="sp-f" aria-label="Fornecedor"><option value="">Todos os fornecedores (${TODOS.length})</option>${forns.map(f=>`<option value="${esc(f)}">${esc(f)} (${TODOS.filter(x=>x.rf===f).length})</option>`).join("")}</select>
+  <button class="btn" id="sp-pdf" type="button">⬇ Baixar PDF</button><button class="btn ghost" id="sp-xls" type="button">Excel</button><button class="btn ghost" id="sp-cp" type="button">Copiar para WhatsApp</button><button class="btn ghost" id="sp-x" type="button" aria-label="Fechar">✕</button></div></div>
+  <div class="mb"><div class="hint" id="sp-msg" style="margin-bottom:8px"></div><div class="tbl-wrap"><table><thead><tr><th>Código</th><th>Descrição</th><th>Cor</th><th class="r">Qtde obra</th><th>Un</th></tr></thead><tbody id="sp-body"></tbody></table></div></div></div>`;
+ const pinta=()=>{const L=lista();$("sp-n").textContent=L.length+" itens";$("sp-body").innerHTML=linhas(L)||'<tr><td colspan="5" class="hint">Todos os componentes já têm preço.</td></tr>';["sp-pdf","sp-xls","sp-cp"].forEach(id=>$(id).disabled=!L.length)};
+ pinta();mo.hidden=false;$("sp-msg").textContent="";
+ $("sp-f").onchange=e=>{FSEL=e.target.value;pinta()};
+ const fechar=()=>{mo.hidden=true};$("sp-x").onclick=fechar;mo.onclick=e=>{if(e.target===mo)fechar()};
+ $("sp-pdf").onclick=async ev=>{const bt=ev.target;bt.disabled=true;bt.textContent="Gerando…";
+  try{await spCarregarPdf();const L=lista();const {jsPDF}=window.jspdf;const d=new jsPDF({orientation:"portrait",unit:"mm",format:"a4"});
+   const W=d.internal.pageSize.getWidth();
+   d.setFont("helvetica","bold");d.setFontSize(15);d.text("Solicitação de orçamento",14,18);
+   d.setFont("helvetica","normal");d.setFontSize(9.5);d.setTextColor(70);
+   const info=["Data: "+new Date().toLocaleDateString("pt-BR")+"   ·   "+L.length+" itens"];
+   info.forEach((t,k)=>d.text(t,14,25+k*5));
+   d.setTextColor(30);d.text("Favor informar para cada item: embalagem, preço da embalagem, IPI, ST e prazo de entrega.",14,25+info.length*5+2);
+   const body=[];let f="";L.forEach(x=>{if(x.rf!==f){f=x.rf;body.push([{content:f,colSpan:8,styles:{fillColor:[227,241,241],font:"helvetica",fontSize:8.5,fontStyle:"bold",textColor:[13,74,72]}}])}
+    body.push([x.code,x.desc+(x.cor?"\nCor: "+x.cor:""),spQ(x),x.un,"","","",""])});
+   d.autoTable({startY:25+info.length*5+7,head:[["Código","Descrição","Qtde","Un","Embalagem","Preço R$","IPI %","ST R$"]],body,theme:"grid",
+    styles:{fontSize:8.5,cellPadding:1.8,valign:"middle",lineColor:[200,208,214],lineWidth:.1},headStyles:{fillColor:[13,74,72],textColor:255,fontStyle:"bold"},
+    columnStyles:{0:{cellWidth:30,font:"courier",fontSize:8},1:{cellWidth:"auto"},2:{cellWidth:16,halign:"right"},3:{cellWidth:10},4:{cellWidth:20},5:{cellWidth:20},6:{cellWidth:13},7:{cellWidth:14}},margin:{left:14,right:14},
+    didDrawPage:()=>{const h=d.internal.pageSize.getHeight();d.setFontSize(8);d.setTextColor(120);d.text("Página "+d.internal.getNumberOfPages(),W-14,h-8,{align:"right"})}});
+   d.save(nome()+".pdf");$("sp-msg").textContent="PDF baixado. É só anexar no WhatsApp ou no e-mail do fornecedor."}
+  catch(e){console.warn(e);$("sp-msg").textContent="Não foi possível gerar o PDF agora. Confira a internet e tente de novo."}
+  bt.disabled=false;bt.textContent="⬇ Baixar PDF"};
+ $("sp-xls").onclick=()=>{const L=lista(),c=v=>'"'+String(v==null?"":v).replace(/"/g,'""')+'"';
+  const lin=[["Fornecedor","Código","Descrição","Cor","Qtde obra","Un","Embalagem","Preço embalagem R$","IPI %","ST R$"].map(c).join(";")].concat(L.map(x=>[x.rf,x.code,x.desc,x.cor,spQ(x),x.un,"","","",""].map(c).join(";")));
+  const b=new Blob(["﻿"+lin.join("\r\n")],{type:"text/csv;charset=utf-8"});const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=nome()+".csv";document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)};
+ $("sp-cp").onclick=async()=>{try{await navigator.clipboard.writeText(spTexto(lista()));$("sp-msg").textContent="Lista copiada. É só colar no WhatsApp ou no e-mail."}catch(e){$("sp-msg").textContent="Não deu para copiar automaticamente. Use o PDF."}};
 }
 
 // ---------- ALUMÍNIO ----------
