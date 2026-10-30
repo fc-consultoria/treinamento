@@ -1,0 +1,2 @@
+{"id":"./","name":"Orçamentos de Obra","short_name":"Orçamentos","description":"Orçamentos de obra a partir dos PDFs do sistema","start_url":"./","scope":"./","display":"standalone","background_color":"#0d4a48","theme_color":"#0d4a48","lang":"pt-BR",
+ "icons":[{"src":"icon-192.png","sizes":"192x192","type":"image/png","purpose":"any"},{"src":"icon-512.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}]}
