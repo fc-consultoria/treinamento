@@ -2,7 +2,7 @@
 (function(){
 const SB='https://cpkjphodruyxfouirhpd.supabase.co',KEY='sb_publishable_d0HEeWsaqOeZIQKGftlF-Q_B8BUOWWg';
 const esc=v=>String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-const TIPOS={mont:['🔧','Dica de montagem','#1f7a4d','#e6f6ec'],onde:['📍','Onde encontrar','#1f5f8b','#e5f0f8'],novo:['🆕','Novidade','#9a4b14','#fdeee3']};
+const TIPOS={uso:['🧭','Dica de uso','#0f6b70','#e3f3f2'],mont:['🔧','Dica de montagem','#1f7a4d','#e6f6ec'],onde:['📍','Onde encontrar','#1f5f8b','#e5f0f8'],novo:['🆕','Novidade','#9a4b14','#fdeee3']};
 const hoje=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
 const yt=u=>{const m=String(u||'').match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?(?:.*&)?v=|shorts\/|embed\/|live\/))([\w-]{11})/);return m?m[1]:'';};
 const url=u=>{u=String(u||'').trim();if(!u)return '';if(!/^https?:\/\//i.test(u))u='https://'+u;try{const x=new URL(u);return /^https?:$/.test(x.protocol)?x.href:'';}catch(_){return '';}};
