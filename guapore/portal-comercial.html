@@ -283,6 +283,12 @@ const MOD={
  sol:['📨','Solicitação com a FC','Peça algo à FC e acompanhe a resposta.'],
  age:['🗓','Agenda da FC','Visitas, reuniões e treinamentos com a FC.']
 };
+/* 29/10/2026 · ferramentas passaram para a Plataforma FC 3D (todos os usuários).
+   No portal fica só Acesso + Agenda da FC; os outros módulos ficam OCULTOS (não apagados):
+   os acessos já gravados de cada pessoa continuam no banco. Para voltar um módulo, tire-o desta lista. */
+const OCULTO=new Set(['cat','esq','casa','dia','orc','pcod','conv','comp','dist','est','pla','rvi','sol']);
+const VIS=k=>MOD[k]&&!OCULTO.has(k);
+const FC3D='https://fc-consultoria.github.io/fc3d/clientes/';
 const COLORS={cat:'#d5604a',ori:'var(--amber)',esq:'#c98a2b',casa:'#8a6bd6',dia:'#3aa0c9',orc:'var(--brand)',pcod:'#2f8f6f',conv:'#6b7fd6',comp:'#1d5fa8',dist:'#5aa3d6',est:'#7a5c3a',pla:'#9a7b2f',rvi:'#4a8a8a',sol:'#b0627e',age:'#7a8794'};
 /* setor: [papel, nome do setor, rótulo da aba, módulos do setor] */
 const SETORES=[
@@ -438,7 +444,7 @@ function vGestor(){
 function cmdTabela(s){
  const [papel,nome,,base]=s;const L=pessoas(papel);
  if(!L.length&&!['vendas','compras','estoque'].includes(papel))return '';
- const cols=[...base,...[...new Set(L.flatMap(p=>p.abas||[]))].filter(k=>MOD[k]&&!base.includes(k))];
+ const cols=[...base,...[...new Set(L.flatMap(p=>p.abas||[]))].filter(k=>MOD[k]&&!base.includes(k))].filter(VIS);
  const todos=k=>L.length&&L.every(p=>(p.abas||[]).includes(k));
  return `<h3 style="font-size:14px;margin:16px 0 6px">${esc(nome)} <span style="font-weight:500;color:var(--muted);font-size:12px">· ${L.length} pessoa(s)</span></h3>
  ${L.length?`<div class="tablewrap"><table><thead><tr><th>Pessoa</th><th class="c">Acesso</th>${cols.map(k=>`<th class="c" title="${esc(MOD[k][2])}">${MOD[k][0]}<br><small class="thn">${MOD[k][1]}</small></th>`).join('')}</tr></thead><tbody>
@@ -465,13 +471,17 @@ function vSetor(papel){
  if(ADM&&!verComo[papel])verComo[papel]='__fc';
  let me=G()?(verComo[papel]==='__fc'&&ADM?FCP:L.find(p=>p.id===verComo[papel])||L[0]):(D.equipe||[]).find(p=>p.id===D.eu.id);
  if(!me)return `<div class="hello"><div><h1>${esc(s[1])}</h1><p>Painel do setor ${esc(s[1])}.</p></div></div><div class="empty">Ninguém no setor ${esc(s[1])} ainda. O gestor cadastra em "+ Cadastrar pessoa", na Central do Gestor.</div>`;
- const ord=[...s[3],...(me.abas||[]).filter(k=>!s[3].includes(k))].filter(k=>MOD[k]);
+ const ord=[...s[3],...(me.abas||[]).filter(k=>!s[3].includes(k))].filter(VIS);
  const meus=(D.atends||[]).filter(a=>!G()||me.id==='__fc'||a.vend===me.nome);
  return `
  ${G()?`<span class="demo-note">Você está vendo o painel como gestor · ver painel de: <select id="verSel" data-p="${papel}" style="width:auto;display:inline-block;padding:2px 6px">${ADM?`<option value="__fc" ${me.id==='__fc'?'selected':''}>🏢 Matriz · FC (você)</option>`:''}${L.map(p=>`<option value="${p.id}" ${p.id===me.id?'selected':''}>${esc(p.nome)}</option>`).join('')}</select></span>`:''}
  <div class="hello"><div><h1>${me.id==='__fc'?'Matriz · setor '+esc(s[1]):'Olá, '+esc(me.nome.split(' ')[0])}</h1><p>${me.id==='__fc'?'Você abre cada ferramenta com o login da FC: vê, simula, faz pedidos e edita o que a equipe fez.':'Suas ferramentas do setor '+esc(s[1])+'.'}</p></div></div>
  ${!me.ativo?'<div class="empty" style="margin-bottom:14px">Este acesso está pausado pelo gestor.</div>':''}
- <div class="grid mods" id="t-mods">${ord.map(k=>{const ok=me.ativo&&(me.abas||[]).includes(k);return `
+ <div class="grid mods" id="t-mods">
+  <a class="mod" href="${FC3D}" target="_blank" rel="noopener" id="mod-fc3d" style="text-decoration:none;color:inherit;border-color:var(--brand)">
+   <span class="tag" style="background:var(--brand);color:#fff">novo</span>
+   <div class="ic" style="font-size:20px">🧊</div><h3>Plataforma FC 3D</h3><p>Tipologias 3D, Catálogo de Perfis e Substituir perfil. Entre com o mesmo login e senha.</p></a>
+  ${ord.map(k=>{const ok=me.ativo&&(me.abas||[]).includes(k);return `
   <button class="mod ${ok?'':'locked'}" data-act="open" data-m="${k}" data-ok="${ok}" id="mod-${k}">
    ${ok?'':'<span class="tag">🔒 bloqueado</span>'}
    <div class="ic" style="font-size:20px">${MOD[k][0]}</div><h3>${MOD[k][1]}</h3><p>${MOD[k][2]}</p></button>`}).join('')}</div>
@@ -614,22 +624,22 @@ const TOURS={
   ['#t-cat','Este gráfico mostra quantas pessoas abriram o Catálogo 3D por dia e quantos clientes se cadastraram.'],
   ['#t-eq','O medidor da equipe mostra quantas vezes cada pessoa abriu cada ferramenta nos últimos trinta dias.'],
   ['#t-equipe','Aqui está a equipe. A bolinha verde mostra quem está on-line agora, e o botão Só quem está on-line filtra a lista. Para incluir alguém, toque em Cadastrar pessoa e mande o link de primeiro acesso. A FC confere e libera.'],
-  ['#t-cmd','Nos Comandos você liga ou desliga cada módulo por pessoa, separado por setor. A chave Acesso pausa a pessoa inteira. A linha Todos liga ou desliga o módulo para o setor todo. Vale na hora, no celular de cada um.'],
+  ['#t-cmd','Nos Comandos você libera a Agenda da FC por pessoa, separado por setor. A chave Acesso pausa a pessoa inteira. A linha Todos liga ou desliga o módulo para o setor todo. Vale na hora, no celular de cada um.'],
   ['#t-orc','Aqui estão os pedidos de cotação que os clientes enviaram pelo catálogo, com o vendedor de cada um. O atendimento é feito no Painel de Vendas.'],
   ['#t-agg','A agenda do treinamento on-line: crie turmas e acompanhe quem se inscreveu.']
  ],
  vendas:[
-  ['#t-mods','Este é o painel do vendedor. Cada cartão é uma ferramenta. Toque para abrir. Os cartões com cadeado foram bloqueados pelo gestor.'],
-  ['#mod-cat','Use o Catálogo 3D para mostrar ao cliente os perfis e acessórios da Guaporé em 3D.'],
+  ['#mod-fc3d','As ferramentas agora ficam na Plataforma FC 3D: tipologias em 3D, catálogo de perfis e substituir perfil. Entre com o mesmo login e senha.'],
+  ['#mod-age','Na Agenda da FC você vê as visitas, reuniões e treinamentos com a FC.'],
   ['#t-meus','Quando um cliente escolhe você no Catálogo 3D e pede cotação, o pedido aparece aqui. O atendimento é feito no Painel de Vendas.'],
   ['#t-agv','Na agenda de treinamento on-line, toque em uma turma para se inscrever.']
  ],
  compras:[
-  ['#t-mods','Este é o painel de Compras. Cada cartão é uma ferramenta: onde comprar, distribuidoras, conversor e pesquisa de código, entre outras. Toque para abrir.'],
+  ['#mod-fc3d','As ferramentas agora ficam na Plataforma FC 3D. Entre com o mesmo login e senha.'],
   ['#t-agv','Na agenda de treinamento on-line, toque em uma turma para se inscrever.']
  ],
  estoque:[
-  ['#t-mods','Este é o painel do Estoque. Aqui ficam a importação do estoque, a pesquisa de código, o conversor, o catálogo e o treinamento. Toque no cartão para abrir.'],
+  ['#mod-fc3d','As ferramentas agora ficam na Plataforma FC 3D. Entre com o mesmo login e senha.'],
   ['#t-agv','Na agenda de treinamento on-line, toque em uma turma para se inscrever.']
  ],
  marketing:[
