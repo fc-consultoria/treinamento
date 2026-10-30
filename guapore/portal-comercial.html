@@ -296,7 +296,7 @@ const SETORES=[
 const SET=Object.fromEntries(SETORES.map(s=>[s[0],s]));
 const PAPEL={gestor:'Gestor geral',vendas:'Vendas',compras:'Compras',estoque:'Estoque',marketing:'Marketing',gerente:'Gerente comercial',fabrica:'Fábrica',admin:'FC Consultoria'};
 
-let fOn=false, D=null, role='gestor', verComo={}, showCad={}, fVend='todos', fStat='todos', LOAD=false, PRODS=null, mkQ='';
+let fOn=false, D=null, role=(new URLSearchParams(location.search).get('papel')||'gestor').replace(/[^a-z]/g,''), verComo={}, showCad={}, fVend='todos', fStat='todos', LOAD=false, PRODS=null, mkQ='';
 const $=s=>document.querySelector(s);
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmtD=iso=>{if(!iso)return '—';const d=new Date(iso);return d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})};

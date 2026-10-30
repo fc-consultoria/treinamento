@@ -126,8 +126,9 @@ function barraVer(hero){
   const P=perfis(),at=(window.VCOMO&&window.VCOMO.papel)||'gestor';
   const b=document.createElement('div');b.className='platVer';
   b.innerHTML='<b>👁 Ver como:</b>'+P.map(x=>`<button type="button" data-vc="${x.papel}" class="${x.papel===at?'on':''}">${h(x.lb)}</button>`).join('')+
-    `<span class="n">Prévia da FC: mostra exatamente os cards que cada login vê. Nada é gravado e não conta como acesso da pessoa.${P.some(x=>x.sem)?' Fábrica: ninguém cadastrado ainda (cards padrão do papel).':''}</span>`;
+    (at==='gb'?`<button type="button" data-pcom="vendedor" title="Abre o Portal Comercial como o vendedor vê">Comercial · Vendedor ↗</button>`:'')+`<span class="n">Prévia da FC: mostra exatamente os cards que cada login vê. Nada é gravado e não conta como acesso da pessoa.${P.some(x=>x.sem)?' Fábrica: ninguém cadastrado ainda (cards padrão do papel).':''}</span>`;
   b.querySelectorAll('[data-vc]').forEach(k=>k.onclick=()=>{const v=P.find(x=>x.papel===k.dataset.vc);escolhe(v&&v.papel!=='gestor'?v:(v?{papel:'gestor',nome:v.nome,abas:null}:null));});
+  {const pc=b.querySelector('[data-pcom]');if(pc)pc.onclick=()=>window.open('/treinamento/guapore/portal-comercial.html?papel='+pc.dataset.pcom,'_blank','noopener');}
   hero.before(b);}
 
 function pinta(forca){
