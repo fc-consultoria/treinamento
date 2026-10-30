@@ -1357,9 +1357,9 @@ async function entrarPessoa(){
       if(d.erro==='pendente'){m.textContent='Seu cadastro está aguardando liberação. Você recebe um aviso pelo WhatsApp quando for liberado.';return;}
       if(d.erro){m.textContent='Login ou senha incorretos.';$('#lgS').select();return;}
       res(seguirPessoa(d));};});}
-const PLAT_URL='https://fc-consultoria.github.io/fc3d/clientes/',PLAT_EMP=['gs'];/* empresas cuja equipe de vendas entra direto na Plataforma FC 3D */
+const PLAT_URL='https://fc-consultoria.github.io/fc3d/clientes/',PLAT_EMP=['gs','gb','cb'],PLAT_PAP=['vendas','compras','estoque'];/* empresas e setores que entram direto na Plataforma FC 3D (gestor, gerente e marketing seguem na Central) */
 function seguirPessoa(p){
-  if(p.papel==='vendas'&&PLAT_EMP.includes(EMPL)){try{localStorage.setItem(tokKey(),p.token);}catch(_){}
+  if(PLAT_PAP.includes(p.papel)&&PLAT_EMP.includes(EMPL)){try{localStorage.setItem(tokKey(),p.token);}catch(_){}
     $('#ficha').innerHTML='<div class="body"><p style="margin:0">Seu acesso agora é pela <b>Plataforma FC 3D</b>. Abrindo…</p></div>';
     location.replace(PLAT_URL+'?u='+encodeURIComponent((document.getElementById('lgU')||{}).value||''));return false;}
   if(p.papel==='vendas'){try{localStorage.setItem(tokKey(),p.token);localStorage.setItem('cons-nome',p.nome);}catch(_){}
