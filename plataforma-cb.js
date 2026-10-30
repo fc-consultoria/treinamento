@@ -9,6 +9,10 @@ let EMP='cb';const CFG=()=>PLATS[EMP]||PLATS.cb;
 const cores=()=>{const c=CFG(),r=document.documentElement.style;r.setProperty('--plat',c.cor);r.setProperty('--plat2',c.cor2);r.setProperty('--platc',c.claro);r.setProperty('--plats',c.sub);};
 const ehCB=()=>{try{if(typeof E==='undefined'||!E[at]||!cli||!PLATS[at])return false;if(EMP!==at){EMP=at;LISTA=null;cores();}return true;}catch(_){return false;}};
 let modo='home',homeTab;
+/* 29/10/2026 · nomes dos cards de treinamento na plataforma (a Matriz mantém os nomes antigos das abas) */
+const ORI_URL='/fc3d/clientes/orientativo/?foco=1';
+const NOMES={ori:['🎓','Treinamento · Orientativo','Guia de esquadrias da Plataforma FC 3D, com catálogo e prova final.'],
+ esq:['🗓','Treinamento · Agenda on-line','Próximos treinamentos ao vivo com a FC: inscrição e entrada.']};
 const h=t=>String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
 const css=`
@@ -74,8 +78,8 @@ const CARD={
       gerente:'O Painel de Vendas Atacado é a principal ferramenta da coordenação. Aqui você acompanha os orçamentos da equipe e aprova os descontos acima do limite autorizado.',
       '':'No Painel de Vendas Atacado ficam os orçamentos e pedidos da empresa.'},
  pcod:'Na Pesquisa de código você encontra um perfil pelo código de qualquer fornecedor.',
- ori:'O Mostruário é o guia de consulta de esquadrias: tipologias, componentes e como cada uma funciona. Use quando surgir uma dúvida no atendimento.',
- esq:'No Treinamento 3D você estuda as esquadrias em 3D, peça por peça, no seu ritmo.',
+ ori:'Treinamento · Orientativo abre o guia de esquadrias da Plataforma FC 3D, em outra aba: tipologias, componentes, catálogo de perfis e prova final. Entre com o seu login da plataforma.',
+ esq:'Em Treinamento · Agenda on-line você vê os próximos treinamentos ao vivo com a FC, faz a inscrição e entra na hora marcada.',
  casa:'No Monte sua Casa 3D você coloca as esquadrias na planta e apresenta o projeto ao cliente.',
  dia:'Os Diagramas de pressão de vento ajudam a escolher o perfil adequado conforme a altura e a região da obra.',
  sol:'Em Solicitações com a FC você envia pedidos e dúvidas ao suporte e acompanha a resposta.',
@@ -88,7 +92,7 @@ const INTRO={
  gerente:['Coordenação','Este é o painel da coordenação comercial. Aqui você acompanha a equipe de vendas, aprova descontos e consulta o catálogo e os treinamentos.'],
  marketing:['Marketing','Este é o painel do Marketing. Aqui você acompanha o catálogo da empresa, a galeria do processo de mudança e fala com a FC.'],
  estoque:['Estoque','Este é o painel do Estoque. Aqui você atualiza o estoque com a planilha do sistema, pesquisa e converte códigos, consulta o catálogo e estuda as esquadrias no treinamento.'],
- fabrica:['Fábrica','Este é o painel da Fábrica. Aqui você estuda as esquadrias no Treinamento 3D e consulta o catálogo de perfis.'],
+ fabrica:['Fábrica','Este é o painel da Fábrica. Aqui você estuda as esquadrias no Treinamento · Orientativo, acompanha a Agenda on-line e consulta o catálogo de perfis.'],
  '':['Visão do cliente','Esta é a Plataforma {cli} e FC 3D. Cada cartão abre uma ferramenta; vou mostrar uma por uma.']};
 const temP=()=>{try{return typeof PESSOA!=='undefined'&&!!PESSOA;}catch(_){return false;}};
 const vc=()=>(!temP()&&window.VCOMO)?window.VCOMO:null;
@@ -126,7 +130,7 @@ function barraVer(hero){
   const P=perfis(),at=(window.VCOMO&&window.VCOMO.papel)||'gestor';
   const b=document.createElement('div');b.className='platVer';
   b.innerHTML='<b>👁 Ver como:</b>'+P.map(x=>`<button type="button" data-vc="${x.papel}" class="${x.papel===at?'on':''}">${h(x.lb)}</button>`).join('')+
-    (at==='gb'?`<button type="button" data-pcom="vendedor" title="Abre o Portal Comercial como o vendedor vê">Comercial · Vendedor ↗</button>`:'')+`<span class="n">Prévia da FC: mostra exatamente os cards que cada login vê. Nada é gravado e não conta como acesso da pessoa.${P.some(x=>x.sem)?' Fábrica: ninguém cadastrado ainda (cards padrão do papel).':''}</span>`;
+    (EMP==='gb'?`<button type="button" data-pcom="vendedor" title="Abre o Portal Comercial como o vendedor vê">Comercial · Vendedor ↗</button>`:'')+`<span class="n">Prévia da FC: mostra exatamente os cards que cada login vê. Nada é gravado e não conta como acesso da pessoa.${P.some(x=>x.sem)?' Fábrica: ninguém cadastrado ainda (cards padrão do papel).':''}</span>`;
   b.querySelectorAll('[data-vc]').forEach(k=>k.onclick=()=>{const v=P.find(x=>x.papel===k.dataset.vc);escolhe(v&&v.papel!=='gestor'?v:(v?{papel:'gestor',nome:v.nome,abas:null}:null));});
   {const pc=b.querySelector('[data-pcom]');if(pc)pc.onclick=()=>window.open('/treinamento/guapore/portal-comercial.html?papel='+pc.dataset.pcom,'_blank','noopener');}
   hero.before(b);}
@@ -156,10 +160,10 @@ function pinta(forca){
     if(body)body.style.display='none';
     const ord=k=>k==='cen'?-1:btns.findIndex(b=>b.dataset.t===k);
     const g=document.createElement('div');g.className='platGrid';
-    g.innerHTML=btns.slice().sort((a,b)=>ord(a.dataset.t)-ord(b.dataset.t)).map(b=>{const k=b.dataset.t,tx=b.textContent.trim(),m=tx.match(/^(\S+)\s+(.*)$/),ic=m?m[1]:'▪',lb=m?m[2]:tx;
-      let d=(b.getAttribute('title')||'').trim();if(d.length>70)d=d.slice(0,68).replace(/\s\S*$/,'')+'…';
+    g.innerHTML=btns.slice().sort((a,b)=>ord(a.dataset.t)-ord(b.dataset.t)).map(b=>{const k=b.dataset.t,tx=b.textContent.trim(),m=tx.match(/^(\S+)\s+(.*)$/),N=NOMES[k],ic=N?N[0]:m?m[1]:'▪',lb=N?N[1]:m?m[2]:tx;
+      let d=N?N[2]:(b.getAttribute('title')||'').trim();if(d.length>70)d=d.slice(0,68).replace(/\s\S*$/,'')+'…';
       return `<button type="button" class="platK${k==='cen'?' dest':''}" data-t="${h(k)}"><span class="ic" aria-hidden="true">${h(ic)}</span><b>${h(lb)}</b>${d?`<span class="d">${h(d)}</span>`:''}</button>`;}).join('');
-    g.querySelectorAll('.platK').forEach(k=>k.onclick=()=>{modo='aba';const o=btns.find(b=>b.dataset.t===k.dataset.t);if(o)o.click();else pinta(true);window.scrollTo({top:0,behavior:'smooth'});});
+    g.querySelectorAll('.platK').forEach(k=>k.onclick=()=>{if(k.dataset.t==='ori'){window.open(ORI_URL,'_blank','noopener');return;}modo='aba';const o=btns.find(b=>b.dataset.t===k.dataset.t);if(o)o.click();else pinta(true);window.scrollTo({top:0,behavior:'smooth'});});
     hero.after(g);
     if(!tutAuto&&typeof PESSOA!=='undefined'&&PESSOA){tutAuto=true;let visto='1';try{visto=localStorage.getItem(chaveTut());}catch(_){}if(!visto)setTimeout(()=>{if(!window.FCTour||!FCTour.ativo())tutorial();},900);}
     const wm=document.createElement('div');wm.className='platWm';wm.textContent='© FC Consultoria em Esquadria';g.after(wm);
@@ -167,7 +171,7 @@ function pinta(forca){
     if(body)body.style.display='';
     const atual=btns.find(b=>b.getAttribute('aria-selected')==='true');
     const v=document.createElement('div');v.className='platVolta';
-    v.innerHTML=`<button type="button">← Todos os cards</button><b>${h(atual?atual.textContent.trim():'')}</b>`;
+    v.innerHTML=`<button type="button">← Todos os cards</button><b>${h(atual?(NOMES[atual.dataset.t]?NOMES[atual.dataset.t][0]+' '+NOMES[atual.dataset.t][1]:atual.textContent.trim()):'')}</b>`;
     v.querySelector('button').onclick=()=>{modo='home';homeTab=(typeof tab!=='undefined')?tab:null;pinta(true);window.scrollTo({top:0,behavior:'smooth'});};
     hero.after(v);
   }
