@@ -7,7 +7,8 @@ const hoje=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth(
 const yt=u=>{const m=String(u||'').match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?(?:.*&)?v=|shorts\/|embed\/|live\/))([\w-]{11})/);return m?m[1]:'';};
 const url=u=>{u=String(u||'').trim();if(!u)return '';if(!/^https?:\/\//i.test(u))u='https://'+u;try{const x=new URL(u);return /^https?:$/.test(x.protocol)?x.href:'';}catch(_){return '';}};
 const img=s=>/^data:image\/(png|jpe?g|webp);base64,/.test(s||'')?s:'';
-function ativa(d,onde){if(!d||d.oc||d.rm||!d.tit)return false;if(d.ate&&d.ate<hoje())return false;if(onde&&d.onde&&d.onde!=='ambos'&&d.onde!==onde)return false;return true;}
+function ativa(d,onde){if(!d||d.oc||d.rm||!d.tit)return false;if(d.ate&&d.ate<hoje())return false;
+  if(onde){const o=d.onde||'ambos';if(o==='tudo')return true;if(onde==='pl')return o==='pl';if(o==='pl')return false;if(o!=='ambos'&&o!==onde)return false;}return true;}
 async function carregar(){const r=await fetch(SB+'/rest/v1/trein_eventos?select=detalhe&tipo=eq.dicas&order=criado_em.desc&limit=1',{headers:{apikey:KEY}});const j=await r.json();return ((((j||[])[0]||{}).detalhe)||{}).itens||[];}
 function hit(ev,ref,pag){try{if(localStorage.getItem('fc_eu')==='1')return;}catch(_){}
   try{let s=sessionStorage.getItem('fc_s');if(!s){s=Math.random().toString(36).slice(2,12)+Date.now().toString(36);sessionStorage.setItem('fc_s',s);}
