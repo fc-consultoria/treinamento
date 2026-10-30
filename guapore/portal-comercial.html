@@ -478,7 +478,7 @@ function vSetor(papel){
  <div class="hello"><div><h1>${me.id==='__fc'?'Matriz · setor '+esc(s[1]):'Olá, '+esc(me.nome.split(' ')[0])}</h1><p>${me.id==='__fc'?'Você abre cada ferramenta com o login da FC: vê, simula, faz pedidos e edita o que a equipe fez.':'Suas ferramentas do setor '+esc(s[1])+'.'}</p></div></div>
  ${!me.ativo?'<div class="empty" style="margin-bottom:14px">Este acesso está pausado pelo gestor.</div>':''}
  <div class="grid mods" id="t-mods">
-  <a class="mod" href="${FC3D}" target="_blank" rel="noopener" id="mod-fc3d" style="text-decoration:none;color:inherit;border-color:var(--brand)">
+  <a class="mod" href="${FC3D+(G()?'?emp='+encodeURIComponent(D.slug||'guapore-vidros')+'&ver='+(me.id==='__fc'?'gestor':'vendedor'):'')}" target="_blank" rel="noopener" id="mod-fc3d" style="text-decoration:none;color:inherit;border-color:var(--brand)">
    <span class="tag" style="background:var(--brand);color:#fff">novo</span>
    <div class="ic" style="font-size:20px">🧊</div><h3>Plataforma FC 3D</h3><p>Tipologias 3D, Catálogo de Perfis e Substituir perfil. Entre com o mesmo login e senha.</p></a>
   ${ord.map(k=>{const ok=me.ativo&&(me.abas||[]).includes(k);return `
