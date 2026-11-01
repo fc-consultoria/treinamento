@@ -60,6 +60,17 @@ Link: ${LINK}`]];
       fn:()=>{try{ptab('ped');}catch(_){}setTimeout(()=>{const c=document.getElementById('dplCard');if(c)c.scrollIntoView({behavior:'smooth',block:'start'});},300);}};
     if(window.alertaGrande)window.alertaGrande(o);
     try{if(document.hidden&&'Notification' in window&&Notification.permission==='granted'){const n=new Notification(o.titulo,{body:o.sub,tag:o.k,requireInteraction:true});n.onclick=()=>{window.focus();n.close();o.fn();};}}catch(_){}}
+  /* 01/11/2026 · on-line agora, tempo de uso e convite automático (convite.js da Plataforma) */
+  const hm=x=>new Date(x).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  const NCV={dica:'Dica',convite:'Convite',ultimo:'Último dia'};
+  function onl(d){const ref=d.agora?new Date(d.agora):new Date(),seg=d.visto_em?(ref-new Date(d.visto_em))/1e3:1e9;
+    const on=seg<75,uso=Math.round((d.uso_seg||0)/60);let h='';
+    if(on)h+=`<br><span style="display:inline-flex;align-items:center;gap:5px;color:#1d7a45;font-weight:700;font-size:13px"><span style="width:9px;height:9px;border-radius:50%;background:#22a45d;box-shadow:0 0 0 3px #22a45d33"></span>On-line agora</span>${d.tela?'<br><span class="note">vendo: '+e(d.tela)+'</span>':''}`;
+    else if(d.visto_em)h+=`<br><span class="note">⚪ visto ${quando(d.visto_em)}${d.tela?' · '+e(d.tela):''}</span>`;
+    if(uso)h+=`<br><span class="note">uso: ${uso<60?uso+' min':Math.floor(uso/60)+' h '+(uso%60)+' min'}</span>`;
+    const cv=d.convites||{};Object.keys(NCV).forEach(k=>{const x=cv[k];if(!x||!x.visto)return;
+      h+=`<br><span style="font-size:12px;color:${x.clicou?'#1d7a45':'#5b6b6d'}">${NCV[k]} exibido ${hm(x.visto)}${x.clicou?' · clicou no WhatsApp ✅':x.fechou?' · fechou':''}</span>`;});
+    return h;}
   function celMsg(d){const k=etapaDe(d),env=envs()[d.id+'|'+k],auto=!ESC[d.id];
     return `<div style="display:flex;gap:6px;align-items:center;margin-bottom:4px;flex-wrap:wrap">
       <select data-dme="${d.id}" style="font-size:12.5px;padding:3px 6px">${ETAPAS.map(x=>`<option value="${x[0]}"${x[0]===k?' selected':''}>${x[1]}${x[0]===etapaAuto(d)?' (agora)':''}</option>`).join('')}</select>
@@ -83,7 +94,7 @@ Link: ${LINK}`]];
       <td><b>${e(d.nome)}</b><br><a href="${zap(d.whats)}" target="_blank" rel="noopener">💬 ${e(d.whats)}</a></td>
       <td>${e(d.empresa)}${d.cidade?'<br><span class="note">'+e(d.cidade)+'</span>':''}</td>
       <td>${new Date(d.criado).toLocaleDateString('pt-BR')}<br><span class="note">último: ${quando(d.ultimo)} · ${d.entradas||1}x</span></td>
-      <td><b style="color:${c}">${t}</b></td>
+      <td><b style="color:${c}">${t}</b>${onl(d)}</td>
       <td style="white-space:nowrap"><button type="button" data-dpm="${d.id}">+3 dias</button> <button type="button" class="${d.ativo?'no':'ok'}" data-dpa="${d.id}" data-v="${d.ativo?0:1}">${d.ativo?'Pausar':'Reativar'}</button></td>
       <td style="min-width:300px;vertical-align:top">${celMsg(d)}</td></tr>`;}).join('')}</tbody></table></div>`
       :'<p class="note" style="margin:0">Ninguém entrou pelo demonstrativo ainda. Copie o link e envie no WhatsApp: quando alguém entrar, aparece aqui e o painel avisa com som.</p>'}`;
@@ -98,7 +109,7 @@ Link: ${LINK}`]];
       try{await navigator.clipboard.writeText(tx);}catch(_){prompt('Copie o texto:',tx);}marcar(d.id,etapaDe(d));b.textContent='✔ Copiado';setTimeout(ui,1500);});
     el.querySelectorAll('[data-dmw]').forEach(a=>a.onclick=ev=>{ev.preventDefault();const d=pega(a.dataset.dmw),tx=el.querySelector(`[data-dmt="${d.id}"]`).value;
       window.open(zap(d.whats)+'?text='+encodeURIComponent(tx),'_blank','noopener');marcar(d.id,etapaDe(d));setTimeout(ui,800);});}
-  setTimeout(carregar,3500);setInterval(carregar,60000);
+  setTimeout(carregar,3500);setInterval(carregar,30000);
   document.addEventListener('visibilitychange',()=>{if(!document.hidden)carregar();});
   window.FCDemoPl={carregar};
 })();
