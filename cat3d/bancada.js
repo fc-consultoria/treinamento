@@ -101,8 +101,8 @@ R.querySelector('.bk-png').onclick=()=>{if(!P.length){msg.textContent='Adicione 
     x2.font='24px Arial';x2.fillText('FC Consultoria em Esquadria · material de apoio técnico · confirme as medidas no catálogo do fabricante',40,H-26);
     const aa=document.createElement('a');aa.download='montagem-fc-'+P.map(p=>p.c).join('-').slice(0,60)+'.png';aa.href=cn.toDataURL('image/png');document.body.appendChild(aa);aa.click();aa.remove();ev('banc_png',P.map(p=>p.c).join('+'));};
   img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(s);};
-{const hb=R.querySelector('.bk-hide'),set=on=>{R.classList.toggle('bk-off',on);hb.textContent=on?'▾ Mostrar bancada de montagem':'▴ Ocultar bancada';R.querySelector('.bk-fs').hidden=on;try{localStorage.setItem('fc_bk_off',on?'1':'0');}catch(_){}if(!on)setTimeout(()=>{setVB();if(P.length)fit();},30);};
- hb.onclick=()=>set(!R.classList.contains('bk-off'));let o=false;try{o=localStorage.getItem('fc_bk_off')==='1';}catch(_){}if(o)set(true);}
+{const hb=R.querySelector('.bk-hide'),set=on=>{R.classList.toggle('bk-off',on);hb.textContent=on?'▾ Mostrar bancada de montagem':'▴ Ocultar bancada';R.querySelector('.bk-fs').hidden=on;if(!on)setTimeout(()=>{setVB();if(P.length)fit();},30);};
+ hb.onclick=()=>set(!R.classList.contains('bk-off'));set(true);}
 R.querySelector('.bk-cat').onclick=()=>{if(R.classList.contains('bk-full'))R.querySelector('.bk-fs').click();const t=document.querySelector('.tools')||document.getElementById('lst');if(t)setTimeout(()=>window.scrollTo({top:t.getBoundingClientRect().top+scrollY-70,behavior:'smooth'}),80);};
 window.FCBanc={add,fit,draw,get P(){return P;}};
 setVB();
