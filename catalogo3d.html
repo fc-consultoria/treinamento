@@ -187,6 +187,12 @@ function trava(c){HITX('cat3d_trava',c);let o=document.getElementById('tv');if(o
  document.body.appendChild(o);if(window.fcStatusUI&&!ACC.adm)fcStatusUI();const fx=()=>o.remove();o.querySelector('.x').onclick=fx;o.querySelector('.x2').onclick=fx;o.addEventListener('click',e=>{if(e.target===o)fx();});}
 gateUI(async({session,perfil})=>{window.UID=session.user.id;const st=document.getElementById('st');st.textContent='Abrindo o catálogo…';
  ACC={adm:perfil.papel==='admin',nome:perfil.nome||perfil.login};document.getElementById('who').textContent=ACC.nome+(ACC.adm?' · matriz':'');
+ /* Matriz: painel Substituir perfil (o mesmo dos catálogos dos clientes), com todos os perfis */
+ if(ACC.adm){const alvo=()=>{const w=document.querySelector('.hero .w');if(!w)return null;const d=document.createElement('div');d.style.cssText='display:grid;min-width:0';w.appendChild(d);return d;};
+  const aviso=()=>{const w=document.querySelector('.hero .w');if(!w||document.getElementById('subAv'))return;const d=document.createElement('div');d.id='subAv';d.style.cssText='margin-top:10px;font-size:13px;color:#cfe3e6';d.innerHTML='🔁 <b>Substituir perfil:</b> entre na <a href="/fc3d/clientes/" target="_blank" rel="noopener" style="color:#f2a51e">Plataforma FC 3D</a> como Matriz neste navegador e atualize esta página.';w.appendChild(d);};
+  const pick=c=>{const q=document.getElementById('q'),l=LN.find(l=>l.p.some(p=>p.c===c));if(l)LI=l;G='all';Q=c;q.value=c;desenha();q.scrollIntoView({behavior:'smooth',block:'center'});};
+  let tk=null;try{tk=localStorage.getItem('pfc-token');}catch(_){}
+  if(!tk)aviso();else{const sc=document.createElement('script');sc.src='/fc3d/clientes/subst.js?v=15';sc.onload=async()=>{try{if(!(await FCSUB.init({alvo,pick})))aviso();}catch(e){aviso();}};sc.onerror=aviso;document.head.appendChild(sc);}}
  if(!ACC.adm){const [l,c]=await Promise.all([sb.from('trein_eventos').select('detalhe').eq('tipo','liberacao').order('criado_em',{ascending:false}).limit(1),sb.from('trein_eventos').select('detalhe').eq('tipo','cat3d').order('criado_em',{ascending:false}).limit(1)]);
   const L=((l.data||[])[0]||{}).detalhe||{},C=((c.data||[])[0]||{}).detalhe||{},h=HOJE3();
   ACC.orient=!!L.ate;ACC.ctr=L.contrato&&L.ate>=h?L.ate:null;ACC.cat=C.ate&&C.ate>=h&&!C.off?C.ate:null;}
