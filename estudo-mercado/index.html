@@ -102,7 +102,8 @@ button{cursor:pointer}
 .mine{display:inline-block;background:var(--amc);color:var(--B);font:700 11px var(--f-b);letter-spacing:1px;text-transform:uppercase;border-radius:6px;padding:2px 7px}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
 .pc{border:1px solid var(--ln);border-radius:14px;background:var(--card);overflow:hidden;display:flex;flex-direction:column}
-.fgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:12px}
+.lk{border:0;background:none;color:var(--tl);font:700 13px var(--f-b);padding:0 0 0 4px;text-decoration:underline;cursor:pointer}
+.fgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
 .fcard{background:var(--card);border:1px solid var(--ln);border-radius:16px;padding:16px 16px 12px;display:flex;flex-direction:column;gap:10px}
 .fcard.me{border-color:var(--am);box-shadow:0 0 0 1px var(--am) inset}
 .fh{display:flex;justify-content:space-between;align-items:center;gap:8px}.fh h3{font-size:26px;line-height:1}
@@ -301,7 +302,7 @@ const IC={
  lck:'<path d="M6 11h12v10H6zM8.5 11V7.5a3.5 3.5 0 0 1 7 0V11"/>',
  aces:'<path d="M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM2 21c0-3.9 3.1-6 7-6s7 2.1 7 6M17 11l2 2 4-4"/>'};
 const ico=k=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[k]}</svg>`;
-function abas(){const a=[['pesq','Pesquisar'],['prec','Preços dos fornecedores'],...(DIST()?[]:[['cli','Clientes especiais']]),['abc','Curva ABC'],['rel',S.role==='gest'?'Relatório por usuário':'Meu histórico']];if(S.role==='gest')a.push(['aces','Acessos e licença'],['cont','Contrato']);return a}
+function abas(){const a=[['pesq','Pesquisar e preços'],...(DIST()?[]:[['cli','Clientes especiais']]),['abc','Curva ABC'],['rel',S.role==='gest'?'Relatório por usuário':'Meu histórico']];if(S.role==='gest')a.push(['aces','Acessos e licença'],['cont','Contrato']);return a}
 
 function trialIni(){const k='fcext_ini_'+S.ext;let v=ls.get(k,0);if(!v){v=Date.now();ls.set(k,v)}return v}
 function trialRest(){return 48*36e5-(Date.now()-trialIni())}
@@ -323,7 +324,7 @@ function draw(){
   const vb0=$('#voltar');if(vb0)vb0.onclick=()=>{S.ext=null;draw()};
   ligar();
 }
-function tela(){return ({pesq:tPesq,prec:tPrec,cli:tCli,abc:tAbc,rel:tRel,aces:tAces,cont:tCont})[S.tab]()}
+function tela(){return ({pesq:tPesq,cli:tCli,abc:tAbc,rel:tRel,aces:tAces,cont:tCont})[S.tab]()}
 
 /* Pesquisar */
 function tPesq(){
@@ -333,7 +334,7 @@ function tPesq(){
   <div class="chips"><span class="chip fix">Natural</span>${['SU-001','SU-002','SU-039','SU-040','LG-007'].map(c=>`<button class="chip" data-q="${c}">${c}</button>`).join('')}</div><div id="sugs"></div></section>`;
   if(!g)return h+`<section class="box empty">Nenhum perfil encontrado para esse código. Confira a digitação ou tente o código de mercado.</section>`;
   const mine=own(g),r=ref(g),base=(mine[0]||r||g.m[0]).p;
-  const pr=ultPrecos(g);
+  const pr=ultPrecos(g,S.pcli);
   const vb=m=>{const p=pr[m.f+'|'+norm(m.c)];return p?p.rk*m.p*6:null};
   const forn=g.m.filter(m=>m.f!=='alcoa');
   const bestP=forn.filter(m=>vb(m)!=null).sort((a,b)=>vb(a)-vb(b))[0];
@@ -342,12 +343,12 @@ function tPesq(){
   h+=`<section class="box"><div class="hero">${img(mine[0]||r)}<div><div class="row"><span class="mine">${DIST()?'Código de mercado':mine.length?'Sua linha · '+esc(EXTS[S.ext].n):'Sem código '+esc(EXTS[S.ext].n)}</span>${abcTag(g.cl)}</div>
    <h3 style="margin-top:10px">${esc(mine.map(m=>m.c).join(' · ')||g.k)}</h3><div class="nm">${esc(g.n)}</div>
    <div class="kv"><span>Linha <b>${LIN[g.l]}</b></span><span>Mercado <b>${esc(g.k)}</b></span>${mine[0]?`<span><b class="num">${n3(mine[0].p)}</b> kg/m</span><span>Barra 6 m <b class="num">${n3(mine[0].p*6)} kg</b></span>`:''}<span><b>${g.m.filter(m=>m.f!=='alcoa').length}</b> equivalentes</span></div>
-   <div class="kv"><button class="btn sm" data-goprec>＄ Ver e lançar preços</button></div></div></div></section>
+   <div class="kv"><button class="btn sm" data-goprec>＄ Lançar preços dos fornecedores</button></div></div></div></section>
   <section class="box"><div class="row"><h2>Equivalentes no mercado</h2><span class="sub" style="margin:0">Desenho de cada catálogo · diferença de peso em relação ${DIST()?'à referência de mercado':'à sua linha'}</span></div>${best?`<div class="note" style="margin-top:12px">${ico('prec')}<span>${bestP?`Menor preço lançado: <b>${esc(FN(best.f))} · ${esc(best.c)}</b> · ${rs(vb(best))} a barra de 6 m.`:`Nenhum preço lançado para este perfil. Menor peso: <b>${esc(FN(best.f))} · ${esc(best.c)}</b> · ${n3(best.p)} kg/m (barra ${n3(best.p*6)} kg).`}</span></div>`:''}
   <div class="grid" style="margin-top:14px">${g.m.slice().sort((a,b)=>(a.f===S.ext?-1:b.f===S.ext?1:0)||(a.f==='alcoa')-(b.f==='alcoa')||((vb(a)??1e9)-(vb(b)??1e9))||a.p-b.p).map(m=>{
     const d=base?((m.p-base)/base*100):0,cls=Math.abs(d)<1?'eq':d>0?'up':'dn',p=pr[m.f+'|'+norm(m.c)];
-    return `<article class="pc ${m.f===S.ext?'me':''} ${m===best?'best':''}">${img(m)}<div class="bd">${m===best?`<span class="ref" style="color:var(--A)">${bestT}</span>`:''}${m.f==='alcoa'?'<span class="ref">Referência de mercado</span>':''}<span class="f">${esc(FN(m.f))}${m.f===S.ext?' · sua':''}</span><span class="c">${esc(m.c)}</span><span class="w num">${n3(m.p)} kg/m · barra ${n3(m.p*6)} kg</span>${m.f!==S.ext&&m.f!=='alcoa'?`<span class="dif ${cls} num">${cls==='eq'?'mesmo peso':(d>0?'+':'')+n2(d)+'% peso'}</span>`:''}${m.f!=='alcoa'?`<div class="price">${p?`<b class="num">${rs(p.rk*m.p*6)}</b> barra · ${rs(p.rk)}/kg<br>lançado ${esc(p.d)}`:'Sem preço lançado'}</div>`:''}</div></article>`}).join('')}</div></section>`;
-  return h;
+    return `<article class="pc ${m.f===S.ext?'me':''} ${m===best?'best':''}">${img(m)}<div class="bd">${m===best?`<span class="ref" style="color:var(--A)">${bestT}</span>`:''}${m.f==='alcoa'?'<span class="ref">Referência de mercado</span>':''}<span class="f">${esc(FN(m.f))}${m.f===S.ext?' · sua':''}</span><span class="c">${esc(m.c)}</span><span class="w num">${n3(m.p)} kg/m · barra ${n3(m.p*6)} kg</span>${m.f!==S.ext&&m.f!=='alcoa'?`<span class="dif ${cls} num">${cls==='eq'?'mesmo peso':(d>0?'+':'')+n2(d)+'% peso'}</span>`:''}${m.f!=='alcoa'?`<div class="price">${p?`<b class="num">${rs(p.rk*m.p*6)}</b> barra · ${rs(p.rk)}/kg<br>lançado ${esc(p.d)} <button type="button" class="lk" data-lanca="${m.f}">editar</button>`:`Sem preço lançado <button type="button" class="lk" data-lanca="${m.f}">lançar</button>`}</div>`:''}</div></article>`}).join('')}</div></section>`;
+  return h+secPrecos();
 }
 function precoForn(cli){const o={};db.precos().filter(p=>(p.cli??null)===(cli??null)).forEach(p=>{o[p.f]=p});return o}
 function ultPrecos(g,cli){const F=precoForn(cli),o={};g.m.forEach(m=>{if(F[m.f])o[m.f+'|'+norm(m.c)]=F[m.f]});return o}
@@ -363,25 +364,19 @@ function buscar(q){
 }
 
 /* Preços */
-function tPrec(){
-  const g=S.g||BY[norm('SU-001')];S.g=g;
+function secPrecos(){
   const cl=DIST()?[]:db.clientes().filter(c=>S.role==='gest'||c.vend===USERS[S.role].n);
   if(S.pcli&&!cl.some(c=>c.id===S.pcli))S.pcli=null;
-  const F=precoForn(S.pcli),FL=fornLista(),forns=g.m.filter(m=>m.f!=='alcoa'),pr=ultPrecos(g,S.pcli);
-  const ctx=S.pcli?(cl.find(c=>c.id===S.pcli)||{}).nome:'Mercado em geral';
+  const F=precoForn(S.pcli),FL=fornLista();
   const hist=db.precos().slice().reverse().slice(0,30);
-  return `<section class="box"><h2>Preços dos fornecedores</h2><p class="sub">Um card por fornecedor. Digite o preço por kg do perfil natural (sem acabamento); a plataforma calcula o valor da barra de cada perfil. Os preços ficam só na plataforma da ${esc(EMP())}.</p>
-   ${cl.length?`<div class="tabs2" style="margin-top:12px"><button data-pcli="0" class="${!S.pcli?'on':''}">Mercado em geral</button>${cl.map(c=>`<button data-pcli="${c.id}" class="${S.pcli===c.id?'on':''}">${c.vip?'★ ':''}${esc(c.nome)}</button>`).join('')}</div>`:''}</section>
-  <div class="fgrid">${FL.map(f=>{const p=F[f],st=stPreco(p);return `<form class="fcard ${f===S.ext?'me':''}" data-forn="${f}" novalidate>
+  return `<section class="box" id="precos"><div class="row"><div><h2>Preço por kg dos fornecedores</h2><p class="sub">Digite o R$/kg do perfil natural e o pedido mínimo de cada fornecedor. Os cards de cima já mostram o valor da barra. Só a ${esc(EMP())} vê esses preços.</p></div></div>
+   ${cl.length?`<div class="tabs2" style="margin-top:12px"><span class="sub" style="margin:0 4px 0 0;align-self:center">Preços de:</span><button data-pcli="0" class="${!S.pcli?'on':''}">Mercado em geral</button>${cl.map(c=>`<button data-pcli="${c.id}" class="${S.pcli===c.id?'on':''}">${c.vip?'★ ':''}${esc(c.nome)}</button>`).join('')}</div>`:''}
+  <div class="fgrid" style="margin-top:14px">${FL.map(f=>{const p=F[f],st=stPreco(p);return `<form class="fcard ${f===S.ext?'me':''}" data-forn="${f}" id="fc-${f}" novalidate>
     <div class="fh"><h3>${esc(FN(f))}${f===S.ext?' <span class="mine">sua</span>':''}</h3><span class="st ${st[0]}">${st[1]}</span></div>
-    <label class="fl">Preço natural (sem acabamento) *<span class="inp"><i>R$/kg</i><input name="rk" inputmode="decimal" placeholder="0,00" value="${p?nb(p.rk):''}"></span></label>
-    <div class="two"><label class="fl">Pedido mínimo<span class="inp"><input name="mp" inputmode="numeric" placeholder="ex.: 150" value="${p?nb(p.mp):''}"><i>kg</i></span></label>
-    <label class="fl">Compra mínima por item<span class="inp"><input name="mi" inputmode="numeric" placeholder="ex.: 30" value="${p?nb(p.mi):''}"><i>kg</i></span></label></div>
-    <div class="ff"><small>${p?`Atualizado em ${esc(p.d)} por ${esc(p.u)}${p.ex?' (exemplo)':''}`:'Ainda não preenchido'}</small><button class="btn sm">Salvar ${esc(FN(f))}</button></div><div class="err"></div></form>`}).join('')}</div>
-  <section class="box"><div class="row"><div><h2>Como fica no perfil</h2><p class="sub">Valor da barra de 6 m com os preços de: <b>${esc(ctx)}</b></p></div>
-   <form id="fq2" class="search" style="margin:0;flex:0 1 320px"><input id="q2" value="${esc(g.k)}" aria-label="Trocar perfil" style="font-size:16px;padding:9px 12px"><button class="btn sm">Trocar</button></form></div>
-   <div class="tw" style="margin-top:12px"><table><thead><tr><th>Desenho</th><th>Fornecedor</th><th>Código</th><th class="n">kg/m</th><th class="n">R$/kg</th><th class="n">Barra 6 m</th></tr></thead><tbody>${forns.slice().sort((a,b)=>{const pa=pr[a.f+'|'+norm(a.c)],pb=pr[b.f+'|'+norm(b.c)];return ((pa?pa.rk*a.p:1e9)-(pb?pb.rk*b.p:1e9))||a.p-b.p}).map(m=>{const p=pr[m.f+'|'+norm(m.c)];return `<tr><td>${img(m,'mini')}</td><td><b>${esc(FN(m.f))}</b>${m.f===S.ext?' <span class="mine">sua</span>':''}</td><td>${esc(m.c)}</td><td class="n">${n3(m.p)}</td><td class="n">${p?rs(p.rk):'—'}</td><td class="n">${p?'<b>'+rs(p.rk*m.p*6)+'</b>':'<small>sem preço</small>'}</td></tr>`}).join('')}</tbody></table></div></section>
-  ${hist.length?`<section class="box"><h2>Histórico de lançamentos</h2><div class="tw" style="margin-top:10px"><table><thead><tr><th>Data</th><th>Fornecedor</th><th class="n">R$/kg</th><th class="n">Pedido mín.</th><th>${DIST()?'':'Cliente'}</th><th>Quem lançou</th></tr></thead><tbody>${hist.map(p=>`<tr><td>${esc(p.d)}</td><td>${esc(FN(p.f))}</td><td class="n">${rs(p.rk)}</td><td class="n">${p.mp?esc(nb(p.mp))+' kg':'—'}</td><td>${DIST()?'':esc((db.clientes().find(c=>c.id===p.cli)||{}).nome||'Mercado em geral')}</td><td>${esc(p.u)}${p.ex?' <small>(exemplo)</small>':''}</td></tr>`).join('')}</tbody></table></div></section>`:''}`;
+    <div class="two"><label class="fl">R$/kg natural *<span class="inp"><i>R$</i><input name="rk" inputmode="decimal" placeholder="0,00" value="${p?nb(p.rk):''}"></span></label>
+    <label class="fl">Pedido mínimo<span class="inp"><input name="mp" inputmode="numeric" placeholder="150" value="${p?nb(p.mp):''}"><i>kg</i></span></label></div>
+    <div class="ff"><small>${p?`${esc(p.d)} · ${esc(p.u)}${p.ex?' (exemplo)':''}`:'Ainda não preenchido'}</small><button class="btn sm">Salvar</button></div><div class="err"></div></form>`}).join('')}</div>
+  ${hist.length?`<details style="margin-top:14px"><summary class="sub" style="cursor:pointer;font-weight:600">Histórico de lançamentos (${hist.length})</summary><div class="tw" style="margin-top:8px"><table><thead><tr><th>Data</th><th>Fornecedor</th><th class="n">R$/kg</th><th class="n">Pedido mín.</th><th>${DIST()?'':'Cliente'}</th><th>Quem lançou</th></tr></thead><tbody>${hist.map(p=>`<tr><td>${esc(p.d)}</td><td>${esc(FN(p.f))}</td><td class="n">${rs(p.rk)}</td><td class="n">${p.mp?esc(nb(p.mp))+' kg':'—'}</td><td>${DIST()?'':esc((db.clientes().find(c=>c.id===p.cli)||{}).nome||'Mercado em geral')}</td><td>${esc(p.u)}${p.ex?' <small>(exemplo)</small>':''}</td></tr>`).join('')}</tbody></table></div></details>`:''}</section>`;
 }
 
 /* Clientes especiais */
@@ -446,7 +441,7 @@ function capa(){const E=EXTS[S.ext];
 function passos(){const E=EXTS[S.ext].n;const v=[
   ['pesq','Pesquise qualquer código','Digite o código de qualquer fornecedor, o código de mercado (Alcoa)'+(DIST()?'':' ou o código '+E)+'. A plataforma encontra o perfil e todos os equivalentes.',['Ex.: SU-001, EX-0747, FASU-0001','Acabamento sempre natural']],
   ['pesq','Compare os desenhos de catálogo','Cada fornecedor aparece com o desenho do próprio catálogo, o peso por metro e o peso da barra de 6 m.',[DIST()?'O card verde é o menor preço lançado; sem preço, o de menor peso':'Borda amarela = perfil da '+E+'; borda verde = menor preço (ou menor peso, se não houver preço)','A Alcoa aparece só como referência de mercado']],
-  ['prec','Lance os preços que encontrar','Em Preços dos fornecedores, cada fornecedor tem um card: digite o R$/kg do natural, o pedido mínimo e clique em Salvar.'+(DIST()?'':' Escolha um cliente no topo para lançar o preço daquele cliente.'),['O valor da barra de 6 m de cada perfil é calculado automaticamente','Só a sua empresa vê esses preços']],
+  ['pesq','Lance os preços na mesma tela','Logo abaixo dos desenhos, cada fornecedor tem um card: digite o R$/kg do natural, o pedido mínimo e clique em Salvar. O botão lançar em cada desenho leva direto ao card do fornecedor.'+(DIST()?'':' Escolha um cliente no topo para lançar o preço daquele cliente.'),['O valor da barra de 6 m de cada perfil é calculado automaticamente','Só a sua empresa vê esses preços']],
   ...(DIST()?[]:[['cli','Monte a carteira de clientes especiais','Cadastre os clientes VIP e acompanhe o preço da concorrência em cada um.',['Estrela = cliente VIP','Preço com mais de 60 dias aparece em destaque']]]),
   ['abc','Use a Curva ABC para priorizar',DIST()?'A classe mostra o giro de cada perfil. Priorize compra e estoque dos perfis da classe A.':'A classe mostra o giro de cada perfil na compra de uma distribuidora. Ofereça primeiro os perfis da classe A.',[]],
   ['rel',S.role==='gest'?'Acompanhe a equipe':'Consulte o seu histórico',S.role==='gest'?'No Relatório por usuário, veja o que cada pessoa pesquisou e lançou.':'Em Meu histórico ficam todas as suas pesquisas e lançamentos.',[]]];
@@ -474,12 +469,13 @@ function ligar(){
     $('#ov').onclick=e=>{if(e.target.id==='ov'){S.tut=null;draw()}};}
   const fq=$('#fq');if(fq)fq.onsubmit=e=>{e.preventDefault();buscar($('#q').value)};
   document.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>buscar(b.dataset.q));
-  const gp=$('[data-goprec]');if(gp)gp.onclick=()=>{S.tab='prec';draw()};
+  const gp=$('[data-goprec]');if(gp)gp.onclick=()=>{const x=$('#precos');if(x)x.scrollIntoView({behavior:'smooth',block:'start'})};
+  document.querySelectorAll('[data-lanca]').forEach(b=>b.onclick=()=>{const f=$('#fc-'+b.dataset.lanca);if(f){f.scrollIntoView({behavior:'smooth',block:'center'});setTimeout(()=>f.rk.focus(),350)}});
   const fq2=$('#fq2');if(fq2)fq2.onsubmit=e=>{e.preventDefault();const g=BY[norm($('#q2').value)];if(g){S.g=g;logar('Pesquisou',g.k);draw()}else toast('Código não encontrado')};
   document.querySelectorAll('form[data-forn]').forEach(fm=>{fm.oninput=()=>fm.querySelector('.err').textContent='';fm.onsubmit=e=>{e.preventDefault();const f=fm.dataset.forn,rk=pn(fm.rk.value);if(!rk){fm.querySelector('.err').textContent='Digite o preço por kg do natural, por exemplo 31,90.';fm.rk.focus();return}
-    const P=db.precos();P.push({id:Date.now(),f,rk,mp:pn(fm.mp.value)||'',mi:pn(fm.mi.value)||'',cli:S.pcli||null,d:hoje(),u:USERS[S.role].n});db.save('precos',P);logar('Lançou preço '+FN(f),'');reg('preco',f);toast('Preço da '+FN(f)+' salvo');draw()}});
-  document.querySelectorAll('[data-pcli]').forEach(b=>b.onclick=()=>{S.pcli=+b.dataset.pcli||null;draw()});
-  document.querySelectorAll('[data-gopcli]').forEach(b=>b.onclick=()=>{S.pcli=+b.dataset.gopcli;S.tab='prec';draw();window.scrollTo(0,0)});
+    const P=db.precos();P.push({id:Date.now(),f,rk,mp:pn(fm.mp.value)||'',cli:S.pcli||null,d:hoje(),u:USERS[S.role].n});db.save('precos',P);logar('Lançou preço '+FN(f),'');reg('preco',f);toast('Preço da '+FN(f)+' salvo');const y=window.scrollY;draw();window.scrollTo(0,y)}});
+  document.querySelectorAll('[data-pcli]').forEach(b=>b.onclick=()=>{S.pcli=+b.dataset.pcli||null;const y=window.scrollY;draw();window.scrollTo(0,y)});
+  document.querySelectorAll('[data-gopcli]').forEach(b=>b.onclick=()=>{S.pcli=+b.dataset.gopcli;S.tab='pesq';draw();const x=$('#precos');if(x)x.scrollIntoView({block:'start'})});
   document.querySelectorAll('[data-cli]').forEach(b=>b.onclick=()=>{S.cliSel=+b.dataset.cli||null;draw()});
   const fc=$('#fc');if(fc){$('#cn').oninput=()=>$('#cerr').textContent='';fc.onsubmit=e=>{e.preventDefault();const n=$('#cn').value.trim();if(!n){$('#cerr').textContent='Digite a razão social do cliente.';return}const C=db.clientes();C.push({id:Date.now(),nome:n,cid:$('#cc').value.trim(),vend:USERS[S.role].n,vip:!!$('#cv').value});db.save('clientes',C);toast('Cliente cadastrado');draw()}}
   document.querySelectorAll('[data-abcl]').forEach(b=>b.onclick=()=>{S.abcL=b.dataset.abcl;draw()});
