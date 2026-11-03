@@ -82,7 +82,7 @@ button{cursor:pointer}
 .chip.fix{background:var(--tlc);color:var(--tl2);border-color:transparent;cursor:default}
 .hero{display:grid;grid-template-columns:minmax(0,300px) minmax(0,1fr);gap:20px;align-items:center}
 .draw{background:var(--paper);border:1px solid var(--ln);border-radius:14px;display:grid;place-items:center;position:relative;overflow:hidden}
-.draw img{max-width:92%;max-height:92%;object-fit:contain;display:block}
+.draw img{position:absolute;left:6%;top:6%;width:88%;height:82%;max-width:none;max-height:none;object-fit:contain;display:block}
 .draw .wm{position:absolute;right:8px;bottom:5px;font:700 9px var(--f-b);letter-spacing:1px;color:#8aa0a8}
 .draw.none{color:#8aa0a8;font-size:12px;text-align:center;padding:8px}
 .hero .draw{aspect-ratio:4/3}
@@ -144,7 +144,7 @@ button{cursor:pointer}
 .pc.leve2 .bd{background:var(--Bc)}
 .pc .bd{flex:1}
 .pc.me{border-color:var(--am);box-shadow:0 0 0 1px var(--am) inset}
-.pc .draw{aspect-ratio:4/3;border:0;border-bottom:1px solid var(--ln);border-radius:0}
+.pc .draw{aspect-ratio:5/4;border:0;border-bottom:1px solid var(--ln);border-radius:0}
 .pc .bd{padding:10px 12px 12px;display:flex;flex-direction:column;gap:4px}
 .pc .f{font:700 12px var(--f-b);letter-spacing:1.2px;text-transform:uppercase;color:var(--tm)}
 .pc .c{font:700 22px/1 var(--f-d)}
@@ -160,7 +160,9 @@ td{padding:8px;border-bottom:1px solid var(--ln);vertical-align:middle}
 td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
 .tw{overflow-x:auto}
 .mini{width:76px;height:56px;border-radius:8px}
-.mini img{max-width:88%;max-height:88%}
+.mini img{left:5%;top:5%;width:90%;height:90%}
+.mini .wm{display:none}
+.ecard .thumbs img{width:100%;height:100%;object-fit:contain}
 .form{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-top:12px}
 .form label{display:flex;flex-direction:column;gap:4px;font:600 12px var(--f-b);letter-spacing:.6px;text-transform:uppercase;color:var(--tm)}
 .form input,.form select{border:1px solid var(--ln);background:var(--bg);border-radius:10px;padding:9px 10px;font:500 15px var(--f-b);text-transform:none;letter-spacing:0;color:var(--ink)}
