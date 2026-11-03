@@ -1,0 +1,456 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="robots" content="noindex">
+<title>FC Estudo de Mercado</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: abertura com cards por extrusora → plataforma com barra lateral de abas, conteúdo em grade de cards de perfil com o desenho do catálogo em destaque */
+:root{
+  --tl:#0f6b70;--tl2:#0b5357;--tlc:#e3f1f1;--am:#f2a51e;--amc:#fff3da;
+  --ink:#13232e;--tm:#5a6b75;--ln:#dbe4e7;--bg:#eef3f4;--card:#ffffff;--paper:#ffffff;
+  --A:#15803d;--Ac:#e5f5ea;--B:#b45309;--Bc:#fdf1df;--C:#5b6b78;--Cc:#eef1f3;--bad:#b42318;
+  --f-d:'Barlow Condensed',system-ui,sans-serif;--f-b:'Barlow',system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --tl:#3fb3b8;--tl2:#5cc7cb;--tlc:#12383a;--am:#f5b443;--amc:#3a2c10;--ink:#e6eef0;--tm:#9aaeb6;--ln:#2a3a41;--bg:#0f1a1e;--card:#16252b;--paper:#f7fafa;
+  --A:#4ade80;--Ac:#123422;--B:#fbbf24;--Bc:#3a2a0e;--C:#a3b3bf;--Cc:#22313a;--bad:#f87171;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --tl:#3fb3b8;--tl2:#5cc7cb;--tlc:#12383a;--am:#f5b443;--amc:#3a2c10;--ink:#e6eef0;--tm:#9aaeb6;--ln:#2a3a41;--bg:#0f1a1e;--card:#16252b;--paper:#f7fafa;
+  --A:#4ade80;--Ac:#123422;--B:#fbbf24;--Bc:#3a2a0e;--C:#a3b3bf;--Cc:#22313a;--bad:#f87171;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:400 15px/1.5 var(--f-b);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 40px}
+.wrap{max-width:1180px;margin:0 auto}
+h1,h2,h3{font-family:var(--f-d);font-weight:700;letter-spacing:.2px;margin:0;text-wrap:balance}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--am);outline-offset:2px}
+.eyebrow{font:600 12px var(--f-b);letter-spacing:1.6px;text-transform:uppercase;color:var(--tm)}
+.num{font-variant-numeric:tabular-nums}
+/* abertura */
+.hub-top{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:22px}
+.hub-top h1{font-size:clamp(30px,5vw,44px);line-height:1}
+.hub-top p{margin:6px 0 0;color:var(--tm);max-width:60ch}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.ecard{position:relative;text-align:left;border:1px solid var(--ln);background:var(--card);border-radius:18px;padding:0;overflow:hidden;display:flex;flex-direction:column;transition:transform .15s,border-color .15s}
+.ecard:hover{transform:translateY(-2px);border-color:var(--tl)}
+.ecard .band{background:var(--tl);color:#fff;padding:18px 20px 16px}
+.ecard .band small{font:600 11px var(--f-b);letter-spacing:1.6px;opacity:.85}
+.ecard .band b{display:block;font:700 30px/1 var(--f-d);margin-top:4px}
+.ecard .thumbs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:14px 16px 4px}
+.ecard .thumbs div{background:var(--paper);border:1px solid var(--ln);border-radius:10px;aspect-ratio:4/3;display:grid;place-items:center;overflow:hidden}
+.ecard .thumbs img{max-width:90%;max-height:90%;object-fit:contain}
+.ecard .meta{padding:10px 18px 18px;display:flex;justify-content:space-between;align-items:center;gap:8px;color:var(--tm);font-size:13px}
+.ecard .go{font:700 14px var(--f-b);color:var(--tl)}
+.lic{margin-top:18px;border:1px dashed var(--ln);border-radius:14px;padding:14px 18px;display:flex;gap:24px;flex-wrap:wrap;color:var(--tm);font-size:14px}
+.lic b{color:var(--ink);font:700 22px var(--f-d)}
+/* plataforma */
+.top{background:var(--tl);color:#fff;border-radius:18px;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap}
+.top .t small{font:600 11px var(--f-b);letter-spacing:1.6px;opacity:.85;text-transform:uppercase}
+.top .t h1{font-size:clamp(22px,3.4vw,30px);line-height:1.05}
+.top .r{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.trial{background:var(--am);color:#3a2604;font:700 13px var(--f-b);padding:5px 10px;border-radius:999px;white-space:nowrap}
+.ghost{background:transparent;border:1px solid rgba(255,255,255,.45);color:#fff;border-radius:10px;padding:6px 12px;font-weight:600;font-size:14px}
+.ghost:hover{background:rgba(255,255,255,.12)}
+.seg{display:inline-flex;background:rgba(0,0,0,.18);border-radius:10px;padding:3px}
+.seg button{border:0;background:transparent;color:#fff;padding:5px 12px;border-radius:8px;font-weight:600;font-size:14px}
+.seg button.on{background:#fff;color:var(--tl2)}
+:root[data-theme="dark"] .seg button.on{color:#0b5357}
+.shell{display:grid;grid-template-columns:220px minmax(0,1fr);gap:18px;margin-top:18px;align-items:start}
+.nav{position:sticky;top:max(12px,env(safe-area-inset-top,0px));display:flex;flex-direction:column;gap:4px;background:var(--card);border:1px solid var(--ln);border-radius:16px;padding:10px}
+.nav button{display:flex;align-items:center;gap:10px;border:0;background:transparent;text-align:left;padding:10px 12px;border-radius:10px;font-weight:600;color:var(--tm)}
+.nav button svg{width:18px;height:18px;flex:none}
+.nav button.on{background:var(--tlc);color:var(--tl2)}
+.nav button:hover:not(.on){background:var(--bg)}
+.nav .who{border-top:1px solid var(--ln);margin-top:6px;padding:10px 12px 4px;font-size:13px;color:var(--tm)}
+.nav .who b{display:block;color:var(--ink)}
+.panel{min-width:0;display:flex;flex-direction:column;gap:16px}
+.box{background:var(--card);border:1px solid var(--ln);border-radius:16px;padding:18px 20px}
+.box h2{font-size:26px;line-height:1.1}
+.sub{color:var(--tm);margin:4px 0 0;max-width:72ch}
+.search{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+.search input{flex:1 1 260px;min-width:0;border:2px solid var(--ln);background:var(--bg);border-radius:12px;padding:12px 14px;font:600 20px var(--f-b)}
+.search input:focus{border-color:var(--tl);outline:0}
+.btn{border:0;background:var(--tl);color:#fff;border-radius:12px;padding:12px 18px;font-weight:700}
+.btn:hover{background:var(--tl2)}
+.btn.sm{padding:7px 12px;border-radius:9px;font-size:14px}
+.btn.line{background:transparent;color:var(--tl);border:1px solid var(--tl)}
+.btn.line:hover{background:var(--tlc)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.chip{border:1px solid var(--ln);background:var(--card);border-radius:999px;padding:4px 11px;font-size:13px;font-weight:600;color:var(--tm)}
+.chip:hover{border-color:var(--tl);color:var(--tl)}
+.chip.fix{background:var(--tlc);color:var(--tl2);border-color:transparent;cursor:default}
+.hero{display:grid;grid-template-columns:minmax(0,300px) minmax(0,1fr);gap:20px;align-items:center}
+.draw{background:var(--paper);border:1px solid var(--ln);border-radius:14px;display:grid;place-items:center;position:relative;overflow:hidden}
+.draw img{max-width:92%;max-height:92%;object-fit:contain;display:block}
+.draw .wm{position:absolute;right:8px;bottom:5px;font:700 9px var(--f-b);letter-spacing:1px;color:#8aa0a8}
+.draw.none{color:#8aa0a8;font-size:12px;text-align:center;padding:8px}
+.hero .draw{aspect-ratio:4/3}
+.hero h3{font-size:clamp(30px,4vw,42px);line-height:1}
+.hero .nm{font:600 18px var(--f-b);margin-top:2px}
+.kv{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.kv span{background:var(--bg);border-radius:10px;padding:6px 10px;font-size:13px;color:var(--tm)}
+.kv b{color:var(--ink);font-weight:700}
+.abc{display:inline-flex;align-items:center;gap:8px;border-radius:12px;padding:6px 12px 6px 6px;font-weight:700;font-size:14px}
+.abc i{font:700 20px/1 var(--f-d);font-style:normal;width:30px;height:30px;border-radius:8px;display:grid;place-items:center;color:#fff}
+.abc.A{background:var(--Ac);color:var(--A)}.abc.A i{background:var(--A)}
+.abc.B{background:var(--Bc);color:var(--B)}.abc.B i{background:var(--B)}
+.abc.C{background:var(--Cc);color:var(--C)}.abc.C i{background:var(--C)}
+.abc.N{background:var(--bg);color:var(--tm)}.abc.N i{background:var(--tm)}
+:root[data-theme="dark"] .abc i{color:#0f1a1e}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .abc i{color:#0f1a1e}}
+.mine{display:inline-block;background:var(--amc);color:var(--B);font:700 11px var(--f-b);letter-spacing:1px;text-transform:uppercase;border-radius:6px;padding:2px 7px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+.pc{border:1px solid var(--ln);border-radius:14px;background:var(--card);overflow:hidden;display:flex;flex-direction:column}
+.pc.best{border-color:var(--A);box-shadow:0 0 0 1px var(--A) inset}
+.pc.me{border-color:var(--am);box-shadow:0 0 0 1px var(--am) inset}
+.pc .draw{aspect-ratio:4/3;border:0;border-bottom:1px solid var(--ln);border-radius:0}
+.pc .bd{padding:10px 12px 12px;display:flex;flex-direction:column;gap:4px}
+.pc .f{font:700 12px var(--f-b);letter-spacing:1.2px;text-transform:uppercase;color:var(--tm)}
+.pc .c{font:700 22px/1 var(--f-d)}
+.pc .w{font-size:13px;color:var(--tm)}
+.dif{font:700 12px var(--f-b);border-radius:6px;padding:1px 6px;align-self:flex-start}
+.dif.up{background:var(--Bc);color:var(--B)}.dif.dn{background:var(--Ac);color:var(--A)}.dif.eq{background:var(--bg);color:var(--tm)}
+.price{margin-top:4px;border-top:1px dashed var(--ln);padding-top:6px;font-size:13px;color:var(--tm)}
+.price b{font:700 18px var(--f-d);color:var(--ink)}
+.ref{font:600 11px var(--f-b);color:var(--tl);letter-spacing:1px;text-transform:uppercase}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;font:600 12px var(--f-b);letter-spacing:1px;text-transform:uppercase;color:var(--tm);padding:8px 8px;border-bottom:1px solid var(--ln);white-space:nowrap}
+td{padding:8px;border-bottom:1px solid var(--ln);vertical-align:middle}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+.tw{overflow-x:auto}
+.mini{width:76px;height:56px;border-radius:8px}
+.mini img{max-width:88%;max-height:88%}
+.form{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-top:12px}
+.form label{display:flex;flex-direction:column;gap:4px;font:600 12px var(--f-b);letter-spacing:.6px;text-transform:uppercase;color:var(--tm)}
+.form input,.form select{border:1px solid var(--ln);background:var(--bg);border-radius:10px;padding:9px 10px;font:500 15px var(--f-b);text-transform:none;letter-spacing:0;color:var(--ink)}
+.err{color:var(--bad);font-size:13px;min-height:18px;margin-top:6px}
+.note{display:flex;gap:10px;align-items:flex-start;background:var(--tlc);color:var(--tl2);border-radius:12px;padding:10px 14px;font-size:13px}
+.note svg{width:18px;height:18px;flex:none;margin-top:1px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.tabs2{display:flex;gap:6px;flex-wrap:wrap}
+.tabs2 button{border:1px solid var(--ln);background:var(--card);border-radius:999px;padding:5px 12px;font-weight:600;font-size:13px;color:var(--tm)}
+.tabs2 button.on{background:var(--ink);color:var(--card);border-color:var(--ink)}
+.stat{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.stat div{background:var(--bg);border-radius:12px;padding:12px 14px}
+.stat small{color:var(--tm);font-size:13px}
+.stat b{display:block;font:700 30px/1.1 var(--f-d)}
+.vip{color:var(--am)}
+.old{color:var(--B);font-weight:700}
+.empty{color:var(--tm);text-align:center;padding:26px 10px}
+.abcgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.abcgrid .pc .draw{aspect-ratio:4/3}
+.abcgrid .pc .c{font-size:18px}
+.pick{border:1px solid var(--ln);border-radius:12px;background:var(--card);padding:8px;display:flex;gap:10px;align-items:center;text-align:left}
+.pick:hover{border-color:var(--tl)}
+.foot{margin-top:22px;text-align:center;color:var(--tm);font-size:12px;line-height:1.6}
+.foot b{letter-spacing:1px}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--card);padding:10px 16px;border-radius:10px;font-weight:600;font-size:14px;opacity:0;pointer-events:none;transition:opacity .2s}
+.toast.on{opacity:1}
+.logo{background:#fff;border-radius:12px;padding:4px;width:58px;height:58px;display:grid;place-items:center;flex:none}
+.logo img{max-width:100%;max-height:100%;display:block}
+.brand{display:flex;align-items:center;gap:14px}
+.cover{min-height:calc(100vh - 80px);display:grid;place-items:center;text-align:center;padding-block:20px}
+.cover .in{max-width:640px;display:flex;flex-direction:column;align-items:center;gap:14px}
+.cover .lg{width:min(230px,55vw);background:#fff;border-radius:22px;padding:14px;border:1px solid var(--ln)}
+.cover .lg img{display:block;width:100%}
+.cover .pair{font:700 clamp(38px,7vw,64px)/1 var(--f-d);color:var(--tl)}
+.cover .pair span{color:var(--ink)}
+.cover h1{font-size:clamp(22px,3.6vw,30px);font-weight:600;color:var(--tm)}
+.cover p{color:var(--tm);max-width:52ch;margin:0}
+.cover .acts{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:6px}
+.cover .rule{width:120px;height:4px;border-radius:4px;background:linear-gradient(90deg,var(--tl) 0 50%,#b9c3c8 50% 100%)}
+.ov{position:fixed;inset:0;background:rgba(10,20,24,.55);display:grid;place-items:center;z-index:50;padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.tut{background:var(--card);border-radius:20px;max-width:560px;width:100%;overflow:hidden;border:1px solid var(--ln)}
+.tut .hd{background:var(--tl);color:#fff;padding:16px 20px;display:flex;align-items:center;gap:12px}
+.tut .hd .logo{width:44px;height:44px;border-radius:10px}
+.tut .hd small{font:600 11px var(--f-b);letter-spacing:1.4px;text-transform:uppercase;opacity:.85}
+.tut .hd b{display:block;font:700 22px/1.1 var(--f-d)}
+.tut .bd{padding:20px}
+.tut .step{display:flex;gap:14px;align-items:flex-start}
+.tut .step .nb{font:700 34px/1 var(--f-d);color:var(--tl);min-width:38px}
+.tut .step h3{font-size:24px;line-height:1.1}
+.tut .step p{margin:6px 0 0;color:var(--tm)}
+.tut .step ul{margin:8px 0 0;padding-left:18px;color:var(--tm)}
+.dots{display:flex;gap:6px;justify-content:center;margin:18px 0 4px}
+.dots i{width:8px;height:8px;border-radius:50%;background:var(--ln)}
+.dots i.on{background:var(--tl);width:22px;border-radius:4px}
+.tut .ft{display:flex;justify-content:space-between;gap:8px;padding:0 20px 18px;flex-wrap:wrap}
+.lock{border:2px dashed var(--ln);border-radius:16px;padding:28px 20px;text-align:center;color:var(--tm)}
+.lock svg{width:36px;height:36px;color:var(--tl)}
+.lock h3{color:var(--ink);font-size:24px;margin-top:6px}
+.clist{display:grid;gap:8px;margin-top:12px}
+.clist div{display:flex;gap:10px;align-items:flex-start;background:var(--bg);border-radius:10px;padding:10px 12px;font-size:14px}
+.clist b{font:700 16px var(--f-d);color:var(--tl);min-width:22px}
+@media (max-width:820px){.shell{grid-template-columns:1fr}.nav{position:static;flex-direction:row;overflow-x:auto}.nav button{white-space:nowrap}.nav .who{display:none}.hero{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+</head><body>
+<div class="wrap" id="app"><p class="empty">Carregando a plataforma…</p></div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+let DATA=null;const EQ='../equivalencias/';const LOGO='logo.webp?v=1';
+const ABC={'25-542':'A','30-023':'A','30-082':'A','DS-152':'B','LG-007':'A','MN-015':'C','SU-001':'A','SU-002':'A','SU-039':'A','SU-040':'A','SU-102':'A','SU-111':'A','SU-123':'A','SU-230':'C','SU-242':'A'};
+const WA='5566999867984';
+const EXTS={texa:{n:'TEXA',lin:'City 2.5 · City 3.2'},selta:{n:'Selta',lin:'Linha Selta'},fbk:{n:'FBK',lin:'FASU · Gold (FLG)'},dist:{n:'Distribuidora',tipo:'dist'}};
+const DIST=()=>!!(S.ext&&EXTS[S.ext].tipo==='dist');
+const NAC=()=>DIST()?3:8;
+const EMP=()=>DIST()?'sua empresa':EXTS[S.ext].n;
+const USERS={vend:{n:'Carlos',r:'Vendedor'},gest:{n:'Paula',r:'Gestora'}};
+let LIN={};
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const norm=s=>String(s||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+const n3=v=>(+v).toLocaleString('pt-BR',{minimumFractionDigits:3,maximumFractionDigits:3});
+const n2=v=>(+v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+const rs=v=>'R$ '+n2(v);
+const hoje=()=>new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
+const agora=()=>new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+const ls={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(_){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(_){}}};
+const FN=f=>DATA.forn[f]||f;
+
+let G=[],BY={};
+function montar(idx){DATA={forn:idx.forn};Object.entries(idx.linhas).forEach(([k,v])=>LIN[k]=v.n);
+  const AN={};Object.entries(ABC).forEach(([k,v])=>AN[norm(k)]=v);
+  G=idx.g.filter(g=>g.l!=='tc'&&idx.linhas[g.l]).map(g=>{const L=idx.linhas[g.l];
+    const m=g.m.map(x=>{const pasta=(x[3]==='base'&&!g.sp)?'alcoa':x[0];return {f:x[0],c:x[1],p:+x[2]||0,src:x[4]?x[4]:EQ+L.img+pasta+'/'+encodeURIComponent(x[1])+'.webp?v=3'}});
+    const cl=(m.map(x=>AN[norm(x.c)]).find(Boolean))||AN[norm(g.k)]||'';
+    return {l:g.l,k:g.k,n:g.n,cl,m}});
+  BY={};G.forEach(g=>{BY[norm(g.k)]=BY[norm(g.k)]||g;g.m.forEach(m=>{const k=norm(m.c);if(!BY[k])BY[k]=g;})});}
+
+const QP=new URLSearchParams(location.search);const FCM=QP.has('fc');
+let S={cover:false,tut:null,ext:null,role:'vend',tab:'pesq',g:null,cliSel:null,abcL:'todas',relU:'todos'};
+
+function img(m,extra=''){return m&&m.src?`<div class="draw ${extra}"><img src="${esc(m.src)}" alt="Desenho do perfil ${esc(m.c)}" loading="lazy" onerror="this.parentNode.classList.add('none');this.parentNode.innerHTML='sem desenho no catálogo'"><span class="wm">FC</span></div>`:`<div class="draw none ${extra}">sem desenho no catálogo</div>`}
+function own(g){return g.m.filter(m=>m.f===S.ext)}
+function ref(g){return g.m.find(m=>m.f==='alcoa')}
+function abcTag(cl){const t={A:'Classe A · alto giro',B:'Classe B · médio giro',C:'Classe C · giro baixo'}[cl]||'Curva não definida';return `<span class="abc ${cl||'N'}"><i>${cl||'?'}</i>${t}</span>`}
+
+/* dados por extrusora (isolados) */
+const K=n=>`fcext_${S.ext}_${n}`;
+const db={
+  precos:()=>ls.get(K('precos'),null)??seed('precos'),
+  clientes:()=>ls.get(K('clientes'),null)??seed('clientes'),
+  log:()=>ls.get(K('log'),null)??seed('log'),
+  save(n,v){ls.set(K(n),v)}
+};
+function seed(n){
+  const comp=Object.keys(DATA.forn).filter(f=>f!=='alcoa'&&f!==S.ext);
+  if(n==='clientes'){const v=[{id:1,nome:'Distribuidora Exemplo A',cid:'Sinop/MT',vend:'Carlos',vip:true},{id:2,nome:'Vidraçaria Exemplo B',cid:'Sorriso/MT',vend:'Marcos',vip:false},{id:3,nome:'Serralheria Exemplo C',cid:'Lucas do Rio Verde/MT',vend:'Carlos',vip:true}];db.save(n,v);return v}
+  if(n==='precos'){const g=BY[norm('SU-001')];const v=[];
+    const mk=(f,rk,cli,d,u)=>{const m=g.m.find(x=>x.f===f);if(m)v.push({id:v.length+1,gk:g.k,f,c:m.c,rk,cli:DIST()?null:cli,d,u,ex:true})};
+    mk(S.ext,34.48,1,'02/11','Carlos');if(comp[0])mk(comp[0],30.31,1,'29/10','Carlos');if(comp[1])mk(comp[1],31.90,2,'12/09','Marcos');if(comp[2])mk(comp[2],32.10,3,'01/11','Carlos');
+    db.save(n,v);return v}
+  if(n==='log'){const v=[{u:'Carlos',d:'03/11 14:20',a:'Pesquisou',gk:'SU-001'},{u:'Marcos',d:'03/11 10:02',a:'Pesquisou',gk:'SU-002'},{u:'Paula',d:'02/11 16:40',a:'Abriu a Curva ABC',gk:''}];db.save(n,v);return v}
+}
+function logar(a,gk){const L=db.log();L.unshift({u:USERS[S.role].n,d:agora(),a,gk:gk||''});db.save('log',L.slice(0,300))}
+function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('on');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('on'),2200)}
+
+/* ===== abertura ===== */
+function card(k,e,ms,meta){return `<button class="ecard" data-ext="${k}"><div class="band"><small>${e.tipo==='dist'?'Demonstrativo para distribuidoras':'FC &amp; '+esc(e.n)}</small><b>FC &amp; ${esc(e.n)}</b></div><div class="thumbs">${ms.map(m=>`<div><img src="${esc(m.src)}" alt="${esc(m.c)}"></div>`).join('')}</div><div class="meta"><span>${meta}</span><span class="go">Entrar →</span></div></button>`}
+function hub(){
+  const pick=f=>{const out=[];for(const g of G){const m=g.m.find(x=>x.f===f&&x.src);if(m&&g.cl==='A')out.push(m);if(out.length===3)break}
+    for(const g of G){if(out.length===3)break;const m=g.m.find(x=>x.f===f&&x.src);if(m&&!out.includes(m))out.push(m)}return out};
+  $('#app').innerHTML=`<div class="hub-top"><div class="brand"><div class="logo" style="width:72px;height:72px"><img src="${LOGO}" alt="FC Consultoria em Esquadria"></div><div><div class="eyebrow">FC Consultoria · Extrusoras</div><h1>Pesquisa / Estudo de Mercado / Comparativo</h1><p>Uma plataforma por empresa, para extrusoras e distribuidoras. A equipe pesquisa qualquer código do mercado, vê o desenho de catálogo de cada fornecedor e registra os preços que encontra no mercado.</p></div></div></div>
+  <div class="eyebrow" style="margin:4px 0 10px">Extrusoras · equipe comercial</div>
+  <div class="cards">${Object.entries(EXTS).filter(([k,e])=>e.tipo!=='dist').map(([k,e])=>{const n=G.filter(g=>g.m.some(m=>m.f===k)).length;return card(k,e,pick(k),n+' perfis com equivalência no catálogo FC')}).join('')}</div>
+  <div class="lic"><div><small>Teste</small><br><b>2 dias</b></div><div><small>Licença anual · condição de lançamento</small><br><b>R$ 7.000</b> · até 8 acessos</div><div><small>Renovação</small><br><b>R$ 5.000</b>/ano</div><div><small>Pagamento</small><br><b>até 2x</b> no cartão</div></div>
+  <div class="eyebrow" style="margin:28px 0 10px">Distribuidoras · compras e comercial</div>
+  <div class="cards">${card('dist',EXTS.dist,['texa','selta','fbk'].map(f=>pick(f)[0]).filter(Boolean),G.length+' perfis · todos os fornecedores')}</div>
+  <div class="lic"><div><small>Teste</small><br><b>2 dias</b></div><div><small>Licença anual · condição de lançamento</small><br><b>R$ 7.000</b> · até 3 acessos</div><div><small>Renovação</small><br><b>R$ 5.000</b>/ano</div><div><small>Pagamento</small><br><b>até 2x</b> no cartão</div></div>
+  ${foot()}`;
+  document.querySelectorAll('[data-ext]').forEach(b=>b.onclick=()=>{S.ext=b.dataset.ext;S.tab='pesq';S.g=BY[norm('SU-001')];S.cover=true;draw();window.scrollTo(0,0)});
+}
+function foot(){return `<div class="foot">Os preços e clientes lançados pertencem exclusivamente à empresa contratante. A FC Consultoria não tem acesso a essas informações; atua só na manutenção da plataforma e na atualização do cadastro de perfis.<br>Desenhos e pesos são demonstrativos e devem ser conferidos no catálogo do fornecedor.<br><b>FC CONSULTORIA EM ESQUADRIA · uso exclusivo</b> · © FC Consultoria em Esquadria</div>`}
+
+/* ===== plataforma ===== */
+const IC={
+ pesq:'<path d="M11 19a8 8 0 1 1 5.3-2L21 21.7" />',
+ prec:'<path d="M12 3v18M17 7.5c0-1.9-2.2-3-5-3s-5 1.1-5 3 2 2.7 5 3.4 5 1.6 5 3.6-2.2 3-5 3-5-1.2-5-3"/>',
+ cli:'<path d="M12 3l2.6 5.6 6 .6-4.5 4 1.3 6-5.4-3.2-5.4 3.2 1.3-6-4.5-4 6-.6z"/>',
+ abc:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
+ rel:'<path d="M7 3h7l5 5v13H7zM14 3v5h5M10 13h6M10 17h6"/>',
+ cont:'<path d="M6 3h9l4 4v14H6zM9 12h7M9 16h5M15 3v4h4"/>',
+ tut:'<path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .8-1 1.5V14M12 17.5v.01"/>',
+ lck:'<path d="M6 11h12v10H6zM8.5 11V7.5a3.5 3.5 0 0 1 7 0V11"/>',
+ aces:'<path d="M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM2 21c0-3.9 3.1-6 7-6s7 2.1 7 6M17 11l2 2 4-4"/>'};
+const ico=k=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[k]}</svg>`;
+function abas(){const a=[['pesq','Pesquisar'],['prec','Preços dos fornecedores'],...(DIST()?[]:[['cli','Clientes especiais']]),['abc','Curva ABC'],['rel',S.role==='gest'?'Relatório por usuário':'Meu histórico']];if(S.role==='gest')a.push(['aces','Acessos e licença'],['cont','Contrato']);return a}
+
+function trialIni(){const k='fcext_ini_'+S.ext;let v=ls.get(k,0);if(!v){v=Date.now();ls.set(k,v)}return v}
+function trialRest(){return 48*36e5-(Date.now()-trialIni())}
+function trialTxt(){const r=trialRest();if(r<=0)return 'Teste encerrado';const h=Math.ceil(r/36e5);return 'Teste · '+(h>24?'1 dia e '+(h-24)+' h':h+' h')+' restantes'}
+function fim(){const E=EXTS[S.ext];$('#app').innerHTML=`<section class="cover"><div class="in"><div class="lg"><img src="${LOGO}" alt="FC Consultoria em Esquadria"></div><div class="rule"></div><div class="pair">FC <span>&amp;</span> ${esc(E.n)}</div><h1>O período de teste terminou</h1><p>Gostou da plataforma? Fale com a FC para contratar a licença anual e manter os preços e o histórico que a sua equipe já lançou.</p><div class="acts"><a class="btn" href="https://wa.me/${WA}?text=${encodeURIComponent('Olá, FC! Testei a plataforma Pesquisa / Estudo de Mercado (FC & '+E.n+') e quero saber sobre a licença.')}" target="_blank" rel="noopener" style="text-decoration:none">Falar com a FC no WhatsApp</a></div><p style="font-size:14px">WhatsApp (66) 9 9986-7984 · FCconsultoria25@hotmail.com</p></div></section>${foot()}`}
+function draw(){
+  if(!S.ext)return hub();
+  if(trialRest()<=0&&!FCM)return fim();
+  if(S.cover)return capa();
+  if(!abas().some(a=>a[0]===S.tab))S.tab='pesq';
+  const E=EXTS[S.ext],U=USERS[S.role];
+  $('#app').innerHTML=`<header class="top"><div class="brand"><div class="logo"><img src="${LOGO}" alt="FC Consultoria em Esquadria"></div><div class="t"><small>FC Consultoria · Estudo de Mercado</small><h1>FC &amp; ${esc(E.n)}</h1></div></div>
+   <div class="r"><span class="trial">${trialTxt()}</span><div class="seg" role="group" aria-label="Ver como"><button data-role="vend" class="${S.role==='vend'?'on':''}">Vendedor</button><button data-role="gest" class="${S.role==='gest'?'on':''}">Gestor</button></div>${QP.get('e')&&!FCM?'':'<button class="ghost" id="voltar">← Cards</button>'}</div></header>
+   <div class="shell"><nav class="nav" aria-label="Abas">${abas().map(([k,t])=>`<button data-tab="${k}" class="${S.tab===k?'on':''}">${ico(k)}${t}</button>`).join('')}<button data-tutorial>${ico('tut')}Como usar</button><div class="who"><b>${esc(U.n)}</b>${esc(U.r)} · ${S.role==='gest'?'vê toda a equipe':'carteira própria'}</div></nav>
+   <main class="panel" id="panel">${tela()}</main></div>${foot()}${S.tut!=null?tutorial():''}`;
+  document.querySelectorAll('[data-role]').forEach(b=>b.onclick=()=>{S.role=b.dataset.role;draw()});
+  document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{S.tab=b.dataset.tab;if(S.tab==='abc')logar('Abriu a Curva ABC','');draw()});
+  const vb0=$('#voltar');if(vb0)vb0.onclick=()=>{S.ext=null;draw()};
+  ligar();
+}
+function tela(){return ({pesq:tPesq,prec:tPrec,cli:tCli,abc:tAbc,rel:tRel,aces:tAces,cont:tCont})[S.tab]()}
+
+/* Pesquisar */
+function tPesq(){
+  const g=S.g;
+  let h=`<section class="box"><h2>Pesquisar perfil</h2><p class="sub">Digite o código de qualquer fornecedor, o código de mercado (Alcoa)${DIST()?'':' ou o código '+esc(EXTS[S.ext].n)}. Acabamento: natural.</p>
+  <form class="search" id="fq"><input id="q" value="${esc(S.q||(g?g.k:''))}" placeholder="SU-001, EX-0747, FASU-0001" aria-label="Código do perfil" autocomplete="off"><button class="btn">Comparar</button></form>
+  <div class="chips"><span class="chip fix">Natural</span>${['SU-001','SU-002','SU-039','SU-040','LG-007'].map(c=>`<button class="chip" data-q="${c}">${c}</button>`).join('')}</div><div id="sugs"></div></section>`;
+  if(!g)return h+`<section class="box empty">Nenhum perfil encontrado para esse código. Confira a digitação ou tente o código de mercado.</section>`;
+  const mine=own(g),r=ref(g),base=(mine[0]||r||g.m[0]).p;
+  const pr=ultPrecos(g);
+  const vb=m=>{const p=pr[m.f+'|'+norm(m.c)];return p?p.rk*m.p*6:null};
+  const forn=g.m.filter(m=>m.f!=='alcoa');
+  const bestP=forn.filter(m=>vb(m)!=null).sort((a,b)=>vb(a)-vb(b))[0];
+  const best=bestP||forn.slice().sort((a,b)=>a.p-b.p)[0];
+  const bestT=bestP?'Menor preço lançado':'Menor peso · sem preço lançado';
+  h+=`<section class="box"><div class="hero">${img(mine[0]||r)}<div><div class="row"><span class="mine">${DIST()?'Código de mercado':mine.length?'Sua linha · '+esc(EXTS[S.ext].n):'Sem código '+esc(EXTS[S.ext].n)}</span>${abcTag(g.cl)}</div>
+   <h3 style="margin-top:10px">${esc(mine.map(m=>m.c).join(' · ')||g.k)}</h3><div class="nm">${esc(g.n)}</div>
+   <div class="kv"><span>Linha <b>${LIN[g.l]}</b></span><span>Mercado <b>${esc(g.k)}</b></span>${mine[0]?`<span><b class="num">${n3(mine[0].p)}</b> kg/m</span><span>Barra 6 m <b class="num">${n3(mine[0].p*6)} kg</b></span>`:''}<span><b>${g.m.filter(m=>m.f!=='alcoa').length}</b> equivalentes</span></div>
+   <div class="kv"><button class="btn sm" data-goprec>＄ Ver e lançar preços</button></div></div></div></section>
+  <section class="box"><div class="row"><h2>Equivalentes no mercado</h2><span class="sub" style="margin:0">Desenho de cada catálogo · diferença de peso em relação ${DIST()?'à referência de mercado':'à sua linha'}</span></div>${best?`<div class="note" style="margin-top:12px">${ico('prec')}<span>${bestP?`Menor preço lançado: <b>${esc(FN(best.f))} · ${esc(best.c)}</b> · ${rs(vb(best))} a barra de 6 m.`:`Nenhum preço lançado para este perfil. Menor peso: <b>${esc(FN(best.f))} · ${esc(best.c)}</b> · ${n3(best.p)} kg/m (barra ${n3(best.p*6)} kg).`}</span></div>`:''}
+  <div class="grid" style="margin-top:14px">${g.m.slice().sort((a,b)=>(a.f===S.ext?-1:b.f===S.ext?1:0)||(a.f==='alcoa')-(b.f==='alcoa')||((vb(a)??1e9)-(vb(b)??1e9))||a.p-b.p).map(m=>{
+    const d=base?((m.p-base)/base*100):0,cls=Math.abs(d)<1?'eq':d>0?'up':'dn',p=pr[m.f+'|'+norm(m.c)];
+    return `<article class="pc ${m.f===S.ext?'me':''} ${m===best?'best':''}">${img(m)}<div class="bd">${m===best?`<span class="ref" style="color:var(--A)">${bestT}</span>`:''}${m.f==='alcoa'?'<span class="ref">Referência de mercado</span>':''}<span class="f">${esc(FN(m.f))}${m.f===S.ext?' · sua':''}</span><span class="c">${esc(m.c)}</span><span class="w num">${n3(m.p)} kg/m · barra ${n3(m.p*6)} kg</span>${m.f!==S.ext&&m.f!=='alcoa'?`<span class="dif ${cls} num">${cls==='eq'?'mesmo peso':(d>0?'+':'')+n2(d)+'% peso'}</span>`:''}${m.f!=='alcoa'?`<div class="price">${p?`<b class="num">${rs(p.rk*m.p*6)}</b> barra · ${rs(p.rk)}/kg<br>lançado ${esc(p.d)}`:'Sem preço lançado'}</div>`:''}</div></article>`}).join('')}</div></section>`;
+  return h;
+}
+function ultPrecos(g,cli){const o={};db.precos().filter(p=>p.gk===g.k&&(cli==null||p.cli===cli)).forEach(p=>{o[p.f+'|'+norm(p.c)]=p});return o}
+function buscar(q){
+  const k=norm(q);if(!k)return;let g=BY[k];
+  if(!g){const c=G.filter(x=>norm(x.k).includes(k)||x.m.some(m=>norm(m.c).includes(k))).slice(0,8);
+    if(c.length===1)g=c[0];else{S.q=q;S.g=null;draw();if(c.length)$('#sugs').innerHTML=`<p class="sub" style="margin-top:12px">Você quis dizer:</p><div class="grid" style="margin-top:8px">${c.map(x=>{const m=own(x)[0]||ref(x)||x.m[0];return `<button class="pick" data-pk="${esc(x.k)}">${img(m,'mini')}<span><b>${esc(m.c)}</b><br><small>${esc(x.n)}</small></span></button>`}).join('')}</div>`;document.querySelectorAll('[data-pk]').forEach(b=>b.onclick=()=>buscar(b.dataset.pk));return}}
+  S.g=g;S.q='';logar('Pesquisou',g.k);draw();
+}
+
+/* Preços */
+function tPrec(){
+  const g=S.g||BY[norm('SU-001')];S.g=g;
+  const pr=ultPrecos(g),cl=db.clientes().filter(c=>S.role==='gest'||c.vend===USERS[S.role].n);
+  const forns=g.m.filter(m=>m.f!=='alcoa');
+  const hist=db.precos().filter(p=>p.gk===g.k).slice().reverse();
+  return `<section class="box"><div class="row"><div><h2>Preços dos fornecedores</h2><p class="sub">Preços lançados pela sua equipe em campo. Acabamento natural, barra de 6 m.</p></div>
+   <form id="fq2" class="search" style="margin:0;flex:0 1 320px"><input id="q2" value="${esc(g.k)}" aria-label="Trocar perfil" style="font-size:16px;padding:9px 12px"><button class="btn sm">Trocar</button></form></div>
+   <div class="hero" style="margin-top:14px;grid-template-columns:minmax(0,200px) minmax(0,1fr)">${img(own(g)[0]||ref(g))}<div><h3 style="font-size:30px">${esc(own(g).map(m=>m.c).join(' · ')||g.k)}</h3><div class="nm">${esc(g.n)} · ${LIN[g.l]}</div><div style="margin-top:8px">${abcTag(g.cl)}</div></div></div>
+   <div class="tw" style="margin-top:14px"><table><thead><tr><th>Desenho</th><th>Fornecedor</th><th>Código</th><th class="n">kg/m</th><th class="n">R$/kg</th><th class="n">Barra 6 m</th><th>Lançado</th></tr></thead><tbody>${forns.map(m=>{const p=pr[m.f+'|'+norm(m.c)];return `<tr><td>${img(m,'mini')}</td><td><b>${esc(FN(m.f))}</b>${m.f===S.ext?' <span class="mine">sua</span>':''}</td><td>${esc(m.c)}</td><td class="n">${n3(m.p)}</td><td class="n">${p?rs(p.rk):'—'}</td><td class="n">${p?'<b>'+rs(p.rk*m.p*6)+'</b>':'—'}</td><td>${p?esc(p.d)+(p.ex?' <small>(exemplo)</small>':''):'<small>sem preço</small>'}</td></tr>`}).join('')}</tbody></table></div></section>
+  <section class="box"><h2>Lançar preço de mercado</h2><p class="sub">O preço fica só na plataforma da ${esc(EMP())}.</p>
+   <form id="fp" class="form" novalidate><label>Fornecedor<select id="pf">${forns.map(m=>`<option value="${m.f}|${esc(m.c)}">${esc(FN(m.f))} · ${esc(m.c)}</option>`).join('')}</select></label>
+   <label>${DIST()?'Preço da cotação R$/kg':'Preço R$/kg'}<input id="pv" inputmode="decimal" placeholder="31,90"></label>
+   ${DIST()?'<input type="hidden" id="pc" value="">':''}<label ${DIST()?'hidden':''}>Cliente<select id="pc"><option value="">Mercado em geral</option>${cl.map(c=>`<option value="${c.id}">${esc(c.nome)}</option>`).join('')}</select></label>
+   <label>&nbsp;<button class="btn">Salvar preço</button></label></form><div class="err" id="perr"></div></section>
+  ${hist.length?`<section class="box"><h2>Histórico deste perfil</h2><div class="tw" style="margin-top:10px"><table><thead><tr><th>Data</th><th>Fornecedor</th><th>Código</th><th class="n">R$/kg</th><th>Cliente</th><th>Quem lançou</th></tr></thead><tbody>${hist.map(p=>`<tr><td>${esc(p.d)}</td><td>${esc(FN(p.f))}</td><td>${esc(p.c)}</td><td class="n">${rs(p.rk)}</td><td>${esc((db.clientes().find(c=>c.id===p.cli)||{}).nome||'Mercado em geral')}</td><td>${esc(p.u)}${p.ex?' <small>(exemplo)</small>':''}</td></tr>`).join('')}</tbody></table></div></section>`:''}`;
+}
+
+/* Clientes especiais */
+function tCli(){
+  const all=db.clientes(),me=USERS[S.role].n,L=all.filter(c=>S.role==='gest'||c.vend===me);
+  const P=db.precos();
+  const sel=L.find(c=>c.id===S.cliSel);
+  let h=`<section class="box"><div class="row"><div><h2>Clientes especiais</h2><p class="sub">${S.role==='gest'?'Carteiras de toda a equipe.':'Sua carteira.'} Preço sem atualização há mais de 60 dias aparece em destaque.</p></div></div>
+  <div class="tw" style="margin-top:12px"><table><thead><tr><th>Cliente</th><th>Cidade</th>${S.role==='gest'?'<th>Vendedor</th>':''}<th class="n">Preços</th><th>Último lançamento</th><th></th></tr></thead><tbody>${L.map(c=>{const pc=P.filter(p=>p.cli===c.id);const u=pc[pc.length-1];const old=u&&dias(u.d)>60;return `<tr><td>${c.vip?'<span class="vip" title="Cliente VIP">★</span> ':''}<b>${esc(c.nome)}</b></td><td>${esc(c.cid)}</td>${S.role==='gest'?`<td>${esc(c.vend)}</td>`:''}<td class="n">${pc.length}</td><td>${u?`<span class="${old?'old':''}">${esc(u.d)}${old?' · '+dias(u.d)+' dias':''}</span>`:'<small>sem preço</small>'}</td><td><button class="btn sm line" data-cli="${c.id}">Abrir</button></td></tr>`}).join('')||`<tr><td colspan="6" class="empty">Nenhum cliente na carteira. Cadastre o primeiro abaixo.</td></tr>`}</tbody></table></div></section>`;
+  if(sel){const pc=P.filter(p=>p.cli===sel.id).slice().reverse();
+    h+=`<section class="box"><div class="row"><h2>${sel.vip?'<span class="vip">★</span> ':''}${esc(sel.nome)}</h2><button class="btn sm line" data-cli="0">Fechar</button></div><p class="sub">${esc(sel.cid)} · vendedor ${esc(sel.vend)}</p>
+    ${pc.length?`<div class="grid" style="margin-top:12px">${pc.map(p=>{const g=BY[norm(p.gk)];const m=g&&g.m.find(x=>x.f===p.f&&norm(x.c)===norm(p.c));return `<article class="pc">${img(m)}<div class="bd"><span class="f">${esc(FN(p.f))}</span><span class="c">${esc(p.c)}</span><span class="w">${esc(g?g.n:'')}</span><div class="price"><b class="num">${rs(p.rk)}</b>/kg${m?' · barra '+rs(p.rk*m.p*6):''}<br>${esc(p.d)} · ${esc(p.u)}</div></div></article>`}).join('')}</div>`:'<p class="empty">Nenhum preço lançado para este cliente. Lance pela aba Preços dos fornecedores.</p>'}</section>`}
+  h+=`<section class="box"><h2>Novo cliente</h2><form id="fc" class="form" novalidate><label>Razão social<input id="cn" placeholder="Vidraçaria Horizonte"></label><label>Cidade/UF<input id="cc" placeholder="Sinop/MT"></label><label>Cliente VIP<select id="cv"><option value="1">Sim</option><option value="">Não</option></select></label><label>&nbsp;<button class="btn">Cadastrar</button></label></form><div class="err" id="cerr"></div></section>`;
+  return h;
+}
+function dias(d){const [dd,mm]=String(d).split(' ')[0].split('/').map(Number);if(!dd||!mm)return 0;const n=new Date();let y=n.getFullYear();let dt=new Date(y,mm-1,dd);if(dt>n)dt=new Date(y-1,mm-1,dd);return Math.round((n-dt)/864e5)}
+
+/* Curva ABC */
+function tAbc(){
+  const lst=G.filter(g=>(DIST()||own(g).length)&&(S.abcL==='todas'||g.l===S.abcL));
+  const by=c=>lst.filter(g=>(g.cl||'')===c);
+  const sec=(c,t)=>{const L=by(c);if(!L.length)return '';return `<section class="box"><div class="row"><h2>${abcTag(c)}</h2><span class="sub" style="margin:0">${L.length} perfis</span></div><div class="abcgrid" style="margin-top:12px">${L.map(g=>{const m=own(g)[0]||ref(g)||g.m[0];return `<article class="pc">${img(m)}<div class="bd"><span class="c">${esc(m.c)}</span><span class="w">${esc(g.n)}</span></div></article>`}).join('')}</div></section>`};
+  return `<section class="box"><h2>Curva ABC</h2><p class="sub">${DIST()?'Giro de cada perfil na compra de uma distribuidora. Use para priorizar reposição e estoque: classe A nunca pode faltar.':'Onde cada perfil da '+esc(EXTS[S.ext].n)+' se encaixa na compra de uma distribuidora. A classe mostra o giro do perfil no mercado, não quem vendeu.'}</p>
+   <div class="tabs2" style="margin-top:12px">${[['todas','Todas as linhas'],...[...new Set(G.filter(g=>DIST()||own(g).length).map(g=>g.l))].filter(l=>G.some(g=>g.l===l&&g.cl&&(DIST()||own(g).length))).map(l=>[l,LIN[l]])].map(([k,t])=>`<button data-abcl="${k}" class="${S.abcL===k?'on':''}">${t}</button>`).join('')}</div>
+   <div class="stat" style="margin-top:14px"><div><small>Classe A</small><b class="num">${by('A').length}</b></div><div><small>Classe B</small><b class="num">${by('B').length}</b></div><div><small>Classe C</small><b class="num">${by('C').length}</b></div><div><small>Em estudo</small><b class="num">${by('').length}</b></div></div></section>
+   ${sec('A')}${sec('B')}${sec('C')}
+   <section class="box"><div class="note">${ico('abc')}<span>${by('').length} perfis ainda estão em estudo pela FC. A classe aparece aqui assim que o estudo de giro for concluído.</span></div></section>`;
+}
+
+/* Relatório */
+function tRel(){
+  const me=USERS[S.role].n;let L=db.log();if(S.role!=='gest')L=L.filter(r=>r.u===me);
+  const us=[...new Set(db.log().map(r=>r.u))];
+  if(S.role==='gest'&&S.relU!=='todos')L=L.filter(r=>r.u===S.relU);
+  const top={};L.forEach(r=>{if(r.gk)top[r.gk]=(top[r.gk]||0)+1});
+  const T=Object.entries(top).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  return `<section class="box"><h2>${S.role==='gest'?'Relatório por usuário':'Meu histórico'}</h2><p class="sub">${S.role==='gest'?'O que cada pessoa da equipe pesquisou e lançou.':'Tudo o que você pesquisou e lançou.'}</p>
+   ${S.role==='gest'?`<div class="tabs2" style="margin-top:12px">${['todos',...us].map(u=>`<button data-relu="${esc(u)}" class="${S.relU===u?'on':''}">${u==='todos'?'Toda a equipe':esc(u)}</button>`).join('')}</div>`:''}</section>
+   ${T.length?`<section class="box"><h2>Mais pesquisados</h2><div class="abcgrid" style="margin-top:12px">${T.map(([k,n])=>{const g=BY[norm(k)];const m=g&&(own(g)[0]||ref(g));return `<article class="pc">${img(m)}<div class="bd"><span class="c">${esc(m?m.c:k)}</span><span class="w">${n} ${n===1?'vez':'vezes'}</span></div></article>`}).join('')}</div></section>`:''}
+   <section class="box"><div class="tw"><table><thead><tr><th>Desenho</th><th>Usuário</th><th>Quando</th><th>Ação</th><th>Perfil</th></tr></thead><tbody>${L.map(r=>{const g=r.gk&&BY[norm(r.gk)];const m=g&&(own(g)[0]||ref(g));return `<tr><td>${g?img(m,'mini'):''}</td><td><b>${esc(r.u)}</b></td><td>${esc(r.d)}</td><td>${esc(r.a)}</td><td>${esc(m?m.c:r.gk||'—')}</td></tr>`}).join('')||'<tr><td colspan="5" class="empty">Nada registrado ainda.</td></tr>'}</tbody></table></div></section>`;
+}
+
+/* Acessos */
+function tAces(){
+  const P=db.precos();
+  return `<section class="box"><h2>Acessos e licença</h2><div class="stat" style="margin-top:14px"><div><small>Acessos em uso</small><b class="num">3 de ${NAC()}</b></div><div><small>Licença</small><b>Teste</b></div><div><small>Preços lançados</small><b class="num">${P.length}</b></div><div><small>Clientes especiais</small><b class="num">${db.clientes().length}</b></div></div>
+  <div class="tw" style="margin-top:14px"><table><thead><tr><th>Nome</th><th>Função</th><th>Situação</th></tr></thead><tbody><tr><td><b>Paula</b></td><td>Gestora</td><td>Ativo</td></tr><tr><td><b>Carlos</b></td><td>Vendedor</td><td>Ativo</td></tr><tr><td><b>Marcos</b></td><td>Vendedor</td><td>Ativo</td></tr></tbody></table></div>
+  <div class="note" style="margin-top:14px">${ico('aces')}<span>Na licença anual, a gestora adiciona e remove acessos (até ${NAC()}${DIST()?"":"; acesso extra R$ 1.000/ano"}). Usuários e valores desta tela são exemplos.</span></div></section>`;
+}
+
+/* Capa de abertura */
+function capa(){const E=EXTS[S.ext];
+  $('#app').innerHTML=`<section class="cover"><div class="in"><div class="lg"><img src="${LOGO}" alt="FC Consultoria em Esquadria"></div><div class="rule"></div>
+  <div class="pair">FC <span>&amp;</span> ${esc(E.n)}</div><h1>Pesquisa / Estudo de Mercado / Comparativo</h1>
+  <p>${DIST()?'Ferramenta das equipes de compras e comercial: pesquise qualquer código do mercado, compare os desenhos de catálogo de cada fornecedor e registre os preços das cotações.':'Ferramenta da equipe comercial da '+esc(E.n)+': pesquise qualquer código do mercado, compare os desenhos de catálogo de cada fornecedor e registre os preços que encontrar em campo.'}</p>
+  <div class="acts"><button class="btn" id="entrar">Entrar na plataforma</button><button class="btn line" id="vercomo">Ver como usar</button></div>
+  <span class="trial" style="margin-top:4px">${trialTxt()}</span></div></section>${foot()}`;
+  $('#entrar').onclick=()=>{S.cover=false;draw()};
+  $('#vercomo').onclick=()=>{S.cover=false;S.tut=0;draw()};
+}
+/* Tutorial */
+function passos(){const E=EXTS[S.ext].n;const v=[
+  ['pesq','Pesquise qualquer código','Digite o código de qualquer fornecedor, o código de mercado (Alcoa)'+(DIST()?'':' ou o código '+E)+'. A plataforma encontra o perfil e todos os equivalentes.',['Ex.: SU-001, EX-0747, FASU-0001','Acabamento sempre natural']],
+  ['pesq','Compare os desenhos de catálogo','Cada fornecedor aparece com o desenho do próprio catálogo, o peso por metro e o peso da barra de 6 m.',[DIST()?'O card verde é o menor preço lançado; sem preço, o de menor peso':'Borda amarela = perfil da '+E+'; borda verde = menor preço (ou menor peso, se não houver preço)','A Alcoa aparece só como referência de mercado']],
+  ['prec','Lance os preços que encontrar','Em Preços dos fornecedores, escolha o fornecedor, digite o R$/kg'+(DIST()?' da cotação.':' e, se quiser, o cliente onde viu esse preço.'),['A barra de 6 m é calculada automaticamente','Só a sua empresa vê esses preços']],
+  ...(DIST()?[]:[['cli','Monte a carteira de clientes especiais','Cadastre os clientes VIP e acompanhe o preço da concorrência em cada um.',['Estrela = cliente VIP','Preço com mais de 60 dias aparece em destaque']]]),
+  ['abc','Use a Curva ABC para priorizar',DIST()?'A classe mostra o giro de cada perfil. Priorize compra e estoque dos perfis da classe A.':'A classe mostra o giro de cada perfil na compra de uma distribuidora. Ofereça primeiro os perfis da classe A.',[]],
+  ['rel',S.role==='gest'?'Acompanhe a equipe':'Consulte o seu histórico',S.role==='gest'?'No Relatório por usuário, veja o que cada pessoa pesquisou e lançou.':'Em Meu histórico ficam todas as suas pesquisas e lançamentos.',[]]];
+  if(S.role==='gest')v.push(['aces','Gerencie acessos e contrato','Em Acessos e licença você controla os até '+NAC()+' acessos. Em Contrato fica o contrato da plataforma após a contratação.',[]]);
+  return v}
+function tutorial(){const P=passos(),i=Math.min(S.tut,P.length-1),p=P[i];
+  return `<div class="ov" id="ov" role="dialog" aria-modal="true" aria-label="Como usar a plataforma"><div class="tut"><div class="hd"><div class="logo"><img src="${LOGO}" alt=""></div><div><small>Como usar · ${S.role==='gest'?'Painel gestor':'Painel vendedor'}</small><b>FC &amp; ${esc(EXTS[S.ext].n)}</b></div></div>
+  <div class="bd"><div class="step"><span class="nb">${i+1}</span><div><h3>${esc(p[1])}</h3><p>${esc(p[2])}</p>${p[3].length?`<ul>${p[3].map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:''}</div></div>
+  <div class="dots">${P.map((_,k)=>`<i class="${k===i?'on':''}"></i>`).join('')}</div></div>
+  <div class="ft"><button class="btn sm line" id="tsair">${i===P.length-1?'Fechar':'Pular tutorial'}</button><div style="display:flex;gap:8px">${i>0?'<button class="btn sm line" id="tvolta">Voltar</button>':''}<button class="btn sm" id="tnext">${i===P.length-1?'Começar a usar':'Próximo'}</button></div></div></div></div>`}
+/* Contrato (gestor) */
+function tCont(){return `<section class="box"><h2>Contrato da plataforma</h2><p class="sub">O contrato da licença fica disponível aqui para a gestão consultar a qualquer momento.</p>
+  <div class="lock" style="margin-top:14px">${ico('lck')}<h3>Disponível após a contratação</h3><p style="margin:6px auto 0;max-width:48ch">Neste demonstrativo o contrato ainda não foi emitido. Assim que a ${esc(EMP())} contratar a licença, a FC disponibiliza o contrato assinado nesta tela.</p></div></section>
+  <section class="box"><h2>O que o contrato vai trazer</h2><div class="clist">
+  <div><b>1</b><span>Licença anual de uso, com até ${NAC()} acessos.</span></div>
+  <div><b>2</b><span>Confidencialidade: preços, clientes e relatórios lançados pertencem só à ${esc(EMP())}; a FC não tem acesso a essas informações.</span></div>
+  <div><b>3</b><span>Dados de uma empresa nunca são compartilhados com outras extrusoras ou distribuidoras.</span></div>
+  <div><b>4</b><span>Ao fim do contrato, exportação dos dados em até 30 dias e exclusão depois desse prazo.</span></div>
+  <div><b>5</b><span>A plataforma, o cadastro de perfis e a metodologia são criação e propriedade intelectual da FC Consultoria em Esquadria.</span></div></div></section>`}
+
+function ligar(){
+  const tb=$('[data-tutorial]');if(tb)tb.onclick=()=>{S.tut=0;draw()};
+  if($('#ov')){const P=passos();$('#tsair').onclick=()=>{S.tut=null;draw()};const tv=$('#tvolta');if(tv)tv.onclick=()=>{S.tut--;draw()};
+    $('#tnext').onclick=()=>{if(S.tut>=P.length-1){S.tut=null;draw();return}S.tut++;S.tab=P[S.tut][0];draw()};
+    $('#ov').onclick=e=>{if(e.target.id==='ov'){S.tut=null;draw()}};}
+  const fq=$('#fq');if(fq)fq.onsubmit=e=>{e.preventDefault();buscar($('#q').value)};
+  document.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>buscar(b.dataset.q));
+  const gp=$('[data-goprec]');if(gp)gp.onclick=()=>{S.tab='prec';draw()};
+  const fq2=$('#fq2');if(fq2)fq2.onsubmit=e=>{e.preventDefault();const g=BY[norm($('#q2').value)];if(g){S.g=g;logar('Pesquisou',g.k);draw()}else toast('Código não encontrado')};
+  const fp=$('#fp');if(fp){$('#pv').oninput=()=>$('#perr').textContent='';fp.onsubmit=e=>{e.preventDefault();const v=parseFloat($('#pv').value.replace(/\./g,'').replace(',','.'));if(!(v>0)){$('#perr').textContent='Digite o preço por kg, por exemplo 31,90.';return}
+    const [f,c]=$('#pf').value.split('|');const P=db.precos();P.push({id:Date.now(),gk:S.g.k,f,c,rk:v,cli:$('#pc').value?+$('#pc').value:null,d:hoje(),u:USERS[S.role].n});db.save('precos',P);logar('Lançou preço '+FN(f),S.g.k);toast('Preço salvo');draw()}}
+  document.querySelectorAll('[data-cli]').forEach(b=>b.onclick=()=>{S.cliSel=+b.dataset.cli||null;draw()});
+  const fc=$('#fc');if(fc){$('#cn').oninput=()=>$('#cerr').textContent='';fc.onsubmit=e=>{e.preventDefault();const n=$('#cn').value.trim();if(!n){$('#cerr').textContent='Digite a razão social do cliente.';return}const C=db.clientes();C.push({id:Date.now(),nome:n,cid:$('#cc').value.trim(),vend:USERS[S.role].n,vip:!!$('#cv').value});db.save('clientes',C);toast('Cliente cadastrado');draw()}}
+  document.querySelectorAll('[data-abcl]').forEach(b=>b.onclick=()=>{S.abcL=b.dataset.abcl;draw()});
+  document.querySelectorAll('[data-relu]').forEach(b=>b.onclick=()=>{S.relU=b.dataset.relu;draw()});
+}
+const voltarHub=()=>{};
+fetch(EQ+'indice.json?v=5',{cache:'no-cache'}).then(r=>r.json()).then(idx=>{montar(idx);const e=QP.get('e');if(e&&EXTS[e]){S.ext=e;S.g=BY[norm('SU-001')];S.cover=true}else if(!FCM){$('#app').innerHTML=`<section class="cover"><div class="in"><div class="lg"><img src="${LOGO}" alt="FC Consultoria em Esquadria"></div><div class="rule"></div><h1>Link de demonstrativo incompleto</h1><p>Use o link enviado pela FC Consultoria para a sua empresa.</p><p style="font-size:14px">WhatsApp (66) 9 9986-7984</p></div></section>`;return}draw()}).catch(()=>{$('#app').innerHTML='<p class="empty">Não foi possível carregar o banco de perfis. Atualize a página.</p>'});
+</script>
+
+</body></html>
