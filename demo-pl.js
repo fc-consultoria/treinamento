@@ -15,22 +15,26 @@
 
 Seu acesso ao demonstrativo da Plataforma FC 3D está liberado até ${d.ate}.
 
-Lá você vê as tipologias das linhas Suprema e Gold em 3D: desmonta peça por peça, vê o código de cada perfil e os cortes das junções.
+A Plataforma FC 3D não é um sistema de cálculo nem de orçamento. É uma ferramenta para o comercial conhecer a fundo os perfis e componentes que vende.
+
+Nas linhas Suprema, Gold, Fachada Cortina e Fachada Atlanta você vê onde vai cada perfil e componente, as substituições possíveis e a referência de pressão de vento.
 
 Link: ${LINK}
 
 Qualquer dúvida, me chama aqui.`],
     ['dica','2 · Acompanhamento',d=>`Oi, ${d.n}! Tudo certo com o demonstrativo da Plataforma FC 3D?
 
-Uma dica: abra uma tipologia e use o "Conhecer a esquadria". Dá para trocar perfis e simular a pressão de vento sem sair da tela.
+Uma dica: abra uma tipologia e use o "Conhecer a esquadria". Lá você vê onde vai cada perfil, as substituições possíveis e a referência de pressão de vento, sem sair da tela.
 
-Seu acesso vai até ${d.ate}. Se quiser, te mostro como a sua equipe pode usar no dia a dia.`],
+É esse conhecimento que deixa o vendedor seguro no atendimento ao serralheiro, ao distribuidor ou ao cliente final.
+
+Seu acesso vai até ${d.ate}. Se quiser, te mostro como a sua equipe comercial pode usar no dia a dia.`],
     ['ultimo','3 · Último dia',d=>`${d.n}, seu demonstrativo da Plataforma FC 3D termina ${d.ate}.
 
-Se a ferramenta fez sentido para você ou para a sua equipe, me responde aqui que te apresento os planos de licença anual.`],
+Se fez sentido ter a sua equipe comercial conhecendo cada perfil e componente que vende, me responde aqui que te apresento os planos de licença anual.`],
     ['fim','4 · Terminou',d=>`Olá, ${d.n}! Seu período de demonstrativo da Plataforma FC 3D terminou.
 
-Obrigado por conhecer a ferramenta! Se quiser continuar usando com a sua equipe, me responde aqui que te passo os planos e valores.
+Obrigado por conhecer a ferramenta! Se quiser que a sua equipe comercial continue com os perfis e componentes na mão, me responde aqui que te passo os planos e valores.
 
 Fernando · FC Consultoria em Esquadria`],
     ['mais','Mais 3 dias',d=>`${d.n}, liberei mais 3 dias no seu demonstrativo da Plataforma FC 3D. Agora vai até ${d.ate}.
