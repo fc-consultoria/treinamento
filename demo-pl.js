@@ -41,7 +41,18 @@ Link: ${LINK}`]];
   const etapaAuto=d=>{const ag=Date.now(),fim=new Date(d.expira)-ag,ini=ag-new Date(d.criado);
     if(!d.ativo||fim<=0)return 'fim';if(fim<24*36e5)return 'ultimo';if(ini>=24*36e5)return 'dica';return 'boas';};
   const ESC={},ED={};  /* etapa escolhida à mão e texto editado, por pessoa (sobrevivem à atualização de 1 min) */
-  const etapaDe=d=>ESC[d.id]||etapaAuto(d);
+  /* 03/11/2026 · sequência 1→4: quais já foram enviadas (verde), qual é a próxima e quando */
+  const SEQ=['boas','dica','ultimo','fim'],H24=24*36e5;
+  const quandoEtapa=(d,k)=>{const c=+new Date(d.criado),x=+new Date(d.expira);
+    return k==='boas'?c:k==='dica'?c+H24:k==='ultimo'?Math.max(c+H24,x-H24):x;};
+  const enviou=(d,k)=>{const o=envs(),t=o[d.id+'|'+k];if(!t)return 0;const m=o[d.id+'|mais']||0;
+    return (k==='ultimo'||k==='fim')&&m>t?0:t;}; /* depois de "+3 dias" o último dia/terminou contam de novo */
+  function proxima(d){if(!d.ativo)return null;const ag=Date.now();
+    const venc=SEQ.filter(k=>quandoEtapa(d,k)<=ag),ult=venc[venc.length-1];
+    if(ult&&!enviou(d,ult))return {k:ult,agora:true};
+    const fut=SEQ.find(k=>quandoEtapa(d,k)>ag&&!enviou(d,k));return fut?{k:fut,agora:false,em:quandoEtapa(d,fut)}:null;}
+  const nomeEt=k=>ETAPAS.find(x=>x[0]===k)[1];
+  const etapaDe=d=>{if(ESC[d.id])return ESC[d.id];const p=proxima(d);return p&&p.agora?p.k:etapaAuto(d);};
   const textoDe=d=>{const k=etapaDe(d),ed=ED[d.id+'|'+k];if(ed!=null)return ed;
     const n=String(d.nome||'').trim().split(/\s+/)[0]||'tudo bem';return ETAPAS.find(x=>x[0]===k)[2]({n,ate:fdt(d.expira)});};
   const KE='fc_demo_msg_env',envs=()=>{try{return JSON.parse(lg(KE))||{};}catch(_){return {};}};
@@ -71,11 +82,20 @@ Link: ${LINK}`]];
     const cv=d.convites||{};Object.keys(NCV).forEach(k=>{const x=cv[k];if(!x||!x.visto)return;
       h+=`<br><span style="font-size:12px;color:${x.clicou?'#1d7a45':'#5b6b6d'}">${NCV[k]} exibido ${hm(x.visto)}${x.clicou?' · clicou no WhatsApp ✅':x.fechou?' · fechou':''}</span>`;});
     return h;}
-  function celMsg(d){const k=etapaDe(d),env=envs()[d.id+'|'+k],auto=!ESC[d.id];
-    return `<div style="display:flex;gap:6px;align-items:center;margin-bottom:4px;flex-wrap:wrap">
-      <select data-dme="${d.id}" style="font-size:12.5px;padding:3px 6px">${ETAPAS.map(x=>`<option value="${x[0]}"${x[0]===k?' selected':''}>${x[1]}${x[0]===etapaAuto(d)?' (agora)':''}</option>`).join('')}</select>
-      ${env?`<span style="font-size:12px;color:#1d7a45">✔ enviado ${quando(env)}</span>`:(auto?'<span style="font-size:12px;color:#8a5a00">● a enviar</span>':'')}</div>
-     <textarea data-dmt="${d.id}" rows="4" style="width:100%;font-size:12.5px;line-height:1.35;resize:vertical;box-sizing:border-box">${e(textoDe(d))}</textarea>
+  function celMsg(d){const k=etapaDe(d),env=enviou(d,k)||(k==='mais'&&envs()[d.id+'|mais']),p=proxima(d);
+    const chip=x=>{const ok=enviou(d,x),ag=p&&p.k===x&&p.agora,nx=p&&p.k===x&&!p.agora;
+      const [bg,cr,bd]=ok?['#e3f4ea','#1d7a45','#22a45d']:ag?['#fff1dc','#8a5a00','#e8912d']:nx?['#eef3ff','#2a4f9a','#7d9ae0']:['#f3f4f5','#8a9496','#d5dadb'];
+      return `<button type="button" data-dmk="${d.id}" data-k="${x}" title="${e(nomeEt(x))}${ok?' · enviado '+quando(ok):ag?' · hora de enviar':nx?' · próxima':''}" style="padding:1px 8px;font-size:12px;border-radius:12px;border:1.5px solid ${bd};background:${bg};color:${cr};font-weight:700;${x===k?'outline:2px solid '+bd+';outline-offset:1px;':''}">${ok?'✔ ':''}${SEQ.indexOf(x)+1}</button>`;};
+    const aviso=!d.ativo?'<span style="font-size:12px;color:#8a9496">pausado · sem próxima</span>'
+      :!p?'<span style="font-size:12px;color:#1d7a45;font-weight:700">✔ sequência completa</span>'
+      :p.agora?`<span style="font-size:12px;color:#8a5a00;font-weight:700">🔔 Enviar agora: ${e(nomeEt(p.k))}</span>`
+      :`<span style="font-size:12px;color:#2a4f9a">⏭ Próxima: <b>${e(nomeEt(p.k))}</b> · ${fdt(p.em)}</span>`;
+    return `<div style="display:flex;gap:4px;align-items:center;margin-bottom:4px;flex-wrap:wrap">${SEQ.map(chip).join('')}<span style="width:4px"></span>${aviso}</div>
+     <div style="display:flex;gap:6px;align-items:center;margin-bottom:4px;flex-wrap:wrap">
+      <select data-dme="${d.id}" style="font-size:12.5px;padding:3px 6px;${env?'border-color:#22a45d;color:#1d7a45;':''}">${ETAPAS.map(x=>{const ok=x[0]==='mais'?envs()[d.id+'|mais']:enviou(d,x[0]);
+        return `<option value="${x[0]}"${x[0]===k?' selected':''}${ok?' style="color:#1d7a45;background:#e3f4ea"':''}>${ok?'✔ ':''}${x[1]}${p&&p.k===x[0]?(p.agora?' 🔔 enviar':' ⏭ próxima'):''}</option>`;}).join('')}</select>
+      ${env?`<span style="font-size:12px;color:#1d7a45">✔ enviado ${quando(env)}</span>`:''}</div>
+     <textarea data-dmt="${d.id}" rows="4" style="width:100%;${env?'border:1.5px solid #22a45d;background:#f2faf5;':''}font-size:12.5px;line-height:1.35;resize:vertical;box-sizing:border-box">${e(textoDe(d))}</textarea>
      <div style="display:flex;gap:6px;margin-top:4px"><button type="button" data-dmc="${d.id}">📋 Copiar</button>
       <a href="#" data-dmw="${d.id}" style="font-size:13px;align-self:center">💬 Abrir no WhatsApp com o texto</a></div>`;}
   function ui(){if(document.activeElement&&document.activeElement.matches&&document.activeElement.matches('[data-dmt]'))return; /* não apaga enquanto edita */const el=document.getElementById('dplBox'),bd=document.getElementById('tbDemo');if(!el)return;
@@ -103,12 +123,13 @@ Link: ${LINK}`]];
     el.querySelectorAll('[data-dpa]').forEach(b=>b.onclick=async()=>{b.disabled=true;try{await rpc('pfc_adm_demo',{p_token:TOK,p_id:b.dataset.dpa,p_ativo:b.dataset.v==='1'});}catch(x){alert(x.message);}carregar();});
     ligaMsg(el);}
   function ligaMsg(el){const pega=id=>D.find(x=>String(x.id)===String(id));
-    el.querySelectorAll('[data-dme]').forEach(sel=>sel.onchange=()=>{const d=pega(sel.dataset.dme);ESC[d.id]=sel.value===etapaAuto(d)?undefined:sel.value;if(!ESC[d.id])delete ESC[d.id];ui();});
+    el.querySelectorAll('[data-dme]').forEach(sel=>sel.onchange=()=>{const d=pega(sel.dataset.dme);ESC[d.id]=sel.value;ui();});
+    el.querySelectorAll('[data-dmk]').forEach(b=>b.onclick=()=>{const d=pega(b.dataset.dmk);ESC[d.id]=b.dataset.k;ui();});
     el.querySelectorAll('[data-dmt]').forEach(t=>t.oninput=()=>{const d=pega(t.dataset.dmt);ED[d.id+'|'+etapaDe(d)]=t.value;});
     el.querySelectorAll('[data-dmc]').forEach(b=>b.onclick=async()=>{const d=pega(b.dataset.dmc),tx=el.querySelector(`[data-dmt="${d.id}"]`).value;
-      try{await navigator.clipboard.writeText(tx);}catch(_){prompt('Copie o texto:',tx);}marcar(d.id,etapaDe(d));b.textContent='✔ Copiado';setTimeout(ui,1500);});
+      try{await navigator.clipboard.writeText(tx);}catch(_){prompt('Copie o texto:',tx);}marcar(d.id,etapaDe(d));delete ESC[d.id];b.textContent='✔ Copiado';setTimeout(ui,1500);});
     el.querySelectorAll('[data-dmw]').forEach(a=>a.onclick=ev=>{ev.preventDefault();const d=pega(a.dataset.dmw),tx=el.querySelector(`[data-dmt="${d.id}"]`).value;
-      window.open(zap(d.whats)+'?text='+encodeURIComponent(tx),'_blank','noopener');marcar(d.id,etapaDe(d));setTimeout(ui,800);});}
+      window.open(zap(d.whats)+'?text='+encodeURIComponent(tx),'_blank','noopener');marcar(d.id,etapaDe(d));delete ESC[d.id];setTimeout(ui,800);});}
   setTimeout(carregar,3500);setInterval(carregar,30000);
   document.addEventListener('visibilitychange',()=>{if(!document.hidden)carregar();});
   window.FCDemoPl={carregar};
