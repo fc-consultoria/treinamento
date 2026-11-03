@@ -107,7 +107,7 @@ setInterval(zeros,1000);
 setTimeout(hoje,2500);setInterval(()=>{if(!document.hidden)hoje().catch(()=>{});},60000);
 
 /* ---------- 4. plataformas dos clientes ---------- */
-const PLAT=[[/guapor/i,'#0e7c7b','GV'],[/bandeirante/i,'#7a4bc4','CB'],[/cde|espelhos/i,'#c2410c','CDE'],[/fc 3d/i,'#1f6fb2','FC']];
+const PLAT=[[/TEXA &/,'#0f6b70','TX'],[/Selta &/,'#1d4ed8','SE'],[/FBK &/,'#b45309','FBK'],[/Distribuidora &/,'#13232e','DI'],[/guapor/i,'#0e7c7b','GV'],[/bandeirante/i,'#7a4bc4','CB'],[/cde|espelhos/i,'#c2410c','CDE'],[/fc 3d/i,'#1f6fb2','FC']];
 function plataformas(){const G=document.getElementById('hmG');if(!G||G.querySelector('.hms.platS'))return;
   const its=[...G.querySelectorAll('.hmt')].filter(t=>/^Plataforma\b/i.test((t.querySelector('b')||{}).textContent||''));if(!its.length)return;
   const sec1=its[0].closest('.hms');if(!sec1)return;
