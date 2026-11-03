@@ -123,6 +123,8 @@ button{cursor:pointer}
 .plm .grid{grid-template-columns:repeat(auto-fill,minmax(190px,1fr))}
 .sel{border:1px solid var(--ln);background:var(--bg);border-radius:10px;padding:8px 10px;font:600 14px var(--f-b);color:var(--ink)}
 @media (max-width:1100px){.pl{grid-template-columns:1fr}.pls{position:static;max-height:none}}
+.fab{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom,0px));z-index:40;border:0;background:var(--tl);color:#fff;font:700 15px var(--f-b);padding:11px 20px;border-radius:999px;box-shadow:0 6px 20px rgba(0,0,0,.18)}
+.fab:hover{background:var(--tl2)}
 .lk{border:0;background:none;color:var(--tl);font:700 13px var(--f-b);padding:0 0 0 4px;text-decoration:underline;cursor:pointer}
 .fgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
 .fcard{background:var(--card);border:1px solid var(--ln);border-radius:16px;padding:16px 16px 12px;display:flex;flex-direction:column;gap:10px}
@@ -227,6 +229,7 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
 </head><body>
 <div class="wrap" id="app"><p class="empty">Carregando a plataforma…</p></div>
 <div class="toast" id="toast" role="status"></div>
+<button type="button" class="fab" id="fab" hidden aria-label="Nova pesquisa">⌕ Nova pesquisa</button>
 
 <script>
 let DATA=null;const EQ='../equivalencias/';const LOGO='logo.webp?v=1';
@@ -345,7 +348,7 @@ function draw(){
    <div class="shell"><nav class="nav" aria-label="Abas">${abas().map(([k,t])=>`<button data-tab="${k}" class="${S.tab===k?'on':''}">${ico(k)}${t}</button>`).join('')}<button data-tutorial>${ico('tut')}Como usar</button><div class="who"><b>${esc(U.n)}</b>${esc(U.r)} · ${S.role==='gest'?'vê toda a equipe':'carteira própria'}</div></nav>
    <main class="panel" id="panel">${tela()}</main></div>${foot()}${S.tut!=null?tutorial():''}`;
   document.querySelectorAll('[data-role]').forEach(b=>b.onclick=()=>{S.role=b.dataset.role;draw()});
-  document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{if(b.dataset.tab==='kg'){if(S.tab!=='pesq'){S.tab='pesq';draw()}const x=$('#precos');if(x)x.scrollIntoView({behavior:'smooth',block:'start'});return}S.tab=b.dataset.tab;if(S.tab==='abc')logar('Abriu a Curva ABC','');draw()});
+  document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{if(b.dataset.tab==='pesq'&&S.tab==='pesq'){novaPesq();return}if(b.dataset.tab==='kg'){if(S.tab!=='pesq'){S.tab='pesq';draw()}const x=$('#precos');if(x)x.scrollIntoView({behavior:'smooth',block:'start'});return}S.tab=b.dataset.tab;if(S.tab==='abc')logar('Abriu a Curva ABC','');draw()});
   const vb0=$('#voltar');if(vb0)vb0.onclick=()=>{S.ext=null;draw()};
   ligar();
 }
@@ -491,7 +494,11 @@ function tCont(){return `<section class="box"><h2>Contrato da plataforma</h2><p 
   <div><b>4</b><span>Ao fim do contrato, exportação dos dados em até 30 dias e exclusão depois desse prazo.</span></div>
   <div><b>5</b><span>A plataforma, o cadastro de perfis e a metodologia são criação e propriedade intelectual da FC Consultoria em Esquadria.</span></div></div></section>`}
 
+function novaPesq(){window.scrollTo({top:0,behavior:'smooth'});setTimeout(()=>{const q=$('#q');if(q){q.focus({preventScroll:true});q.select()}},400)}
+function fabUpd(){const f=$('#fab');if(!f)return;f.hidden=!(S.ext&&!S.cover&&S.tab==='pesq'&&S.tut==null&&window.scrollY>500)}
+window.addEventListener('scroll',fabUpd,{passive:true});
 function ligar(){
+  const fb=$('#fab');if(fb){fb.onclick=novaPesq;fabUpd()}
   const tb=$('[data-tutorial]');if(tb)tb.onclick=()=>{S.tut=0;draw()};
   if($('#ov')){const P=passos();$('#tsair').onclick=()=>{S.tut=null;draw()};const tv=$('#tvolta');if(tv)tv.onclick=()=>{S.tut--;draw()};
     $('#tnext').onclick=()=>{if(S.tut>=P.length-1){S.tut=null;draw();return}S.tut++;S.tab=P[S.tut][0];draw()};
