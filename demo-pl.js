@@ -4,6 +4,7 @@
 (function(){
   const URL0='https://pawwncmfadzxfahfvhry.supabase.co/rest/v1/rpc/',KEY='sb_publishable_b0kGoqo85joo3Vb8Xllxhw_VemwaLMs';
   const LINK='https://fc-consultoria.github.io/fc3d/clientes/demo/',ADM='https://fc-consultoria.github.io/fc3d/clientes/empresas/';
+  const VID='https://fc-consultoria.github.io/video/',VID_PLAT=VID+'plataforma-fc3d.mp4',VID_CAT=VID+'catalogo-fc3d.mp4';
   const KT='pfc-token-painel',KV='fc_demo_pl_vistos';
   const e=v=>String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   const lg=k=>{try{return localStorage.getItem(k);}catch(_){return null;}},ls=(k,v)=>{try{localStorage.setItem(k,v);}catch(_){}};
@@ -18,6 +19,12 @@ Seu acesso ao demonstrativo da Plataforma FC 3D está liberado até ${d.ate}.
 Lá você vê as tipologias das linhas Suprema e Gold em 3D: desmonta peça por peça, vê o código de cada perfil e os cortes das junções.
 
 Link: ${LINK}
+
+🎥 Veja em 1 minuto o que a Plataforma FC 3D faz pela sua equipe:
+${VID_PLAT}
+
+📐 E o Catálogo 3D de perfis:
+${VID_CAT}
 
 Qualquer dúvida, me chama aqui.`],
     ['dica','2 · Acompanhamento',d=>`Oi, ${d.n}! Tudo certo com o demonstrativo da Plataforma FC 3D?
