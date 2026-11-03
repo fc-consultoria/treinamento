@@ -57,6 +57,7 @@ Link: ${LINK}`]];
     const n=String(d.nome||'').trim().split(/\s+/)[0]||'tudo bem';return ETAPAS.find(x=>x[0]===k)[2]({n,ate:fdt(d.expira)});};
   const KE='fc_demo_msg_env',envs=()=>{try{return JSON.parse(lg(KE))||{};}catch(_){return {};}};
   const marcar=(id,k)=>{const o=envs();o[id+'|'+k]=Date.now();ls(KE,JSON.stringify(o));};
+  const desmarcar=(id,k)=>{const o=envs();delete o[id+'|'+k];ls(KE,JSON.stringify(o));};
   async function rpc(fn,a){const r=await fetch(URL0+fn,{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify(a||{})});
     const j=await r.json().catch(()=>null);if(!r.ok)throw new Error((j&&(j.message||j.hint))||'Falha');return j;}
   let TOK=null,D=null,primeira=true;
@@ -85,7 +86,7 @@ Link: ${LINK}`]];
   function celMsg(d){const k=etapaDe(d),env=enviou(d,k)||(k==='mais'&&envs()[d.id+'|mais']),p=proxima(d);
     const chip=x=>{const ok=enviou(d,x),ag=p&&p.k===x&&p.agora,nx=p&&p.k===x&&!p.agora;
       const [bg,cr,bd]=ok?['#e3f4ea','#1d7a45','#22a45d']:ag?['#fff1dc','#8a5a00','#e8912d']:nx?['#eef3ff','#2a4f9a','#7d9ae0']:['#f3f4f5','#8a9496','#d5dadb'];
-      return `<button type="button" data-dmk="${d.id}" data-k="${x}" title="${e(nomeEt(x))}${ok?' · enviado '+quando(ok):ag?' · hora de enviar':nx?' · próxima':''}" style="padding:1px 8px;font-size:12px;border-radius:12px;border:1.5px solid ${bd};background:${bg};color:${cr};font-weight:700;${x===k?'outline:2px solid '+bd+';outline-offset:1px;':''}">${ok?'✔ ':''}${SEQ.indexOf(x)+1}</button>`;};
+      return `<button type="button" data-dmk="${d.id}" data-k="${x}" title="${e(nomeEt(x))}${ok?' · enviado '+quando(ok):ag?' · hora de enviar':nx?' · próxima':''} · clique 2x para ${ok?'desmarcar':'marcar como enviado'}" style="padding:1px 8px;cursor:pointer;user-select:none;font-size:12px;border-radius:12px;border:1.5px solid ${bd};background:${bg};color:${cr};font-weight:700;${x===k?'outline:2px solid '+bd+';outline-offset:1px;':''}">${ok?'✔ ':''}${SEQ.indexOf(x)+1}</button>`;};
     const aviso=!d.ativo?'<span style="font-size:12px;color:#8a9496">pausado · sem próxima</span>'
       :!p?'<span style="font-size:12px;color:#1d7a45;font-weight:700">✔ sequência completa</span>'
       :p.agora?`<span style="font-size:12px;color:#8a5a00;font-weight:700">🔔 Enviar agora: ${e(nomeEt(p.k))}</span>`
@@ -124,7 +125,10 @@ Link: ${LINK}`]];
     ligaMsg(el);}
   function ligaMsg(el){const pega=id=>D.find(x=>String(x.id)===String(id));
     el.querySelectorAll('[data-dme]').forEach(sel=>sel.onchange=()=>{const d=pega(sel.dataset.dme);ESC[d.id]=sel.value;ui();});
-    el.querySelectorAll('[data-dmk]').forEach(b=>b.onclick=()=>{const d=pega(b.dataset.dmk);ESC[d.id]=b.dataset.k;ui();});
+    el.querySelectorAll('[data-dmk]').forEach(b=>{let tm=null;
+      b.onclick=()=>{clearTimeout(tm);tm=setTimeout(()=>{const d=pega(b.dataset.dmk);ESC[d.id]=b.dataset.k;ui();},250);};
+      b.ondblclick=ev=>{ev.preventDefault();clearTimeout(tm);const d=pega(b.dataset.dmk),k=b.dataset.k; /* 2 cliques: marca/desmarca como enviada */
+        if(enviou(d,k))desmarcar(d.id,k);else marcar(d.id,k);delete ESC[d.id];ui();};});
     el.querySelectorAll('[data-dmt]').forEach(t=>t.oninput=()=>{const d=pega(t.dataset.dmt);ED[d.id+'|'+etapaDe(d)]=t.value;});
     el.querySelectorAll('[data-dmc]').forEach(b=>b.onclick=async()=>{const d=pega(b.dataset.dmc),tx=el.querySelector(`[data-dmt="${d.id}"]`).value;
       try{await navigator.clipboard.writeText(tx);}catch(_){prompt('Copie o texto:',tx);}marcar(d.id,etapaDe(d));delete ESC[d.id];b.textContent='✔ Copiado';setTimeout(ui,1500);});
