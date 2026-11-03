@@ -20,7 +20,7 @@
   --A:#4ade80;--Ac:#123422;--B:#fbbf24;--Bc:#3a2a0e;--C:#a3b3bf;--Cc:#22313a;--bad:#f87171;color-scheme:dark}
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--ink);font:400 15px/1.5 var(--f-b);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 40px}
-.wrap{max-width:1180px;margin:0 auto}
+.wrap{max-width:1440px;margin:0 auto}
 h1,h2,h3{font-family:var(--f-d);font-weight:700;letter-spacing:.2px;margin:0;text-wrap:balance}
 button,input,select{font:inherit;color:inherit}
 button{cursor:pointer}
@@ -108,6 +108,21 @@ button{cursor:pointer}
 .seg2 button{border:0;background:transparent;border-radius:9px;padding:7px 12px;font:700 14px var(--f-b);color:var(--tm);text-align:left;line-height:1.15}
 .seg2 button small{display:block;font:500 11.5px var(--f-b);opacity:.85}
 .seg2 button.on{background:var(--tl);color:#fff}
+.pl{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:16px;align-items:start}
+.plm{min-width:0;display:flex;flex-direction:column;gap:16px}
+.pls{position:sticky;top:max(12px,env(safe-area-inset-top,0px));max-height:calc(100vh - 24px);overflow:auto;border-radius:16px}
+.box.side{padding:16px}
+.rows{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.prow{border:1px solid var(--ln);border-radius:12px;padding:8px 10px;display:flex;flex-direction:column;gap:6px;background:var(--card)}
+.prow.me{border-color:var(--am);box-shadow:0 0 0 1px var(--am) inset}
+.pr1{display:flex;align-items:center;gap:6px}.pr1 b{font:700 18px var(--f-d)}.pr1 .st{margin-left:auto}
+.pr2{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) auto;gap:6px;align-items:stretch}
+.pr2 .inp input{font-size:16px;padding:7px 8px}.pr2 .inp i{padding:0 7px;font-size:12px}
+.pr3 small{color:var(--tm);font-size:12px}
+.prow .err{min-height:0;margin:0}.prow .err:empty{display:none}
+.plm .grid{grid-template-columns:repeat(auto-fill,minmax(190px,1fr))}
+.sel{border:1px solid var(--ln);background:var(--bg);border-radius:10px;padding:8px 10px;font:600 14px var(--f-b);color:var(--ink)}
+@media (max-width:1100px){.pl{grid-template-columns:1fr}.pls{position:static;max-height:none}}
 .lk{border:0;background:none;color:var(--tl);font:700 13px var(--f-b);padding:0 0 0 4px;text-decoration:underline;cursor:pointer}
 .fgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
 .fcard{background:var(--card);border:1px solid var(--ln);border-radius:16px;padding:16px 16px 12px;display:flex;flex-direction:column;gap:10px}
@@ -363,7 +378,7 @@ function tPesq(){
   <div class="grid" style="margin-top:14px">${g.m.slice().sort((a,b)=>(a.f===S.ext?-1:b.f===S.ext?1:0)||(a.f==='alcoa')-(b.f==='alcoa')||(ORD==='peso'?a.p-b.p:(((vb(a)??1e9)-(vb(b)??1e9))||a.p-b.p))).map(m=>{
     const d=base?((m.p-base)/base*100):0,cls=Math.abs(d)<1?'eq':d>0?'up':'dn',p=pr[m.f+'|'+norm(m.c)];
     return `<article class="pc ${m.f===S.ext?'me':''} ${m===best?bestC:''} ${m===leve&&m!==best?'leve2':''}">${img(m)}<div class="bd">${m===best?`<span class="ref" style="color:${bestC==='best'?'var(--A)':'var(--B)'}">${bestT}</span>`:''}${m===leve&&m!==best?'<span class="ref" style="color:var(--B)">Ferramenta mais leve</span>':''}${m.f==='alcoa'?'<span class="ref">Referência de mercado</span>':''}<span class="f">${esc(FN(m.f))}${m.f===S.ext?' · sua':''}</span><span class="c">${esc(m.c)}</span><span class="w num">${n3(m.p)} kg/m · barra ${n3(m.p*6)} kg</span>${m.f!==S.ext&&m.f!=='alcoa'?`<span class="dif ${cls} num">${cls==='eq'?'mesmo peso':(d>0?'+':'')+n2(d)+'% peso'}</span>`:''}${m.f!=='alcoa'?`<div class="price">${p?`<b class="num">${rs(p.rk*m.p*6)}</b> barra · ${rs(p.rk)}/kg<br>lançado ${esc(p.d)} <button type="button" class="lk" data-lanca="${m.f}">editar</button>`:`Sem preço lançado <button type="button" class="lk" data-lanca="${m.f}">lançar</button>`}</div>`:''}</div></article>`}).join('')}</div></section>`;
-  return h+secPrecos();
+  return `<div class="pl"><div class="plm">${h}</div><aside class="pls">${secPrecos()}</aside></div>`;
 }
 function precoForn(cli){const o={};db.precos().filter(p=>(p.cli??null)===(cli??null)).forEach(p=>{if(p.rk==null)delete o[p.f];else o[p.f]=p});return o}
 function ultPrecos(g,cli){const F=precoForn(cli),o={};g.m.forEach(m=>{if(F[m.f])o[m.f+'|'+norm(m.c)]=F[m.f]});return o}
@@ -383,15 +398,14 @@ function secPrecos(){
   const cl=DIST()?[]:db.clientes().filter(c=>S.role==='gest'||c.vend===USERS[S.role].n);
   if(S.pcli&&!cl.some(c=>c.id===S.pcli))S.pcli=null;
   const F=precoForn(S.pcli),FL=fornLista();
-  const hist=db.precos().slice().reverse().slice(0,30);
-  return `<section class="box" id="precos"><div class="row"><div><h2>Preço por kg dos fornecedores</h2><p class="sub">Digite o R$/kg do perfil natural e o pedido mínimo de cada fornecedor. Os cards de cima já mostram o valor da barra. Só a ${esc(EMP())} vê esses preços.</p></div></div>
-   ${cl.length?`<div class="tabs2" style="margin-top:12px"><span class="sub" style="margin:0 4px 0 0;align-self:center">Preços de:</span><button data-pcli="0" class="${!S.pcli?'on':''}">Mercado em geral</button>${cl.map(c=>`<button data-pcli="${c.id}" class="${S.pcli===c.id?'on':''}">${c.vip?'★ ':''}${esc(c.nome)}</button>`).join('')}</div>`:''}
-  <div class="fgrid" style="margin-top:14px">${FL.map(f=>{const p=F[f],st=stPreco(p);return `<form class="fcard ${f===S.ext?'me':''}" data-forn="${f}" id="fc-${f}" novalidate>
-    <div class="fh"><h3>${esc(FN(f))}${f===S.ext?' <span class="mine">sua</span>':''}</h3><span class="st ${st[0]}">${st[1]}</span></div>
-    <div class="two"><label class="fl">R$/kg natural *<span class="inp"><i>R$</i><input name="rk" autocomplete="off" inputmode="decimal" placeholder="0,00" value="${p?nb(p.rk):''}"></span></label>
-    <label class="fl">Pedido mínimo<span class="inp"><input name="mp" autocomplete="off" inputmode="numeric" placeholder="150" value="${p?nb(p.mp):''}"><i>kg</i></span></label></div>
-    <div class="ff"><small>${p?`${esc(p.d)} · ${esc(p.u)}${p.ex?' (exemplo)':''}`:'Ainda não preenchido'}</small><button class="btn sm">Salvar</button></div><div class="err"></div></form>`}).join('')}</div>
-  ${hist.length?`<details style="margin-top:14px"><summary class="sub" style="cursor:pointer;font-weight:600">Histórico de lançamentos (${hist.length})</summary><div class="tw" style="margin-top:8px"><table><thead><tr><th>Data</th><th>Fornecedor</th><th class="n">R$/kg</th><th class="n">Pedido mín.</th><th>${DIST()?'':'Cliente'}</th><th>Quem lançou</th></tr></thead><tbody>${hist.map(p=>`<tr><td>${esc(p.d)}</td><td>${esc(FN(p.f))}</td><td class="n">${p.rk==null?'retirado':rs(p.rk)}</td><td class="n">${p.mp?esc(nb(p.mp))+' kg':'—'}</td><td>${DIST()?'':esc((db.clientes().find(c=>c.id===p.cli)||{}).nome||'Mercado em geral')}</td><td>${esc(p.u)}${p.ex?' <small>(exemplo)</small>':''}</td></tr>`).join('')}</tbody></table></div></details>`:''}</section>`;
+  const hist=db.precos().slice().reverse().slice(0,20);
+  return `<section class="box side" id="precos"><h2 style="font-size:22px">Preço por kg</h2><p class="sub" style="font-size:13px">R$/kg do natural e pedido mínimo. Ao salvar, os desenhos ao lado já mostram o valor da barra.</p>
+   ${cl.length?`<label class="fl" style="margin-top:10px">Preços de<select id="pcliSel" class="sel">${[['0','Mercado em geral'],...cl.map(c=>[String(c.id),(c.vip?'★ ':'')+c.nome])].map(([v,n])=>`<option value="${v}" ${String(S.pcli||0)===v?'selected':''}>${esc(n)}</option>`).join('')}</select></label>`:''}
+   <div class="rows">${FL.map(f=>{const p=F[f],st=stPreco(p);return `<form class="prow ${f===S.ext?'me':''}" data-forn="${f}" id="fc-${f}" novalidate>
+     <div class="pr1"><b>${esc(FN(f))}</b>${f===S.ext?' <span class="mine">sua</span>':''}<span class="st ${st[0]}">${st[1]}</span></div>
+     <div class="pr2"><span class="inp"><i>R$</i><input name="rk" autocomplete="off" inputmode="decimal" placeholder="0,00" aria-label="R$/kg ${esc(FN(f))}" value="${p?nb(p.rk):''}"></span><span class="inp sm"><input name="mp" autocomplete="off" inputmode="numeric" placeholder="mín." aria-label="Pedido mínimo ${esc(FN(f))}" value="${p?nb(p.mp):''}"><i>kg</i></span><button class="btn sm" aria-label="Salvar ${esc(FN(f))}">Salvar</button></div>
+     <div class="pr3"><small>${p?`${esc(p.d)} · ${esc(p.u)}${p.ex?' (exemplo)':''}`:'Ainda não preenchido'}</small></div><div class="err"></div></form>`}).join('')}</div>
+   ${hist.length?`<details style="margin-top:10px"><summary class="sub" style="cursor:pointer;font-weight:600;font-size:13px">Histórico (${hist.length})</summary><div style="display:grid;gap:4px;margin-top:6px;font-size:12.5px">${hist.map(p=>`<div style="display:flex;justify-content:space-between;gap:6px;border-bottom:1px solid var(--ln);padding:3px 0"><span>${esc(p.d)} · ${esc(FN(p.f))}${DIST()?'':' · '+esc((db.clientes().find(c=>c.id===p.cli)||{}).nome||'Mercado')}</span><b class="num">${p.rk==null?'retirado':rs(p.rk)}</b></div>`).join('')}</div></details>`:''}</section>`;
 }
 
 /* Clientes especiais */
@@ -486,11 +500,11 @@ function ligar(){
   document.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>buscar(b.dataset.q));
   document.querySelectorAll('[data-ord]').forEach(b=>b.onclick=()=>{S.ord=b.dataset.ord;ls.set('fcext_ord',S.ord);const y=window.scrollY;draw();window.scrollTo(0,y)});
   const gp=$('[data-goprec]');if(gp)gp.onclick=()=>{const x=$('#precos');if(x)x.scrollIntoView({behavior:'smooth',block:'start'})};
-  document.querySelectorAll('[data-lanca]').forEach(b=>b.onclick=()=>{const f=$('#fc-'+b.dataset.lanca);if(f){f.scrollIntoView({behavior:'smooth',block:'center'});setTimeout(()=>f.rk.focus(),350)}});
+  document.querySelectorAll('[data-lanca]').forEach(b=>b.onclick=()=>{const f=$('#fc-'+b.dataset.lanca);if(f){f.scrollIntoView({behavior:'smooth',block:'nearest'});setTimeout(()=>f.rk.focus({preventScroll:true}),350)}});
   const fq2=$('#fq2');if(fq2)fq2.onsubmit=e=>{e.preventDefault();const g=BY[norm($('#q2').value)];if(g){S.g=g;logar('Pesquisou',g.k);draw()}else toast('Código não encontrado')};
   document.querySelectorAll('form[data-forn]').forEach(fm=>{fm.oninput=()=>fm.querySelector('.err').textContent='';fm.onsubmit=e=>{e.preventDefault();const f=fm.dataset.forn,rk=pn(fm.rk.value);if(!rk){const tinha=precoForn(S.pcli)[f];if(!tinha){fm.querySelector('.err').textContent='Digite o preço por kg do natural, por exemplo 31,90.';fm.rk.focus();return}const P0=db.precos();P0.push({id:Date.now(),f,rk:null,mp:'',cli:S.pcli||null,d:hoje(),u:USERS[S.role].n});db.save('precos',P0);toast('Preço da '+FN(f)+' retirado · fica sem preço');const y0=window.scrollY;draw();window.scrollTo(0,y0);return}
     const P=db.precos();P.push({id:Date.now(),f,rk,mp:pn(fm.mp.value)||'',cli:S.pcli||null,d:hoje(),u:USERS[S.role].n});db.save('precos',P);logar('Lançou preço '+FN(f),'');reg('preco',f);toast('Preço da '+FN(f)+' salvo');const y=window.scrollY;draw();window.scrollTo(0,y)}});
-  document.querySelectorAll('[data-pcli]').forEach(b=>b.onclick=()=>{S.pcli=+b.dataset.pcli||null;const y=window.scrollY;draw();window.scrollTo(0,y)});
+  const ps=$('#pcliSel');if(ps)ps.onchange=()=>{S.pcli=+ps.value||null;const y=window.scrollY;draw();window.scrollTo(0,y)};
   document.querySelectorAll('[data-gopcli]').forEach(b=>b.onclick=()=>{S.pcli=+b.dataset.gopcli;S.tab='pesq';draw();const x=$('#precos');if(x)x.scrollIntoView({block:'start'})});
   document.querySelectorAll('[data-cli]').forEach(b=>b.onclick=()=>{S.cliSel=+b.dataset.cli||null;draw()});
   const fc=$('#fc');if(fc){$('#cn').oninput=()=>$('#cerr').textContent='';fc.onsubmit=e=>{e.preventDefault();const n=$('#cn').value.trim();if(!n){$('#cerr').textContent='Digite a razão social do cliente.';return}const C=db.clientes();C.push({id:Date.now(),nome:n,cid:$('#cc').value.trim(),vend:USERS[S.role].n,vip:!!$('#cv').value});db.save('clientes',C);toast('Cliente cadastrado');draw()}}
