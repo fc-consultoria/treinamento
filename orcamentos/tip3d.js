@@ -178,7 +178,7 @@ function abrir(t,cfg){cfg=cfg||{};if(!T()){alert("O 3D não carregou. Verifique 
   r.domElement.addEventListener("click",e=>{if(Math.hypot(e.clientX-px,e.clientY-py)>4)return;const ray=new (T().Raycaster)();const p=new (T().Vector2)(e.clientX/innerWidth*2-1,-e.clientY/innerHeight*2+1);ray.setFromCamera(p,V.cam);if(!ray.intersectObject(V.conj,true).length)fechar()});
   document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!d.hidden)fechar()});
   d.querySelector("#t3d-ab").onclick=e=>{V.alvo=V.alvo?0:1;e.target.textContent=V.alvo?"Fechar folhas":"Abrir folhas"};
-  d.querySelector("#t3d-gi").onclick=()=>{V.giro=Math.PI*2};
+  d.querySelector("#t3d-gi").onclick=()=>girar();
   d.querySelector("#t3d-fr").onclick=()=>{V.giro=0;frente(0)};
   window.addEventListener("resize",()=>{if(!d.hidden)tam()});}
  V.volta=document.activeElement;
@@ -193,15 +193,19 @@ function abrir(t,cfg){cfg=cfg||{};if(!T()){alert("O 3D não carregou. Verifique 
  const reduz=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
  if(o&&!reduz){const sc=Math.max(o.width/innerWidth,o.height/innerHeight);cv.style.transition="none";cv.style.transform=`translate(${o.left+o.width/2-innerWidth*sc/2}px,${o.top+o.height/2-innerHeight*sc/2}px) scale(${sc})`;cv.getBoundingClientRect();cv.style.transition="";}
  requestAnimationFrame(()=>{V.d.classList.add("on");cv.style.transform="none"});
- V.giro=reduz?0:Math.PI*2;cancelAnimationFrame(V.raf);loop();
+ V.giro=0;if(!reduz)girar();cancelAnimationFrame(V.raf);loop();
  setTimeout(()=>V.d.querySelector("#t3d-x").focus(),60);
 }
 function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
 function lc(h){const c=new (T().Color)(h);if(c.convertSRGBToLinear)c.convertSRGBToLinear();return c}
 function tam(){const w=innerWidth,h=innerHeight;V.r.setSize(w,h,false);V.cam.aspect=w/Math.max(h,1);V.cam.updateProjectionMatrix();V.dist=enquadrar(V.cam,V.mo.L,V.mo.H,V.cam.aspect,1.55)}
 function frente(ry){const d=V.dist;V.cam.position.set(0,d*.06,d);V.cam.lookAt(0,0,0);V.conj.rotation.y=ry;if(V.ctl){V.ctl.target.set(0,0,0);V.ctl.update()}}
+const GIRO_MS=10000;
+function girar(){V.giro=1;V.giroT0=performance.now();V.giroBase=V.conj.rotation.y}
 function loop(){V.raf=requestAnimationFrame(loop);V.k+=(V.alvo-V.k)*.08;if(Math.abs(V.alvo-V.k)<.001)V.k=V.alvo;V.mo.animar(V.k);
- if(V.giro>0){const p=Math.min(V.giro,.035);V.giro-=p;V.conj.rotation.y+=p;if(V.giro<=0&&!V.mexeu)V.conj.rotation.y=-.35}
+ if(V.giro>0){/* volta de 360° lenta e suave: começa e termina devagar */
+  const p=Math.min(1,(performance.now()-V.giroT0)/GIRO_MS),e=.5-.5*Math.cos(Math.PI*p);V.conj.rotation.y=V.giroBase+e*Math.PI*2;
+  if(p>=1){V.giro=0;if(!V.mexeu)V.conj.rotation.y=V.giroBase}}
  if(V.ctl)V.ctl.update();V.r.render(V.s,V.cam)}
 window.TIP3D={imagem,abrir,PERFIS,VIDROS,perfilDe,vidroDe,limparCache:()=>cache.clear()};
 })();
