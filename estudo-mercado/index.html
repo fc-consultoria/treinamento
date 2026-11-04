@@ -300,17 +300,15 @@ function abcTag(cl){const t={A:'Classe A · alto giro',B:'Classe B · médio gir
 /* dados por extrusora (isolados) */
 const K=n=>`fcext_${S.ext}_${n}`;
 const db={
-  precos:()=>ls.get(K('precos2'),null)??seed('precos'),
+  precos:()=>ls.get(K('precos3'),null)??seed('precos'),
   clientes:()=>ls.get(K('clientes'),null)??seed('clientes'),
   log:()=>ls.get(K('log'),null)??seed('log'),
-  save(n,v){ls.set(K(n==='precos'?'precos2':n),v)}
+  save(n,v){ls.set(K(n==='precos'?'precos3':n),v)}
 };
 function seed(n){
   const comp=Object.keys(DATA.forn).filter(f=>f!=='alcoa'&&f!==S.ext);
   if(n==='clientes'){const v=[{id:1,nome:'Distribuidora Exemplo A',cid:'Sinop/MT',vend:'Carlos',vip:true},{id:2,nome:'Vidraçaria Exemplo B',cid:'Sorriso/MT',vend:'Marcos',vip:false},{id:3,nome:'Serralheria Exemplo C',cid:'Lucas do Rio Verde/MT',vend:'Carlos',vip:true}];db.save(n,v);return v}
-  if(n==='precos'){const v=[];const mk=(f,rk,mp,mi,cli,d,u)=>{if(f&&DATA.forn[f])v.push({id:v.length+1,f,rk,mp,mi,cli:DIST()?null:cli,d,u,ex:true})};
-    if(!DIST())mk(S.ext,34.48,200,30,null,'02/11','Carlos');mk(comp[0],30.31,250,'',null,'29/10','Carlos');mk(comp[1],31.90,300,30,null,'12/09','Marcos');mk(comp[2],32.10,150,'',null,'01/11','Carlos');if(!DIST())mk(comp[0],29.90,250,'',1,'30/10','Carlos');
-    db.save(n,v);return v}
+  if(n==='precos'){const v=[];db.save(n,v);return v}
   if(n==='log'){const v=[{u:'Carlos',d:'03/11 14:20',a:'Pesquisou',gk:'SU-001'},{u:'Marcos',d:'03/11 10:02',a:'Pesquisou',gk:'SU-002'},{u:'Paula',d:'02/11 16:40',a:'Abriu a Curva ABC',gk:''}];db.save(n,v);return v}
 }
 function logar(a,gk){const L=db.log();L.unshift({u:USERS[S.role].n,d:agora(),a,gk:gk||''});db.save('log',L.slice(0,300))}
