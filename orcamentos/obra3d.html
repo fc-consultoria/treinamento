@@ -99,11 +99,20 @@ table.cli td.n,table.cli th.n{text-align:right}
 .lnk input{flex:1;min-width:220px;font:500 13px var(--body);padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface2);color:var(--fg)}
 .ctl{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px 14px;padding:16px}
 .ctl .w3{grid-column:1/-1}
+.tag{font:600 11px var(--body);border-radius:999px;padding:2px 8px;background:var(--teal-soft);color:var(--teal);margin-left:6px;vertical-align:middle}
+.ed{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px 10px}
+.ed .w2{grid-column:span 2}.ed .w3{grid-column:span 3}.ed .w6{grid-column:1/-1}
+.ed .f input{min-height:36px;padding:7px 9px;font-size:13.5px}
+.pre{display:flex;gap:10px 16px;flex-wrap:wrap;align-items:flex-end;padding:12px 14px;margin-bottom:14px}
+.pre .tt{flex-basis:100%;font:700 14px var(--display)}
+.pre .vl{font-size:12px;color:var(--muted);font-weight:600}.pre .vl b{display:block;font:700 18px var(--display);color:var(--fg)}
+.pre .f input{width:110px}
+.logo{display:flex;gap:8px;align-items:center}.logo img{max-height:38px;max-width:120px;background:#fff;border:1px solid var(--line);border-radius:6px;padding:3px}
 .msg{background:var(--surface);border-radius:14px;padding:28px 20px;text-align:center;color:var(--muted)}
 .wm-app{text-align:center;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:18px 0 4px}
 #toast{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:#16262a;color:#fff;font:600 13px var(--body);padding:9px 14px;border-radius:999px;box-shadow:0 8px 24px rgba(0,0,0,.25);z-index:9000;opacity:0;transition:opacity .25s;pointer-events:none}
 #toast.on{opacity:1}
-@media (max-width:900px){.cols{grid-template-columns:1fr}.ptop{grid-template-columns:repeat(2,minmax(0,1fr))}.it{grid-template-columns:120px minmax(0,1fr)}.des{grid-column:1/-1;border-left:0;padding-left:0;border-top:1px solid var(--line);padding-top:10px}.ctl{grid-template-columns:1fr 1fr}}
+@media (max-width:900px){.ed{grid-template-columns:repeat(2,minmax(0,1fr))}.ed .w2,.ed .w3{grid-column:1/-1}.cols{grid-template-columns:1fr}.ptop{grid-template-columns:repeat(2,minmax(0,1fr))}.it{grid-template-columns:120px minmax(0,1fr)}.des{grid-column:1/-1;border-left:0;padding-left:0;border-top:1px solid var(--line);padding-top:10px}.ctl{grid-template-columns:1fr 1fr}}
 @media (max-width:560px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.ptop{grid-template-columns:1fr}.it{grid-template-columns:1fr}.thumb{height:160px}.thumb img{max-height:148px}.dl{grid-template-columns:repeat(2,minmax(0,1fr))}.ctl{grid-template-columns:1fr}.pj{grid-template-columns:8px minmax(0,1fr)}.pj .r{grid-column:2;text-align:left}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 @media print{header.top,.tabs,.ptop,.lnk,.noprint,.wm-app,#toast{display:none!important}body{background:#fff}main{padding:0}.wrap{max-width:none;padding:0}}
@@ -153,7 +162,13 @@ addEventListener("beforeunload",e=>{if(pend.size){e.preventDefault();e.returnVal
 
 /* ---------- dados para a apresentação (nunca leva preço) ---------- */
 function t3(it){return {item:it.item,tipo:it.tipo,loc:it.loc,kind:it.kind,f:it.f,enc:it.enc,L:it.L,H:it.H,q:it.q,linha:it.linha,desc:it.vidro+(it.obs?" · "+it.obs:"")}}
-function doc(p){return {marca:p.empresa,marcaCor:p.cor,numero:p.numero,obra:p.obra,cliente:p.cliente,cor:p.corPerfil,emitida:p.emitida||p.criado,itens:p.itens.map(t3)}}
+function doc(p){const d={marca:p.empresa,marcaCor:p.cor,numero:p.numero,obra:p.obra,cliente:p.cliente,cor:p.corPerfil,emitida:p.emitida||p.criado,itens:p.itens.map(t3)};
+ if(p.logo)d.logo=p.logo;if(p.editavel&&typeof p.rodape==="string")d.rodape=p.rodape;return d}
+/* preços: só para o PDF impresso (valor do item no PDF + margem em lote); o link nunca recebe isto */
+const fat=p=>1+(+p.margem||0)/100;
+const precos=p=>p.itens.map(t=>Math.round((+t.pv||0)*fat(p)*100)/100);
+const somaPdf=p=>p.itens.reduce((s,t)=>s+(+t.pv||0),0);
+const novoId=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 
 /* ---------- cabeçalho ---------- */
 function hdr(sub){$("hdr").innerHTML=`<div>${P?`<button class="tomatriz" type="button" id="h-back">← Projetos</button>`:`<a class="tomatriz" href="../painel.html">← Painel da Matriz</a>`}
@@ -173,7 +188,7 @@ function home(){P=null;hdr("A vidraçaria manda o PDF do orçamento; a FC confer
   <div class="drop" id="drop" tabindex="0" role="button" aria-label="Subir o PDF do orçamento"><b>＋ Novo projeto</b><span class="hint">Arraste aqui o PDF do orçamento da vidraçaria ou toque para escolher.</span><input type="file" id="file" accept="application/pdf,.pdf" hidden></div>
   <div class="hint" id="dmsg" role="status" style="margin:-6px 0 12px"></div>
   <div class="card sec"><h2>Projetos <span class="hint">${tot.n} no total</span></h2><div class="lst">${ord.length?ord.map(p=>{const s=stOf(p.status);const v=VISTAS[p.link&&p.link.tok];
-   return `<button class="pj" type="button" data-id="${esc(p.id)}"><i style="background:${esc(p.cor||"#0d5c63")}"></i><span><b>${esc(p.obra||"Obra")}</b><small>${esc(p.empresa||"—")} · ${p.itens.length} itens · ${dt(p.criado)}${v?` · link aberto ${v.vistas}×`:""}</small></span>
+   return `<button class="pj" type="button" data-id="${esc(p.id)}"><i style="background:${esc(p.cor||"#0d5c63")}"></i><span><b>${esc(p.obra||"Obra")}${p.editavel?'<span class="tag">cópia editável</span>':""}</b><small>${esc(p.empresa||"—")} · ${p.itens.length} itens · ${dt(p.criado)}${v?` · link aberto ${v.vistas}×`:""}</small></span>
    <span class="r"><span class="st" style="color:${s[2]}">${s[1]}</span><br><span class="num">${+p.valor?brl(p.valor):'<span class="hint">sem valor</span>'}</span></span></button>`}).join(""):`<div class="hint">Nenhum projeto ainda. Suba o primeiro PDF acima.</div>`}</div></div>
  </div>
  <div class="card sec"><h2>Por cliente</h2>${Object.keys(cli).length?`<table class="cli"><thead><tr><th>Vidraçaria</th><th class="n">Projetos</th><th class="n">Entregues</th><th class="n">Recebido</th><th class="n">A receber</th></tr></thead><tbody>${Object.entries(cli).sort((a,b)=>b[1].n-a[1].n).map(([k,c])=>`<tr><td><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${esc(c.cor||"#0d5c63")};margin-right:6px"></span>${esc(k)}</td><td class="n num">${c.n}</td><td class="n num">${c.ent}</td><td class="n num">${brl(c.fat)}</td><td class="n num">${brl(c.rec)}</td></tr>`).join("")}</tbody></table>
@@ -199,9 +214,9 @@ async function novo(file){const m=$("dmsg");
  m.textContent="Lendo o PDF…";
  let O;try{O=O3DLER.ler(await lerPdf(file))}catch(e){console.warn(e);m.textContent="Não consegui ler este PDF. Confira se é o orçamento com Local/Ambiente, Tipo e medidas.";return}
  if(!O.itens.length){m.textContent=O.avisos[0]||"Nenhum item encontrado neste PDF.";return}
- const id=Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+ const id=novoId();
  const p={id,criado:new Date().toISOString(),pdf:file.name,empresa:O.empresa,cor:"",obra:O.cliente||"Obra",cliente:O.cliente,numero:O.numero,emissao:O.emissao,vendedor:O.vendedor,corPerfil:O.cor,
-  itens:O.itens.map(it=>Object.assign(it,{lido:{kind:it.kind,f:it.f,enc:it.enc},ok:false})),avisos:O.avisos,valor:"",status:"recebido",entregue:"",pago:"",notas:"",link:null};
+  itens:O.itens.map(it=>Object.assign(it,{lido:{kind:it.kind,f:it.f,enc:it.enc},ok:false})),avisos:O.avisos,margem:0,valor:"",status:"recebido",entregue:"",pago:"",notas:"",link:null};
  LIST.push(p);touch(p);location.hash="p-"+id;toast(`${p.itens.length} itens lidos`)}
 
 /* ======================= PROJETO ======================= */
@@ -212,13 +227,25 @@ function abrir(id){P=LIST.find(p=>p.id===id);if(!P){location.hash="";return}
  <div class="card ptop">
   <label class="f">Empresa na apresentação<input id="p-emp" value="${esc(P.empresa)}" autocomplete="off"></label>
   <label class="f">Título da obra<input id="p-obra" value="${esc(P.obra)}" autocomplete="off"></label>
-  <div class="f">Cliente (do PDF)<span class="lk">🔒 ${esc(P.cliente||"—")}</span></div>
+  ${P.editavel?`<label class="f">Cliente<input id="p-cli" value="${esc(P.cliente)}" autocomplete="off"></label>`:`<div class="f">Cliente (do PDF)<span class="lk">🔒 ${esc(P.cliente||"—")}</span></div>`}
   <div class="f">Cor da empresa<div class="sws" id="p-cor">${CORES.map(c=>`<button type="button" class="sw" style="background:${c}" data-c="${c}" aria-label="Cor ${c}" aria-pressed="${P.cor===c}"></button>`).join("")}<input type="color" id="p-cor2" value="${esc(P.cor||"#0d5c63")}" aria-label="Outra cor"></div></div>
+  ${P.editavel?`<label class="f">Número do orçamento<input id="p-num" value="${esc(P.numero)}" autocomplete="off"></label>
+  <div class="f">Logo da empresa<div class="logo">${P.logo?`<img src="${esc(P.logo)}" alt="Logo">`:""}<button class="btn" type="button" id="p-lg">${P.logo?"Trocar":"Subir logo"}</button>${P.logo?`<button class="btn dan" type="button" id="p-lgx">Tirar</button>`:""}<input type="file" id="p-lgf" accept="image/*" hidden></div></div>
+  <label class="f w2" style="grid-column:span 2">Rodapé da apresentação (em branco = sem rodapé)<input id="p-rod" value="${esc(P.rodape||"")}" autocomplete="off"></label>`:""}
+  <div class="f" style="grid-column:1/-1;flex-direction:row;gap:10px;align-items:center;flex-wrap:wrap">${P.editavel?`<span class="hint">Cópia editável${P.copiaDe?" de um projeto recebido":""}: tudo pode ser alterado, inclusive marca e rodapé.</span>`:`<span class="hint">Original do PDF: textos e medidas travados.</span>`}<button class="btn" type="button" id="p-dup">⧉ Duplicar (cópia editável)</button></div>
  </div>
  ${P.cor?"":`<div class="aviso">Escolha a <b>cor da empresa</b>: é ela que pinta a capa e o link do cliente.</div>`}
  <nav class="tabs" role="tablist"><button role="tab" data-t="conf" aria-selected="${TAB==="conf"}">Conferência <span class="hint num">${nOk}/${P.itens.length}</span></button><button role="tab" data-t="apr" aria-selected="${TAB==="apr"}">Apresentação e link</button><button role="tab" data-t="ctl" aria-selected="${TAB==="ctl"}">Controle do projeto</button></nav>
  <div id="tab"></div>`;
  $("p-emp").oninput=e=>{P.empresa=e.target.value;touch(P)};
+ $("p-dup").onclick=()=>{const c=JSON.parse(JSON.stringify(P));Object.assign(c,{id:novoId(),criado:new Date().toISOString(),copiaDe:P.id,editavel:true,obra:(P.obra||"Obra")+" (cópia)",link:null,status:"recebido",valor:"",entregue:"",pago:"",notas:"",avisos:[]});
+  if(typeof c.rodape!=="string")c.rodape="Desenvolvido por FC Consultoria em Esquadria";c.itens.forEach(t=>{t.avisos=[];t.ok=true});LIST.push(c);touch(c);TAB="conf";location.hash="p-"+c.id;toast("Cópia criada · tudo editável")};
+ if(P.editavel){
+  $("p-cli").onchange=e=>{P.cliente=e.target.value;touch(P)};$("p-num").onchange=e=>{P.numero=e.target.value;touch(P)};
+  $("p-rod").onchange=e=>{P.rodape=e.target.value;touch(P)};
+  $("p-lg").onclick=()=>$("p-lgf").click();if($("p-lgx"))$("p-lgx").onclick=()=>{P.logo="";touch(P);abrir(P.id)};
+  $("p-lgf").onchange=e=>{const f=e.target.files[0];if(!f)return;const im=new Image(),u=URL.createObjectURL(f);im.onload=()=>{const k=Math.min(1,400/im.width,160/im.height);const c=document.createElement("canvas");c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext("2d").drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(u);P.logo=c.toDataURL("image/png");touch(P);abrir(P.id)};im.onerror=()=>toast("Não consegui abrir esta imagem");im.src=u};
+ }
  $("p-obra").oninput=e=>{P.obra=e.target.value;touch(P);document.querySelector("header h1").textContent=P.obra||"Projeto"};
  const setCor=c=>{P.cor=c;touch(P);abrir(P.id)};
  document.querySelectorAll("#p-cor .sw").forEach(b=>b.onclick=()=>setCor(b.dataset.c));$("p-cor2").onchange=e=>setCor(e.target.value);
@@ -227,7 +254,7 @@ function abrir(id){P=LIST.find(p=>p.id===id);if(!P){location.hash="";return}
 }
 
 /* ---------- conferência: texto do PDF travado; só o desenho 3D pode ser ajustado ---------- */
-function conf(){const it=P.itens,nOk=it.filter(t=>t.ok).length;
+function conf(){if(P.editavel)return confEd();const it=P.itens,nOk=it.filter(t=>t.ok).length;
  const av=(P.avisos||[]).concat(it.some(t=>t.avisos.length)?[`${it.filter(t=>t.avisos.length).length} itens com observação da leitura (em amarelo).`]:[]);
  $("tab").innerHTML=`<div class="row" style="margin-bottom:12px"><div class="prog" aria-label="Itens conferidos"><i style="width:${it.length?nOk/it.length*100:0}%"></i></div><span class="hint num">${nOk} de ${it.length} conferidos</span>
   <button class="btn noprint" type="button" id="c-all">✓ Marcar todos como conferidos</button></div>
@@ -255,6 +282,36 @@ function conf(){const it=P.itens,nOk=it.filter(t=>t.ok).length;
  $("c-all").onclick=()=>{P.itens.forEach(t=>t.ok=true);if(P.status==="recebido")P.status="conferencia";touch(P);abrir(P.id)};
  document.querySelectorAll("[data-v]").forEach(b=>b.onclick=()=>{const t=P.itens[+b.dataset.v];window.TIP3D&&TIP3D.abrir(t3(t),{cor:P.corPerfil,origem:b,titulo:`Item ${t.orig.item} · ${t.orig.tipo}`})});
  fila()}
+/* ---------- cópia editável: todos os campos abertos ---------- */
+function confEd(){const it=P.itens;
+ const inp=(i,k,v,tp,cls,lb)=>`<label class="f ${cls||""}">${lb}<input data-e="${k}" data-i="${i}" ${tp==="n"?'type="number" inputmode="decimal" step="any"':""} value="${esc(v)}" autocomplete="off"></label>`;
+ $("tab").innerHTML=`<p class="hint" style="margin:0 0 12px">Cópia editável: altere qualquer campo. O preço é o valor do item antes da margem e só aparece no PDF impresso.</p>
+ ${it.map((t,i)=>`<div class="card it ok">
+  <button class="thumb" type="button" data-v="${i}" aria-label="Ver item em 3D"><img data-i="${i}" alt="" hidden><span class="ld">Gerando 3D…</span><span class="v3">Ver em 3D</span></button>
+  <div class="ed">${inp(i,"item",t.item,"","","Item")}${inp(i,"tipo",t.tipo,"","w3","Tipologia")}${inp(i,"linha",t.linha,"","w2","Linha")}
+   ${inp(i,"loc",t.loc,"","w3","Local / ambiente")}${inp(i,"corPerfil",t.corPerfil,"","w3","Cor do perfil")}
+   ${inp(i,"q",t.q,"n","","Qtde")}${inp(i,"L",t.L,"n","","Largura mm")}${inp(i,"H",t.H,"n","","Altura mm")}${inp(i,"vidro",t.vidro,"","w3","Vidro")}
+   ${inp(i,"obs",t.obs||"","","w3","Observação")}${inp(i,"pv",t.pv||"","n","w2","Preço do item R$ (sem margem)")}
+   <div class="f" style="justify-content:flex-end"><button class="btn dan" type="button" data-x="${i}">Excluir</button></div></div>
+  <div class="des"><h4>Desenho 3D</h4>
+   <label class="f">Tipologia<select data-k="kind" data-i="${i}">${KINDS.map(([k,n])=>`<option value="${k}"${t.kind===k?" selected":""}>${n}</option>`).join("")}</select></label>
+   <div class="row" style="gap:8px"><label class="f" style="flex:1">Folhas / módulos<input type="number" min="1" max="12" data-k="f" data-i="${i}" value="${t.f}"></label>
+   <label class="f" style="flex:2">Preenchimento<select data-k="enc" data-i="${i}">${ENCS.map(([k,n])=>`<option value="${k}"${t.enc===k?" selected":""}>${n}</option>`).join("")}</select></label></div></div>
+ </div>`).join("")}
+ <button class="btn pri" type="button" id="e-add">＋ Adicionar item</button>`;
+ const thumb=i=>{const im=document.querySelector(`img[data-i="${i}"]`);if(im&&window.TIP3D){try{im.src=TIP3D.imagem(t3(P.itens[i]),{cor:P.corPerfil,px:420})}catch(e){}}};
+ document.querySelectorAll("[data-e]").forEach(el=>el.onchange=()=>{const i=+el.dataset.i,k=el.dataset.e,t=P.itens[i];let v=el.value;
+  if(k==="q"||k==="L"||k==="H")v=Math.max(0,Math.round(+v||0));else if(k==="pv")v=Math.max(0,+String(v).replace(",",".")||0);
+  t[k]=v;if(t.orig)t.orig[k]=v;
+  if(k==="tipo"){const d=O3DLER.desenho(v,t.linha);Object.assign(t,{kind:d.kind,f:d.f,enc:d.enc});t.lido={kind:d.kind,f:d.f,enc:d.enc};touch(P);confEd();return}
+  touch(P);if(k==="q"||k==="L"||k==="H"||k==="vidro")thumb(i)});
+ document.querySelectorAll("[data-k]").forEach(el=>el.onchange=()=>{const t=P.itens[+el.dataset.i];const k=el.dataset.k;t[k]=k==="f"?Math.max(1,Math.min(12,+el.value||1)):el.value;touch(P);thumb(+el.dataset.i)});
+ document.querySelectorAll("[data-x]").forEach(b=>b.onclick=()=>{const i=+b.dataset.x;if(b.dataset.ok!=="1"){b.dataset.ok="1";b.textContent="Confirmar exclusão";setTimeout(()=>{if(b.isConnected){b.dataset.ok="";b.textContent="Excluir"}},3000);return}P.itens.splice(i,1);P.itens.forEach((t,j)=>t.n=j+1);touch(P);confEd()});
+ $("e-add").onclick=()=>{const u=P.itens[P.itens.length-1]||{};const t={n:P.itens.length+1,item:String(P.itens.length+1),loc:"",tipo:"",linha:u.linha||"",corPerfil:u.corPerfil||P.corPerfil||"",corAcess:"",q:1,m2:0,L:1000,H:1000,vidro:"",obs:"",pv:0,kind:"gen",f:1,enc:"vidro",avisos:[],ok:true};
+  t.orig={loc:"",tipo:"",linha:t.linha,corPerfil:t.corPerfil,q:1,L:1000,H:1000,vidro:"",item:t.item,obs:"",pv:0};t.lido={kind:"gen",f:1,enc:"vidro"};P.itens.push(t);touch(P);confEd();
+  const q=document.querySelectorAll('[data-e="tipo"]');if(q.length)q[q.length-1].focus()};
+ document.querySelectorAll("[data-v]").forEach(b=>b.onclick=()=>{const t=P.itens[+b.dataset.v];window.TIP3D&&TIP3D.abrir(t3(t),{cor:P.corPerfil,origem:b,titulo:`Item ${t.item} · ${t.tipo}`})});
+ fila()}
 let filaRaf=0;
 function fila(){cancelAnimationFrame(filaRaf);const passo=()=>{const im=document.querySelector("img[data-i][hidden]");if(!im)return;const t=P&&P.itens[+im.dataset.i];
   if(t&&window.TIP3D){try{im.src=TIP3D.imagem(t3(t),{cor:P.corPerfil,px:420})}catch(e){}}im.hidden=false;const ld=im.parentNode.querySelector(".ld");if(ld)ld.remove();filaRaf=requestAnimationFrame(passo)};passo()}
@@ -266,7 +323,13 @@ function apr(){const nOk=P.itens.filter(t=>t.ok).length,lk=P.link;const v=lk&&VI
  <div class="card lnk noprint">${lk&&lk.ativo!==false?`<input readonly id="l-url" value="${esc(urlDe(lk.tok))}" aria-label="Link do cliente"><button class="btn pri" type="button" id="l-cp">Copiar link</button><a class="btn" id="l-wa" target="_blank" rel="noopener">WhatsApp</a><a class="btn" href="${esc(urlDe(lk.tok))}" target="_blank" rel="noopener">Abrir ↗</a><button class="btn" type="button" id="l-up">Atualizar link</button><button class="btn dan" type="button" id="l-off">Desativar</button>
   <span class="hint" style="flex-basis:100%">Link sem preço, com a marca de ${esc(P.empresa||"—")}.${v?` Aberto ${v.vistas} ${v.vistas===1?"vez":"vezes"}${v.ultima_vista?` (último em ${new Date(v.ultima_vista).toLocaleString("pt-BR")})`:""}.`:" Ainda não foi aberto."} Depois de ajustar desenhos ou nomes, toque em <b>Atualizar link</b>.</span>`
   :`<span class="hint" style="flex:1">${lk?"O link anterior foi desativado. ":""}Gere o link sem preço para enviar à ${esc(P.empresa||"vidraçaria")}.</span><button class="btn pri" type="button" id="l-new">Gerar link sem preço</button>`}
-  <button class="btn" type="button" id="l-pr">🖨 Imprimir / PDF</button><span class="hint" id="l-msg" role="status"></span></div>
+  <button class="btn" type="button" id="l-pr">🖨 Imprimir sem preço</button><span class="hint" id="l-msg" role="status"></span></div>
+ <div class="card pre noprint"><span class="tt">Preços no PDF impresso <span class="hint" style="font:500 12px var(--body)">· o link do cliente nunca mostra preço</span></span>
+  <span class="vl">Total do PDF recebido<b class="num">${brl(somaPdf(P))}</b></span>
+  <label class="f">Margem em todas as tipologias (%)<input id="m-pct" type="number" step="0.5" inputmode="decimal" value="${esc(+P.margem||0)}"></label>
+  <span class="vl">Total no PDF impresso<b class="num" id="m-tot">${brl(precos(P).reduce((a,b)=>a+b,0))}</b></span>
+  <button class="btn amb" type="button" id="l-prc"${somaPdf(P)>0?"":" disabled"}>🖨 Imprimir com preço</button>
+  ${somaPdf(P)>0?"":`<span class="hint" style="flex-basis:100%">Este projeto não tem preços do PDF.${P.editavel?" Lance o preço de cada item na Conferência.":" Duplique para lançar preços."}</span>`}</div>
  <div id="pdoc"></div>`;
  if(!window.PROPOSTA){$("pdoc").innerHTML=`<div class="msg">O modelo da proposta não carregou. Verifique a internet e atualize.</div>`;return}
  const D=doc(P);PROPOSTA.render($("pdoc"),D,{});
@@ -279,6 +342,10 @@ function apr(){const nOk=P.itens.filter(t=>t.ok).length,lk=P.link;const v=lk&&VI
  if($("l-cp"))$("l-cp").onclick=async()=>{try{await navigator.clipboard.writeText(urlDe(lk.tok));toast("Link copiado")}catch(e){$("l-url").select();document.execCommand("copy");toast("Link copiado")}};
  if($("l-wa"))$("l-wa").href="https://wa.me/?text="+encodeURIComponent(`Apresentação 3D da obra ${P.obra||""}: ${urlDe(lk.tok)}`);
  $("l-pr").onclick=()=>{PROPOSTA.preencher($("pdoc"),D,true);setTimeout(()=>print(),80)};
+ $("m-pct").oninput=e=>{P.margem=Math.round((+String(e.target.value).replace(",",".")||0)*100)/100;touch(P);$("m-tot").textContent=brl(precos(P).reduce((a,b)=>a+b,0))};
+ /* com preço: monta a proposta com valores só para imprimir e volta à versão sem preço depois */
+ $("l-prc").onclick=()=>{const pr=precos(P);PROPOSTA.render($("pdoc"),D,{precos:pr,total:pr.reduce((a,b)=>a+b,0),rotulo:"Proposta comercial",adiar:true});PROPOSTA.preencher($("pdoc"),D,true);
+  addEventListener("afterprint",()=>PROPOSTA.render($("pdoc"),D,{}),{once:true});setTimeout(()=>print(),80)};
  if(lk&&lk.ativo!==false)vistas();
 }
 

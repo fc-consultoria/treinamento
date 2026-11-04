@@ -87,7 +87,8 @@ function ler(P){
   if(it.m2&&it.L&&it.H&&it.q&&Math.abs(it.L*it.H*it.q/1e6-it.m2)>.02)it.avisos.push(`M² do original (${it.m2}) não bate com L × A × qtde.`);
   /* o texto exatamente como veio do PDF fica travado */
   it.orig={loc:it.loc,tipo:it.tipo,linha:it.linha,corPerfil:it.corPerfil,q:it.q,L:it.L,H:it.H,vidro:it.vidro,item:it.item,obs:it.obs||""};
-  delete it.vu;delete it.vt;   /* preços do original não são guardados no projeto */
+  /* valor do item no PDF: fica só no painel da Matriz (base da margem no PDF impresso); o link nunca leva preço */
+  it.pv=it.vt||0;it.orig.pv=it.pv;delete it.vu;delete it.vt;
  });
  const cores=[...new Set(O.itens.map(t=>t.corPerfil).filter(Boolean))];O.cor=cores[0]||"";
  if(!O.itens.length)O.avisos.push("Nenhum item encontrado. Confira se o PDF é o orçamento com Local/Ambiente, Tipo e medidas.");

@@ -15,6 +15,7 @@ const CSS=`
 .pp-capa:before{content:"";position:absolute;inset:0;opacity:.13;pointer-events:none;
  background:repeating-linear-gradient(90deg,transparent 0 calc(25% - 1px),#fff calc(25% - 1px) 25%),linear-gradient(transparent calc(62% - 1px),#fff calc(62% - 1px) 62%,transparent 62%)}
 .pp-top{position:relative;display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap}
+.pp-logo{display:block;max-height:52px;max-width:200px;object-fit:contain;background:#fff;border-radius:8px;padding:5px 8px;margin-bottom:8px}
 .pp-marca{font:700 22px/1.1 var(--disp);letter-spacing:.01em}.pp-marca small{display:block;font:600 10.5px var(--txt);letter-spacing:.14em;text-transform:uppercase;opacity:.8;margin-top:4px}
 .pp-doc{text-align:right;font-size:12px;opacity:.92}.pp-doc b{display:block;font:700 18px var(--disp);letter-spacing:.02em}
 .pp-hero{position:relative;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:clamp(16px,3vw,36px);align-items:center;margin-top:22px}
@@ -103,7 +104,7 @@ function render(el,D,op){op=op||{};css();const it=D.itens||[];const P=op.precos|
  const pecas=it.reduce((s,t)=>s+(+t.q||0),0),totM2=it.reduce((s,t)=>s+area(t),0);
  const linhas=[...new Set(it.map(t=>t.linha).filter(Boolean))];
  const p0=T3?T3.perfilDe(D.cor):null;const hi=heroIdx(it);
- const marca=D.marca?`${esc(D.marca)}`:`FC Consultoria<small>e Representação</small>`;
+ const marca=(D.logo?`<img class="pp-logo" src="${esc(D.logo)}" alt="">`:"")+(D.marca?`${esc(D.marca)}`:`FC Consultoria<small>e Representação</small>`);
  const data=D.emitida?new Date(D.emitida).toLocaleDateString("pt-BR"):new Date().toLocaleDateString("pt-BR");
  let h=`<article class="pp"${pc?` style="--pc:${esc(pc)}"`:""}>
  <header class="pp-capa">
@@ -126,7 +127,7 @@ function render(el,D,op){op=op||{};css();const it=D.itens||[];const P=op.precos|
    h+=`<div class="pp-card"><figure>${T3?`<img data-pp="${i}" alt="Tipologia ${esc(t.tipo)} em 3D" hidden><span class="ld">Gerando 3D…</span><button class="pp-vr" type="button" data-pv="${i}">Ver em 3D</button>`:""}<span class="pp-badge">Item ${esc(t.item)}</span>${op.editar&&t.orig?'<span class="pp-alt">alterado</span>':""}</figure>
    <div class="pp-cb"><div><div class="pp-cod">${esc(t.tipo)}</div><div class="pp-desc">${esc(t.desc)}</div></div>
     <div class="pp-specs num"><div><span>Larg. mm</span><b>${n0(t.L)}</b></div><div><span>Alt. mm</span><b>${n0(t.H)}</b></div><div><span>Área m²</span><b>${m2(area(t))}</b></div><div><span>Qtde</span><b>${esc(t.q)}</b></div></div>
-    <div class="pp-meta">${t.linha?`<span>Linha <b>${esc(t.linha)}</b></span>`:""}${p?`<span><i style="background:${p.hex}"></i>Perfil ${p.nome.toLowerCase()}</span><span><i style="background:${v.hex}"></i>Vidro ${v.nome.toLowerCase()}</span>`:""}</div>
+    <div class="pp-meta">${t.linha?`<span>Linha <b>${esc(t.linha)}</b></span>`:""}${p?`<span><i style="background:${p.hex}"></i>Perfil ${p.nome.toLowerCase()}</span>${/SEM\s+VIDRO/i.test(t.desc||"")?"":`<span><i style="background:${v.hex}"></i>Vidro ${v.nome.toLowerCase()}</span>`}`:""}</div>
     ${op.editar?`<button class="pp-ed" type="button" data-pe="${i}">✎ Editar medida, vidro ou desenho</button>`:""}
     ${P?`<div class="pp-price num"><span>${(+t.q||0)>1&&pv>0?"Unit. "+brl(pv/t.q):"Valor do item"}</span><b>${pv>0?brl(pv):"—"}</b></div>`:""}
    </div></div>`;
@@ -136,7 +137,7 @@ function render(el,D,op){op=op||{};css();const it=D.itens||[];const P=op.precos|
  if(P)h+=`<div class="pp-total"><div><span>Valor total da obra</span><small>${it.length} tipologias · ${pecas} peças · ${m2(totM2)} m²</small></div><b class="num">${brl(op.total!=null?op.total:P.reduce((s,v)=>s+(+v||0),0))}</b></div>`;
  const c=op.condicoes||{};const cs=[["Validade da proposta",c.validade],["Condições de pagamento",c.cond],["Prazo de entrega",c.prazo],["Observações",c.obs]].filter(x=>x[1]);
  if(P&&cs.length)h+=`<div class="pp-cond">${cs.map(([k,v])=>`<div><span>${k}</span><b>${esc(v)}</b></div>`).join("")}</div>`;
- h+=`<footer class="pp-foot"><div>Medidas e quantidades conforme projeto, sujeitas a conferência na obra. Imagens 3D ilustrativas.</div><div class="wm">${D.marca?"Desenvolvido por FC Consultoria em Esquadria · ©":"FC Consultoria em Esquadria · uso exclusivo · © FC Consultoria em Esquadria"}</div></footer></article>`;
+ h+=`<footer class="pp-foot"><div>Medidas e quantidades conforme projeto, sujeitas a conferência na obra. Imagens 3D ilustrativas.</div>${typeof D.rodape==="string"?(D.rodape.trim()?`<div class="wm">${esc(D.rodape)}</div>`:""):`<div class="wm">${D.marca?"Desenvolvido por FC Consultoria em Esquadria · ©":"FC Consultoria em Esquadria · uso exclusivo · © FC Consultoria em Esquadria"}</div>`}</footer></article>`;
  el.innerHTML=h;
  if(T3){el.querySelectorAll("[data-pv]").forEach(b=>b.onclick=()=>T3.abrir(it[+b.dataset.pv],{cor:D.cor,origem:b.closest("figure")}));if(!op.adiar)preencher(el,D)}
 }
