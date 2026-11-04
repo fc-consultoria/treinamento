@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="robots" content="noindex">
 <meta http-equiv="Cache-Control" content="no-cache">
-<script>(function(){var B='20261104150800';try{fetch('versao.txt?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.text():''}).then(function(v){v=(v||'').trim();if(!v||v===B)return;var u=new URL(location.href);if(u.searchParams.get('v')===v)return;u.searchParams.set('v',v);location.replace(u.toString())}).catch(function(){})}catch(e){}})();</script>
+<script>(function(){var B='20261104151500';try{fetch('versao.txt?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.text():''}).then(function(v){v=(v||'').trim();if(!v||v===B)return;var u=new URL(location.href);if(u.searchParams.get('v')===v)return;u.searchParams.set('v',v);location.replace(u.toString())}).catch(function(){})}catch(e){}})();</script>
 
 <title>FC Estudo de Mercado</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -270,7 +270,8 @@ const EXTS={texa:{n:'TEXA',lin:'City 2.5 · City 3.2'},selta:{n:'Selta',lin:'Lin
 const DIST=()=>!!(S.ext&&EXTS[S.ext].tipo==='dist');
 const NAC=()=>DIST()?3:8;
 const EMP=()=>DIST()?'sua empresa':EXTS[S.ext].n;
-const USERS={vend:{n:'Carlos',r:'Vendedor'},gest:{n:'Paula',r:'Gestora'}};
+function meuNome(){const r=S&&S.ext?ls.get('fcext_reg_'+S.ext,null):null;return (r&&r.nome)||(FCM?'FC Consultoria':'Você')}
+const USERS={get vend(){return {n:meuNome(),r:'Vendedor'}},get gest(){return {n:meuNome(),r:'Gestor'}}};
 let LIN={};
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -304,15 +305,13 @@ function abcTag(cl){const t={A:'Classe A · alto giro',B:'Classe B · médio gir
 const K=n=>`fcext_${S.ext}_${n}`;
 const db={
   precos:()=>ls.get(K('precos3'),null)??seed('precos'),
-  clientes:()=>ls.get(K('clientes'),null)??seed('clientes'),
-  log:()=>ls.get(K('log'),null)??seed('log'),
-  save(n,v){ls.set(K(n==='precos'?'precos3':n),v)}
+  clientes:()=>ls.get(K('clientes3'),null)??[],
+  log:()=>ls.get(K('log3'),null)??[],
+  save(n,v){ls.set(K(({precos:'precos3',clientes:'clientes3',log:'log3'})[n]||n),v)}
 };
 function seed(n){
   const comp=Object.keys(DATA.forn).filter(f=>f!=='alcoa'&&f!==S.ext);
-  if(n==='clientes'){const v=[{id:1,nome:'Distribuidora Exemplo A',cid:'Sinop/MT',vend:'Carlos',vip:true},{id:2,nome:'Vidraçaria Exemplo B',cid:'Sorriso/MT',vend:'Marcos',vip:false},{id:3,nome:'Serralheria Exemplo C',cid:'Lucas do Rio Verde/MT',vend:'Carlos',vip:true}];db.save(n,v);return v}
   if(n==='precos'){const v=[];db.save(n,v);return v}
-  if(n==='log'){const v=[{u:'Carlos',d:'03/11 14:20',a:'Pesquisou',gk:'SU-001'},{u:'Marcos',d:'03/11 10:02',a:'Pesquisou',gk:'SU-002'},{u:'Paula',d:'02/11 16:40',a:'Abriu a Curva ABC',gk:''}];db.save(n,v);return v}
 }
 function logar(a,gk){const L=db.log();L.unshift({u:USERS[S.role].n,d:agora(),a,gk:gk||''});db.save('log',L.slice(0,300))}
 function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('on');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('on'),2200)}
@@ -474,9 +473,9 @@ function tRel(){
 /* Acessos */
 function tAces(){
   const P=db.precos();
-  return `<section class="box"><h2>Acessos e licença</h2><div class="stat" style="margin-top:14px"><div><small>Acessos em uso</small><b class="num">3 de ${NAC()}</b></div><div><small>Licença</small><b>Teste</b></div><div><small>Preços lançados</small><b class="num">${P.length}</b></div><div><small>Clientes especiais</small><b class="num">${db.clientes().length}</b></div></div>
-  <div class="tw" style="margin-top:14px"><table><thead><tr><th>Nome</th><th>Função</th><th>Situação</th></tr></thead><tbody><tr><td><b>Paula</b></td><td>Gestora</td><td>Ativo</td></tr><tr><td><b>Carlos</b></td><td>Vendedor</td><td>Ativo</td></tr><tr><td><b>Marcos</b></td><td>Vendedor</td><td>Ativo</td></tr></tbody></table></div>
-  <div class="note" style="margin-top:14px">${ico('aces')}<span>Na licença anual, a gestora adiciona e remove acessos (até ${NAC()}${DIST()?"":"; acesso extra R$ 1.000/ano"}). Usuários e valores desta tela são exemplos.</span></div></section>`;
+  return `<section class="box"><h2>Acessos e licença</h2><div class="stat" style="margin-top:14px"><div><small>Acessos em uso</small><b class="num">1 de ${NAC()}</b></div><div><small>Licença</small><b>Teste</b></div><div><small>Preços lançados</small><b class="num">${P.length}</b></div><div><small>Clientes especiais</small><b class="num">${db.clientes().length}</b></div></div>
+  <div class="tw" style="margin-top:14px"><table><thead><tr><th>Nome</th><th>Função</th><th>Situação</th></tr></thead><tbody><tr><td><b>${esc(meuNome())}</b></td><td>Gestor (teste)</td><td>Ativo</td></tr></tbody></table></div>
+  <div class="note" style="margin-top:14px">${ico('aces')}<span>Na licença anual, a gestora adiciona e remove acessos (até ${NAC()}${DIST()?"":"; acesso extra R$ 1.000/ano"}). No teste, cada pessoa entra pelo próprio link.</span></div></section>`;
 }
 
 /* Capa de abertura */
