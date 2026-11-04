@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="robots" content="noindex">
 <meta http-equiv="Cache-Control" content="no-cache">
-<script>(function(){var B='20261104151500';try{fetch('versao.txt?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.text():''}).then(function(v){v=(v||'').trim();if(!v||v===B)return;var u=new URL(location.href);if(u.searchParams.get('v')===v)return;u.searchParams.set('v',v);location.replace(u.toString())}).catch(function(){})}catch(e){}})();</script>
+<script>(function(){var B='20261104153000';try{fetch('versao.txt?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.text():''}).then(function(v){v=(v||'').trim();if(!v||v===B)return;var u=new URL(location.href);if(u.searchParams.get('v')===v)return;u.searchParams.set('v',v);location.replace(u.toString())}).catch(function(){})}catch(e){}})();</script>
 
 <title>FC Estudo de Mercado</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -128,6 +128,13 @@ button{cursor:pointer}
 @media (max-width:1100px){.pl{grid-template-columns:1fr}.pls{position:static;max-height:none}}
 .fab{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom,0px));z-index:40;border:0;background:var(--tl);color:#fff;font:700 15px var(--f-b);padding:11px 20px;border-radius:999px;box-shadow:0 6px 20px rgba(0,0,0,.18)}
 .fab:hover{background:var(--tl2)}
+.cwrap{display:flex;flex-direction:column;gap:8px;min-width:0}
+.cfg{border:1px dashed var(--tl);border-radius:14px;padding:10px 12px;background:var(--card);display:flex;flex-direction:column;gap:8px}
+.cfgh{display:flex;justify-content:space-between;gap:8px;align-items:baseline;font-size:13px}.cfgh small{color:var(--tm)}
+.cfgc{display:flex;flex-wrap:wrap;gap:6px}
+.ck{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--ln);border-radius:999px;padding:4px 10px;font:600 13px var(--f-b);color:var(--tm);cursor:pointer}
+.ck.on{border-color:var(--tl);color:var(--tl2);background:var(--tlc)}.ck.fix{cursor:default;opacity:.8}
+.cfgf{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.cfgm{font-size:12.5px;color:var(--tm)}.cfgm.err{color:var(--bad)}
 .lk{border:0;background:none;color:var(--tl);font:700 13px var(--f-b);padding:0 0 0 4px;text-decoration:underline;cursor:pointer}
 .fgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
 .fcard{background:var(--card);border:1px solid var(--ln);border-radius:16px;padding:16px 16px 12px;display:flex;flex-direction:column;gap:10px}
@@ -291,7 +298,21 @@ function montar(idx){DATA={forn:idx.forn};Object.entries(idx.linhas).forEach(([k
     const m=g.m.map(x=>{const pasta=(x[3]==='base'&&!g.sp)?'alcoa':x[0];return {f:x[0],c:x[1],p:+x[2]||0,src:x[4]?x[4]:EQ+L.img+pasta+'/'+encodeURIComponent(x[1])+'.webp?v=3'}});
     const cl=(m.map(x=>AN[norm(x.c)]).find(Boolean))||AN[norm(g.k)]||'';
     return {l:g.l,k:g.k,n:g.n,cl,m}});
-  BY={};G.forEach(g=>{BY[norm(g.k)]=BY[norm(g.k)]||g;g.m.forEach(m=>{const k=norm(m.c);if(!BY[k])BY[k]=g;})});}
+  G0=G;mkBY();}
+let G0=[],CFG={};
+function mkBY(){BY={};G.forEach(g=>{BY[norm(g.k)]=BY[norm(g.k)]||g;g.m.forEach(m=>{const k=norm(m.c);if(!BY[k])BY[k]=g;})});}
+function libera(e){const a=CFG[e];return f=>f==='alcoa'||f===e||!a||a.includes(f)}
+function setExt(e){S.ext=e;if(!e){G=G0;mkBY();return}const ok=libera(e);G=G0.map(g=>({...g,m:g.m.filter(m=>ok(m.f))})).filter(g=>g.m.some(m=>m.f!=='alcoa'));mkBY()}
+let SBC=null;
+function sbc(){if(SBC)return Promise.resolve(SBC);return new Promise((ok,no)=>{const go=()=>{SBC=window.supabase.createClient(SB,SBK,{auth:{persistSession:true,storageKey:'trein-fc-auth'}});ok(SBC)};if(window.supabase)return go();const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js';s.onload=go;s.onerror=no;document.head.appendChild(s)})}
+async function salvaCfg(k){const m=$('#cfm-'+k);const sel=[...document.querySelectorAll(`[data-cf="${k}"]`)].filter(c=>c.checked).map(c=>c.value);
+  if(!sel.length){m.textContent='Marque pelo menos 1 fornecedor.';m.className='cfgm err';return}
+  m.textContent='Salvando…';m.className='cfgm';
+  try{const c=await sbc();const {data:{session}}=await c.auth.getSession();if(!session){m.textContent='Entre no Painel da Matriz (mesmo navegador) e tente de novo.';m.className='cfgm err';return}
+    const todos=Object.keys(DATA.forn).filter(f=>f!=='alcoa'&&f!==k);const val=sel.length===todos.length?null:sel;
+    const q=val?await c.from('em_config').upsert({ext:k,forn:val,atualizado_em:new Date().toISOString()}):await c.from('em_config').delete().eq('ext',k);
+    if(q.error)throw q.error;if(val)CFG[k]=val;else delete CFG[k];toast('Fornecedores salvos para FC & '+EXTS[k].n);hub()}catch(e){m.textContent='Não salvou: '+(e.message||e);m.className='cfgm err'}}
+async function carregaCfg(){try{const r=await fetch(SB+'/rest/v1/em_config?select=ext,forn',{headers:{apikey:SBK,Authorization:'Bearer '+SBK},cache:'no-store'});if(r.ok){CFG={};(await r.json()).forEach(x=>CFG[x.ext]=x.forn)}}catch(_){}}
 
 const QP=new URLSearchParams(location.search);const FCM=QP.has('fc');
 let S={ord:ls.get('fcext_ord','preco'),cover:false,tut:null,ext:null,role:'vend',tab:'pesq',g:null,cliSel:null,abcL:'todas',relU:'todos'};
@@ -317,8 +338,14 @@ function logar(a,gk){const L=db.log();L.unshift({u:USERS[S.role].n,d:agora(),a,g
 function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('on');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('on'),2200)}
 
 /* ===== abertura ===== */
-function card(k,e,ms,meta){return `<button class="ecard" data-ext="${k}"><div class="band"><small>${e.tipo==='dist'?'Demonstrativo para distribuidoras':'FC &amp; '+esc(e.n)}</small><b>FC &amp; ${esc(e.n)}</b></div><div class="thumbs">${ms.map(m=>`<div><img src="${esc(m.src)}" alt="${esc(m.c)}"></div>`).join('')}</div><div class="meta"><span>${meta}</span><span class="go">Entrar →</span></div></button>`}
+function cfgPanel(k){if(!FCM)return '';const a=CFG[k],todos=Object.keys(DATA.forn).filter(f=>f!=='alcoa'&&f!==k);
+  return `<div class="cfg"><div class="cfgh"><b>Fornecedores liberados${k==='dist'?' para as distribuidoras':' para FC &amp; '+esc(EXTS[k].n)}</b><small>${a?a.filter(f=>f!==k).length+' de '+todos.length:'todos'}</small></div>
+  <div class="cfgc">${k!=='dist'?`<label class="ck on fix"><input type="checkbox" checked disabled> ${esc(FN(k))} (própria)</label>`:''}${todos.map(f=>`<label class="ck ${!a||a.includes(f)?'on':''}"><input type="checkbox" data-cf="${k}" value="${f}" ${!a||a.includes(f)?'checked':''}> ${esc(FN(f))}</label>`).join('')}</div>
+  <div class="cfgf"><button type="button" class="btn sm" data-cfsave="${k}">Salvar fornecedores</button><span class="cfgm" id="cfm-${k}"></span></div></div>`}
+function card(k,e,ms,meta){return `<div class="cwrap">`+card0(k,e,ms,meta)+cfgPanel(k)+`</div>`}
+function card0(k,e,ms,meta){return `<button class="ecard" data-ext="${k}"><div class="band"><small>${e.tipo==='dist'?'Demonstrativo para distribuidoras':'FC &amp; '+esc(e.n)}</small><b>FC &amp; ${esc(e.n)}</b></div><div class="thumbs">${ms.map(m=>`<div><img src="${esc(m.src)}" alt="${esc(m.c)}"></div>`).join('')}</div><div class="meta"><span>${meta}</span><span class="go">Entrar →</span></div></button>`}
 function hub(){
+  setExt(null);
   const pick=f=>{const out=[];for(const g of G){const m=g.m.find(x=>x.f===f&&x.src);if(m&&g.cl==='A')out.push(m);if(out.length===3)break}
     for(const g of G){if(out.length===3)break;const m=g.m.find(x=>x.f===f&&x.src);if(m&&!out.includes(m))out.push(m)}return out};
   $('#app').innerHTML=`<div class="hub-top"><div class="brand"><div class="logo" style="width:72px;height:72px"><img src="${LOGO}" alt="FC Consultoria em Esquadria"></div><div><div class="eyebrow">FC Consultoria · Extrusoras</div><h1>Pesquisa / Estudo de Mercado / Comparativo</h1><p>Uma plataforma por empresa, para extrusoras e distribuidoras. A equipe pesquisa qualquer código do mercado, vê o desenho de catálogo de cada fornecedor e registra os preços que encontra no mercado.</p></div></div></div>
@@ -326,10 +353,12 @@ function hub(){
   <div class="cards">${Object.entries(EXTS).filter(([k,e])=>e.tipo!=='dist').map(([k,e])=>{const n=G.filter(g=>g.m.some(m=>m.f===k)).length;return card(k,e,pick(k),n+' perfis com equivalência no catálogo FC')}).join('')}</div>
   <div class="lic"><div><small>Teste</small><br><b>2 dias</b></div><div><small>Licença anual · condição de lançamento</small><br><b>R$ 7.000</b> · até 8 acessos</div><div><small>Renovação</small><br><b>R$ 5.000</b>/ano</div><div><small>Pagamento</small><br><b>até 2x</b> no cartão</div></div>
   <div class="eyebrow" style="margin:28px 0 10px">Distribuidoras · compras e comercial</div>
-  <div class="cards">${card('dist',EXTS.dist,['texa','selta','fbk'].map(f=>pick(f)[0]).filter(Boolean),G.length+' perfis · todos os fornecedores')}</div>
+  <div class="cards" style="grid-template-columns:repeat(auto-fit,minmax(260px,440px))">${card('dist',EXTS.dist,['texa','selta','fbk'].map(f=>pick(f)[0]).filter(Boolean),G.length+' perfis · todos os fornecedores')}</div>
   <div class="lic"><div><small>Teste</small><br><b>2 dias</b></div><div><small>Licença anual · condição de lançamento</small><br><b>R$ 7.000</b> · até 3 acessos</div><div><small>Renovação</small><br><b>R$ 5.000</b>/ano</div><div><small>Pagamento</small><br><b>até 2x</b> no cartão</div></div>
   ${foot()}`;
-  document.querySelectorAll('[data-ext]').forEach(b=>b.onclick=()=>{S.ext=b.dataset.ext;S.tab='pesq';S.g=BY[norm('SU-001')];S.cover=true;draw();window.scrollTo(0,0)});
+  document.querySelectorAll('[data-cf]').forEach(c=>c.onchange=()=>c.closest('.ck').classList.toggle('on',c.checked));
+  document.querySelectorAll('[data-cfsave]').forEach(b=>b.onclick=()=>salvaCfg(b.dataset.cfsave));
+  document.querySelectorAll('[data-ext]').forEach(b=>b.onclick=()=>{setExt(b.dataset.ext);S.tab='pesq';S.g=BY[norm('SU-001')];S.cover=true;draw();window.scrollTo(0,0)});
 }
 function foot(){return `<div class="foot">Os preços e clientes lançados pertencem exclusivamente à empresa contratante. A FC Consultoria não tem acesso a essas informações; atua só na manutenção da plataforma e na atualização do cadastro de perfis.<br>Desenhos e pesos são demonstrativos e devem ser conferidos no catálogo do fornecedor.<br><b>FC CONSULTORIA EM ESQUADRIA · uso exclusivo</b> · © FC Consultoria em Esquadria</div>`}
 
@@ -404,7 +433,7 @@ function tPesq(){
 function ultAny(f,cli){const L=db.precos().filter(p=>p.f===f&&(p.cli??null)===(cli??null));return L[L.length-1]}
 function precoForn(cli){const o={};db.precos().filter(p=>(p.cli??null)===(cli??null)).forEach(p=>{if(p.rk==null)delete o[p.f];else o[p.f]=p});return o}
 function ultPrecos(g,cli){const F=precoForn(cli),o={};g.m.forEach(m=>{if(F[m.f])o[m.f+'|'+norm(m.c)]=F[m.f]});return o}
-function fornLista(){return Object.keys(DATA.forn).filter(f=>f!=='alcoa').sort((a,b)=>(a===S.ext?-1:b===S.ext?1:0)||FN(a).localeCompare(FN(b)))}
+function fornLista(){const ok=libera(S.ext);return Object.keys(DATA.forn).filter(f=>f!=='alcoa'&&ok(f)).sort((a,b)=>(a===S.ext?-1:b===S.ext?1:0)||FN(a).localeCompare(FN(b)))}
 function stPreco(p){if(!p)return ['N','sem preço'];const d=dias(p.d);return d>60?['B','há '+d+' dias']:['A','em dia']}
 const nb=v=>v===''||v==null?'':String(v).replace('.',',');
 const pn=v=>{const x=parseFloat(String(v||'').replace(/\./g,'').replace(',','.'));return x>0?x:null};
@@ -538,7 +567,7 @@ function ligar(){
   document.querySelectorAll('[data-relu]').forEach(b=>b.onclick=()=>{S.relU=b.dataset.relu;draw()});
 }
 const voltarHub=()=>{};
-fetch(EQ+'indice.json?v=5',{cache:'no-cache'}).then(r=>r.json()).then(idx=>{montar(idx);const e=QP.get('e');if(e&&EXTS[e]){S.ext=e;S.g=BY[norm('SU-001')];S.cover=true;try{if(ls.get('fcext_reg_'+e,null)&&!sessionStorage.getItem('fcext_ses_'+e)){sessionStorage.setItem('fcext_ses_'+e,'1');reg('acesso')}}catch(_){}}else if(!FCM){$('#app').innerHTML=`<section class="cover"><div class="in"><div class="lg"><img src="${LOGO}" alt="FC Consultoria em Esquadria"></div><div class="rule"></div><h1>Link de demonstrativo incompleto</h1><p>Use o link enviado pela FC Consultoria para a sua empresa.</p><p style="font-size:14px">WhatsApp (66) 9 9986-7984</p></div></section>`;return}draw();if(S.ext&&!FCM&&ls.get('fcext_lib_'+S.ext,0)){rpc('em_status',{p_ext:S.ext,p_dev:devId()}).then(st=>{if(st==='bloqueado'){ls.set('fcext_bloq_'+S.ext,1);draw()}}).catch(()=>{})}}).catch(()=>{$('#app').innerHTML='<p class="empty">Não foi possível carregar o banco de perfis. Atualize a página.</p>'});
+Promise.all([fetch(EQ+'indice.json?v=5',{cache:'no-cache'}).then(r=>r.json()),carregaCfg()]).then(([idx])=>{montar(idx);const e=QP.get('e');if(e&&EXTS[e]){setExt(e);S.g=BY[norm('SU-001')];S.cover=true;try{if(ls.get('fcext_reg_'+e,null)&&!sessionStorage.getItem('fcext_ses_'+e)){sessionStorage.setItem('fcext_ses_'+e,'1');reg('acesso')}}catch(_){}}else if(!FCM){$('#app').innerHTML=`<section class="cover"><div class="in"><div class="lg"><img src="${LOGO}" alt="FC Consultoria em Esquadria"></div><div class="rule"></div><h1>Link de demonstrativo incompleto</h1><p>Use o link enviado pela FC Consultoria para a sua empresa.</p><p style="font-size:14px">WhatsApp (66) 9 9986-7984</p></div></section>`;return}draw();if(S.ext&&!FCM&&ls.get('fcext_lib_'+S.ext,0)){rpc('em_status',{p_ext:S.ext,p_dev:devId()}).then(st=>{if(st==='bloqueado'){ls.set('fcext_bloq_'+S.ext,1);draw()}}).catch(()=>{})}}).catch(()=>{$('#app').innerHTML='<p class="empty">Não foi possível carregar o banco de perfis. Atualize a página.</p>'});
 </script>
 
 </body></html>
