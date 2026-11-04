@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Apresentação 3D da obra</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap">
+<style>
+/* Apresentação 3D enviada ao cliente: só tipologias, medidas e cores — sem preço. © FC Consultoria em Esquadria */
+:root{--bg:#f3f6f6;--surface:#fff;--surface2:#e8eeee;--line:#d3dddd;--fg:#16262a;--muted:#5b6d70;--teal:#0d5c63;--amber:#c9831a;--display:"Space Grotesk",system-ui,sans-serif;--body:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;color-scheme:light}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.45 var(--body)}
+.top{background:var(--teal);color:#fff;padding-block:14px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-top:calc(14px + env(safe-area-inset-top,0px))}
+.top .in{max-width:960px;margin:auto;display:flex;gap:12px;justify-content:space-between;align-items:center;flex-wrap:wrap}
+.top small{font:600 11px var(--body);letter-spacing:.1em;opacity:.8;text-transform:uppercase}.top h1{font:700 20px var(--display);margin:2px 0 0;text-wrap:balance}
+.btn{font:600 13px var(--body);border:1px solid rgba(255,255,255,.4);background:rgba(255,255,255,.12);color:#fff;border-radius:9px;padding:8px 13px;cursor:pointer;min-height:38px}
+.btn:focus-visible,.vr:focus-visible{outline:3px solid #ffd27a;outline-offset:2px}
+.wrap{max-width:960px;margin:16px auto 32px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.dica{color:var(--muted);font-size:13px;margin:0 0 12px}
+.paper{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.ph{display:flex;justify-content:space-between;gap:12px;padding:20px 22px 16px;border-bottom:3px solid var(--amber);flex-wrap:wrap}
+.lg b{font:700 20px var(--display);color:var(--teal);display:block}.lg span{font:600 11px var(--body);letter-spacing:.1em;color:var(--muted);text-transform:uppercase}
+.nr{text-align:right}.nr small{font:600 10px var(--body);letter-spacing:.12em;color:var(--muted);text-transform:uppercase}.nr b{display:block;font:700 22px var(--display)}.nr span{font-size:12px;color:var(--muted)}
+.meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:6px 18px;padding:12px 22px;background:var(--surface2);font-size:13px;color:var(--muted)}.meta b{color:var(--fg)}
+.loc{font:600 14px var(--display);letter-spacing:.06em;color:var(--teal);padding:16px 22px 4px;text-transform:uppercase}
+.tip{display:grid;grid-template-columns:200px minmax(0,1fr);gap:16px;align-items:center;padding:14px 22px;border-top:1px solid #e3eaea;break-inside:avoid}
+.tip figure{margin:0;position:relative;height:150px;display:grid;place-items:center;background:radial-gradient(circle at 50% 40%,#fbfdfd,#e7eeee);border-radius:10px}
+.tip figure img{max-width:100%;max-height:140px;display:block}.tip .ld{font-size:11px;color:var(--muted)}
+.vr{position:absolute;right:6px;bottom:6px;font:700 11px var(--body);border:0;background:var(--teal);color:#fff;border-radius:999px;padding:6px 10px;cursor:pointer}
+.t-name{font:600 15px var(--display)}.t-desc{font-size:12.5px;color:var(--muted);margin:2px 0 6px}
+.t-dims{display:flex;gap:4px 14px;flex-wrap:wrap;font-size:12.5px}
+.t-cor{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px;font-size:11.5px;color:var(--muted)}.t-cor i{display:inline-block;width:10px;height:10px;border-radius:50%;border:1px solid rgba(0,0,0,.25);margin-right:4px;vertical-align:-1px}
+.pf{padding:16px 22px 20px;display:grid;gap:6px;font-size:12px;color:var(--muted);border-top:1px solid var(--line)}
+.pf .wm{font-size:11px;letter-spacing:.1em;text-transform:uppercase;text-align:center;padding-top:8px}
+.msg{background:#fff;border:1px solid var(--line);border-radius:12px;padding:28px 22px;text-align:center;color:var(--muted)}.msg b{display:block;color:var(--fg);font:700 18px var(--display);margin-bottom:6px}
+@media (max-width:600px){.tip{grid-template-columns:minmax(0,1fr)}.tip figure{height:190px}.tip figure img{max-height:180px}.nr{text-align:left}}
+@media print{@page{size:A4;margin:10mm}body{background:#fff}.top,.dica,.vr,.t3d{display:none!important}.wrap{margin:0;padding:0;max-width:none}.paper{border:0;border-radius:0}
+ *{-webkit-print-color-adjust:exact;print-color-adjust:exact}.tip{grid-template-columns:62mm minmax(0,1fr)}.tip figure{height:46mm}.tip figure img{max-height:44mm}}
+</style>
+</head>
+<body>
+<header class="top"><div class="in"><div><small id="h-num">Apresentação 3D</small><h1 id="h-obra">Carregando…</h1></div><button class="btn" type="button" id="b-print" hidden>🖨 Imprimir / Salvar PDF</button></div></header>
+<main class="wrap" id="main"><div class="msg">Carregando a apresentação…</div></main>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/environments/RoomEnvironment.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/geometries/RoundedBoxGeometry.js"></script>
+<script src="tip3d.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+(async function(){
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const erro=(t,d)=>{$("h-obra").textContent="Apresentação 3D";$("main").innerHTML=`<div class="msg"><b>${t}</b>${d}</div>`};
+const tok=new URLSearchParams(location.search).get("t")||"";
+if(tok.length<20){erro("Link incompleto","Confira se o link foi copiado inteiro ou peça um novo a quem enviou.");return}
+let D=null;
+try{const sb=window.supabase.createClient("https://cpkjphodruyxfouirhpd.supabase.co","sb_publishable_d0HEeWsaqOeZIQKGftlF-Q_B8BUOWWg",{auth:{persistSession:false}});
+ const r=await sb.rpc("orcobra_link_ver",{tok});if(r.error)throw r.error;D=r.data}catch(e){erro("Não foi possível carregar","Verifique a internet e abra o link de novo.");return}
+if(!D){erro("Este link não está mais disponível","Peça um link atualizado a quem enviou a apresentação.");return}
+document.title=(D.obra||"Obra")+" · Apresentação 3D";
+if(D.marcaCor)document.documentElement.style.setProperty("--teal",D.marcaCor),document.documentElement.style.setProperty("--amber",D.marcaCor);
+const marca=D.marca?`<b>${esc(D.marca)}</b>`:`<b>FC Consultoria</b><span>e Representação</span>`;
+$("h-num").textContent="Apresentação 3D"+(D.numero?" · "+D.numero:"");$("h-obra").textContent=D.obra||"Obra";
+const its=D.itens||[],pecas=its.reduce((s,t)=>s+(+t.q||0),0);
+let h=`<p class="dica">Toque em <b>Ver em 3D</b> em qualquer item para girar a tipologia e abrir as folhas.</p><div class="paper">
+ <div class="ph"><div class="lg">${marca}</div><div class="nr"><small>Apresentação de tipologias</small><b>${esc(D.numero||"—")}</b><span>${D.emitida?"Atualizada em "+new Date(D.emitida).toLocaleDateString("pt-BR"):""}</span></div></div>
+ <div class="meta"><div>Cliente: <b>${esc(D.cliente||"—")}</b></div><div>Obra: <b>${esc(D.obra||"—")}</b></div><div>Acabamento: <b>${esc(D.cor||"—")}</b></div><div>Itens: <b>${its.length} tipologias · ${pecas} peças</b></div></div>`;
+let ll="";
+its.forEach((t,i)=>{const p=window.TIP3D?TIP3D.perfilDe(D.cor,t.corPerfil):null,v=window.TIP3D?TIP3D.vidroDe(t.desc,t.vidroCor):null;
+ if(t.loc!==ll){h+=`<div class="loc">${esc(t.loc)}</div>`;ll=t.loc}
+ h+=`<div class="tip"><figure><img data-i="${i}" alt="Tipologia ${esc(t.tipo)} em 3D" hidden><span class="ld">Gerando 3D…</span>${window.TIP3D?`<button class="vr" type="button" data-v="${i}">Ver em 3D</button>`:""}</figure>
+ <div><div class="t-name">Item ${esc(t.item)} · ${esc(t.tipo)}</div><div class="t-desc">${esc(t.desc)}</div>
+ <div class="t-dims"><span>Linha: <b>${esc(t.linha)}</b></span><span>L × H: <b>${esc(t.L)} × ${esc(t.H)} mm</b></span><span>Qtde: <b>${esc(t.q)}</b></span></div>
+ ${p?`<div class="t-cor"><span><i style="background:${p.hex}"></i>Perfil ${p.nome.toLowerCase()}</span><span><i style="background:${v.hex}"></i>Vidro ${v.nome.toLowerCase()}</span></div>`:""}</div></div>`});
+h+=`<div class="pf"><div>Medidas e quantidades conforme projeto, sujeitas a conferência na obra. Imagens 3D ilustrativas.</div><div class="wm">${D.marca?"Desenvolvido por FC Consultoria em Esquadria · ©":"FC Consultoria em Esquadria · uso exclusivo · © FC Consultoria em Esquadria"}</div></div></div>`;
+$("main").innerHTML=h;
+if(!window.TIP3D){document.querySelectorAll(".ld").forEach(x=>x.textContent="3D indisponível neste aparelho")}
+else{document.querySelectorAll("[data-v]").forEach(b=>b.onclick=()=>TIP3D.abrir(its[+b.dataset.v],{cor:D.cor,origem:b.closest("figure")}));
+ const imgs=[...document.querySelectorAll("img[data-i]")];let k=0;
+ const passo=()=>{const im=imgs[k++];if(!im)return;try{im.src=TIP3D.imagem(its[+im.dataset.i],{cor:D.cor,px:900})}catch(e){}im.hidden=false;const ld=im.parentNode.querySelector(".ld");if(ld)ld.remove();requestAnimationFrame(passo)};passo()}
+const b=$("b-print");b.hidden=false;b.onclick=()=>{document.querySelectorAll("img[data-i][hidden]").forEach(im=>{im.src=TIP3D.imagem(its[+im.dataset.i],{cor:D.cor,px:900});im.hidden=false});setTimeout(()=>print(),80)};
+})();
+</script>
+</body>
+</html>
