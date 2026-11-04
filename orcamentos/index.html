@@ -168,18 +168,20 @@ input.big{width:100%;font-size:16px;text-align:right;padding:9px 10px}
 .tip .t-cor{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px;font-size:11.5px;color:var(--muted)}.tip .t-cor i{display:inline-block;width:10px;height:10px;border-radius:50%;border:1px solid rgba(0,0,0,.25);margin-right:4px;vertical-align:-1px}
 .tip .ed{font:600 12px var(--body);border:1px dashed var(--teal);color:var(--teal);background:transparent;border-radius:8px;padding:5px 9px;cursor:pointer;margin-top:8px}
 .tip .alt{display:inline-block;font:700 10px var(--body);background:var(--amber-soft);color:var(--warn);border-radius:999px;padding:2px 8px;margin-left:6px;vertical-align:2px}
-.tip .edit{grid-column:1/-1;background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
-.tip .edit label{font:600 11px var(--body);color:var(--muted);display:flex;flex-direction:column;gap:4px}
-.tip .edit .acts{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap;align-items:center}.tip .edit .acts small{color:var(--muted)}
+.pp-edit .edit{grid-column:1/-1;background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.pp-edit .edit label{font:600 11px var(--body);color:var(--muted);display:flex;flex-direction:column;gap:4px}
+.pp-edit .edit .acts{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap;align-items:center}.pp-edit .edit .acts small{color:var(--muted)}
 a.btn{text-decoration:none;display:inline-flex;align-items:center}
-.apr-bar{max-width:960px;margin:0 auto 12px;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.p-doc{max-width:1020px;margin:0 auto}
+.apr-bar{max-width:1020px;margin:0 auto 12px;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
 .btn.amb{background:var(--amber);border-color:var(--amber);color:#1d1405}
 .lk{display:grid;gap:12px}.lk input{width:100%}.lk .row{display:flex;gap:8px;flex-wrap:wrap}.lk .ok{background:var(--surface2);border-radius:8px;padding:10px 12px;font-size:13px}
 @media print{
  @page{size:A4;margin:10mm}
  body{background:#fff!important}
- header.top,#tabs,.apr-bar,.tip .vr,.tip .ed,.tip .edit,.tip .alt,.wm-app,#orc-sync,#orc-aviso,.modal,.t3d,#view-home{display:none!important}
+ header.top,#tabs,.apr-bar,.tip .vr,.tip .ed,.pp-edit .edit,.tip .alt,.wm-app,#orc-sync,#orc-aviso,.modal,.t3d,#view-home{display:none!important}
  #view-obra .tab:not(#tab-apr){display:none!important}#tab-apr{display:block!important}
+ main .wrap,.wrap{padding:0!important;max-width:none!important}.p-doc{max-width:none}
  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
  .pres{border:0;border-radius:0;max-width:none}
  .tip{break-inside:avoid;grid-template-columns:62mm minmax(0,1fr) 38mm}.tip>figure{height:46mm}.tip>figure img{max-height:44mm}
@@ -655,11 +657,7 @@ function buildObra(){
  </div></div>
 </div></section>
 
-<section id="tab-apr" class="tab" hidden><div class="apr-bar"><button class="btn ghost" type="button" id="apr-print">🖨 Imprimir / Salvar PDF</button><button class="btn amb" type="button" id="apr-link">🔗 Link de Apresentação 3D</button></div><div class="pres">
- <div class="pres-h"><div class="brand" id="p-brand">FC Consultoria<small>e Representação</small></div><div class="doc"><div class="eyebrow" style="color:var(--muted)">Proposta comercial</div><h2 id="p-num"></h2><div class="hint" id="p-date"></div></div></div>
- <div class="pres-info"><div><span>Cliente: </span><b id="p-cli"></b></div><div><span>Obra: </span><b id="p-obra"></b></div><div><span>Acabamento: </span><b id="p-cor"></b></div><div><span>Itens: </span>${O.tips.length} tipologias · <span id="p-pecas"></span> peças</div></div>
- <div id="p-list"></div><div class="pres-total"><span>Valor total da obra</span><b class="num" id="p-total">R$ 0,00</b></div><div class="pres-foot" id="p-foot"></div>
-</div></section>`;
+<section id="tab-apr" class="tab" hidden><div class="apr-bar"><button class="btn ghost" type="button" id="apr-print">🖨 Imprimir / Salvar PDF</button><button class="btn amb" type="button" id="apr-link">🔗 Link de Apresentação 3D</button></div><div id="p-doc" class="p-doc"></div></section>`;
  ["comp","alu","vid","out"].forEach(k=>pricePanel(k,{comp:"Componentes",alu:"Alumínio",vid:"Vidros",out:"Outros custos"}[k]));
  wireComp();buildCot();buildComp();buildAlu();buildVid();buildOut();wireFields();refresh();
  $("apr-print").onclick=aprImprimir;$("apr-link").onclick=aprLink;
@@ -890,14 +888,9 @@ function paintRes(gs){
 /* 3D das tipologias (tip3d.js): miniaturas em alta geradas aos poucos, Ver em 3D, edição do item e link do cliente */
 const KINDS3D=[["fixo","Fixo"],["correr","Correr"],["giro","Giro / abrir"],["max","Maxim-ar"],["maxp","Maxim-ar com peitoril fixo"],["piv","Pivotante com fixo"],["gen","Outro"]];
 let aprAberto=-1,aprFila=0;
-function aprImg(t){return TIP3D.imagem(t,{cor:O.cor,px:900})}
-function aprFill(){if(!window.TIP3D||!O||$("tab-apr").hidden)return;cancelAnimationFrame(aprFila);
- const passo=()=>{const im=[...document.querySelectorAll('#p-list img[data-i]')].find(x=>x.hidden);if(!im)return;const t=O.tips[+im.dataset.i];
-  if(t){im.src=aprImg(t);im.hidden=false;const ld=im.parentNode.querySelector(".ld");if(ld)ld.remove()}else im.hidden=false;aprFila=requestAnimationFrame(passo)};passo()}
-function aprLigar(){if(!window.TIP3D)return;
- document.querySelectorAll('#p-list [data-v]').forEach(b=>b.onclick=()=>TIP3D.abrir(O.tips[+b.dataset.v],{cor:O.cor,origem:b.closest("figure")}));
- document.querySelectorAll('#p-list [data-e]').forEach(b=>b.onclick=()=>{aprAberto=aprAberto===+b.dataset.e?-1:+b.dataset.e;paintApr(groups(O))});
- if(aprAberto>=0)aprEditorLigar(O.tips[aprAberto]);aprFill()}
+/* dados da obra no formato do modelo da proposta (proposta.js) */
+function aprDoc(){return {numero:O.numero||"",obra:O.obra||"",cliente:O.cliente||"",cor:O.cor||"",marca:(O.marcaNome||"").trim(),marcaCor:O.marcaCor||"",emitida:new Date().toISOString(),itens:O.tips}}
+function aprFill(){if(window.PROPOSTA&&O&&$("p-doc"))PROPOSTA.preencher($("p-doc"),aprDoc())}
 function aprEditor(t){
  return `<div class="edit">
  <label>Desenho<select class="in" id="e3-k">${KINDS3D.map(([k,n])=>`<option value="${k}"${t.kind===k?" selected":""}>${n}</option>`).join("")}</select></label>
@@ -915,7 +908,7 @@ function aprEditorLigar(t){const g=id=>$(id);if(!g("e3-ok"))return;
  g("e3-v3").onclick=()=>TIP3D.abrir(Object.assign({},t,ler()),{cor:O.cor});
  g("e3-x").onclick=()=>{aprAberto=-1;paintApr(groups(O))};
  if(g("e3-rs"))g("e3-rs").onclick=()=>{Object.assign(t,t.orig);delete t.orig;aprAberto=-1;touch();refresh()};}
-function aprImprimir(){if(window.TIP3D){document.querySelectorAll('#p-list img[data-i]').forEach(im=>{if(im.hidden){const t=O.tips[+im.dataset.i];if(t)im.src=aprImg(t);im.hidden=false;const ld=im.parentNode.querySelector(".ld");if(ld)ld.remove()}})}setTimeout(()=>window.print(),80)}
+function aprImprimir(){if(window.PROPOSTA)PROPOSTA.preencher($("p-doc"),aprDoc(),true);setTimeout(()=>window.print(),80)}
 /* link do cliente: só tipologias, medidas e cores; nunca preço, custo, margem ou condições */
 function aprDados(){return {v:1,numero:O.numero||"",obra:O.obra||"",cliente:O.cliente||"",cor:O.cor||"",marca:(O.marcaNome||"").trim(),marcaCor:O.marcaCor||"",emitida:new Date().toISOString(),
  itens:O.tips.map(t=>({item:t.item,tipo:t.tipo,loc:t.loc,kind:t.kind,f:t.f,L:t.L,H:t.H,q:t.q,linha:t.linha,desc:String(t.desc||"").replace(/\s*Validade da Proposta:.*$/i,""),vidroCor:t.vidroCor||"",corPerfil:t.corPerfil||""}))}}
@@ -962,24 +955,14 @@ function paintApr(gs){
  const w=t=>st.rateio==="per"?itemPer(t):itemM2(t);const wTot=O.tips.reduce((s,t)=>s+w(t),0);
  const vS=sale("vid"),vC=vidCost(O);
  const vidItem=t=>{const c=vidCostOf(O,t.vid),a=autoM2(O,t.vid);if(!c||!vC||!a)return 0;return vS*(c/vC)*(itemM2(t)/a)};
- let html="",ll="",total=0,pecas=0;
- O.tips.forEach(t=>{const v=(wTot?shared*w(t)/wTot:0)+vidItem(t);total+=v;pecas+=t.q;
-  if(t.loc!==ll){html+=`<div class="loc">${esc(t.loc)}</div>`;ll=t.loc}
-  const i=O.tips.indexOf(t),p3=window.TIP3D?TIP3D.perfilDe(O.cor,t.corPerfil):null,v3=window.TIP3D?TIP3D.vidroDe(t.desc,t.vidroCor):null;
-  html+=`<div class="tip">${window.TIP3D?`<figure><img data-i="${i}" alt="Tipologia ${esc(t.tipo)} em 3D" hidden><span class="ld">Gerando 3D…</span><button class="vr" type="button" data-v="${i}">Ver em 3D</button></figure>`:`<div>${sketch(t)}</div>`}<div><div class="t-name">Item ${esc(t.item)} · ${esc(t.tipo)}${t.orig?'<span class="alt">alterado</span>':''}</div><div class="t-desc">${esc(t.desc)}</div>
-   <div class="t-dims num"><span>Linha: <b>${esc(t.linha)}</b></span><span>L × H: <b>${t.L} × ${t.H} mm</b></span><span>Qtde: <b>${t.q}</b></span></div>${p3?`<div class="t-cor"><span><i style="background:${p3.hex}"></i>Perfil ${p3.nome.toLowerCase()}</span><span><i style="background:${v3.hex}"></i>Vidro ${v3.nome.toLowerCase()}</span></div><button class="ed" type="button" data-e="${i}">✎ Editar medida, vidro ou desenho</button>`:""}</div>
-   <div class="t-price"><div class="u num">${t.q>1&&v>0?"Unit. "+brl(v/t.q):"&nbsp;"}</div><div class="tot num">${v>0?brl(v):"—"}</div></div>${aprAberto===i?aprEditor(t):""}</div>`});
- if(!O.tips.length)html=`<div class="card-b hint">Esta obra não tem croqui. O total abaixo soma os grupos do resumo.</div>`,total=gs.reduce((s,x)=>s+(x.p.ok?x.p.v:0),0);
- $("p-list").innerHTML=html;aprLigar();$("p-total").textContent=brl(total);$("p-pecas").textContent=pecas;
- $("p-num").textContent=O.numero||"—";$("p-cli").textContent=O.cliente||"—";$("p-obra").textContent=O.obra||"—";$("p-cor").textContent=O.cor||"—";
- $("p-date").textContent="Emitida em "+new Date().toLocaleDateString("pt-BR");
- const mn=(O.marcaNome||"").trim(),mc=O.marcaCor||"";$("p-brand").innerHTML=mn?esc(mn):'FC Consultoria<small>e Representação</small>';
- const pr=document.querySelector("#tab-apr .pres");if(mc)pr.style.setProperty("--pc",mc);else pr.style.removeProperty("--pc");
- const f=[];if(st.validade)f.push(`<div><b>Validade da proposta:</b> ${esc(st.validade)}</div>`);if(st.cond)f.push(`<div><b>Condições de pagamento:</b> ${esc(st.cond)}</div>`);
- if(st.prazo)f.push(`<div><b>Prazo de entrega:</b> ${esc(st.prazo)}</div>`);if(st.obs)f.push(`<div><b>Observações:</b> ${esc(st.obs)}</div>`);
- f.push(`<div>Medidas e quantidades conforme croqui. Valores sujeitos a conferência de medidas na obra.</div>`);
- f.push(`<div class="wm">${(O.marcaNome||"").trim()?"Desenvolvido por FC Consultoria em Esquadria · ©":"FC Consultoria em Esquadria · uso exclusivo · © FC Consultoria em Esquadria"}</div>`);
- $("p-foot").innerHTML=f.join("");
+ const precos=O.tips.map(t=>(wTot?shared*w(t)/wTot:0)+vidItem(t));
+ const total=O.tips.length?precos.reduce((s,v)=>s+v,0):gs.reduce((s,x)=>s+(x.p.ok?x.p.v:0),0);
+ const el=$("p-doc");if(!el)return;
+ if(!window.PROPOSTA){el.innerHTML=`<div class="card-b hint">O modelo da proposta não carregou. Verifique a internet e atualize a página.</div>`;return}
+ PROPOSTA.render(el,aprDoc(),{precos:O.tips.length?precos:[],total,condicoes:{validade:st.validade,cond:st.cond,prazo:st.prazo,obs:st.obs},editar:true,aberto:aprAberto,editor:t=>aprEditor(t),adiar:$("tab-apr").hidden});
+ if(!O.tips.length)el.querySelector(".pp-body").insertAdjacentHTML("beforeend",`<div class="hint" style="padding:16px 0">Esta obra não tem croqui. O total soma os grupos do resumo.</div>`);
+ el.querySelectorAll("[data-pe]").forEach(b=>b.onclick=()=>{aprAberto=aprAberto===+b.dataset.pe?-1:+b.dataset.pe;paintApr(groups(O));if(aprAberto>=0){const ed=el.querySelector(".pp-edit");if(ed)ed.scrollIntoView({block:"nearest",behavior:"smooth"})}});
+ if(aprAberto>=0)aprEditorLigar(O.tips[aprAberto]);
 }
 
 function refresh(){const gs=groups(O);gs.forEach(paintPanel);paintAlu();paintVid();paintRes(gs);paintApr(gs)}
@@ -997,6 +980,7 @@ window.addEventListener("hashchange",()=>{const k=location.hash.replace("#","");
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/environments/RoomEnvironment.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/geometries/RoundedBoxGeometry.js"></script>
 <script src="tip3d.js"></script>
+<script src="proposta.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="../auth.js"></script>
 <script src="sync.js"></script>
