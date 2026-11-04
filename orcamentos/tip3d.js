@@ -44,9 +44,29 @@ function quadro(w,h,face,d,mat){const g=new (T().Group)();
 /* chapa de vidro: faces na cor do vidro, bordas com o verde da lapidação */
 function vidro(w,h,m){const v=new (T().Mesh)(new (T().BoxGeometry)(Math.max(w,.001),Math.max(h,.001),VID),[m.borda,m.borda,m.borda,m.borda,m.vid,m.vid]);v.renderOrder=2;v.receiveShadow=true;return v}
 /* folha com vidro; o grupo tem a origem no centro da folha */
-function folha(w,h,m,opts){const g=new (T().Group)();const face=(opts&&opts.face)||FOLHA;
+/* enchimento de um vão (vidro, lambri ou veneziana); o vão tem o centro em (0,cy) */
+function encher(g,w,h,cy,m,enc){
+ if(enc==="lambri"){
+  /* lambri: réguas horizontais de ~100 mm com o friso (sombra) entre elas */
+  const fu=box(w,h,.006,m.fundo,0,cy,0);fu.castShadow=false;g.add(fu);
+  const n=Math.max(2,Math.round(h/.1)),rh=h/n;
+  for(let i=0;i<n;i++)g.add(perf(w,rh-.005,.018,m.alu,0,cy-h/2+rh/2+i*rh,0));
+ }else if(enc==="veneziana"){
+  /* veneziana: aletas inclinadas, com passagem de ar entre elas */
+  const n=Math.max(3,Math.round(h/.038)),rh=h/n;
+  for(let i=0;i<n;i++){const a=box(w,rh*1.15,.004,m.alu,0,cy-h/2+rh/2+i*rh,0);a.rotation.x=.75;g.add(a)}
+ }else{const v=vidro(w+.01,h+.01,m);v.position.y=cy;g.add(v)}
+}
+function folha(w,h,m,opts){const g=new (T().Group)();const face=(opts&&opts.face)||FOLHA;const enc=(opts&&opts.enc)||"vidro";
  g.add(quadro(w,h,face,PFOL,m.alu));
- g.add(vidro(w-2*face+.01,h-2*face+.01,m));
+ const iw=w-2*face,ih=h-2*face;
+ if(enc==="vidlam"){
+  /* vidro em cima, lambri embaixo, com a travessa no meio (lambri até ~0,95 m) */
+  const hb=Math.min(ih*.45,.95),ht=ih-hb-face;
+  encher(g,iw,hb,-ih/2+hb/2,m,"lambri");
+  g.add(perf(iw,face,PFOL,m.alu,0,-ih/2+hb+face/2,0));
+  encher(g,iw,ht,ih/2-ht/2,m,"vidro");
+ }else encher(g,iw,ih,0,m,enc);
  if(opts&&opts.puxador){const px=opts.puxador==="esq"?-w/2+face/2:w/2-face/2;g.add(box(.018,Math.min(.28,h*.18),.03,m.pux,px,opts.ph||0,PFOL/2+.016))}
  return g}
 function vidroFixo(w,h,m){return vidro(w+.01,h+.01,m)}
@@ -56,10 +76,21 @@ function montar(t,m){
  const L=Math.max(+t.L||1000,200)/1000,H=Math.max(+t.H||1000,200)/1000;
  const g=new (T().Group)();const moveis=[];
  const f=Math.max(1,Math.min(+t.f||1,12));const kind=t.kind||"gen";
- g.add(quadro(L,H,MARCO,PROF,m.alu));
- const iw=L-2*MARCO,ih=H-2*MARCO;
+ const enc=t.enc||"vidro";
+ /* painel fixo de vidro temperado: só o perfil U fino no perímetro */
+ const MQ=kind==="painel"?.022:MARCO;
+ g.add(quadro(L,H,MQ,kind==="painel"?.03:PROF,m.alu));
+ const iw=L-2*MQ,ih=H-2*MQ;
  const montantes=(n,x0,w,y,h)=>{const pw=(w-(n-1)*MARCO)/n;const xs=[];for(let i=0;i<n;i++){const cx=x0+pw/2+i*(pw+MARCO);xs.push(cx);if(i<n-1)g.add(perf(MARCO*.9,h,PROF*.85,m.alu,cx+pw/2+MARCO/2,y,0))}return {pw,xs}};
- if(kind==="fixo"||kind==="gen"){
+ if(kind==="painel"){
+  const J=.004,pw=(iw-(f-1)*J)/f;
+  for(let i=0;i<f;i++){const v=vidro(pw,ih+.01,m);v.position.x=-iw/2+pw/2+i*(pw+J);g.add(v)}
+ }else if(kind==="correr4"){
+  /* 4 folhas: 2 fixas nas pontas (trilho interno) e 2 móveis no centro (trilho externo), que abrem sobre as fixas */
+  const sob=.04,pw=(iw+3*sob)/4;const xs=[0,1,2,3].map(i=>-iw/2+pw/2+i*(pw-sob));
+  xs.forEach((x,i)=>{const mov=i===1||i===2;const fo=folha(pw,ih-.006,m,{enc,puxador:mov?(i===1?"dir":"esq"):null,ph:0});fo.position.set(x,0,(mov?1:-1)*PFOL*.6);g.add(fo);
+   if(mov){const alvo=xs[i===1?0:3]+(i===1?1:-1)*pw*.06;moveis.push(k=>{fo.position.x=x+(alvo-x)*k})}});
+ }else if(kind==="fixo"||kind==="gen"){
   /* fixos: só o quadro no perímetro; entre as chapas, junta seca vidro com vidro (silicone incolor) */
   const J=.004,pw=(iw-(f-1)*J)/f;
   for(let i=0;i<f;i++){const x=-iw/2+pw/2+i*(pw+J);const v=vidro(pw,ih+.01,m);v.position.x=x;g.add(v);
@@ -69,7 +100,7 @@ function montar(t,m){
  }else if(kind==="correr"){
   const n=Math.max(f,2);const sob=.04;const pw=(iw+(n-1)*sob)/n;
   for(let i=0;i<n;i++){const x=-iw/2+pw/2+i*(pw-sob);const z=(i%2?-1:1)*PFOL*.6;
-   const lado=i<n/2?"dir":"esq";const fo=folha(pw,ih-.006,m,{puxador:n===2?(i===0?"dir":"esq"):lado,ph:0});fo.position.set(x,0,z);g.add(fo);
+   const lado=i<n/2?"dir":"esq";const fo=folha(pw,ih-.006,m,{enc,puxador:n===2?(i===0?"dir":"esq"):lado,ph:0});fo.position.set(x,0,z);g.add(fo);
    /* folhas pares (trilho externo) correm sobre as vizinhas */
    const alvo=i%2===0?(i+1<n?x+(pw-sob)*.82:x):x;const xi=x;
    if(i%2===0&&i+1<n)moveis.push(k=>{fo.position.x=xi+(alvo-xi)*k});}
@@ -77,14 +108,14 @@ function montar(t,m){
   const n=f>=2?2:1;const pw=iw/n;
   for(let i=0;i<n;i++){const piv=new (T().Group)();const ladoEsq=n===1||i===0;
    piv.position.set(ladoEsq?-iw/2+i*pw:iw/2,0,PROF*.25);
-   const fo=folha(pw,ih-.004,m,{face:FOLHA*1.25,puxador:ladoEsq?"dir":"esq",ph:-ih*.05});fo.position.x=ladoEsq?pw/2:-pw/2;piv.add(fo);g.add(piv);
+   const fo=folha(pw,ih-.004,m,{enc,face:FOLHA*1.25,puxador:ladoEsq?"dir":"esq",ph:-ih*.05});fo.position.x=ladoEsq?pw/2:-pw/2;piv.add(fo);g.add(piv);
    moveis.push(k=>{piv.rotation.y=(ladoEsq?-1:1)*k*1.25});}
  }else if(kind==="max"||kind==="maxp"){
   const top=kind==="maxp"?ih*.68:ih;const {pw,xs}=montantes(f,-iw/2,iw,ih/2-top/2,top);
   if(kind==="maxp"){g.add(perf(iw,MARCO*.9,PROF*.85,m.alu,0,ih/2-top-MARCO/2,0));const bh=ih-top-MARCO;
    const vb=vidroFixo(iw,bh,m);vb.position.y=-ih/2+bh/2;g.add(vb)}
   xs.forEach(x=>{const piv=new (T().Group)();piv.position.set(x,ih/2,PROF*.2);
-   const fo=folha(pw,top-.004,m,{});fo.position.y=-top/2;piv.add(fo);g.add(piv);
+   const fo=folha(pw,top-.004,m,{enc});fo.position.y=-top/2;piv.add(fo);g.add(piv);
    moveis.push(k=>{piv.rotation.x=k*.55})});
  }else if(kind==="piv"){
   const a=iw*.42;g.add(perf(MARCO*.9,ih,PROF*.85,m.alu,-iw/2+a+MARCO/2,0,0));
@@ -107,6 +138,7 @@ function materiais(t,cfg){
  const p=perfilDe(cfg.cor,t.corPerfil),v=vidroDe(t.desc,t.vidroCor);const lin=h=>{const c=new (T().Color)(h);if(c.convertSRGBToLinear)c.convertSRGBToLinear();return c};
  return {p,v,
   alu:new (T().MeshStandardMaterial)({color:lin(p.hex),metalness:p.met,roughness:p.rug,envMapIntensity:.7}),
+  fundo:new (T().MeshStandardMaterial)({color:lin(p.hex).multiplyScalar(.45),metalness:p.met,roughness:.8}),
   vid:new (T().MeshPhysicalMaterial)({map:reflexo(),color:lin(v.hex),transparent:true,opacity:v.op,roughness:.02,metalness:v.met,reflectivity:.9,envMapIntensity:1.4,side:T().DoubleSide,depthWrite:false}),
   borda:new (T().MeshStandardMaterial)({color:lin("#5f9c8b"),transparent:true,opacity:.9,roughness:.15,metalness:0}),
   junta:new (T().LineBasicMaterial)({color:"#5d7076",transparent:true,opacity:.45,depthWrite:false}),
@@ -129,7 +161,7 @@ let R=null;
 function renderer(){if(R)return R;R=new (T().WebGLRenderer)({antialias:true,alpha:true,preserveDrawingBuffer:true});
  R.setPixelRatio(1);R.toneMapping=T().ACESFilmicToneMapping;R.toneMappingExposure=1.05;R.shadowMap.enabled=true;R.shadowMap.type=T().PCFSoftShadowMap;if(T().sRGBEncoding)R.outputEncoding=T().sRGBEncoding;return R}
 const cache=new Map();
-function chave(t,cfg){return [t.kind,t.f,t.L,t.H,t.desc,t.vidroCor||"",t.corPerfil||"",cfg.cor||"",cfg.px||0,cfg.aberto?1:0].join("|")}
+function chave(t,cfg){return [t.kind,t.f,t.enc||"",t.L,t.H,t.desc,t.vidroCor||"",t.corPerfil||"",cfg.cor||"",cfg.px||0,cfg.aberto?1:0].join("|")}
 function imagem(t,cfg){cfg=cfg||{};const k=chave(t,cfg);if(cache.has(k))return cache.get(k);
  if(!T())return "";const r=renderer();const px=cfg.px||900;
  const mt=materiais(t,cfg),mo=montar(t,mt);if(cfg.aberto)mo.animar(.55);

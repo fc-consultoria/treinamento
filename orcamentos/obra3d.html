@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Obra em 3D</title>
+<meta name="theme-color" content="#0d4a48"><link rel="apple-touch-icon" href="icon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap">
+<style>
+/* Obra em 3D · serviço por projeto da FC: a vidraçaria manda o PDF do orçamento, a FC confere, gera o 3D
+   e entrega o link sem preço com a marca da vidraçaria. Só a Matriz. © FC Consultoria em Esquadria */
+:root{
+ --bg:#f3f6f6;--surface:#fff;--surface2:#e8eeee;--line:#d3dddd;--fg:#16262a;--muted:#5b6d70;
+ --teal:#0d5c63;--teal-ink:#fff;--teal-soft:#d6ebec;--amber:#c9831a;--amber-soft:#fbefd9;--ok:#1f7a4a;--warn:#a45a00;--bad:#b3261e;
+ --display:"Space Grotesk",system-ui,sans-serif;--body:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+ --bg:#0f1719;--surface:#162226;--surface2:#1d2c30;--line:#2c3f44;--fg:#e3eced;--muted:#93a6a9;--teal:#2a8b93;--teal-soft:#183a3e;
+ --amber:#e7a33e;--amber-soft:#3a2c14;--ok:#52b783;--warn:#e3a14a;--bad:#ef7a72;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0f1719;--surface:#162226;--surface2:#1d2c30;--line:#2c3f44;--fg:#e3eced;--muted:#93a6a9;--teal:#2a8b93;--teal-soft:#183a3e;
+ --amber:#e7a33e;--amber-soft:#3a2c14;--ok:#52b783;--warn:#e3a14a;--bad:#ef7a72;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.45 var(--body)}
+.wrap{max-width:1240px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--display);margin:0;text-wrap:balance}
+.num{font-variant-numeric:tabular-nums}
+header.top{background:var(--teal);color:var(--teal-ink);padding-top:env(safe-area-inset-top,0px)}
+header.top .wrap{padding-block:16px 14px;display:flex;flex-wrap:wrap;gap:10px 24px;align-items:flex-end;justify-content:space-between}
+.eyebrow{font-size:11px;letter-spacing:.12em;text-transform:uppercase;opacity:.8}
+header.top h1{font-size:24px}
+.meta{font-size:13px;opacity:.88;max-width:620px}
+.tomatriz{display:inline-block;font:600 13px var(--body);color:#fff;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);border-radius:6px;padding:4px 10px;text-decoration:none;margin-bottom:8px;cursor:pointer}
+main{padding:18px 0 40px}
+.btn{font:600 13px var(--body);border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:10px;padding:9px 14px;cursor:pointer;min-height:40px;display:inline-flex;gap:6px;align-items:center;text-decoration:none}
+.btn.pri{background:var(--teal);border-color:var(--teal);color:#fff}
+.btn.amb{background:var(--amber);border-color:var(--amber);color:#1d1405}
+.btn.dan{color:var(--bad)}
+.btn:disabled{opacity:.55;cursor:default}
+.btn:focus-visible,select:focus-visible,input:focus-visible,.drop:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px}
+.hint{color:var(--muted);font-size:13px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+/* início */
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}
+.kpi{padding:12px 14px}.kpi span{display:block;font-size:12px;color:var(--muted)}.kpi b{font:700 22px var(--display)}
+.cols{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:14px;align-items:start}
+.sec{padding:14px 16px}.sec h2{font-size:16px;margin-bottom:10px;display:flex;justify-content:space-between;gap:8px;align-items:center}
+.drop{border:2px dashed var(--line);border-radius:14px;padding:22px 16px;text-align:center;cursor:pointer;background:var(--surface);margin-bottom:14px}
+.drop.on{border-color:var(--teal);background:var(--teal-soft)}
+.drop b{font:700 17px var(--display);display:block;margin-bottom:4px}
+.lst{display:flex;flex-direction:column;gap:8px}
+.pj{display:grid;grid-template-columns:8px minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--surface);cursor:pointer;text-align:left;font:inherit;color:inherit;width:100%}
+.pj:hover{border-color:var(--teal)}
+.pj i{width:8px;align-self:stretch;border-radius:4px}
+.pj b{font:600 14.5px var(--display);display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pj small{color:var(--muted);font-size:12.5px}
+.pj .r{text-align:right;font-size:13px;white-space:nowrap}
+.st{display:inline-block;font:600 11.5px var(--body);border-radius:999px;padding:2px 9px;border:1px solid currentColor}
+table.cli{width:100%;border-collapse:collapse;font-size:13px}
+table.cli th{text-align:left;font-weight:600;color:var(--muted);font-size:12px;padding:6px 6px;border-bottom:1px solid var(--line)}
+table.cli td{padding:8px 6px;border-bottom:1px solid var(--line)}
+table.cli td.n,table.cli th.n{text-align:right}
+/* projeto */
+.ptop{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px 14px;padding:14px 16px;margin-bottom:12px}
+.f{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted);font-weight:600}
+.f input,.f select,.f textarea{font:500 14px var(--body);color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 10px;min-height:38px}
+.f .lk{font:500 14px var(--body);color:var(--fg);padding:8px 0;min-height:38px;display:flex;gap:6px;align-items:center}
+.sws{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.sw{width:26px;height:26px;border-radius:50%;border:2px solid var(--surface);box-shadow:0 0 0 1px var(--line);cursor:pointer;padding:0}
+.sw[aria-pressed="true"]{box-shadow:0 0 0 2px var(--fg)}
+.sws input[type=color]{width:34px;height:30px;padding:0;border:1px solid var(--line);border-radius:8px;background:none;cursor:pointer}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:14px;overflow-x:auto}
+.tabs button{font:600 14px var(--body);background:none;border:0;border-bottom:3px solid transparent;color:var(--muted);padding:10px 14px;cursor:pointer;white-space:nowrap}
+.tabs button[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--teal)}
+.prog{height:8px;border-radius:5px;background:var(--surface2);overflow:hidden;flex:1;min-width:120px}.prog i{display:block;height:100%;background:var(--ok)}
+.aviso{background:var(--amber-soft);border:1px solid #e9c27a;color:var(--fg);border-radius:10px;padding:9px 12px;font-size:13px;margin-bottom:12px}
+/* conferência */
+.it{display:grid;grid-template-columns:150px minmax(0,1fr) minmax(220px,280px);gap:14px;padding:12px;margin-bottom:10px}
+.it.ok{border-color:color-mix(in srgb,var(--ok) 55%,var(--line))}
+.thumb{position:relative;border-radius:10px;background:linear-gradient(180deg,#e4eaec,#cbd5d8);display:grid;place-items:center;height:132px;overflow:hidden;border:0;padding:6px;cursor:pointer;width:100%}
+.thumb img{max-width:100%;max-height:120px;display:block}
+.thumb .ld{font-size:12px;color:#5b6d70}
+.thumb .v3{position:absolute;left:6px;bottom:6px;font:600 11px var(--body);background:#fff;color:#16262a;border-radius:999px;padding:3px 8px;box-shadow:0 2px 6px rgba(0,0,0,.15)}
+.orig h3{font-size:15px;line-height:1.3;margin:2px 0 8px}
+.orig .badge{font:600 11.5px var(--body);color:var(--muted)}
+.dl{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px 12px;font-size:13px}
+.dl div span{display:block;font-size:11px;color:var(--muted);font-weight:600}
+.dl div.w2{grid-column:span 2}
+.lock{font-size:11px;color:var(--muted);margin-top:8px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.chip{font:600 11.5px var(--body);border-radius:999px;padding:3px 9px;background:var(--amber-soft);color:var(--warn);border:1px solid #e9c27a}
+.des{display:flex;flex-direction:column;gap:8px;border-left:1px solid var(--line);padding-left:14px}
+.des h4{margin:0;font:600 12px var(--body);color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.des .alt{font:600 11.5px var(--body);color:var(--amber)}
+.ckb{display:flex;gap:8px;align-items:center;font-weight:600;font-size:13.5px;cursor:pointer;margin-top:auto;padding-top:4px}
+.ckb input{width:20px;height:20px;accent-color:var(--ok)}
+.lnk{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:12px 14px;margin-bottom:14px}
+.lnk input{flex:1;min-width:220px;font:500 13px var(--body);padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface2);color:var(--fg)}
+.ctl{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px 14px;padding:16px}
+.ctl .w3{grid-column:1/-1}
+.msg{background:var(--surface);border-radius:14px;padding:28px 20px;text-align:center;color:var(--muted)}
+.wm-app{text-align:center;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:18px 0 4px}
+#toast{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:#16262a;color:#fff;font:600 13px var(--body);padding:9px 14px;border-radius:999px;box-shadow:0 8px 24px rgba(0,0,0,.25);z-index:9000;opacity:0;transition:opacity .25s;pointer-events:none}
+#toast.on{opacity:1}
+@media (max-width:900px){.cols{grid-template-columns:1fr}.ptop{grid-template-columns:repeat(2,minmax(0,1fr))}.it{grid-template-columns:120px minmax(0,1fr)}.des{grid-column:1/-1;border-left:0;padding-left:0;border-top:1px solid var(--line);padding-top:10px}.ctl{grid-template-columns:1fr 1fr}}
+@media (max-width:560px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.ptop{grid-template-columns:1fr}.it{grid-template-columns:1fr}.thumb{height:160px}.thumb img{max-height:148px}.dl{grid-template-columns:repeat(2,minmax(0,1fr))}.ctl{grid-template-columns:1fr}.pj{grid-template-columns:8px minmax(0,1fr)}.pj .r{grid-column:2;text-align:left}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+@media print{header.top,.tabs,.ptop,.lnk,.noprint,.wm-app,#toast{display:none!important}body{background:#fff}main{padding:0}.wrap{max-width:none;padding:0}}
+</style>
+<style>.rgate{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;background:#e9f0f0;padding:16px;font-family:system-ui,sans-serif}.rgate[hidden]{display:none}.rgate form{width:min(360px,100%);background:#fff;border:1px solid #d6e1e1;border-radius:14px;padding:26px 22px;display:flex;flex-direction:column;gap:12px}.rgate h1{margin:0;font:700 24px system-ui;color:#13262a}.rgate small{color:#5a6e72;font-size:12px;letter-spacing:.06em;text-transform:uppercase}.rgate label{display:flex;flex-direction:column;gap:5px;font-weight:600;font-size:14px;color:#13262a}.rgate input{font:15px system-ui;padding:9px 10px;border:1px solid #c4ccd2;border-radius:8px}.rgate button{background:#0d5c63;color:#fff;border:0;border-radius:9px;padding:11px;font:700 15px system-ui;cursor:pointer}.rgate p{margin:0;color:#b42318;font-size:14px}</style>
+</head>
+<body>
+<div class="rgate" id="gate" hidden><form id="gateForm"><small>FC Consultoria · Matriz</small><h1>Obra em 3D</h1>
+<label>Login<input name="login" autocomplete="username" required placeholder="matriz"></label>
+<label>Senha<input name="senha" type="password" autocomplete="current-password" required></label>
+<button type="submit">Entrar</button><p id="gateMsg" role="alert"></p></form></div>
+<header class="top"><div class="wrap" id="hdr"></div></header>
+<main><div class="wrap" id="main"><div class="msg">Carregando…</div></div>
+<div class="wm-app">FC Consultoria em Esquadria · uso exclusivo · © FC Consultoria em Esquadria</div></main>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/environments/RoomEnvironment.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/geometries/RoundedBoxGeometry.js"></script>
+<script src="tip3d.js"></script>
+<script src="proposta.js"></script>
+<script src="obra3d-ler.js"></script>
+<script>
+/* ======================= Obra em 3D ======================= */
+function iniciarObra3D(BD){(function(){
+"use strict";
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const brl=v=>Number(v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+const dt=v=>v?new Date(v).toLocaleDateString("pt-BR"):"—";
+const toast=t=>{const e=$("toast");e.textContent=t;e.classList.add("on");clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove("on"),2200)};
+const STATUS=[["recebido","Recebido","#a3620b"],["conferencia","Em conferência","#1f6fb2"],["entregue","Link entregue","#0d6b68"],["pago","Pago","#1f7a4a"]];
+const stOf=k=>STATUS.find(s=>s[0]===k)||STATUS[0];
+const KINDS=[["giro","Porta de giro"],["correr","Correr"],["correr4","Correr 4 folhas (2 fixas + 2 móveis)"],["max","Maxim-ar"],["maxp","Maxim-ar com peitoril fixo"],["fixo","Fixo (vidro com vidro)"],["painel","Painel fixo temperado com perfil"],["piv","Pivotante com fixo"],["gen","Outro"]];
+const ENCS=[["vidro","Vidro"],["lambri","Lambri"],["vidlam","Vidro em cima + lambri embaixo"],["veneziana","Veneziana"]];
+const CORES=["#1d5fa8","#0d5c63","#1f7a4a","#b3261e","#c9831a","#6d4bd8","#13232e","#8a4b2a"];
+let LIST=BD.projetos.slice(),P=null,TAB="conf",VISTAS={};
+
+/* ---------- salvar (debounce; o Supabase é a fonte) ---------- */
+let pend=new Set(),tm=null;
+function touch(p){p.atualizado=new Date().toISOString();pend.add(p.id);clearTimeout(tm);tm=setTimeout(enviar,800)}
+async function enviar(){const ids=[...pend];pend.clear();if(!ids.length)return;
+ const rows=ids.map(id=>LIST.find(p=>p.id===id)).filter(Boolean).map(p=>({id:p.id,dados:p,atualizado:p.atualizado}));
+ const r=await BD.salvar(rows);if(r&&r.error){ids.forEach(i=>pend.add(i));toast("Não salvou · tentando de novo");clearTimeout(tm);tm=setTimeout(enviar,6000)}}
+addEventListener("beforeunload",e=>{if(pend.size){e.preventDefault();e.returnValue=""}});
+
+/* ---------- dados para a apresentação (nunca leva preço) ---------- */
+function t3(it){return {item:it.item,tipo:it.tipo,loc:it.loc,kind:it.kind,f:it.f,enc:it.enc,L:it.L,H:it.H,q:it.q,linha:it.linha,desc:it.vidro+(it.obs?" · "+it.obs:"")}}
+function doc(p){return {marca:p.empresa,marcaCor:p.cor,numero:p.numero,obra:p.obra,cliente:p.cliente,cor:p.corPerfil,emitida:p.emitida||p.criado,itens:p.itens.map(t3)}}
+
+/* ---------- cabeçalho ---------- */
+function hdr(sub){$("hdr").innerHTML=`<div>${P?`<button class="tomatriz" type="button" id="h-back">← Projetos</button>`:`<a class="tomatriz" href="../painel.html">← Painel da Matriz</a>`}
+ <div class="eyebrow">FC Consultoria em Esquadria · serviço por projeto</div><h1>${P?esc(P.obra||"Projeto"):"Obra em 3D"}</h1>
+ <div class="meta">${sub}</div></div>`;if($("h-back"))$("h-back").onclick=()=>{location.hash="";}}
+
+/* ======================= INÍCIO ======================= */
+function home(){P=null;hdr("A vidraçaria manda o PDF do orçamento; a FC confere, monta a obra em 3D e entrega um link sem preço com a marca dela.");
+ const tot={n:LIST.length,ent:0,fat:0,rec:0};const cli={};
+ LIST.forEach(p=>{const v=+p.valor||0,e=p.status==="entregue"||p.status==="pago";if(e)tot.ent++;if(p.status==="pago")tot.fat+=v;else tot.rec+=v;
+  const c=cli[p.empresa||"—"]||(cli[p.empresa||"—"]={n:0,ent:0,fat:0,rec:0,cor:p.cor});c.n++;if(e)c.ent++;if(p.status==="pago")c.fat+=v;else c.rec+=v});
+ const ord=LIST.slice().sort((a,b)=>String(b.criado).localeCompare(String(a.criado)));
+ $("main").innerHTML=`
+ <div class="kpis"><div class="card kpi"><span>Projetos</span><b class="num">${tot.n}</b></div><div class="card kpi"><span>Links entregues</span><b class="num">${tot.ent}</b></div>
+  <div class="card kpi"><span>Recebido</span><b class="num">${brl(tot.fat)}</b></div><div class="card kpi"><span>A receber</span><b class="num">${brl(tot.rec)}</b></div></div>
+ <div class="cols"><div>
+  <div class="drop" id="drop" tabindex="0" role="button" aria-label="Subir o PDF do orçamento"><b>＋ Novo projeto</b><span class="hint">Arraste aqui o PDF do orçamento da vidraçaria ou toque para escolher.</span><input type="file" id="file" accept="application/pdf,.pdf" hidden></div>
+  <div class="hint" id="dmsg" role="status" style="margin:-6px 0 12px"></div>
+  <div class="card sec"><h2>Projetos <span class="hint">${tot.n} no total</span></h2><div class="lst">${ord.length?ord.map(p=>{const s=stOf(p.status);const v=VISTAS[p.link&&p.link.tok];
+   return `<button class="pj" type="button" data-id="${esc(p.id)}"><i style="background:${esc(p.cor||"#0d5c63")}"></i><span><b>${esc(p.obra||"Obra")}</b><small>${esc(p.empresa||"—")} · ${p.itens.length} itens · ${dt(p.criado)}${v?` · link aberto ${v.vistas}×`:""}</small></span>
+   <span class="r"><span class="st" style="color:${s[2]}">${s[1]}</span><br><span class="num">${+p.valor?brl(p.valor):'<span class="hint">sem valor</span>'}</span></span></button>`}).join(""):`<div class="hint">Nenhum projeto ainda. Suba o primeiro PDF acima.</div>`}</div></div>
+ </div>
+ <div class="card sec"><h2>Por cliente</h2>${Object.keys(cli).length?`<table class="cli"><thead><tr><th>Vidraçaria</th><th class="n">Projetos</th><th class="n">Entregues</th><th class="n">Recebido</th><th class="n">A receber</th></tr></thead><tbody>${Object.entries(cli).sort((a,b)=>b[1].n-a[1].n).map(([k,c])=>`<tr><td><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${esc(c.cor||"#0d5c63")};margin-right:6px"></span>${esc(k)}</td><td class="n num">${c.n}</td><td class="n num">${c.ent}</td><td class="n num">${brl(c.fat)}</td><td class="n num">${brl(c.rec)}</td></tr>`).join("")}</tbody></table>
+  <p class="hint" style="margin:10px 0 0">Vidraçaria com vários projetos é candidata à licença própria (fase 2).</p>`:`<div class="hint">Aparece aqui quando houver projetos.</div>`}</div></div>`;
+ document.querySelectorAll(".pj").forEach(b=>b.onclick=()=>{location.hash="p-"+b.dataset.id});
+ const dr=$("drop"),fi=$("file");dr.onclick=()=>fi.click();dr.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();fi.click()}};
+ fi.onchange=()=>{if(fi.files[0])novo(fi.files[0])};
+ dr.ondragover=e=>{e.preventDefault();dr.classList.add("on")};dr.ondragleave=()=>dr.classList.remove("on");
+ dr.ondrop=e=>{e.preventDefault();dr.classList.remove("on");if(e.dataTransfer.files[0])novo(e.dataTransfer.files[0])};
+ vistas();
+}
+async function vistas(){const toks=LIST.map(p=>p.link&&p.link.tok).filter(Boolean);if(!toks.length||!BD.vistas)return;
+ const r=await BD.vistas(toks);if(!r)return;let mud=false;r.forEach(x=>{const o=VISTAS[x.token];if(!o||o.vistas!==x.vistas)mud=true;VISTAS[x.token]=x});if(mud&&!P)home()}
+
+/* ---------- novo projeto a partir do PDF ---------- */
+let pdfReady=null;
+function loadPdfJs(){if(pdfReady)return pdfReady;const add=src=>new Promise((res,rej)=>{const s=document.createElement("script");s.src=src;s.onload=res;s.onerror=()=>rej(new Error("load"));document.head.appendChild(s)});
+ const base="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/";pdfReady=add(base+"pdf.worker.min.js").then(()=>add(base+"pdf.min.js")).then(()=>window.pdfjsLib);pdfReady.catch(()=>{pdfReady=null});return pdfReady}
+async function lerPdf(file){const lib=await loadPdfJs();const d=await lib.getDocument({data:new Uint8Array(await file.arrayBuffer())}).promise;const P=[];
+ for(let p=1;p<=d.numPages;p++){const tc=await (await d.getPage(p)).getTextContent();P.push(tc.items.map(i=>({x:i.transform[4],y:i.transform[5],w:i.width,s:i.str})))}return P}
+async function novo(file){const m=$("dmsg");
+ if(!/\.pdf$/i.test(file.name)&&file.type!=="application/pdf"){m.textContent=`"${file.name}" não é PDF.`;return}
+ m.textContent="Lendo o PDF…";
+ let O;try{O=O3DLER.ler(await lerPdf(file))}catch(e){console.warn(e);m.textContent="Não consegui ler este PDF. Confira se é o orçamento com Local/Ambiente, Tipo e medidas.";return}
+ if(!O.itens.length){m.textContent=O.avisos[0]||"Nenhum item encontrado neste PDF.";return}
+ const id=Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+ const p={id,criado:new Date().toISOString(),pdf:file.name,empresa:O.empresa,cor:"",obra:O.cliente||"Obra",cliente:O.cliente,numero:O.numero,emissao:O.emissao,vendedor:O.vendedor,corPerfil:O.cor,
+  itens:O.itens.map(it=>Object.assign(it,{lido:{kind:it.kind,f:it.f,enc:it.enc},ok:false})),avisos:O.avisos,valor:"",status:"recebido",entregue:"",pago:"",notas:"",link:null};
+ LIST.push(p);touch(p);location.hash="p-"+id;toast(`${p.itens.length} itens lidos`)}
+
+/* ======================= PROJETO ======================= */
+function abrir(id){P=LIST.find(p=>p.id===id);if(!P){location.hash="";return}
+ hdr(`${esc(P.empresa||"—")} · Orçamento ${esc(P.numero||"—")}${P.emissao?" de "+esc(P.emissao):""} · ${P.itens.length} itens`);
+ const nOk=P.itens.filter(t=>t.ok).length;
+ $("main").innerHTML=`
+ <div class="card ptop">
+  <label class="f">Empresa na apresentação<input id="p-emp" value="${esc(P.empresa)}" autocomplete="off"></label>
+  <label class="f">Título da obra<input id="p-obra" value="${esc(P.obra)}" autocomplete="off"></label>
+  <div class="f">Cliente (do PDF)<span class="lk">🔒 ${esc(P.cliente||"—")}</span></div>
+  <div class="f">Cor da empresa<div class="sws" id="p-cor">${CORES.map(c=>`<button type="button" class="sw" style="background:${c}" data-c="${c}" aria-label="Cor ${c}" aria-pressed="${P.cor===c}"></button>`).join("")}<input type="color" id="p-cor2" value="${esc(P.cor||"#0d5c63")}" aria-label="Outra cor"></div></div>
+ </div>
+ ${P.cor?"":`<div class="aviso">Escolha a <b>cor da empresa</b>: é ela que pinta a capa e o link do cliente.</div>`}
+ <nav class="tabs" role="tablist"><button role="tab" data-t="conf" aria-selected="${TAB==="conf"}">Conferência <span class="hint num">${nOk}/${P.itens.length}</span></button><button role="tab" data-t="apr" aria-selected="${TAB==="apr"}">Apresentação e link</button><button role="tab" data-t="ctl" aria-selected="${TAB==="ctl"}">Controle do projeto</button></nav>
+ <div id="tab"></div>`;
+ $("p-emp").oninput=e=>{P.empresa=e.target.value;touch(P)};
+ $("p-obra").oninput=e=>{P.obra=e.target.value;touch(P);document.querySelector("header h1").textContent=P.obra||"Projeto"};
+ const setCor=c=>{P.cor=c;touch(P);abrir(P.id)};
+ document.querySelectorAll("#p-cor .sw").forEach(b=>b.onclick=()=>setCor(b.dataset.c));$("p-cor2").onchange=e=>setCor(e.target.value);
+ document.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>{TAB=b.dataset.t;abrir(P.id)});
+ ({conf,apr,ctl})[TAB]();
+}
+
+/* ---------- conferência: texto do PDF travado; só o desenho 3D pode ser ajustado ---------- */
+function conf(){const it=P.itens,nOk=it.filter(t=>t.ok).length;
+ const av=(P.avisos||[]).concat(it.some(t=>t.avisos.length)?[`${it.filter(t=>t.avisos.length).length} itens com observação da leitura (em amarelo).`]:[]);
+ $("tab").innerHTML=`<div class="row" style="margin-bottom:12px"><div class="prog" aria-label="Itens conferidos"><i style="width:${it.length?nOk/it.length*100:0}%"></i></div><span class="hint num">${nOk} de ${it.length} conferidos</span>
+  <button class="btn noprint" type="button" id="c-all">✓ Marcar todos como conferidos</button></div>
+  ${av.length?`<div class="aviso">${av.map(esc).join("<br>")}</div>`:""}
+  <p class="hint" style="margin:0 0 12px">Os textos e medidas vêm do PDF e ficam travados. Se o desenho 3D saiu diferente da tipologia, ajuste só o desenho ao lado.</p>
+  ${it.map((t,i)=>{const mud=t.kind!==t.lido.kind||t.f!==t.lido.f||t.enc!==t.lido.enc;const o=t.orig;
+  return `<div class="card it${t.ok?" ok":""}">
+   <button class="thumb" type="button" data-v="${i}" aria-label="Ver item ${esc(o.item)} em 3D"><img data-i="${i}" alt="" hidden><span class="ld">Gerando 3D…</span><span class="v3">Ver em 3D</span></button>
+   <div class="orig"><span class="badge">Item ${esc(o.item)} · bloco ${t.n} de ${it.length}</span><h3>${esc(o.tipo)}</h3>
+    <div class="dl num"><div class="w2"><span>Local / ambiente</span>${esc(o.loc||"—")}</div><div><span>Linha</span>${esc(o.linha||"—")}</div><div><span>Cor do perfil</span>${esc(o.corPerfil||"—")}</div>
+     <div><span>Qtde</span>${esc(o.q)}</div><div><span>Largura × altura</span>${esc(o.L)} × ${esc(o.H)} mm</div><div class="w2"><span>Vidro</span>${esc(o.vidro||"—")}</div>
+     ${o.obs?`<div class="w2" style="grid-column:1/-1"><span>Observação do item</span>${esc(o.obs)}</div>`:""}</div>
+    ${t.avisos.length?`<div class="chips">${t.avisos.map(a=>`<span class="chip">${esc(a)}</span>`).join("")}</div>`:""}
+    <div class="lock">🔒 Texto e medidas conforme o PDF</div></div>
+   <div class="des"><h4>Desenho 3D ${mud?'<span class="alt">· ajustado</span>':""}</h4>
+    <label class="f">Tipologia<select data-k="kind" data-i="${i}">${KINDS.map(([k,n])=>`<option value="${k}"${t.kind===k?" selected":""}>${n}</option>`).join("")}</select></label>
+    <div class="row" style="gap:8px"><label class="f" style="flex:1">Folhas / módulos<input type="number" min="1" max="12" data-k="f" data-i="${i}" value="${t.f}"></label>
+    <label class="f" style="flex:2">Preenchimento<select data-k="enc" data-i="${i}">${ENCS.map(([k,n])=>`<option value="${k}"${t.enc===k?" selected":""}>${n}</option>`).join("")}</select></label></div>
+    ${mud?`<button class="btn" type="button" data-r="${i}">↺ Voltar ao desenho lido</button>`:""}
+    <label class="ckb"><input type="checkbox" data-ok="${i}"${t.ok?" checked":""}> Conferido</label></div>
+  </div>`}).join("")}`;
+ document.querySelectorAll("[data-k]").forEach(el=>el.onchange=()=>{const t=P.itens[+el.dataset.i];const k=el.dataset.k;t[k]=k==="f"?Math.max(1,Math.min(12,+el.value||1)):el.value;touch(P);conf()});
+ document.querySelectorAll("[data-r]").forEach(b=>b.onclick=()=>{const t=P.itens[+b.dataset.r];Object.assign(t,t.lido);touch(P);conf()});
+ document.querySelectorAll("[data-ok]").forEach(c=>c.onchange=()=>{P.itens[+c.dataset.ok].ok=c.checked;if(c.checked&&P.status==="recebido")P.status="conferencia";touch(P);abrir(P.id)});
+ $("c-all").onclick=()=>{P.itens.forEach(t=>t.ok=true);if(P.status==="recebido")P.status="conferencia";touch(P);abrir(P.id)};
+ document.querySelectorAll("[data-v]").forEach(b=>b.onclick=()=>{const t=P.itens[+b.dataset.v];window.TIP3D&&TIP3D.abrir(t3(t),{cor:P.corPerfil,origem:b,titulo:`Item ${t.orig.item} · ${t.orig.tipo}`})});
+ fila()}
+let filaRaf=0;
+function fila(){cancelAnimationFrame(filaRaf);const passo=()=>{const im=document.querySelector("img[data-i][hidden]");if(!im)return;const t=P&&P.itens[+im.dataset.i];
+  if(t&&window.TIP3D){try{im.src=TIP3D.imagem(t3(t),{cor:P.corPerfil,px:420})}catch(e){}}im.hidden=false;const ld=im.parentNode.querySelector(".ld");if(ld)ld.remove();filaRaf=requestAnimationFrame(passo)};passo()}
+
+/* ---------- apresentação no modelo da proposta + link sem preço ---------- */
+function urlDe(tok){return new URL("apresentacao.html?t="+tok,location.href).href}
+function apr(){const nOk=P.itens.filter(t=>t.ok).length,lk=P.link;const v=lk&&VISTAS[lk.tok];
+ $("tab").innerHTML=`${nOk<P.itens.length?`<div class="aviso">Faltam <b>${P.itens.length-nOk}</b> itens para conferir antes de entregar o link.</div>`:""}
+ <div class="card lnk noprint">${lk&&lk.ativo!==false?`<input readonly id="l-url" value="${esc(urlDe(lk.tok))}" aria-label="Link do cliente"><button class="btn pri" type="button" id="l-cp">Copiar link</button><a class="btn" id="l-wa" target="_blank" rel="noopener">WhatsApp</a><a class="btn" href="${esc(urlDe(lk.tok))}" target="_blank" rel="noopener">Abrir ↗</a><button class="btn" type="button" id="l-up">Atualizar link</button><button class="btn dan" type="button" id="l-off">Desativar</button>
+  <span class="hint" style="flex-basis:100%">Link sem preço, com a marca de ${esc(P.empresa||"—")}.${v?` Aberto ${v.vistas} ${v.vistas===1?"vez":"vezes"}${v.ultima_vista?` (último em ${new Date(v.ultima_vista).toLocaleString("pt-BR")})`:""}.`:" Ainda não foi aberto."} Depois de ajustar desenhos ou nomes, toque em <b>Atualizar link</b>.</span>`
+  :`<span class="hint" style="flex:1">${lk?"O link anterior foi desativado. ":""}Gere o link sem preço para enviar à ${esc(P.empresa||"vidraçaria")}.</span><button class="btn pri" type="button" id="l-new">Gerar link sem preço</button>`}
+  <button class="btn" type="button" id="l-pr">🖨 Imprimir / PDF</button><span class="hint" id="l-msg" role="status"></span></div>
+ <div id="pdoc"></div>`;
+ if(!window.PROPOSTA){$("pdoc").innerHTML=`<div class="msg">O modelo da proposta não carregou. Verifique a internet e atualize.</div>`;return}
+ const D=doc(P);PROPOSTA.render($("pdoc"),D,{});
+ const msg=t=>{$("l-msg").textContent=t};
+ const publicar=async tok=>{msg("Publicando…");const r=await BD.link(tok,"o3d-"+P.id,doc(P));if(r&&r.error){msg("Não foi possível publicar: "+r.error.message);return false}
+  P.link={tok,ativo:true,em:new Date().toISOString()};if(P.status==="recebido"||P.status==="conferencia"){P.status="entregue";P.entregue=P.entregue||new Date().toISOString().slice(0,10)}touch(P);return true};
+ if($("l-new"))$("l-new").onclick=async()=>{const b=new Uint8Array(18);crypto.getRandomValues(b);const tok=btoa(String.fromCharCode(...b)).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");if(await publicar(tok)){abrir(P.id);toast("Link gerado · status: Link entregue")}};
+ if($("l-up"))$("l-up").onclick=async()=>{if(await publicar(lk.tok)){toast("Link atualizado");abrir(P.id)}};
+ if($("l-off"))$("l-off").onclick=async()=>{if(!confirm("Desativar este link? Quem tiver o link não verá mais a apresentação."))return;const r=await BD.linkOff(lk.tok);if(r&&r.error){msg("Não foi possível desativar: "+r.error.message);return}P.link.ativo=false;touch(P);abrir(P.id)};
+ if($("l-cp"))$("l-cp").onclick=async()=>{try{await navigator.clipboard.writeText(urlDe(lk.tok));toast("Link copiado")}catch(e){$("l-url").select();document.execCommand("copy");toast("Link copiado")}};
+ if($("l-wa"))$("l-wa").href="https://wa.me/?text="+encodeURIComponent(`Apresentação 3D da obra ${P.obra||""}: ${urlDe(lk.tok)}`);
+ $("l-pr").onclick=()=>{PROPOSTA.preencher($("pdoc"),D,true);setTimeout(()=>print(),80)};
+ if(lk&&lk.ativo!==false)vistas();
+}
+
+/* ---------- controle do projeto (só na Matriz) ---------- */
+function ctl(){const s=stOf(P.status);
+ $("tab").innerHTML=`<div class="card ctl">
+  <label class="f">Valor do projeto (R$)<input id="c-val" inputmode="decimal" value="${esc(P.valor)}" placeholder="0,00"></label>
+  <label class="f">Status<select id="c-st">${STATUS.map(([k,n])=>`<option value="${k}"${P.status===k?" selected":""}>${n}</option>`).join("")}</select></label>
+  <label class="f">Link entregue em<input type="date" id="c-ent" value="${esc(P.entregue)}"></label>
+  <label class="f">Pago em<input type="date" id="c-pag" value="${esc(P.pago)}"></label>
+  <div class="f">Recebido em<span class="lk">${dt(P.criado)}</span></div>
+  <div class="f">Orçamento original<span class="lk">${esc(P.numero||"—")}${P.vendedor?" · "+esc(P.vendedor):""}</span></div>
+  <label class="f w3">Anotações internas (não aparecem para o cliente)<textarea id="c-not" rows="3">${esc(P.notas)}</textarea></label>
+  <div class="w3 row" style="justify-content:space-between"><span class="hint">Status atual: <span class="st" style="color:${s[2]}">${s[1]}</span></span><button class="btn dan" type="button" id="c-del">Excluir projeto</button></div></div>`;
+ $("c-val").onchange=e=>{const v=String(e.target.value).replace(/[^\d,.-]/g,"").replace(/\.(?=\d{3}(\D|$))/g,"").replace(",",".");P.valor=v===""?"":(+v||0).toFixed(2);e.target.value=P.valor?(+P.valor).toLocaleString("pt-BR",{minimumFractionDigits:2}):"";touch(P)};
+ if(P.valor)$("c-val").value=(+P.valor).toLocaleString("pt-BR",{minimumFractionDigits:2});
+ $("c-st").onchange=e=>{P.status=e.target.value;const hoje=new Date().toISOString().slice(0,10);if(P.status==="pago"&&!P.pago)P.pago=hoje;if((P.status==="entregue"||P.status==="pago")&&!P.entregue)P.entregue=hoje;touch(P);ctl()};
+ $("c-ent").onchange=e=>{P.entregue=e.target.value;touch(P)};$("c-pag").onchange=e=>{P.pago=e.target.value;touch(P)};
+ $("c-not").oninput=e=>{P.notas=e.target.value;touch(P)};
+ $("c-del").onclick=async()=>{if(!confirm(`Excluir o projeto "${P.obra}"? O link do cliente também será desativado.`))return;
+  if(P.link&&P.link.ativo!==false&&BD.linkOff)await BD.linkOff(P.link.tok);const r=await BD.excluir(P.id);if(r&&r.error){toast("Não foi possível excluir");return}
+  LIST=LIST.filter(p=>p!==P);pend.delete(P.id);location.hash=""};
+}
+
+/* ---------- navegação ---------- */
+function rota(){const h=location.hash.replace("#","");if(h.startsWith("p-")){if(!P||P.id!==h.slice(2))TAB="conf";abrir(h.slice(2))}else home();scrollTo(0,0)}
+addEventListener("hashchange",rota);rota();
+})();}
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="../auth.js"></script>
+<script>
+gateUI(async()=>{
+ const r=await sb.from("obra3d_projetos").select("dados");
+ if(r.error){document.getElementById("main").innerHTML='<div class="msg"><b>Não foi possível carregar os projetos.</b><br>Confira a internet e atualize a página (F5).</div>';return}
+ iniciarObra3D({
+  projetos:(r.data||[]).map(x=>x.dados),
+  salvar:rows=>sb.from("obra3d_projetos").upsert(rows),
+  excluir:id=>sb.from("obra3d_projetos").delete().eq("id",id),
+  link:(token,obra_id,dados)=>sb.from("orcobra_links").upsert({token,obra_id,dados,ativo:true,atualizado:new Date().toISOString()}),
+  linkOff:token=>sb.from("orcobra_links").update({ativo:false}).eq("token",token),
+  vistas:async toks=>{const q=await sb.from("orcobra_links").select("token,vistas,ultima_vista").in("token",toks);return q.error?null:q.data}
+ });
+},{soMatriz:true});
+</script>
+</body>
+</html>
