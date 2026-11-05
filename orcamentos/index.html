@@ -41,6 +41,7 @@ header.top h1{font-size:24px;font-weight:700}
 .kpis{display:flex;gap:10px;flex-wrap:wrap}
 .kpi{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);border-radius:8px;padding:8px 14px;min-width:150px}
 .kpi b{display:block;font-family:var(--display);font-size:19px}
+.kacts{display:flex;flex-direction:column;gap:6px;justify-content:center}.kbt{font:700 13.5px var(--sans,inherit);border:1.5px solid rgba(255,255,255,.55);background:rgba(255,255,255,.12);color:#fff;border-radius:8px;padding:8px 12px;cursor:pointer;white-space:nowrap}.kbt:hover{background:rgba(255,255,255,.22)}.kbt.sv{background:#fff;color:#0d4f52;border-color:#fff}.kbt:disabled{opacity:.6;cursor:default}
 .kpi.sale{background:var(--amber);border-color:var(--amber);color:#1b1205}
 nav.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--line)}
 nav.tabs .wrap{display:flex;gap:2px;overflow-x:auto}
@@ -643,7 +644,7 @@ function openObra(id){
  const lines=[...new Set(O.tips.map(t=>t.linha))].join(", ");
  $("hdr").innerHTML=`<div><button class="back" id="b-back">← Orçamentos</button><div class="eyebrow">Orçamento de obra · ${esc(O.numero||"sem número")}</div><h1>${esc(O.obra||"Obra sem nome")}</h1>
   <div class="meta">${esc(O.cor||"")}${O.cor&&lines?" · ":""}${esc(lines)} · ${O.tips.length} itens</div></div>
-  <div class="kpis"><div class="kpi"><span class="eyebrow">Custo total</span><b class="num" id="k-cost">R$ 0,00</b></div><div class="kpi sale"><span class="eyebrow">Preço de venda</span><b class="num" id="k-sale">R$ 0,00</b></div></div>`;
+  <div class="kpis"><div class="kpi"><span class="eyebrow">Custo total</span><b class="num" id="k-cost">R$ 0,00</b></div><div class="kpi sale"><span class="eyebrow">Preço de venda</span><b class="num" id="k-sale">R$ 0,00</b></div><div class="kacts"><button type="button" class="kbt" id="k-calc" title="Refaz todas as contas da obra">🔄 Calcular obra</button><button type="button" class="kbt sv" id="k-save" title="Salva a obra agora">💾 Salvar</button></div></div>`;
  $("b-back").onclick=showHome;
  buildObra();
  if(st.__aplicar){const c=st.__aplicar;delete st.__aplicar;aplicarCot(c)}
@@ -707,6 +708,11 @@ function buildObra(){
  $("apr-print").onclick=aprImprimir;$("apr-link").onclick=aprLink;
 }
 function touch(){save()}
+/* 05/11: botões do cabeçalho da obra */
+document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("#k-calc,#k-save");if(!b||!O)return;
+ const tx=b.textContent;b.disabled=true;b.textContent=b.id==="k-calc"?"Calculando…":"Salvando…";
+ setTimeout(()=>{try{refresh();if(b.id==="k-save")save()}catch(x){console.warn(x)}
+  b.textContent=b.id==="k-calc"?"✓ Calculado":(saveErr?"⚠ Não salvou":"✓ Salvo");setTimeout(()=>{b.textContent=tx;b.disabled=false},1800)},60)});
 
 // ---------- PAINEL DE PREÇO ----------
 function pricePanel(key,title){
