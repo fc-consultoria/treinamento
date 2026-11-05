@@ -476,7 +476,8 @@ function moGarante3(O){const st=O&&O.st;if(!st||!st.mg||st.moV3)return;moGarante
 const moCost=O=>{moGarante3(O);return m2Obra(O)*n(O.st.mg.mo.mo)};
 const gKeys=O=>[...new Set(O.tips.map(t=>t.vid))];
 const autoM2=(O,k)=>O.tips.filter(t=>t.vid===k).reduce((s,t)=>s+itemM2(t),0);
-const m2Of=(O,k)=>{const o=n(O.st.vidM2[k]);return o>0?o+dupTips(O).filter(t=>t.vid===k).reduce((s,t)=>s+itemM2(t),0):autoM2(O,k)};
+/* 05/11: m² ajustado substitui o total da linha (para mais ou para menos), já com as tipologias duplicadas; vazio = m² pelo vão */
+const m2Of=(O,k)=>{const o=n(O.st.vidM2[k]);return o>0?o:autoM2(O,k)};
 const vidCostOf=(O,k)=>m2Of(O,k)*n(O.st.vidPrice[k]);
 const vidCost=O=>gKeys(O).reduce((s,k)=>s+vidCostOf(O,k),0);
 const outManual=O=>O.st.outros.reduce((s,o)=>s+n(o.v),0);
@@ -701,7 +702,7 @@ function buildObra(){
  </div><div id="pp-alu"></div></div></section>
 
 <section id="tab-vid" class="tab" hidden><div class="panel-grid"><div class="stack">
- <div class="card"><div class="card-h"><div><h2>Vidros por tipo</h2><div class="hint">m² calculado pela área do vão (L × H × qtde) do croqui. Se tiver o m² real do vidro, digite em "m² ajustado".</div></div></div>
+ <div class="card"><div class="card-h"><div><h2>Vidros por tipo</h2><div class="hint">m² calculado pela área do vão (L × H × qtde) do croqui. Se tiver o m² real do vidro, digite em "m² ajustado": ele substitui o total da linha (já contando tipologias duplicadas). Vazio = m² pelo vão.</div></div></div>
   <div class="tbl-wrap"><table><thead><tr><th>Tipo de vidro</th><th class="r">Peças</th><th class="r">m² pelo vão</th><th class="r">m² ajustado</th><th class="r">Custo R$/m²</th><th class="r">Custo total</th></tr></thead>
   <tbody id="vid-body"></tbody><tfoot><tr><td><b>Total</b></td><td></td><td class="r num"><b id="vid-m2"></b></td><td></td><td></td><td class="r num"><b id="vid-cost"></b></td></tr></tfoot></table></div></div>
  <div class="card"><div class="card-h"><h2>Área por item</h2></div><div class="tbl-wrap"><table><thead><tr><th>Item</th><th>Tipo</th><th>Vidro</th><th class="r">L × H</th><th class="r">Qtde</th><th class="r">m²</th></tr></thead><tbody id="vid-items"></tbody></table></div></div>
