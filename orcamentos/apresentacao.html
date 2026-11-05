@@ -100,19 +100,25 @@ if(!VIDRA&&vt.length>=20){
    $("vb").onclick=go;$("vc").onkeydown=e=>{if(e.key==="Enter")go()};$("vc").focus()});
   $("main").innerHTML=""}
  VIDRA=true}
+/* 05/11/2026 · "Abrir" pelo painel da FC (fc=1): apresentação completa, com troca de cor para demonstrar.
+   Só vale para quem está logado no painel e enxerga este link; o link enviado ao cliente continua sem troca de cor. */
+let FCMODO=false;
+if(!VIDRA&&QS.get("fc")==="1"){try{const sbf=window.supabase.createClient("https://cpkjphodruyxfouirhpd.supabase.co","sb_publishable_d0HEeWsaqOeZIQKGftlF-Q_B8BUOWWg",{auth:{persistSession:true,storageKey:"trein-fc-auth",autoRefreshToken:false,detectSessionInUrl:false}});
+ const se=await sbf.auth.getSession();if(se.data&&se.data.session){const r=await sbf.from("orcobra_links").select("token").eq("token",tok).maybeSingle();FCMODO=!r.error&&!!r.data}}catch(_){}}
 async function salvarCor(cores){if(!confirm("Salvar estas cores? O link do cliente passa a mostrar a obra nessas cores (os valores não mudam)."))return false;
  const r=VCOD?await sbp.rpc("obra3d_teste_cor_salvar",{link:tok,vt,cod:VCOD,cores}):await sbp.rpc("obra3d_cor_salvar",{link:tok,vid,cores});if(r.error){alert("Não foi possível salvar. Tente de novo.");return false}return true}
+if(FCMODO){const dc=document.querySelector(".bar .dica");if(dc)dc.innerHTML="<b>Apresentação completa (FC)</b> · a troca de cor aparece só aqui, para demonstrar. O link enviado ao cliente não tem esta opção."}
 if(VIDRA){const dc=document.querySelector(".bar .dica");if(dc)dc.innerHTML="<b>Modo vidraçaria</b> · a troca de cor aparece só para você. O link que você envia ao cliente não tem esta opção."}
 if(!window.PROPOSTA){erro("Não foi possível carregar","Verifique a internet e abra o link de novo.");return}
 /* link aberto (antigo): sem preço. Proposta protegida: com preço, só para quem tem o código (ou a própria empresa) */
 if(Array.isArray(D.precos)&&D.precos.some(v=>+v>0)){
- PROPOSTA.render($("main"),D,{precos:D.precos,total:D.precos.reduce((a,b)=>a+(+b||0),0),rotulo:"Proposta comercial",simular:VIDRA,onSalvar:VIDRA?salvarCor:null});
+ PROPOSTA.render($("main"),D,{precos:D.precos,total:D.precos.reduce((a,b)=>a+(+b||0),0),rotulo:"Proposta comercial",simular:VIDRA||FCMODO,onSalvar:VIDRA?salvarCor:null});
  const quem=ACESSO?ACESSO.nome:EMPRESA?"Visualização da empresa":"";
  if(quem){const w=document.createElement("div");w.setAttribute("aria-hidden","true");const txt=(ACESSO?"Proposta exclusiva para ":"")+quem+" · "+new Date().toLocaleDateString("pt-BR");
   w.style.cssText="position:fixed;inset:0;pointer-events:none;z-index:50;opacity:.09;overflow:hidden;-webkit-print-color-adjust:exact;print-color-adjust:exact";
   w.innerHTML=`<div style="position:absolute;inset:-50%;transform:rotate(-24deg);display:flex;flex-wrap:wrap;gap:60px 80px;align-content:center;justify-content:center;font:700 22px Inter,sans-serif;color:#0d1f24">${(`<span>${esc(txt)}</span>`).repeat(80)}</div>`;document.body.appendChild(w);
   if(ACESSO)document.querySelector(".bar .dica").insertAdjacentHTML("beforeend",` · Acesso de <b>${esc(ACESSO.nome)}</b> até ${new Date(ACESSO.valido_ate).toLocaleDateString("pt-BR")}`)}
-}else PROPOSTA.render($("main"),D,{simular:VIDRA,onSalvar:VIDRA?salvarCor:null});
+}else PROPOSTA.render($("main"),D,{simular:VIDRA||FCMODO,onSalvar:VIDRA?salvarCor:null});
 const b=$("b-print");b.hidden=false;b.onclick=()=>{PROPOSTA.preencher($("main"),D,true);setTimeout(()=>print(),80)};
 })();
 </script>
