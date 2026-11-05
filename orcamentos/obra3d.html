@@ -135,7 +135,7 @@ table.cli td.n,table.cli th.n{text-align:right}
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/environments/RoomEnvironment.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/geometries/RoundedBoxGeometry.js"></script>
-<script src="tip3d.js?v=20261105q"></script>
+<script src="tip3d.js?v=20261105r"></script>
 <script src="proposta.js?v=20261105i"></script>
 <script src="obra3d-ler.js?v=20261105d"></script>
 <script src="orientativo-ler.js?v=3"></script>
@@ -359,6 +359,11 @@ async function novo(file){const m=$("dmsg");
 
 /* ======================= PROJETO ======================= */
 function abrir(id){P=LIST.find(p=>p.id===id);if(!P){location.hash="";return}
+ /* projetos lidos antes de uma melhoria do leitor: itens com o desenho ainda como foi lido (sem ajuste manual) passam a usar a leitura nova */
+ {let mud=false;P.itens.forEach(t=>{const tp=(t.orig&&t.orig.tipo)||t.tipo;if(!tp||!t.lido)return;const lv=t.lido;
+  if(t.kind!==lv.kind||t.f!==lv.f||t.enc!==lv.enc||(t.per||"")!==(lv.per||""))return;
+  const d=O3DLER.desenho(tp,t.linha);if(d.kind!==t.kind||d.f!==t.f||d.enc!==t.enc||d.per!==(t.per||"")){Object.assign(t,{kind:d.kind,f:d.f,enc:d.enc,per:d.per});t.lido={kind:d.kind,f:d.f,enc:d.enc,per:d.per};mud=true}});
+  if(mud)touch(P)}
  hdr(`${esc(P.empresa||"—")} · Orçamento ${esc(P.numero||"—")}${P.emissao?" de "+esc(P.emissao):""} · ${P.itens.length} itens`);
  const nOk=P.itens.filter(t=>t.ok).length;
  const AV=AVAL[P.id];

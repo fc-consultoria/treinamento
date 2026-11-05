@@ -147,26 +147,50 @@ NM=kind==="painel"?"Perfil U":"Marco"; g.add(quadro(L,H,MQ,kind==="painel"?.03:P
  return {grupo:g,animar:k=>moveis.forEach(fn=>fn(k)),temMovel:moveis.length>0,L,H,kind};
 }
 
-/* 05/11/2026 · porta/janela com persiana integrada: caixa da persiana em cima, guias nas laterais e a cortina meio descida
-   (é apresentação: medidas aproximadas, a esquadria fica abaixo da caixa dentro do L × A do orçamento) */
-function laminas(hex,rep){const c=document.createElement("canvas");c.width=8;c.height=64;const x=c.getContext("2d");
- x.fillStyle=hex;x.fillRect(0,0,8,64);x.fillStyle="rgba(255,255,255,.18)";x.fillRect(0,4,8,10);x.fillStyle="rgba(0,0,0,.38)";x.fillRect(0,58,8,6);
- const tx=new (T().CanvasTexture)(c);tx.wrapS=tx.wrapT=T().RepeatWrapping;tx.repeat.set(1,rep);if(T().sRGBEncoding)tx.encoding=T().sRGBEncoding;return tx}
+/* 05/11/2026 · porta/janela com persiana integrada: caixa em cima, guias nas laterais e a cortina de lâminas que
+   sobe enrolando no eixo dentro da caixa (igual ao Orientativo 3D). É apresentação: medidas aproximadas, a esquadria
+   fica abaixo da caixa dentro do L × A do orçamento. per.o: 0 = fechada (toda descida), 1 = toda enrolada */
 function montar(t,m){
  if(!t.per)return montarBase(t,m);
- const Hmm=Math.max(+t.H||1000,400),hcm=Math.round(Math.min(260,Math.max(170,Hmm*.09)));
+ const Hmm=Math.max(+t.H||1000,400);
+ const pitch=.045,sh=.0445,r0=.032,tk=.010,a=tk/(2*Math.PI);
+ /* raio do rolo com a cortina toda enrolada define o tamanho da caixa */
+ const hl0=(Hmm-200)/1000,rmax=Math.sqrt(r0*r0+tk*hl0/Math.PI)+.006;
+ const hcm=Math.round(Math.max(170,Math.min(320,(2*rmax+.03)*1000)));
  const base=montarBase(Object.assign({},t,{per:"",H:Hmm-hcm}),m);
  const g=new (T().Group)();const L=base.L,H=Hmm/1000,hc=hcm/1000,hl=H-hc;
  base.grupo.position.y=-hc/2;g.add(base.grupo);
- const zf=PROF/2+.022;
- NM="Caixa da persiana";const cx=perf(L,hc,PROF+.05,m.alu,0,H/2-hc/2,.025);cx.userData.len=L;g.add(cx);
+ const zf=PROF/2+.022,dd=2*rmax+.03,zb=zf+.03-dd/2;
+ /* caixa: tampa, frente, fundo e base; material próprio para poder ficar transparente ("Ver dentro da caixa") */
+ const cxm=m.alu.clone();cxm.transparent=true;cxm.opacity=1;
+ NM="Caixa da persiana";const yc=H/2-hc/2,ep=.004;
+ [[L,ep,dd,0,H/2-ep/2,zb],[L,hc,ep,0,yc,zb+dd/2-ep/2],[L,hc,ep,0,yc,zb-dd/2+ep/2],[L,ep,dd-.03,0,H/2-hc+ep/2,zb-.015],[ep,hc,dd,-L/2+ep/2,yc,zb],[ep,hc,dd,L/2-ep/2,yc,zb]].forEach(([w,h,d,x,y,z],k)=>{const c=box(w,h,d,cxm,x,y,z);c.userData.len=k<4?L:hc;c.userData.cx=1;g.add(c)});
  NM="Guia da persiana";[-1,1].forEach(sd=>{const gu=perf(.028,hl,.03,m.alu,sd*(L/2-.014),-hc/2,zf);gu.userData.len=hl;g.add(gu)});
- /* cortina: uma peça só, lâminas desenhadas na textura; desce cerca de 1/3 da altura livre */
- const dc=Math.max(.12,hl*.34),cw=L-.05;
- const mat=new (T().MeshStandardMaterial)({map:laminas(m.p.hex,dc/.045),metalness:m.p.met,roughness:Math.min(.85,m.p.rug+.1)});
- NM="Cortina da persiana";const ct=box(cw,dc,.012,mat,0,H/2-hc-dc/2,zf);g.add(ct);
- NM="Lâmina final";g.add(perf(cw,.03,.02,m.alu,0,H/2-hc-dc-.012,zf));
- return {grupo:g,animar:base.animar,temMovel:base.temMovel,L,H,kind:base.kind}}
+ /* eixo octogonal */
+ NM="Eixo da persiana";const ex=new (T().Mesh)(new (T().CylinderGeometry)(r0*.9,r0*.9,L-.07,8),m.alu);ex.rotation.z=Math.PI/2;ex.position.set(0,yc,zb);ex.userData.nm=NM;ex.userData.len=L-.07;ex.castShadow=true;g.add(ex);
+ /* lâminas: cada uma num grupo; as que não estão penduradas ficam enroladas em espiral no eixo */
+ const cw=L-.05,N=Math.ceil(hl/pitch),NE=N+3;
+ const lm=new (T().MeshStandardMaterial)({color:m.alu.color.clone(),metalness:m.p.met,roughness:Math.min(.85,m.p.rug+.08)});
+ const cg=new (T().Group)();cg.position.set(0,H/2-hc,zf);g.add(cg);const sl=[];
+ const geo=new (T().BoxGeometry)(cw,sh,.011);
+ for(let i=0;i<NE;i++){const pv=new (T().Group)();cg.add(pv);let ms;
+  if(i===NE-1){NM="Lâmina final";ms=perf(cw,.03,.02,m.alu,0,-.006,0);ms.userData.len=cw}
+  else{NM="Lâmina da persiana";ms=new (T().Mesh)(geo,lm);ms.castShadow=true;ms.userData.nm=NM;ms.userData.len=cw;
+   /* só uma lâmina entra na montagem peça por peça; as outras são repetição */
+   if(i!==NE-2)ms.userData.fundo=true}
+  /* frisos da lâmina */
+  pv.add(ms);sl.push(pv)}
+ const C={y:yc-(H/2-hc),z:zb-zf};
+ const th=Ls=>(-r0+Math.sqrt(r0*r0+2*a*Ls))/a;
+ const per=function(o){o=Math.max(0,Math.min(1,o));per.o=o;const nv=Math.max(1,Math.round(N*(1-o))),k=NE-nv,T0=th(k*pitch);
+  sl.forEach((pv,i)=>{if(i>=k){pv.position.set(0,-sh/2-(i-k)*pitch,0);pv.rotation.x=0;return}
+   const sc=(k-1-i+.5)*pitch,al=T0-th(sc),r=r0+a*th(sc)+tk*.5;
+   /* sai do rolo pela frente (lado da cortina) e enrola para dentro da caixa */
+   pv.position.set(0,C.y+r*Math.sin(al),C.z+r*Math.cos(al));pv.rotation.x=-al});
+  ex.rotation.x=-T0};
+ per.caixa=v=>{cxm.opacity=v?1:.22;cxm.depthWrite=!!v};
+ per(.66);
+ return {grupo:g,animar:base.animar,temMovel:base.temMovel,L,H,kind:base.kind,per}}
 
 /* faixas de reflexo no vidro (textura gerada, sem imagem externa) */
 let REF=null;
@@ -202,10 +226,10 @@ let R=null;
 function renderer(){if(R)return R;R=new (T().WebGLRenderer)({antialias:true,alpha:true,preserveDrawingBuffer:true});
  R.setPixelRatio(1);R.toneMapping=T().ACESFilmicToneMapping;R.toneMappingExposure=1.05;R.shadowMap.enabled=true;R.shadowMap.type=T().PCFSoftShadowMap;if(T().sRGBEncoding)R.outputEncoding=T().sRGBEncoding;return R}
 const cache=new Map();
-function chave(t,cfg){return [t.kind,t.f,t.enc||"",t.per?"P":"",t.lado||"",t.L,t.H,t.desc,t.vidroCor||"",t.corPerfil||"",cfg.cor||"",cfg.px||0,cfg.aberto?1:0].join("|")}
+function chave(t,cfg){return [t.kind,t.f,t.enc||"",t.per?"P":"",t.lado||"",t.L,t.H,t.desc,t.vidroCor||"",t.corPerfil||"",cfg.cor||"",cfg.px||0,cfg.aberto?1:0,cfg.pers==null?"":cfg.pers,cfg.caixaAberta?1:0].join("|")}
 function imagem(t,cfg){cfg=cfg||{};const k=chave(t,cfg);if(cache.has(k))return cache.get(k);
  if(!T())return "";const r=renderer();const px=cfg.px||900;
- const mt=materiais(t,cfg),mo=montar(t,mt);if(cfg.aberto)mo.animar(.55);
+ const mt=materiais(t,cfg),mo=montar(t,mt);if(cfg.aberto)mo.animar(.55);if(mo.per&&cfg.pers!=null)mo.per(cfg.pers);if(mo.per&&cfg.caixaAberta)mo.per.caixa(false);
  const asp=Math.max(.35,Math.min(mo.L/mo.H,3.2));const w=asp>=1?px:Math.round(px*asp),h=asp>=1?Math.round(px/asp):px;
  r.setSize(w,h,false);const s=cena(r,Math.max(mo.L,mo.H));mo.grupo.rotation.y=-.22;s.add(mo.grupo);
  const ch=new (T().Mesh)(new (T().PlaneGeometry)(mo.L*3,3),new (T().ShadowMaterial)({opacity:.16}));ch.rotation.x=-Math.PI/2;ch.position.y=-mo.H/2-.001;ch.receiveShadow=true;s.add(ch);
@@ -244,7 +268,7 @@ function abrir(t,cfg){cfg=cfg||{};if(!T()){alert("O 3D não carregou. Verifique 
   d.innerHTML=`<div class="tt"><span id="t3d-t"></span><small id="t3d-s"></small><div class="cs" id="t3d-ch"></div></div>
   <button type="button" class="x" id="t3d-x">✕ Fechar</button><div class="wm"><img class="lg" alt="FC Consultoria em Esquadria" src="${LOGO}"><span>IMAGENS DEMONSTRATIVAS</span><span>Desenvolvido por FC Consultoria em Esquadria · CNPJ 52.985.682/0001-32</span></div>
   <div class="cap" id="t3d-cap" hidden></div>
-  <div class="bt"><button type="button" class="pri" id="t3d-mo">Ver montagem</button><button type="button" id="t3d-de">Desmontar</button><button type="button" id="t3d-ab">Abrir folhas</button><button type="button" id="t3d-gi">Girar 360°</button><button type="button" id="t3d-fr">Frente</button><button type="button" id="t3d-in" hidden title="Simula o controle do vidro inteligente">💡 Desligar vidro</button></div>`;
+  <div class="bt"><button type="button" class="pri" id="t3d-mo">Ver montagem</button><button type="button" id="t3d-de">Desmontar</button><button type="button" id="t3d-ab">Abrir folhas</button><button type="button" id="t3d-pe" hidden>Subir persiana</button><button type="button" id="t3d-pc" hidden>Ver dentro da caixa</button><button type="button" id="t3d-gi">Girar 360°</button><button type="button" id="t3d-fr">Frente</button><button type="button" id="t3d-in" hidden title="Simula o controle do vidro inteligente">💡 Desligar vidro</button></div>`;
   document.body.appendChild(d);
   const r=new (T().WebGLRenderer)({antialias:true,alpha:true});r.setPixelRatio(Math.min(window.devicePixelRatio||1,2));r.toneMapping=T().ACESFilmicToneMapping;r.toneMappingExposure=1.05;r.shadowMap.enabled=true;r.shadowMap.type=T().PCFSoftShadowMap;if(T().sRGBEncoding)r.outputEncoding=T().sRGBEncoding;r.setClearColor(0x000000,0);
   d.prepend(r.domElement);
@@ -259,6 +283,8 @@ function abrir(t,cfg){cfg=cfg||{};if(!T()){alert("O 3D não carregou. Verifique 
   document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!d.hidden)fechar()});
   d.querySelector("#t3d-ab").onclick=e=>{V.alvo=V.alvo?0:1;e.target.textContent=V.alvo?"Fechar folhas":"Abrir folhas"};
   d.querySelector("#t3d-gi").onclick=()=>girar();
+  d.querySelector("#t3d-pe").onclick=e=>{if(!V.mo.per)return;V.pAlvo=V.pAlvo>.5?0:1;e.target.textContent=V.pAlvo>.5?"Descer persiana":"Subir persiana"};
+  d.querySelector("#t3d-pc").onclick=e=>{if(!V.mo.per)return;V.pCx=!V.pCx;V.mo.per.caixa(!V.pCx);e.target.textContent=V.pCx?"Fechar a caixa":"Ver dentro da caixa"};
   d.querySelector("#t3d-mo").onclick=()=>montagem();
   d.querySelector("#t3d-de").onclick=()=>{V.modo==="v"?sairVitrine():V.modo==="k"||V.modo==="f"?montagem():desmontar()};
   /* dois toques numa peça desmontada: ela vem para a frente com nome e medida */
@@ -272,6 +298,7 @@ function abrir(t,cfg){cfg=cfg||{};if(!T()){alert("O 3D não carregou. Verifique 
  V.volta=document.activeElement;
  const mt=materiais(t,cfg);V.mo=montar(t,mt);if(V.s)descartar(V.s);V.s=cena(V.r,Math.max(V.mo.L,V.mo.H)+2);V.conj=new (T().Group)();V.conj.add(V.mo.grupo);V.s.add(V.conj);V.k=0;V.alvo=0;V.mexeu=false;
  const ab=V.d.querySelector("#t3d-ab");ab.textContent="Abrir folhas";ab.hidden=!V.mo.temMovel;
+ V.pAlvo=V.mo.per?V.mo.per.o:null;V.pCx=false;const pe=V.d.querySelector("#t3d-pe"),pc=V.d.querySelector("#t3d-pc");pe.hidden=pc.hidden=!V.mo.per;pe.textContent="Subir persiana";pc.textContent="Ver dentro da caixa";
  V.d.querySelector("#t3d-t").textContent=cfg.titulo||("Item "+(t.item||"")+" · "+(t.tipo||""));
  V.d.querySelector("#t3d-s").textContent=(t.L||"")+" × "+(t.H||"")+" mm"+(t.q>1?" · "+t.q+" peças":"")+(t.linha?" · Linha "+t.linha:"");
  V.mt=mt;V.tA=t;V.cfgA=cfg;V.intelK=0;V.intelAlvo=0;V.d.querySelector("#t3d-in").hidden=!ehIntel(t);intelBotao();chipsCor();
@@ -390,7 +417,8 @@ function sairVitrine(){const v=V.vit;if(v){V.conj.remove(v.g);v.g.traverse(o=>{i
 function fundos(v){if(V.mo&&V.mo.grupo)V.mo.grupo.traverse(o=>{if(o.userData&&o.userData.fundo)o.visible=v})}
 function linhas(v){V.mo.grupo.traverse(o=>{if(o.isLine&&!o.userData.aresta)o.visible=v})}
 function botoes(){const k=V.modo==="k"||V.modo==="f"||V.modo==="v";const de=V.d.querySelector("#t3d-de");de.textContent=V.modo==="v"?"Voltar às peças":k?"Montar":"Desmontar";de.className=k?"pri":"";
- V.d.querySelector("#t3d-mo").hidden=k;V.d.querySelector("#t3d-ab").hidden=k||!V.mo.temMovel||V.modo==="m";}
+ V.d.querySelector("#t3d-mo").hidden=k;V.d.querySelector("#t3d-ab").hidden=k||!V.mo.temMovel||V.modo==="m";
+ ["#t3d-pe","#t3d-pc"].forEach(q=>{const b=V.d.querySelector(q);if(b)b.hidden=k||!V.mo.per||V.modo==="m"});}
 function fecharFolhas(){V.alvo=0;V.k=0;V.mo.animar(0);const ab=V.d.querySelector("#t3d-ab");if(ab)ab.textContent="Abrir folhas"}
 const rnd=a=>(Math.random()-.5)*a;
 function montagem(){if(!V.pc||!V.pc.length)return;V.pc.forEach(p=>{if(p.gr){p.o.geometry=p.gb;p.ar.visible=false}});fecharFolhas();V.giro=0;V.focus=null;const doKit=V.modo==="k"||V.modo==="f";if(!doKit)frente(-.35);
@@ -452,6 +480,7 @@ function recolorir(){const mt=V.mt,t=V.tA,cfg=V.cfgA;const lin=h=>{const c=new (
 const GIRO_MS=10000;
 function girar(){V.giro=1;V.giroT0=performance.now();V.giroBase=V.conj.rotation.y}
 function loop(){V.raf=requestAnimationFrame(loop);if(V.modo==="v")passoVitrine();else if(V.modo&&V.modo!=="ok")passoPecas();else V.lt=0;if(V.intelAlvo!=null&&V.intelK!==V.intelAlvo){V.intelK+=(V.intelAlvo-V.intelK)*.12;if(Math.abs(V.intelAlvo-V.intelK)<.005)V.intelK=V.intelAlvo;intelAplicar()}V.k+=(V.alvo-V.k)*.08;if(Math.abs(V.alvo-V.k)<.001)V.k=V.alvo;V.mo.animar(V.k);
+ if(V.mo.per&&V.pAlvo!=null&&V.modo==="ok"){const o=V.mo.per.o,d=V.pAlvo-o;if(Math.abs(d)>.0005)V.mo.per(o+Math.sign(d)*Math.min(Math.abs(d),.006))}
  if(V.giro>0){/* volta de 360° lenta e suave: começa e termina devagar */
   const p=Math.min(1,(performance.now()-V.giroT0)/GIRO_MS),e=.5-.5*Math.cos(Math.PI*p);V.conj.rotation.y=V.giroBase+e*Math.PI*2;
   if(p>=1){V.giro=0;if(!V.mexeu)V.conj.rotation.y=V.giroBase}}
