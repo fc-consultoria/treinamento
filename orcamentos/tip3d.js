@@ -190,7 +190,9 @@ function css(){if(document.getElementById("t3d-css"))return;const st=document.cr
 .t3d canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;transform-origin:0 0;transition:transform .55s cubic-bezier(.2,.8,.25,1)}
 .t3d .tt{position:absolute;left:max(16px,env(safe-area-inset-left,0px));top:calc(14px + env(safe-area-inset-top,0px));color:#fff;font:700 16px "Space Grotesk",system-ui,sans-serif;text-shadow:0 1px 6px rgba(0,0,0,.4);pointer-events:none}
 .t3d .tt small{display:block;font:500 12.5px Inter,system-ui,sans-serif;opacity:.9}
-.t3d .tt .cs{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.t3d .tt .cs{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;pointer-events:auto;max-width:min(560px,calc(100vw - 140px))}
+.t3d .tt .cs button.chip{border:0}
+.t3d #t3d-pal[hidden]{display:none!important}
 .t3d .chip{background:rgba(255,255,255,.94);color:#16262a;border-radius:999px;padding:4px 10px;font:600 12px Inter,system-ui,sans-serif;display:flex;gap:6px;align-items:center;text-shadow:none}
 .t3d .sw{width:12px;height:12px;border-radius:50%;border:1px solid rgba(0,0,0,.25)}
 .t3d .x{position:absolute;right:max(16px,env(safe-area-inset-right,0px));top:calc(14px + env(safe-area-inset-top,0px));font:600 13px Inter,system-ui,sans-serif;background:#fff;color:#16262a;border:0;border-radius:999px;padding:9px 14px;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.25)}
@@ -390,7 +392,7 @@ function chipsCor(){const mt=V.mt,t=V.tA,cfg=V.cfgA,el=V.d.querySelector("#t3d-c
  const chip=(k,hex,tx)=>sim?`<button type="button" class="chip" data-ck="${k}" style="cursor:pointer;font:inherit" aria-haspopup="true"><span class="sw" style="background:${hex}"></span>${tx} ▾</button>`:`<span class="chip"><span class="sw" style="background:${hex}"></span>${tx}</span>`;
  el.innerHTML=chip("p",mt.p.hex,"Perfil: "+esc(nP))+(sim&&cfg.temVidro===false?"":chip("v",mt.v.hex,"Vidro: "+esc(nm("v",mt.v.id,mt.v.nome))))
   +(alt?`<span class="chip" style="background:#fff6e5;color:#7a4b07;border:1px solid #f0d49a">⚠ Cor só para demonstração · confirme o valor com a vidraçaria</span>`:"")
-  +`<div id="t3d-pal" hidden style="flex-basis:100%;display:flex;gap:6px;flex-wrap:wrap;margin-top:6px"></div>`;
+  +`<div id="t3d-pal" hidden style="flex-basis:100%;display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;padding:8px;border-radius:12px;background:rgba(10,25,30,.55)"></div>`;
  if(!sim)return;
  el.querySelectorAll("[data-ck]").forEach(b=>b.onclick=()=>{const k=b.dataset.ck,pal=el.querySelector("#t3d-pal");
   if(!pal.hidden&&pal.dataset.k===k){pal.hidden=true;return}pal.dataset.k=k;pal.hidden=false;
