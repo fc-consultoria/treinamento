@@ -202,22 +202,28 @@ function home(){P=null;hdr("A vidraçaria manda o PDF do orçamento; a FC confer
  vistas();linksEnvio();
 }
 /* ---------- links de envio: a vidraçaria sobe o PDF e o pedido chega aqui como "Recebido" ---------- */
+const planoTx=l=>l.plano==="teste"?(l.validade&&new Date(l.validade)<new Date()?"Teste encerrado":"Teste até "+(l.validade?new Date(l.validade).toLocaleDateString("pt-BR"):"—")):l.plano==="pacote"?"Pacote · "+l.envios+" de "+(l.limite||0)+" projetos":"Sem limite";
 const urlEnvio=t=>new URL("obra3d-envio.html?t="+t,location.href).href;
 async function linksEnvio(){if(!BD.links)return;if(LINKS===null){const r=await BD.links();LINKS=r||[]}pintaLinks()}
 function pintaLinks(){const el=$("lenv");if(!el)return;const at=LINKS.filter(l=>l.ativo);
  el.innerHTML=`<h2>Links de envio <span class="hint">${at.length} ativo${at.length===1?"":"s"}</span></h2>
  <p class="hint" style="margin:0 0 10px">Cada vidraçaria recebe um link para mandar o PDF do orçamento. O pedido entra na lista de projetos como "Recebido".</p>
  <div class="row" style="margin-bottom:10px"><label class="f" style="flex:1;min-width:160px">Vidraçaria<input id="le-emp" placeholder="Nome da vidraçaria" autocomplete="off"></label>
-  <label class="f">Cor<input type="color" id="le-cor" value="#1d5fa8" style="width:52px;padding:2px"></label><button class="btn pri" type="button" id="le-new" style="align-self:flex-end">Criar link</button></div>
+  <label class="f">Cor<input type="color" id="le-cor" value="#1d5fa8" style="width:52px;padding:2px"></label>
+  <label class="f">Plano<select id="le-pl"><option value="livre">Sem limite</option><option value="teste">Teste · 3 dias</option><option value="pacote">Pacote · 20 projetos</option></select></label><button class="btn pri" type="button" id="le-new" style="align-self:flex-end">Criar link</button></div>
  <span class="hint" id="le-msg" role="status"></span>
- <div class="lst">${at.length?at.map(l=>`<div class="pj" style="cursor:default;grid-template-columns:8px minmax(0,1fr)"><i style="background:${esc(l.cor||"#0d5c63")}"></i><span><b>${esc(l.empresa||"—")}</b><small>${l.envios} ${l.envios===1?"envio":"envios"}${l.ultimo?" · último em "+dt(l.ultimo):""}</small>
-  <span class="row" style="gap:6px;margin-top:6px"><button class="btn" type="button" data-lc="${esc(l.token)}">Copiar link</button><a class="btn" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent("Para receber a apresentação 3D da sua obra, envie o PDF do orçamento por este link: "+urlEnvio(l.token))}">WhatsApp</a><a class="btn" target="_blank" rel="noopener" href="${esc(urlEnvio(l.token))}">Abrir ↗</a><button class="btn dan" type="button" data-lx="${esc(l.token)}">Desativar</button></span></span></div>`).join(""):`<div class="hint">Nenhum link ativo.</div>`}</div>`;
+ <div class="lst">${at.length?at.map(l=>`<div class="pj" style="cursor:default;grid-template-columns:8px minmax(0,1fr)"><i style="background:${esc(l.cor||"#0d5c63")}"></i><span><b>${esc(l.empresa||"—")}</b><small>${planoTx(l)} · ${l.envios} ${l.envios===1?"envio":"envios"}${l.ultimo?" · último em "+dt(l.ultimo):""}</small>
+  <span class="row" style="gap:6px;margin-top:6px"><button class="btn" type="button" data-lc="${esc(l.token)}">Copiar link</button><a class="btn" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent("Para receber a apresentação 3D da sua obra, envie o PDF do orçamento por este link: "+urlEnvio(l.token))}">WhatsApp</a><a class="btn" target="_blank" rel="noopener" href="${esc(urlEnvio(l.token))}">Abrir ↗</a><button class="btn" type="button" data-lp="${esc(l.token)}" title="Soma 20 projetos ao pacote (vale também para quem está no teste)">+20 projetos</button><button class="btn" type="button" data-lk="${esc(l.token)}" title="Código para colar na Plataforma FC 3D (Acesso FC → empresa → Apresentação → Obra em 3D)">Código p/ Plataforma</button><button class="btn dan" type="button" data-lx="${esc(l.token)}">Desativar</button></span></span></div>`).join(""):`<div class="hint">Nenhum link ativo.</div>`}</div>`;
  $("le-new").onclick=async()=>{const emp=$("le-emp").value.trim();if(!emp){$("le-msg").textContent="Informe o nome da vidraçaria.";$("le-emp").focus();return}
   const b=new Uint8Array(18);crypto.getRandomValues(b);const token=btoa(String.fromCharCode(...b)).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
-  const row={token,empresa:emp,cor:$("le-cor").value,ativo:true};const r=await BD.criarLink(row);if(r&&r.error){$("le-msg").textContent="Não foi possível criar: "+r.error.message;return}
+  const pl=$("le-pl").value;const row={token,empresa:emp,cor:$("le-cor").value,ativo:true,plano:pl,limite:pl==="pacote"?20:null,validade:pl==="teste"?new Date(Date.now()+3*864e5).toISOString():null};const r=await BD.criarLink(row);if(r&&r.error){$("le-msg").textContent="Não foi possível criar: "+r.error.message;return}
   LINKS.unshift(Object.assign({envios:0,ultimo:null,criado:new Date().toISOString()},row));pintaLinks();
   try{await navigator.clipboard.writeText(urlEnvio(token));toast("Link criado e copiado")}catch(e){toast("Link criado")}};
  el.querySelectorAll("[data-lc]").forEach(b=>b.onclick=async()=>{try{await navigator.clipboard.writeText(urlEnvio(b.dataset.lc));toast("Link copiado")}catch(e){prompt("Copie o link:",urlEnvio(b.dataset.lc))}});
+ el.querySelectorAll("[data-lk]").forEach(b=>b.onclick=async()=>{try{await navigator.clipboard.writeText(b.dataset.lk);toast("Código copiado · cole na Plataforma FC 3D")}catch(e){prompt("Copie o código:",b.dataset.lk)}});
+ el.querySelectorAll("[data-lp]").forEach(b=>b.onclick=async()=>{const l=LINKS.find(x=>x.token===b.dataset.lp);if(!l||!BD.ajustarLink)return;
+  const campos={plano:"pacote",limite:Math.max(l.limite||0,l.plano==="pacote"?0:l.envios)+20,validade:null};const r=await BD.ajustarLink(l.token,campos);if(r&&r.error){toast("Não foi possível liberar");return}
+  Object.assign(l,campos);pintaLinks();toast("Pacote liberado: até "+campos.limite+" projetos")});
  el.querySelectorAll("[data-lx]").forEach(b=>b.onclick=async()=>{if(b.dataset.ok!=="1"){b.dataset.ok="1";b.textContent="Confirmar";setTimeout(()=>{if(b.isConnected){b.dataset.ok="";b.textContent="Desativar"}},3000);return}
   const r=await BD.linkEnvioOff(b.dataset.lx);if(r&&r.error){toast("Não foi possível desativar");return}const l=LINKS.find(x=>x.token===b.dataset.lx);if(l)l.ativo=false;pintaLinks();toast("Link desativado")});
 }
@@ -413,8 +419,9 @@ gateUI(async()=>{
   excluir:id=>sb.from("obra3d_projetos").delete().eq("id",id),
   link:(token,obra_id,dados)=>sb.from("orcobra_links").upsert({token,obra_id,dados,ativo:true,atualizado:new Date().toISOString()}),
   linkOff:token=>sb.from("orcobra_links").update({ativo:false}).eq("token",token),
-  links:async()=>{const q=await sb.from("obra3d_envio_links").select("token,empresa,cor,ativo,envios,ultimo,criado").order("criado",{ascending:false});return q.error?null:q.data},
+  links:async()=>{const q=await sb.from("obra3d_envio_links").select("token,empresa,cor,ativo,envios,ultimo,criado,plano,limite,validade").order("criado",{ascending:false});return q.error?null:q.data},
   criarLink:row=>sb.from("obra3d_envio_links").insert(row),
+  ajustarLink:(token,campos)=>sb.from("obra3d_envio_links").update(campos).eq("token",token),
   linkEnvioOff:token=>sb.from("obra3d_envio_links").update({ativo:false}).eq("token",token),
   recarregar:async()=>{const q=await sb.from("obra3d_projetos").select("dados");return q.error?null:q.data.map(x=>x.dados)},
   vistas:async toks=>{const q=await sb.from("orcobra_links").select("token,vistas,ultima_vista").in("token",toks);return q.error?null:q.data}
