@@ -122,11 +122,13 @@ if(C&&C.plano==="avulso"&&!C.pedido){
   <button class="btn pri" id="cgo" type="button" style="width:100%;margin-top:14px;min-height:46px">Pedir acesso</button><p id="cer" role="alert" style="color:#a3262b;font-size:13px;min-height:1.2em"></p>`);
  $("cgo").onclick=async()=>{const n=$("cn").value.trim(),w=$("cw").value;if(n.length<2||w.replace(/\D/g,"").length<10){$("cer").textContent="Informe o nome e um WhatsApp com DDD.";return}
   $("cgo").disabled=true;const r=await sb.rpc("obra3d_cad_pedir",{tok,nome:n,whats:w});if(r.error){$("cgo").disabled=false;$("cer").textContent="Não foi possível enviar. Confira a internet e tente de novo.";return}recarrega()};
+ meus();
  return}
 if(C&&C.plano==="avulso"&&C.pedido&&!C.liberado){
  const falta=()=>Math.max(0,60-Math.floor((Date.now()-new Date(C.pedido).getTime()+(new Date().getTime()-new Date(C.agora).getTime())*0)/1000));
  caixa(`<h2 style="margin:0 0 4px">Liberando o seu acesso…</h2><p class="hint" style="margin:0">A FC Consultoria recebeu o seu pedido. Se não houver resposta antes, o acesso abre sozinho em <b id="cs">60</b> segundos.</p>`);
  const t=setInterval(async()=>{const f=falta();if($("cs"))$("cs").textContent=f;if(f%10===0||f===0){const r=await sb.rpc("obra3d_cad_info",{tok});if(r.data&&r.data.liberado){clearInterval(t);recarrega()}}},1000);
+ meus();
  return}
 /* 2) dados da empresa para a nota fiscal → começa o teste de 3 dias */
 if(C&&C.plano==="avulso"&&C.liberado){
@@ -135,6 +137,7 @@ if(C&&C.plano==="avulso"&&C.liberado){
   <button class="btn pri" id="cgo" type="button" style="width:100%;margin-top:14px;min-height:46px">Liberar meu teste de 3 dias</button><p id="cer" role="alert" style="color:#a3262b;font-size:13px;min-height:1.2em"></p>`);
  $("cgo").onclick=async()=>{$("cgo").disabled=true;$("cer").textContent="";const r=await sb.rpc("obra3d_cad_empresa",{tok,razao:$("cr").value,cnpj:$("cc").value,email:$("ce").value});
   if(r.error){$("cgo").disabled=false;const m=String(r.error.message||"");$("cer").textContent=/razao/.test(m)?"Informe a razão social.":/cnpj/.test(m)?"O CNPJ tem 14 números.":/email/.test(m)?"Informe um e-mail válido.":"Não foi possível salvar. Tente de novo.";return}recarrega()};
+ meus();
  return}
 /* ===== 05/11/2026 · "Seus orçamentos": orçamentos já feitos, com link 3D e PDF da proposta ===== */
 async function meus(){let r;try{r=await sb.rpc("obra3d_envio_meus",{tok})}catch(_){return}const L2=(r&&r.data)||[];
