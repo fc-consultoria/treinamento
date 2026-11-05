@@ -210,7 +210,7 @@ function home(){P=null;if(ORC)return homeOrc();if(BD.avaliacoes&&!AVAL_OK){AVAL_
  vistas();linksEnvio();
 }
 /* ---------- links de envio: a vidraçaria sobe o PDF e o pedido chega aqui como "Recebido" ---------- */
-const planoTx=l=>l.plano==="teste"?(l.validade&&new Date(l.validade)<new Date()?"Teste encerrado":"Teste até "+(l.validade?new Date(l.validade).toLocaleDateString("pt-BR"):"—")):l.plano==="pacote"?"Pacote · "+l.envios+" de "+(l.limite||0)+" projetos":"Sem limite";
+const planoTx=l=>l.plano==="avulso"?"Avulso · aguardando o cadastro da empresa":l.plano==="teste"?(l.validade&&new Date(l.validade)<new Date()?"Teste encerrado":"Teste até "+(l.validade?new Date(l.validade).toLocaleDateString("pt-BR"):"—")):l.plano==="pacote"?"Pacote · "+l.envios+" de "+(l.limite||0)+" projetos":"Sem limite";
 const urlEnvio=t=>new URL("obra3d-envio.html?t="+t,location.href).href;
 async function linksEnvio(){if(!BD.links)return;if(LINKS===null){const r=await BD.links();LINKS=r||[]}pintaLinks()}
 function pintaLinks(){const el=$("lenv");if(!el)return;const at=LINKS.filter(l=>l.ativo);
@@ -218,9 +218,9 @@ function pintaLinks(){const el=$("lenv");if(!el)return;const at=LINKS.filter(l=>
  <p class="hint" style="margin:0 0 10px">Cada vidraçaria recebe um link para mandar o PDF do orçamento. O pedido entra na lista de projetos como "Recebido".</p>
  <div class="row" style="margin-bottom:10px"><label class="f" style="flex:1;min-width:160px">Vidraçaria<input id="le-emp" placeholder="Nome da vidraçaria" autocomplete="off"></label>
   <label class="f">Cor<input type="color" id="le-cor" value="#1d5fa8" style="width:52px;padding:2px"></label>
-  <label class="f">Plano<select id="le-pl"><option value="livre">Sem limite</option><option value="teste">Teste · 3 dias</option><option value="pacote">Pacote · 20 projetos</option></select></label><button class="btn pri" type="button" id="le-new" style="align-self:flex-end">Criar link</button></div>
+  <label class="f">Plano<select id="le-pl"><option value="avulso">Avulso · cadastro + teste 3 dias (6 projetos)</option><option value="livre">Sem limite</option><option value="teste">Teste · 3 dias</option><option value="pacote">Pacote · 20 projetos</option></select></label><button class="btn pri" type="button" id="le-new" style="align-self:flex-end">Criar link</button></div>
  <span class="hint" id="le-msg" role="status"></span>
- <div class="lst">${at.length?at.map(l=>`<div class="pj" style="cursor:default;grid-template-columns:8px minmax(0,1fr)"><i style="background:${esc(l.cor||"#0d5c63")}"></i><span><b>${esc(l.empresa||"—")}</b><small>${planoTx(l)} · ${l.envios} ${l.envios===1?"envio":"envios"}${l.ultimo?" · último em "+dt(l.ultimo):""}</small>
+ <div class="lst">${at.length?at.map(l=>`<div class="pj" style="cursor:default;grid-template-columns:8px minmax(0,1fr)"><i style="background:${esc(l.cor||"#0d5c63")}"></i><span><b>${esc(l.empresa||"—")}</b><small>${planoTx(l)} · ${l.envios} ${l.envios===1?"envio":"envios"}${l.ultimo?" · último em "+dt(l.ultimo):""}</small><div class="cobx" data-ct="${esc(l.token)}"></div>
   <span class="row" style="gap:6px;margin-top:6px"><button class="btn" type="button" data-lc="${esc(l.token)}">Copiar link</button><a class="btn" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent("Para receber a apresentação 3D da sua obra, envie o PDF do orçamento por este link: "+urlEnvio(l.token))}">WhatsApp</a><a class="btn" target="_blank" rel="noopener" href="${esc(urlEnvio(l.token))}">Abrir ↗</a><button class="btn" type="button" data-lp="${esc(l.token)}" title="Soma 20 projetos ao pacote (vale também para quem está no teste)">+20 projetos</button>${l.plano==="livre"?"":`<button class="btn" type="button" data-ll="${esc(l.token)}" title="Tira o limite de projetos e o prazo de teste">Sem limite</button>`}<button class="btn" type="button" data-lk="${esc(l.token)}" title="Código para colar na Plataforma FC 3D (Acesso FC → empresa → Apresentação → Obra em 3D)">Código p/ Plataforma</button><button class="btn dan" type="button" data-lx="${esc(l.token)}">Desativar</button></span></span></div>`).join(""):`<div class="hint">Nenhum link ativo.</div>`}</div>`;
  $("le-new").onclick=async()=>{const emp=$("le-emp").value.trim();if(!emp){$("le-msg").textContent="Informe o nome da vidraçaria.";$("le-emp").focus();return}
   const b=new Uint8Array(18);crypto.getRandomValues(b);const token=btoa(String.fromCharCode(...b)).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
@@ -232,12 +232,34 @@ function pintaLinks(){const el=$("lenv");if(!el)return;const at=LINKS.filter(l=>
  el.querySelectorAll("[data-lp]").forEach(b=>b.onclick=async()=>{const l=LINKS.find(x=>x.token===b.dataset.lp);if(!l||!BD.ajustarLink)return;
   const campos={plano:"pacote",limite:Math.max(l.limite||0,l.plano==="pacote"?0:l.envios)+20,validade:null};const r=await BD.ajustarLink(l.token,campos);if(r&&r.error){toast("Não foi possível liberar");return}
   Object.assign(l,campos);pintaLinks();toast("Pacote liberado: até "+campos.limite+" projetos")});
+ cobPinta();
  el.querySelectorAll("[data-ll]").forEach(b=>b.onclick=async()=>{const l=LINKS.find(x=>x.token===b.dataset.ll);if(!l||!BD.ajustarLink)return;
   if(b.dataset.ok!=="1"){b.dataset.ok="1";b.textContent="Confirmar sem limite";setTimeout(()=>{if(b.isConnected){b.dataset.ok="";b.textContent="Sem limite"}},3000);return}
   const campos={plano:"livre",limite:null,validade:null};const r=await BD.ajustarLink(l.token,campos);if(r&&r.error){toast("Não foi possível liberar");return}
   Object.assign(l,campos);pintaLinks();toast("Liberado sem limite de projetos")});
  el.querySelectorAll("[data-lx]").forEach(b=>b.onclick=async()=>{if(b.dataset.ok!=="1"){b.dataset.ok="1";b.textContent="Confirmar";setTimeout(()=>{if(b.isConnected){b.dataset.ok="";b.textContent="Desativar"}},3000);return}
   const r=await BD.linkEnvioOff(b.dataset.lx);if(r&&r.error){toast("Não foi possível desativar");return}const l=LINKS.find(x=>x.token===b.dataset.lx);if(l)l.ativo=false;pintaLinks();toast("Link desativado")});
+}
+/* ---------- 05/11/2026 · avulso: cadastro, teste e cobrança por PIX ---------- */
+let COB=null;
+async function cobPinta(force){if(!BD.cobLista)return;if(COB===null||force){const r=await BD.cobLista();COB={};(r||[]).forEach(x=>COB[x.token]=x)}
+ document.querySelectorAll(".cobx").forEach(el=>{const x=COB[el.dataset.ct];if(!x||!x.cad){el.innerHTML="";return}const c=x.cad,pend=(x.cobs||[]).find(k=>k.status==="enviado");
+  const fone=c.whats?`<a href="https://wa.me/55${esc(c.whats)}" target="_blank" rel="noopener">${esc(c.whats)}</a>`:"";
+  let st="";
+  if(x.plano==="avulso"&&!c.liberado&&!c.completo)st=`<span class="st" style="color:#a3620b">Aguardando liberação (abre sozinho em 1 min)</span> <button class="btn" type="button" data-clib="${esc(x.token)}">Liberar agora</button>`;
+  else if(x.plano==="avulso")st=`<span class="st" style="color:#a3620b">Liberado · preenchendo os dados da empresa</span>`;
+  else if(x.plano==="teste"){const fim=x.validade&&new Date(x.validade)<new Date();st=`<span class="st" style="color:${fim?"#a3262b":"#1f6fb2"}">${fim?"Teste encerrado":"Teste até "+dt(x.validade)} · ${x.usados} de ${x.limite} projetos</span>`}
+  else if(x.plano==="pacote")st=`<span class="st" style="color:#0d6b68">Pacote · ${x.usados} de ${x.limite} projetos</span>`;
+  el.innerHTML=`<div style="margin-top:6px;padding:8px 10px;border-radius:10px;background:#f6f8f8;font-size:12.5px;display:grid;gap:4px">
+   <span>👤 ${esc(c.nome||"—")} · ${fone}${c.razao?` · <b>${esc(c.razao)}</b> · CNPJ ${esc(String(c.cnpj||"").replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/,"$1.$2.$3/$4-$5"))} · NF: ${esc(c.email||"")}`:""}</span>
+   <span>${st}</span>
+   ${pend?`<span style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><b style="color:#a3620b">💰 Comprovante de ${pend.tipo==="renovacao"?"renovação":"contratação"} · ${brl(pend.valor)} · ${pend.projetos} projetos · ${dt(pend.enviado)}</b><button class="btn" type="button" data-cver="${esc(pend.id)}">Ver comprovante</button><button class="btn pri" type="button" data-cok="${esc(pend.id)}">Confirmar pagamento</button><button class="btn dan" type="button" data-cno="${esc(pend.id)}">Recusar</button></span>`:""}
+   ${c.nao?`<span style="color:#a3262b">✗ Não quis contratar agora (${dt(c.nao.em)})${c.nao.motivo?": "+esc(c.nao.motivo):""}</span>`:""}
+   ${(x.cobs||[]).filter(k=>k.status!=="enviado").slice(0,3).map(k=>`<span class="hint">${k.status==="confirmado"?"✓ Pago":"✗ Recusado"} · ${k.tipo==="renovacao"?"renovação":"contratação"} · ${brl(k.valor)} · ${dt(k.conferido)}</span>`).join("")}</div>`});
+ document.querySelectorAll("[data-clib]").forEach(b=>b.onclick=async()=>{await BD.cadLib(b.dataset.clib);toast("Acesso liberado");cobPinta(true)});
+ document.querySelectorAll("[data-cver]").forEach(b=>b.onclick=async()=>{const u=await BD.cobComp(b.dataset.cver);if(!u){toast("Comprovante não encontrado");return}const w=window.open("","_blank");if(w)w.document.write(/^data:application\/pdf/.test(u)?`<iframe src="${u}" style="border:0;width:100%;height:100vh"></iframe>`:`<img src="${u}" style="max-width:100%">`)});
+ document.querySelectorAll("[data-cok]").forEach(b=>b.onclick=async()=>{if(b.dataset.ok!=="1"){b.dataset.ok="1";b.textContent="Confirmar: liberar +20 projetos";return}const r=await BD.cobConf(b.dataset.cok,true,"");if(r&&r.error){toast("Não foi possível confirmar");return}toast("Pagamento confirmado · +20 projetos liberados");LINKS=null;COB=null;linksEnvio()});
+ document.querySelectorAll("[data-cno]").forEach(b=>b.onclick=async()=>{const nota=prompt("Motivo da recusa (a empresa vê esta mensagem):","Comprovante ilegível ou valor diferente");if(nota===null)return;await BD.cobConf(b.dataset.cno,false,nota);toast("Comprovante recusado");COB=null;cobPinta(true)});
 }
 /* novos envios chegam sem recarregar: confere ao voltar para a aba e a cada minuto na tela inicial */
 async function novidades(){if(!BD.recarregar||pend.size)return;const r=await BD.recarregar();if(!r)return;const ids=new Set(LIST.map(p=>p.id));const novos=r.filter(p=>p&&!ids.has(p.id));
@@ -485,6 +507,10 @@ gateUI(async rr=>{
   ajustarLink:(token,campos)=>sb.from("obra3d_envio_links").update(campos).eq("token",token),
   linkEnvioOff:token=>sb.from("obra3d_envio_links").update({ativo:false}).eq("token",token),
   recarregar:async()=>{const q=await sb.from("obra3d_projetos").select("dados");return q.error?null:q.data.map(x=>x.dados)},
+  cobLista:async()=>{const q=await sb.rpc("obra3d_cob_lista",{chave:""});return q.error?null:q.data},
+  cobComp:async id=>{const q=await sb.rpc("obra3d_cob_comprovante",{chave:"",id});return q.error?null:q.data},
+  cobConf:(id,ok,nota)=>sb.rpc("obra3d_cob_conferir",{chave:"",id,ok,nota}),
+  cadLib:tok=>sb.rpc("obra3d_cad_liberar",{chave:"",tok}),
   vistas:async toks=>{const q=await sb.from("orcobra_links").select("token,vistas,ultima_vista").in("token",toks);return q.error?null:q.data}
  });
 },{soMatriz:true,permitir:['orcamentista']});

@@ -89,8 +89,60 @@ let sb,L;
 try{sb=window.supabase.createClient("https://cpkjphodruyxfouirhpd.supabase.co","sb_publishable_d0HEeWsaqOeZIQKGftlF-Q_B8BUOWWg",{auth:{persistSession:false}});
  const r=await sb.rpc("obra3d_envio_info",{tok});if(r.error)throw r.error;L=r.data}catch(e){fim("Não foi possível abrir","Verifique a internet e abra o link de novo.");return}
 if(!L){fim("Este link não está mais ativo","Peça um link novo à FC Consultoria.");return}
-if(L.plano==="teste"&&L.validade&&new Date(L.validade)<new Date()){fim("O período de teste terminou","Gostou? Fale com a FC Consultoria no WhatsApp (66) 9 9986-7984 para liberar o seu pacote de projetos.");return}
-if(L.limite!=null&&L.usados>=L.limite){fim("Pacote de projetos concluído","Você usou os "+L.limite+" projetos do pacote. Fale com a FC Consultoria no WhatsApp (66) 9 9986-7984 para liberar mais.");return}
+/* ===== 05/11/2026 · avulso: cadastro (1 min), dados da empresa, teste de 3 dias, contratação por PIX ===== */
+let C=null;try{const r=await sb.rpc("obra3d_cad_info",{tok});if(!r.error)C=r.data}catch(_){}
+const brl=v=>Number(v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+const caixa=h=>{$("main").innerHTML=`<div class="sec" style="max-width:560px;margin:0 auto">${h}</div>`};
+const campo=(id,rot,ph,tipo)=>`<label style="display:block;margin:10px 0 0;font-size:13px;color:#5d6e73">${rot}<input id="${id}" ${tipo?`inputmode="${tipo}"`:""} placeholder="${ph}" autocomplete="off" style="display:block;width:100%;margin-top:4px;padding:11px 12px;border:1px solid #c9d4d6;border-radius:10px;font:inherit"></label>`;
+const recarrega=()=>location.reload();
+/* 1) cadastro com nome e WhatsApp; a FC libera ou libera sozinho em 1 minuto */
+if(C&&C.plano==="avulso"&&!C.pedido){
+ caixa(`<h2 style="margin:0 0 4px">Bem-vindo ao Simulador de Obra 3D</h2><p class="hint" style="margin:0">Informe seu nome e WhatsApp para liberar o acesso. Leva até 1 minuto.</p>
+  ${campo("cn","Seu nome","Ex.: João Silva")}${campo("cw","WhatsApp com DDD","(66) 9 0000-0000","tel")}
+  <button class="btn pri" id="cgo" type="button" style="width:100%;margin-top:14px;min-height:46px">Pedir acesso</button><p id="cer" role="alert" style="color:#a3262b;font-size:13px;min-height:1.2em"></p>`);
+ $("cgo").onclick=async()=>{const n=$("cn").value.trim(),w=$("cw").value;if(n.length<2||w.replace(/\D/g,"").length<10){$("cer").textContent="Informe o nome e um WhatsApp com DDD.";return}
+  $("cgo").disabled=true;const r=await sb.rpc("obra3d_cad_pedir",{tok,nome:n,whats:w});if(r.error){$("cgo").disabled=false;$("cer").textContent="Não foi possível enviar. Confira a internet e tente de novo.";return}recarrega()};
+ return}
+if(C&&C.plano==="avulso"&&C.pedido&&!C.liberado){
+ const falta=()=>Math.max(0,60-Math.floor((Date.now()-new Date(C.pedido).getTime()+(new Date().getTime()-new Date(C.agora).getTime())*0)/1000));
+ caixa(`<h2 style="margin:0 0 4px">Liberando o seu acesso…</h2><p class="hint" style="margin:0">A FC Consultoria recebeu o seu pedido. Se não houver resposta antes, o acesso abre sozinho em <b id="cs">60</b> segundos.</p>`);
+ const t=setInterval(async()=>{const f=falta();if($("cs"))$("cs").textContent=f;if(f%10===0||f===0){const r=await sb.rpc("obra3d_cad_info",{tok});if(r.data&&r.data.liberado){clearInterval(t);recarrega()}}},1000);
+ return}
+/* 2) dados da empresa para a nota fiscal → começa o teste de 3 dias */
+if(C&&C.plano==="avulso"&&C.liberado){
+ caixa(`<h2 style="margin:0 0 4px">Dados da empresa</h2><p class="hint" style="margin:0">Para liberar o teste de <b>3 dias com até 6 projetos</b> e emitir a nota fiscal se você contratar.</p>
+  ${campo("cr","Razão social","Nome da empresa como está no CNPJ")}${campo("cc","CNPJ","00.000.000/0000-00","numeric")}${campo("ce","E-mail para a nota fiscal","financeiro@empresa.com.br","email")}
+  <button class="btn pri" id="cgo" type="button" style="width:100%;margin-top:14px;min-height:46px">Liberar meu teste de 3 dias</button><p id="cer" role="alert" style="color:#a3262b;font-size:13px;min-height:1.2em"></p>`);
+ $("cgo").onclick=async()=>{$("cgo").disabled=true;$("cer").textContent="";const r=await sb.rpc("obra3d_cad_empresa",{tok,razao:$("cr").value,cnpj:$("cc").value,email:$("ce").value});
+  if(r.error){$("cgo").disabled=false;const m=String(r.error.message||"");$("cer").textContent=/razao/.test(m)?"Informe a razão social.":/cnpj/.test(m)?"O CNPJ tem 14 números.":/email/.test(m)?"Informe um e-mail válido.":"Não foi possível salvar. Tente de novo.";return}recarrega()};
+ return}
+/* 3) contratação / renovação por PIX: 20 projetos por R$ 200,00 */
+function cobrar(tipo,tit,txt){const cob=C&&C.cob;
+ if(cob&&cob.status==="enviado"){caixa(`<h2 style="margin:0 0 4px">Comprovante recebido ✓</h2><p class="hint" style="margin:0">A FC Consultoria vai conferir o pagamento e liberar os seus ${C.projetos} projetos. Você recebe o aviso no WhatsApp.</p>`);return}
+ const nao=C&&C.cad&&C.cad.nao;
+ caixa(`<h2 style="margin:0 0 4px">${tit}</h2><p class="hint" style="margin:0 0 12px">${txt}</p>
+  ${cob&&cob.status==="recusado"?`<p style="color:#a3262b;font-size:13px">O último comprovante não foi aceito${cob.nota?": "+esc(cob.nota):""}. Envie de novo.</p>`:""}
+  <div style="border:1px solid #c9d4d6;border-radius:12px;padding:14px;display:grid;gap:6px"><span class="hint">${C.projetos} projetos (orçamentos) · PIX à vista</span><b style="font-size:26px">${brl(C.valor)}</b>
+   <span class="hint">Chave PIX (CNPJ) · FC Desenvolvimento de Projetos de Compra e Venda LTDA</span><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><b style="font:700 18px ui-monospace,monospace">${esc(C.pix)}</b><button class="btn" id="cpx" type="button">Copiar chave</button></div></div>
+  <label style="display:block;margin:12px 0 0;font-size:13px;color:#5d6e73">Comprovante do PIX (imagem ou PDF)<input type="file" id="cf" accept="image/*,application/pdf" style="display:block;margin-top:6px"></label>
+  <button class="btn pri" id="cgo" type="button" style="width:100%;margin-top:12px;min-height:46px">Enviar comprovante</button><p id="cer" role="alert" style="color:#a3262b;font-size:13px;min-height:1.2em"></p>
+  <details style="margin-top:6px"${nao?" open":""}><summary style="cursor:pointer;color:#5d6e73;font-size:13px">Não quero contratar agora</summary>
+   ${nao?`<p class="hint">Recebemos o seu retorno. Obrigado! Se mudar de ideia, é só voltar a este link.</p>`:`<textarea id="cm" rows="3" placeholder="Conte o motivo (opcional): preço, ainda testando, não atendeu…" style="width:100%;margin-top:8px;padding:10px;border:1px solid #c9d4d6;border-radius:10px;font:inherit"></textarea><button class="btn" id="cno" type="button" style="margin-top:8px">Enviar e não contratar agora</button>`}</details>`);
+ $("cpx").onclick=async()=>{try{await navigator.clipboard.writeText(C.pix.replace(/\D/g,""));$("cpx").textContent="✓ Copiada"}catch(_){prompt("Copie a chave PIX:",C.pix)}};
+ $("cgo").onclick=async()=>{const f=$("cf").files[0];if(!f){$("cer").textContent="Anexe o comprovante do PIX.";return}if(f.size>3e6){$("cer").textContent="Arquivo muito grande (máx. 3 MB).";return}
+  $("cgo").disabled=true;$("cer").textContent="Enviando…";const du=await new Promise(res=>{const rd=new FileReader();rd.onload=()=>res(rd.result);rd.readAsDataURL(f)});
+  const r=await sb.rpc("obra3d_cob_enviar",{tok,tipo,comprovante:du,arquivo:f.name});if(r.error){$("cgo").disabled=false;$("cer").textContent=/arquivo/.test(r.error.message)?"Envie uma imagem (JPG, PNG) ou PDF.":"Não foi possível enviar. Tente de novo.";return}recarrega()};
+ if($("cno"))$("cno").onclick=async()=>{$("cno").disabled=true;await sb.rpc("obra3d_cad_nao",{tok,motivo:$("cm").value});recarrega()};
+}
+const avulso=!!(C&&C.cad&&C.cad.completo);
+if(L.plano==="teste"&&L.validade&&new Date(L.validade)<new Date()){if(avulso){cobrar("contratacao","Seu teste de 3 dias terminou","Gostou? Contrate o pacote do Simulador de Obra 3D e continue mandando os orçamentos da sua empresa.");return}fim("O período de teste terminou","Gostou? Fale com a FC Consultoria no WhatsApp (66) 9 9986-7984 para liberar o seu pacote de projetos.");return}
+if(L.limite!=null&&L.usados>=L.limite){if(avulso){cobrar(L.plano==="teste"?"contratacao":"renovacao",L.plano==="teste"?"Você usou os "+L.limite+" projetos do teste":"Pacote de projetos concluído",L.plano==="teste"?"Contrate o pacote para continuar.":`Você usou os ${L.limite} projetos do pacote. Renove para mais ${C.projetos} projetos.`);return}fim("Pacote de projetos concluído","Você usou os "+L.limite+" projetos do pacote. Fale com a FC Consultoria no WhatsApp (66) 9 9986-7984 para liberar mais.");return}
+/* contagem regressiva enquanto usa */
+if(avulso||L.plano==="teste"||L.limite!=null){const rest=L.limite!=null?L.limite-L.usados:null;let tx="";
+ if(L.plano==="teste"&&L.validade){const ms=new Date(L.validade)-Date.now(),d=Math.floor(ms/864e5),h=Math.floor(ms%864e5/36e5);tx=`Teste: faltam <b>${d>0?d+" dia"+(d>1?"s":"")+" e ":""}${h} h</b>`+(rest!=null?` · <b>${rest}</b> de ${L.limite} projetos`:"")}
+ else if(rest!=null)tx=`Pacote: restam <b>${rest}</b> de ${L.limite} projetos`;
+ if(tx){$("main").insertAdjacentHTML("beforebegin",`<div id="faixa" style="max-width:920px;margin:10px auto 0;padding:10px 14px;border-radius:12px;background:#fff6e5;border:1px solid #f0d49a;display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:14px"><span>⏳ ${tx}</span>${avulso&&L.plano!=="teste"?`<button class="btn" id="fren" type="button" style="margin-left:auto">Renovar +${C.projetos} projetos</button>`:""}</div>`);
+  if($("fren"))$("fren").onclick=()=>cobrar("renovacao","Renovar o pacote",`Mais ${C.projetos} projetos para a sua empresa. Os projetos que ainda restam continuam valendo.`)}}
 
 const S={O:null,pdf:"",ORI:null,oriPdf:"",lig:null,oriLendo:false,empresa:L.empresa||"",cor:L.cor||"",logo:L.logo||"",nome:"",zap:"",obs:"",enviando:false};
 const pinta=()=>{document.documentElement.style.setProperty("--pc",S.cor||"#0d5c63");
@@ -183,7 +235,7 @@ async function enviar(){const E=$("eerr");if(S.enviando||!S.O)return;
    <p style="margin:18px 0 0;display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><button class="btn" type="button" id="outro">Enviar outro orçamento</button>${VOLTA?`<a class="btn" style="text-decoration:none;background:var(--pc);color:#fff;border-color:var(--pc)" href="${VOLTA}">← Voltar para o painel</a>`:""}</p></div>`;
   $("outro").onclick=()=>{S.O=null;S.pdf="";S.obs="";S.enviando=false;tela()}}
  catch(e){S.enviando=false;tela();const m=String(e&&e.message||"");
-  $("eerr").textContent=/link_inativo/.test(m)?"Este link foi desativado. Peça um novo à FC Consultoria.":/orientativo_obrigatorio/.test(m)?"Anexe o Orientativo de Montagem do mesmo orçamento para continuar.":/teste_encerrado/.test(m)?"O período de teste terminou. Fale com a FC para liberar o pacote.":/limite_pacote/.test(m)?"O pacote de projetos foi concluído. Fale com a FC para liberar mais.":/limite_diario/.test(m)?"Limite de envios de hoje atingido. Tente amanhã ou fale com a FC.":/muito_grande/.test(m)?"O envio ficou grande demais. Tente uma logo menor.":"Não foi possível enviar. Verifique a internet e tente de novo."}}
+  $("eerr").textContent=/link_inativo/.test(m)?"Este link foi desativado. Peça um novo à FC Consultoria.":/orientativo_obrigatorio/.test(m)?"Anexe o Orientativo de Montagem do mesmo orçamento para continuar.":/cadastro_pendente/.test(m)?"Termine o cadastro da empresa antes de enviar.":/teste_encerrado/.test(m)?"O período de teste terminou. Fale com a FC para liberar o pacote.":/limite_pacote/.test(m)?"O pacote de projetos foi concluído. Fale com a FC para liberar mais.":/limite_diario/.test(m)?"Limite de envios de hoje atingido. Tente amanhã ou fale com a FC.":/muito_grande/.test(m)?"O envio ficou grande demais. Tente uma logo menor.":"Não foi possível enviar. Verifique a internet e tente de novo."}}
 tela();
 /* aberto por "Anexar Proposta" ou "Anexar Orientativo" na plataforma: vai direto ao campo e destaca */
 {const fo=new URLSearchParams(location.search).get("foco");const el=fo==="orientativo"?$("drop2"):fo==="proposta"?$("drop"):null;
