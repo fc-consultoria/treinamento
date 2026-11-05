@@ -50,6 +50,7 @@ nav.tabs button{font:600 14px var(--body);color:var(--muted);background:none;bor
 nav.tabs button[aria-selected="true"]{color:var(--teal);border-bottom-color:var(--amber)}
 nav.tabs button:focus-visible{outline:2px solid var(--amber);outline-offset:-2px}
 main .wrap{padding-block:20px 40px}
+.panel-grid[hidden]{display:none!important}
 .panel-grid{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:20px;align-items:start}
 @media (max-width:900px){.panel-grid{grid-template-columns:minmax(0,1fr)}}
 .panel-grid>*,.stack>*{min-width:0}
@@ -706,7 +707,7 @@ function buildObra(){
  <div class="card"><div class="card-h"><h2>Resumo da obra</h2><div class="hint">Componentes: PV = Custo × (1 + margem). Alumínio: PV = Perfis × (1 + margem). Vidros: PV = Custo × (1 + margem). Mão de obra: PV = (Área × R$/m²) × (1 + margem).</div></div>
   <div class="tbl-wrap"><table class="sum-table"><thead><tr><th>Grupo</th><th class="r">Custo</th><th class="r">Custo médio</th><th class="r">Margem %</th><th class="r">Preço de venda</th><th class="r">Venda média</th><th class="r">Lucro R$</th><th class="r">% da venda</th></tr></thead>
   <tbody id="res-body"></tbody><tfoot><tr><td>Total da obra</td><td class="r num" id="res-c"></td><td></td><td></td><td class="r num" id="res-v"></td><td></td><td class="r num" id="res-l"></td><td class="r num">100%</td></tr></tfoot></table></div></div>
- <!-- 05/11: Outros custos oculto; para voltar, tirar o hidden --><div class="panel-grid" id="out-sec" hidden><div class="card"><div class="card-h"><div><h2>Outros custos</h2><div class="hint">Opcional (instalação, frete…). Margem sobre o custo, igual aos demais grupos. Entra no resumo e no preço das tipologias.</div></div></div>
+ <!-- 05/11: Outros custos oculto; para voltar, tirar o hidden --><div class="panel-grid" id="out-sec" hidden style="display:none"><div class="card"><div class="card-h"><div><h2>Outros custos</h2><div class="hint">Opcional (instalação, frete…). Margem sobre o custo, igual aos demais grupos. Entra no resumo e no preço das tipologias.</div></div></div>
   <div class="tbl-wrap"><table><thead><tr><th>Descrição</th><th class="r">Custo R$</th></tr></thead><tbody id="out-body"></tbody></table></div></div><div id="pp-out"></div></div>
  <div class="card"><div class="card-h"><h2>Dados da proposta</h2></div><div class="card-b fields">
   <label>Número da proposta<input class="in" id="f-numero"></label><label>Obra<input class="in" id="f-obra"></label><label>Cliente<input class="in" id="f-cliente"></label><label>Acabamento<input class="in" id="f-cor"></label>
