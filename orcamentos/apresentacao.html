@@ -41,14 +41,54 @@ const tok=new URLSearchParams(location.search).get("t")||"";
 /* aberto pela Plataforma FC 3D (avaliar o projeto): comando de voltar para o painel; o link copiado para o cliente não tem isto */
 if(new URLSearchParams(location.search).get("de")==="fc3d"){const bar=document.querySelector(".bar");if(bar)bar.insertAdjacentHTML("afterbegin",'<a class="btn" href="https://fc-consultoria.github.io/fc3d/clientes/#apr" style="text-decoration:none;background:#0d5c63;color:#fff;border-color:#0d5c63">← Voltar para o painel</a>')}
 if(tok.length<20){erro("Link incompleto","Confira se o link foi copiado inteiro ou peça um novo a quem enviou.");return}
-let D=null;
+let D=null;/* pode ser trocado pela proposta protegida */
 try{const sb=window.supabase.createClient("https://cpkjphodruyxfouirhpd.supabase.co","sb_publishable_d0HEeWsaqOeZIQKGftlF-Q_B8BUOWWg",{auth:{persistSession:false}});
  const r=await sb.rpc("orcobra_link_ver",{tok});if(r.error)throw r.error;D=r.data}catch(e){erro("Não foi possível carregar","Verifique a internet e abra o link de novo.");return}
 if(!D){erro("Este link não está mais disponível","Peça um link atualizado a quem enviou a apresentação.");return}
+/* 04/11/2026 · proposta on-line protegida (Simulador de Obra 3D): só abre com código de acesso de uso único */
+const sbp=window.supabase.createClient("https://cpkjphodruyxfouirhpd.supabase.co","sb_publishable_d0HEeWsaqOeZIQKGftlF-Q_B8BUOWWg",{auth:{persistSession:false}});
+const QS=new URLSearchParams(location.search),KAP="o3ap_"+tok,lsg=k=>{try{return localStorage.getItem(k)}catch(_){return null}},lss=(k,v)=>{try{v==null?localStorage.removeItem(k):localStorage.setItem(k,v)}catch(_){}};
+let ACESSO=null,EMPRESA=false;
+if(D.protegido){
+ const marca=D.marca||"",cor=D.marcaCor||"#0d5c63";
+ const tentar=async()=>{
+  if(QS.get("e")){const r=await sbp.rpc("obra3d_proposta_empresa",{link:tok,tok:QS.get("e")});if(!r.error&&r.data){EMPRESA=true;return r.data}}
+  const ap=lsg(KAP);if(!ap)return null;
+  const r=await sbp.rpc("obra3d_proposta_ver",{link:tok,aparelho:ap});
+  if(r.error){const m=String(r.error.message||"");if(/bloqueado|vencido/.test(m)){lss(KAP,null);return {erro:/bloqueado/.test(m)?"Este acesso foi bloqueado por quem enviou a proposta.":"O seu acesso a esta proposta venceu."}}lss(KAP,null);return null}
+  return r.data};
+ let R;try{R=await tentar()}catch(e){erro("Não foi possível carregar","Verifique a internet e abra o link de novo.");return}
+ if(!R||R.erro){
+  document.title="Proposta · código de acesso";
+  $("main").innerHTML=`<div style="max-width:420px;margin:40px auto;background:#fff;border-radius:16px;padding:26px 22px;box-shadow:0 12px 40px rgba(10,30,35,.12);text-align:center">
+   ${D.logo?`<img src="${esc(D.logo)}" alt="" style="max-height:56px;max-width:200px;object-fit:contain;margin-bottom:10px">`:""}
+   <div style="font:700 13px Inter,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:${esc(cor)}">${esc(marca||"Proposta da obra")}</div>
+   <h1 style="font:700 22px/1.2 'Space Grotesk',Inter,sans-serif;margin:8px 0 6px">Proposta protegida</h1>
+   <p style="margin:0 0 16px;color:#5d6e73;font-size:14px">${R&&R.erro?esc(R.erro)+" Peça um novo código a quem enviou.":"Digite o código de acesso de 6 números que você recebeu junto com o link."}</p>
+   <input id="cod" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="000000" aria-label="Código de acesso" style="width:100%;font:700 28px/1 ui-monospace,monospace;letter-spacing:.3em;text-align:center;padding:12px;border:2px solid #c9d4d6;border-radius:12px">
+   <button id="lib" class="btn" type="button" style="width:100%;margin-top:12px;background:${esc(cor)};color:#fff;border-color:${esc(cor)};min-height:48px;font-size:15px">Liberar a proposta</button>
+   <p id="cerr" role="alert" style="color:#a3262b;font-size:13px;min-height:1.2em;margin:10px 0 0"></p>
+   <p style="margin:14px 0 0;color:#7a8a8e;font-size:12px">O código é pessoal e libera só este aparelho.</p></div>`;
+  const ci=$("cod");ci.focus();ci.oninput=()=>{ci.value=ci.value.replace(/\D/g,"").slice(0,6)};
+  const ir=async()=>{const c=ci.value;if(c.length!==6){$("cerr").textContent="O código tem 6 números.";return}$("lib").disabled=true;$("cerr").textContent="";
+   const r=await sbp.rpc("obra3d_acesso_entrar",{link:tok,codigo:c});$("lib").disabled=false;
+   if(r.error){const m=String(r.error.message||"");$("cerr").textContent=/muitas_tentativas/.test(m)?"Muitas tentativas. Aguarde 15 minutos.":/codigo_usado/.test(m)?"Este código já foi usado em outro aparelho. Peça um novo a quem enviou.":/codigo_expirado/.test(m)?"Este código expirou. Peça um novo a quem enviou.":"Código não confere. Confira os números.";return}
+   lss(KAP,r.data.aparelho);location.reload()};
+  $("lib").onclick=ir;ci.onkeydown=e=>{if(e.key==="Enter")ir()};
+  return}
+ D=R;ACESSO=R.acesso||null;
+}
 document.title=(D.obra||"Obra")+" · Apresentação 3D";
 if(!window.PROPOSTA){erro("Não foi possível carregar","Verifique a internet e abra o link de novo.");return}
-/* link do cliente: o modelo é chamado sem preços, então nenhum valor aparece */
-PROPOSTA.render($("main"),D,{});
+/* link aberto (antigo): sem preço. Proposta protegida: com preço, só para quem tem o código (ou a própria empresa) */
+if(Array.isArray(D.precos)&&D.precos.some(v=>+v>0)){
+ PROPOSTA.render($("main"),D,{precos:D.precos,total:D.precos.reduce((a,b)=>a+(+b||0),0),rotulo:"Proposta comercial"});
+ const quem=ACESSO?ACESSO.nome:EMPRESA?"Visualização da empresa":"";
+ if(quem){const w=document.createElement("div");w.setAttribute("aria-hidden","true");const txt=(ACESSO?"Proposta exclusiva para ":"")+quem+" · "+new Date().toLocaleDateString("pt-BR");
+  w.style.cssText="position:fixed;inset:0;pointer-events:none;z-index:50;opacity:.09;overflow:hidden;-webkit-print-color-adjust:exact;print-color-adjust:exact";
+  w.innerHTML=`<div style="position:absolute;inset:-50%;transform:rotate(-24deg);display:flex;flex-wrap:wrap;gap:60px 80px;align-content:center;justify-content:center;font:700 22px Inter,sans-serif;color:#0d1f24">${(`<span>${esc(txt)}</span>`).repeat(80)}</div>`;document.body.appendChild(w);
+  if(ACESSO)document.querySelector(".bar .dica").insertAdjacentHTML("beforeend",` · Acesso de <b>${esc(ACESSO.nome)}</b> até ${new Date(ACESSO.valido_ate).toLocaleDateString("pt-BR")}`)}
+}else PROPOSTA.render($("main"),D,{});
 const b=$("b-print");b.hidden=false;b.onclick=()=>{PROPOSTA.preencher($("main"),D,true);setTimeout(()=>print(),80)};
 })();
 </script>

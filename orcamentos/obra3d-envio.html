@@ -185,6 +185,9 @@ async function enviar(){const E=$("eerr");if(S.enviando||!S.O)return;
  catch(e){S.enviando=false;tela();const m=String(e&&e.message||"");
   $("eerr").textContent=/link_inativo/.test(m)?"Este link foi desativado. Peça um novo à FC Consultoria.":/orientativo_obrigatorio/.test(m)?"Anexe o Orientativo de Montagem do mesmo orçamento para continuar.":/teste_encerrado/.test(m)?"O período de teste terminou. Fale com a FC para liberar o pacote.":/limite_pacote/.test(m)?"O pacote de projetos foi concluído. Fale com a FC para liberar mais.":/limite_diario/.test(m)?"Limite de envios de hoje atingido. Tente amanhã ou fale com a FC.":/muito_grande/.test(m)?"O envio ficou grande demais. Tente uma logo menor.":"Não foi possível enviar. Verifique a internet e tente de novo."}}
 tela();
+/* aberto por "Anexar Proposta" ou "Anexar Orientativo" na plataforma: vai direto ao campo e destaca */
+{const fo=new URLSearchParams(location.search).get("foco");const el=fo==="orientativo"?$("drop2"):fo==="proposta"?$("drop"):null;
+ if(el){setTimeout(()=>{el.scrollIntoView({behavior:"smooth",block:"center"});el.classList.add("on");el.focus({preventScroll:true});setTimeout(()=>el.classList.remove("on"),2500)},150)}}
 })();
 </script>
 </body>
