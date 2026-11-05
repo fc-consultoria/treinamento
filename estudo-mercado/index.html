@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="robots" content="noindex">
 <meta http-equiv="Cache-Control" content="no-cache">
-<script>(function(){var B='20261104222335';try{fetch('versao.txt?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.text():''}).then(function(v){v=(v||'').trim();if(!v||v===B)return;var u=new URL(location.href);if(u.searchParams.get('v')===v)return;u.searchParams.set('v',v);location.replace(u.toString())}).catch(function(){})}catch(e){}})();</script>
+<script>(function(){var B='20261104231334';try{fetch('versao.txt?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.text():''}).then(function(v){v=(v||'').trim();if(!v||v===B)return;var u=new URL(location.href);if(u.searchParams.get('v')===v)return;u.searchParams.set('v',v);location.replace(u.toString())}).catch(function(){})}catch(e){}})();</script>
 
 <title>FC Estudo de Mercado</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -448,7 +448,7 @@ function foot(){return `<div class="foot">Os preços e clientes lançados perten
 const IC={
  forn:'<path d="M12 3v18M17 7.5c0-1.9-2.2-3-5-3s-5 1.1-5 3 2 2.7 5 3.4 5 1.6 5 3.6-2.2 3-5 3-5-1.2-5-3"/>',
  revd:'<path d="M4 5h16v14H4zM8 15l3-3 2 2 3-4 2 3"/>',
- eqs:'<path d="M7 7h10M7 7l3-3M7 7l3 3M17 17H7M17 17l-3-3M17 17l-3 3"/>',
+ eqs:'<path d="M7 7h10M7 7l3-3M7 7l3 3M17 17H7M17 17l-3-3M17 17l-3 3"/>',txf:'<path d="M4 6h16M12 6v13M8 19h8"/>',
  rankp:'<path d="M12 3v3M5 21h14l-2.5-11h-9zM9 10a3 3 0 0 1 6 0"/>',
  rank:'<path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0zM7 6H4v1a3 3 0 0 0 3 3M17 6h3v1a3 3 0 0 1-3 3"/>',
  kg:'<path d="M12 3v18M17 7.5c0-1.9-2.2-3-5-3s-5 1.1-5 3 2 2.7 5 3.4 5 1.6 5 3.6-2.2 3-5 3-5-1.2-5-3"/>',
@@ -462,7 +462,7 @@ const IC={
  lck:'<path d="M6 11h12v10H6zM8.5 11V7.5a3.5 3.5 0 0 1 7 0V11"/>',
  aces:'<path d="M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM2 21c0-3.9 3.1-6 7-6s7 2.1 7 6M17 11l2 2 4-4"/>'};
 const ico=k=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[k]}</svg>`;
-function abas(){const a=[['pesq','Pesquisa'],['forn','Preço de fornecedor','R$/kg do natural de cada fornecedor'],['rank','Melhor preço','Filtro com o melhor preço na barra'],['rankp','Melhor peso','Filtro com o melhor peso na barra'],...(DIST()?[]:[['cli','Clientes especiais']]),['abc','Curva ABC'],['rel',S.role==='gest'?'Relatório por usuário':'Meu histórico']];if(S.role==='gest')a.push(['aces','Acessos e licença'],['cont','Contrato']);if(FCM)a.push(['revd','Revisão de desenhos','Só a FC vê este item'],['eqs','Varredura de equivalências','Só a FC vê este item']);return a}
+function abas(){const a=[['pesq','Pesquisa'],['forn','Preço de fornecedor','R$/kg do natural de cada fornecedor'],['rank','Melhor preço','Filtro com o melhor preço na barra'],['rankp','Melhor peso','Filtro com o melhor peso na barra'],...(DIST()?[]:[['cli','Clientes especiais']]),['abc','Curva ABC'],['rel',S.role==='gest'?'Relatório por usuário':'Meu histórico']];if(S.role==='gest')a.push(['aces','Acessos e licença'],['cont','Contrato']);if(FCM)a.push(['revd','Revisão de desenhos','Só a FC vê este item'],['eqs','Varredura de equivalências','Só a FC vê este item'],['txf','TEXA fora do banco','Só a FC vê este item']);return a}
 
 function trialIni(){const k='fcext_ini_'+S.ext;let v=ls.get(k,0);if(!v){v=Date.now();ls.set(k,v)}return v}
 function trialRest(){return 96*36e5-(Date.now()-trialIni())}
@@ -491,7 +491,7 @@ function draw(){
   const vb0=$('#voltar');if(vb0)vb0.onclick=()=>{S.ext=null;draw()};
   ligar();
 }
-function tela(){return ({eqs:tEqs,revd:tRevd,pesq:tPesq,forn:tForn,rank:tRank,rankp:tRank,cli:tCli,abc:tAbc,rel:tRel,aces:tAces,cont:tCont})[S.tab]()}
+function tela(){return ({txf:tTxf,eqs:tEqs,revd:tRevd,pesq:tPesq,forn:tForn,rank:tRank,rankp:tRank,cli:tCli,abc:tAbc,rel:tRel,aces:tAces,cont:tCont})[S.tab]()}
 
 /* Pesquisar */
 function tPesq(){
@@ -667,6 +667,34 @@ function tEqs(){if(!EQS){fetch('varredura.json?v='+Date.now(),{cache:'no-store'}
        return `<div style="display:flex;gap:10px;align-items:stretch;margin-top:8px;flex-wrap:wrap;${on?'outline:3px solid #1f7a3f;border-radius:12px':''}">${eqBloco(B,'',' '+tag)}<div style="display:flex;align-items:center"><button type="button" data-eqv="${esc(key)}" data-eqi="${esc(e.id)}" style="${on?'background:#1f7a3f;color:#fff':''}">✓ É este</button></div></div>`}).join('')}
      <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><button type="button" data-eqv="n" data-eqi="${esc(e.id)}" style="${v==='n'?'background:#b42318;color:#fff':''}">✗ Nenhuma é igual</button>${v?`<button type="button" data-eqv="" data-eqi="${esc(e.id)}">Desfazer</button>`:''}</div></article>`}).join('')||'<p class="empty">Nada nesta seleção.</p>'}
    ${pag}</section>`}
+/* TEXA fora do banco: perfis do catálogo TEXA que ainda não estão ligados, com candidatos da varredura */
+let TXF=null;
+function txSt(){try{return JSON.parse(localStorage.getItem('fc_txf_v1')||'{}')}catch(_){return {}}}
+function txSet(o){try{localStorage.setItem('fc_txf_v1',JSON.stringify(o))}catch(_){}}
+function tTxf(){if(!TXF){fetch('texa-faltantes.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.json()).then(j=>{const sc=e=>{const o=e.cand[0]||{},m=/desenho (\d+)%/.exec(o.motivo||'');return (/refer|código/i.test(o.motivo||'')?200:0)+(m?+m[1]:0)-Math.abs(o.dw||0)};TXF=j.sort((a,b)=>sc(b)-sc(a));draw()}).catch(()=>{TXF=[];draw()});return `<section class="box"><p class="empty">Carregando…</p></section>`}
+  const st=txSt();S.txF=S.txF||'pend';S.txP=S.txP||0;const q=norm(S.txQ||'');
+  const sit=e=>!st[e.c]?'pend':st[e.c]==='n'?'n':'s';
+  const nS=TXF.filter(e=>sit(e)==='s').length,nN=TXF.filter(e=>sit(e)==='n').length,nP=TXF.length-nS-nN;
+  const L=TXF.filter(e=>(S.txF==='todos'||sit(e)===S.txF)&&(!q||norm(e.c).includes(q)||e.cand.some(o=>norm(o.k).includes(q))));
+  const PP=15,np=Math.max(1,Math.ceil(L.length/PP));if(S.txP>=np)S.txP=np-1;const pg=L.slice(S.txP*PP,S.txP*PP+PP);
+  const pag=`<div style="display:flex;gap:8px;align-items:center;margin-top:12px;flex-wrap:wrap"><button type="button" data-txp="-1" ${S.txP?'':'disabled'}>← Anterior</button><span class="sub">Página <b>${S.txP+1}</b> de ${np} · ${L.length} perfis</span><button type="button" data-txp="1" ${S.txP<np-1?'':'disabled'}>Próxima →</button></div>`;
+  const n3=v=>v==null?'—':String(v).replace('.',',');
+  return `<style>.eqd .draw{width:150px;height:120px;aspect-ratio:auto;border:1px solid var(--ln);border-radius:10px;margin-bottom:4px}</style><section class="box"><h2>TEXA fora do banco</h2><p class="sub">Só a FC vê este item. Perfis do catálogo da TEXA que ainda não estão ligados a nenhum perfil do banco, com os candidatos encontrados pelo desenho da própria TEXA, peso (até 8%), medidas e código de referência. Marque o perfil igual; depois use <b>Copiar aprovadas</b> e cole na conversa com o Claude para ligar.</p>
+   <div class="rkf" style="margin-top:12px">${[['pend','A conferir',nP],['s','Aprovadas',nS],['n','Nenhuma igual',nN],['todos','Todas',TXF.length]].map(([k,n,c])=>`<button data-txf="${k}" class="${S.txF===k?'on':''}"><b>${n}</b><span class="num">${c}</span></button>`).join('')}</div>
+   <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><input id="txQ" type="search" placeholder="Filtrar por código" value="${esc(S.txQ||'')}" style="flex:1;min-width:200px;padding:8px 10px;border:1px solid #c4ccd2;border-radius:10px"><button type="button" id="txCopia">📋 Copiar aprovadas (${nS})</button></div><p id="txMsg" class="sub"></p>
+   ${pag}
+   ${pg.map(e=>{const v=st[e.c];return `<article style="border:1px solid ${v==='n'?'#b42318':v?'#1f7a3f':'#c4ccd2'};border-radius:14px;padding:12px;margin-top:14px">
+     <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap"><div class="eqd" style="width:150px">${img({src:e.img,c:e.c})}</div><div><div style="font-size:12px;color:#5a6b75">Catálogo TEXA · ainda não ligado</div><b style="font-size:18px">${esc(e.c)}</b><div class="sub">${n3(e.p)} kg/m${e.M?` · ${n3(e.M)} × ${n3(e.m)} mm`:''}</div></div></div>
+     <div style="margin-top:10px;font-size:13px;color:#5a6b75">Candidatos no banco:</div>
+     ${e.cand.map(o=>{const B=eqG(o.l,o.k);if(!B)return '';const key=o.l+'|'+o.k,on=v===key;
+       return `<div style="display:flex;gap:10px;align-items:stretch;margin-top:8px;flex-wrap:wrap;${on?'outline:3px solid #1f7a3f;border-radius:12px':''}">${eqBloco(B,'',' <span class="sub">'+esc(o.motivo||'')+'</span>')}<div style="display:flex;align-items:center"><button type="button" data-txv="${esc(key)}" data-txi="${esc(e.c)}" style="${on?'background:#1f7a3f;color:#fff':''}">✓ É este</button></div></div>`}).join('')}
+     <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><button type="button" data-txv="n" data-txi="${esc(e.c)}" style="${v==='n'?'background:#b42318;color:#fff':''}">✗ Nenhum é igual</button>${v?`<button type="button" data-txv="" data-txi="${esc(e.c)}">Desfazer</button>`:''}</div></article>`}).join('')||'<p class="empty">Nada nesta seleção.</p>'}
+   ${pag}</section>`}
+function ligaTxf(){document.querySelectorAll('[data-txf]').forEach(b=>b.onclick=()=>{S.txF=b.dataset.txf;S.txP=0;draw()});
+  document.querySelectorAll('[data-txp]').forEach(b=>b.onclick=()=>{S.txP+= +b.dataset.txp;draw();window.scrollTo(0,0)});
+  const qi=$('#txQ');if(qi)qi.onchange=()=>{S.txQ=qi.value;S.txP=0;draw()};
+  document.querySelectorAll('[data-txv]').forEach(b=>b.onclick=()=>{const st=txSt();if(b.dataset.txv)st[b.dataset.txi]=b.dataset.txv;else delete st[b.dataset.txi];txSet(st);const y=window.scrollY;draw();window.scrollTo(0,y)});
+  const c=$('#txCopia');if(c)c.onclick=()=>{const st=txSt();const t=TXF.filter(e=>st[e.c]&&st[e.c]!=='n').map(e=>{const [l,k]=st[e.c].split('|');return `TEXA ${e.c} (${String(e.p).replace('.',',')} kg/m) = ${LIN[l]||l}: ${k}`});if(!t.length){$('#txMsg').textContent='Nenhuma aprovada ainda.';return}const txt='TEXA fora do banco · aprovadas para ligar ('+t.length+'):\n'+t.join('\n');(navigator.clipboard?navigator.clipboard.writeText(txt):Promise.reject()).then(()=>$('#txMsg').textContent='Copiado. Cole na conversa com o Claude.').catch(()=>{prompt('Copie o texto:',txt)})}}
 function ligaEqs(){document.querySelectorAll('[data-eqf]').forEach(b=>b.onclick=()=>{S.eqF=b.dataset.eqf;S.eqP=0;draw()});
   document.querySelectorAll('[data-eqfo]').forEach(b=>b.onclick=()=>{S.eqFo=b.dataset.eqfo;S.eqP=0;draw()});
   document.querySelectorAll('[data-eqp]').forEach(b=>b.onclick=()=>{S.eqP+= +b.dataset.eqp;draw();window.scrollTo(0,0)});
@@ -763,6 +791,7 @@ function ligar(){
   if(S.tab==='rank'||S.tab==='rankp')ligaRank();
   if(S.tab==='revd')ligaRevd();
   if(S.tab==='eqs')ligaEqs();
+  if(S.tab==='txf')ligaTxf();
   const fb=$('#fab');if(fb){fb.onclick=novaPesq;fabUpd()}
   const tb=$('[data-tutorial]');if(tb)tb.onclick=()=>{S.tut=0;draw()};
   if($('#ov')){const P=passos();$('#tsair').onclick=()=>{S.tut=null;draw()};const tv=$('#tvolta');if(tv)tv.onclick=()=>{S.tut--;draw()};
@@ -784,7 +813,7 @@ function ligar(){
   document.querySelectorAll('[data-relu]').forEach(b=>b.onclick=()=>{S.relU=b.dataset.relu;draw()});
 }
 const voltarHub=()=>{};
-Promise.all([fetch(EQ+'indice.json?v=5',{cache:'no-cache'}).then(r=>r.json()),carregaCfg()]).then(([idx])=>{montar(idx);const e=QP.get('e');if(e&&EXTS[e]){setExt(e);setTimeout(sincDados,600);S.g=BY[norm('SU-001')];S.cover=true;try{if(ls.get('fcext_reg_'+e,null)&&!sessionStorage.getItem('fcext_ses_'+e)){sessionStorage.setItem('fcext_ses_'+e,'1');reg('acesso')}}catch(_){}}else if(!FCM){$('#app').innerHTML=`<section class="cover"><div class="in"><div class="lg"><img src="${LOGO}" alt="FC Consultoria em Esquadria"></div><div class="rule"></div><h1>Link de demonstrativo incompleto</h1><p>Use o link enviado pela FC Consultoria para a sua empresa.</p><p style="font-size:14px">WhatsApp (66) 9 9986-7984</p></div></section>`;return}draw();if(S.ext&&!FCM&&ls.get('fcext_lib_'+S.ext,0)){rpc('em_status',{p_ext:S.ext,p_dev:devId()}).then(st=>{if(st==='bloqueado'){ls.set('fcext_bloq_'+S.ext,1);draw()}}).catch(()=>{})}}).catch(()=>{$('#app').innerHTML='<p class="empty">Não foi possível carregar o banco de perfis. Atualize a página.</p>'});
+Promise.all([fetch(EQ+'indice.json?v=5',{cache:'no-cache'}).then(r=>r.json()),carregaCfg(),fetch('aprovadas.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():[]).catch(()=>[])]).then(([idx,,apr])=>{(apr||[]).forEach(a=>{const g=idx.g.find(x=>x.l===a.l&&x.k===a.k);if(g&&!g.m.some(m=>m[0]===a.m[0]&&norm(m[1])===norm(a.m[1])))g.m.push(a.m)});montar(idx);const e=QP.get('e');if(e&&EXTS[e]){setExt(e);setTimeout(sincDados,600);S.g=BY[norm('SU-001')];S.cover=true;try{if(ls.get('fcext_reg_'+e,null)&&!sessionStorage.getItem('fcext_ses_'+e)){sessionStorage.setItem('fcext_ses_'+e,'1');reg('acesso')}}catch(_){}}else if(!FCM){$('#app').innerHTML=`<section class="cover"><div class="in"><div class="lg"><img src="${LOGO}" alt="FC Consultoria em Esquadria"></div><div class="rule"></div><h1>Link de demonstrativo incompleto</h1><p>Use o link enviado pela FC Consultoria para a sua empresa.</p><p style="font-size:14px">WhatsApp (66) 9 9986-7984</p></div></section>`;return}draw();if(S.ext&&!FCM&&ls.get('fcext_lib_'+S.ext,0)){rpc('em_status',{p_ext:S.ext,p_dev:devId()}).then(st=>{if(st==='bloqueado'){ls.set('fcext_bloq_'+S.ext,1);draw()}}).catch(()=>{})}}).catch(()=>{$('#app').innerHTML='<p class="empty">Não foi possível carregar o banco de perfis. Atualize a página.</p>'});
 </script>
 
 </body></html>
