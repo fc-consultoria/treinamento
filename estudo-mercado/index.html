@@ -550,9 +550,9 @@ function tRank(){const r=rkSt(),L=rkLinhas(),sel=r.lin?new Set(r.lin):null,PESO=
   if(S.pcli&&!cl.some(c=>c.id===S.pcli))S.pcli=null;
   const nPr=Object.keys(precoForn(S.pcli)).length;
   const dif=(x)=>{if(x.semp)return `<span class="rkd solo">Nenhum fornecedor com preço lançado · ferramenta mais leve: ${esc(FN(x.w.f))}</span>`;if(x.excl)return `<span class="rkd solo">Verificar com os outros fornecedores se têm este perfil com as mesmas medidas</span>`;if(!x.seg)return `<span class="rkd solo">Único fornecedor com preço lançado · ${x.nf-1} ${x.nf-1===1?'concorrente':'concorrentes'} sem preço</span>`;
-    if(x.emp)return `<span class="rkd eq">empate com ${esc(FN(x.seg.f))}</span>`;
+    if(x.emp)return `<span class="rkd eq">empate com outro fornecedor</span>`;
     const d=x.vs-x.vw,pc=d/x.vs*100;
-    return `<span class="rkd up">${PESO?n3(d*6)+' kg mais leve na barra':rs(d)+' mais barato na barra'} (${n2(pc)}%) que ${esc(FN(x.seg.f))} · ${esc(x.seg.c)}</span>`};
+    return `<span class="rkd up"><b style="font-size:1.15em">${n2(pc)}% ${PESO?'mais leve':'mais barato'}</b> na barra · ${PESO?n3(d*6)+' kg a menos':rs(d)+' a menos'} que o próximo fornecedor</span>`};
   const meu=(x)=>{if(DIST()||x.w.f===S.ext||!x.mine)return x.w.f!==S.ext&&!DIST()&&!x.mine?`<span class="rkm">${esc(EXTS[S.ext].n)}: verificar se tem este perfil com as mesmas medidas</span>`:'';
     if(x.vm==null)return `<span class="rkm">${esc(EXTS[S.ext].n)} ${esc(x.mine.c)} · sem preço lançado</span>`;
     const d=x.vm-x.vw;return `<span class="rkm">${esc(EXTS[S.ext].n)} ${esc(x.mine.c)}: ${PESO?n3(x.mine.p)+' kg/m · +'+n3(d*6)+' kg na barra':rs(x.vm)+' · +'+rs(d)+' na barra'}</span>`};
@@ -590,8 +590,8 @@ function ligaRank(){const r=rkSt();const re=()=>{const y=window.scrollY;draw();w
   document.querySelectorAll('[data-rkg]').forEach(a=>a.onclick=()=>{const g=BY[norm(a.dataset.rkg)];if(!g)return;S.g=g;S.q=g.k;S.ord=r.modo==='peso'?'peso':'preco';ls.set('fcext_ord',S.ord);S.tab='pesq';logar('Abriu pelo ranking',g.k);draw();window.scrollTo(0,0)});
   const cv=$('#rkcsv');if(cv)cv.onclick=()=>{const {out}=rkCalc(),PESO=r.modo==='peso';const L=out.filter(x=>x.w.f===r.f);
     const c=v=>'"'+String(v??'').replace(/"/g,'""')+'"',nb=v=>v==null?'':String(Math.round(v*1000)/1000).replace('.',',');
-    const H=['Fornecedor vencedor','Código','Descrição','Linha','Código mercado','Curva','kg/m','Barra 6 m (kg)','R$/kg','Valor barra (R$)','2º fornecedor','2º código','2º kg/m','2º valor barra (R$)','Observação'];
-    const rows=L.map(x=>{const p=x.F[x.w.f],p2=x.seg?x.F[x.seg.f]:null;return [FN(x.w.f),x.w.c,x.g.n,LIN[x.g.l]||x.g.l,x.g.k,x.g.cl||'',nb(x.w.p),nb(x.w.p*6),p?nb(p.rk):'',p?nb(p.rk*x.w.p*6):'',x.seg?FN(x.seg.f):'',x.seg?x.seg.c:'',x.seg?nb(x.seg.p):'',p2?nb(p2.rk*x.seg.p*6):'',x.excl?'Verificar com os outros fornecedores se têm este perfil com as mesmas medidas':(!x.seg&&!PESO?'Único com preço lançado':'')]});
+    const H=['Fornecedor vencedor','Código','Descrição','Linha','Código mercado','Curva','kg/m','Barra 6 m (kg)','R$/kg','Valor barra (R$)','Vantagem (%)','2º kg/m','2º valor barra (R$)','Observação'];
+    const rows=L.map(x=>{const p=x.F[x.w.f],p2=x.seg?x.F[x.seg.f]:null;return [FN(x.w.f),x.w.c,x.g.n,LIN[x.g.l]||x.g.l,x.g.k,x.g.cl||'',nb(x.w.p),nb(x.w.p*6),p?nb(p.rk):'',p?nb(p.rk*x.w.p*6):'',x.seg&&x.vs?nb(((x.vs-x.vw)/x.vs*100).toFixed(2)):'',x.seg?nb(x.seg.p):'',p2?nb(p2.rk*x.seg.p*6):'',x.excl?'Verificar com os outros fornecedores se têm este perfil com as mesmas medidas':(!x.seg&&!PESO?'Único com preço lançado':'')]});
     const csv='﻿'+[H,...rows].map(a=>a.map(c).join(';')).join('\r\n');
     const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download=`melhor-${PESO?'peso':'preco'}-${FN(r.f)}.csv`.toLowerCase().replace(/\s+/g,'-');document.body.appendChild(a);a.click();a.remove();logar('Baixou lista melhor '+(PESO?'peso':'preço')+' · '+FN(r.f),'')};
 }
