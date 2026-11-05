@@ -110,6 +110,24 @@ NM=kind==="painel"?"Perfil U":"Marco"; g.add(quadro(L,H,MQ,kind==="painel"?.03:P
    if(i<f-1){const jx=x+pw/2+J/2;NM="Silicone";const sl=box(J,ih,VID*1.15,m.sil,jx,0,0);sl.castShadow=false;g.add(sl);
     /* risco do encontro dos vidros: linha fina e leve nas duas faces (aparece em qualquer tamanho) */
     [1,-1].forEach(sd=>{const z=sd*(VID*.6+.0006);const ln=new (T().Line)(new (T().BufferGeometry)().setFromPoints([new (T().Vector3)(jx,-ih/2,z),new (T().Vector3)(jx,ih/2,z)]),m.junta);ln.renderOrder=3;g.add(ln)})}}
+ }else if(kind==="atlanta"){
+  /* 05/11/2026 · fachada pele de vidro modelo Atlanta (como no Orientativo 3D): por fora só o vidro, com a junta seca
+     entre os módulos; por trás, quadros colados no vidro, colunas e travessas da estrutura e os marcos nas pontas.
+     Colunas = folhas/módulos (1 = automático pela largura); linhas = t.fy (automático pela altura) */
+  const X=(+t.f>1?+t.f:Math.max(1,Math.round(L/1.8))),Y=Math.max(1,+t.fy||Math.round(H/1.7));
+  g.remove(g.children[0]);/* sem o marco comum: a fachada tem estrutura própria */
+  const J=.01,w=(L-(X-1)*J)/X,hh=(H-(Y-1)*J)/Y,zs=-.075,zq=-.014,zv=VID/2;
+  NM="Marco da fachada";[-1,1].forEach(sd=>{const c=perf(.045,H,.12,m.alu,sd*(L/2-.0225),0,zs);c.userData.len=H;g.add(c)});
+  [-1,1].forEach(sd=>{const c=perf(L-.09,.045,.1,m.alu,0,sd*(H/2-.0225),zs+.01);c.userData.len=L-.09;g.add(c)});
+  NM="Coluna";for(let i=1;i<X;i++){const x=-L/2+i*(w+J)-J/2;const c=perf(.05,H,.12,m.alu,x,0,zs);c.userData.len=H;g.add(c)}
+  NM="Travessa";for(let j=1;j<Y;j++){const y=-H/2+j*(hh+J)-J/2;for(let i=0;i<X;i++){const c=perf(w-.05,.05,.08,m.alu,-L/2+w/2+i*(w+J),y,zs+.02);c.userData.len=w-.05;g.add(c)}}
+  for(let j=0;j<Y;j++)for(let i=0;i<X;i++){const x=-L/2+w/2+i*(w+J),y=-H/2+hh/2+j*(hh+J);
+   NM="Quadro do vidro";const q=quadro(w-.012,hh-.012,.032,.022,m.alu);q.position.set(x,y,zq);g.add(q);
+   const v=vidro(w,hh,m);v.position.set(x,y,zv);g.add(v)}
+  const jm=m.gua||(m.gua=new (T().MeshStandardMaterial)({color:0x15181a,roughness:.7,metalness:0}));
+  NM="Guarnição da junta";
+  for(let i=1;i<X;i++){const x=-L/2+i*(w+J)-J/2;const b=box(J,H,VID*.9,jm,x,0,zv);b.userData.len=H;g.add(b)}
+  for(let j=1;j<Y;j++){const y=-H/2+j*(hh+J)-J/2;for(let i=0;i<X;i++){const b=box(w,J,VID*.9,jm,-L/2+w/2+i*(w+J),y,zv);b.userData.len=w;g.add(b)}}
  }else if(kind==="seq"){
   /* 05/11/2026 · correr sequencial: cada folha no seu trilho e todas recolhem para o mesmo lado, uma escondida atrás da outra.
      lado "dir" (padrão): a folha da ponta direita fica no trilho de trás e as outras correm por cima dela; "esq" espelha */
@@ -226,7 +244,7 @@ let R=null;
 function renderer(){if(R)return R;R=new (T().WebGLRenderer)({antialias:true,alpha:true,preserveDrawingBuffer:true});
  R.setPixelRatio(1);R.toneMapping=T().ACESFilmicToneMapping;R.toneMappingExposure=1.05;R.shadowMap.enabled=true;R.shadowMap.type=T().PCFSoftShadowMap;if(T().sRGBEncoding)R.outputEncoding=T().sRGBEncoding;return R}
 const cache=new Map();
-function chave(t,cfg){return [t.kind,t.f,t.enc||"",t.per?"P":"",t.lado||"",t.L,t.H,t.desc,t.vidroCor||"",t.corPerfil||"",cfg.cor||"",cfg.px||0,cfg.aberto?1:0,cfg.pers==null?"":cfg.pers,cfg.caixaAberta?1:0].join("|")}
+function chave(t,cfg){return [t.kind,t.f,t.enc||"",t.per?"P":"",t.lado||"",t.fy||"",t.L,t.H,t.desc,t.vidroCor||"",t.corPerfil||"",cfg.cor||"",cfg.px||0,cfg.aberto?1:0,cfg.pers==null?"":cfg.pers,cfg.caixaAberta?1:0].join("|")}
 function imagem(t,cfg){cfg=cfg||{};const k=chave(t,cfg);if(cache.has(k))return cache.get(k);
  if(!T())return "";const r=renderer();const px=cfg.px||900;
  const mt=materiais(t,cfg),mo=montar(t,mt);if(cfg.aberto)mo.animar(.55);if(mo.per&&cfg.pers!=null)mo.per(cfg.pers);if(mo.per&&cfg.caixaAberta)mo.per.caixa(false);

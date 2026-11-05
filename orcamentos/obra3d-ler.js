@@ -30,6 +30,7 @@ function desenho(tipo,linha){
  else if(/CORRER/.test(d)){kind=/SEQU[EÊ]NCIA/.test(d)?"seq":(folhas===4&&fixas===2)?"correr4":"correr";f=Math.max(folhas||2,2)}
  else if(/GIRO|ABRIR/.test(d)){kind="giro";f=folhas>=2?2:1}
  else if(/MAXIM-?AR|BASCULANTE/.test(d)){kind=/PEITORIL/.test(d)?"maxp":"max";f=mod||folhas||1}
+ else if(/FACHADA|PELE DE VIDRO|ATLANTA|STRUCTURAL|ESTRUTURAL/.test(d)&&!/CORRER|GIRO|ABRIR/.test(d)){kind="atlanta";f=1}
  else if(/PAINEL\s+FIXO|VIDRO\s+TEMPERADO|PERFIL DE ALUM/.test(d)&&/FIXO/.test(d)){kind="painel";f=mod||1}
  else if(/\bFIX[OA]S?\b/.test(d)){kind="fixo";f=mod||folhas||1}
  if(/VENEZIANA/.test(d))enc="veneziana";

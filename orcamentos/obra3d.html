@@ -135,9 +135,9 @@ table.cli td.n,table.cli th.n{text-align:right}
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/environments/RoomEnvironment.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/geometries/RoundedBoxGeometry.js"></script>
-<script src="tip3d.js?v=20261105r"></script>
+<script src="tip3d.js?v=20261105s"></script>
 <script src="proposta.js?v=20261105i"></script>
-<script src="obra3d-ler.js?v=20261105d"></script>
+<script src="obra3d-ler.js?v=20261105e"></script>
 <script src="orientativo-ler.js?v=3"></script>
 <script src="secao-ler.js?v=2"></script>
 <script>
@@ -155,7 +155,7 @@ document.addEventListener("click",async e=>{const b=e.target.closest&&e.target.c
  const r=await BD.liberarAval(P.id);if(r&&r.error){b.disabled=false;b.textContent="Ajuste feito · liberar nova avaliação";toast("Não foi possível liberar");return}
  delete AVAL[P.id];toast("Liberado de novo para a empresa avaliar");abrir(P.id)});
 const stOf=k=>STATUS.find(s=>s[0]===k)||STATUS[0];
-const KINDS=[["giro","Porta de giro"],["correr","Correr"],["correr4","Correr 4 folhas (2 fixas + 2 móveis)"],["seq","Correr sequencial (todas recolhem para um lado)"],["max","Maxim-ar"],["maxp","Maxim-ar com peitoril fixo"],["fixo","Fixo (vidro com vidro)"],["painel","Painel fixo temperado com perfil"],["piv","Pivotante com fixo"],["gen","Outro"]];
+const KINDS=[["giro","Porta de giro"],["correr","Correr"],["correr4","Correr 4 folhas (2 fixas + 2 móveis)"],["seq","Correr sequencial (todas recolhem para um lado)"],["atlanta","Fachada pele de vidro (Atlanta)"],["max","Maxim-ar"],["maxp","Maxim-ar com peitoril fixo"],["fixo","Fixo (vidro com vidro)"],["painel","Painel fixo temperado com perfil"],["piv","Pivotante com fixo"],["gen","Outro"]];
 const ENCS=[["vidro","Vidro"],["lambri","Lambri"],["vidlam","Vidro em cima + lambri embaixo"],["veneziana","Veneziana"]];
 const CORES=["#1d5fa8","#0d5c63","#1f7a4a","#b3261e","#c9831a","#6d4bd8","#13232e","#8a4b2a"];
 /* 05/11/2026 · modo Orçamentos de obra (Simulador de Obra 3D): só os projetos criados ali, com os dois PDFs, sem cobrança nem links de envio */
@@ -171,7 +171,7 @@ async function enviar(){const ids=[...pend];pend.clear();if(!ids.length)return t
 addEventListener("beforeunload",e=>{if(pend.size){e.preventDefault();e.returnValue=""}});
 
 /* ---------- dados para a apresentação (nunca leva preço) ---------- */
-function t3(it){const o={item:it.item,tipo:it.tipo,loc:it.loc,kind:it.kind,f:it.f,enc:it.enc,per:it.per||"",lado:it.lado||"",L:it.L,H:it.H,q:it.q,linha:it.linha,desc:it.vidro+(it.obs?" · "+it.obs:"")};if(it.cortes)o.cortes=it.cortes;if(it.corPerfil)o.corPerfil=it.corPerfil;if(it.vidroCor)o.vidroCor=it.vidroCor;return o}
+function t3(it){const o={item:it.item,tipo:it.tipo,loc:it.loc,kind:it.kind,f:it.f,enc:it.enc,per:it.per||"",lado:it.lado||"",fy:it.fy||"",L:it.L,H:it.H,q:it.q,linha:it.linha,desc:it.vidro+(it.obs?" · "+it.obs:"")};if(it.cortes)o.cortes=it.cortes;if(it.corPerfil)o.corPerfil=it.corPerfil;if(it.vidroCor)o.vidroCor=it.vidroCor;return o}
 function doc(p){const d={marca:p.empresa,marcaCor:p.cor,numero:p.numero,obra:p.obra,cliente:p.cliente,cor:p.corPerfil,emitida:p.emitida||p.criado,itens:p.itens.map(t3)};
  if(p.logo)d.logo=p.logo;if(p.editavel&&typeof p.rodape==="string")d.rodape=p.rodape;if(p.corAlterada)d.corAlterada=true;return d}
 /* preços: só para o PDF impresso (valor do item no PDF + margem em lote); o link nunca recebe isto */
@@ -418,6 +418,7 @@ function conf(){if(P.editavel)return confEd();const it=P.itens,nOk=it.filter(t=>
     <label class="f">Tipologia<select data-k="kind" data-i="${i}">${KINDS.map(([k,n])=>`<option value="${k}"${t.kind===k?" selected":""}>${n}</option>`).join("")}</select></label>
     <div class="row" style="gap:8px"><label class="f" style="flex:1">Folhas / módulos<input type="number" min="1" max="12" data-k="f" data-i="${i}" value="${t.f}"></label>
     <label class="f" style="flex:2">Preenchimento<select data-k="enc" data-i="${i}">${ENCS.map(([k,n])=>`<option value="${k}"${t.enc===k?" selected":""}>${n}</option>`).join("")}</select></label></div>
+    ${t.kind==="atlanta"?`<label class="f">Linhas de vidro na altura (vazio = automático)<input type="number" min="1" max="12" data-k="fy" data-i="${i}" value="${esc(t.fy||"")}"></label>`:""}
     ${t.kind==="seq"?`<label class="f">Folhas recolhem para<select data-k="lado" data-i="${i}"><option value=""${t.lado==="esq"?"":" selected"}>Direita</option><option value="esq"${t.lado==="esq"?" selected":""}>Esquerda</option></select></label>`:""}
     <label class="f">Persiana integrada<select data-k="per" data-i="${i}"><option value=""${t.per?"":" selected"}>Sem persiana</option><option value="1"${t.per?" selected":""}>Com persiana (caixa em cima)</option></select></label>
     ${mud?`<button class="btn" type="button" data-r="${i}">↺ Voltar ao desenho lido</button>`:""}
@@ -457,6 +458,7 @@ function confEd(){const it=P.itens;
    <label class="f">Tipologia<select data-k="kind" data-i="${i}">${KINDS.map(([k,n])=>`<option value="${k}"${t.kind===k?" selected":""}>${n}</option>`).join("")}</select></label>
    <div class="row" style="gap:8px"><label class="f" style="flex:1">Folhas / módulos<input type="number" min="1" max="12" data-k="f" data-i="${i}" value="${t.f}"></label>
    <label class="f" style="flex:2">Preenchimento<select data-k="enc" data-i="${i}">${ENCS.map(([k,n])=>`<option value="${k}"${t.enc===k?" selected":""}>${n}</option>`).join("")}</select></label></div>
+    ${t.kind==="atlanta"?`<label class="f">Linhas de vidro na altura (vazio = automático)<input type="number" min="1" max="12" data-k="fy" data-i="${i}" value="${esc(t.fy||"")}"></label>`:""}
     ${t.kind==="seq"?`<label class="f">Folhas recolhem para<select data-k="lado" data-i="${i}"><option value=""${t.lado==="esq"?"":" selected"}>Direita</option><option value="esq"${t.lado==="esq"?" selected":""}>Esquerda</option></select></label>`:""}
     <label class="f">Persiana integrada<select data-k="per" data-i="${i}"><option value=""${t.per?"":" selected"}>Sem persiana</option><option value="1"${t.per?" selected":""}>Com persiana (caixa em cima)</option></select></label></div>
  </div>`).join("")}
