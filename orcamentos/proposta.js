@@ -5,6 +5,15 @@
 (function(){
 "use strict";
 const CSS=`
+.pp-sim{display:grid;gap:8px;margin:0 0 16px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--wash)}
+.pp-sim .rw{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.pp-sim .rw>span{font-size:12.5px;color:var(--muted);min-width:96px}
+.pp-sim button{display:inline-flex;gap:6px;align-items:center;font:600 12.5px var(--txt);border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:999px;padding:6px 11px;cursor:pointer;min-height:34px}
+.pp-sim button[aria-pressed="true"]{border-color:var(--pc);box-shadow:0 0 0 2px var(--pc) inset}
+.pp-sim button i{width:14px;height:14px;border-radius:50%;border:1px solid rgba(0,0,0,.18);flex:none}
+.pp-sim .rs{margin-left:auto}
+.pp-av{padding:10px 12px;border-radius:10px;background:#fff6e5;border:1px solid #f0d49a;color:#7a4b07;font-size:13px;margin:0 0 16px}
+@media print{.pp-sim{display:none!important}}
+
 .pp{--pc:#0d5c63;--pc-ink:#fff;--ink:#14232a;--muted:#5d6e73;--paper:#fff;--wash:#f2f5f5;--line:#dfe6e7;--amb:#c9831a;
  --disp:"Space Grotesk",system-ui,sans-serif;--txt:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
  color:var(--ink);font:14px/1.5 var(--txt);background:var(--paper);border-radius:16px;overflow:hidden;box-shadow:0 1px 2px rgba(10,30,35,.06),0 12px 40px rgba(10,30,35,.08);color-scheme:light}
@@ -117,17 +126,17 @@ function render(el,D,op){op=op||{};css();const it=D.itens||[];const P=op.precos|
    <div class="pp-stat"><span>Tipologias</span><b class="num">${it.length}</b></div>
    <div class="pp-stat"><span>Peças</span><b class="num">${pecas}</b></div>
    <div class="pp-stat"><span>Área de vãos</span><b class="num">${m2(totM2)} <small>m²</small></b></div>
-   <div class="pp-stat"><span>Acabamento</span><b class="acab">${p0?`<i class="pp-sw" style="background:${p0.hex}"></i>`:""}${esc(D.cor||"—")}</b></div>
+   <div class="pp-stat"><span>Acabamento</span><b class="acab">${D._sim&&D._sim.p&&T3?`<i class="pp-sw" style="background:${T3.perfilDe("",D._sim.p).hex}"></i>${esc(SIMP.find(x=>x[0]===D._sim.p)[1])} <small>(simulação)</small>`:`${p0?`<i class="pp-sw" style="background:${p0.hex}"></i>`:""}${esc(D.cor||"—")}`}</b></div>
   </div>
  </header>
- <div class="pp-body">${linhas.length?`<div class="pp-linhas"><span class="pp-chip" style="background:none;border-color:transparent;padding-left:0">Linhas da obra</span>${linhas.map(l=>`<span class="pp-chip">${esc(l)}</span>`).join("")}</div>`:""}`;
+ <div class="pp-body">${op.simular&&T3?barraSim(D,T3):""}${simAtivo(D)?`<div class="pp-av">⚠ <b>Cor alterada apenas para demonstração.</b> A troca de cor pode alterar o valor — confirme com a vidraçaria.</div>`:""}${linhas.length?`<div class="pp-linhas"><span class="pp-chip" style="background:none;border-color:transparent;padding-left:0">Linhas da obra</span>${linhas.map(l=>`<span class="pp-chip">${esc(l)}</span>`).join("")}</div>`:""}`;
  /* itens agrupados por local, na ordem do croqui */
  const grupos=[];it.forEach((t,i)=>{const g=grupos[grupos.length-1];if(g&&g.loc===t.loc)g.ix.push(i);else grupos.push({loc:t.loc,ix:[i]})});
  /* grade contínua: o local vai dentro do card, para não sobrar meia linha vazia nem pular página a cada local */
  h+=`<div class="pp-loc"><h2>Itens da obra</h2><span class="num">${it.length} ${it.length===1?"tipologia":"tipologias"} · ${pecas} ${pecas===1?"peça":"peças"} · ${m2(totM2)} m²</span></div><div class="pp-grid">`;
  grupos.forEach(g=>{
   g.ix.forEach(i=>{const t=it[i];const p=T3?T3.perfilDe(D.cor,t.corPerfil):null,v=T3?T3.vidroDe(t.desc,t.vidroCor):null;const pv=P?+P[i]||0:0;
-   h+=`<div class="pp-card"><figure>${T3?`<img data-pp="${i}" alt="Tipologia ${esc(t.tipo)} em 3D" hidden><span class="ld">Gerando 3D…</span><button class="pp-vr" type="button" data-pv="${i}">Ver em 3D</button>`:""}<span class="pp-badge">Item ${esc(t.item)}</span>${op.editar&&t.orig?'<span class="pp-alt">alterado</span>':""}</figure>
+   h+=`<div class="pp-card"><figure>${t._s&&op.simular?`<span style="position:absolute;top:10px;right:10px;z-index:2;background:#fff6e5;color:#7a4b07;border:1px solid #f0d49a;border-radius:999px;padding:2px 9px;font-size:11.5px;font-weight:600">cor simulada neste item</span>`:""}${T3?`<img data-pp="${i}" alt="Tipologia ${esc(t.tipo)} em 3D" hidden><span class="ld">Gerando 3D…</span><button class="pp-vr" type="button" data-pv="${i}">Ver em 3D</button>`:""}<span class="pp-badge">Item ${esc(t.item)}</span>${op.editar&&t.orig?'<span class="pp-alt">alterado</span>':""}</figure>
    <div class="pp-cb"><div>${t.loc?`<div class="pp-lc">${esc(t.loc)}</div>`:""}<div class="pp-cod">${esc(t.tipo)}</div><div class="pp-desc">${esc(t.desc)}</div></div>
     <div class="pp-specs num"><div><span>Larg. mm</span><b>${n0(t.L)}</b></div><div><span>Alt. mm</span><b>${n0(t.H)}</b></div><div><span>Área m²</span><b>${m2(area(t))}</b></div><div><span>Qtde</span><b>${esc(t.q)}</b></div></div>
     <div class="pp-meta">${t.linha?`<span>Linha <b>${esc(t.linha)}</b></span>`:""}${p?`<span><i style="background:${p.hex}"></i>Perfil ${p.nome.toLowerCase()}</span>${/SEM\s+VIDRO/i.test(t.desc||"")?"":`<span><i style="background:${v.hex}"></i>Vidro ${v.nome.toLowerCase()}</span>`}`:""}</div>
@@ -142,8 +151,24 @@ function render(el,D,op){op=op||{};css();const it=D.itens||[];const P=op.precos|
  if(P&&cs.length)h+=`<div class="pp-cond">${cs.map(([k,v])=>`<div><span>${k}</span><b>${esc(v)}</b></div>`).join("")}</div>`;
  h+=`<footer class="pp-foot"><div>Medidas e quantidades conforme projeto, sujeitas a conferência na obra. Imagens 3D ilustrativas.</div>${typeof D.rodape==="string"?(D.rodape.trim()?`<div class="wm">${esc(D.rodape)}</div>`:""):`<div class="wm">${D.marca?"Desenvolvido por FC Consultoria em Esquadria · ©":"FC Consultoria em Esquadria · uso exclusivo · © FC Consultoria em Esquadria"}</div>`}</footer></article>`;
  el.innerHTML=h;
- if(T3){el.querySelectorAll("[data-pv]").forEach(b=>b.onclick=()=>T3.abrir(it[+b.dataset.pv],{cor:D.cor,origem:b.closest("figure")}));if(!op.adiar)preencher(el,D)}
+ if(T3){el.querySelectorAll("[data-pv]").forEach(b=>b.onclick=()=>T3.abrir(it[+b.dataset.pv],Object.assign({cor:D.cor,origem:b.closest("figure")},op.simular?{cores:{p:SIMP,v:SIMV},temVidro:temVidro(it[+b.dataset.pv]),onCor:(k,id,obra)=>{const t=it[+b.dataset.pv];if(k==="reset")delete t._s;else if(obra){D._sim=Object.assign({},D._sim);D._sim[k]=id;(D.itens||[]).forEach(x=>{if(x._s){delete x._s[k];if(!x._s.p&&!x._s.v)delete x._s}})}else{t._s=Object.assign({},t._s);t._s[k]=id}aplicarSim(D);clearTimeout(el._simT);el._simT=setTimeout(()=>{const y=scrollY;render(el,D,op);scrollTo(0,y)},50)}}:{})));if(op.simular)ligarSim(el,D,op);if(!op.adiar)preencher(el,D)}
 }
+/* 05/11/2026 · simular cor de perfil e de vidro na negociação (só demonstração; preço não muda) */
+const SIMP=[["branco","Branco"],["preto","Preto"],["natural","Fosco"],["madeira","Madeira"],["linheiro","Linheiro"]];
+const SIMV=[["incolor","Incolor"],["verde","Verde"],["fume","Fumê"],["champanhe","Champanhe"]];
+const temVidro=t=>!/SEM\s*VIDRO/i.test(String(t.desc||""))&&/VIDRO|INCOLOR|TEMPERAD|LAMINAD|FUM|VERDE|MM/i.test(String(t.desc||""));
+function barraSim(D,T3){const s=D._sim||{};const it=D.itens||[];const algumVidro=it.some(temVidro);
+ const b=(k,id,nm,hex)=>`<button type="button" data-sim="${k}:${id}" aria-pressed="${s[k]===id}"><i style="background:${hex}"></i>${nm}</button>`;
+ return `<div class="pp-sim" role="group" aria-label="Simular cores"><div class="rw"><span>Cor do perfil</span>${SIMP.map(([id,nm])=>b("p",id,nm,T3.perfilDe("",id).hex)).join("")}</div>
+  ${algumVidro?`<div class="rw"><span>Cor do vidro</span>${SIMV.map(([id,nm])=>b("v",id,nm,T3.vidroDe("",id).hex)).join("")}</div>`:""}
+  <div class="rw"><span class="hint" style="min-width:0"><b>Obra toda:</b> escolha acima. <b>Por item:</b> abra o Ver em 3D e toque na cor do perfil ou do vidro. Os valores não mudam.</span>${simAtivo(D)?`<button type="button" class="rs" data-sim="reset">↺ Cor do orçamento (tudo)</button>`:""}</div></div>`}
+/* obra toda (D._sim) e por item (t._s): o item vale mais que a obra */
+function aplicarSim(D){const it=D.itens||[];it.forEach(t=>{if(!("_cp0" in t)){t._cp0=t.corPerfil;t._vc0=t.vidroCor}
+  const s=D._sim||{},i=t._s||{};t.corPerfil=i.p||s.p||t._cp0;t.vidroCor=temVidro(t)?(i.v||s.v||t._vc0):t._vc0;if(t.corPerfil==null)delete t.corPerfil;if(t.vidroCor==null)delete t.vidroCor})}
+const simAtivo=D=>!!(D._sim||(D.itens||[]).some(t=>t._s));
+function ligarSim(el,D,op){el.querySelectorAll("[data-sim]").forEach(b=>b.onclick=()=>{const v=b.dataset.sim;
+  if(v==="reset"){D._sim=null;(D.itens||[]).forEach(t=>delete t._s)}else{const [k,id]=v.split(":");D._sim=Object.assign({},D._sim);D._sim[k]=D._sim[k]===id?undefined:id;if(!D._sim.p&&!D._sim.v)D._sim=null;(D.itens||[]).forEach(t=>{if(t._s){delete t._s[k];if(!t._s.p&&!t._s.v)delete t._s}})}
+  aplicarSim(D);const y=scrollY;render(el,D,op);scrollTo(0,y)})}
 /* gera as imagens aos poucos (uma por quadro) para a página não travar */
 const filas=new WeakMap();
 function preencher(el,D,tudo){const T3=window.TIP3D;if(!T3)return;cancelAnimationFrame(filas.get(el)||0);const it=D.itens||[];

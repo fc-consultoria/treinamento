@@ -18,6 +18,7 @@ const PERFIS=[
  {id:"champanhe",nome:"Champanhe",hex:"#bfa77d",met:.6,rug:.35,re:/CHAMPAN|DOURAD|OURO|GOLD\b/},
  {id:"corten",nome:"Corten",hex:"#8a4b2a",met:.2,rug:.7,re:/CORTEN|FERRUGEM/},
  {id:"madeira",nome:"Amadeirado",hex:"#8b5e3c",met:.05,rug:.7,re:/MADEIRA|AMADEIRAD|CARVALHO|NOGUEIRA|IMBUIA/},
+ {id:"linheiro",nome:"Linheiro",hex:"#d6cab0",met:.08,rug:.6,re:/LINHEIRO|LINHO/},
  {id:"natural",nome:"Anodizado natural",hex:"#c4c8cb",met:.75,rug:.32,re:/ANODIZ|NATURAL|FOSCO|BRUTO/}
 ];
 const VIDROS=[
@@ -27,12 +28,13 @@ const VIDROS=[
  {id:"bronze",nome:"Bronze",hex:"#8a6a4c",op:.5,met:0,re:/BRONZE/},
  {id:"azul",nome:"Azul",hex:"#5d93c2",op:.45,met:0,re:/AZUL/},
  {id:"refletivo",nome:"Refletivo prata",hex:"#a9b9c3",op:.82,met:.85,re:/REFLET|ESPELH|PRATA|MIRROR/},
+ {id:"champanhe",nome:"Champanhe",hex:"#b8995f",op:.5,met:0,re:/CHAMPAN/},
  {id:"jateado",nome:"Jateado / leitoso",hex:"#f1f4f4",op:.86,met:0,re:/JATEAD|LEITOS|ACIDAD|MINI ?BOREAL|CANELAD|PONTILHAD/}
 ];
 function perfilDe(txt,forcado){if(forcado){const f=PERFIS.find(p=>p.id===forcado);if(f)return f}const s=String(txt||"").toUpperCase();return PERFIS.find(p=>p.re.test(s))||PERFIS[PERFIS.length-1]}
 function vidroDe(txt,forcado){if(forcado){const f=VIDROS.find(v=>v.id===forcado);if(f)return f}const s=String(txt||"").toUpperCase();
  /* ordem: refletivo/jateado antes de "incolor" (ex.: "REFLETIVO INCOLOR") */
- for(const id of ["refletivo","jateado","verde","fume","bronze","azul","incolor"]){const v=VIDROS.find(x=>x.id===id);if(v.re.test(s))return v}return VIDROS[0]}
+ for(const id of ["refletivo","jateado","verde","fume","bronze","champanhe","azul","incolor"]){const v=VIDROS.find(x=>x.id===id);if(v.re.test(s))return v}return VIDROS[0]}
 
 /* ---------- geometria ---------- */
 /* medidas em metros; faces dos perfis aproximadas (é apresentação, não desenho técnico) */
@@ -236,7 +238,7 @@ function abrir(t,cfg){cfg=cfg||{};if(!T()){alert("O 3D não carregou. Verifique 
  const ab=V.d.querySelector("#t3d-ab");ab.textContent="Abrir folhas";ab.hidden=!V.mo.temMovel;
  V.d.querySelector("#t3d-t").textContent=cfg.titulo||("Item "+(t.item||"")+" · "+(t.tipo||""));
  V.d.querySelector("#t3d-s").textContent=(t.L||"")+" × "+(t.H||"")+" mm"+(t.q>1?" · "+t.q+" peças":"")+(t.linha?" · Linha "+t.linha:"");
- V.d.querySelector("#t3d-ch").innerHTML=`<span class="chip"><span class="sw" style="background:${mt.p.hex}"></span>Perfil: ${esc(cfg.cor||mt.p.nome)}</span><span class="chip"><span class="sw" style="background:${mt.v.hex}"></span>Vidro: ${mt.v.nome}</span>`;
+ V.mt=mt;V.tA=t;V.cfgA=cfg;chipsCor();
  if(V.pc)V.pc.forEach(p=>{if(p.gr)p.gr.dispose()});
  V.cortes=t.cortes&&t.cortes.perfis&&t.cortes.perfis.length?t.cortes:null;pecas();ligarCortes();reais();kit();V.modo="ok";botoes();V.d.querySelector("#t3d-cap").hidden=true;
  V.d.hidden=false;tam();frente(-.35);
@@ -382,6 +384,27 @@ function passoPecas(){const now=performance.now();V.s.updateMatrixWorld();const 
    cap.innerHTML="<b>Montagem concluída</b> · arraste para girar";clearTimeout(V.capT);V.capT=setTimeout(()=>{if(V.modo==="ok")cap.hidden=true},3500)}}
  else if(V.modo==="k")cap.innerHTML=V.cortes?(V.pc.some(p=>p.gr)?"Perfis reais da lista de corte · <b>toque em um perfil</b> para ver em destaque":"Peças separadas · <b>toque duas vezes em uma peça</b> para ver a medida de corte"):"Peças separadas · <b>toque duas vezes em uma peça</b> para ver o detalhe";
  else if(V.modo==="f")cap.innerHTML=detalhe(V.focus);}
+/* 05/11/2026 · chips de cor: com cfg.onCor viram botões para simular outra cor de perfil/vidro (só demonstração) */
+function chipsCor(){const mt=V.mt,t=V.tA,cfg=V.cfgA,el=V.d.querySelector("#t3d-ch");const sim=!!(cfg.onCor&&cfg.cores);
+ const nP=t.corPerfil?mt.p.nome:(cfg.cor||mt.p.nome),alt=!!(t.corPerfil||t.vidroCor)&&sim;
+ const chip=(k,hex,tx)=>sim?`<button type="button" class="chip" data-ck="${k}" style="cursor:pointer;font:inherit" aria-haspopup="true"><span class="sw" style="background:${hex}"></span>${tx} ▾</button>`:`<span class="chip"><span class="sw" style="background:${hex}"></span>${tx}</span>`;
+ el.innerHTML=chip("p",mt.p.hex,"Perfil: "+esc(nP))+(sim&&cfg.temVidro===false?"":chip("v",mt.v.hex,"Vidro: "+esc(mt.v.nome)))
+  +(alt?`<span class="chip" style="background:#fff6e5;color:#7a4b07;border:1px solid #f0d49a">⚠ Cor só para demonstração · confirme o valor com a vidraçaria</span>`:"")
+  +`<div id="t3d-pal" hidden style="flex-basis:100%;display:flex;gap:6px;flex-wrap:wrap;margin-top:6px"></div>`;
+ if(!sim)return;
+ el.querySelectorAll("[data-ck]").forEach(b=>b.onclick=()=>{const k=b.dataset.ck,pal=el.querySelector("#t3d-pal");
+  if(!pal.hidden&&pal.dataset.k===k){pal.hidden=true;return}pal.dataset.k=k;pal.hidden=false;
+  const lista=k==="p"?cfg.cores.p:cfg.cores.v,cur=k==="p"?mt.p.id:mt.v.id;
+  pal.innerHTML=lista.map(([id,nm])=>{const hx=k==="p"?perfilDe("",id).hex:vidroDe("",id).hex;return`<button type="button" class="chip" data-cid="${id}" style="cursor:pointer;font:inherit;${id===cur?"outline:2px solid #fff":""}"><span class="sw" style="background:${hx}"></span>${esc(nm)}</button>`}).join("")
+   +`<label class="chip" style="cursor:pointer;font:inherit;gap:6px"><input type="checkbox" id="t3d-obra"${V.obraToda?" checked":""}> Aplicar na obra toda</label>`
+   +(alt?`<button type="button" class="chip" data-cid="__orig" style="cursor:pointer;font:inherit">↺ Cor do orçamento neste item</button>`:"");
+  pal.querySelector("#t3d-obra").onchange=e=>{V.obraToda=e.target.checked};
+  pal.querySelectorAll("[data-cid]").forEach(x=>x.onclick=()=>{const id=x.dataset.cid;if(id==="__orig")cfg.onCor("reset");else cfg.onCor(k,id,!!V.obraToda);recolorir();chipsCor()})})}
+function recolorir(){const mt=V.mt,t=V.tA,cfg=V.cfgA;const lin=h=>{const c=new (T().Color)(h);if(c.convertSRGBToLinear)c.convertSRGBToLinear();return c};
+ const p=perfilDe(cfg.cor,t.corPerfil),v=vidroDe(t.desc,t.vidroCor);mt.p=p;mt.v=v;
+ mt.alu.color.copy(lin(p.hex));mt.alu.metalness=p.met;mt.alu.roughness=p.rug;mt.fundo.color.copy(lin(p.hex).multiplyScalar(.45));mt.fundo.metalness=p.met;
+ mt.pux.color.copy(lin(p.id==="preto"?"#3a3f44":"#2b2f33"));
+ mt.vid.color.copy(lin(v.hex));mt.vid.opacity=v.op;mt.vid.metalness=v.met;[mt.alu,mt.fundo,mt.vid,mt.pux].forEach(m=>m.needsUpdate=true)}
 const GIRO_MS=10000;
 function girar(){V.giro=1;V.giroT0=performance.now();V.giroBase=V.conj.rotation.y}
 function loop(){V.raf=requestAnimationFrame(loop);if(V.modo==="v")passoVitrine();else if(V.modo&&V.modo!=="ok")passoPecas();else V.lt=0;V.k+=(V.alvo-V.k)*.08;if(Math.abs(V.alvo-V.k)<.001)V.k=V.alvo;V.mo.animar(V.k);

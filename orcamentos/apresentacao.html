@@ -29,8 +29,8 @@ body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.45 "Inter",system
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/environments/RoomEnvironment.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/geometries/RoundedBoxGeometry.js"></script>
-<script src="tip3d.js?v=20261105a"></script>
-<script src="proposta.js?v=20261104r"></script>
+<script src="tip3d.js?v=20261105b"></script>
+<script src="proposta.js?v=20261105b"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
 (async function(){
@@ -82,13 +82,13 @@ document.title=(D.obra||"Obra")+" · Apresentação 3D";
 if(!window.PROPOSTA){erro("Não foi possível carregar","Verifique a internet e abra o link de novo.");return}
 /* link aberto (antigo): sem preço. Proposta protegida: com preço, só para quem tem o código (ou a própria empresa) */
 if(Array.isArray(D.precos)&&D.precos.some(v=>+v>0)){
- PROPOSTA.render($("main"),D,{precos:D.precos,total:D.precos.reduce((a,b)=>a+(+b||0),0),rotulo:"Proposta comercial"});
+ PROPOSTA.render($("main"),D,{precos:D.precos,total:D.precos.reduce((a,b)=>a+(+b||0),0),rotulo:"Proposta comercial",simular:true});
  const quem=ACESSO?ACESSO.nome:EMPRESA?"Visualização da empresa":"";
  if(quem){const w=document.createElement("div");w.setAttribute("aria-hidden","true");const txt=(ACESSO?"Proposta exclusiva para ":"")+quem+" · "+new Date().toLocaleDateString("pt-BR");
   w.style.cssText="position:fixed;inset:0;pointer-events:none;z-index:50;opacity:.09;overflow:hidden;-webkit-print-color-adjust:exact;print-color-adjust:exact";
   w.innerHTML=`<div style="position:absolute;inset:-50%;transform:rotate(-24deg);display:flex;flex-wrap:wrap;gap:60px 80px;align-content:center;justify-content:center;font:700 22px Inter,sans-serif;color:#0d1f24">${(`<span>${esc(txt)}</span>`).repeat(80)}</div>`;document.body.appendChild(w);
   if(ACESSO)document.querySelector(".bar .dica").insertAdjacentHTML("beforeend",` · Acesso de <b>${esc(ACESSO.nome)}</b> até ${new Date(ACESSO.valido_ate).toLocaleDateString("pt-BR")}`)}
-}else PROPOSTA.render($("main"),D,{});
+}else PROPOSTA.render($("main"),D,{simular:true});
 const b=$("b-print");b.hidden=false;b.onclick=()=>{PROPOSTA.preencher($("main"),D,true);setTimeout(()=>print(),80)};
 })();
 </script>
