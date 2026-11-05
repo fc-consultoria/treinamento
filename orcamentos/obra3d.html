@@ -135,9 +135,9 @@ table.cli td.n,table.cli th.n{text-align:right}
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/environments/RoomEnvironment.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/geometries/RoundedBoxGeometry.js"></script>
-<script src="tip3d.js?v=20261105p"></script>
+<script src="tip3d.js?v=20261105q"></script>
 <script src="proposta.js?v=20261105i"></script>
-<script src="obra3d-ler.js?v=20261105c"></script>
+<script src="obra3d-ler.js?v=20261105d"></script>
 <script src="orientativo-ler.js?v=3"></script>
 <script src="secao-ler.js?v=2"></script>
 <script>
@@ -155,7 +155,7 @@ document.addEventListener("click",async e=>{const b=e.target.closest&&e.target.c
  const r=await BD.liberarAval(P.id);if(r&&r.error){b.disabled=false;b.textContent="Ajuste feito · liberar nova avaliação";toast("Não foi possível liberar");return}
  delete AVAL[P.id];toast("Liberado de novo para a empresa avaliar");abrir(P.id)});
 const stOf=k=>STATUS.find(s=>s[0]===k)||STATUS[0];
-const KINDS=[["giro","Porta de giro"],["correr","Correr"],["correr4","Correr 4 folhas (2 fixas + 2 móveis)"],["max","Maxim-ar"],["maxp","Maxim-ar com peitoril fixo"],["fixo","Fixo (vidro com vidro)"],["painel","Painel fixo temperado com perfil"],["piv","Pivotante com fixo"],["gen","Outro"]];
+const KINDS=[["giro","Porta de giro"],["correr","Correr"],["correr4","Correr 4 folhas (2 fixas + 2 móveis)"],["seq","Correr sequencial (todas recolhem para um lado)"],["max","Maxim-ar"],["maxp","Maxim-ar com peitoril fixo"],["fixo","Fixo (vidro com vidro)"],["painel","Painel fixo temperado com perfil"],["piv","Pivotante com fixo"],["gen","Outro"]];
 const ENCS=[["vidro","Vidro"],["lambri","Lambri"],["vidlam","Vidro em cima + lambri embaixo"],["veneziana","Veneziana"]];
 const CORES=["#1d5fa8","#0d5c63","#1f7a4a","#b3261e","#c9831a","#6d4bd8","#13232e","#8a4b2a"];
 /* 05/11/2026 · modo Orçamentos de obra (Simulador de Obra 3D): só os projetos criados ali, com os dois PDFs, sem cobrança nem links de envio */
@@ -171,7 +171,7 @@ async function enviar(){const ids=[...pend];pend.clear();if(!ids.length)return t
 addEventListener("beforeunload",e=>{if(pend.size){e.preventDefault();e.returnValue=""}});
 
 /* ---------- dados para a apresentação (nunca leva preço) ---------- */
-function t3(it){const o={item:it.item,tipo:it.tipo,loc:it.loc,kind:it.kind,f:it.f,enc:it.enc,per:it.per||"",L:it.L,H:it.H,q:it.q,linha:it.linha,desc:it.vidro+(it.obs?" · "+it.obs:"")};if(it.cortes)o.cortes=it.cortes;if(it.corPerfil)o.corPerfil=it.corPerfil;if(it.vidroCor)o.vidroCor=it.vidroCor;return o}
+function t3(it){const o={item:it.item,tipo:it.tipo,loc:it.loc,kind:it.kind,f:it.f,enc:it.enc,per:it.per||"",lado:it.lado||"",L:it.L,H:it.H,q:it.q,linha:it.linha,desc:it.vidro+(it.obs?" · "+it.obs:"")};if(it.cortes)o.cortes=it.cortes;if(it.corPerfil)o.corPerfil=it.corPerfil;if(it.vidroCor)o.vidroCor=it.vidroCor;return o}
 function doc(p){const d={marca:p.empresa,marcaCor:p.cor,numero:p.numero,obra:p.obra,cliente:p.cliente,cor:p.corPerfil,emitida:p.emitida||p.criado,itens:p.itens.map(t3)};
  if(p.logo)d.logo=p.logo;if(p.editavel&&typeof p.rodape==="string")d.rodape=p.rodape;if(p.corAlterada)d.corAlterada=true;return d}
 /* preços: só para o PDF impresso (valor do item no PDF + margem em lote); o link nunca recebe isto */
@@ -413,6 +413,7 @@ function conf(){if(P.editavel)return confEd();const it=P.itens,nOk=it.filter(t=>
     <label class="f">Tipologia<select data-k="kind" data-i="${i}">${KINDS.map(([k,n])=>`<option value="${k}"${t.kind===k?" selected":""}>${n}</option>`).join("")}</select></label>
     <div class="row" style="gap:8px"><label class="f" style="flex:1">Folhas / módulos<input type="number" min="1" max="12" data-k="f" data-i="${i}" value="${t.f}"></label>
     <label class="f" style="flex:2">Preenchimento<select data-k="enc" data-i="${i}">${ENCS.map(([k,n])=>`<option value="${k}"${t.enc===k?" selected":""}>${n}</option>`).join("")}</select></label></div>
+    ${t.kind==="seq"?`<label class="f">Folhas recolhem para<select data-k="lado" data-i="${i}"><option value=""${t.lado==="esq"?"":" selected"}>Direita</option><option value="esq"${t.lado==="esq"?" selected":""}>Esquerda</option></select></label>`:""}
     <label class="f">Persiana integrada<select data-k="per" data-i="${i}"><option value=""${t.per?"":" selected"}>Sem persiana</option><option value="1"${t.per?" selected":""}>Com persiana (caixa em cima)</option></select></label>
     ${mud?`<button class="btn" type="button" data-r="${i}">↺ Voltar ao desenho lido</button>`:""}
     <label class="ckb"><input type="checkbox" data-ok="${i}"${t.ok?" checked":""}> Conferido</label></div>
@@ -451,6 +452,7 @@ function confEd(){const it=P.itens;
    <label class="f">Tipologia<select data-k="kind" data-i="${i}">${KINDS.map(([k,n])=>`<option value="${k}"${t.kind===k?" selected":""}>${n}</option>`).join("")}</select></label>
    <div class="row" style="gap:8px"><label class="f" style="flex:1">Folhas / módulos<input type="number" min="1" max="12" data-k="f" data-i="${i}" value="${t.f}"></label>
    <label class="f" style="flex:2">Preenchimento<select data-k="enc" data-i="${i}">${ENCS.map(([k,n])=>`<option value="${k}"${t.enc===k?" selected":""}>${n}</option>`).join("")}</select></label></div>
+    ${t.kind==="seq"?`<label class="f">Folhas recolhem para<select data-k="lado" data-i="${i}"><option value=""${t.lado==="esq"?"":" selected"}>Direita</option><option value="esq"${t.lado==="esq"?" selected":""}>Esquerda</option></select></label>`:""}
     <label class="f">Persiana integrada<select data-k="per" data-i="${i}"><option value=""${t.per?"":" selected"}>Sem persiana</option><option value="1"${t.per?" selected":""}>Com persiana (caixa em cima)</option></select></label></div>
  </div>`).join("")}
  <button class="btn pri" type="button" id="e-add">＋ Adicionar item</button></div><div id="pdoc-imp" class="soimp"></div>`;
@@ -466,7 +468,7 @@ function confEd(){const it=P.itens;
   t[k]=v;if(t.orig)t.orig[k]=v;
   if(k==="tipo"){const d=O3DLER.desenho(v,t.linha);Object.assign(t,{kind:d.kind,f:d.f,enc:d.enc,per:d.per});t.lido={kind:d.kind,f:d.f,enc:d.enc,per:d.per};touch(P);confEd();return}
   touch(P);if(k==="q"||k==="L"||k==="H"||k==="vidro")thumb(i)});
- document.querySelectorAll("[data-k]").forEach(el=>el.onchange=()=>{const t=P.itens[+el.dataset.i];const k=el.dataset.k;t[k]=k==="f"?Math.max(1,Math.min(12,+el.value||1)):el.value;touch(P);thumb(+el.dataset.i)});
+ document.querySelectorAll("[data-k]").forEach(el=>el.onchange=()=>{const t=P.itens[+el.dataset.i];const k=el.dataset.k;t[k]=k==="f"?Math.max(1,Math.min(12,+el.value||1)):el.value;touch(P);if(k==="kind"){confEd();return}thumb(+el.dataset.i)});
  document.querySelectorAll("[data-x]").forEach(b=>b.onclick=()=>{const i=+b.dataset.x;if(b.dataset.ok!=="1"){b.dataset.ok="1";b.textContent="Confirmar exclusão";setTimeout(()=>{if(b.isConnected){b.dataset.ok="";b.textContent="Excluir"}},3000);return}P.itens.splice(i,1);P.itens.forEach((t,j)=>t.n=j+1);touch(P);confEd()});
  $("e-add").onclick=()=>{const u=P.itens[P.itens.length-1]||{};const t={n:P.itens.length+1,item:String(P.itens.length+1),loc:"",tipo:"",linha:u.linha||"",corPerfil:u.corPerfil||P.corPerfil||"",corAcess:"",q:1,m2:0,L:1000,H:1000,vidro:"",obs:"",pv:0,kind:"gen",f:1,enc:"vidro",avisos:[],ok:true};
   t.orig={loc:"",tipo:"",linha:t.linha,corPerfil:t.corPerfil,q:1,L:1000,H:1000,vidro:"",item:t.item,obs:"",pv:0};t.lido={kind:"gen",f:1,enc:"vidro"};P.itens.push(t);touch(P);confEd();

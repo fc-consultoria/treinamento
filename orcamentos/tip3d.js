@@ -110,6 +110,13 @@ NM=kind==="painel"?"Perfil U":"Marco"; g.add(quadro(L,H,MQ,kind==="painel"?.03:P
    if(i<f-1){const jx=x+pw/2+J/2;NM="Silicone";const sl=box(J,ih,VID*1.15,m.sil,jx,0,0);sl.castShadow=false;g.add(sl);
     /* risco do encontro dos vidros: linha fina e leve nas duas faces (aparece em qualquer tamanho) */
     [1,-1].forEach(sd=>{const z=sd*(VID*.6+.0006);const ln=new (T().Line)(new (T().BufferGeometry)().setFromPoints([new (T().Vector3)(jx,-ih/2,z),new (T().Vector3)(jx,ih/2,z)]),m.junta);ln.renderOrder=3;g.add(ln)})}}
+ }else if(kind==="seq"){
+  /* 05/11/2026 · correr sequencial: cada folha no seu trilho e todas recolhem para o mesmo lado, uma escondida atrás da outra.
+     lado "dir" (padrão): a folha da ponta direita fica no trilho de trás e as outras correm por cima dela; "esq" espelha */
+  const n=Math.max(f,2),sob=.04,pw=(iw+(n-1)*sob)/n,sg=t.lado==="esq"?-1:1,dz=PFOL*1.05;
+  for(let i=0;i<n;i++){const x=sg*(-iw/2+pw/2+i*(pw-sob));const z=((n-1)/2-i)*dz;
+   const fo=folha(pw,ih-.006,m,{enc,puxador:i===0?(sg>0?"esq":"dir"):null,ph:0});fo.position.set(x,0,z);fo.userData.fi=i;fo.userData.fn=n;g.add(fo);
+   const alvo=sg*(iw/2-pw/2-(n-1-i)*.035);if(i<n-1)moveis.push(k=>{fo.position.x=x+(alvo-x)*k});}
  }else if(kind==="correr"){
   const n=Math.max(f,2);const sob=.04;const pw=(iw+(n-1)*sob)/n;
   for(let i=0;i<n;i++){const x=-iw/2+pw/2+i*(pw-sob);const z=(i%2?-1:1)*PFOL*.6;
@@ -195,7 +202,7 @@ let R=null;
 function renderer(){if(R)return R;R=new (T().WebGLRenderer)({antialias:true,alpha:true,preserveDrawingBuffer:true});
  R.setPixelRatio(1);R.toneMapping=T().ACESFilmicToneMapping;R.toneMappingExposure=1.05;R.shadowMap.enabled=true;R.shadowMap.type=T().PCFSoftShadowMap;if(T().sRGBEncoding)R.outputEncoding=T().sRGBEncoding;return R}
 const cache=new Map();
-function chave(t,cfg){return [t.kind,t.f,t.enc||"",t.per?"P":"",t.L,t.H,t.desc,t.vidroCor||"",t.corPerfil||"",cfg.cor||"",cfg.px||0,cfg.aberto?1:0].join("|")}
+function chave(t,cfg){return [t.kind,t.f,t.enc||"",t.per?"P":"",t.lado||"",t.L,t.H,t.desc,t.vidroCor||"",t.corPerfil||"",cfg.cor||"",cfg.px||0,cfg.aberto?1:0].join("|")}
 function imagem(t,cfg){cfg=cfg||{};const k=chave(t,cfg);if(cache.has(k))return cache.get(k);
  if(!T())return "";const r=renderer();const px=cfg.px||900;
  const mt=materiais(t,cfg),mo=montar(t,mt);if(cfg.aberto)mo.animar(.55);

@@ -27,7 +27,7 @@ function desenho(tipo,linha){
  const folhas=n(/(\d+)\s*FOLHAS?/),mod=n(/(\d+)\s*M[ÓO]DULOS?/),fixas=n(/(\d+)\s*FIXAS?/);
  let kind="gen",f=folhas||mod||1,enc="vidro";
  if(/PIVOTANTE/.test(d))kind="piv";
- else if(/CORRER/.test(d)){kind=(folhas===4&&fixas===2)?"correr4":"correr";f=Math.max(folhas||2,2)}
+ else if(/CORRER/.test(d)){kind=/SEQU[EÊ]NCIA/.test(d)?"seq":(folhas===4&&fixas===2)?"correr4":"correr";f=Math.max(folhas||2,2)}
  else if(/GIRO|ABRIR/.test(d)){kind="giro";f=folhas>=2?2:1}
  else if(/MAXIM-?AR|BASCULANTE/.test(d)){kind=/PEITORIL/.test(d)?"maxp":"max";f=mod||folhas||1}
  else if(/PAINEL\s+FIXO|VIDRO\s+TEMPERADO|PERFIL DE ALUM/.test(d)&&/FIXO/.test(d)){kind="painel";f=mod||1}
