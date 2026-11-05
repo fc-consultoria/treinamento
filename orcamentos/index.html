@@ -41,6 +41,7 @@ header.top h1{font-size:24px;font-weight:700}
 .kpis{display:flex;gap:10px;flex-wrap:wrap}
 .kpi{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);border-radius:8px;padding:8px 14px;min-width:150px}
 .kpi b{display:block;font-family:var(--display);font-size:19px}
+#mo-resumo>div{background:#f3f7f7;border:1px solid #dde5e5;border-radius:10px;padding:10px 12px}#mo-resumo span{display:block;font-size:12px;color:#5b6b70}#mo-resumo b{font-size:18px}
 .kacts{display:flex;flex-direction:column;gap:6px;justify-content:center}.kbt{font:700 13.5px var(--sans,inherit);border:1.5px solid rgba(255,255,255,.55);background:rgba(255,255,255,.12);color:#fff;border-radius:8px;padding:8px 12px;cursor:pointer;white-space:nowrap}.kbt:hover{background:rgba(255,255,255,.22)}.kbt.sv{background:#fff;color:#0d4f52;border-color:#fff}.kbt:disabled{opacity:.6;cursor:default}
 .kpi.sale{background:var(--amber);border-color:var(--amber);color:#1b1205}
 nav.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--line)}
@@ -221,6 +222,7 @@ svg text{fill:var(--muted);font:600 8px var(--body)}
     <button role="tab" data-tab="comp" aria-selected="true">Componentes</button>
     <button role="tab" data-tab="alu" aria-selected="false">Alumínio</button>
     <button role="tab" data-tab="vid" aria-selected="false">Vidros</button>
+    <button role="tab" data-tab="mo" aria-selected="false">Mão de obra</button>
     <button role="tab" data-tab="res" aria-selected="false">Resumo</button>
     <button role="tab" data-tab="apr" aria-selected="false">Apresentação</button>
   </div>
@@ -390,7 +392,7 @@ const glassName=k=>{const s=String(k).toLowerCase().replace(/(\d+)\s*mm/g,"$1 mm
 /* Componentes, Alumínio e Vidros: margem sobre o custo (PV = Custo × (1 + margem)), de 0% a 150%, sem impostos/despesas.
    Demais grupos: PV = Custo ÷ (1 − impostos − despesas − margem). */
 const MG_MAX_COMP=150;
-const MKUP=k=>k==="comp"||k==="alu"||k==="vid"||k==="out"; // grupos sem impostos/despesas, margem sobre o custo
+const MKUP=k=>k==="comp"||k==="alu"||k==="vid"||k==="out"||k==="mo"; // grupos sem impostos/despesas, margem sobre o custo
 function pv(cost,m,k){const g=n(m.mg)/100;
  if(MKUP(k)){const div=1+g;if(g<0||g*100>MG_MAX_COMP)return {ok:false,div,v:0,l:0};return {ok:true,div,v:cost*div,l:cost*g}}
  const i=n(m.imp)/100,d=n(m.desp)/100;const div=1-i-d-g;if(div<=0)return {ok:false,div,v:0,l:0};const v=cost/div;return {ok:true,div,v,l:v*g}}
@@ -403,7 +405,7 @@ if(window.ORC&&ORC.ativo){DB=ORC.DB}else{try{const s=localStorage.getItem(KEY);i
 function newState(o,lib){
  const st={hide:{},comp:{},aluPeso:num(o.pesoTotal||o.perfis.reduce((s,p)=>s+p.peso,0)),aluKg:lib.aluKg||"",aluAdd:lib.aluAdd||"",vidPrice:{},vidM2:{},
   outros:[{d:"Instalação",v:""},{d:"Frete / transporte",v:""},{d:"",v:""}],
-  mg:{comp:Object.assign(blankMg(),lib.mg&&lib.mg.comp),alu:Object.assign(blankMg(),lib.mg&&lib.mg.alu),vid:Object.assign(blankMg(),lib.mg&&lib.mg.vid),out:Object.assign(blankMg(),lib.mg&&lib.mg.out)},
+  mg:{comp:Object.assign(blankMg(),lib.mg&&lib.mg.comp),alu:Object.assign(blankMg(),lib.mg&&lib.mg.alu),vid:Object.assign(blankMg(),lib.mg&&lib.mg.vid),mo:Object.assign(blankMg(),lib.mg&&lib.mg.mo),out:Object.assign(blankMg(),lib.mg&&lib.mg.out)},
   rateio:"area",validade:"",cond:"",prazo:"",obs:""};
  st.emb={};o.comps.forEach(c=>{const b=DB.banco&&DB.banco[c.code];if(b&&b.preco){st.comp[c.code]=b.preco;st.emb[c.code]=Object.assign({},b.emb)}});
  [...new Set(o.tips.map(t=>t.vid))].forEach(k=>{if(lib.vid&&lib.vid[k])st.vidPrice[k]=lib.vid[k]});
@@ -466,17 +468,20 @@ const m2Obra=O=>O.tips.reduce((s,t)=>s+itemM2(t),0);
    Obra antiga: leva o R$/m² do Alumínio e, se o grupo estava vazio, a margem também, para o preço não mudar. */
 function moGarante(O){const st=O&&O.st;if(!st||!st.mg||st.moV2)return;st.moV2=1;if(Array.isArray(st.outros))st.outros=st.outros.filter(x=>!(/^m[ãa]o de obra de fabrica/i.test(x.d||"")&&!n(x.v)));const a=st.mg.alu||{},o=st.mg.out=st.mg.out||blankMg();
  if(n(a.mo)){o.mo=a.mo;if(!n(o.mg)&&!(st.outros||[]).some(x=>n(x.v)))o.mg=a.mg||""}}
-const moCost=O=>{moGarante(O);return m2Obra(O)*n(O.st.mg.out.mo)};
+/* 05/11 (2): mão de obra ganhou grupo e painel próprios (st.mg.mo), com área total da obra, R$/m² e margem */
+function moGarante3(O){const st=O&&O.st;if(!st||!st.mg||st.moV3)return;moGarante(O);st.moV3=1;const o=st.mg.out||{},a=st.mg.alu||{};
+ const src=n(o.mo)?o:n(a.mo)?a:null;st.mg.mo=Object.assign(blankMg(),st.mg.mo);if(src&&!n(st.mg.mo.mo)){st.mg.mo.mo=src.mo;st.mg.mo.mg=src.mg||""}o.mo=""}
+const moCost=O=>{moGarante3(O);return m2Obra(O)*n(O.st.mg.mo.mo)};
 const gKeys=O=>[...new Set(O.tips.map(t=>t.vid))];
 const autoM2=(O,k)=>O.tips.filter(t=>t.vid===k).reduce((s,t)=>s+itemM2(t),0);
 const m2Of=(O,k)=>{const o=n(O.st.vidM2[k]);return o>0?o+dupTips(O).filter(t=>t.vid===k).reduce((s,t)=>s+itemM2(t),0):autoM2(O,k)};
 const vidCostOf=(O,k)=>m2Of(O,k)*n(O.st.vidPrice[k]);
 const vidCost=O=>gKeys(O).reduce((s,k)=>s+vidCostOf(O,k),0);
 const outManual=O=>O.st.outros.reduce((s,o)=>s+n(o.v),0);
-const outCost=O=>moCost(O)+outManual(O);
+const outCost=O=>outManual(O);
 function groups(O){return [
  {k:"comp",name:"Componentes",cost:compCost(O)*(1+fatorDup(O)),dup:compCost(O)*fatorDup(O)},{k:"alu",name:"Alumínio",cost:aluCost(O)*(1+fatorDup(O)),perfil:aluCost(O)*(1+fatorDup(O)),dup:aluCost(O)*fatorDup(O),mo:moCost(O),m2:m2Obra(O)},
- {k:"vid",name:"Vidros",cost:vidCost(O)},{k:"out",name:"Mão de obra e outros custos",cost:outCost(O),mo:moCost(O),man:outManual(O),m2:m2Obra(O)}
+ {k:"vid",name:"Vidros",cost:vidCost(O)},{k:"mo",name:"Mão de obra",cost:moCost(O),m2:m2Obra(O),pecas:O.tips.reduce((s,t)=>s+(+t.q||0),0)},{k:"out",name:"Outros custos",cost:outCost(O)}
 ].map(g=>Object.assign(g,{p:pv(g.cost,O.st.mg[g.k],g.k)}))}
 const totals=O=>{const gs=groups(O);return {c:gs.reduce((s,g)=>s+g.cost,0),v:gs.reduce((s,g)=>s+(g.p.ok?g.p.v:0),0),gs}};
 
@@ -692,11 +697,16 @@ function buildObra(){
  <div class="card"><div class="card-h"><h2>Área por item</h2></div><div class="tbl-wrap"><table><thead><tr><th>Item</th><th>Tipo</th><th>Vidro</th><th class="r">L × H</th><th class="r">Qtde</th><th class="r">m²</th></tr></thead><tbody id="vid-items"></tbody></table></div></div>
  </div><div id="pp-vid"></div></div></section>
 
+<section id="tab-mo" class="tab" hidden><div class="panel-grid"><div class="stack">
+ <div class="card"><div class="card-h"><div><h2>Mão de obra da obra</h2><div class="hint">Área total da obra pelos vãos do croqui (L × H × qtde) × R$/m². Tipologias incluídas na proposta também entram. Defina o R$/m² e a margem no painel ao lado.</div></div></div>
+  <div class="card-b"><div id="mo-resumo" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px"></div></div></div>
+ </div><div id="pp-mo"></div></div></section>
+
 <section id="tab-res" class="tab" hidden><div class="stack">
- <div class="card"><div class="card-h"><h2>Resumo da obra</h2><div class="hint">Componentes: PV = Custo × (1 + margem). Alumínio: PV = Perfis × (1 + margem). Vidros: PV = Custo × (1 + margem). Mão de obra e outros custos: PV = (Mão de obra por m² + outros) × (1 + margem).</div></div>
+ <div class="card"><div class="card-h"><h2>Resumo da obra</h2><div class="hint">Componentes: PV = Custo × (1 + margem). Alumínio: PV = Perfis × (1 + margem). Vidros: PV = Custo × (1 + margem). Mão de obra: PV = (Área × R$/m²) × (1 + margem). Outros custos: PV = Custo × (1 + margem).</div></div>
   <div class="tbl-wrap"><table class="sum-table"><thead><tr><th>Grupo</th><th class="r">Custo</th><th class="r">Impostos</th><th class="r">Despesas</th><th class="r">Margem</th><th class="r">Preço de venda</th><th class="r">Lucro R$</th><th class="r">% da venda</th></tr></thead>
   <tbody id="res-body"></tbody><tfoot><tr><td>Total da obra</td><td class="r num" id="res-c"></td><td></td><td></td><td></td><td class="r num" id="res-v"></td><td class="r num" id="res-l"></td><td class="r num">100%</td></tr></tfoot></table></div></div>
- <div class="panel-grid" id="out-sec"><div class="card"><div class="card-h"><div><h2>Mão de obra e outros custos</h2><div class="hint">Mão de obra pela área da obra × R$/m² (digite o R$/m² no painel ao lado) + outros custos da obra. Margem sobre o custo, igual aos demais grupos. Entra no resumo e no preço das tipologias.</div></div></div>
+ <div class="panel-grid" id="out-sec"><div class="card"><div class="card-h"><div><h2>Outros custos</h2><div class="hint">Opcional (instalação, frete…). Margem sobre o custo, igual aos demais grupos. Entra no resumo e no preço das tipologias.</div></div></div>
   <div class="tbl-wrap"><table><thead><tr><th>Descrição</th><th class="r">Custo R$</th></tr></thead><tbody id="out-body"></tbody></table></div></div><div id="pp-out"></div></div>
  <div class="card"><div class="card-h"><h2>Dados da proposta</h2></div><div class="card-b fields">
   <label>Número da proposta<input class="in" id="f-numero"></label><label>Obra<input class="in" id="f-obra"></label><label>Cliente<input class="in" id="f-cliente"></label><label>Acabamento<input class="in" id="f-cor"></label>
@@ -708,7 +718,7 @@ function buildObra(){
 </div></section>
 
 <section id="tab-apr" class="tab" hidden><div class="apr-bar"><button class="btn ghost" type="button" id="apr-print">🖨 Imprimir / Salvar PDF</button><button class="btn amb" type="button" id="apr-link">🔗 Link de Apresentação 3D</button></div><div id="p-doc" class="p-doc"></div></section>`;
- moGarante(O);["comp","alu","vid","out"].forEach(k=>pricePanel(k,{comp:"Componentes",alu:"Alumínio",vid:"Vidros",out:"Mão de obra e outros custos"}[k]));
+ moGarante3(O);["comp","alu","vid","mo","out"].forEach(k=>pricePanel(k,{comp:"Componentes",alu:"Alumínio",vid:"Vidros",mo:"Mão de obra",out:"Outros custos"}[k]));
  wireComp();buildCot();buildComp();buildAlu();buildVid();buildOut();wireFields();refresh();
  $("apr-print").onclick=aprImprimir;$("apr-link").onclick=aprLink;
 }
@@ -723,18 +733,16 @@ document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest
 function pricePanel(key,title){
  $("pp-"+key).innerHTML=`<div class="card price-panel"><div class="pp-h"><div class="eyebrow">Formação de preço</div><h3>${title}</h3></div><div class="pp-b">
   ${key==="alu"?`<div class="row"><label>Custo dos perfis</label><span class="num" id="pp-alu-perf">R$ 0,00</span></div>
-  <div class="row"><label>Custo total</label><span class="cost num" id="pp-${key}-c">R$ 0,00</span></div>`:key==="out"?`<div class="row"><label>Área total da obra</label><span class="num" id="pp-out-m2">0,00 m²</span></div>
-  <div class="row"><label for="pp-out-mo">Mão de obra R$/m²</label><input class="in pct num" id="pp-out-mo" inputmode="decimal" placeholder="0,00"></div>
-  <div class="row"><label>Mão de obra</label><span class="num" id="pp-out-mov">R$ 0,00</span></div>
-  <div class="row"><label>Outros custos</label><span class="num" id="pp-out-man">R$ 0,00</span></div>
+  <div class="row"><label>Custo total</label><span class="cost num" id="pp-${key}-c">R$ 0,00</span></div>`:key==="mo"?`<div class="row"><label>Área total da obra</label><span class="num" id="pp-mo-m2">0,00 m²</span></div>
+  <div class="row"><label for="pp-mo-mo">Mão de obra R$/m²</label><input class="in pct num" id="pp-mo-mo" inputmode="decimal" placeholder="0,00"></div>
   <div class="row"><label>Custo total</label><span class="cost num" id="pp-${key}-c">R$ 0,00</span></div>`:`<div class="row"><label>Custo</label><span class="cost num" id="pp-${key}-c">R$ 0,00</span></div>`}
   ${MKUP(key)?"":`<div class="row"><label for="pp-${key}-imp">Impostos %</label><input class="in pct num" id="pp-${key}-imp" inputmode="decimal" placeholder="0"></div>
   <div class="row"><label for="pp-${key}-desp">Despesas %</label><input class="in pct num" id="pp-${key}-desp" inputmode="decimal" placeholder="0"></div>`}
   <div class="row"><label for="pp-${key}-mg">Margem %${MKUP(key)?` <span class="hint">(até ${MG_MAX_COMP}%)</span>`:""}</label><input class="in pct num" id="pp-${key}-mg" inputmode="decimal" placeholder="0"></div>
-  <div class="formula">${MKUP(key)?`PV = ${key==="out"?"(Mão de obra + outros)":key==="alu"?"Perfis":"Custo"} × (1 + margem)<br>Multiplicador: <b class="num" id="pp-${key}-div">1,0000</b>`:`PV = Custo ÷ (1 − impostos − despesas − margem)<br>Divisor: <b class="num" id="pp-${key}-div">1,0000</b>`}</div>
+  <div class="formula">${MKUP(key)?`PV = ${key==="mo"?"Área × R$/m²":key==="alu"?"Perfis":"Custo"} × (1 + margem)<br>Multiplicador: <b class="num" id="pp-${key}-div">1,0000</b>`:`PV = Custo ÷ (1 − impostos − despesas − margem)<br>Divisor: <b class="num" id="pp-${key}-div">1,0000</b>`}</div>
   <div class="sale-box"><div class="eyebrow" style="color:var(--muted)">Preço de venda</div><div class="v num" id="pp-${key}-v">R$ 0,00</div><div class="hint">Lucro: <b class="num" id="pp-${key}-l">R$ 0,00</b></div></div>
   <div class="err" id="pp-${key}-err" hidden>${MKUP(key)?`A margem precisa ficar entre 0% e ${MG_MAX_COMP}%.`:"A soma de impostos, despesas e margem precisa ficar abaixo de 100%."}</div></div></div>`;
- (key==="out"?["mo","mg"]:MKUP(key)?["mg"]:["imp","desp","mg"]).forEach(f=>{const el=$(`pp-${key}-${f}`);el.value=st.mg[key][f]||"";el.addEventListener("input",()=>{st.mg[key][f]=el.value;DB.lib.mg[key]=Object.assign({},st.mg[key]);touch();refresh()})});
+ (key==="mo"?["mo","mg"]:MKUP(key)?["mg"]:["imp","desp","mg"]).forEach(f=>{const el=$(`pp-${key}-${f}`);el.value=st.mg[key][f]||"";el.addEventListener("input",()=>{st.mg[key][f]=el.value;DB.lib.mg[key]=Object.assign({},st.mg[key]);touch();refresh()})});
 }
 function paintPanel(g){
  $(`pp-${g.k}-c`).textContent=brl(g.cost);$(`pp-${g.k}-div`).textContent=num(g.p.div,4);
@@ -742,7 +750,7 @@ function paintPanel(g){
  $(`pp-${g.k}-l`).textContent=g.p.ok?brl(g.p.l):"—";
  $(`pp-${g.k}-err`).hidden=g.p.ok;
  if(g.k==="alu")$("pp-alu-perf").textContent=brl(g.perfil);
- if(g.k==="out"){$("pp-out-m2").textContent=num(g.m2,2)+" m²";$("pp-out-mov").textContent=brl(g.mo);$("pp-out-man").textContent=brl(g.man);const r=$("out-mo-v");if(r)r.textContent=brl(g.mo);const a=$("out-mo-m2");if(a)a.textContent=num(g.m2,2)}
+ if(g.k==="mo"){$("pp-mo-m2").textContent=num(g.m2,2)+" m²";const e=$("mo-resumo");if(e)e.innerHTML=[["Tipologias",O.tips.length],["Peças",g.pecas],["Área total da obra",num(g.m2,2)+" m²"],["Mão de obra R$/m²",n(st.mg.mo.mo)?brl(n(st.mg.mo.mo)):"—"],["Custo da mão de obra",brl(g.cost)],["Preço de venda",g.p.ok?brl(g.p.v):"—"]].map(([a,b])=>`<div><span>${a}</span><b class="num">${b}</b></div>`).join("")}
 }
 
 // ---------- COMPONENTES ----------
@@ -928,7 +936,7 @@ function paintVid(){let m=0;gKeys(O).forEach((k,j)=>{m+=m2Of(O,k);const c=vidCos
 
 // ---------- OUTROS / CAMPOS ----------
 function buildOut(){
- $("out-body").innerHTML=`<tr style="background:var(--wash,#f3f7f7)"><td><b>Mão de obra</b> <span class="hint">· <span class="num" id="out-mo-m2">0,00</span> m² × R$/m² do painel</span></td><td class="r num"><b id="out-mo-v">R$ 0,00</b></td></tr>`+st.outros.map((o,i)=>`<tr><td><input class="in" style="width:100%" id="od-${i}" value="${esc(o.d)}" placeholder="Descrição" aria-label="Descrição do custo ${i+1}"></td><td class="r"><input class="in money num" id="ov-${i}" inputmode="decimal" placeholder="0,00" value="${esc(o.v)}" aria-label="Valor do custo ${i+1}"></td></tr>`).join("");
+ $("out-body").innerHTML=st.outros.map((o,i)=>`<tr><td><input class="in" style="width:100%" id="od-${i}" value="${esc(o.d)}" placeholder="Descrição" aria-label="Descrição do custo ${i+1}"></td><td class="r"><input class="in money num" id="ov-${i}" inputmode="decimal" placeholder="0,00" value="${esc(o.v)}" aria-label="Valor do custo ${i+1}"></td></tr>`).join("");
  st.outros.forEach((o,i)=>{$("od-"+i).oninput=e=>{st.outros[i].d=e.target.value;touch()};$("ov-"+i).oninput=e=>{st.outros[i].v=e.target.value;touch();refresh()}});
 }
 function wireFields(){
@@ -1028,7 +1036,7 @@ function sketch(t){
 }
 function paintApr(gs){
  const g=Object.fromEntries(gs.map(x=>[x.k,x]));const sale=k=>g[k].p.ok?g[k].p.v:0;
- const shared=sale("comp")+sale("alu")+sale("out");
+ const shared=sale("comp")+sale("alu")+sale("mo")+sale("out");
  const w=t=>st.rateio==="per"?itemPer(t):itemM2(t);const wTot=O.tips.reduce((s,t)=>s+w(t),0);
  const vS=sale("vid"),vC=vidCost(O);
  const vidItem=t=>{const c=vidCostOf(O,t.vid),a=autoM2(O,t.vid);if(!c||!vC||!a)return 0;return vS*(c/vC)*(itemM2(t)/a)};
