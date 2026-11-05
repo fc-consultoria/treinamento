@@ -134,8 +134,8 @@ table.cli td.n,table.cli th.n{text-align:right}
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/environments/RoomEnvironment.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/geometries/RoundedBoxGeometry.js"></script>
-<script src="tip3d.js?v=20261105g"></script>
-<script src="proposta.js?v=20261105d"></script>
+<script src="tip3d.js?v=20261105h"></script>
+<script src="proposta.js?v=20261105e"></script>
 <script src="obra3d-ler.js"></script>
 <script src="orientativo-ler.js?v=1"></script>
 <script src="secao-ler.js?v=1"></script>
@@ -170,9 +170,9 @@ async function enviar(){const ids=[...pend];pend.clear();if(!ids.length)return;
 addEventListener("beforeunload",e=>{if(pend.size){e.preventDefault();e.returnValue=""}});
 
 /* ---------- dados para a apresentação (nunca leva preço) ---------- */
-function t3(it){const o={item:it.item,tipo:it.tipo,loc:it.loc,kind:it.kind,f:it.f,enc:it.enc,L:it.L,H:it.H,q:it.q,linha:it.linha,desc:it.vidro+(it.obs?" · "+it.obs:"")};if(it.cortes)o.cortes=it.cortes;return o}
+function t3(it){const o={item:it.item,tipo:it.tipo,loc:it.loc,kind:it.kind,f:it.f,enc:it.enc,L:it.L,H:it.H,q:it.q,linha:it.linha,desc:it.vidro+(it.obs?" · "+it.obs:"")};if(it.cortes)o.cortes=it.cortes;if(it.corPerfil)o.corPerfil=it.corPerfil;if(it.vidroCor)o.vidroCor=it.vidroCor;return o}
 function doc(p){const d={marca:p.empresa,marcaCor:p.cor,numero:p.numero,obra:p.obra,cliente:p.cliente,cor:p.corPerfil,emitida:p.emitida||p.criado,itens:p.itens.map(t3)};
- if(p.logo)d.logo=p.logo;if(p.editavel&&typeof p.rodape==="string")d.rodape=p.rodape;return d}
+ if(p.logo)d.logo=p.logo;if(p.editavel&&typeof p.rodape==="string")d.rodape=p.rodape;if(p.corAlterada)d.corAlterada=true;return d}
 /* preços: só para o PDF impresso (valor do item no PDF + margem em lote); o link nunca recebe isto */
 const fat=p=>1+(+p.margem||0)/100;
 const precos=p=>p.itens.map(t=>Math.round((+t.pv||0)*fat(p)*100)/100);
@@ -472,7 +472,7 @@ function apr(){const nOk=P.itens.filter(t=>t.ok).length,lk=P.link;const v=lk&&VI
   ${somaPdf(P)>0?"":`<span class="hint" style="flex-basis:100%">Este projeto não tem preços do PDF.${P.editavel?" Lance o preço de cada item na Conferência.":" Duplique para lançar preços."}</span>`}</div>
  <div id="pdoc"></div>`;
  if(!window.PROPOSTA){$("pdoc").innerHTML=`<div class="msg">O modelo da proposta não carregou. Verifique a internet e atualize.</div>`;return}
- const D=doc(P);PROPOSTA.render($("pdoc"),D,{simular:true,simRotulo:"só a FC vê · o link do cliente não tem",estado:((window.__simEst=window.__simEst||{})[P.id]=window.__simEst[P.id]||{})});
+ const D=doc(P);PROPOSTA.render($("pdoc"),D,{simular:true,simRotulo:"só a FC vê · o link do cliente não tem",estado:((window.__simEst=window.__simEst||{})[P.id]=window.__simEst[P.id]||{}),onSalvar:cores=>salvarCorFC(P,cores)});
  const msg=t=>{$("l-msg").textContent=t};
  const publicar=async tok=>{msg("Publicando…");const r=await BD.link(tok,"o3d-"+P.id,doc(P));if(r&&r.error){msg("Não foi possível publicar: "+r.error.message);return false}
   P.link={tok,ativo:true,em:new Date().toISOString()};if(P.status==="recebido"||P.status==="conferencia"){P.status="entregue";P.entregue=P.entregue||new Date().toISOString().slice(0,10)}touch(P);return true};
@@ -497,10 +497,15 @@ function apr(){const nOk=P.itens.filter(t=>t.ok).length,lk=P.link;const v=lk&&VI
  $("m-pct").oninput=e=>{P.margem=Math.round((+String(e.target.value).replace(",",".")||0)*100)/100;touch(P);$("m-tot").textContent=brl(precos(P).reduce((a,b)=>a+b,0))};
  /* com preço: monta a proposta com valores só para imprimir e volta à versão sem preço depois */
  $("l-prc").onclick=()=>{const pr=precos(P);PROPOSTA.render($("pdoc"),D,{precos:pr,total:pr.reduce((a,b)=>a+b,0),rotulo:"Proposta comercial",adiar:true,simular:true,estado:((window.__simEst=window.__simEst||{})[P.id]=window.__simEst[P.id]||{})});PROPOSTA.preencher($("pdoc"),D,true);
-  addEventListener("afterprint",()=>PROPOSTA.render($("pdoc"),D,{simular:true,simRotulo:"só a FC vê · o link do cliente não tem",estado:((window.__simEst=window.__simEst||{})[P.id]=window.__simEst[P.id]||{})}),{once:true});setTimeout(()=>print(),80)};
+  addEventListener("afterprint",()=>PROPOSTA.render($("pdoc"),D,{simular:true,simRotulo:"só a FC vê · o link do cliente não tem",estado:((window.__simEst=window.__simEst||{})[P.id]=window.__simEst[P.id]||{}),onSalvar:cores=>salvarCorFC(P,cores)}),{once:true});setTimeout(()=>print(),80)};
  if(lk&&lk.ativo!==false)vistas();
 }
 
+/* 05/11/2026 · salvar a cor escolhida na negociação: grava nos itens e atualiza o link ativo */
+async function salvarCorFC(P,cores){if(!confirm("Salvar estas cores? O link do cliente passa a mostrar a obra nessas cores (os valores não mudam)."))return false;
+ P.itens.forEach((t,i)=>{const c=cores[i]||{};if(c.corPerfil)t.corPerfil=c.corPerfil;else delete t.corPerfil;if(c.vidroCor)t.vidroCor=c.vidroCor;else delete t.vidroCor});
+ P.corAlterada=P.itens.some(t=>t.corPerfil||t.vidroCor);delete (window.__simEst||{})[P.id];touch(P);
+ if(P.link&&P.link.ativo!==false){const r=await BD.link(P.link.tok,"o3d-"+P.id,doc(P));if(r&&r.error){toast("Cores salvas · não foi possível atualizar o link");return true}toast("Cores salvas · link do cliente atualizado")}else toast("Cores salvas");return true}
 /* ---------- controle do projeto (só na Matriz) ---------- */
 function ctl(){const s=stOf(P.status);
  $("tab").innerHTML=`<div class="card ctl">

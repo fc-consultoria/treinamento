@@ -388,12 +388,14 @@ function passoPecas(){const now=performance.now();V.s.updateMatrixWorld();const 
  else if(V.modo==="f")cap.innerHTML=detalhe(V.focus);}
 /* 05/11/2026 · chips de cor: com cfg.onCor viram botões para simular outra cor de perfil/vidro (só demonstração) */
 function chipsCor(){const mt=V.mt,t=V.tA,cfg=V.cfgA,el=V.d.querySelector("#t3d-ch");const sim=!!(cfg.onCor&&cfg.cores);
- const nm=(k,id,d)=>{const f=sim&&(cfg.cores[k]||[]).find(x=>x[0]===id);return f?f[1]:d};const nP=t.corPerfil?nm("p",mt.p.id,mt.p.nome):(cfg.cor||mt.p.nome),alt=!!(t.corPerfil||t.vidroCor)&&sim;
+ const nm=(k,id,d)=>{const f=sim&&(cfg.cores[k]||[]).find(x=>x[0]===id);return f?f[1]:d};const nP=t.corPerfil?nm("p",mt.p.id,mt.p.nome):(cfg.cor||mt.p.nome),alt=sim&&(cfg.simAtivo?cfg.simAtivo():!!(t.corPerfil||t.vidroCor));
  const chip=(k,hex,tx)=>sim?`<button type="button" class="chip" data-ck="${k}" style="cursor:pointer;font:inherit" aria-haspopup="true"><span class="sw" style="background:${hex}"></span>${tx} ▾</button>`:`<span class="chip"><span class="sw" style="background:${hex}"></span>${tx}</span>`;
  el.innerHTML=chip("p",mt.p.hex,"Perfil: "+esc(nP))+(sim&&cfg.temVidro===false?"":chip("v",mt.v.hex,"Vidro: "+esc(nm("v",mt.v.id,mt.v.nome))))
   +(alt?`<span class="chip" style="background:#fff6e5;color:#7a4b07;border:1px solid #f0d49a">⚠ Cor só para demonstração · confirme o valor com a vidraçaria</span>`:"")
+  +(alt&&cfg.onSalvar?`<button type="button" class="chip" id="t3d-sv" style="cursor:pointer;font:inherit;background:#0d6b68;color:#fff">💾 Salvar cores</button>`:"")
   +`<div id="t3d-pal" hidden style="flex-basis:100%;display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;padding:8px;border-radius:12px;background:rgba(10,25,30,.55)"></div>`;
  if(!sim)return;
+ const sv=el.querySelector("#t3d-sv");if(sv)sv.onclick=()=>{sv.textContent="Salvando…";cfg.onSalvar();setTimeout(()=>chipsCor(),900)};
  el.querySelectorAll("[data-ck]").forEach(b=>b.onclick=()=>{const k=b.dataset.ck,pal=el.querySelector("#t3d-pal");
   if(!pal.hidden&&pal.dataset.k===k){pal.hidden=true;return}pal.dataset.k=k;pal.hidden=false;
   const lista=k==="p"?cfg.cores.p:cfg.cores.v,cur=k==="p"?mt.p.id:mt.v.id;

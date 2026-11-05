@@ -917,7 +917,7 @@ function paintRes(gs){
 const KINDS3D=[["fixo","Fixo"],["correr","Correr"],["giro","Giro / abrir"],["max","Maxim-ar"],["maxp","Maxim-ar com peitoril fixo"],["piv","Pivotante com fixo"],["gen","Outro"]];
 let aprAberto=-1,aprFila=0;
 /* dados da obra no formato do modelo da proposta (proposta.js) */
-function aprDoc(){return {numero:O.numero||"",obra:O.obra||"",cliente:O.cliente||"",cor:O.cor||"",marca:(O.marcaNome||"").trim(),marcaCor:O.marcaCor||"",emitida:new Date().toISOString(),itens:O.tips}}
+function aprDoc(){return {numero:O.numero||"",obra:O.obra||"",cliente:O.cliente||"",cor:O.cor||"",marca:(O.marcaNome||"").trim(),marcaCor:O.marcaCor||"",emitida:new Date().toISOString(),itens:O.tips.map(t=>Object.assign({},t)),corAlterada:!!O.corAlterada}}
 function aprFill(){if(window.PROPOSTA&&O&&$("p-doc"))PROPOSTA.preencher($("p-doc"),aprDoc())}
 function aprEditor(t){
  return `<div class="edit">
@@ -938,8 +938,15 @@ function aprEditorLigar(t){const g=id=>$(id);if(!g("e3-ok"))return;
  if(g("e3-rs"))g("e3-rs").onclick=()=>{Object.assign(t,t.orig);delete t.orig;aprAberto=-1;touch();refresh()};}
 function aprImprimir(){if(window.PROPOSTA)PROPOSTA.preencher($("p-doc"),aprDoc(),true);setTimeout(()=>window.print(),80)}
 /* link do cliente: só tipologias, medidas e cores; nunca preço, custo, margem ou condições */
+/* 05/11/2026 · salvar a cor escolhida na negociação: grava em cada tipologia e atualiza o link ativo */
+const avisoCor=t=>{let e=document.getElementById("cor-toast");if(!e){e=document.createElement("div");e.id="cor-toast";e.setAttribute("role","status");e.style.cssText="position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:#13232e;color:#fff;padding:10px 16px;border-radius:10px;font-size:14px;z-index:999";document.body.appendChild(e)}e.textContent=t;e.hidden=false;clearTimeout(e._h);e._h=setTimeout(()=>e.hidden=true,3000)};
+async function salvarCorObra(cores){if(!confirm("Salvar estas cores? O link do cliente passa a mostrar a obra nessas cores (os valores não mudam)."))return false;
+ O.tips.forEach((t,k)=>{const c=cores[k]||{};t.corPerfil=c.corPerfil||"";t.vidroCor=c.vidroCor||""});O.corAlterada=O.tips.some(t=>t.corPerfil||t.vidroCor);
+ if(window.__simEst)delete window.__simEst[O.id];touch();
+ const lk=st&&st.link;if(lk&&lk.tok&&lk.ativo!==false){const r=await sb.from("orcobra_links").upsert({token:lk.tok,obra_id:O.id,dados:aprDados(),ativo:true,atualizado:new Date().toISOString()});
+  avisoCor(r.error?"Cores salvas · não foi possível atualizar o link":"Cores salvas · link do cliente atualizado")}else avisoCor("Cores salvas");paintApr(groups(O));return true}
 function aprDados(){return {v:1,numero:O.numero||"",obra:O.obra||"",cliente:O.cliente||"",cor:O.cor||"",marca:(O.marcaNome||"").trim(),marcaCor:O.marcaCor||"",emitida:new Date().toISOString(),
- itens:O.tips.map(t=>({item:t.item,tipo:t.tipo,loc:t.loc,kind:t.kind,f:t.f,L:t.L,H:t.H,q:t.q,linha:t.linha,desc:String(t.desc||"").replace(/\s*Validade da Proposta:.*$/i,""),vidroCor:t.vidroCor||"",corPerfil:t.corPerfil||""}))}}
+ itens:O.tips.map(t=>({item:t.item,tipo:t.tipo,loc:t.loc,kind:t.kind,f:t.f,L:t.L,H:t.H,q:t.q,linha:t.linha,desc:String(t.desc||"").replace(/\s*Validade da Proposta:.*$/i,""),vidroCor:t.vidroCor||"",corPerfil:t.corPerfil||""})),corAlterada:!!O.corAlterada}}
 function aprUrl(tok){return location.origin+location.pathname.replace(/[^/]*$/,"")+"apresentacao.html?t="+tok}
 async function aprLink(){let m=$("lk-modal");if(!m){m=document.createElement("div");m.id="lk-modal";m.className="modal";m.setAttribute("role","dialog");m.setAttribute("aria-modal","true");document.body.appendChild(m);m.addEventListener("click",e=>{if(e.target===m)m.hidden=true})}
  const lk=st.link||null;
@@ -987,7 +994,7 @@ function paintApr(gs){
  const total=O.tips.length?precos.reduce((s,v)=>s+v,0):gs.reduce((s,x)=>s+(x.p.ok?x.p.v:0),0);
  const el=$("p-doc");if(!el)return;
  if(!window.PROPOSTA){el.innerHTML=`<div class="card-b hint">O modelo da proposta não carregou. Verifique a internet e atualize a página.</div>`;return}
- PROPOSTA.render(el,aprDoc(),{simular:true,simRotulo:"só a FC vê · o link do cliente não tem",estado:((window.__simEst=window.__simEst||{})[O.id]=window.__simEst[O.id]||{}),onSim:()=>paintApr(groups(O)),precos:O.tips.length?precos:[],total,condicoes:{validade:st.validade,cond:st.cond,prazo:st.prazo,obs:st.obs},editar:true,aberto:aprAberto,editor:t=>aprEditor(t),adiar:$("tab-apr").hidden});
+ PROPOSTA.render(el,aprDoc(),{simular:true,simRotulo:"só a FC vê · o link do cliente não tem",estado:((window.__simEst=window.__simEst||{})[O.id]=window.__simEst[O.id]||{}),onSim:()=>paintApr(groups(O)),onSalvar:cores=>salvarCorObra(cores),precos:O.tips.length?precos:[],total,condicoes:{validade:st.validade,cond:st.cond,prazo:st.prazo,obs:st.obs},editar:true,aberto:aprAberto,editor:t=>aprEditor(t),adiar:$("tab-apr").hidden});
  if(!O.tips.length)el.querySelector(".pp-body").insertAdjacentHTML("beforeend",`<div class="hint" style="padding:16px 0">Esta obra não tem croqui. O total soma os grupos do resumo.</div>`);
  el.querySelectorAll("[data-pe]").forEach(b=>b.onclick=()=>{aprAberto=aprAberto===+b.dataset.pe?-1:+b.dataset.pe;paintApr(groups(O));if(aprAberto>=0){const ed=el.querySelector(".pp-edit");if(ed)ed.scrollIntoView({block:"nearest",behavior:"smooth"})}});
  if(aprAberto>=0)aprEditorLigar(O.tips[aprAberto]);
@@ -1007,8 +1014,8 @@ window.addEventListener("hashchange",()=>{const k=location.hash.replace("#","");
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/environments/RoomEnvironment.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/geometries/RoundedBoxGeometry.js"></script>
-<script src="tip3d.js?v=20261105g"></script>
-<script src="proposta.js?v=20261105d"></script>
+<script src="tip3d.js?v=20261105h"></script>
+<script src="proposta.js?v=20261105e"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="../auth.js"></script>
 <script src="sync.js"></script>
