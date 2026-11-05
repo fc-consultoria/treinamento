@@ -136,6 +136,8 @@ table.cli td.n,table.cli th.n{text-align:right}
 <script src="tip3d.js?v=20261104q"></script>
 <script src="proposta.js?v=20261104r"></script>
 <script src="obra3d-ler.js"></script>
+<script src="orientativo-ler.js?v=1"></script>
+<script src="secao-ler.js?v=1"></script>
 <script>
 /* ======================= Obra em 3D ======================= */
 function iniciarObra3D(BD){(function(){
@@ -154,7 +156,9 @@ const stOf=k=>STATUS.find(s=>s[0]===k)||STATUS[0];
 const KINDS=[["giro","Porta de giro"],["correr","Correr"],["correr4","Correr 4 folhas (2 fixas + 2 móveis)"],["max","Maxim-ar"],["maxp","Maxim-ar com peitoril fixo"],["fixo","Fixo (vidro com vidro)"],["painel","Painel fixo temperado com perfil"],["piv","Pivotante com fixo"],["gen","Outro"]];
 const ENCS=[["vidro","Vidro"],["lambri","Lambri"],["vidlam","Vidro em cima + lambri embaixo"],["veneziana","Veneziana"]];
 const CORES=["#1d5fa8","#0d5c63","#1f7a4a","#b3261e","#c9831a","#6d4bd8","#13232e","#8a4b2a"];
-let LIST=BD.projetos.slice(),P=null,TAB="conf",VISTAS={},LINKS=null;
+/* 05/11/2026 · modo Orçamentos de obra (Simulador de Obra 3D): só os projetos criados ali, com os dois PDFs, sem cobrança nem links de envio */
+const ORC=!!BD.orc;
+let LIST=ORC?BD.projetos.filter(p=>p&&p.origem==="orc"):BD.projetos.slice(),P=null,TAB="conf",VISTAS={},LINKS=null;
 
 /* ---------- salvar (debounce; o Supabase é a fonte) ---------- */
 let pend=new Set(),tm=null;
@@ -175,12 +179,12 @@ const somaPdf=p=>p.itens.reduce((s,t)=>s+(+t.pv||0),0);
 const novoId=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 
 /* ---------- cabeçalho ---------- */
-function hdr(sub){$("hdr").innerHTML=`<div>${P?`<button class="tomatriz" type="button" id="h-back">← Projetos</button>`:`<a class="tomatriz" href="../painel.html">← Painel da Matriz</a>`}
- <div class="eyebrow">FC Consultoria em Esquadria · serviço por projeto</div><h1>${P?esc(P.obra||"Projeto"):"Obra em 3D"}</h1>
+function hdr(sub){$("hdr").innerHTML=`<div>${P?`<button class="tomatriz" type="button" id="h-back">← Projetos</button>`:ORC?`<a class="tomatriz" href="index.html">← Orçamentos de obra</a>`:`<a class="tomatriz" href="../painel.html">← Painel da Matriz</a>`}
+ <div class="eyebrow">FC Consultoria em Esquadria · ${ORC?"Orçamentos de obra · Simulador de Obra 3D":"serviço por projeto"}</div><h1>${P?esc(P.obra||"Projeto"):ORC?"Simulador de Obra 3D":"Obra em 3D"}</h1>
  <div class="meta">${sub}</div></div>`;if($("h-back"))$("h-back").onclick=()=>{location.hash="";}}
 
 /* ======================= INÍCIO ======================= */
-function home(){P=null;if(BD.avaliacoes&&!AVAL_OK){AVAL_OK=true;BD.avaliacoes().then(r=>{if(r){AVAL={};r.forEach(a=>AVAL[a.pid]=a);if(!P)home()}})}hdr("A vidraçaria manda o PDF do orçamento; a FC confere, monta a obra em 3D e entrega um link sem preço com a marca dela.");
+function home(){P=null;if(ORC)return homeOrc();if(BD.avaliacoes&&!AVAL_OK){AVAL_OK=true;BD.avaliacoes().then(r=>{if(r){AVAL={};r.forEach(a=>AVAL[a.pid]=a);if(!P)home()}})}hdr("A vidraçaria manda o PDF do orçamento; a FC confere, monta a obra em 3D e entrega um link sem preço com a marca dela.");
  const tot={n:LIST.length,ent:0,fat:0,rec:0};const cli={};
  LIST.forEach(p=>{const v=+p.valor||0,e=p.status==="entregue"||p.status==="pago";if(e)tot.ent++;if(p.status==="pago")tot.fat+=v;else tot.rec+=v;
   const c=cli[p.empresa||"—"]||(cli[p.empresa||"—"]={n:0,ent:0,fat:0,rec:0,cor:p.cor});c.n++;if(e)c.ent++;if(p.status==="pago")c.fat+=v;else c.rec+=v});
@@ -238,6 +242,50 @@ addEventListener("focus",novidades);setInterval(()=>{if(!P&&!document.hidden)nov
 async function vistas(){const toks=LIST.map(p=>p.link&&p.link.tok).filter(Boolean);if(!toks.length||!BD.vistas)return;
  const r=await BD.vistas(toks);if(!r)return;let mud=false;r.forEach(x=>{const o=VISTAS[x.token];if(!o||o.vistas!==x.vistas)mud=true;VISTAS[x.token]=x});if(mud&&!P)home()}
 
+/* ======================= MODO ORÇAMENTOS DE OBRA · Simulador de Obra 3D ======================= */
+const NV={O:null,ORI:null,lig:null,pdf:"",oriPdf:"",lendo:"",err:""};
+const nvMesmo=()=>!NV.O||!NV.ORI||!NV.O.numero||!NV.ORI.numero||String(NV.O.numero)===String(NV.ORI.numero);
+function nvLigar(){NV.lig=null;if(!NV.O||!NV.ORI)return;NV.O.itens.forEach(t=>delete t.cortes);if(nvMesmo())NV.lig=O3DORI.ligar(NV.O.itens,NV.ORI)}
+function homeOrc(){hdr("Monte o orçamento rápido a partir da Proposta comercial e do Orientativo de Montagem gerados pelo sistema. Sai a apresentação 3D com a marca da empresa, a proposta com preço e o link para o cliente.");
+ const ent=LIST.filter(p=>p.link&&p.link.ativo!==false).length,ord=LIST.slice().sort((a,b)=>String(b.criado).localeCompare(String(a.criado)));
+ const ok=!!(NV.O&&NV.ORI&&NV.lig&&NV.lig.ligados>0&&nvMesmo());
+ const falta=!NV.O&&!NV.ORI?"Anexe os dois PDFs para criar o projeto.":!NV.O?"Falta a Proposta comercial.":!NV.ORI?"Falta o Orientativo de Montagem.":!nvMesmo()?`O Orientativo é do orçamento ${NV.ORI.numero} e a proposta é do ${NV.O.numero}. Anexe os dois do mesmo orçamento.`:!ok?"Nenhuma tipologia do Orientativo corresponde à proposta.":"";
+ const box=(k,t,info,on)=>`<div class="drop" id="nv-${k}" tabindex="0" role="button" style="margin:0;${on?"border-color:#1f7a4a;background:#eef8f1":""}"><b>${on?"✓":"＋"} ${t}</b><span class="hint">${info}</span><input type="file" accept="application/pdf,.pdf" hidden></div>`;
+ $("main").innerHTML=`
+ <div class="kpis"><div class="card kpi"><span>Projetos</span><b class="num">${LIST.length}</b></div><div class="card kpi"><span>Links ativos</span><b class="num">${ent}</b></div></div>
+ <div class="card sec" style="margin-bottom:14px"><h2>Novo pelo Simulador</h2>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;margin-top:8px">
+   ${box("pro","Proposta comercial",NV.lendo==="pro"?"Lendo o PDF…":NV.O?`${esc(NV.pdf)} · ${NV.O.itens.length} itens · orçamento ${esc(NV.O.numero||"—")}`:"PDF da proposta gerada pelo sistema (local, tipologia e medidas).",!!NV.O)}
+   ${box("ori","Orientativo de Montagem",NV.lendo==="ori"?"Lendo o PDF e recortando os perfis…":NV.ORI?`${esc(NV.oriPdf)} · ${NV.lig?NV.lig.ligados+" de "+NV.lig.total+" tipologias ligadas":"aguardando a proposta"}`:"PDF do Orientativo do mesmo orçamento, com a lista de corte.",!!NV.ORI)}
+  </div>
+  <div class="row" style="margin-top:10px"><button class="btn pri" type="button" id="nv-ok" ${ok?"":"disabled"}>Criar projeto</button><span class="hint" role="status">${esc(NV.err||falta)}</span>${NV.O||NV.ORI?`<button class="btn" type="button" id="nv-x" style="margin-left:auto">Limpar</button>`:""}</div>
+ </div>
+ <div class="card sec"><h2>Projetos <span class="hint">${LIST.length} no total</span></h2><div class="lst">${ord.length?ord.map(p=>{const v=VISTAS[p.link&&p.link.tok];const nc=p.itens.filter(t=>t.cortes).length;
+   return `<button class="pj" type="button" data-id="${esc(p.id)}"><i style="background:${esc(p.cor||"#0d5c63")}"></i><span><b>${esc(p.obra||"Obra")}</b><small>${esc(p.empresa||"—")} · orçamento ${esc(p.numero||"—")} · ${p.itens.length} itens · ${nc} com perfis reais · ${dt(p.criado)}</small></span>
+   <span class="r"><span class="st" style="color:${p.link&&p.link.ativo!==false?"#0d6b68":"#a3620b"}">${p.link&&p.link.ativo!==false?"Link ativo":"Em conferência"}</span>${v?`<br><span class="hint">aberto ${v.vistas}×</span>`:""}</span></button>`}).join(""):`<div class="hint">Nenhum projeto ainda. Anexe os dois PDFs acima.</div>`}</div></div>`;
+ document.querySelectorAll(".pj").forEach(b=>b.onclick=()=>{location.hash="p-"+b.dataset.id});
+ [["pro",lerPro],["ori",lerOri]].forEach(([k,fn])=>{const dr=$("nv-"+k),fi=dr.querySelector("input");dr.onclick=()=>fi.click();dr.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();fi.click()}};
+  fi.onchange=()=>{if(fi.files[0])fn(fi.files[0])};dr.ondragover=e=>{e.preventDefault();dr.classList.add("on")};dr.ondragleave=()=>dr.classList.remove("on");
+  dr.ondrop=e=>{e.preventDefault();dr.classList.remove("on");if(e.dataTransfer.files[0])fn(e.dataTransfer.files[0])}});
+ if($("nv-x"))$("nv-x").onclick=()=>{Object.assign(NV,{O:null,ORI:null,lig:null,pdf:"",oriPdf:"",err:""});homeOrc()};
+ $("nv-ok").onclick=criarOrc;vistas();
+}
+const ehPdf=f=>/\.pdf$/i.test(f.name)||f.type==="application/pdf";
+async function abrirDoc(file){const lib=await loadPdfJs();const d=await lib.getDocument({data:new Uint8Array(await file.arrayBuffer())}).promise;const P=[];
+ for(let p=1;p<=d.numPages;p++){const tc=await (await d.getPage(p)).getTextContent();P.push(tc.items.map(i=>({x:i.transform[4],y:i.transform[5],w:i.width,s:i.str})))}return {d,P}}
+async function lerPro(file){NV.err="";if(!ehPdf(file)){NV.err=`"${file.name}" não é PDF.`;return homeOrc()}NV.lendo="pro";homeOrc();
+ try{const {P}=await abrirDoc(file);const O=O3DLER.ler(P);NV.lendo="";
+  if(!O.itens.length){NV.err="Não encontrei itens neste PDF. Confira se é a Proposta comercial com local, tipologia e medidas.";return homeOrc()}
+  NV.O=O;NV.pdf=file.name;nvLigar()}catch(e){console.warn(e);NV.lendo="";NV.err="Não consegui ler a proposta. Use o PDF gerado pelo sistema."}homeOrc()}
+async function lerOri(file){NV.err="";if(!ehPdf(file)){NV.err=`"${file.name}" não é PDF.`;return homeOrc()}NV.lendo="ori";homeOrc();
+ try{const {d,P}=await abrirDoc(file);const R=O3DORI.ler(P);
+  if(!R.itens.length||!R.itens.some(t=>t.perfis.length)){NV.lendo="";NV.err="Não encontrei a lista de corte neste PDF. Confira se é o Orientativo de Montagem (não a proposta).";return homeOrc()}
+  await O3DORI.secoes(d,R);O3DORI.limpar(R);NV.ORI=R;NV.oriPdf=file.name;NV.lendo="";nvLigar()}catch(e){console.warn(e);NV.lendo="";NV.err="Não consegui ler o Orientativo. Use o PDF gerado pelo sistema."}homeOrc()}
+function criarOrc(){const O=NV.O;if(!O||!NV.lig||!NV.lig.ligados)return;const id=novoId();
+ const p={id,criado:new Date().toISOString(),origem:"orc",pdf:NV.pdf,pdfOri:NV.oriPdf,empresa:O.empresa,cor:"",obra:O.cliente||"Obra",cliente:O.cliente,numero:O.numero,emissao:O.emissao,vendedor:O.vendedor,corPerfil:O.cor,
+  itens:O.itens.map(it=>Object.assign(it,{lido:{kind:it.kind,f:it.f,enc:it.enc},ok:false})),avisos:O.avisos,margem:0,valor:"",status:"recebido",entregue:"",pago:"",notas:"",link:null};
+ Object.assign(NV,{O:null,ORI:null,lig:null,pdf:"",oriPdf:"",err:""});LIST.push(p);touch(p);location.hash="p-"+id;toast(`${p.itens.length} itens lidos · ${p.itens.filter(t=>t.cortes).length} com perfis reais`)}
+
 /* ---------- novo projeto a partir do PDF ---------- */
 let pdfReady=null;
 function loadPdfJs(){if(pdfReady)return pdfReady;const add=src=>new Promise((res,rej)=>{const s=document.createElement("script");s.src=src;s.onload=res;s.onerror=()=>rej(new Error("load"));document.head.appendChild(s)});
@@ -286,6 +334,7 @@ function abrir(id){P=LIST.find(p=>p.id===id);if(!P){location.hash="";return}
  const setCor=c=>{P.cor=c;touch(P);abrir(P.id)};
  document.querySelectorAll("#p-cor .sw").forEach(b=>b.onclick=()=>setCor(b.dataset.c));$("p-cor2").onchange=e=>setCor(e.target.value);
  document.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>{TAB=b.dataset.t;abrir(P.id)});
+ if(ORC){const bc=document.querySelector('.tabs [data-t="ctl"]');if(bc)bc.remove();if(TAB==="ctl")TAB="conf";}/* controle de cobrança é só do card Obra em 3D */
  ({conf,apr,ctl})[TAB]();
 }
 
@@ -415,10 +464,11 @@ addEventListener("hashchange",rota);rota();
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="../auth.js"></script>
 <script>
-gateUI(async()=>{
+gateUI(async rr=>{
+ const ORC=new URLSearchParams(location.search).get("de")==="orc"||(rr&&rr.perfil&&rr.perfil.papel==="orcamentista");
  const r=await sb.from("obra3d_projetos").select("dados");
  if(r.error){document.getElementById("main").innerHTML='<div class="msg"><b>Não foi possível carregar os projetos.</b><br>Confira a internet e atualize a página (F5).</div>';return}
- iniciarObra3D({
+ iniciarObra3D({orc:ORC,
   projetos:(r.data||[]).map(x=>x.dados),
   salvar:rows=>sb.from("obra3d_projetos").upsert(rows),
   excluir:id=>sb.from("obra3d_projetos").delete().eq("id",id),
@@ -433,7 +483,7 @@ gateUI(async()=>{
   recarregar:async()=>{const q=await sb.from("obra3d_projetos").select("dados");return q.error?null:q.data.map(x=>x.dados)},
   vistas:async toks=>{const q=await sb.from("orcobra_links").select("token,vistas,ultima_vista").in("token",toks);return q.error?null:q.data}
  });
-},{soMatriz:true});
+},{soMatriz:true,permitir:['orcamentista']});
 </script>
 </body>
 </html>
