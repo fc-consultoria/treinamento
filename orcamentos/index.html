@@ -718,10 +718,10 @@ function buildObra(){
  </div></div>
 </div></section>
 
-<section id="tab-apr" class="tab" hidden><div class="apr-bar"><button class="btn ghost" type="button" id="apr-print">🖨 Imprimir / Salvar PDF</button><button class="btn amb" type="button" id="apr-link">🔗 Link de Apresentação 3D</button></div><div id="p-doc" class="p-doc"></div></section>`;
+<section id="tab-apr" class="tab" hidden><div class="apr-bar"><button class="btn ghost" type="button" id="apr-print">🖨 Imprimir / Salvar PDF</button><button class="btn ghost" type="button" id="apr-video">🎬 Vídeo da obra</button><button class="btn amb" type="button" id="apr-link">🔗 Link de Apresentação 3D</button></div><div id="p-doc" class="p-doc"></div></section>`;
  moGarante3(O);["comp","alu","vid","mo","out"].forEach(k=>pricePanel(k,{comp:"Componentes",alu:"Alumínio",vid:"Vidros",mo:"Mão de obra",out:"Outros custos"}[k]));
  wireComp();buildCot();buildComp();buildAlu();buildVid();buildOut();wireFields();refresh();
- $("apr-print").onclick=aprImprimir;$("apr-link").onclick=aprLink;
+ $("apr-print").onclick=aprImprimir;$("apr-link").onclick=aprLink;$("apr-video").onclick=aprVideo;
 }
 function touch(){save()}
 /* 05/11: botões do cabeçalho da obra */
@@ -1007,7 +1007,15 @@ async function salvarCorObra(cores){if(!confirm("Salvar estas cores? O link do c
  const lk=st&&st.link;if(lk&&lk.tok&&lk.ativo!==false){const r=await sb.from("orcobra_links").upsert({token:lk.tok,obra_id:O.id,dados:aprDados(),ativo:true,atualizado:new Date().toISOString()});
   avisoCor(r.error?"Cores salvas · não foi possível atualizar o link":"Cores salvas · link do cliente atualizado")}else avisoCor("Cores salvas");paintApr(groups(O));return true}
 function aprDados(){return {v:1,numero:O.numero||"",obra:O.obra||"",cliente:O.cliente||"",cor:O.cor||"",marca:(O.marcaNome||"").trim(),marcaCor:O.marcaCor||"",emitida:new Date().toISOString(),
- itens:O.tips.map(t=>({item:t.item,tipo:t.tipo,loc:t.loc,kind:t.kind,f:t.f,L:t.L,H:t.H,q:t.q,linha:t.linha,desc:String(t.desc||"").replace(/\s*Validade da Proposta:.*$/i,""),vidroCor:t.vidroCor||"",corPerfil:t.corPerfil||""})),corAlterada:!!O.corAlterada}}
+ video:String(O.video||"").trim(),itens:O.tips.map(t=>({item:t.item,tipo:t.tipo,loc:t.loc,kind:t.kind,f:t.f,L:t.L,H:t.H,q:t.q,linha:t.linha,desc:String(t.desc||"").replace(/\s*Validade da Proposta:.*$/i,""),vidroCor:t.vidroCor||"",corPerfil:t.corPerfil||""})),corAlterada:!!O.corAlterada}}
+/* 05/11/2026 · vídeo de apresentação da obra (MP4 feito pela FC): abre no link do cliente antes da apresentação, sem preço */
+async function aprVideo(){const atual=String(O.video||"");
+ const v=prompt("Cole o endereço do vídeo desta obra (MP4).\nDeixe em branco para tirar o vídeo do link.",atual);if(v===null)return;
+ const url=v.trim();if(url&&!/^(https:\/\/|videos\/)[^\s"'<>]+\.mp4(\?[^\s"'<>]*)?$/i.test(url)){alert("Use um endereço https terminado em .mp4.");return}
+ O.video=url;touch();const lk=st&&st.link;
+ if(lk&&lk.tok&&lk.ativo!==false){const r=await sb.from("orcobra_links").upsert({token:lk.tok,obra_id:O.id,dados:aprDados(),ativo:true,atualizado:new Date().toISOString()});
+  avisoCor(r.error?"Vídeo salvo · não foi possível atualizar o link":url?"Vídeo incluído · link do cliente atualizado":"Vídeo retirado · link do cliente atualizado")}
+ else avisoCor(url?"Vídeo salvo · gere o Link de Apresentação 3D para enviar":"Vídeo retirado")}
 function aprUrl(tok){return location.origin+location.pathname.replace(/[^/]*$/,"")+"apresentacao.html?t="+tok}
 async function aprLink(){let m=$("lk-modal");if(!m){m=document.createElement("div");m.id="lk-modal";m.className="modal";m.setAttribute("role","dialog");m.setAttribute("aria-modal","true");document.body.appendChild(m);m.addEventListener("click",e=>{if(e.target===m)m.hidden=true})}
  const lk=st.link||null;

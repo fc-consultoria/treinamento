@@ -123,7 +123,24 @@ if(Array.isArray(D.precos)&&D.precos.some(v=>+v>0)){
 /* 05/11/2026 · filme da obra: abre a apresentação com o filme gerado a partir do orçamento (sem preço) */
 if(window.FILME&&(D.itens||[]).length){const bf=document.createElement("button");bf.className="btn";bf.type="button";bf.innerHTML="▶ Filme da obra";bf.style.cssText="background:"+(D.marcaCor||"#0d5c63")+";color:#fff;border-color:transparent";
  bf.onclick=()=>FILME.abrir(D);const bp=$("b-print");bp.parentNode.insertBefore(bf,bp);
- if(QS.get("filme")!=="0"&&!window.matchMedia("print").matches)FILME.abrir(D)}
+ if(!D.video&&QS.get("filme")!=="0"&&!window.matchMedia("print").matches)FILME.abrir(D)}
+/* 05/11/2026 · vídeo da obra (MP4 feito pela FC para a vidraçaria): abre primeiro; o filme gerado continua no botão */
+const VURL=String(D.video||"");
+if(VURL&&/^(https:\/\/|videos\/)[^\s"'<>]+\.mp4(\?[^\s"'<>]*)?$/i.test(VURL)){
+ const cor=D.marcaCor||"#0d5c63";
+ const abrirVideo=()=>{let o=$("vd-ov");if(o)o.remove();o=document.createElement("div");o.id="vd-ov";o.setAttribute("role","dialog");o.setAttribute("aria-modal","true");o.setAttribute("aria-label","Vídeo da obra");
+  o.style.cssText="position:fixed;inset:0;z-index:200;background:rgba(4,10,20,.94);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;gap:14px";
+  const v=document.createElement("video");v.src=VURL;v.controls=true;v.playsInline=true;v.setAttribute("playsinline","");v.preload="auto";
+  const pst=VURL.replace(/\.mp4(\?.*)?$/i,".jpg");v.poster=pst;
+  v.style.cssText="width:min(1100px,100%);max-height:78vh;border-radius:14px;background:#000;box-shadow:0 20px 60px rgba(0,0,0,.5)";
+  const bt=document.createElement("button");bt.className="btn";bt.type="button";bt.textContent="Ver a apresentação da obra →";bt.style.cssText="background:"+cor+";color:#fff;border-color:transparent;min-height:46px;font-size:15px";
+  const fechar=()=>{try{v.pause()}catch(_){}o.remove()};bt.onclick=fechar;v.onended=()=>{bt.focus()};
+  o.addEventListener("keydown",e=>{if(e.key==="Escape")fechar()});o.append(v,bt);document.body.appendChild(o);
+  const p=v.play();if(p&&p.catch)p.catch(()=>{})};
+ const bv=document.createElement("button");bv.className="btn";bv.type="button";bv.innerHTML="▶ Vídeo da obra";bv.style.cssText="background:"+cor+";color:#fff;border-color:transparent";bv.onclick=abrirVideo;
+ const bp=$("b-print");bp.parentNode.insertBefore(bv,bp.parentNode.querySelector(".btn")||bp);
+ if(QS.get("video")!=="0"&&!window.matchMedia("print").matches)abrirVideo()
+}
 const b=$("b-print");b.hidden=false;b.onclick=()=>{PROPOSTA.preencher($("main"),D,true);setTimeout(()=>print(),80)};
 })();
 </script>
