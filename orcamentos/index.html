@@ -933,7 +933,11 @@ let aprAberto=-1,aprFila=0;
 /* dados da obra no formato do modelo da proposta (proposta.js) */
 function aprDoc(){return {numero:O.numero||"",obra:O.obra||"",cliente:O.cliente||"",cor:O.cor||"",marca:(O.marcaNome||"").trim(),marcaCor:O.marcaCor||"",emitida:new Date().toISOString(),itens:O.tips.map(t=>Object.assign({},t)),corAlterada:!!O.corAlterada}}
 function aprFill(){if(window.PROPOSTA&&O&&$("p-doc"))PROPOSTA.preencher($("p-doc"),aprDoc())}
-function aprEditor(t){
+/* 05/11/2026 · descrição do vidro editável: trecho "VIDRO ..." da descrição (entre " - "); sem esse trecho, edita a descrição inteira */
+function vidroTrecho(desc){const p=String(desc||"").split(/\s+-\s+/);const i=p.findIndex(x=>/^\s*VIDRO\b/i.test(x)||/\bVIDRO\b/i.test(x)&&!/FOLHA|LINHA/i.test(x));return {p,i}}
+function vidroTexto(desc){const {p,i}=vidroTrecho(desc);return i>=0?p[i]:String(desc||"")}
+function vidroAplicar(desc,novo){novo=String(novo||"").trim().toUpperCase();const {p,i}=vidroTrecho(desc);if(!novo)return desc;if(i<0)return novo;p[i]=novo;return p.join(" - ")}
+function aprEditor(t){const vt=vidroTrecho(t.desc).i>=0;
  return `<div class="edit">
  <label>Desenho<select class="in" id="e3-k">${KINDS3D.map(([k,n])=>`<option value="${k}"${t.kind===k?" selected":""}>${n}</option>`).join("")}</select></label>
  <label>Folhas<input class="in" id="e3-f" type="number" min="1" max="12" value="${t.f||1}"></label>
@@ -941,12 +945,13 @@ function aprEditor(t){
  <label>Altura (mm)<input class="in" id="e3-H" type="number" inputmode="numeric" value="${t.H}"></label>
  <label>Qtde<input class="in" id="e3-q" type="number" min="1" value="${t.q}"></label>
  <label>Cor do vidro<select class="in" id="e3-v"><option value="">Conforme descrição (${TIP3D.vidroDe(t.desc).nome})</option>${TIP3D.VIDROS.map(v=>`<option value="${v.id}"${t.vidroCor===v.id?" selected":""}>${v.nome}</option>`).join("")}</select></label>
+ <label style="grid-column:1/-1">${vt?"Descrição do vidro":"Descrição do item"}<input class="in" id="e3-d" type="text" value="${esc(vidroTexto(t.desc))}" placeholder="Ex.: VIDRO TEMPERADO 8MM FOSCO" style="text-transform:uppercase"><small style="font-weight:500">Muda o texto na proposta e no link. "Conforme descrição" na cor do vidro segue este texto (ex.: FOSCO, VERDE, FUMÊ). O custo da aba Vidros não muda.</small></label>
  <label>Cor do perfil<select class="in" id="e3-p"><option value="">Da obra (${TIP3D.perfilDe(O.cor).nome})</option>${TIP3D.PERFIS.map(p=>`<option value="${p.id}"${t.corPerfil===p.id?" selected":""}>${p.nome}</option>`).join("")}</select></label>
  <div class="acts"><button class="btn" type="button" id="e3-ok">Aplicar</button><button class="btn ghost" type="button" id="e3-v3">Ver em 3D</button>${t.orig?'<button class="btn ghost" type="button" id="e3-rs">Voltar ao original</button>':""}<button class="btn ghost" type="button" id="e3-x">Cancelar</button>
  <small>O preço do item acompanha a nova área (rateio). O custo de perfis e componentes continua o da lista do sistema.</small></div></div>`}
 function aprEditorLigar(t){const g=id=>$(id);if(!g("e3-ok"))return;
- const ler=()=>({kind:g("e3-k").value,f:Math.max(1,Math.min(12,+g("e3-f").value||1)),L:Math.max(200,+g("e3-L").value||t.L),H:Math.max(200,+g("e3-H").value||t.H),q:Math.max(1,+g("e3-q").value||1),vidroCor:g("e3-v").value||"",corPerfil:g("e3-p").value||""});
- g("e3-ok").onclick=()=>{if(!t.orig)t.orig={kind:t.kind,f:t.f,L:t.L,H:t.H,q:t.q,vidroCor:t.vidroCor||"",corPerfil:t.corPerfil||""};Object.assign(t,ler());aprAberto=-1;touch();refresh()};
+ const ler=()=>({kind:g("e3-k").value,f:Math.max(1,Math.min(12,+g("e3-f").value||1)),L:Math.max(200,+g("e3-L").value||t.L),H:Math.max(200,+g("e3-H").value||t.H),q:Math.max(1,+g("e3-q").value||1),vidroCor:g("e3-v").value||"",corPerfil:g("e3-p").value||"",desc:vidroAplicar(t.desc,g("e3-d").value)});
+ g("e3-ok").onclick=()=>{if(!t.orig)t.orig={kind:t.kind,f:t.f,L:t.L,H:t.H,q:t.q,vidroCor:t.vidroCor||"",corPerfil:t.corPerfil||"",desc:t.desc};Object.assign(t,ler());aprAberto=-1;touch();refresh()};
  g("e3-v3").onclick=()=>TIP3D.abrir(Object.assign({},t,ler()),{cor:O.cor});
  g("e3-x").onclick=()=>{aprAberto=-1;paintApr(groups(O))};
  if(g("e3-rs"))g("e3-rs").onclick=()=>{Object.assign(t,t.orig);delete t.orig;aprAberto=-1;touch();refresh()};}
@@ -1028,8 +1033,8 @@ window.addEventListener("hashchange",()=>{const k=location.hash.replace("#","");
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/environments/RoomEnvironment.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/geometries/RoundedBoxGeometry.js"></script>
-<script src="tip3d.js?v=20261105i"></script>
-<script src="proposta.js?v=20261105e"></script>
+<script src="tip3d.js?v=20261105j"></script>
+<script src="proposta.js?v=20261105f"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="../auth.js"></script>
 <script src="sync.js"></script>

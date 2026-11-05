@@ -19,7 +19,8 @@ const PERFIS=[
  {id:"corten",nome:"Corten",hex:"#8a4b2a",met:.2,rug:.7,re:/CORTEN|FERRUGEM/},
  {id:"madeira",nome:"Madeira cerejeira",hex:"#5c2617",met:.05,rug:.58,re:/MADEIRA|AMADEIRAD|CEREJEIRA|CARVALHO|NOGUEIRA|IMBUIA/},
  {id:"linheiro",nome:"Linheiro",hex:"#d6cab0",met:.08,rug:.6,re:/LINHEIRO|LINHO/},
- {id:"natural",nome:"Anodizado natural",hex:"#c4c8cb",met:.75,rug:.32,re:/ANODIZ|NATURAL|FOSCO|BRUTO/}
+ {id:"fosco",nome:"Fosco",hex:"#b3b7ba",met:.4,rug:.78,re:/FOSCO/},
+ {id:"natural",nome:"Anodizado natural",hex:"#c4c8cb",met:.75,rug:.32,re:/ANODIZ|NATURAL|BRUTO/}
 ];
 const VIDROS=[
  {id:"incolor",nome:"Incolor",hex:"#8fc3d1",op:.38,met:0,re:/INCOLOR|CRISTAL|TRANSPARENTE/},
@@ -29,7 +30,7 @@ const VIDROS=[
  {id:"azul",nome:"Azul",hex:"#5d93c2",op:.45,met:0,re:/AZUL/},
  {id:"refletivo",nome:"Refletivo prata",hex:"#a9b9c3",op:.82,met:.85,re:/REFLET|ESPELH|PRATA|MIRROR/},
  {id:"champanhe",nome:"Champanhe",hex:"#b8995f",op:.5,met:0,re:/CHAMPAN/},
- {id:"jateado",nome:"Jateado / leitoso",hex:"#f1f4f4",op:.86,met:0,re:/JATEAD|LEITOS|ACIDAD|MINI ?BOREAL|CANELAD|PONTILHAD/}
+ {id:"jateado",nome:"Fosco / jateado",hex:"#f1f4f4",op:.86,met:0,re:/JATEAD|LEITOS|ACIDAD|MINI ?BOREAL|CANELAD|PONTILHAD|VIDRO[^-]*\bFOSCO/}
 ];
 function perfilDe(txt,forcado){if(forcado){const f=PERFIS.find(p=>p.id===forcado);if(f)return f}const s=String(txt||"").toUpperCase();return PERFIS.find(p=>p.re.test(s))||PERFIS[PERFIS.length-1]}
 function vidroDe(txt,forcado){if(forcado){const f=VIDROS.find(v=>v.id===forcado);if(f)return f}const s=String(txt||"").toUpperCase();

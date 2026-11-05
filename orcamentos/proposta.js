@@ -156,8 +156,8 @@ function render(el,D,op){op=op||{};css();const it=D.itens||[];const P=op.precos|
  if(T3){el.querySelectorAll("[data-pv]").forEach(b=>b.onclick=()=>T3.abrir(it[+b.dataset.pv],Object.assign({cor:D.cor,origem:b.closest("figure")},op.simular?{cores:{p:SIMP,v:SIMV},temVidro:temVidro(it[+b.dataset.pv]),simAtivo:()=>simAtivo(D),onSalvar:op.onSalvar?()=>{const sb2=el.querySelector('[data-sim="salvar"]');if(sb2)sb2.click()}:null,onCor:(k,id,obra)=>{const t=it[+b.dataset.pv];if(k==="reset")delete t._s;else if(obra){D._sim=Object.assign({},D._sim);D._sim[k]=id;(D.itens||[]).forEach(x=>{if(x._s){delete x._s[k];if(!x._s.p&&!x._s.v)delete x._s}})}else{t._s=Object.assign({},t._s);t._s[k]=id}aplicarSim(D);clearTimeout(el._simT);el._simT=setTimeout(()=>repinta(el,D,op),50)}}:{})));if(op.simular)ligarSim(el,D,op);if(!op.adiar)preencher(el,D)}
 }
 /* 05/11/2026 · simular cor de perfil e de vidro na negociação (só demonstração; preço não muda) */
-const SIMP=[["branco","Branco"],["preto","Preto"],["natural","Fosco"],["madeira","Madeira"],["linheiro","Linheiro"]];
-const SIMV=[["incolor","Incolor"],["verde","Verde"],["fume","Fumê"],["champanhe","Champanhe"]];
+const SIMP=[["branco","Branco"],["preto","Preto"],["fosco","Fosco"],["madeira","Madeira"],["linheiro","Linheiro"]];
+const SIMV=[["incolor","Incolor"],["verde","Verde"],["fume","Fumê"],["champanhe","Champanhe"],["jateado","Fosco"]];
 const temVidro=t=>!/SEM\s*VIDRO/i.test(String(t.desc||""))&&/VIDRO|INCOLOR|TEMPERAD|LAMINAD|FUM|VERDE|MM/i.test(String(t.desc||""));
 function barraSim(D,T3){const s=D._sim||{};const it=D.itens||[];const algumVidro=it.some(temVidro);
  const b=(k,id,nm,hex)=>`<button type="button" data-sim="${k}:${id}" aria-pressed="${s[k]===id}"><i style="background:${hex}"></i>${nm}</button>`;
