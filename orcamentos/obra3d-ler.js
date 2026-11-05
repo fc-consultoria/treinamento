@@ -31,16 +31,56 @@ function desenho(tipo,linha){
  else if(/GIRO|ABRIR/.test(d)){kind="giro";f=folhas>=2?2:1}
  else if(/MAXIM-?AR|BASCULANTE/.test(d)){kind=/PEITORIL/.test(d)?"maxp":"max";f=mod||folhas||1}
  else if(/PAINEL\s+FIXO|VIDRO\s+TEMPERADO|PERFIL DE ALUM/.test(d)&&/FIXO/.test(d)){kind="painel";f=mod||1}
- else if(/FIXO/.test(d)){kind="fixo";f=mod||folhas||1}
+ else if(/\bFIX[OA]S?\b/.test(d)){kind="fixo";f=mod||folhas||1}
  if(/VENEZIANA/.test(d))enc="veneziana";
  else if(/VIDRO\s+SUPERIOR/.test(d)&&/LAMBRI/.test(d))enc="vidlam";
  else if(/LAMBRI/.test(d))enc="lambri";
  return {kind,f:Math.max(1,Math.min(f,12)),enc,reconhecido:kind!=="gen"};
 }
 
+/* PDF da Proposta comercial em layout de cards (cada item: descrição, Cor:, Vidros:, linha "L x H: Área: Tipo: Qtd: Linha: Localização:" e os valores logo abaixo) */
+function ehCards(L){return L.some(r=>/^L\s*x\s*H:/i.test(r.t)&&/Localiza[çc][ãa]o:/i.test(r.t))}
+function lerCards(L,O){
+ const rod=L.find(r=>/\t\s*\d+\s*\/\s*\d+\s*$/.test(r.t));if(rod)O.empresa=LIMPA(rod.t.split("\t")[0]);
+ L.forEach(r=>{const t=r.t;
+  if(!O.numero&&/^Proposta\s+\S/i.test(t))O.numero=LIMPA(t.replace(/^Proposta/i,""));
+  if(!O.emissao&&/Emitido por/i.test(t)){const m=t.match(/Emitido por\s+(.+?)\s+em\s+(\d{2}\/\d{2}\/\d{4})/i);if(m){O.vendedor=LIMPA(m[1]);O.emissao=m[2]}}
+  if(!O.cliente&&/^Cliente:/i.test(t))O.cliente=entre(t,/Cliente:/i,/\t|Telefone:/i)||"";
+ });
+ const COLS=[["L",/^L\s*x\s*H:?$/i],["m2",/^[ÁA]rea:?$/i],["tipo",/^Tipo:?$/i],["q",/^Qtd:?$/i],["linha",/^Linha:?$/i],["loc",/^Localiza[çc][ãa]o:?$/i]];
+ const ignora=t=>/^Obra:|^Proposta\s|^Emitido por|^Cliente:|^Contato:|^Endere[çc]o Obra:|^Use seu smartphone|CEM Plus|Alumisoft|\t\s*\d+\s*\/\s*\d+\s*$|^-$|^Total [ÁA]rea|^Observa[çc][õo]es:|^Condi[çc][õo]es de Pagamento|^Forma de Pagamento/i.test(t);
+ let desc=[],cur={},k=0,pg=0;
+ const novoBloco=()=>{desc=[];cur={}};
+ for(;k<L.length;k++){const r=L[k],t=r.t,tl=LIMPA(t.replace(/\t/g," "));
+  if(r.pg!==pg){pg=r.pg;novoBloco()}
+  if(/^Endere[çc]o Obra:|^Obra:/i.test(t))novoBloco();
+  if(!tl||ignora(t)){if(/^Total [ÁA]rea/i.test(t))break;continue}
+  if(/^Cor:/i.test(t)){cur.corPerfil=entre(t,/^Cor:/i,/\t|$/)||"";continue}
+  if(/^[ÁA]rea Esquadria:/i.test(t))continue;
+  if(/^Vidros?:/i.test(t)){cur.vidro=entre(t,/^Vidros?:/i,/\t|$/)||"";continue}
+  if(/^L\s*x\s*H:/i.test(t)&&/Localiza/i.test(t)){
+   /* colunas pelo x dos rótulos; os valores (e a continuação logo abaixo, ex.: GRID / CONVENCIONAL) caem na coluna mais próxima */
+   const cx=COLS.map(([c,re])=>{const it=r.it.find(i=>re.test(i.s));return it?{c,x:it.x}:null}).filter(Boolean);
+   const val={};const poe=it=>{let b=cx[0],d=1e9;cx.forEach(c=>{const dd=Math.abs(c.x-it.x);if(dd<d){d=dd;b=c}});val[b.c]=LIMPA((val[b.c]?val[b.c]+" ":"")+it.s)};
+   const v=L[k+1];if(!v||v.pg!==r.pg)continue;v.it.forEach(poe);k++;
+   while(L[k+1]&&L[k+1].pg===r.pg&&v.y-L[k+1].y<=16&&!ignora(L[k+1].t)&&L[k+1].it.every(i=>i.x>(cx.find(c=>c.c==="q")||{x:0}).x+15)){L[k+1].it.forEach(poe);k++}
+   const m=(val.L||"").match(/(\d+)\s*x\s*(\d+)/i);
+   /* descrição: linhas em sequência; uma linha separada por espaço maior é observação do item */
+   let tipo=[],obs=[];desc.forEach((d,i)=>{(i&&desc[i-1].y-d.y>14?obs:(obs.length?obs:tipo)).push(d.t)});
+   const it={item:val.tipo||"",loc:val.loc||"",tipo:LIMPA(tipo.join(" ")),linha:val.linha||"",corPerfil:cur.corPerfil||"",corAcess:"",q:parseInt(val.q,10)||0,
+    m2:num(String(val.m2||"").replace(/m.*$/i,"")),L:m?+m[1]:0,H:m?+m[2]:0,vidro:cur.vidro||"",obs:LIMPA(obs.join(" ")),vt:0,avisos:[]};
+   if(it.q)O.itens.push(it);else O.avisos.push(`Um bloco (${it.loc||"sem local"}) não teve a quantidade lida.`);
+   novoBloco();continue}
+  desc.push({y:r.y,t:tl});
+ }
+ const tot=L.find(r=>/R\$:?\s*[\d.]+,\d{2}/.test(r.t)&&L[L.indexOf(r)-1]&&/Total Or[çc]amento/i.test(L[L.indexOf(r)-1].t));
+ if(tot){const m=tot.t.match(/R\$:?\s*([\d.]+,\d{2})/);O.total=num(m[1])}
+}
+
 function ler(P){
  const L=[];P.forEach((pag,pi)=>linhas(pag).forEach(r=>L.push(Object.assign(r,{pg:pi+1}))));
  const O={empresa:"",numero:"",emissao:"",vendedor:"",cliente:"",cor:"",itens:[],avisos:[]};
+ if(ehCards(L))lerCards(L,O);else{
  /* cabeçalho: primeira linha da primeira página é o nome da empresa que fez o orçamento */
  const p1=L.filter(r=>r.pg===1);
  if(p1.length){const t0=p1[0].t.split("\t")[0];O.empresa=LIMPA(t0)}
@@ -74,6 +114,7 @@ function ler(P){
   if(/OBSERVA[ÇC][ÕO]ES DESTE ITEM/i.test(tl)){obs=true;continue}
  }
  fecha();
+ }
 
  /* sugestão do desenho e conferências automáticas (nunca alteram o texto original) */
  const vistos={};
