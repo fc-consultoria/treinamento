@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="robots" content="noindex">
 <meta http-equiv="Cache-Control" content="no-cache">
-<script>(function(){var B='20261104194324';try{fetch('versao.txt?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.text():''}).then(function(v){v=(v||'').trim();if(!v||v===B)return;var u=new URL(location.href);if(u.searchParams.get('v')===v)return;u.searchParams.set('v',v);location.replace(u.toString())}).catch(function(){})}catch(e){}})();</script>
+<script>(function(){var B='20261104200400';try{fetch('versao.txt?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.text():''}).then(function(v){v=(v||'').trim();if(!v||v===B)return;var u=new URL(location.href);if(u.searchParams.get('v')===v)return;u.searchParams.set('v',v);location.replace(u.toString())}).catch(function(){})}catch(e){}})();</script>
 
 <title>FC Estudo de Mercado</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -85,7 +85,7 @@ button{cursor:pointer}
 .chip.fix{background:var(--tlc);color:var(--tl2);border-color:transparent;cursor:default}
 .hero{display:grid;grid-template-columns:minmax(0,300px) minmax(0,1fr);gap:20px;align-items:center}
 .draw{background:var(--paper);border:1px solid var(--ln);border-radius:14px;display:grid;place-items:center;position:relative;overflow:hidden}
-.draw img{position:absolute;left:6%;top:6%;width:88%;height:82%;max-width:none;max-height:none;object-fit:contain;display:block}
+.draw img{position:absolute;left:5%;top:5%;width:90%;height:84%;image-rendering:auto;max-width:none;max-height:none;object-fit:contain;display:block}
 .draw .wm{position:absolute;right:8px;bottom:5px;font:700 9px var(--f-b);letter-spacing:1px;color:#8aa0a8}
 .draw.none{color:#8aa0a8;font-size:12px;text-align:center;padding:8px}
 .hero .draw{aspect-ratio:4/3}
@@ -242,7 +242,7 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
 .rkf button.on{background:var(--tl);border-color:var(--tl);color:#fff}.rkf button.on span,.rkf button.on small{color:#fff}
 .rkbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;align-items:center}.rkbar input{flex:1;min-width:200px}
 .rkl{display:grid;gap:10px;margin-top:12px}
-.rk{display:grid;grid-template-columns:200px 1fr;border:1px solid var(--ln);border-radius:14px;background:var(--card);overflow:hidden;cursor:pointer;transition:border-color .15s}
+.rk{display:grid;grid-template-columns:260px 1fr;border:1px solid var(--ln);border-radius:14px;background:var(--card);overflow:hidden;cursor:pointer;transition:border-color .15s}
 .rk:hover{border-color:var(--tl)}.rk.me{border-color:var(--B)}
 .rk .draw{aspect-ratio:5/4;border:0;border-right:1px solid var(--ln);border-radius:0}
 .rkb{padding:12px 14px;display:flex;flex-direction:column;gap:5px;min-width:0}
@@ -327,7 +327,7 @@ let G=[],BY={};
 function montar(idx){DATA={forn:idx.forn};Object.entries(idx.linhas).forEach(([k,v])=>LIN[k]=v.n);
   const AN={};Object.entries(ABC).forEach(([k,v])=>AN[norm(k)]=v);
   G=idx.g.filter(g=>g.l!=='tc'&&idx.linhas[g.l]).map(g=>{const L=idx.linhas[g.l];
-    const m=g.m.map(x=>{const pasta=(x[3]==='base'&&!g.sp)?'alcoa':x[0];return {f:x[0],c:x[1],p:+x[2]||0,src:x[4]?x[4]:EQ+L.img+pasta+'/'+encodeURIComponent(x[1])+'.webp?v=3'}});
+    const m=g.m.map(x=>{const pasta=(x[3]==='base'&&!g.sp)?'alcoa':x[0];return {f:x[0],c:x[1],p:+x[2]||0,src:x[4]?x[4]:'d/'+L.img+pasta+'/'+encodeURIComponent(x[1])+'.webp?v=4',o:x[4]?'':EQ+L.img+pasta+'/'+encodeURIComponent(x[1])+'.webp?v=3'}});
     const cl=(m.map(x=>AN[norm(x.c)]).find(Boolean))||AN[norm(g.k)]||'';
     return {l:g.l,k:g.k,n:g.n,cl,m}});
   G0=G;mkBY();}
@@ -349,7 +349,7 @@ async function carregaCfg(){try{const r=await fetch(SB+'/rest/v1/em_config?selec
 const QP=new URLSearchParams(location.search);const FCM=QP.has('fc');
 let S={ord:ls.get('fcext_ord','preco'),cover:false,tut:null,ext:null,role:'vend',tab:'pesq',g:null,cliSel:null,abcL:'todas',relU:'todos'};
 
-function img(m,extra=''){return m&&m.src?`<div class="draw ${extra}"><img src="${esc(m.src)}" alt="Desenho do perfil ${esc(m.c)}" loading="lazy" onerror="this.parentNode.classList.add('none');this.parentNode.innerHTML='sem desenho no catálogo'"><span class="wm">FC</span></div>`:`<div class="draw none ${extra}">sem desenho no catálogo</div>`}
+function img(m,extra=''){return m&&m.src?`<div class="draw ${extra}"><img src="${esc(m.src)}" ${m.o?`data-o="${esc(m.o)}"`:''} alt="Desenho do perfil ${esc(m.c)}" loading="lazy" decoding="async" onerror="if(this.dataset.o){this.src=this.dataset.o;this.removeAttribute('data-o');return}this.parentNode.classList.add('none');this.parentNode.innerHTML='sem desenho no catálogo'"><span class="wm">FC</span></div>`:`<div class="draw none ${extra}">sem desenho no catálogo</div>`}
 function own(g){return g.m.filter(m=>m.f===S.ext)}
 function ref(g){return g.m.find(m=>m.f==='alcoa')}
 function abcTag(cl){const t={A:'Classe A · alto giro',B:'Classe B · médio giro',C:'Classe C · giro baixo'}[cl]||'Curva não definida';return `<span class="abc ${cl||'N'}"><i>${cl||'?'}</i>${t}</span>`}
