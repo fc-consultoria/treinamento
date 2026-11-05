@@ -74,6 +74,7 @@ function css(cor){if(document.getElementById("fm-css"))return;const st=document.
 .fm-st{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;width:min(760px,100%);margin-top:22px}
 .fm-st div{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:16px;padding:16px 14px;backdrop-filter:blur(8px)}
 .fm-st b{display:block;font:700 clamp(26px,4vw,40px)/1 "Space Grotesk",sans-serif}.fm-st span{font:500 12.5px Inter,sans-serif;color:rgba(255,255,255,.7)}
+.fm-ui[hidden]{display:none!important}
 .fm-ui{position:absolute;left:0;right:0;bottom:0;padding:0 max(18px,env(safe-area-inset-left,0px)) calc(18px + env(safe-area-inset-bottom,0px));display:flex;gap:10px;align-items:center;z-index:3}
 .fm-bar{flex:1;height:4px;background:rgba(255,255,255,.18);border-radius:4px;overflow:hidden}.fm-bar i{display:block;height:100%;width:0;background:var(--fc)}
 .fm-b{font:600 13px Inter,sans-serif;color:#fff;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:9px 14px;min-height:40px;cursor:pointer;backdrop-filter:blur(8px)}
@@ -172,7 +173,7 @@ function abrir(D,op){op=op||{};if(!T()||!window.TIP3D||!TIP3D.filme){if(op.fim)o
 
  /* ---------- relógio ---------- */
  function irPara(i){const a=F.seg[F.idx];if(a&&a.fim)a.fim();F.idx=i;F.t0=F.t;const b=F.seg[i];if(b&&b.ini)b.ini.call(b)}
- function passo(now){if(!F)return;F.raf=requestAnimationFrame(passo);const dt=Math.min(.05,(now-(F.last||now))/1000);F.last=now;
+ function passo(now,fixo){if(!F)return;if(!fixo)F.raf=requestAnimationFrame(passo);const dt=fixo||Math.min(.05,(now-(F.last||now))/1000);F.last=now;
   if(!F.pausa&&F.idx>=0){F.t+=dt;let s=F.seg[F.idx];if(!s.final&&F.t-F.t0>=s.dur)irPara(F.idx+1);s=F.seg[F.idx];
    const p=clamp((F.t-F.t0)/s.dur,0,1);if(s.quadro)s.quadro.call(s,p);$("#fm-pr").style.width=Math.min(100,F.t/total*100)+"%"}
   /* a esquadria fica deslocada do texto: para a direita na tela deitada, para cima no celular em pé */
@@ -191,7 +192,9 @@ function abrir(D,op){op=op||{};if(!T()||!window.TIP3D||!TIP3D.filme){if(op.fim)o
   <button class="fm-go" type="button" id="fm-play"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></svg>Assistir à apresentação</button>
   <button class="fm-sec" type="button" id="fm-pular">Ir direto para a proposta</button>`);
  setTimeout(()=>{const pl=$("#fm-play");if(pl){pl.onclick=()=>{some();setTimeout(()=>comecar(true),450)};pl.focus()}const pu=$("#fm-pular");if(pu)pu.onclick=fechar},60);
- requestAnimationFrame(()=>d.classList.add("on"));F.raf=requestAnimationFrame(passo);
+ requestAnimationFrame(()=>d.classList.add("on"));
+ /* gravação quadro a quadro (gerar o MP4): window.__fmTick(dt) avança o filme num passo fixo */
+ if(window.__FM_MANUAL){window.__fmTick=dt=>passo(0,dt);window.__fmPlay=()=>{comecar(true)}}else F.raf=requestAnimationFrame(passo);
 }
 window.FILME={abrir};
 })();
