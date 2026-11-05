@@ -552,7 +552,7 @@ function tRank(){const r=rkSt(),L=rkLinhas(),sel=r.lin?new Set(r.lin):null,PESO=
   const dif=(x)=>{if(x.semp)return `<span class="rkd solo">Nenhum fornecedor com preço lançado · ferramenta mais leve: ${esc(FN(x.w.f))}</span>`;if(x.excl)return `<span class="rkd solo">Verificar com os outros fornecedores se têm este perfil com as mesmas medidas</span>`;if(!x.seg)return `<span class="rkd solo">Único fornecedor com preço lançado · ${x.nf-1} ${x.nf-1===1?'concorrente':'concorrentes'} sem preço</span>`;
     if(x.emp)return `<span class="rkd eq">empate com outro fornecedor</span>`;
     const d=x.vs-x.vw,pc=d/x.vs*100;
-    return `<span class="rkd up"><b style="font-size:1.15em">${n2(pc)}% ${PESO?'mais leve':'mais barato'}</b> na barra · ${PESO?n3(d*6)+' kg a menos':rs(d)+' a menos'} que o próximo fornecedor</span>`};
+    return `<span class="rkd up"><b style="font-size:1.15em">${n2(pc)}% ${PESO?'mais leve':'mais barato'}</b> na <b>barra de 6 metros</b> · ${PESO?n3(d*6)+' kg':rs(d)} a menos por barra de 6 m que o próximo fornecedor</span>`};
   const meu=(x)=>{if(DIST()||x.w.f===S.ext||!x.mine)return x.w.f!==S.ext&&!DIST()&&!x.mine?`<span class="rkm">${esc(EXTS[S.ext].n)}: verificar se tem este perfil com as mesmas medidas</span>`:'';
     if(x.vm==null)return `<span class="rkm">${esc(EXTS[S.ext].n)} ${esc(x.mine.c)} · sem preço lançado</span>`;
     const d=x.vm-x.vw;return `<span class="rkm">${esc(EXTS[S.ext].n)} ${esc(x.mine.c)}: ${PESO?n3(x.mine.p)+' kg/m · +'+n3(d*6)+' kg na barra':rs(x.vm)+' · +'+rs(d)+' na barra'}</span>`};
