@@ -3689,6 +3689,29 @@ function setLinhaStatus(c, linhas, valor){
     sb.rpc('impl_portal_atualizar_linhas',{p_cliente:c.id}).then(()=>{},()=>{});
   });
 }
+// "Alimentado manual": a barra da linha vai a 100% (e o cliente vê 100% no link), mas a contagem real continua para a FC.
+// Fica em linhas_datas[linha].alim_manual = {em, por}, que já é copiado para o link do cliente.
+function alimManualDe(c, l){ return l ? (((c.linhas_datas||{})[l]||{}).alim_manual || null) : null; }
+function tirarAlimManualDt(dt, l){ if(!dt[l] || !dt[l].alim_manual) return false; const o = Object.assign({}, dt[l]); delete o.alim_manual; if(Object.keys(o).length) dt[l]=o; else delete dt[l]; return true; }
+async function setAlimManual(c, l, ligar){
+  let por = (MEU_ACESSO && (MEU_ACESSO.nome || MEU_ACESSO.email)) || '';
+  if(!por){ try{ const {data:{user}} = await sb.auth.getUser(); por = (user && user.email) || ''; }catch(_){} }
+  const dt = JSON.parse(JSON.stringify(c.linhas_datas||{}));
+  if(ligar) dt[l] = Object.assign({}, dt[l]||{}, {alim_manual: {em: new Date().toISOString(), por}});
+  else tirarAlimManualDt(dt, l);
+  c.linhas_datas = dt; render();
+  const {error} = await sb.from('impl_clientes').update({linhas_datas: dt}).eq('id', c.id);
+  if(error) return avisarErroSalvar(error);
+  toastSalvo(ligar ? 'Linha marcada como alimentada — o cliente vê 100%' : 'Voltou para a contagem automática');
+  sb.rpc('impl_portal_atualizar_linhas',{p_cliente:c.id}).then(()=>{},()=>{});
+}
+function fmtAlimManual(am){ if(!am||!am.em) return ''; const d = new Date(am.em); return d.toLocaleDateString('pt-BR')+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})+(am.por?' por '+am.por:''); }
+function blocoAlimManual(c, key){
+  const l = linhaStatusDoKey(c, key); if(!l) return '';
+  const am = alimManualDe(c, l);
+  if(am) return `<button class="btn btn-sm btn-ghost" data-action="linha-alim-manual" data-linha="${escapeHtml(l)}" data-valor="off" title="Marcado em ${escapeHtml(fmtAlimManual(am))}. Volta a barra para a contagem automática dos itens marcados.">Desfazer alimentado</button>`;
+  return `<button class="btn btn-sm" data-action="linha-alim-manual" data-linha="${escapeHtml(l)}" data-valor="on" style="border-color:#93c5fd;color:#1d4ed8" title="Leva a barra desta linha a 100% (alimentado manualmente). O cliente vê 100% no link; a contagem real continua só para você.">✋ Alimentado manual</button>`;
+}
 function linhaStatusDoKey(c, key){ if(key==='vidro') return 'Vidro'; return (c.linhas_componentes||[]).includes(key) ? key : null; }
 function blocoEmergenciaLinha(c, key, p){
   const l = linhaStatusDoKey(c, key); if(!l) return '';
@@ -3716,13 +3739,13 @@ function renderPainelAvisosLinhasPortal(c){
       </div>
     </div>
     <div style="padding:10px 18px;background:#fff8ec;border-top:1px solid #f5e1bf;font-size:12.5px;color:#7a4a00"><b>🚨 Liberação manual:</b> o cliente vê <i>"Sistema alimentado · preços em revisão"</i> e o percentual de preços revisados. A lista de códigos mostra só os itens alimentados de verdade. Quando a revisão terminar, use <b>✅ Marcar 100% revisado</b>: o cliente vê a data e o aviso sobre atualizações do WVetro/CEM.</div>
-    ${linhas.map(cat=>{ const p = categoriaProgress(c, cat.key); return `
+    ${linhas.map(cat=>{ const p = categoriaProgress(c, cat.key); const am = alimManualDe(c, linhaStatusDoKey(c, cat.key)); const pctVer = am ? 100 : p.pct; return `
       <div style="padding:12px 18px; border-top:1px solid var(--border-2); display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
         <div style="min-width:170px; font-weight:650; font-size:13.5px;">${icon(cat.icone,'style="width:14px;height:14px;vertical-align:-2px; margin-right:6px; color:var(--text-3)"')}${escapeHtml(cat.nome)}</div>
-        <div class="pbar-row" style="flex:1; min-width:180px;"><div class="pbar-track" style="height:10px;"><div class="pbar-fill" style="width:${p.pct}%; height:10px;"></div></div><div class="pct" style="font-size:13px;">${p.pct}%</div></div>
-        <div class="desc" style="min-width:110px; text-align:right;">${p.total ? p.alimentados+' de '+p.total+' itens' : 'sem itens ainda'}</div>
-        <span style="display:inline-flex;gap:6px;align-items:center;flex-wrap:wrap">${blocoEmergenciaLinha(c, cat.key, p)}</span>
-        ${p.total && (p.alimentados>0) ? `<button class="btn btn-sm btn-ghost" data-action="zerar-implantacao-linha" data-key="${escapeHtml(cat.key)}" style="color:var(--danger);">${icon('rotate-ccw')} Zerar linha</button>` : ''}
+        <div class="pbar-row" style="flex:1; min-width:180px;"><div class="pbar-track" style="height:10px;"><div class="pbar-fill" style="width:${pctVer}%; height:10px;"></div></div><div class="pct" style="font-size:13px;">${pctVer}%</div></div>
+        <div class="desc" style="min-width:110px; text-align:right;" ${am ? `title="Marcado em ${escapeHtml(fmtAlimManual(am))}"` : ''}>${am ? `<b style="color:#1d4ed8">alimentado manual</b> (${p.alimentados} de ${p.total} itens marcados)` : (p.total ? p.alimentados+' de '+p.total+' itens' : 'sem itens ainda')}</div>
+        <span style="display:inline-flex;gap:6px;align-items:center;flex-wrap:wrap">${blocoEmergenciaLinha(c, cat.key, p)}${blocoAlimManual(c, cat.key)}</span>
+        ${(p.total && (p.alimentados>0)) || am ? `<button class="btn btn-sm btn-ghost" data-action="zerar-implantacao-linha" data-key="${escapeHtml(cat.key)}" style="color:var(--danger);">${icon('rotate-ccw')} Zerar linha</button>` : ''}
       </div>`; }).join('')}
     <div class="footnote">Perfis (metro/kg) entram dentro de cada linha contratada no link do cliente, por isso a liberação é feita na linha. Para você a contagem aparece em itens; o cliente vê só o percentual no link.</div>
   </div>`;
@@ -6133,6 +6156,13 @@ async function zerarImplantacao(c, keys){
     if(r2.error) console.warn('impl_notificacoes_percentual:', r2.error);
     else if(c.emailMarcos) delete c.emailMarcos[key];
   }
+  // Zerar também apaga a marcação "alimentado manual" das linhas zeradas
+  const dtAm = JSON.parse(JSON.stringify(c.linhas_datas||{}));
+  const mudouAm = keys.map(k=>linhaStatusDoKey(c, k)).filter(Boolean).map(l=>tirarAlimManualDt(dtAm, l)).some(Boolean);
+  if(mudouAm){
+    const ra = await sb.from('impl_clientes').update({linhas_datas: dtAm}).eq('id', c.id);
+    if(ra.error) erros.push(ra.error); else { c.linhas_datas = dtAm; sb.rpc('impl_portal_atualizar_linhas',{p_cliente:c.id}).then(()=>{},()=>{}); }
+  }
   render();
   return erros.length ? {ok:false, zerados, erro: erros[0].message||String(erros[0])} : {ok:true, zerados};
 }
@@ -8464,6 +8494,13 @@ function wireEvents(){
         if(v==='manual' && !confirm(`Liberar "${el.dataset.linha}" manualmente?\n\nO cliente vai ver: "Sistema alimentado · preços em revisão".\nA lista de códigos continua mostrando só os itens alimentados de verdade.`)) return;
         if(v==='concluida' && !confirm(`Marcar "${el.dataset.linha}" como 100% revisada em ${fmtDate(hojeYmd())}?\n\nO cliente vê a data e o aviso sobre atualizações do WVetro/CEM.`)) return;
         setLinhaStatus(c, el.dataset.linha, v);
+        return;
+      }
+      if(action==='linha-alim-manual'){
+        const c = CLIENTS.find(x=>x.id===STATE.clientId); if(!c) return;
+        const l = el.dataset.linha, ligar = el.dataset.valor==='on';
+        if(ligar && !confirm(`Marcar "${l}" como ALIMENTADA MANUALMENTE?\n\nA barra vai para 100% e o cliente vê 100% no link.\nA contagem real dos itens marcados continua aparecendo só para você.`)) return;
+        setAlimManual(c, l, ligar);
         return;
       }
       if(action==='linha-emerg-todas'){

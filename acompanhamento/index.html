@@ -303,8 +303,18 @@ function estado(titulo, texto){
 
 function linhasPorNome(foto){const m={};((foto&&foto.dados&&foto.dados.linhas)||[]).forEach(l=>m[l.nome]=l);return m;}
 
+// Linha marcada pela FC como "alimentado manual": para o cliente aparece 100% alimentada
+function aplicarAlimManual(f){
+  const G=f&&f.dados&&f.dados.grupos;if(!G)return;
+  const nomes=new Set();
+  (G.linhas||[]).forEach(l=>{if(!(l.datas&&l.datas.alim_manual))return;nomes.add(l.nome);
+    ['perfis','componentes'].forEach(k=>{const x=l[k];if(x&&+x.total){x.alimentados=+x.total;x.pendentes=[];}});});
+  if(G.vidro_datas&&G.vidro_datas.alim_manual){(G.vidros||[]).forEach(v=>v.ok=true);nomes.add('Vidro');}
+  (f.dados.linhas||[]).forEach(l=>{if(nomes.has(l.nome)&&+l.total)l.alimentados=+l.total;});
+}
 function render(r){
   const fotos=r.fotos||[];
+  fotos.slice(0,2).forEach(aplicarAlimManual);
   $('#cliente').textContent=r.cliente||'';
   try{if(((r.fotos||[])[0]||{}).dados&&r.fotos[0].dados.tipo_cliente==='ativo'){document.querySelector('.top .eyebrow').textContent='Acompanhamento da revisão de preços';}}catch(_){}
   document.title='Acompanhamento — '+(r.cliente||'FC Consultoria');
