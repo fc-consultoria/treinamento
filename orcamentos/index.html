@@ -104,6 +104,7 @@ input.big{width:100%;font-size:16px;text-align:right;padding:9px 10px}
 .chip{display:inline-block;font-size:11.5px;font-weight:600;border-radius:999px;padding:2px 9px;background:var(--surface2);color:var(--muted)}
 .chip.warn{background:var(--amber-soft);color:var(--warn)}
 .chip.ok{background:var(--teal-soft);color:var(--teal)}
+button.chip{border:0;cursor:pointer;font-family:inherit}.chip.gv{background:#dbe8f7;color:#1d5fa8}
 .split{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
 .stat{background:var(--surface2);border-radius:8px;padding:10px 12px;display:grid;gap:6px}
 .stack{display:grid;gap:20px}
@@ -523,6 +524,12 @@ function renderBanco(){
 }
 /* 05/11/2026 · projetos do Simulador de Obra 3D criados nos Orçamentos de obra (tabela obra3d_projetos, origem "orc") */
 let SIM=null,SIM_LENDO=false;
+/* 05/11/2026 · colaborador (login "orcamentos") vê só os projetos da Guaporé Vidros; a FC marca cada projeto no card */
+const ehAdm=()=>!(window.ORC&&ORC.papel==="orcamentista");
+const gvChip=(p,attr)=>{const g=p.cliente_fc==="guapore-vidros";if(!ehAdm())return "";
+ return `<button type="button" class="chip ${g?"gv":""}" ${attr}="${esc(p.id)}" title="Clique para trocar">${g?"🔵 Guaporé Vidros · colaborador vê":"🔒 Só FC · tornar Guaporé"}</button>`};
+async function simGv(id){const p=SIM.find(x=>x.id===id);if(!p)return;const ant=p.cliente_fc;p.cliente_fc=p.cliente_fc==="guapore-vidros"?"fc":"guapore-vidros";p.atualizado=new Date().toISOString();
+ const r=await sb.from("obra3d_projetos").upsert({id:p.id,dados:p,atualizado:p.atualizado});if(r.error){p.cliente_fc=ant;alert("Não foi possível salvar. Confira a internet e tente de novo.")}showHome()}
 async function simCarregar(){if(SIM_LENDO||typeof sb==="undefined")return;SIM_LENDO=true;
  try{const r=await sb.from("obra3d_projetos").select("dados");SIM=r.error?[]:(r.data||[]).map(x=>x.dados).filter(p=>p&&p.origem==="orc")}catch(e){SIM=[]}
  SIM_LENDO=false;if(!$("view-home").hidden&&HOMETAB==="orc"&&!NEW)showHome()}
@@ -531,7 +538,7 @@ function simCards(){if(SIM===null){simCarregar();return ""}
  return SIM.slice().sort((a,b)=>String(b.criado).localeCompare(String(a.criado))).map(p=>{const it=p.itens||[],nc=it.filter(t=>t.cortes).length,lk=p.link&&p.link.ativo!==false,v=simVenda(p);
   return `<article class="ocard" style="border-top:3px solid #c9831a"><div class="n">${esc(p.numero||"Sem número")} · <span style="color:#a3620b">Simulador de Obra 3D</span></div><h3>${esc(p.obra||"Obra sem nome")}</h3>
   <div class="cl">${esc(p.empresa||"")}${p.cliente&&p.cliente!==p.obra?" · "+esc(p.cliente):""}</div>
-  <div class="chips"><span class="chip">${it.length} tipologias</span><span class="chip ${nc?"ok":"warn"}">${nc} com perfis reais</span><span class="chip ${lk?"ok":""}">${lk?"link ativo":"sem link"}</span></div>
+  <div class="chips"><span class="chip">${it.length} tipologias</span><span class="chip ${nc?"ok":"warn"}">${nc} com perfis reais</span><span class="chip ${lk?"ok":""}">${lk?"link ativo":"sem link"}</span>${gvChip(p,"data-sgv")}</div>
   <div class="vals"><div><span>Proposta</span><b class="num">${brl(it.reduce((t,i)=>t+(+i.pv||0),0))}</b></div><div class="sale"><span>Com margem${+p.margem?" ("+(+p.margem)+"%)":""}</span><b class="num">${brl(v)}</b></div></div>
   <div class="acts" id="sacts-${esc(p.id)}"><button class="btn" data-sopen="${esc(p.id)}">Abrir simulador</button><button class="btn ghost" data-sdup="${esc(p.id)}">Duplicar</button><button class="btn ghost" data-sdel="${esc(p.id)}">Excluir</button></div>
   <div class="hint">Criado em ${new Date(p.criado).toLocaleDateString("pt-BR")}</div></article>`}).join("")}
@@ -555,7 +562,7 @@ function showHome(){
   const lines=[...new Set(o.tips.map(x=>x.linha))].slice(0,4).join(" · ");
   return `<article class="ocard"><div class="n">${esc(o.numero||"Sem número")}</div><h3>${esc(o.obra||"Obra sem nome")}</h3>
   <div class="cl">${esc(o.cliente&&o.cliente!==o.obra?o.cliente+" · ":"")}${esc(lines)}</div>
-  <div class="chips"><span class="chip">${o.tips.length} tipologias</span><span class="chip">${o.perfis.length} perfis</span><span class="chip ${nP?"warn":"ok"}">${nP?nP+" componentes sem preço":"componentes com preço"}</span></div>
+  <div class="chips"><span class="chip">${o.tips.length} tipologias</span><span class="chip">${o.perfis.length} perfis</span><span class="chip ${nP?"warn":"ok"}">${nP?nP+" componentes sem preço":"componentes com preço"}</span>${gvChip(o,"data-gv")}</div>
   <div class="vals"><div><span>Custo</span><b class="num">${brl(t.c)}</b></div><div class="sale"><span>Venda</span><b class="num">${brl(t.v)}</b></div></div>
   <div class="acts" id="acts-${o.id}"><button class="btn" data-open="${o.id}">Abrir orçamento</button><button class="btn ghost" data-dup="${o.id}">Duplicar</button><button class="btn ghost" data-del="${o.id}">Excluir</button></div>
   <div class="hint">Criado em ${new Date(o.criado).toLocaleDateString("pt-BR")}</div></article>`}).join("");
@@ -575,6 +582,8 @@ function showHome(){
   if(b.dataset.sdup)simDup(b.dataset.sdup);
   if(b.dataset.sdel){const box=$("sacts-"+b.dataset.sdel);box.innerHTML=`<span class="err">Excluir este simulador? O link do cliente também será desativado.</span><button class="btn danger" data-sdelok="${b.dataset.sdel}">Sim, excluir</button><button class="btn ghost" data-cancel="1">Não</button>`}
   if(b.dataset.sdelok)simDel(b.dataset.sdelok);
+  if(b.dataset.gv){const o=DB.obras.find(x=>x.id===b.dataset.gv);if(o){o.cliente_fc=o.cliente_fc==="guapore-vidros"?"fc":"guapore-vidros";save();showHome()}}
+  if(b.dataset.sgv)simGv(b.dataset.sgv);
  };
  $("b-copy").onclick=()=>{const txt=JSON.stringify(DB);const fb=()=>{$("b-paste").value=txt;$("b-paste").select();$("b-msg").textContent="Copie o texto selecionado (Ctrl+C)."};
   if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(txt).then(()=>$("b-msg").textContent="Dados copiados.").catch(fb);else fb()};
