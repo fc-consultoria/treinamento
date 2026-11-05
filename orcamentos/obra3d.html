@@ -135,7 +135,7 @@ table.cli td.n,table.cli th.n{text-align:right}
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/environments/RoomEnvironment.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/geometries/RoundedBoxGeometry.js"></script>
 <script src="tip3d.js?v=20261105f"></script>
-<script src="proposta.js?v=20261105c"></script>
+<script src="proposta.js?v=20261105d"></script>
 <script src="obra3d-ler.js"></script>
 <script src="orientativo-ler.js?v=1"></script>
 <script src="secao-ler.js?v=1"></script>
@@ -472,7 +472,7 @@ function apr(){const nOk=P.itens.filter(t=>t.ok).length,lk=P.link;const v=lk&&VI
   ${somaPdf(P)>0?"":`<span class="hint" style="flex-basis:100%">Este projeto não tem preços do PDF.${P.editavel?" Lance o preço de cada item na Conferência.":" Duplique para lançar preços."}</span>`}</div>
  <div id="pdoc"></div>`;
  if(!window.PROPOSTA){$("pdoc").innerHTML=`<div class="msg">O modelo da proposta não carregou. Verifique a internet e atualize.</div>`;return}
- const D=doc(P);PROPOSTA.render($("pdoc"),D,{});
+ const D=doc(P);PROPOSTA.render($("pdoc"),D,{simular:true,simRotulo:"só a FC vê · o link do cliente não tem",estado:((window.__simEst=window.__simEst||{})[P.id]=window.__simEst[P.id]||{})});
  const msg=t=>{$("l-msg").textContent=t};
  const publicar=async tok=>{msg("Publicando…");const r=await BD.link(tok,"o3d-"+P.id,doc(P));if(r&&r.error){msg("Não foi possível publicar: "+r.error.message);return false}
   P.link={tok,ativo:true,em:new Date().toISOString()};if(P.status==="recebido"||P.status==="conferencia"){P.status="entregue";P.entregue=P.entregue||new Date().toISOString().slice(0,10)}touch(P);return true};
@@ -496,8 +496,8 @@ function apr(){const nOk=P.itens.filter(t=>t.ok).length,lk=P.link;const v=lk&&VI
  $("l-pr").onclick=()=>{PROPOSTA.preencher($("pdoc"),D,true);setTimeout(()=>print(),80)};
  $("m-pct").oninput=e=>{P.margem=Math.round((+String(e.target.value).replace(",",".")||0)*100)/100;touch(P);$("m-tot").textContent=brl(precos(P).reduce((a,b)=>a+b,0))};
  /* com preço: monta a proposta com valores só para imprimir e volta à versão sem preço depois */
- $("l-prc").onclick=()=>{const pr=precos(P);PROPOSTA.render($("pdoc"),D,{precos:pr,total:pr.reduce((a,b)=>a+b,0),rotulo:"Proposta comercial",adiar:true});PROPOSTA.preencher($("pdoc"),D,true);
-  addEventListener("afterprint",()=>PROPOSTA.render($("pdoc"),D,{}),{once:true});setTimeout(()=>print(),80)};
+ $("l-prc").onclick=()=>{const pr=precos(P);PROPOSTA.render($("pdoc"),D,{precos:pr,total:pr.reduce((a,b)=>a+b,0),rotulo:"Proposta comercial",adiar:true,simular:true,estado:((window.__simEst=window.__simEst||{})[P.id]=window.__simEst[P.id]||{})});PROPOSTA.preencher($("pdoc"),D,true);
+  addEventListener("afterprint",()=>PROPOSTA.render($("pdoc"),D,{simular:true,simRotulo:"só a FC vê · o link do cliente não tem",estado:((window.__simEst=window.__simEst||{})[P.id]=window.__simEst[P.id]||{})}),{once:true});setTimeout(()=>print(),80)};
  if(lk&&lk.ativo!==false)vistas();
 }
 
