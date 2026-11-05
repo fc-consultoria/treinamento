@@ -161,7 +161,7 @@ async function enviar(){const ids=[...pend];pend.clear();if(!ids.length)return;
 addEventListener("beforeunload",e=>{if(pend.size){e.preventDefault();e.returnValue=""}});
 
 /* ---------- dados para a apresentação (nunca leva preço) ---------- */
-function t3(it){return {item:it.item,tipo:it.tipo,loc:it.loc,kind:it.kind,f:it.f,enc:it.enc,L:it.L,H:it.H,q:it.q,linha:it.linha,desc:it.vidro+(it.obs?" · "+it.obs:"")}}
+function t3(it){const o={item:it.item,tipo:it.tipo,loc:it.loc,kind:it.kind,f:it.f,enc:it.enc,L:it.L,H:it.H,q:it.q,linha:it.linha,desc:it.vidro+(it.obs?" · "+it.obs:"")};if(it.cortes)o.cortes=it.cortes;return o}
 function doc(p){const d={marca:p.empresa,marcaCor:p.cor,numero:p.numero,obra:p.obra,cliente:p.cliente,cor:p.corPerfil,emitida:p.emitida||p.criado,itens:p.itens.map(t3)};
  if(p.logo)d.logo=p.logo;if(p.editavel&&typeof p.rodape==="string")d.rodape=p.rodape;return d}
 /* preços: só para o PDF impresso (valor do item no PDF + margem em lote); o link nunca recebe isto */
@@ -264,7 +264,7 @@ function abrir(id){P=LIST.find(p=>p.id===id);if(!P){location.hash="";return}
  <div id="tab"></div>`;
  $("p-emp").oninput=e=>{P.empresa=e.target.value;touch(P)};
  $("p-dup").onclick=()=>{const c=JSON.parse(JSON.stringify(P));Object.assign(c,{id:novoId(),criado:new Date().toISOString(),copiaDe:P.id,editavel:true,obra:(P.obra||"Obra")+" (cópia)",link:null,status:"recebido",valor:"",entregue:"",pago:"",notas:"",avisos:[]});
-  if(typeof c.rodape!=="string")c.rodape="Desenvolvido por FC Consultoria em Esquadria";c.itens.forEach(t=>{t.avisos=[];t.ok=true});LIST.push(c);touch(c);TAB="conf";location.hash="p-"+c.id;toast("Cópia criada · tudo editável")};
+  if(typeof c.rodape!=="string")c.rodape="Desenvolvido por FC Consultoria em Esquadria · CNPJ 52.985.682/0001-32";c.itens.forEach(t=>{t.avisos=[];t.ok=true});LIST.push(c);touch(c);TAB="conf";location.hash="p-"+c.id;toast("Cópia criada · tudo editável")};
  if(P.editavel){
   $("p-cli").onchange=e=>{P.cliente=e.target.value;touch(P)};$("p-num").onchange=e=>{P.numero=e.target.value;touch(P)};
   $("p-rod").onchange=e=>{P.rodape=e.target.value;touch(P)};
