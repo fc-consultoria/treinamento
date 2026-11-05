@@ -5,6 +5,7 @@
 (function(){
 "use strict";
 const CSS=`
+.pp-sim-d{margin:0 0 16px}.pp-sim-d>summary{cursor:pointer;display:inline-flex;gap:6px;align-items:center;font:600 13px var(--txt);border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 13px;list-style:none}.pp-sim-d>summary::-webkit-details-marker{display:none}
 .pp-sim{display:grid;gap:8px;margin:0 0 16px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--wash)}
 .pp-sim .rw{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.pp-sim .rw>span{font-size:12.5px;color:var(--muted);min-width:96px}
 .pp-sim button{display:inline-flex;gap:6px;align-items:center;font:600 12.5px var(--txt);border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:999px;padding:6px 11px;cursor:pointer;min-height:34px}
@@ -12,7 +13,7 @@ const CSS=`
 .pp-sim button i{width:14px;height:14px;border-radius:50%;border:1px solid rgba(0,0,0,.18);flex:none}
 .pp-sim .rs{margin-left:auto}
 .pp-av{padding:10px 12px;border-radius:10px;background:#fff6e5;border:1px solid #f0d49a;color:#7a4b07;font-size:13px;margin:0 0 16px}
-@media print{.pp-sim{display:none!important}}
+@media print{.pp-sim,.pp-sim-d{display:none!important}}
 
 .pp{--pc:#0d5c63;--pc-ink:#fff;--ink:#14232a;--muted:#5d6e73;--paper:#fff;--wash:#f2f5f5;--line:#dfe6e7;--amb:#c9831a;
  --disp:"Space Grotesk",system-ui,sans-serif;--txt:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
@@ -159,14 +160,14 @@ const SIMV=[["incolor","Incolor"],["verde","Verde"],["fume","Fumê"],["champanhe
 const temVidro=t=>!/SEM\s*VIDRO/i.test(String(t.desc||""))&&/VIDRO|INCOLOR|TEMPERAD|LAMINAD|FUM|VERDE|MM/i.test(String(t.desc||""));
 function barraSim(D,T3){const s=D._sim||{};const it=D.itens||[];const algumVidro=it.some(temVidro);
  const b=(k,id,nm,hex)=>`<button type="button" data-sim="${k}:${id}" aria-pressed="${s[k]===id}"><i style="background:${hex}"></i>${nm}</button>`;
- return `<div class="pp-sim" role="group" aria-label="Simular cores"><div class="rw"><span>Cor do perfil</span>${SIMP.map(([id,nm])=>b("p",id,nm,T3.perfilDe("",id).hex)).join("")}</div>
+ return `<details class="pp-sim-d"${D._simAberto||simAtivo(D)?" open":""}><summary>🎨 Trocar cores <span style="font-weight:500;color:var(--muted)">· só a vidraçaria vê</span></summary><div class="pp-sim" role="group" aria-label="Simular cores" style="margin-top:8px"><div class="rw"><span>Cor do perfil</span>${SIMP.map(([id,nm])=>b("p",id,nm,T3.perfilDe("",id).hex)).join("")}</div>
   ${algumVidro?`<div class="rw"><span>Cor do vidro</span>${SIMV.map(([id,nm])=>b("v",id,nm,T3.vidroDe("",id).hex)).join("")}</div>`:""}
-  <div class="rw"><span class="hint" style="min-width:0"><b>Obra toda:</b> escolha acima. <b>Por item:</b> abra o Ver em 3D e toque na cor do perfil ou do vidro. Os valores não mudam.</span>${simAtivo(D)?`<button type="button" class="rs" data-sim="reset">↺ Cor do orçamento (tudo)</button>`:""}</div></div>`}
+  <div class="rw"><span class="hint" style="min-width:0"><b>Obra toda:</b> escolha acima. <b>Por item:</b> abra o Ver em 3D e toque na cor do perfil ou do vidro. Os valores não mudam.</span>${simAtivo(D)?`<button type="button" class="rs" data-sim="reset">↺ Cor do orçamento (tudo)</button>`:""}</div></div></details>`}
 /* obra toda (D._sim) e por item (t._s): o item vale mais que a obra */
 function aplicarSim(D){const it=D.itens||[];it.forEach(t=>{if(!("_cp0" in t)){t._cp0=t.corPerfil;t._vc0=t.vidroCor}
   const s=D._sim||{},i=t._s||{};t.corPerfil=i.p||s.p||t._cp0;t.vidroCor=temVidro(t)?(i.v||s.v||t._vc0):t._vc0;if(t.corPerfil==null)delete t.corPerfil;if(t.vidroCor==null)delete t.vidroCor})}
 const simAtivo=D=>!!(D._sim||(D.itens||[]).some(t=>t._s));
-function ligarSim(el,D,op){el.querySelectorAll("[data-sim]").forEach(b=>b.onclick=()=>{const v=b.dataset.sim;
+function ligarSim(el,D,op){const dd=el.querySelector(".pp-sim-d");if(dd)dd.ontoggle=()=>{D._simAberto=dd.open};el.querySelectorAll("[data-sim]").forEach(b=>b.onclick=()=>{const v=b.dataset.sim;
   if(v==="reset"){D._sim=null;(D.itens||[]).forEach(t=>delete t._s)}else{const [k,id]=v.split(":");D._sim=Object.assign({},D._sim);D._sim[k]=D._sim[k]===id?undefined:id;if(!D._sim.p&&!D._sim.v)D._sim=null;(D.itens||[]).forEach(t=>{if(t._s){delete t._s[k];if(!t._s.p&&!t._s.v)delete t._s}})}
   aplicarSim(D);const y=scrollY;render(el,D,op);scrollTo(0,y)})}
 /* gera as imagens aos poucos (uma por quadro) para a página não travar */
