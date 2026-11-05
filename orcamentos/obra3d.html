@@ -52,6 +52,7 @@ main{padding:18px 0 40px}
 .lst{display:flex;flex-direction:column;gap:8px}
 .pj{display:grid;grid-template-columns:8px minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--surface);cursor:pointer;text-align:left;font:inherit;color:inherit;width:100%}
 .pj:hover{border-color:var(--teal)}
+.pjw{display:flex;gap:8px;align-items:stretch}.pjw .pj{flex:1;min-width:0}.pjdel{flex:none;color:var(--bad);white-space:nowrap}
 .pj i{width:8px;align-self:stretch;border-radius:4px}
 .pj b{font:600 14.5px var(--display);display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pj small{color:var(--muted);font-size:12.5px}
@@ -287,9 +288,15 @@ function homeOrc(){hdr("Monte o orçamento rápido a partir da Proposta comercia
   <div class="row" style="margin-top:10px"><button class="btn pri" type="button" id="nv-ok" ${ok?"":"disabled"}>Criar projeto</button><span class="hint" role="status">${esc(NV.err||falta)}</span>${NV.O||NV.ORI?`<button class="btn" type="button" id="nv-x" style="margin-left:auto">Limpar</button>`:""}</div>
  </div>
  <div class="card sec"><h2>Projetos <span class="hint">${LIST.length} no total</span></h2><div class="lst">${ord.length?ord.map(p=>{const v=VISTAS[p.link&&p.link.tok];const nc=p.itens.filter(t=>t.cortes).length;
-   return `<button class="pj" type="button" data-id="${esc(p.id)}"><i style="background:${esc(p.cor||"#0d5c63")}"></i><span><b>${esc(p.obra||"Obra")}</b><small>${esc(p.empresa||"—")} · orçamento ${esc(p.numero||"—")} · ${p.itens.length} itens · ${nc} com perfis reais · ${dt(p.criado)}</small></span>
-   <span class="r"><span class="st" style="color:${p.link&&p.link.ativo!==false?"#0d6b68":"#a3620b"}">${p.link&&p.link.ativo!==false?"Link ativo":"Em conferência"}</span>${v?`<br><span class="hint">aberto ${v.vistas}×</span>`:""}</span></button>`}).join(""):`<div class="hint">Nenhum projeto ainda. Anexe os dois PDFs acima.</div>`}</div></div>`;
+   return `<div class="pjw"><button class="pj" type="button" data-id="${esc(p.id)}"><i style="background:${esc(p.cor||"#0d5c63")}"></i><span><b>${esc(p.obra||"Obra")}</b><small>${esc(p.empresa||"—")} · orçamento ${esc(p.numero||"—")} · ${p.itens.length} itens · ${nc} com perfis reais · ${dt(p.criado)}</small></span>
+   <span class="r"><span class="st" style="color:${p.link&&p.link.ativo!==false?"#0d6b68":"#a3620b"}">${p.link&&p.link.ativo!==false?"Link ativo":"Em conferência"}</span>${v?`<br><span class="hint">aberto ${v.vistas}×</span>`:""}</span></button><button class="btn pjdel" type="button" data-del="${esc(p.id)}" title="Excluir projeto">Excluir</button></div>`}).join(""):`<div class="hint">Nenhum projeto ainda. Anexe os dois PDFs acima.</div>`}</div></div>`;
  document.querySelectorAll(".pj").forEach(b=>b.onclick=()=>{location.hash="p-"+b.dataset.id});
+ document.querySelectorAll("[data-del]").forEach(b=>b.onclick=async()=>{const P=LIST.find(x=>x.id===b.dataset.del);if(!P)return;
+  if(b.dataset.ok!=="1"){b.dataset.ok="1";b.textContent="Confirmar exclusão";setTimeout(()=>{if(b.isConnected){b.dataset.ok="";b.textContent="Excluir"}},4000);return}
+  b.disabled=true;b.textContent="Excluindo…";
+  if(P.link&&P.link.ativo!==false&&BD.linkOff)await BD.linkOff(P.link.tok);
+  const r=BD.excluir?await BD.excluir(P.id):null;if(r&&r.error){toast("Não foi possível excluir");b.disabled=false;b.dataset.ok="";b.textContent="Excluir";return}
+  LIST=LIST.filter(x=>x!==P);pend.delete(P.id);toast("Projeto excluído");homeOrc()});
  [["pro",lerPro],["ori",lerOri]].forEach(([k,fn])=>{const dr=$("nv-"+k),fi=dr.querySelector("input");dr.onclick=()=>fi.click();dr.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();fi.click()}};
   fi.onchange=()=>{if(fi.files[0])fn(fi.files[0])};dr.ondragover=e=>{e.preventDefault();dr.classList.add("on")};dr.ondragleave=()=>dr.classList.remove("on");
   dr.ondrop=e=>{e.preventDefault();dr.classList.remove("on");if(e.dataTransfer.files[0])fn(e.dataTransfer.files[0])}});
