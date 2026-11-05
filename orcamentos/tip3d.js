@@ -32,6 +32,9 @@ const VIDROS=[
  {id:"champanhe",nome:"Champanhe",hex:"#b8995f",op:.5,met:0,re:/CHAMPAN/},
  {id:"jateado",nome:"Fosco / jateado",hex:"#f1f4f4",op:.86,met:0,re:/JATEAD|LEITOS|ACIDAD|MINI ?BOREAL|CANELAD|PONTILHAD|VIDRO[^-]*\bFOSCO/}
 ];
+/* 05/11/2026 · vidro inteligente (PDLC): desligado fica leitoso (privacidade), ligado fica transparente */
+const INTEL=/INTELIGENT|PDLC|SMART\s*GLASS|G-?TECH/i;
+const ehIntel=t=>INTEL.test(String((t&&t.desc)||""));
 function perfilDe(txt,forcado){if(forcado){const f=PERFIS.find(p=>p.id===forcado);if(f)return f}const s=String(txt||"").toUpperCase();return PERFIS.find(p=>p.re.test(s))||PERFIS[PERFIS.length-1]}
 function vidroDe(txt,forcado){if(forcado){const f=VIDROS.find(v=>v.id===forcado);if(f)return f}const s=String(txt||"").toUpperCase();
  /* ordem: refletivo/jateado antes de "incolor" (ex.: "REFLETIVO INCOLOR") */
@@ -213,7 +216,7 @@ function abrir(t,cfg){cfg=cfg||{};if(!T()){alert("O 3D não carregou. Verifique 
   d.innerHTML=`<div class="tt"><span id="t3d-t"></span><small id="t3d-s"></small><div class="cs" id="t3d-ch"></div></div>
   <button type="button" class="x" id="t3d-x">✕ Fechar</button><div class="wm"><img class="lg" alt="FC Consultoria em Esquadria" src="${LOGO}"><span>IMAGENS DEMONSTRATIVAS</span><span>Desenvolvido por FC Consultoria em Esquadria · CNPJ 52.985.682/0001-32</span></div>
   <div class="cap" id="t3d-cap" hidden></div>
-  <div class="bt"><button type="button" class="pri" id="t3d-mo">Ver montagem</button><button type="button" id="t3d-de">Desmontar</button><button type="button" id="t3d-ab">Abrir folhas</button><button type="button" id="t3d-gi">Girar 360°</button><button type="button" id="t3d-fr">Frente</button></div>`;
+  <div class="bt"><button type="button" class="pri" id="t3d-mo">Ver montagem</button><button type="button" id="t3d-de">Desmontar</button><button type="button" id="t3d-ab">Abrir folhas</button><button type="button" id="t3d-gi">Girar 360°</button><button type="button" id="t3d-fr">Frente</button><button type="button" id="t3d-in" hidden title="Simula o controle do vidro inteligente">💡 Desligar vidro</button></div>`;
   document.body.appendChild(d);
   const r=new (T().WebGLRenderer)({antialias:true,alpha:true});r.setPixelRatio(Math.min(window.devicePixelRatio||1,2));r.toneMapping=T().ACESFilmicToneMapping;r.toneMappingExposure=1.05;r.shadowMap.enabled=true;r.shadowMap.type=T().PCFSoftShadowMap;if(T().sRGBEncoding)r.outputEncoding=T().sRGBEncoding;r.setClearColor(0x000000,0);
   d.prepend(r.domElement);
@@ -235,13 +238,15 @@ function abrir(t,cfg){cfg=cfg||{};if(!T()){alert("O 3D não carregou. Verifique 
    if(V.modo!=="k"&&V.modo!=="f")return;if(Math.hypot(e.clientX-px,e.clientY-py)>8)return;const n=performance.now();
    if(n-tq<380&&Math.hypot(e.clientX-tx,e.clientY-ty)<30){tq=0;escolher(e.clientX,e.clientY)}else{tq=n;tx=e.clientX;ty=e.clientY}});
   d.querySelector("#t3d-fr").onclick=()=>{V.giro=0;frente(0)};
+  d.querySelector("#t3d-in").onclick=()=>{V.intelAlvo=V.intelAlvo?0:1;intelBotao();const cap=d.querySelector("#t3d-cap");cap.hidden=false;
+   cap.innerHTML=V.intelAlvo?"<b>Vidro desligado</b> · fica leitoso: de fora não se vê o ambiente interno":"<b>Vidro ligado</b> · volta a ficar transparente";clearTimeout(V.capT);V.capT=setTimeout(()=>{cap.hidden=true},3500)};
   window.addEventListener("resize",()=>{if(!d.hidden)tam()});}
  V.volta=document.activeElement;
  const mt=materiais(t,cfg);V.mo=montar(t,mt);if(V.s)descartar(V.s);V.s=cena(V.r,Math.max(V.mo.L,V.mo.H)+2);V.conj=new (T().Group)();V.conj.add(V.mo.grupo);V.s.add(V.conj);V.k=0;V.alvo=0;V.mexeu=false;
  const ab=V.d.querySelector("#t3d-ab");ab.textContent="Abrir folhas";ab.hidden=!V.mo.temMovel;
  V.d.querySelector("#t3d-t").textContent=cfg.titulo||("Item "+(t.item||"")+" · "+(t.tipo||""));
  V.d.querySelector("#t3d-s").textContent=(t.L||"")+" × "+(t.H||"")+" mm"+(t.q>1?" · "+t.q+" peças":"")+(t.linha?" · Linha "+t.linha:"");
- V.mt=mt;V.tA=t;V.cfgA=cfg;chipsCor();
+ V.mt=mt;V.tA=t;V.cfgA=cfg;V.intelK=0;V.intelAlvo=0;V.d.querySelector("#t3d-in").hidden=!ehIntel(t);intelBotao();chipsCor();
  if(V.pc)V.pc.forEach(p=>{if(p.gr)p.gr.dispose()});
  V.cortes=t.cortes&&t.cortes.perfis&&t.cortes.perfis.length?t.cortes:null;pecas();ligarCortes();reais();kit();V.modo="ok";botoes();V.d.querySelector("#t3d-cap").hidden=true;
  V.d.hidden=false;tam();frente(-.35);
@@ -407,17 +412,21 @@ function chipsCor(){const mt=V.mt,t=V.tA,cfg=V.cfgA,el=V.d.querySelector("#t3d-c
    +(alt?`<button type="button" class="chip" data-cid="__orig" style="cursor:pointer;font:inherit">↺ Cor do orçamento neste item</button>`:"");
   pal.querySelector("#t3d-obra").onchange=e=>{V.obraToda=e.target.checked};
   pal.querySelectorAll("[data-cid]").forEach(x=>x.onclick=()=>{const id=x.dataset.cid;if(id==="__orig")cfg.onCor("reset");else cfg.onCor(k,id,!!V.obraToda);recolorir();chipsCor()})})}
+function intelBotao(){const b=V.d.querySelector("#t3d-in");if(b){b.textContent=V.intelAlvo?"💡 Ligar vidro (transparente)":"💡 Desligar vidro (leitoso)";b.className=V.intelAlvo?"pri":""}}
+/* aplica o estado do vidro inteligente por cima da cor do vidro (k: 0 transparente → 1 leitoso) */
+function intelAplicar(){const mt=V.mt;if(!mt||!mt.vid)return;const k=V.intelK||0,v=mt.v;const a=new (T().Color)(v.hex),b=new (T().Color)("#f4f6f6");
+ if(a.convertSRGBToLinear){a.convertSRGBToLinear();b.convertSRGBToLinear()}mt.vid.color.copy(a.lerp(b,k));mt.vid.opacity=v.op+(.94-v.op)*k;mt.vid.roughness=.02+.55*k;mt.vid.metalness=v.met*(1-k);mt.vid.needsUpdate=true}
 function recolorir(){const mt=V.mt,t=V.tA,cfg=V.cfgA;const lin=h=>{const c=new (T().Color)(h);if(c.convertSRGBToLinear)c.convertSRGBToLinear();return c};
  const p=perfilDe(cfg.cor,t.corPerfil),v=vidroDe(t.desc,t.vidroCor);mt.p=p;mt.v=v;
  mt.alu.color.copy(lin(p.hex));mt.alu.metalness=p.met;mt.alu.roughness=p.rug;mt.fundo.color.copy(lin(p.hex).multiplyScalar(.45));mt.fundo.metalness=p.met;
  mt.pux.color.copy(lin(p.id==="preto"?"#3a3f44":"#2b2f33"));
- mt.vid.color.copy(lin(v.hex));mt.vid.opacity=v.op;mt.vid.metalness=v.met;[mt.alu,mt.fundo,mt.vid,mt.pux].forEach(m=>m.needsUpdate=true)}
+ mt.vid.color.copy(lin(v.hex));mt.vid.opacity=v.op;mt.vid.metalness=v.met;[mt.alu,mt.fundo,mt.vid,mt.pux].forEach(m=>m.needsUpdate=true);if(V.intelK)intelAplicar()}
 const GIRO_MS=10000;
 function girar(){V.giro=1;V.giroT0=performance.now();V.giroBase=V.conj.rotation.y}
-function loop(){V.raf=requestAnimationFrame(loop);if(V.modo==="v")passoVitrine();else if(V.modo&&V.modo!=="ok")passoPecas();else V.lt=0;V.k+=(V.alvo-V.k)*.08;if(Math.abs(V.alvo-V.k)<.001)V.k=V.alvo;V.mo.animar(V.k);
+function loop(){V.raf=requestAnimationFrame(loop);if(V.modo==="v")passoVitrine();else if(V.modo&&V.modo!=="ok")passoPecas();else V.lt=0;if(V.intelAlvo!=null&&V.intelK!==V.intelAlvo){V.intelK+=(V.intelAlvo-V.intelK)*.12;if(Math.abs(V.intelAlvo-V.intelK)<.005)V.intelK=V.intelAlvo;intelAplicar()}V.k+=(V.alvo-V.k)*.08;if(Math.abs(V.alvo-V.k)<.001)V.k=V.alvo;V.mo.animar(V.k);
  if(V.giro>0){/* volta de 360° lenta e suave: começa e termina devagar */
   const p=Math.min(1,(performance.now()-V.giroT0)/GIRO_MS),e=.5-.5*Math.cos(Math.PI*p);V.conj.rotation.y=V.giroBase+e*Math.PI*2;
   if(p>=1){V.giro=0;if(!V.mexeu)V.conj.rotation.y=V.giroBase}}
  if(V.ctl)V.ctl.update();V.r.render(V.s,V.cam)}
-window.TIP3D={imagem,abrir,PERFIS,VIDROS,perfilDe,vidroDe,limparCache:()=>cache.clear()};
+window.TIP3D={imagem,abrir,PERFIS,VIDROS,perfilDe,vidroDe,ehIntel,limparCache:()=>cache.clear()};
 })();
