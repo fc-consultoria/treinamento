@@ -348,6 +348,15 @@ function loadPdfJs(){if(pdfReady)return pdfReady;const add=src=>new Promise((res
  const base="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/";pdfReady=add(base+"pdf.worker.min.js").then(()=>add(base+"pdf.min.js")).then(()=>window.pdfjsLib);pdfReady.catch(()=>{pdfReady=null});return pdfReady}
 async function lerPdf(file){const lib=await loadPdfJs();const d=await lib.getDocument({data:new Uint8Array(await file.arrayBuffer())}).promise;const P=[];
  for(let p=1;p<=d.numPages;p++){const tc=await (await d.getPage(p)).getTextContent();P.push(tc.items.map(i=>({x:i.transform[4],y:i.transform[5],w:i.width,s:i.str})))}return P}
+/* 05/11/2026 · cor da empresa tirada do próprio PDF: a cor viva chapada (logo, faixas) da capa e da última página; fotos ficam de fora */
+async function corDoPdf(file){try{const lib=await loadPdfJs();const d=await lib.getDocument({data:new Uint8Array(await file.arrayBuffer())}).promise;const B={};
+ for(const pg of [...new Set([1,d.numPages])]){const page=await d.getPage(pg);const vp=page.getViewport({scale:.35});const cv=document.createElement("canvas");cv.width=vp.width;cv.height=vp.height;
+  await page.render({canvasContext:cv.getContext("2d"),viewport:vp}).promise;const px=cv.getContext("2d").getImageData(0,0,cv.width,cv.height).data;
+  const W4=cv.width*4;for(let i=0;i<px.length-W4-4;i+=8){/* só áreas de cor chapada (logo, faixas): foto tem textura e fica de fora */if(Math.abs(px[i]-px[i+4])+Math.abs(px[i+1]-px[i+5])+Math.abs(px[i+2]-px[i+6])>14||Math.abs(px[i]-px[i+W4])+Math.abs(px[i+1]-px[i+W4+1])+Math.abs(px[i+2]-px[i+W4+2])>14)continue;const r=px[i]/255,g=px[i+1]/255,b=px[i+2]/255,mx=Math.max(r,g,b),mn=Math.min(r,g,b),l=(mx+mn)/2,dl=mx-mn;if(dl<.35||l<.2||l>.72)continue;
+   const sat=dl/(1-Math.abs(2*l-1));if(sat<.62)continue;let h=mx===r?((g-b)/dl)%6:mx===g?(b-r)/dl+2:(r-g)/dl+4;h=(h*60+360)%360;const k=Math.round(h/15)%24;
+   const o=B[k]||(B[k]={n:0,r:0,g:0,b:0});o.n++;o.r+=px[i];o.g+=px[i+1];o.b+=px[i+2]}}
+ const top=Object.values(B).sort((a,b)=>b.n-a.n)[0];if(!top||top.n<40)return "";
+ const hx=v=>Math.round(v/top.n).toString(16).padStart(2,"0");return "#"+hx(top.r)+hx(top.g)+hx(top.b)}catch(e){return ""}}
 async function novo(file){const m=$("dmsg");
  if(!/\.pdf$/i.test(file.name)&&file.type!=="application/pdf"){m.textContent=`"${file.name}" não é PDF.`;return}
  m.textContent="Lendo o PDF…";
@@ -356,7 +365,8 @@ async function novo(file){const m=$("dmsg");
  const id=novoId();
  const p={id,criado:new Date().toISOString(),pdf:file.name,empresa:O.empresa,cor:"",obra:O.cliente||"Obra",cliente:O.cliente,numero:O.numero,emissao:O.emissao,vendedor:O.vendedor,corPerfil:O.cor,
   itens:O.itens.map(it=>Object.assign(it,{lido:{kind:it.kind,f:it.f,enc:it.enc,per:it.per||""},ok:false})),avisos:O.avisos,margem:0,valor:"",status:"recebido",entregue:"",pago:"",notas:"",link:null};
- LIST.push(p);touch(p);location.hash="p-"+id;toast(`${p.itens.length} itens lidos`)}
+ LIST.push(p);touch(p);location.hash="p-"+id;toast(`${p.itens.length} itens lidos`);
+ corDoPdf(file).then(c=>{if(c&&!p.cor){p.cor=c;touch(p);if(P&&P.id===p.id)abrir(p.id)}})}
 
 /* ======================= PROJETO ======================= */
 function abrir(id){P=LIST.find(p=>p.id===id);if(!P){location.hash="";return}
