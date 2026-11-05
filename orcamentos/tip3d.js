@@ -17,7 +17,7 @@ const PERFIS=[
  {id:"grafite",nome:"Grafite",hex:"#43484d",met:.35,rug:.5,re:/GRAFITE|CINZA|GRAY|GREY|RAL\s*70(16|21|22|24)/},
  {id:"champanhe",nome:"Champanhe",hex:"#bfa77d",met:.6,rug:.35,re:/CHAMPAN|DOURAD|OURO|GOLD\b/},
  {id:"corten",nome:"Corten",hex:"#8a4b2a",met:.2,rug:.7,re:/CORTEN|FERRUGEM/},
- {id:"madeira",nome:"Amadeirado",hex:"#8c4630",met:.06,rug:.62,re:/MADEIRA|AMADEIRAD|CEREJEIRA|CARVALHO|NOGUEIRA|IMBUIA/},
+ {id:"madeira",nome:"Madeira cerejeira",hex:"#5c2617",met:.05,rug:.58,re:/MADEIRA|AMADEIRAD|CEREJEIRA|CARVALHO|NOGUEIRA|IMBUIA/},
  {id:"linheiro",nome:"Linheiro",hex:"#d6cab0",met:.08,rug:.6,re:/LINHEIRO|LINHO/},
  {id:"natural",nome:"Anodizado natural",hex:"#c4c8cb",met:.75,rug:.32,re:/ANODIZ|NATURAL|FOSCO|BRUTO/}
 ];
