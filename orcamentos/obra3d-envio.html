@@ -70,7 +70,7 @@ footer{text-align:center;color:var(--muted);font-size:11.5px;letter-spacing:.08e
 <footer class="wrap">FC Consultoria em Esquadria</footer>
 
 <script src="obra3d-ler.js"></script>
-<script src="orientativo-ler.js?v=2"></script>
+<script src="orientativo-ler.js?v=3"></script>
 <script src="secao-ler.js?v=2"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
@@ -80,6 +80,8 @@ const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const CORES=["#1d5fa8","#0d5c63","#1f7a4a","#b3261e","#c9831a","#6d4bd8","#13232e","#8a4b2a"];
 const tok=new URLSearchParams(location.search).get("t")||"";
+/* 05/11/2026 · biblioteca de perfis (Obra em 3D): desenho conferido vem do banco; perfil novo entra sozinho */
+window.O3DBIB={buscar:async c=>{const r=await sb.rpc("obra3d_perfis_buscar",{cods:[...new Set(c.filter(Boolean).map(x=>String(x).toUpperCase().trim()))]});return r.error?[]:r.data},salvar:async L=>{await sb.rpc("obra3d_perfis_novos",{tok:tok,itens:L})}};
 /* aberto pela Plataforma FC 3D: sempre o comando de voltar para o painel */
 const VOLTA=new URLSearchParams(location.search).get("de")==="fc3d"?"https://fc-consultoria.github.io/fc3d/clientes/#apr":"";
 if(VOLTA){const v0=document.getElementById("volta0");if(v0)v0.hidden=false}

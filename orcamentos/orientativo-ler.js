@@ -37,7 +37,7 @@ function ler(P){
     const pos=/^[LH]$/.test(c[ic+1]||"")?c[ic+1]:"";
     const peso=+c[c.length-1].replace(/\./g,"").replace(",","."),qt=+c[ic-2],tam=+c[ic-1];
     /* o código só serve para achar o desenho da seção; não vai para o 3D nem para o link */
-    let sid=FIG.get(c[0]);if(!sid){sid="s"+(FIG.size+1);FIG.set(c[0],sid);O._fig.push({sid,pg:pi,y:r.y,kgm:qt&&tam?peso/(qt*tam/1000):0})}
+    let sid=FIG.get(c[0]);if(!sid){sid="s"+(FIG.size+1);FIG.set(c[0],sid);O._fig.push({sid,cod:c[0],pg:pi,y:r.y,kgm:qt&&tam?peso/(qt*tam/1000):0})}
     cur.perfis.push({desc:c.slice(1,ic-2).join(" "),qt,tam,corte:c[ic],pos,obs:"",s:sid})}
    return}
   if(sec==="vidr"&&/^VIDRO\b/i.test(c[0])&&c.length>=6){
@@ -66,7 +66,12 @@ function ligar(itensObra,ori){
    doc = documento do pdf.js já aberto; precisa de secao-ler.js (SECAO). Só a 1ª ocorrência de cada perfil. */
 async function secoes(doc,O,opt){opt=opt||{};const S=opt.escala||36,SEC=root.SECAO||(typeof require==="function"?require("./secao-ler.js"):null);
  if(!SEC||!O._fig)return O;const cache={};
- for(const f of O._fig){try{
+ /* 05/11/2026 · biblioteca de perfis: desenho já conferido vem do banco (pelo código e kg/m); só o perfil novo é recortado */
+ const BIB=opt.bib||root.O3DBIB,achou={},novos=[];
+ if(BIB&&BIB.buscar){try{const r=await BIB.buscar(O._fig.map(f=>f.cod));(r||[]).forEach(x=>{achou[String(x.codigo).toUpperCase()]=x})}catch(e){}}
+ for(const f of O._fig){const b=achou[String(f.cod||"").toUpperCase().trim()];
+  if(b&&b.secao&&b.secao.f&&b.secao.f.length&&(!(+b.kgm>0)||!(f.kgm>0)||Math.abs(f.kgm-b.kgm)/b.kgm<.06)){O.secoes[f.sid]=b.secao;continue}
+  try{
   const pg=cache[f.pg]||(cache[f.pg]=await doc.getPage(f.pg+1));const vp0=pg.getViewport({scale:1});
   /* figura: x 21–58 pt; topo ≈ 9 pt acima da linha de base do código; altura ≈ 22 pt */
   const x0=21,top=f.y+9.4,w=37,h=22.4;
@@ -75,7 +80,8 @@ async function secoes(doc,O,opt){opt=opt||{};const S=opt.escala||36,SEC=root.SEC
   const vp=pg.getViewport({scale:S,offsetX:-x0*S,offsetY:-(vp0.height-top)*S});
   await pg.render({canvasContext:cx,viewport:vp}).promise;
   const sec=SEC.extrair(cx.getImageData(0,0,cv.width,cv.height),f.kgm);
-  if(sec&&sec.f.length)O.secoes[f.sid]=sec}catch(e){}}
+  if(sec&&sec.f.length){O.secoes[f.sid]=sec;if(f.cod&&!b)novos.push({codigo:f.cod,kgm:+f.kgm.toFixed(4),secao:sec})}}catch(e){}}
+ if(BIB&&BIB.salvar&&novos.length){try{await BIB.salvar(novos)}catch(e){}}
  return O}
 function limpar(O){delete O._fig;return O}
 const API={ler,ligar,secoes,limpar};

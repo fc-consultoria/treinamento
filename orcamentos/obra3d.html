@@ -134,10 +134,10 @@ table.cli td.n,table.cli th.n{text-align:right}
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/environments/RoomEnvironment.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/geometries/RoundedBoxGeometry.js"></script>
-<script src="tip3d.js?v=20261105h"></script>
+<script src="tip3d.js?v=20261105i"></script>
 <script src="proposta.js?v=20261105e"></script>
 <script src="obra3d-ler.js"></script>
-<script src="orientativo-ler.js?v=2"></script>
+<script src="orientativo-ler.js?v=3"></script>
 <script src="secao-ler.js?v=2"></script>
 <script>
 /* ======================= Obra em 3D ======================= */
@@ -537,6 +537,8 @@ addEventListener("hashchange",rota);rota();
 <script src="../auth.js"></script>
 <script>
 gateUI(async rr=>{
+/* 05/11/2026 · biblioteca de perfis (Obra em 3D): desenho conferido vem do banco; perfil novo entra sozinho */
+window.O3DBIB={buscar:async c=>{const r=await sb.rpc("obra3d_perfis_buscar",{cods:[...new Set(c.filter(Boolean).map(x=>String(x).toUpperCase().trim()))]});return r.error?[]:r.data},salvar:async L=>{await sb.rpc("obra3d_perfis_novos",{tok:"",itens:L})}};
  const ORC=new URLSearchParams(location.search).get("de")==="orc"||(rr&&rr.perfil&&rr.perfil.papel==="orcamentista");
  const r=await sb.from("obra3d_projetos").select("dados");
  if(r.error){document.getElementById("main").innerHTML='<div class="msg"><b>Não foi possível carregar os projetos.</b><br>Confira a internet e atualize a página (F5).</div>';return}

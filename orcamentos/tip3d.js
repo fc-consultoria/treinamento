@@ -57,7 +57,7 @@ function vidro(w,h,m){const v=new (T().Mesh)(new (T().BoxGeometry)(Math.max(w,.0
 function encher(g,w,h,cy,m,enc){
   if(enc==="lambri"){NM="Fundo do lambri";
   /* lambri: réguas horizontais de ~100 mm com o friso (sombra) entre elas */
-  const fu=box(w,h,.006,m.fundo,0,cy,0);fu.castShadow=false;g.add(fu);NM="Lambri";
+  const fu=box(w,h,.006,m.fundo,0,cy,0);fu.castShadow=false;fu.userData.fundo=1;g.add(fu);NM="Lambri";
   const n=Math.max(2,Math.round(h/.1)),rh=h/n;
   for(let i=0;i<n;i++)g.add(perf(w,rh-.005,.018,m.alu,0,cy-h/2+rh/2+i*rh,0));
   }else if(enc==="veneziana"){NM="Aleta da veneziana";
@@ -257,7 +257,7 @@ function lc(h){const c=new (T().Color)(h);if(c.convertSRGBToLinear)c.convertSRGB
 function tam(){const w=innerWidth,h=innerHeight;V.r.setSize(w,h,false);V.cam.aspect=w/Math.max(h,1);V.cam.updateProjectionMatrix();V.dist=enquadrar(V.cam,V.mo.L,V.mo.H,V.cam.aspect,1.55)}
 function frente(ry){const d=V.dist;V.cam.position.set(0,d*.06,d);V.cam.lookAt(0,0,0);V.conj.rotation.y=ry;if(V.ctl){V.ctl.target.set(0,0,0);V.ctl.update()}}
 /* ---------- montagem peça por peça, desmontar e detalhe da peça ---------- */
-function pecas(){const L=[];V.mo.grupo.children.forEach((ch,ti)=>ch.traverse(o=>{if(o.isMesh){o.userData.top=ti;L.push(o)}}));
+function pecas(){const L=[];V.mo.grupo.children.forEach((ch,ti)=>ch.traverse(o=>{if(o.isMesh&&!o.userData.fundo){o.userData.top=ti;L.push(o)}}));
  V.pc=L.map(o=>{o.geometry.computeBoundingBox();const z=new (T().Vector3)();o.geometry.boundingBox.getSize(z);
   return {o,len:o.userData.len||0,hp:o.position.clone(),hr:[o.rotation.x,o.rotation.y,o.rotation.z],nm:o.userData.nm||"Peça",sx:z.x,sy:z.y,top:o.userData.top,tg:"home",t0:0,pend:false,ex:null,er:null}});
 }
@@ -352,6 +352,8 @@ function passoVitrine(){const v=V.vit;if(!v)return;const g=v.g,now=performance.n
  g.scale.set(Math.max(sc,.001),Math.max(sc,.001),Math.max(sc,.001));}
 function sairVitrine(){const v=V.vit;if(v){V.conj.remove(v.g);v.g.traverse(o=>{if(o.geometry)o.geometry.dispose()});V.vit=null}
  V.pc.forEach(q=>q.o.visible=true);frente(0);V.modo="k";botoes()}
+/* 05/11/2026 · o fundo escuro atrás das réguas do lambri é só sombra da montagem: não é peça, some ao desmontar */
+function fundos(v){if(V.mo&&V.mo.grupo)V.mo.grupo.traverse(o=>{if(o.userData&&o.userData.fundo)o.visible=v})}
 function linhas(v){V.mo.grupo.traverse(o=>{if(o.isLine&&!o.userData.aresta)o.visible=v})}
 function botoes(){const k=V.modo==="k"||V.modo==="f"||V.modo==="v";const de=V.d.querySelector("#t3d-de");de.textContent=V.modo==="v"?"Voltar às peças":k?"Montar":"Desmontar";de.className=k?"pri":"";
  V.d.querySelector("#t3d-mo").hidden=k;V.d.querySelector("#t3d-ab").hidden=k||!V.mo.temMovel||V.modo==="m";}
@@ -362,7 +364,7 @@ function montagem(){if(!V.pc||!V.pc.length)return;V.pc.forEach(p=>{if(p.gr){p.o.
  V.pc.forEach(p=>{if(p.top!==top){if(top>=0)t+=220;top=p.top}p.tg="home";p.t0=t;t+=g;
   if(!doKit){p.ex=p.hp.clone().add(new (T().Vector3)(rnd(V.mo.L*2.2),rnd(V.mo.H*1.4)+V.mo.H*.1,V.dist*(.45+Math.random()*.3)));p.er=[rnd(3),rnd(3),rnd(3)];p.pend=true;p.o.visible=false}});
  V.fimM=t+1300;linhas(false);V.modo="m";botoes();V.d.querySelector("#t3d-cap").hidden=false}
-function desmontar(){if(!V.pc||!V.pc.length)return;V.pc.forEach(p=>{if(p.gr){p.o.geometry=p.gr;p.ar.visible=true}});fecharFolhas();V.giro=0;V.focus=null;frente(0);const now=performance.now();
+function desmontar(){if(!V.pc||!V.pc.length)return;fundos(false);V.pc.forEach(p=>{if(p.gr){p.o.geometry=p.gr;p.ar.visible=true}});fecharFolhas();V.giro=0;V.focus=null;frente(0);const now=performance.now();
  V.pc.forEach((p,i)=>{p.o.visible=true;p.pend=false;p.tg="kit";p.t0=now+80+(V.pc.length-1-i)*Math.min(25,1500/V.pc.length)});
  linhas(false);V.modo="k";botoes();V.d.querySelector("#t3d-cap").hidden=false}
 function escolher(cx,cy){const r=V.r.domElement.getBoundingClientRect();const ray=new (T().Raycaster)();ray.setFromCamera(new (T().Vector2)((cx-r.left)/r.width*2-1,-(cy-r.top)/r.height*2+1),V.cam);
@@ -382,7 +384,7 @@ function passoPecas(){const now=performance.now();V.s.updateMatrixWorld();const 
   o.position.lerp(tp,a);o.rotation.set(o.rotation.x+(tr[0]-o.rotation.x)*a,o.rotation.y+(tr[1]-o.rotation.y)*a,o.rotation.z+(tr[2]-o.rotation.z)*a);const sc=o.scale.x+(ts-o.scale.x)*a;o.scale.set(sc,sc,sc)});
  const cap=V.d.querySelector("#t3d-cap");
  if(V.modo==="m"){if(ult>=0)cap.innerHTML=`Montagem · <b>${esc(V.pc[ult].nm)}</b> · peça ${ult+1} de ${V.pc.length}`;
-  if(now>V.fimM){V.pc.forEach(p=>{p.o.position.copy(p.hp);p.o.rotation.set(p.hr[0],p.hr[1],p.hr[2]);p.o.scale.set(1,1,1);p.o.visible=true});linhas(true);V.modo="ok";botoes();
+  if(now>V.fimM){V.pc.forEach(p=>{p.o.position.copy(p.hp);p.o.rotation.set(p.hr[0],p.hr[1],p.hr[2]);p.o.scale.set(1,1,1);p.o.visible=true});linhas(true);fundos(true);V.modo="ok";botoes();
    cap.innerHTML="<b>Montagem concluída</b> · arraste para girar";clearTimeout(V.capT);V.capT=setTimeout(()=>{if(V.modo==="ok")cap.hidden=true},3500)}}
  else if(V.modo==="k")cap.innerHTML=V.cortes?(V.pc.some(p=>p.gr)?"Perfis reais da lista de corte · <b>toque em um perfil</b> para ver em destaque":"Peças separadas · <b>toque duas vezes em uma peça</b> para ver a medida de corte"):"Peças separadas · <b>toque duas vezes em uma peça</b> para ver o detalhe";
  else if(V.modo==="f")cap.innerHTML=detalhe(V.focus);}
