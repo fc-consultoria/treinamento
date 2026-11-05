@@ -1983,13 +1983,19 @@ setTimeout(()=>{if(PTAB==='cat')ui();},2500);
 <script>/* Selo On-line da Matriz (27/10): passando o mouse mostra quem está on-line; clicando no nome abre a conversa */
 (function(){const PAP={gestor:'Gestor geral',compras:'Compras',vendas:'Vendas',gerente:'Gerente comercial',marketing:'Marketing',fabrica:'Fábrica',estoque:'Estoque'},APPS={implantacao:'Painel de Implantação',matriz:'Painel da Matriz'};
   function go(){if(!window.FCSessao||typeof sb==='undefined'){setTimeout(go,1500);return;}
-    FCSessao.lista(async()=>{const r=await sb.rpc('fc_online_lista');if(r.error||!r.data)return [];const d=r.data,l=[];
+    /* Plataforma FC 3D (outro banco): clientes com sinal nos últimos 10 min, lidos com o token do Acesso FC (05/11) */
+    async function pl3d(){let t=null;try{t=localStorage.getItem('pfc-token-painel')||localStorage.getItem('pfc-token');}catch(_){}if(!t)return [];
+      try{const r=await fetch('https://pawwncmfadzxfahfvhry.supabase.co/rest/v1/rpc/fc_online_clientes',{method:'POST',headers:{apikey:'sb_publishable_b0kGoqo85joo3Vb8Xllxhw_VemwaLMs','Content-Type':'application/json'},body:JSON.stringify({p_token:t,janela_min:10})});
+        if(!r.ok)return [];const d=await r.json(),E=(typeof plEmp==='function'?await plEmp():[])||[],nm=id=>((E.find(x=>x.id===id)||{}).nome)||id||'Sem empresa';
+        return (d||[]).map(p=>({grupo:'FC 3D · '+nm(p.empresa_id),nome:p.nome||'Sem nome',sub:(PAP[p.papel]||(p.papel==='vendedor'?'Vendas':p.papel)||'')+(p.tela?' · '+p.tela:'')+(p.visto?' · '+new Date(p.visto).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):''),
+          abrir:()=>window.open('https://fc-consultoria.github.io/fc3d/clientes/empresas/','_blank')}));}catch(_){return [];}}
+    FCSessao.lista(async()=>{const [r,p3]=await Promise.all([sb.rpc('fc_online_lista'),pl3d()]);if(r.error||!r.data)return p3;const d=r.data,l=[];
       (d.equipe||[]).forEach(p=>l.push({grupo:'Equipe FC',nome:p.nome,sub:(APPS[p.app]||p.app||'')+(p.onde?' · '+p.onde:''),fc:1,
         abrir:()=>{if(window.fcChatAbrir)fcChatAbrir();else alert('A conversa da equipe ainda está carregando. Tente de novo em instantes.');}}));
       (d.clientes||[]).forEach(p=>l.push({grupo:String(p.emp_nome||p.emp).split(' · ')[0],nome:p.nome,sub:PAP[p.papel]||p.papel,n:+p.nao_lidas||0,
         abrir:async()=>{const x=await sb.rpc('emp_chat_fc_abrir',{p_pessoa:p.id});if(x.error||!x.data){alert('Não foi possível abrir a conversa.');return;}
           if(window.FCConversas&&FCConversas.abrirMatriz)FCConversas.abrirMatriz(x.data);else alert('As conversas ainda estão carregando. Tente de novo em instantes.');}}));
-      return l;});}
+      return l.concat(p3);});}
   setTimeout(go,2000);})();</script>
 <script src="conversas.js?v=8"></script><script>setTimeout(()=>window.FCConversas&&FCConversas.matriz({semBotao:true}),2500);</script><script src="caixa-fc.js?v=6"></script><script src="acessos-todos.js?v=7"></script><script src="central-cliente.js?v=7"></script>
 <script src="painel-skin.js?v=4"></script><script src="painel-hoje.js?v=2"></script>
