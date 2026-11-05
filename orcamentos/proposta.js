@@ -34,7 +34,7 @@ const CSS=`
 .pp-cli{font-size:14px;opacity:.92}.pp-cli b{font-weight:600}
 .pp-fig{margin:0;display:grid;place-items:center;min-height:220px;border-radius:14px;background:radial-gradient(120% 90% at 50% 35%,rgba(255,255,255,.96),rgba(255,255,255,.78));box-shadow:0 18px 40px rgba(0,0,0,.22);padding:14px;position:relative}
 .pp-fig img{max-width:100%;max-height:260px;display:block}
-.pp-fig figcaption{position:absolute;left:12px;bottom:10px;font:600 11px var(--txt);color:var(--muted)}
+.pp-fig figcaption{position:static;margin-top:10px;max-width:100%;text-align:center;font:600 12px/1.35 var(--txt);color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .pp-stats{position:relative;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:22px}
 .pp-stat{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);border-radius:12px;padding:10px 12px;min-width:0}
 .pp-stat span{display:block;font:600 10.5px var(--txt);letter-spacing:.12em;text-transform:uppercase;opacity:.8}
@@ -62,7 +62,8 @@ button.pp-chip{cursor:pointer;transition:background .15s,color .15s}button.pp-ch
 .pp-vr:focus-visible,.pp-ed:focus-visible{outline:3px solid var(--amb);outline-offset:2px}
 .pp-cb{padding:12px 14px 14px;display:flex;flex-direction:column;gap:10px;flex:1}
 .pp-lc{font:700 10.5px/1.3 var(--txt);letter-spacing:.08em;text-transform:uppercase;color:var(--pc);margin-bottom:3px;overflow-wrap:anywhere}
-.pp-cod{font:700 19px/1.15 var(--disp);letter-spacing:.01em}
+.pp-cod{font:650 17px/1.2 var(--disp);letter-spacing:0;text-wrap:balance}
+.pp-det{font:500 12.5px/1.4 var(--txt);color:var(--fg);opacity:.78;margin-top:4px}
 .pp-desc{font-size:12px;color:var(--muted);line-height:1.4;margin-top:2px}
 .pp-specs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
 .pp-specs div{background:var(--wash);border-radius:8px;padding:6px 7px;min-width:0}
@@ -102,6 +103,13 @@ button.pp-chip{cursor:pointer;transition:background .15s,color .15s}button.pp-ch
  .pp-linhas{margin-top:0}.pp-loc{break-after:avoid;margin:4mm 0 3mm}
  .pp-vr,.pp-ed,.pp-edit,.pp-alt{display:none!important}
 }`;
+/* 05/11/2026 · letras: o texto do PDF vem todo em maiúsculas; na tela mostra em caixa normal (sem mudar o conteúdo).
+   Palavras com número (RAL9005F, 08mm, LG043) ficam como vieram. Título = primeiros trechos; o resto vai em detalhe. */
+const MIN=/^(de|da|do|das|dos|e|em|com|na|no|para|por|a|o|sem)$/;
+function caixa(s,titulo){return String(s||"").toLowerCase().split(/(\s+)/).map((w,i)=>{const o=String(s).split(/(\s+)/)[i]||w;if(/\d/.test(w))return o;if(titulo&&MIN.test(w)&&i)return w;return titulo?w.charAt(0).toUpperCase()+w.slice(1):w}).join("").replace(/^\s*(\p{L})/u,m=>m.toUpperCase()).replace(/\b([Ll]inha) (\p{L})/gu,(m,a,b)=>a+" "+b.toUpperCase())}
+function partes(tp){const p=String(tp||"").split(/\s+-\s+|-\s+(?=[A-ZÁÉÍÓÚÂÊÔÃÕÇ])/).map(x=>x.trim()).filter(Boolean);let k=Math.min(2,p.length);if(p.slice(0,k).join(" · ").length>60)k=1;
+ return {tit:p.slice(0,k).map(x=>caixa(x)).join(" · "),det:p.slice(k).map(x=>caixa(x)).join(" · ")}}
+
 function css(){if(document.getElementById("pp-css"))return;const s=document.createElement("style");s.id="pp-css";s.textContent=CSS;document.head.appendChild(s)}
 const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const n0=v=>Number(v||0).toLocaleString("pt-BR");
@@ -127,8 +135,8 @@ function render(el,D,op){op=op||{};css();const it=D.itens||[];const P=op.precos|
  let h=`<article class="pp"${pc?` style="--pc:${esc(pc)}"`:""}>
  <header class="pp-capa">
   <div class="pp-top"><div class="pp-marca">${marca}</div><div class="pp-doc">${esc(op.rotulo||(P?"Proposta comercial":"Apresentação de tipologias"))}<b class="num">${esc(D.numero||"—")}</b>${P?"Emitida":"Atualizada"} em ${data}</div></div>
-  <div class="pp-hero"><div><div class="pp-eye">Esquadrias de alumínio e vidro</div><h1>${esc(D.obra||"Obra")}</h1><div class="pp-cli">Cliente: <b>${esc(D.cliente||"—")}</b></div></div>
-   <figure class="pp-fig">${hi>=0&&T3?`<img data-pp="${hi}" data-px="1400" alt="Tipologia ${esc(it[hi].tipo)} em 3D" hidden><span class="ld">Gerando 3D…</span><figcaption>${esc(it[hi].tipo)} · ${n0(it[hi].L)} × ${n0(it[hi].H)} mm</figcaption>`:""}</figure></div>
+  <div class="pp-hero"><div><div class="pp-eye">Esquadrias de alumínio e vidro</div><h1>${esc(caixa(D.obra||"Obra",true))}</h1><div class="pp-cli">Cliente: <b>${esc(D.cliente?caixa(D.cliente,true):"—")}</b></div></div>
+   <figure class="pp-fig">${hi>=0&&T3?`<img data-pp="${hi}" data-px="1400" alt="Tipologia ${esc(it[hi].tipo)} em 3D" hidden><span class="ld">Gerando 3D…</span><figcaption>${esc(partes(it[hi].tipo).tit)} · ${n0(it[hi].L)} × ${n0(it[hi].H)} mm</figcaption>`:""}</figure></div>
   <div class="pp-stats">
    <div class="pp-stat"><span>Tipologias</span><b class="num">${itv.length}</b></div>
    <div class="pp-stat"><span>Peças</span><b class="num">${pecas}</b></div>
@@ -144,7 +152,7 @@ function render(el,D,op){op=op||{};css();const it=D.itens||[];const P=op.precos|
  grupos.forEach(g=>{
   g.ix.forEach(i=>{const t=it[i];const p=T3?T3.perfilDe(D.cor,t.corPerfil):null,v=T3?T3.vidroDe(t.desc,t.vidroCor):null;const pv=P?+P[i]||0:0;
    h+=`<div class="pp-card"><figure>${t._s&&op.simular?`<span style="position:absolute;top:10px;right:10px;z-index:2;background:#fff6e5;color:#7a4b07;border:1px solid #f0d49a;border-radius:999px;padding:2px 9px;font-size:11.5px;font-weight:600">cor simulada neste item</span>`:""}${T3?`<img data-pp="${i}" alt="Tipologia ${esc(t.tipo)} em 3D" hidden><span class="ld">Gerando 3D…</span><button class="pp-vr" type="button" data-pv="${i}">Ver em 3D</button>`:""}<span class="pp-badge">Item ${esc(t.item)}</span>${op.editar&&t.dup?'<span class="pp-alt" style="background:#e6f4ea;color:#14532d;border-color:#9fd6b0">incluído</span>':op.editar&&t.orig?'<span class="pp-alt">alterado</span>':""}</figure>
-   <div class="pp-cb"><div>${t.loc?`<div class="pp-lc">${esc(t.loc)}</div>`:""}<div class="pp-cod">${esc(t.tipo)}</div><div class="pp-desc">${esc(t.desc)}</div></div>
+   <div class="pp-cb"><div>${t.loc?`<div class="pp-lc">${esc(t.loc)}</div>`:""}${(()=>{const q=partes(t.tipo);return `<div class="pp-cod">${esc(q.tit)}</div>${q.det?`<div class="pp-det">${esc(q.det)}</div>`:""}`})()}<div class="pp-desc">${esc(caixa(t.desc))}</div></div>
     <div class="pp-specs num"><div><span>Larg. mm</span><b>${n0(t.L)}</b></div><div><span>Alt. mm</span><b>${n0(t.H)}</b></div><div><span>Área m²</span><b>${m2(area(t))}</b></div><div><span>Qtde</span><b>${esc(t.q)}</b></div></div>
     <div class="pp-meta">${t.linha?`<span>Linha <b>${esc(t.linha)}</b></span>`:""}${p?`<span><i style="background:${p.hex}"></i>Perfil ${p.nome.toLowerCase()}</span>${/SEM\s+VIDRO/i.test(t.desc||"")?"":`<span><i style="background:${v.hex}"></i>Vidro ${v.nome.toLowerCase()}</span>`}`:""}${T3&&T3.ehIntel&&T3.ehIntel(t)?`<span title="Abra o Ver em 3D e use o botão Desligar vidro para mostrar o efeito">💡 <b>Vidro inteligente</b></span>`:""}</div>
     ${op.editar?`<div style="display:flex;gap:6px;flex-wrap:wrap"><button class="pp-ed" type="button" data-pe="${i}">✎ Editar medida, vidro ou desenho</button>${op.duplicar?`<button class="pp-ed" type="button" data-pdup="${i}" title="Incluir uma cópia desta tipologia logo abaixo">⧉ Duplicar</button>${t.dup?`<button class="pp-ed" type="button" data-prm="${i}" style="border-color:#c46a62;color:#9b2c22" title="Tirar esta tipologia incluída da proposta">🗑 Remover</button>`:""}`:""}</div>`:""}
