@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="robots" content="noindex">
 <meta http-equiv="Cache-Control" content="no-cache">
-<script>(function(){var B='20261104212128';try{fetch('versao.txt?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.text():''}).then(function(v){v=(v||'').trim();if(!v||v===B)return;var u=new URL(location.href);if(u.searchParams.get('v')===v)return;u.searchParams.set('v',v);location.replace(u.toString())}).catch(function(){})}catch(e){}})();</script>
+<script>(function(){var B='20261104221845';try{fetch('versao.txt?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.text():''}).then(function(v){v=(v||'').trim();if(!v||v===B)return;var u=new URL(location.href);if(u.searchParams.get('v')===v)return;u.searchParams.set('v',v);location.replace(u.toString())}).catch(function(){})}catch(e){}})();</script>
 
 <title>FC Estudo de Mercado</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -334,9 +334,27 @@ function montar(idx){DATA={forn:idx.forn};Object.entries(idx.linhas).forEach(([k
     const m=g.m.map(x=>{const pasta=(x[3]==='base'&&!g.sp)?'alcoa':x[0];return {f:x[0],c:x[1],p:+x[2]||0,src:x[4]?x[4]:'d/'+L.img+pasta+'/'+encodeURIComponent(x[1])+'.webp?v=4',o:x[4]?'':EQ+L.img+pasta+'/'+encodeURIComponent(x[1])+'.webp?v=3'}});
     const cl=(m.map(x=>AN[norm(x.c)]).find(Boolean))||AN[norm(g.k)]||'';
     return {l:g.l,k:g.k,n:g.n,cl,m}});
-  G0=G;mkBY();}
+  unirIguais();G0=G;mkBY();}
+/* Mesmo perfil com pequenas diferenças no código (TMN001 = MN-001 = MN001; FASU-0190 = SU-190; ESU-192 = SU-192)
+   ou cadastrado em mais de uma linha: junta os fornecedores, desde que o peso fique dentro de 8%. */
+const PREF={texa:['T'],ecoalumi:['E'],fbk:['FA','F']};
+function fam(f,c){c=norm(c);for(const p of (PREF[f]||[]))if(c.startsWith(p)&&c.length>p.length+2){c=c.slice(p.length);break}
+  const x=c.match(/^([A-Z]+)0*(\d+)([A-Z]*)$/);return x?x[1]+'-'+x[2]+x[3]:c}
+let FAM={};
+function unirIguais(){const pai=G.map((_,i)=>i),raiz=i=>{while(pai[i]!==i){pai[i]=pai[pai[i]];i=pai[i]}return i};
+  const pm=g=>{const v=g.m.map(m=>m.p).filter(Boolean);return v.length?v.reduce((a,b)=>a+b,0)/v.length:0};
+  const idx={};FAM={};
+  G.forEach((g,i)=>{const ks=new Set([fam('alcoa',g.k),...g.m.map(m=>fam(m.f,m.c))]);ks.forEach(k=>(idx[k]=idx[k]||[]).push(i))});
+  Object.entries(idx).forEach(([k,v])=>{for(let a=0;a<v.length;a++)for(let b=a+1;b<v.length;b++){const wa=pm(G[v[a]]),wb=pm(G[v[b]]);
+    if(wa&&wb&&Math.max(wa,wb)/Math.min(wa,wb)>1.08)continue;pai[raiz(v[a])]=raiz(v[b])}});
+  const grp={};G.forEach((g,i)=>(grp[raiz(i)]=grp[raiz(i)]||[]).push(g));
+  Object.entries(grp).forEach(([r,gs])=>{gs.forEach(g=>g.u=r);if(gs.length<2)return;
+    const vis={},m=[];gs.slice().sort((a,b)=>b.m.length-a.m.length).forEach(g=>g.m.forEach(x=>{const k=x.f+'|'+norm(x.c);if(!vis[k]){vis[k]=1;m.push(x)}}));
+    const nm=(gs.find(g=>g.n)||{}).n||'';gs.forEach(g=>{g.m=m;if(!g.n)g.n=nm})});
+  Object.entries(idx).forEach(([k,v])=>{FAM[k]=v.map(i=>G[i]).sort((a,b)=>b.m.length-a.m.length)[0]});}
+function unico(L){const vis={};return L.filter(g=>vis[g.u]?false:(vis[g.u]=1))}
 let G0=[],CFG={};
-function mkBY(){BY={};G.forEach(g=>{BY[norm(g.k)]=BY[norm(g.k)]||g;g.m.forEach(m=>{const k=norm(m.c);if(!BY[k])BY[k]=g;})});}
+function mkBY(){BY={};const put=(k,g)=>{const o=BY[k];if(!o||(o.u!==g.u&&g.m.length>o.m.length)||(o.u===g.u&&!own(o).length&&own(g).length))BY[k]=g};G.forEach(g=>{put(norm(g.k),g);g.m.forEach(m=>put(norm(m.c),g))});}
 function libera(e){const a=CFG[e];return f=>f==='alcoa'||f===e||!a||a.includes(f)}
 function setExt(e){S.ext=e;if(!e){G=G0;mkBY();return}const ok=libera(e);G=G0.map(g=>({...g,m:g.m.filter(m=>ok(m.f))})).filter(g=>g.m.some(m=>m.f!=='alcoa'));mkBY()}
 let SBC=null;
@@ -494,7 +512,7 @@ function stPreco(p){if(!p)return ['N','sem preço'];const d=dias(p.d);return d>6
 const nb=v=>v===''||v==null?'':String(v).replace('.',',');
 const pn=v=>{const x=parseFloat(String(v||'').replace(/\./g,'').replace(',','.'));return x>0?x:null};
 function buscar(q){
-  const k=norm(q);if(!k)return;let g=BY[k];
+  const k=norm(q);if(!k)return;let g=BY[k]||BY[norm(fam('texa',k))]||FAM[fam('alcoa',k)]||FAM[fam('texa',k)];
   if(!g){const c=G.filter(x=>norm(x.k).includes(k)||x.m.some(m=>norm(m.c).includes(k))).slice(0,8);
     if(c.length===1)g=c[0];else{S.q=q;S.g=null;draw();if(c.length)$('#sugs').innerHTML=`<p class="sub" style="margin-top:12px">Você quis dizer:</p><div class="grid" style="margin-top:8px">${c.map(x=>{const m=own(x)[0]||ref(x)||x.m[0];return `<button class="pick" data-pk="${esc(x.k)}">${img(m,'mini')}<span><b>${esc(m.c)}</b><br><small>${esc(x.n)}</small></span></button>`}).join('')}</div>`;document.querySelectorAll('[data-pk]').forEach(b=>b.onclick=()=>buscar(b.dataset.pk));return}}
   S.g=g;S.q='';logar('Pesquisou',g.k);reg('pesquisa',g.k);draw();
@@ -540,7 +558,7 @@ function rkLinhas(){const c={};G.forEach(g=>{if(g.m.some(m=>m.f!=='alcoa'))c[g.l
 function rkCalc(){const r=rkSt(),F=precoForn(S.pcli),sel=r.lin?new Set(r.lin):null;
   const vb=m=>F[m.f]?F[m.f].rk*m.p*6:null;
   const out=[],sem=[];let semP=0,tot=0,exc=0;
-  G.forEach(g=>{if(sel&&!sel.has(g.l))return;
+  const vu={};G.forEach(g=>{if(sel&&!sel.has(g.l))return;if(vu[g.u])return;vu[g.u]=1;
     const fo=g.m.filter(m=>m.f!=='alcoa');if(!fo.length)return;const excl=new Set(fo.map(m=>m.f)).size<2;if(excl)exc++;tot++;
     const val=r.modo==='peso'?(m=>m.p):vb;
     const cand=fo.filter(m=>val(m)!=null);
@@ -616,7 +634,7 @@ function eqSt(){try{return JSON.parse(localStorage.getItem('fc_varre_v1')||'{}')
 function eqSet(o){try{localStorage.setItem('fc_varre_v1',JSON.stringify(o))}catch(_){}}
 function eqG(l,k){return G0.find(g=>g.l===l&&g.k===k)}
 function eqBloco(g,t,extra){return `<div style="flex:1;min-width:260px;border:1px solid #d6dde2;border-radius:12px;padding:10px">${t?`<div style="font-size:12px;color:#5a6b75">${t}</div>`:''}<b style="font-size:16px">${esc(g.k)}</b> <span style="color:#5a6b75">${esc(g.n||'')}</span> <span class="sub">· ${esc(LIN[g.l]||g.l)}</span>${extra||''}<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">${g.m.map(m=>`<div class="eqd" style="width:150px;text-align:center">${img(m)}<div style="font-size:12px"><b>${esc(FN(m.f))}</b><br>${esc(m.c)}<br>${m.p?m.p.toFixed(3).replace('.',',')+' kg/m':''}</div></div>`).join('')}</div></div>`}
-function tEqs(){if(!EQS){fetch('varredura.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.json()).then(j=>{EQS=j;draw()}).catch(()=>{EQS=[];draw()});return `<section class="box"><p class="empty">Carregando…</p></section>`}
+function tEqs(){if(!EQS){fetch('varredura.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.json()).then(j=>{EQS=j.filter(e=>{const g=eqG(e.l,e.k);return !g||new Set(g.m.map(m=>m.f)).size<2});draw()}).catch(()=>{EQS=[];draw()});return `<section class="box"><p class="empty">Carregando…</p></section>`}
   const st=eqSt();S.eqF=S.eqF||'pend';S.eqP=S.eqP||0;S.eqFo=S.eqFo||'todos';const q=norm(S.eqQ||'');
   const sit=e=>!st[e.id]?'pend':st[e.id]==='n'?'n':'s';
   const nS=EQS.filter(e=>sit(e)==='s').length,nN=EQS.filter(e=>sit(e)==='n').length,nP=EQS.length-nS-nN;
@@ -657,7 +675,7 @@ function tRevd(){if(!REV){fetch('revisao.json?v='+Date.now(),{cache:'no-store'})
    <div class="grid" style="margin-top:8px">${L.map(e=>`<article class="pc">${img({src:'d/'+e.p+'?v=4',o:EQ+e.p,c:e.c})}<div class="bd"><span class="f">${esc(FN(e.f))}</span><span class="c" style="font-size:18px">${esc(e.c)}</span><span class="w">${esc(e.l)} · mercado ${esc(e.k)}</span>${e.t.map(x=>`<span class="dif ${x==='possível corte'?'up':'eq'}">${esc(x)}</span>`).join('')}</div></article>`).join('')}</div></section>`}
 function ligaRevd(){document.querySelectorAll('[data-rvt]').forEach(b=>b.onclick=()=>{S.rvT=b.dataset.rvt;draw()});document.querySelectorAll('[data-rvf]').forEach(b=>b.onclick=()=>{S.rvF=b.dataset.rvf;draw()})}
 function tAbc(){
-  const lst=G.filter(g=>(DIST()||own(g).length)&&(S.abcL==='todas'||g.l===S.abcL));
+  let lst=G.filter(g=>(DIST()||own(g).length)&&(S.abcL==='todas'||g.l===S.abcL));if(S.abcL==='todas')lst=unico(lst);
   const by=c=>lst.filter(g=>(g.cl||'')===c);
   const sec=(c,t)=>{const L=by(c);if(!L.length)return '';return `<section class="box"><div class="row"><h2>${abcTag(c)}</h2><span class="sub" style="margin:0">${L.length} perfis</span></div><div class="abcgrid" style="margin-top:12px">${L.map(g=>{const m=own(g)[0]||ref(g)||g.m[0];return `<article class="pc">${img(m)}<div class="bd"><span class="c">${esc(m.c)}</span><span class="w">${esc(g.n)}</span></div></article>`}).join('')}</div></section>`};
   return `<section class="box"><h2>Curva ABC</h2><p class="sub">${DIST()?'Giro de cada perfil na compra de uma distribuidora. Use para priorizar reposição e estoque: classe A nunca pode faltar.':'Onde cada perfil da '+esc(EXTS[S.ext].n)+' se encaixa na compra de uma distribuidora. A classe mostra o giro do perfil no mercado, não quem vendeu.'}</p>
@@ -741,7 +759,7 @@ function ligar(){
   document.querySelectorAll('[data-ord]').forEach(b=>b.onclick=()=>{S.ord=b.dataset.ord;ls.set('fcext_ord',S.ord);const y=window.scrollY;draw();window.scrollTo(0,y)});
   const gp=$('[data-goprec]');if(gp)gp.onclick=()=>irForn();
   document.querySelectorAll('[data-lanca]').forEach(b=>b.onclick=()=>irForn(b.dataset.lanca));
-  const fq2=$('#fq2');if(fq2)fq2.onsubmit=e=>{e.preventDefault();const g=BY[norm($('#q2').value)];if(g){S.g=g;logar('Pesquisou',g.k);draw()}else toast('Código não encontrado')};
+  const fq2=$('#fq2');if(fq2)fq2.onsubmit=e=>{e.preventDefault();const v2=norm($('#q2').value),g=BY[v2]||FAM[fam('alcoa',v2)]||FAM[fam('texa',v2)];if(g){S.g=g;logar('Pesquisou',g.k);draw()}else toast('Código não encontrado')};
   document.querySelectorAll('form[data-forn]').forEach(fm=>{fm.oninput=()=>fm.querySelector('.err').textContent='';fm.onsubmit=e=>{e.preventDefault();const f=fm.dataset.forn,rk=pn(fm.rk.value);if(!rk){const P0=db.precos();P0.push({id:Date.now(),f,rk:null,mp:pn(fm.mp.value)||'',cli:S.pcli||null,d:hoje(),u:USERS[S.role].n});db.save('precos',P0);logar('Sem preço da '+FN(f),'');toast(FN(f)+' salvo sem preço (R$ 0)');const y0=window.scrollY;draw();window.scrollTo(0,y0);return}
     const P=db.precos();P.push({id:Date.now(),f,rk,mp:pn(fm.mp.value)||'',cli:S.pcli||null,d:hoje(),u:USERS[S.role].n});db.save('precos',P);logar('Lançou preço '+FN(f),'');reg('preco',f);toast('Preço da '+FN(f)+' salvo');const y=window.scrollY;draw();window.scrollTo(0,y)}});
   const ps=$('#pcliSel');if(ps)ps.onchange=()=>{S.pcli=+ps.value||null;const y=window.scrollY;draw();window.scrollTo(0,y)};
