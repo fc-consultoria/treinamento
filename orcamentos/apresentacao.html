@@ -38,6 +38,8 @@ const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const erro=(t,d)=>{$("main").innerHTML=`<div class="msg"><b>${t}</b>${d}</div>`};
 const tok=new URLSearchParams(location.search).get("t")||"";
+/* aberto pela Plataforma FC 3D (avaliar o projeto): comando de voltar para o painel; o link copiado para o cliente não tem isto */
+if(new URLSearchParams(location.search).get("de")==="fc3d"){const bar=document.querySelector(".bar");if(bar)bar.insertAdjacentHTML("afterbegin",'<a class="btn" href="https://fc-consultoria.github.io/fc3d/clientes/#apr" style="text-decoration:none;background:#0d5c63;color:#fff;border-color:#0d5c63">← Voltar para o painel</a>')}
 if(tok.length<20){erro("Link incompleto","Confira se o link foi copiado inteiro ou peça um novo a quem enviou.");return}
 let D=null;
 try{const sb=window.supabase.createClient("https://cpkjphodruyxfouirhpd.supabase.co","sb_publishable_d0HEeWsaqOeZIQKGftlF-Q_B8BUOWWg",{auth:{persistSession:false}});
