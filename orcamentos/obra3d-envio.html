@@ -69,6 +69,8 @@ footer{text-align:center;color:var(--muted);font-size:11.5px;letter-spacing:.08e
 <footer class="wrap">FC Consultoria em Esquadria</footer>
 
 <script src="obra3d-ler.js"></script>
+<script src="orientativo-ler.js?v=1"></script>
+<script src="secao-ler.js?v=1"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
 (async function(){
@@ -90,33 +92,42 @@ if(!L){fim("Este link não está mais ativo","Peça um link novo à FC Consultor
 if(L.plano==="teste"&&L.validade&&new Date(L.validade)<new Date()){fim("O período de teste terminou","Gostou? Fale com a FC Consultoria no WhatsApp (66) 9 9986-7984 para liberar o seu pacote de projetos.");return}
 if(L.limite!=null&&L.usados>=L.limite){fim("Pacote de projetos concluído","Você usou os "+L.limite+" projetos do pacote. Fale com a FC Consultoria no WhatsApp (66) 9 9986-7984 para liberar mais.");return}
 
-const S={O:null,pdf:"",empresa:L.empresa||"",cor:L.cor||"",logo:L.logo||"",nome:"",zap:"",obs:"",enviando:false};
+const S={O:null,pdf:"",ORI:null,oriPdf:"",lig:null,oriLendo:false,empresa:L.empresa||"",cor:L.cor||"",logo:L.logo||"",nome:"",zap:"",obs:"",enviando:false};
 const pinta=()=>{document.documentElement.style.setProperty("--pc",S.cor||"#0d5c63");
  $("hd").innerHTML=`${S.logo?`<img src="${esc(S.logo)}" alt="">`:""}<div><small>Apresentação 3D da obra</small><h1>${S.empresa?esc(S.empresa)+" · ":""}Envio de orçamento</h1></div>${bVolta()}`};
 pinta();
 
 function tela(){const O=S.O;
  $("main").innerHTML=`
- <div class="sec"><h2><i>1</i>Orçamento em PDF</h2><p class="hint">O mesmo PDF que você mandaria ao cliente, com local, tipologia e medidas de cada item.</p>
-  <div class="drop" id="drop" tabindex="0" role="button" aria-label="Escolher o PDF do orçamento"><b>${O?"✓ "+esc(S.pdf):"Escolher o PDF"}</b><span class="hint" style="margin:0">${O?"Toque para trocar o arquivo":"Arraste aqui ou toque para escolher"}</span><input type="file" id="fi" accept="application/pdf,.pdf" hidden></div>
+ <div class="av" style="margin:0 0 14px"><b>Anexe os dois PDFs gerados pelo sistema:</b> a <b>Proposta comercial</b> e o <b>Orientativo de Montagem</b> do mesmo orçamento. Sem os dois, o envio não segue.</div>
+ <div class="sec"><h2><i>1</i>Proposta comercial (PDF)</h2><p class="hint">A proposta/orçamento gerada pelo sistema, com local, tipologia e medidas de cada item.</p>
+  <div class="drop" id="drop" tabindex="0" role="button" aria-label="Escolher o PDF da proposta comercial"><b>${O?"✓ "+esc(S.pdf):"Escolher a Proposta comercial"}</b><span class="hint" style="margin:0">${O?"Toque para trocar o arquivo":"Arraste aqui ou toque para escolher"}</span><input type="file" id="fi" accept="application/pdf,.pdf" hidden></div>
   <p class="err" id="perr" role="alert"></p>
   ${O?`<div class="res"><div>Itens<b>${O.itens.length}</b></div><div>Peças<b>${O.itens.reduce((s,t)=>s+(+t.q||0),0)}</b></div><div>Cliente<b style="font-size:15px">${esc(O.cliente||"—")}</b></div><div>Orçamento<b style="font-size:15px">${esc(O.numero||"—")}</b></div></div>
    <div class="lst" aria-label="Itens lidos">${O.itens.map(t=>`<div><span>${esc(t.item)}</span><b style="font-weight:500">${esc(t.tipo)}<br><span>${esc(t.loc||"")}</span></b><em>${esc(t.q)} × ${esc(t.L)}×${esc(t.H)}</em></div>`).join("")}</div>
    ${O.itens.some(t=>t.avisos.length)?`<div class="av">Alguns itens têm observações da leitura. A FC confere tudo antes de montar o 3D.</div>`:""}`:""}
  </div>
- <div class="sec"><h2><i>2</i>Sua marca na apresentação</h2><p class="hint">É assim que seu cliente vai ver a capa e o link.</p>
+ <div class="sec"><h2><i>2</i>Orientativo de Montagem (PDF)</h2><p class="hint">O Orientativo de Montagem do mesmo orçamento, gerado pelo sistema, com a lista de corte de cada tipologia. É dele que saem os perfis reais do 3D.</p>
+  <div class="drop" id="drop2" tabindex="0" role="button" aria-label="Escolher o PDF do Orientativo de Montagem"><b>${S.ORI?"✓ "+esc(S.oriPdf):S.oriLendo?"Lendo o Orientativo…":"Escolher o Orientativo de Montagem"}</b><span class="hint" style="margin:0">${S.ORI?"Toque para trocar o arquivo":"Arraste aqui ou toque para escolher"}</span><input type="file" id="fi2" accept="application/pdf,.pdf" hidden></div>
+  <p class="err" id="oerr" role="alert"></p>
+  ${S.ORI?`<div class="res"><div>Tipologias<b>${S.ORI.itens.length}</b></div><div>Perfis em 3D<b>${Object.keys(S.ORI.secoes||{}).length}</b></div><div>Ligadas à proposta<b>${S.lig?S.lig.ligados+" de "+S.lig.total:"—"}</b></div><div>Orçamento<b style="font-size:15px">${esc(S.ORI.numero||"—")}</b></div></div>
+   ${S.lig&&S.lig.ligados<S.lig.total?`<div class="av">${S.lig.total-S.lig.ligados} item(ns) da proposta não têm correspondência no Orientativo. A FC confere antes de montar o 3D.</div>`:""}`:""}
+ </div>
+ <div class="sec"><h2><i>3</i>Sua marca na apresentação</h2><p class="hint">É assim que seu cliente vai ver a capa e o link.</p>
   <label class="f">Nome da empresa<input id="emp" value="${esc(S.empresa)}" autocomplete="organization"></label>
   <div class="f">Logo (opcional)<div class="logo">${S.logo?`<img src="${esc(S.logo)}" alt="Logo">`:""}<button class="btn" type="button" id="lg">${S.logo?"Trocar logo":"Escolher logo"}</button><input type="file" id="lgf" accept="image/*" hidden></div></div>
   <div class="f">Cor da empresa<div class="sws">${CORES.map(c=>`<button type="button" class="sw" style="background:${c}" data-c="${c}" aria-label="Cor ${c}" aria-pressed="${S.cor===c}"></button>`).join("")}<input type="color" id="cor2" value="${esc(S.cor||"#0d5c63")}" aria-label="Outra cor"></div></div>
  </div>
- <div class="sec"><h2><i>3</i>Contato</h2><p class="hint">Para a FC avisar quando o link 3D estiver pronto.</p>
+ <div class="sec"><h2><i>4</i>Contato</h2><p class="hint">Para a FC avisar quando o link 3D estiver pronto.</p>
   <div class="g2"><label class="f">Seu nome<input id="nome" value="${esc(S.nome)}" autocomplete="name"></label><label class="f">WhatsApp<input id="zap" value="${esc(S.zap)}" inputmode="tel" autocomplete="tel" placeholder="(66) 9 0000-0000"></label></div>
   <label class="f">Observação (opcional)<textarea id="obs" rows="3" placeholder="Ex.: prazo para apresentar ao cliente">${esc(S.obs)}</textarea></label>
  </div>
- <button class="btn pri" type="button" id="env"${O?"":" disabled"}>${S.enviando?"Enviando…":"Enviar para a FC"}</button>
+ ${pronto()?"":`<p class="hint" style="margin:0 0 8px;text-align:center">${bloqueio()}</p>`}<button class="btn pri" type="button" id="env"${pronto()?"":" disabled"}>${S.enviando?"Enviando…":"Enviar para a FC"}</button>
  <p class="err" id="eerr" role="alert"></p>`;
  const dr=$("drop"),fi=$("fi");dr.onclick=()=>fi.click();dr.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();fi.click()}};
  fi.onchange=()=>{if(fi.files[0])ler(fi.files[0])};
+ {const d2=$("drop2"),f2=$("fi2");d2.onclick=()=>f2.click();d2.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();f2.click()}};f2.onchange=()=>{if(f2.files[0])lerOri(f2.files[0])};
+  d2.ondragover=e=>{e.preventDefault();d2.classList.add("on")};d2.ondragleave=()=>d2.classList.remove("on");d2.ondrop=e=>{e.preventDefault();d2.classList.remove("on");if(e.dataTransfer.files[0])lerOri(e.dataTransfer.files[0])};}
  dr.ondragover=e=>{e.preventDefault();dr.classList.add("on")};dr.ondragleave=()=>dr.classList.remove("on");dr.ondrop=e=>{e.preventDefault();dr.classList.remove("on");if(e.dataTransfer.files[0])ler(e.dataTransfer.files[0])};
  $("emp").oninput=e=>{S.empresa=e.target.value;pinta()};
  $("nome").oninput=e=>S.nome=e.target.value;$("zap").oninput=e=>S.zap=e.target.value;$("obs").oninput=e=>S.obs=e.target.value;
@@ -138,23 +149,41 @@ async function ler(file){const pe=$("perr");
   for(let p=1;p<=d.numPages;p++){const tc=await (await d.getPage(p)).getTextContent();P.push(tc.items.map(i=>({x:i.transform[4],y:i.transform[5],w:i.width,s:i.str})))}
   const O=O3DLER.ler(P);
   if(!O.itens.length){pe.textContent="Não encontrei itens neste PDF. Confira se é o orçamento com local, tipologia e medidas de cada item.";return}
-  S.O=O;S.pdf=file.name;if(!S.empresa&&O.empresa)S.empresa=O.empresa;pinta();tela()}
+  S.O=O;S.pdf=file.name;if(!S.empresa&&O.empresa)S.empresa=O.empresa;religar();pinta();tela()}
  catch(e){console.warn(e);pe.textContent="Não consegui ler este PDF. Se ele for uma foto ou digitalização, mande o PDF gerado pelo sistema de orçamento."}}
 
+/* os dois PDFs são obrigatórios e têm de ser do mesmo orçamento */
+const mesmoNro=()=>!S.O||!S.ORI||!S.O.numero||!S.ORI.numero||String(S.O.numero)===String(S.ORI.numero);
+const pronto=()=>!!(S.O&&S.ORI&&S.lig&&S.lig.ligados>0&&mesmoNro());
+const bloqueio=()=>!S.O&&!S.ORI?"Anexe a Proposta comercial e o Orientativo de Montagem para continuar.":!S.O?"Falta anexar a Proposta comercial.":!S.ORI?"Falta anexar o Orientativo de Montagem.":!mesmoNro()?`O Orientativo é do orçamento ${S.ORI.numero} e a proposta é do ${S.O.numero}. Anexe os dois do mesmo orçamento.`:"Nenhuma tipologia do Orientativo corresponde à proposta. Confira se os dois PDFs são do mesmo orçamento.";
+function religar(){S.lig=null;if(!S.O||!S.ORI)return;S.O.itens.forEach(t=>delete t.cortes);if(mesmoNro())S.lig=O3DORI.ligar(S.O.itens,S.ORI);}
+async function lerOri(file){const pe=$("oerr");
+ if(!/\.pdf$/i.test(file.name)&&file.type!=="application/pdf"){pe.textContent="Este arquivo não é PDF. Escolha o Orientativo de Montagem em PDF.";return}
+ S.oriLendo=true;tela();
+ try{const lib=await loadPdfJs();const d=await lib.getDocument({data:new Uint8Array(await file.arrayBuffer())}).promise;const P=[];
+  for(let p=1;p<=d.numPages;p++){const tc=await (await d.getPage(p)).getTextContent();P.push(tc.items.map(i=>({x:i.transform[4],y:i.transform[5],w:i.width,s:i.str})))}
+  const R=O3DORI.ler(P);
+  if(!R.itens.length||!R.itens.some(t=>t.perfis.length)){S.oriLendo=false;tela();$("oerr").textContent="Não encontrei a lista de corte neste PDF. Confira se é o Orientativo de Montagem gerado pelo sistema (não a proposta).";return}
+  await O3DORI.secoes(d,R);O3DORI.limpar(R);
+  S.ORI=R;S.oriPdf=file.name;S.oriLendo=false;religar();tela()}
+ catch(e){console.warn(e);S.oriLendo=false;tela();$("oerr").textContent="Não consegui ler este PDF. Mande o Orientativo de Montagem gerado pelo sistema."}}
+
 async function enviar(){const E=$("eerr");if(S.enviando||!S.O)return;
+ if(!pronto()){E.textContent=bloqueio();return}
  if(!S.empresa.trim()){E.textContent="Informe o nome da empresa.";$("emp").focus();return}
  if(!S.nome.trim()||S.zap.replace(/\D/g,"").length<10){E.textContent="Informe seu nome e um WhatsApp com DDD.";(S.nome.trim()?$("zap"):$("nome")).focus();return}
  S.enviando=true;tela();
  const O=S.O;
  const dados={pdf:S.pdf,empresa:S.empresa.trim(),cor:S.cor,logo:S.logo,obra:O.cliente||"Obra",cliente:O.cliente,numero:O.numero,emissao:O.emissao,vendedor:O.vendedor,corPerfil:O.cor,
   itens:O.itens.map(it=>Object.assign(it,{lido:{kind:it.kind,f:it.f,enc:it.enc},ok:false})),avisos:O.avisos,
+  ori:{pdf:S.oriPdf,numero:S.ORI.numero,tipologias:S.ORI.itens.length,perfis3d:Object.keys(S.ORI.secoes||{}).length,ligados:S.lig.ligados,total:S.lig.total,avisos:S.ORI.avisos},
   contato:{nome:S.nome.trim(),zap:S.zap.trim(),obs:S.obs.trim()}};
  try{const r=await sb.rpc("obra3d_envio_enviar",{tok,dados});if(r.error)throw r.error;
   $("main").innerHTML=`<div class="sec fim"><div class="ic" aria-hidden="true">✓</div><h2>Orçamento enviado</h2><p class="hint" style="margin:0 auto;max-width:440px">Recebemos os <b>${O.itens.length} itens</b> da obra <b>${esc(O.cliente||"")}</b>. A FC confere tudo, monta o 3D com a sua marca e manda o link no WhatsApp ${esc(S.zap)}.</p>
    <p style="margin:18px 0 0;display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><button class="btn" type="button" id="outro">Enviar outro orçamento</button>${VOLTA?`<a class="btn" style="text-decoration:none;background:var(--pc);color:#fff;border-color:var(--pc)" href="${VOLTA}">← Voltar para o painel</a>`:""}</p></div>`;
   $("outro").onclick=()=>{S.O=null;S.pdf="";S.obs="";S.enviando=false;tela()}}
  catch(e){S.enviando=false;tela();const m=String(e&&e.message||"");
-  $("eerr").textContent=/link_inativo/.test(m)?"Este link foi desativado. Peça um novo à FC Consultoria.":/teste_encerrado/.test(m)?"O período de teste terminou. Fale com a FC para liberar o pacote.":/limite_pacote/.test(m)?"O pacote de projetos foi concluído. Fale com a FC para liberar mais.":/limite_diario/.test(m)?"Limite de envios de hoje atingido. Tente amanhã ou fale com a FC.":/muito_grande/.test(m)?"O envio ficou grande demais. Tente uma logo menor.":"Não foi possível enviar. Verifique a internet e tente de novo."}}
+  $("eerr").textContent=/link_inativo/.test(m)?"Este link foi desativado. Peça um novo à FC Consultoria.":/orientativo_obrigatorio/.test(m)?"Anexe o Orientativo de Montagem do mesmo orçamento para continuar.":/teste_encerrado/.test(m)?"O período de teste terminou. Fale com a FC para liberar o pacote.":/limite_pacote/.test(m)?"O pacote de projetos foi concluído. Fale com a FC para liberar mais.":/limite_diario/.test(m)?"Limite de envios de hoje atingido. Tente amanhã ou fale com a FC.":/muito_grande/.test(m)?"O envio ficou grande demais. Tente uma logo menor.":"Não foi possível enviar. Verifique a internet e tente de novo."}}
 tela();
 })();
 </script>
