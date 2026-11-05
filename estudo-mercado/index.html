@@ -308,7 +308,7 @@ function cadastro(){const E=EXTS[S.ext];
     const bt=$('#fcad button');bt.disabled=true;bt.textContent='Enviando…';let res='ok';
     try{res=await rpc('em_cadastrar',{p_ext:S.ext,p_dev:devId(),p_nome:nome,p_empresa:emp,p_tel:tel})}catch(_){res='ok'}
     if(res==='limite'){return capaMsg('Limite de acessos atingido','Este demonstrativo permite até 3 acessos por empresa e a sua empresa já usou os 3. Fale com a FC para liberar mais um acesso.')}
-    ls.set('fcext_reg_'+S.ext,{nome,emp,tel,termo:new Date().toISOString()});setTimeout(()=>reg('aceite_termo','termo de confidencialidade v1'),300);ls.set('fcext_regt_'+S.ext,Date.now());try{sessionStorage.setItem('fcext_ses_'+S.ext,'1')}catch(_){}espera()};}
+    ls.set('fcext_reg_'+S.ext,{nome,emp,tel,termo:new Date().toISOString()});setTimeout(()=>reg('aceite_termo','termo de confidencialidade v1'),300);ls.set('fcext_regt_'+S.ext,Date.now());setTimeout(sincDados,900);try{sessionStorage.setItem('fcext_ses_'+S.ext,'1')}catch(_){}espera()};}
 const EXTS={texa:{n:'TEXA',lin:'City 2.5 · City 3.2'},selta:{n:'Selta',lin:'Linha Selta'},fbk:{n:'FBK',lin:'FASU · Gold (FLG)'},dist:{n:'Distribuidora',tipo:'dist'}};
 const DIST=()=>!!(S.ext&&EXTS[S.ext].tipo==='dist');
 const NAC=()=>DIST()?3:8;
@@ -364,8 +364,22 @@ const db={
   precos:()=>ls.get(K('precos3'),null)??seed('precos'),
   clientes:()=>ls.get(K('clientes3'),null)??[],
   log:()=>ls.get(K('log3'),null)??[],
-  save(n,v){ls.set(K(({precos:'precos3',clientes:'clientes3',log:'log3'})[n]||n),v)}
+  save(n,v){ls.set(K(({precos:'precos3',clientes:'clientes3',log:'log3'})[n]||n),v);if(n==='precos'||n==='clientes')envia(n)}
 };
+
+/* Preços e clientes salvos online (Supabase), por link/empresa */
+const SYNC={on:false,lido:false};
+function rpcAuth(fn,body){if(FCM)return sbc().then(c=>c.rpc(fn,body)).then(r=>{if(r.error)throw r.error;return r.data});return rpc(fn,body)}
+function junta(a,b){const m=new Map();(a||[]).forEach(x=>m.set(String(x.id),x));(b||[]).forEach(x=>m.set(String(x.id),x));return [...m.values()].sort((x,y)=>(+x.id||0)-(+y.id||0))}
+const KN={precos:'precos3',clientes:'clientes3'};
+async function sincDados(){if(!S.ext)return;try{const r=await rpcAuth('em_dados_ler',{p_ext:S.ext,p_dev:devId()});if(r==null){SYNC.on=false;return}SYNC.on=true;SYNC.lido=true;let mud=false;
+  for(const n of ['precos','clientes']){const loc=ls.get(K(KN[n]),null)||[],srv=(r[n]&&r[n].d)||[];const v=junta(srv,loc);
+    if(JSON.stringify(v)!==JSON.stringify(loc)){ls.set(K(KN[n]),v);mud=true}
+    if(v.length!==srv.length)await rpcAuth('em_dados_salvar',{p_ext:S.ext,p_dev:devId(),p_nome:n,p_dados:v,p_por:(USERS[S.role]||{}).n||''})}
+  if(mud)draw()}catch(e){SYNC.on=false}}
+async function envia(n){if(!S.ext)return;try{const r=await rpcAuth('em_dados_ler',{p_ext:S.ext,p_dev:devId()});if(r==null){SYNC.on=false;toast('Salvo só neste navegador (acesso não liberado para salvar online)');return}
+  const v=junta((r[n]&&r[n].d)||[],ls.get(K(KN[n]),null)||[]);ls.set(K(KN[n]),v);
+  const ok=await rpcAuth('em_dados_salvar',{p_ext:S.ext,p_dev:devId(),p_nome:n,p_dados:v,p_por:(USERS[S.role]||{}).n||''});SYNC.on=ok==='ok';if(ok!=='ok')toast('Não foi possível salvar online. Ficou salvo neste navegador.')}catch(e){toast('Sem conexão: salvo neste navegador. Envia online na próxima abertura.')}}
 function seed(n){
   const comp=Object.keys(DATA.forn).filter(f=>f!=='alcoa'&&f!==S.ext);
   if(n==='precos'){const v=[];db.save(n,v);return v}
@@ -573,7 +587,7 @@ function tRank(){const r=rkSt(),L=rkLinhas(),sel=r.lin?new Set(r.lin):null,PESO=
   <section class="box"><div class="row"><h2 style="font-size:24px">${PESO?'Quem tem a ferramenta mais leve':'Quem ganha no preço'}</h2><span class="sub" style="margin:0"><b>${tot}</b> perfis no filtro${exc?` · ${exc} com um só fornecedor no cadastro`:''}${!PESO&&semP?` · ${semP} sem nenhum preço`:''}</span></div>
     <div class="rkf" role="tablist" aria-label="Fornecedor">${FL.map(f=>`<button role="tab" aria-selected="${f===r.f}" data-rkf="${f}" class="${f===r.f?'on':''} ${f===S.ext?'me':''}"><b>${esc(FN(f))}</b><span class="num">${cnt[f]||0}</span><small>${(cnt[f]||0)===1?'item':'itens'}</small></button>`).join('')}${!PESO&&sem.length?`<button role="tab" aria-selected="${r.f==='__sem'}" data-rkf="__sem" class="${r.f==='__sem'?'on':''} semp"><b>Sem preço</b><span class="num">${sem.length}</span><small>${sem.length===1?'item':'itens'}</small></button>`:''}</div>
     <div class="rkbar"><input id="rkq" class="sel" value="${esc(r.q)}" placeholder="Filtrar por código ou descrição" aria-label="Filtrar lista" autocomplete="off">${csvBtn}</div>
-    ${lst.length?`<p class="sub" style="margin:10px 0 0">${r.f==='__sem'?`<b>${lst.length}</b> ${lst.length===1?'perfil ainda não tem':'perfis ainda não têm'} preço de nenhum fornecedor${q?' com esse filtro':''}. Lance em Preço de fornecedor para entrarem na disputa.`:`<b>${esc(FN(r.f))}</b> ${PESO?'tem a ferramenta mais leve em':'ganha no preço em'} <b>${lst.length}</b> ${lst.length===1?'perfil':'perfis'}${q?' com esse filtro':''}${(()=>{const e=lst.filter(x=>x.excl).length;return e?` (${e} para verificar com os outros fornecedores)`:''})()}.`}</p>
+    ${lst.length?`<p class="sub" style="margin:10px 0 0">${r.f==='__sem'?`<b>${lst.length}</b> ${lst.length===1?'perfil ainda não tem':'perfis ainda não têm'} preço de nenhum fornecedor${q?' com esse filtro':''}.${(()=>{const Fx=precoForn(S.pcli);const fa=[...new Set(lst.flatMap(x=>x.g.m.map(m=>m.f)))].filter(f=>f!=='alcoa'&&!Fx[f]).map(f=>[f,lst.filter(x=>x.g.m.some(m=>m.f===f)).length]).sort((a,b)=>b[1]-a[1]).map(([f,n])=>`<b>${esc(FN(f))}</b> (${n} perfis)`);return fa.length?`<br><span style="display:inline-block;margin-top:8px;padding:8px 12px;border-radius:10px;background:#fff4e5;border:1px solid #f0b46a;color:#7a4300">⚠ Falta lançar o R$/kg de: ${fa.join(', ')}. Lance em <b>Preço de fornecedor</b>${S.pcli?' (na mesma tabela de cliente que está selecionada)':' (Preço geral)'} para esses perfis entrarem na disputa.</span>`:' Lance em Preço de fornecedor para entrarem na disputa.'})()}`:`<b>${esc(FN(r.f))}</b> ${PESO?'tem a ferramenta mais leve em':'ganha no preço em'} <b>${lst.length}</b> ${lst.length===1?'perfil':'perfis'}${q?' com esse filtro':''}${(()=>{const e=lst.filter(x=>x.excl).length;return e?` (${e} para verificar com os outros fornecedores)`:''})()}.`}</p>
       <div class="rkl">${lst.slice(0,r.lim).map(row).join('')}</div>${lst.length>r.lim?`<div style="text-align:center;margin-top:12px"><button class="btn line" id="rkmais">Mostrar mais ${Math.min(40,lst.length-r.lim)} (${lst.length-r.lim} restantes)</button></div>`:''}`
     :`<p class="empty" style="padding:22px 0">${q?'Nenhum perfil com esse filtro.':`${esc(FN(r.f))} não ganha nenhum perfil ${PESO?'no peso':'no preço'} nas linhas selecionadas${!PESO&&!precoForn(S.pcli)[r.f]?' (ainda sem preço por kg lançado)':''}.`}</p>`}
   </section>`}
@@ -724,7 +738,7 @@ function ligar(){
   document.querySelectorAll('[data-relu]').forEach(b=>b.onclick=()=>{S.relU=b.dataset.relu;draw()});
 }
 const voltarHub=()=>{};
-Promise.all([fetch(EQ+'indice.json?v=5',{cache:'no-cache'}).then(r=>r.json()),carregaCfg()]).then(([idx])=>{montar(idx);const e=QP.get('e');if(e&&EXTS[e]){setExt(e);S.g=BY[norm('SU-001')];S.cover=true;try{if(ls.get('fcext_reg_'+e,null)&&!sessionStorage.getItem('fcext_ses_'+e)){sessionStorage.setItem('fcext_ses_'+e,'1');reg('acesso')}}catch(_){}}else if(!FCM){$('#app').innerHTML=`<section class="cover"><div class="in"><div class="lg"><img src="${LOGO}" alt="FC Consultoria em Esquadria"></div><div class="rule"></div><h1>Link de demonstrativo incompleto</h1><p>Use o link enviado pela FC Consultoria para a sua empresa.</p><p style="font-size:14px">WhatsApp (66) 9 9986-7984</p></div></section>`;return}draw();if(S.ext&&!FCM&&ls.get('fcext_lib_'+S.ext,0)){rpc('em_status',{p_ext:S.ext,p_dev:devId()}).then(st=>{if(st==='bloqueado'){ls.set('fcext_bloq_'+S.ext,1);draw()}}).catch(()=>{})}}).catch(()=>{$('#app').innerHTML='<p class="empty">Não foi possível carregar o banco de perfis. Atualize a página.</p>'});
+Promise.all([fetch(EQ+'indice.json?v=5',{cache:'no-cache'}).then(r=>r.json()),carregaCfg()]).then(([idx])=>{montar(idx);const e=QP.get('e');if(e&&EXTS[e]){setExt(e);setTimeout(sincDados,600);S.g=BY[norm('SU-001')];S.cover=true;try{if(ls.get('fcext_reg_'+e,null)&&!sessionStorage.getItem('fcext_ses_'+e)){sessionStorage.setItem('fcext_ses_'+e,'1');reg('acesso')}}catch(_){}}else if(!FCM){$('#app').innerHTML=`<section class="cover"><div class="in"><div class="lg"><img src="${LOGO}" alt="FC Consultoria em Esquadria"></div><div class="rule"></div><h1>Link de demonstrativo incompleto</h1><p>Use o link enviado pela FC Consultoria para a sua empresa.</p><p style="font-size:14px">WhatsApp (66) 9 9986-7984</p></div></section>`;return}draw();if(S.ext&&!FCM&&ls.get('fcext_lib_'+S.ext,0)){rpc('em_status',{p_ext:S.ext,p_dev:devId()}).then(st=>{if(st==='bloqueado'){ls.set('fcext_bloq_'+S.ext,1);draw()}}).catch(()=>{})}}).catch(()=>{$('#app').innerHTML='<p class="empty">Não foi possível carregar o banco de perfis. Atualize a página.</p>'});
 </script>
 
 </body></html>
