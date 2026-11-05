@@ -104,7 +104,7 @@ if(VER){
  if(TELA==="3")C=Object.assign({},base,{plano:"avulso",pedido:agora,agora,liberado:true});
  if(TELA==="4"){C=Object.assign({},base,{plano:"teste",cad:{completo:true}});L=Object.assign({},L,{plano:"teste",validade:fut,limite:6,usados:0,pausado:false})}
  if(TELA==="5"){C=Object.assign({},base,{plano:"teste",cad:{completo:true}});L=Object.assign({},L,{plano:"teste",validade:pas,limite:6,usados:2,pausado:false})}
- sb.rpc=async(n,a)=>{if(n==="obra3d_cad_info")return TELA?{data:C}:rpc0(n,a);if(n==="obra3d_envio_info")return rpc0(n,a);aviso();return{data:null,error:{message:"visualizacao_fc"}}};
+ sb.rpc=async(n,a)=>{if(n==="obra3d_cad_info")return TELA?{data:C}:rpc0(n,a);if(n==="obra3d_envio_info"||n==="obra3d_envio_meus")return rpc0(n,a);aviso();return{data:null,error:{message:"visualizacao_fc"}}};
  const op=(v,t)=>`<option value="${v}"${TELA===v?" selected":""}>${t}</option>`;
  document.querySelector("header").insertAdjacentHTML("afterend",`<div style="background:#fff6e5;border-bottom:1px solid #f0d49a"><div class="wrap" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding-top:10px;padding-bottom:10px;font-size:14px">
   <span>👁 <b>Visualização da FC</b> · é assim que o cliente vê. Os botões não gravam nada.</span>
@@ -136,6 +136,20 @@ if(C&&C.plano==="avulso"&&C.liberado){
  $("cgo").onclick=async()=>{$("cgo").disabled=true;$("cer").textContent="";const r=await sb.rpc("obra3d_cad_empresa",{tok,razao:$("cr").value,cnpj:$("cc").value,email:$("ce").value});
   if(r.error){$("cgo").disabled=false;const m=String(r.error.message||"");$("cer").textContent=/razao/.test(m)?"Informe a razão social.":/cnpj/.test(m)?"O CNPJ tem 14 números.":/email/.test(m)?"Informe um e-mail válido.":"Não foi possível salvar. Tente de novo.";return}recarrega()};
  return}
+/* ===== 05/11/2026 · "Seus orçamentos": orçamentos já feitos, com link 3D e PDF da proposta ===== */
+async function meus(){let r;try{r=await sb.rpc("obra3d_envio_meus",{tok})}catch(_){return}const L2=(r&&r.data)||[];
+ let el=$("meus");if(!el){$("main").insertAdjacentHTML("afterend",`<section class="wrap" id="meus" style="padding-bottom:36px"></section>`);el=$("meus")}
+ const base=location.href.split("obra3d-envio.html")[0];
+ const urlA=t=>base+"apresentacao.html?t="+encodeURIComponent(t),urlP=id=>base+"proposta-pdf.html?t="+encodeURIComponent(tok)+"&p="+encodeURIComponent(id);
+ const stx=x=>x.link?["#0d6b68","Link 3D pronto"]:x.status==="conferencia"?["#1f6fb2","Em conferência na FC"]:["#a3620b","Recebido · a FC está montando o 3D"];
+ const d=v=>{const t=new Date(v);return isNaN(t)?"":t.toLocaleDateString("pt-BR")};
+ el.innerHTML=`<div class="sec"><h2>Seus orçamentos <span class="hint" style="font:500 13px var(--body)">${L2.length}</span></h2>
+  <p class="hint" style="margin:0 0 10px">Ficam guardados aqui. Quando precisar, copie o link 3D ou abra o PDF da proposta para enviar ao seu cliente.</p>
+  ${L2.length?`<div style="display:grid;gap:8px">${L2.map(x=>{const [c,t]=stx(x);return`<div style="border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:grid;gap:6px">
+   <div style="display:flex;gap:10px;justify-content:space-between;flex-wrap:wrap;align-items:baseline"><b style="font:600 15px var(--display)">${esc(x.obra||x.cliente||"Obra")}</b><span style="color:${c};font-size:13px;font-weight:600">${t}</span></div>
+   <span class="hint" style="font-size:12.5px">Orçamento ${esc(x.numero||"—")} · ${x.itens} itens · enviado em ${d(x.criado)}</span>
+   <span style="display:flex;gap:6px;flex-wrap:wrap">${x.link?`<button class="btn" type="button" data-mc="${esc(urlA(x.link))}">Copiar link 3D</button><a class="btn" style="text-decoration:none" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent("Apresentação 3D da obra "+(x.obra||"")+": "+urlA(x.link))}">WhatsApp</a><a class="btn" style="text-decoration:none" target="_blank" rel="noopener" href="${esc(urlA(x.link))}">Abrir 3D ↗</a>`:""}${x.preco?`<a class="btn" style="text-decoration:none" target="_blank" rel="noopener" href="${esc(urlP(x.id))}">📄 PDF da proposta</a>`:""}${!x.link&&!x.preco?`<span class="hint" style="font-size:12.5px">O link aparece aqui quando a FC terminar.</span>`:""}</span></div>`}).join("")}</div>`:`<p class="hint" style="margin:0">Nenhum orçamento enviado ainda.</p>`}</div>`;
+ el.querySelectorAll("[data-mc]").forEach(b=>b.onclick=async()=>{try{await navigator.clipboard.writeText(b.dataset.mc);b.textContent="✓ Copiado";setTimeout(()=>{b.textContent="Copiar link 3D"},2000)}catch(_){prompt("Copie o link:",b.dataset.mc)}})}
 /* 3) contratação / renovação por PIX: 20 projetos por R$ 200,00 */
 function cobrar(tipo,tit,txt){const cob=C&&C.cob;
  if(cob&&cob.status==="enviado"){caixa(`<h2 style="margin:0 0 4px">Comprovante recebido ✓</h2><p class="hint" style="margin:0">A FC Consultoria vai conferir o pagamento e liberar os seus ${C.projetos} projetos. Você recebe o aviso no WhatsApp.</p>`);return}
@@ -148,6 +162,7 @@ function cobrar(tipo,tit,txt){const cob=C&&C.cob;
   <button class="btn pri" id="cgo" type="button" style="width:100%;margin-top:12px;min-height:46px">Enviar comprovante</button><p id="cer" role="alert" style="color:#a3262b;font-size:13px;min-height:1.2em"></p>
   <details style="margin-top:6px"${nao?" open":""}><summary style="cursor:pointer;color:#5d6e73;font-size:13px">Não quero contratar agora</summary>
    ${nao?`<p class="hint">Recebemos o seu retorno. Obrigado! Se mudar de ideia, é só voltar a este link.</p>`:`<textarea id="cm" rows="3" placeholder="Conte o motivo (opcional): preço, ainda testando, não atendeu…" style="width:100%;margin-top:8px;padding:10px;border:1px solid #c9d4d6;border-radius:10px;font:inherit"></textarea><button class="btn" id="cno" type="button" style="margin-top:8px">Enviar e não contratar agora</button>`}</details>`);
+ meus();
  $("cpx").onclick=async()=>{try{await navigator.clipboard.writeText(C.pix.replace(/\D/g,""));$("cpx").textContent="✓ Copiada"}catch(_){prompt("Copie a chave PIX:",C.pix)}};
  $("cgo").onclick=async()=>{const f=$("cf").files[0];if(!f){$("cer").textContent="Anexe o comprovante do PIX.";return}if(f.size>3e6){$("cer").textContent="Arquivo muito grande (máx. 3 MB).";return}
   $("cgo").disabled=true;$("cer").textContent="Enviando…";const du=await new Promise(res=>{const rd=new FileReader();rd.onload=()=>res(rd.result);rd.readAsDataURL(f)});
@@ -254,10 +269,11 @@ async function enviar(){const E=$("eerr");if(S.enviando||!S.O)return;
  try{const r=await sb.rpc("obra3d_envio_enviar",{tok,dados});if(r.error)throw r.error;
   $("main").innerHTML=`<div class="sec fim"><div class="ic" aria-hidden="true">✓</div><h2>Orçamento enviado</h2><p class="hint" style="margin:0 auto;max-width:440px">Recebemos os <b>${O.itens.length} itens</b> da obra <b>${esc(O.cliente||"")}</b>. A FC confere tudo, monta o 3D com a sua marca e manda o link no WhatsApp ${esc(S.zap)}.</p>
    <p style="margin:18px 0 0;display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><button class="btn" type="button" id="outro">Enviar outro orçamento</button>${VOLTA?`<a class="btn" style="text-decoration:none;background:var(--pc);color:#fff;border-color:var(--pc)" href="${VOLTA}">← Voltar para o painel</a>`:""}</p></div>`;
+  meus();
   $("outro").onclick=()=>{S.O=null;S.pdf="";S.obs="";S.enviando=false;tela()}}
  catch(e){S.enviando=false;tela();const m=String(e&&e.message||"");
   $("eerr").textContent=/link_inativo/.test(m)?"Este link foi desativado. Peça um novo à FC Consultoria.":/link_pausado/.test(m)?"Os envios por este link estão pausados. Fale com a FC Consultoria.":/orientativo_obrigatorio/.test(m)?"Anexe o Orientativo de Montagem do mesmo orçamento para continuar.":/cadastro_pendente/.test(m)?"Termine o cadastro da empresa antes de enviar.":/teste_encerrado/.test(m)?"O período de teste terminou. Fale com a FC para liberar o pacote.":/limite_pacote/.test(m)?"O pacote de projetos foi concluído. Fale com a FC para liberar mais.":/limite_diario/.test(m)?"Limite de envios de hoje atingido. Tente amanhã ou fale com a FC.":/muito_grande/.test(m)?"O envio ficou grande demais. Tente uma logo menor.":"Não foi possível enviar. Verifique a internet e tente de novo."}}
-tela();
+tela();meus();
 /* aberto por "Anexar Proposta" ou "Anexar Orientativo" na plataforma: vai direto ao campo e destaca */
 {const fo=new URLSearchParams(location.search).get("foco");const el=fo==="orientativo"?$("drop2"):fo==="proposta"?$("drop"):null;
  if(el){setTimeout(()=>{el.scrollIntoView({behavior:"smooth",block:"center"});el.classList.add("on");el.focus({preventScroll:true});setTimeout(()=>el.classList.remove("on"),2500)},150)}}
