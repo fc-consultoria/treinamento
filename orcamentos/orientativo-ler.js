@@ -64,7 +64,7 @@ function ligar(itensObra,ori){
 }
 /* desenho de cada perfil: recorta a figura ao lado da linha (coluna "Figura") e tira a seção real.
    doc = documento do pdf.js já aberto; precisa de secao-ler.js (SECAO). Só a 1ª ocorrência de cada perfil. */
-async function secoes(doc,O,opt){opt=opt||{};const S=opt.escala||18,SEC=root.SECAO||(typeof require==="function"?require("./secao-ler.js"):null);
+async function secoes(doc,O,opt){opt=opt||{};const S=opt.escala||36,SEC=root.SECAO||(typeof require==="function"?require("./secao-ler.js"):null);
  if(!SEC||!O._fig)return O;const cache={};
  for(const f of O._fig){try{
   const pg=cache[f.pg]||(cache[f.pg]=await doc.getPage(f.pg+1));const vp0=pg.getViewport({scale:1});

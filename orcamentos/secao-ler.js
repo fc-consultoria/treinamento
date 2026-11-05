@@ -49,7 +49,9 @@ function extrair(img,kgm,opt){opt=opt||{};const W=img.width,H=img.height,g=cinza
  m=morf(morf(m,W,H,r,false),W,H,r,true);                 /* abertura: some cota e texto fino */
  const {lab,cs}=componentes(m,W,H);if(!cs.length)return null;
  const big=Math.max(...cs.map(c=>c.area)),lim=.12*Math.max(W,H);
- const keep=new Set(cs.filter(c=>c.area>=big*.06&&Math.max(c.x1-c.x0,c.y1-c.y0)+1>=lim).map(c=>c.id));
+ const L=c=>Math.max(c.x1-c.x0,c.y1-c.y0)+1,mc=cs.find(c=>c.area===big),esp=mc.area/L(mc);
+ /* 05/11/2026 · linha de cota e seta: parte comprida e fina (área ÷ comprimento bem menor que a do perfil) sai */
+ const keep=new Set(cs.filter(c=>c.area>=big*.06&&L(c)>=lim&&c.area/L(c)>=esp*.35).map(c=>c.id));
  let k=new Uint8Array(W*H);for(let i=0;i<W*H;i++)k[i]=keep.has(lab[i])?1:0;
  k=morf(morf(k,W,H,r,true),W,H,r,false);                 /* fechamento: junta partes separadas por pouco */
  let area=0,x0=W,x1=0,y0=H,y1=0;for(let y=0;y<H;y++)for(let x=0;x<W;x++)if(k[y*W+x]){area++;if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y}
