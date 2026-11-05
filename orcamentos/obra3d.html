@@ -136,6 +136,7 @@ table.cli td.n,table.cli th.n{text-align:right}
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/environments/RoomEnvironment.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/geometries/RoundedBoxGeometry.js"></script>
 <script src="tip3d.js?v=20261105t"></script>
+<script src="filme.js?v=2"></script>
 <script src="proposta.js?v=20261105i"></script>
 <script src="obra3d-ler.js?v=20261105e"></script>
 <script src="orientativo-ler.js?v=3"></script>
@@ -495,7 +496,7 @@ function apr(){const nOk=P.itens.filter(t=>t.ok).length,lk=P.link;const v=lk&&VI
  <div class="card lnk noprint">${lk&&lk.ativo!==false?`<input readonly id="l-url" value="${esc(urlDe(lk.tok))}" aria-label="Link do cliente"><button class="btn pri" type="button" id="l-cp">Copiar link</button><a class="btn" id="l-wa" target="_blank" rel="noopener">WhatsApp</a><a class="btn" href="${esc(urlDe(lk.tok))}" target="_blank" rel="noopener">Abrir ↗</a><button class="btn" type="button" id="l-up">Atualizar link</button><button class="btn dan" type="button" id="l-off">Desativar</button>
   <span class="hint" style="flex-basis:100%">Link sem preço, com a marca de ${esc(P.empresa||"—")}.${v?` Aberto ${v.vistas} ${v.vistas===1?"vez":"vezes"}${v.ultima_vista?` (último em ${new Date(v.ultima_vista).toLocaleString("pt-BR")})`:""}.`:" Ainda não foi aberto."} Depois de ajustar desenhos ou nomes, toque em <b>Atualizar link</b>.</span>`
   :`<span class="hint" style="flex:1">${lk?"O link anterior foi desativado. ":""}Gere o link sem preço para enviar à ${esc(P.empresa||"vidraçaria")}.</span><button class="btn pri" type="button" id="l-new">Gerar link sem preço</button>`}
-  <button class="btn" type="button" id="l-pr">🖨 Imprimir sem preço</button><span class="hint" id="l-msg" role="status"></span></div>
+  <button class="btn" type="button" id="l-fm">▶ Ver o filme da obra</button><button class="btn" type="button" id="l-pr">🖨 Imprimir sem preço</button><span class="hint" id="l-msg" role="status"></span></div>
  ${lk&&lk.ativo!==false?`<div class="card lnk noprint" style="border-left:4px solid #a3620b"><span style="flex-basis:100%"><b>Link de teste da vidraçaria</b> <span class="hint">· a vidraçaria simula e troca cor de perfil e vidro (obra toda e por item), com código próprio e sem entrar na plataforma. O link do cliente continua sem troca de cor.</span></span>
   ${P.teste&&P.teste.ativo!==false?`<input readonly id="t-url" value="${esc(urlTeste(lk.tok,P.teste.tok))}" aria-label="Link de teste da vidraçaria"><span class="vl" style="min-width:auto">Código<b class="num" style="letter-spacing:.15em">${esc(P.teste.cod)}</b></span><button class="btn" type="button" id="t-cl">Copiar só o link</button><button class="btn pri" type="button" id="t-cp">Copiar mensagem (link + código)</button><a class="btn" id="t-wa" target="_blank" rel="noopener">WhatsApp</a><a class="btn" href="${esc(urlTeste(lk.tok,P.teste.tok))}" target="_blank" rel="noopener">Abrir ↗</a><button class="btn dan" type="button" id="t-off">Encerrar teste</button>`
   :`<span class="hint" style="flex:1">${P.teste?"O teste anterior foi encerrado. ":""}Gere o link de teste para a ${esc(P.empresa||"vidraçaria")} fazer as simulações de cor.</span><button class="btn amb" type="button" id="t-new">Gerar link de teste</button>`}</div>`:""}
@@ -529,6 +530,8 @@ function apr(){const nOk=P.itens.filter(t=>t.ok).length,lk=P.link;const v=lk&&VI
  if($("l-cp"))$("l-cp").onclick=async()=>{try{await navigator.clipboard.writeText(urlDe(lk.tok));toast("Link copiado")}catch(e){$("l-url").select();document.execCommand("copy");toast("Link copiado")}};
  if($("l-wa"))$("l-wa").href="https://wa.me/?text="+encodeURIComponent(`Apresentação 3D da obra ${P.obra||""}: ${urlDe(lk.tok)}`);
  $("l-pr").onclick=()=>{PROPOSTA.preencher($("pdoc"),D,true);setTimeout(()=>print(),80)};
+ /* 05/11/2026 · todo projeto já tem o filme: é gerado do orçamento conferido, igual ao que abre no link do cliente */
+ if($("l-fm"))$("l-fm").onclick=()=>{if(window.FILME)FILME.abrir(doc(P));else toast("O filme não carregou. Recarregue a página.")};
  /* 05/11/2026 · link de teste da vidraçaria: token + código de 6 números guardados no projeto */
  const txtTeste=()=>`Teste da apresentação 3D da obra ${P.obra||""}\nLink: ${urlTeste(lk.tok,P.teste.tok)}\nCódigo de acesso: ${P.teste.cod}\nNo teste você pode trocar a cor dos perfis e do vidro (obra toda ou por item). As cores são demonstrativas; confirme valores com a sua vidraçaria.`;
  if($("t-new"))$("t-new").onclick=()=>{const b=new Uint8Array(18);crypto.getRandomValues(b);const vt=btoa(String.fromCharCode(...b)).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
