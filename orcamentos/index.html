@@ -384,13 +384,14 @@ const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",
 const $=id=>document.getElementById(id);
 const uid=()=>"o"+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 const glassName=k=>{const s=String(k).toLowerCase().replace(/(\d+)\s*mm/g,"$1 mm");return "Vidro "+s};
-/* Componentes: margem sobre o custo (PV = Custo × (1 + margem)), de 0% a 150%, sem impostos/despesas.
+/* Componentes, Alumínio e Vidros: margem sobre o custo (PV = Custo × (1 + margem)), de 0% a 150%, sem impostos/despesas.
    Demais grupos: PV = Custo ÷ (1 − impostos − despesas − margem). */
 const MG_MAX_COMP=150;
+const MKUP=k=>k==="comp"||k==="alu"||k==="vid"; // grupos sem impostos/despesas, margem sobre o custo
 function pv(cost,m,k){const g=n(m.mg)/100;
- if(k==="comp"){const div=1+g;if(g<0||g*100>MG_MAX_COMP)return {ok:false,div,v:0,l:0};return {ok:true,div,v:cost*div,l:cost*g}}
+ if(MKUP(k)){const div=1+g;if(g<0||g*100>MG_MAX_COMP)return {ok:false,div,v:0,l:0};return {ok:true,div,v:cost*div,l:cost*g}}
  const i=n(m.imp)/100,d=n(m.desp)/100;const div=1-i-d-g;if(div<=0)return {ok:false,div,v:0,l:0};const v=cost/div;return {ok:true,div,v,l:v*g}}
-const blankMg=()=>({imp:"",desp:"",mg:""});
+const blankMg=()=>({imp:"",desp:"",mg:"",mo:""});
 
 // ---------- BANCO LOCAL ----------
 const KEY="fc-orcamentos-v2";
@@ -451,6 +452,9 @@ const compCost=O=>[...new Set(O.comps.map(r=>r.code))].reduce((s,c)=>s+codeCalc(
 const aluCost=O=>n(O.st.aluPeso)*(n(O.st.aluKg)+n(O.st.aluAdd));
 const itemM2=t=>t.L*t.H*t.q/1e6;
 const itemPer=t=>2*(t.L+t.H)*t.q/1000;
+/* mão de obra do alumínio: área total da obra (vãos L × H × qtde) × R$/m² */
+const m2Obra=O=>O.tips.reduce((s,t)=>s+itemM2(t),0);
+const moCost=O=>m2Obra(O)*n((O.st.mg.alu||{}).mo);
 const gKeys=O=>[...new Set(O.tips.map(t=>t.vid))];
 const autoM2=(O,k)=>O.tips.filter(t=>t.vid===k).reduce((s,t)=>s+itemM2(t),0);
 const m2Of=(O,k)=>{const o=n(O.st.vidM2[k]);return o>0?o:autoM2(O,k)};
@@ -458,7 +462,7 @@ const vidCostOf=(O,k)=>m2Of(O,k)*n(O.st.vidPrice[k]);
 const vidCost=O=>gKeys(O).reduce((s,k)=>s+vidCostOf(O,k),0);
 const outCost=O=>O.st.outros.reduce((s,o)=>s+n(o.v),0);
 function groups(O){return [
- {k:"comp",name:"Componentes",cost:compCost(O)},{k:"alu",name:"Alumínio",cost:aluCost(O)},
+ {k:"comp",name:"Componentes",cost:compCost(O)},{k:"alu",name:"Alumínio",cost:aluCost(O)+moCost(O),perfil:aluCost(O),mo:moCost(O),m2:m2Obra(O)},
  {k:"vid",name:"Vidros",cost:vidCost(O)},{k:"out",name:"Outros custos",cost:outCost(O)}
 ].map(g=>Object.assign(g,{p:pv(g.cost,O.st.mg[g.k],g.k)}))}
 const totals=O=>{const gs=groups(O);return {c:gs.reduce((s,g)=>s+g.cost,0),v:gs.reduce((s,g)=>s+(g.p.ok?g.p.v:0),0),gs}};
@@ -676,7 +680,7 @@ function buildObra(){
  </div><div id="pp-vid"></div></div></section>
 
 <section id="tab-res" class="tab" hidden><div class="stack">
- <div class="card"><div class="card-h"><h2>Resumo da obra</h2><div class="hint">Componentes: PV = Custo × (1 + margem). Demais grupos: PV = Custo ÷ (1 − impostos − despesas − margem).</div></div>
+ <div class="card"><div class="card-h"><h2>Resumo da obra</h2><div class="hint">Componentes: PV = Custo × (1 + margem). Alumínio: PV = (Perfis + Mão de obra por m²) × (1 + margem). Vidros: PV = Custo × (1 + margem). Outros custos: PV = Custo ÷ (1 − impostos − despesas − margem).</div></div>
   <div class="tbl-wrap"><table class="sum-table"><thead><tr><th>Grupo</th><th class="r">Custo</th><th class="r">Impostos</th><th class="r">Despesas</th><th class="r">Margem</th><th class="r">Preço de venda</th><th class="r">Lucro R$</th><th class="r">% da venda</th></tr></thead>
   <tbody id="res-body"></tbody><tfoot><tr><td>Total da obra</td><td class="r num" id="res-c"></td><td></td><td></td><td></td><td class="r num" id="res-v"></td><td class="r num" id="res-l"></td><td class="r num">100%</td></tr></tfoot></table></div></div>
  <div class="panel-grid"><div class="card"><div class="card-h"><div><h2>Outros custos</h2><div class="hint">Opcional. Entra no resumo e no preço das tipologias.</div></div></div>
@@ -700,20 +704,25 @@ function touch(){save()}
 // ---------- PAINEL DE PREÇO ----------
 function pricePanel(key,title){
  $("pp-"+key).innerHTML=`<div class="card price-panel"><div class="pp-h"><div class="eyebrow">Formação de preço</div><h3>${title}</h3></div><div class="pp-b">
-  <div class="row"><label>Custo</label><span class="cost num" id="pp-${key}-c">R$ 0,00</span></div>
-  ${key==="comp"?"":`<div class="row"><label for="pp-${key}-imp">Impostos %</label><input class="in pct num" id="pp-${key}-imp" inputmode="decimal" placeholder="0"></div>
+  ${key==="alu"?`<div class="row"><label>Custo dos perfis</label><span class="num" id="pp-alu-perf">R$ 0,00</span></div>
+  <div class="row"><label>Área total da obra</label><span class="num" id="pp-alu-m2">0,00 m²</span></div>
+  <div class="row"><label for="pp-alu-mo">Mão de obra R$/m²</label><input class="in pct num" id="pp-alu-mo" inputmode="decimal" placeholder="0,00"></div>
+  <div class="row"><label>Mão de obra</label><span class="num" id="pp-alu-mov">R$ 0,00</span></div>
+  <div class="row"><label>Custo total</label><span class="cost num" id="pp-${key}-c">R$ 0,00</span></div>`:`<div class="row"><label>Custo</label><span class="cost num" id="pp-${key}-c">R$ 0,00</span></div>`}
+  ${MKUP(key)?"":`<div class="row"><label for="pp-${key}-imp">Impostos %</label><input class="in pct num" id="pp-${key}-imp" inputmode="decimal" placeholder="0"></div>
   <div class="row"><label for="pp-${key}-desp">Despesas %</label><input class="in pct num" id="pp-${key}-desp" inputmode="decimal" placeholder="0"></div>`}
-  <div class="row"><label for="pp-${key}-mg">Margem %${key==="comp"?` <span class="hint">(até ${MG_MAX_COMP}%)</span>`:""}</label><input class="in pct num" id="pp-${key}-mg" inputmode="decimal" placeholder="0"></div>
-  <div class="formula">${key==="comp"?`PV = Custo × (1 + margem)<br>Multiplicador: <b class="num" id="pp-${key}-div">1,0000</b>`:`PV = Custo ÷ (1 − impostos − despesas − margem)<br>Divisor: <b class="num" id="pp-${key}-div">1,0000</b>`}</div>
+  <div class="row"><label for="pp-${key}-mg">Margem %${MKUP(key)?` <span class="hint">(até ${MG_MAX_COMP}%)</span>`:""}</label><input class="in pct num" id="pp-${key}-mg" inputmode="decimal" placeholder="0"></div>
+  <div class="formula">${MKUP(key)?`PV = ${key==="alu"?"(Perfis + Mão de obra)":"Custo"} × (1 + margem)<br>Multiplicador: <b class="num" id="pp-${key}-div">1,0000</b>`:`PV = Custo ÷ (1 − impostos − despesas − margem)<br>Divisor: <b class="num" id="pp-${key}-div">1,0000</b>`}</div>
   <div class="sale-box"><div class="eyebrow" style="color:var(--muted)">Preço de venda</div><div class="v num" id="pp-${key}-v">R$ 0,00</div><div class="hint">Lucro: <b class="num" id="pp-${key}-l">R$ 0,00</b></div></div>
-  <div class="err" id="pp-${key}-err" hidden>${key==="comp"?`A margem precisa ficar entre 0% e ${MG_MAX_COMP}%.`:"A soma de impostos, despesas e margem precisa ficar abaixo de 100%."}</div></div></div>`;
- (key==="comp"?["mg"]:["imp","desp","mg"]).forEach(f=>{const el=$(`pp-${key}-${f}`);el.value=st.mg[key][f]||"";el.addEventListener("input",()=>{st.mg[key][f]=el.value;DB.lib.mg[key]=Object.assign({},st.mg[key]);touch();refresh()})});
+  <div class="err" id="pp-${key}-err" hidden>${MKUP(key)?`A margem precisa ficar entre 0% e ${MG_MAX_COMP}%.`:"A soma de impostos, despesas e margem precisa ficar abaixo de 100%."}</div></div></div>`;
+ (key==="alu"?["mo","mg"]:MKUP(key)?["mg"]:["imp","desp","mg"]).forEach(f=>{const el=$(`pp-${key}-${f}`);el.value=st.mg[key][f]||"";el.addEventListener("input",()=>{st.mg[key][f]=el.value;DB.lib.mg[key]=Object.assign({},st.mg[key]);touch();refresh()})});
 }
 function paintPanel(g){
  $(`pp-${g.k}-c`).textContent=brl(g.cost);$(`pp-${g.k}-div`).textContent=num(g.p.div,4);
  $(`pp-${g.k}-v`).textContent=g.p.ok?brl(g.p.v):"—";
  $(`pp-${g.k}-l`).textContent=g.p.ok?brl(g.p.l):"—";
  $(`pp-${g.k}-err`).hidden=g.p.ok;
+ if(g.k==="alu"){$("pp-alu-perf").textContent=brl(g.perfil);$("pp-alu-m2").textContent=num(g.m2,2)+" m²";$("pp-alu-mov").textContent=brl(g.mo)}
 }
 
 // ---------- COMPONENTES ----------
@@ -910,7 +919,7 @@ function wireFields(){
 // ---------- RESUMO ----------
 function paintRes(gs){
  const totV=gs.reduce((s,g)=>s+(g.p.ok?g.p.v:0),0),totC=gs.reduce((s,g)=>s+g.cost,0);
- $("res-body").innerHTML=gs.map(g=>{const m=st.mg[g.k];return `<tr><td><b>${g.name}</b></td><td class="r num">${brl(g.cost)}</td><td class="r num">${g.k==="comp"?"—":pct(n(m.imp))}</td><td class="r num">${g.k==="comp"?"—":pct(n(m.desp))}</td><td class="r num">${pct(n(m.mg))}</td>
+ $("res-body").innerHTML=gs.map(g=>{const m=st.mg[g.k];return `<tr><td><b>${g.name}</b></td><td class="r num">${brl(g.cost)}</td><td class="r num">${MKUP(g.k)?"—":pct(n(m.imp))}</td><td class="r num">${MKUP(g.k)?"—":pct(n(m.desp))}</td><td class="r num">${pct(n(m.mg))}</td>
   <td class="r num">${g.p.ok?brl(g.p.v):'<span class="err">verificar %</span>'}</td><td class="r num">${g.p.ok?brl(g.p.l):"—"}</td><td class="r num">${totV>0&&g.p.ok?pct(g.p.v/totV*100):"—"}</td></tr>`}).join("");
  const lucro=gs.reduce((s,g)=>s+(g.p.ok?g.p.l:0),0);
  $("res-c").textContent=brl(totC);$("res-v").textContent=brl(totV);$("res-l").textContent=brl(lucro);
