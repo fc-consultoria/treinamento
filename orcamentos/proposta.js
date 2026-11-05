@@ -39,7 +39,7 @@ const CSS=`
 .pp-loc{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;margin:26px 0 12px;padding-bottom:8px;border-bottom:2px solid var(--pc)}
 .pp-loc h2{font:700 20px var(--disp);margin:0;color:var(--pc);letter-spacing:.01em}
 .pp-loc span{font-size:12.5px;color:var(--muted)}
-.pp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.pp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
 .pp-card{border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;background:#fff;break-inside:avoid}
 .pp-card figure{margin:0;position:relative;height:200px;display:grid;place-items:center;background:radial-gradient(110% 90% at 50% 30%,#fdfefe,#e9efef);padding:10px}
 .pp-card figure img{max-width:100%;max-height:180px;display:block}
@@ -49,6 +49,7 @@ const CSS=`
 .pp-vr{position:absolute;right:10px;bottom:10px;font:700 12px var(--txt);border:0;background:var(--pc);color:var(--pc-ink);border-radius:999px;padding:7px 12px;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.18)}
 .pp-vr:focus-visible,.pp-ed:focus-visible{outline:3px solid var(--amb);outline-offset:2px}
 .pp-cb{padding:12px 14px 14px;display:flex;flex-direction:column;gap:10px;flex:1}
+.pp-lc{font:700 10.5px/1.3 var(--txt);letter-spacing:.08em;text-transform:uppercase;color:var(--pc);margin-bottom:3px;overflow-wrap:anywhere}
 .pp-cod{font:700 19px/1.15 var(--disp);letter-spacing:.01em}
 .pp-desc{font-size:12px;color:var(--muted);line-height:1.4;margin-top:2px}
 .pp-specs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
@@ -81,11 +82,12 @@ const CSS=`
  .pp-hero{grid-template-columns:minmax(0,1fr);margin-top:0}.pp-hero h1{font-size:34pt}
  .pp-fig{min-height:100mm}.pp-fig img{max-height:92mm}
  .pp-body,.pp-foot{padding-left:0;padding-right:0}.pp-total,.pp-cond{margin-left:0;margin-right:0}
- .pp-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:4mm}
- .pp-card figure{height:40mm;padding:2mm}.pp-card figure img{max-height:36mm}
- .pp-card{font-size:11px}.pp-cb{padding:2.5mm 3mm 3mm;gap:2mm}.pp-cod{font-size:15px}.pp-desc{font-size:10px}.pp-specs b{font-size:12px}.pp-specs div{padding:1.2mm 1.6mm}
- .pp-meta{font-size:10px}.pp-price{padding-top:1.8mm}.pp-price b{font-size:14px}.pp-badge{font-size:10px}
- .pp-loc{break-after:avoid;margin-top:6mm}
+ .pp-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:3mm}
+ .pp-card{font-size:9.5px;border-radius:3mm}.pp-card figure{height:27mm;padding:1.2mm}.pp-card figure img{max-height:25mm}
+ .pp-cb{padding:2mm 2.4mm 2.4mm;gap:1.5mm}.pp-lc{font-size:7.5px;margin-bottom:.6mm}.pp-cod{font-size:11.5px}.pp-desc{font-size:8px;line-height:1.3}
+ .pp-specs{gap:1mm}.pp-specs div{padding:.8mm 1.1mm;border-radius:1.5mm}.pp-specs span{font-size:6.5px;letter-spacing:.04em}.pp-specs b{font-size:10px}
+ .pp-meta{font-size:8px;gap:2mm}.pp-meta i{width:7px;height:7px}.pp-price{padding-top:1.4mm}.pp-price span{font-size:8px}.pp-price b{font-size:11.5px}.pp-badge{font-size:8px;left:1.5mm;top:1.5mm;padding:.5mm 2mm}
+ .pp-linhas{margin-top:0}.pp-loc{break-after:avoid;margin:4mm 0 3mm}
  .pp-vr,.pp-ed,.pp-edit,.pp-alt{display:none!important}
 }`;
 function css(){if(document.getElementById("pp-css"))return;const s=document.createElement("style");s.id="pp-css";s.textContent=CSS;document.head.appendChild(s)}
@@ -121,19 +123,20 @@ function render(el,D,op){op=op||{};css();const it=D.itens||[];const P=op.precos|
  <div class="pp-body">${linhas.length?`<div class="pp-linhas"><span class="pp-chip" style="background:none;border-color:transparent;padding-left:0">Linhas da obra</span>${linhas.map(l=>`<span class="pp-chip">${esc(l)}</span>`).join("")}</div>`:""}`;
  /* itens agrupados por local, na ordem do croqui */
  const grupos=[];it.forEach((t,i)=>{const g=grupos[grupos.length-1];if(g&&g.loc===t.loc)g.ix.push(i);else grupos.push({loc:t.loc,ix:[i]})});
- grupos.forEach(g=>{const gp=g.ix.reduce((s,i)=>s+(+it[i].q||0),0),ga=g.ix.reduce((s,i)=>s+area(it[i]),0);
-  h+=`<section><div class="pp-loc"><h2>${esc(g.loc||"Itens")}</h2><span class="num">${g.ix.length} ${g.ix.length===1?"tipologia":"tipologias"} · ${gp} ${gp===1?"peça":"peças"} · ${m2(ga)} m²</span></div><div class="pp-grid">`;
+ /* grade contínua: o local vai dentro do card, para não sobrar meia linha vazia nem pular página a cada local */
+ h+=`<div class="pp-loc"><h2>Itens da obra</h2><span class="num">${it.length} ${it.length===1?"tipologia":"tipologias"} · ${pecas} ${pecas===1?"peça":"peças"} · ${m2(totM2)} m²</span></div><div class="pp-grid">`;
+ grupos.forEach(g=>{
   g.ix.forEach(i=>{const t=it[i];const p=T3?T3.perfilDe(D.cor,t.corPerfil):null,v=T3?T3.vidroDe(t.desc,t.vidroCor):null;const pv=P?+P[i]||0:0;
    h+=`<div class="pp-card"><figure>${T3?`<img data-pp="${i}" alt="Tipologia ${esc(t.tipo)} em 3D" hidden><span class="ld">Gerando 3D…</span><button class="pp-vr" type="button" data-pv="${i}">Ver em 3D</button>`:""}<span class="pp-badge">Item ${esc(t.item)}</span>${op.editar&&t.orig?'<span class="pp-alt">alterado</span>':""}</figure>
-   <div class="pp-cb"><div><div class="pp-cod">${esc(t.tipo)}</div><div class="pp-desc">${esc(t.desc)}</div></div>
+   <div class="pp-cb"><div>${t.loc?`<div class="pp-lc">${esc(t.loc)}</div>`:""}<div class="pp-cod">${esc(t.tipo)}</div><div class="pp-desc">${esc(t.desc)}</div></div>
     <div class="pp-specs num"><div><span>Larg. mm</span><b>${n0(t.L)}</b></div><div><span>Alt. mm</span><b>${n0(t.H)}</b></div><div><span>Área m²</span><b>${m2(area(t))}</b></div><div><span>Qtde</span><b>${esc(t.q)}</b></div></div>
     <div class="pp-meta">${t.linha?`<span>Linha <b>${esc(t.linha)}</b></span>`:""}${p?`<span><i style="background:${p.hex}"></i>Perfil ${p.nome.toLowerCase()}</span>${/SEM\s+VIDRO/i.test(t.desc||"")?"":`<span><i style="background:${v.hex}"></i>Vidro ${v.nome.toLowerCase()}</span>`}`:""}</div>
     ${op.editar?`<button class="pp-ed" type="button" data-pe="${i}">✎ Editar medida, vidro ou desenho</button>`:""}
     ${P?`<div class="pp-price num"><span>${(+t.q||0)>1&&pv>0?"Unit. "+brl(pv/t.q):"Valor do item"}</span><b>${pv>0?brl(pv):"—"}</b></div>`:""}
    </div></div>`;
    if(op.editar&&op.aberto===i&&op.editor)h+=`<div class="pp-edit">${op.editor(t,i)}</div>`;});
-  h+=`</div></section>`});
- h+=`</div>`;
+  });
+ h+=`</div></div>`;
  if(P)h+=`<div class="pp-total"><div><span>Valor total da obra</span><small>${it.length} tipologias · ${pecas} peças · ${m2(totM2)} m²</small></div><b class="num">${brl(op.total!=null?op.total:P.reduce((s,v)=>s+(+v||0),0))}</b></div>`;
  const c=op.condicoes||{};const cs=[["Validade da proposta",c.validade],["Condições de pagamento",c.cond],["Prazo de entrega",c.prazo],["Observações",c.obs]].filter(x=>x[1]);
  if(P&&cs.length)h+=`<div class="pp-cond">${cs.map(([k,v])=>`<div><span>${k}</span><b>${esc(v)}</b></div>`).join("")}</div>`;
