@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="robots" content="noindex">
 <meta http-equiv="Cache-Control" content="no-cache">
-<script>(function(){var B='20261104221845';try{fetch('versao.txt?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.text():''}).then(function(v){v=(v||'').trim();if(!v||v===B)return;var u=new URL(location.href);if(u.searchParams.get('v')===v)return;u.searchParams.set('v',v);location.replace(u.toString())}).catch(function(){})}catch(e){}})();</script>
+<script>(function(){var B='20261104222335';try{fetch('versao.txt?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.text():''}).then(function(v){v=(v||'').trim();if(!v||v===B)return;var u=new URL(location.href);if(u.searchParams.get('v')===v)return;u.searchParams.set('v',v);location.replace(u.toString())}).catch(function(){})}catch(e){}})();</script>
 
 <title>FC Estudo de Mercado</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -87,6 +87,7 @@ button{cursor:pointer}
 .hero{display:grid;grid-template-columns:minmax(0,300px) minmax(0,1fr);gap:20px;align-items:center}
 .draw{background:var(--paper);border:1px solid var(--ln);border-radius:14px;display:grid;place-items:center;position:relative;overflow:hidden}
 .draw img{position:absolute;left:5%;top:5%;width:90%;height:84%;image-rendering:auto;max-width:none;max-height:none;object-fit:contain;display:block}
+.draw .cap{position:absolute;left:8px;bottom:5px;right:30px;font:600 11px var(--f-b);color:#5a6b75;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left}
 .draw .wm{position:absolute;right:8px;bottom:5px;font:700 9px var(--f-b);letter-spacing:1px;color:#8aa0a8}
 .draw.none{color:#8aa0a8;font-size:12px;text-align:center;padding:8px}
 .hero .draw{aspect-ratio:4/3}
@@ -342,16 +343,19 @@ function fam(f,c){c=norm(c);for(const p of (PREF[f]||[]))if(c.startsWith(p)&&c.l
   const x=c.match(/^([A-Z]+)0*(\d+)([A-Z]*)$/);return x?x[1]+'-'+x[2]+x[3]:c}
 let FAM={};
 function unirIguais(){const pai=G.map((_,i)=>i),raiz=i=>{while(pai[i]!==i){pai[i]=pai[pai[i]];i=pai[i]}return i};
-  const pm=g=>{const v=g.m.map(m=>m.p).filter(Boolean);return v.length?v.reduce((a,b)=>a+b,0)/v.length:0};
+  /* só compara o código principal de cada perfil (não os equivalentes), para não encadear perfis diferentes */
+  const km=g=>g.m.find(m=>norm(m.c)===norm(g.k))||g.m.find(m=>m.f==='alcoa')||g.m[0];
+  const pk=g=>{const m=km(g);return m&&m.p||0};
   const idx={};FAM={};
-  G.forEach((g,i)=>{const ks=new Set([fam('alcoa',g.k),...g.m.map(m=>fam(m.f,m.c))]);ks.forEach(k=>(idx[k]=idx[k]||[]).push(i))});
-  Object.entries(idx).forEach(([k,v])=>{for(let a=0;a<v.length;a++)for(let b=a+1;b<v.length;b++){const wa=pm(G[v[a]]),wb=pm(G[v[b]]);
+  G.forEach((g,i)=>{const m=km(g);const ks=new Set([fam('alcoa',g.k),fam(m?m.f:'alcoa',g.k)]);ks.forEach(k=>(idx[k]=idx[k]||[]).push(i))});
+  Object.values(idx).forEach(v=>{for(let a=0;a<v.length;a++)for(let b=a+1;b<v.length;b++){const wa=pk(G[v[a]]),wb=pk(G[v[b]]);
     if(wa&&wb&&Math.max(wa,wb)/Math.min(wa,wb)>1.08)continue;pai[raiz(v[a])]=raiz(v[b])}});
   const grp={};G.forEach((g,i)=>(grp[raiz(i)]=grp[raiz(i)]||[]).push(g));
   Object.entries(grp).forEach(([r,gs])=>{gs.forEach(g=>g.u=r);if(gs.length<2)return;
-    const vis={},m=[];gs.slice().sort((a,b)=>b.m.length-a.m.length).forEach(g=>g.m.forEach(x=>{const k=x.f+'|'+norm(x.c);if(!vis[k]){vis[k]=1;m.push(x)}}));
+    const vis={},m=[];gs.slice().sort((a,b)=>b.m.length-a.m.length).forEach(g=>g.m.forEach(x=>{const k=x.f+'|'+norm(x.c);if(!vis[k]){vis[k]=x;m.push(x)}else if(x.src&&x.src!==vis[k].src){const o=vis[k];o.alt=(o.alt||[]).concat([[x.src,x.o||'','']])}}));
     const nm=(gs.find(g=>g.n)||{}).n||'';gs.forEach(g=>{g.m=m;if(!g.n)g.n=nm})});
-  Object.entries(idx).forEach(([k,v])=>{FAM[k]=v.map(i=>G[i]).sort((a,b)=>b.m.length-a.m.length)[0]});}
+  G.forEach(g=>g.m.forEach(m=>{const k=fam(m.f,m.c);const o=FAM[k];if(!o||g.m.length>o.m.length)FAM[k]=g}));
+  Object.entries(idx).forEach(([k,v])=>{const g=v.map(i=>G[i]).sort((a,b)=>b.m.length-a.m.length)[0];if(!FAM[k]||g.m.length>FAM[k].m.length)FAM[k]=g});}
 function unico(L){const vis={};return L.filter(g=>vis[g.u]?false:(vis[g.u]=1))}
 let G0=[],CFG={};
 function mkBY(){BY={};const put=(k,g)=>{const o=BY[k];if(!o||(o.u!==g.u&&g.m.length>o.m.length)||(o.u===g.u&&!own(o).length&&own(g).length))BY[k]=g};G.forEach(g=>{put(norm(g.k),g);g.m.forEach(m=>put(norm(m.c),g))});}
@@ -371,7 +375,17 @@ async function carregaCfg(){try{const r=await fetch(SB+'/rest/v1/em_config?selec
 const QP=new URLSearchParams(location.search);const FCM=QP.has('fc');
 let S={ord:ls.get('fcext_ord','preco'),cover:false,tut:null,ext:null,role:'vend',tab:'pesq',g:null,cliSel:null,abcL:'todas',relU:'todos'};
 
-function img(m,extra=''){return m&&m.src?`<div class="draw ${extra}"><img src="${esc(m.src)}" ${m.o?`data-o="${esc(m.o)}"`:''} alt="Desenho do perfil ${esc(m.c)}" loading="lazy" decoding="async" onerror="if(this.dataset.o){this.src=this.dataset.o;this.removeAttribute('data-o');return}this.parentNode.classList.add('none');this.parentNode.innerHTML='sem desenho no catálogo'"><span class="wm">FC</span></div>`:`<div class="draw none ${extra}">sem desenho no catálogo</div>`}
+function img(m,extra=''){if(!m||!m.src)return `<div class="draw none ${extra}">sem desenho no catálogo</div>`;
+  const alt=(m.alt||[]).map(x=>x.join('¦')).join('§');
+  return `<div class="draw ${extra}"><img src="${esc(m.src)}" ${m.o?`data-o="${esc(m.o)}"`:''} ${alt?`data-alt="${esc(alt)}"`:''} alt="Desenho do perfil ${esc(m.c)}" loading="lazy" decoding="async" onerror="fotoErro(this)"><span class="wm">FC</span>${m.cap?`<span class="cap">${esc(m.cap)}</span>`:''}</div>`}
+function fotoErro(t){if(t.dataset.o){t.src=t.dataset.o;t.removeAttribute('data-o');return}
+  const a=(t.dataset.alt||'').split('§').filter(Boolean);if(a.length){const [u,o,c]=a.shift().split('¦');t.dataset.alt=a.join('§');if(o)t.dataset.o=o;const cp=t.parentNode.querySelector('.cap');if(cp&&c)cp.textContent=c;t.src=u;return}
+  t.parentNode.classList.add('none');t.parentNode.innerHTML='sem desenho no catálogo'}
+/* Foto do catálogo base: tenta o desenho pedido, depois Alcoa, CDA e qualquer outro fornecedor do mesmo perfil */
+function foto(g,first,extra=''){const L=[];const add=m=>{if(m&&m.src&&!L.includes(m))L.push(m)};add(first);add(g.m.find(m=>m.f==='alcoa'));add(g.m.find(m=>m.f==='cda'));g.m.forEach(add);
+  if(!L.length)return img(null,extra);const cap=m=>'Desenho do catálogo '+FN(m.f)+' · '+m.c;
+  const ch=[];L.forEach((m,i)=>{if(i)ch.push([m.src,m.o||'',cap(m)]);(m.alt||[]).forEach(a=>ch.push([a[0],a[1],cap(m)]))});
+  return img({...L[0],cap:extra?'':cap(L[0]),alt:ch},extra)}
 function own(g){return g.m.filter(m=>m.f===S.ext)}
 function ref(g){return g.m.find(m=>m.f==='alcoa')}
 function abcTag(cl){const t={A:'Classe A · alto giro',B:'Classe B · médio giro',C:'Classe C · giro baixo'}[cl]||'Curva não definida';return `<span class="abc ${cl||'N'}"><i>${cl||'?'}</i>${t}</span>`}
@@ -494,7 +508,7 @@ function tPesq(){
   const leve=forn.slice().sort((a,b)=>a.p-b.p)[0];
   const vbS=m=>vb(m)??1e9;
   const semP=forn.filter(m=>vb(m)==null).length;
-  h+=`<section class="box"><div class="hero">${img(mine[0]||r)}<div><div class="row"><span class="mine">${DIST()?'Código de mercado':mine.length?'Sua linha · '+esc(EXTS[S.ext].n):'Sem código '+esc(EXTS[S.ext].n)}</span>${abcTag(g.cl)}</div>
+  h+=`<section class="box"><div class="hero">${foto(g,mine[0]||r)}<div><div class="row"><span class="mine">${DIST()?'Código de mercado':mine.length?'Sua linha · '+esc(EXTS[S.ext].n):'Sem código '+esc(EXTS[S.ext].n)}</span>${abcTag(g.cl)}</div>
    <h3 style="margin-top:10px">${esc(mine.map(m=>m.c).join(' · ')||g.k)}</h3><div class="nm">${esc(g.n)}</div>
    <div class="kv"><span>Linha <b>${LIN[g.l]}</b></span><span>Mercado <b>${esc(g.k)}</b></span>${mine[0]?`<span><b class="num">${n3(mine[0].p)}</b> kg/m</span><span>Barra 6 m <b class="num">${n3(mine[0].p*6)} kg</b></span>`:''}<span><b>${g.m.filter(m=>m.f!=='alcoa').length}</b> equivalentes</span></div>
    <div class="kv"><button class="btn sm" data-goprec>＄ Lançar preços dos fornecedores</button></div></div></div></section>
@@ -514,7 +528,7 @@ const pn=v=>{const x=parseFloat(String(v||'').replace(/\./g,'').replace(',','.')
 function buscar(q){
   const k=norm(q);if(!k)return;let g=BY[k]||BY[norm(fam('texa',k))]||FAM[fam('alcoa',k)]||FAM[fam('texa',k)];
   if(!g){const c=G.filter(x=>norm(x.k).includes(k)||x.m.some(m=>norm(m.c).includes(k))).slice(0,8);
-    if(c.length===1)g=c[0];else{S.q=q;S.g=null;draw();if(c.length)$('#sugs').innerHTML=`<p class="sub" style="margin-top:12px">Você quis dizer:</p><div class="grid" style="margin-top:8px">${c.map(x=>{const m=own(x)[0]||ref(x)||x.m[0];return `<button class="pick" data-pk="${esc(x.k)}">${img(m,'mini')}<span><b>${esc(m.c)}</b><br><small>${esc(x.n)}</small></span></button>`}).join('')}</div>`;document.querySelectorAll('[data-pk]').forEach(b=>b.onclick=()=>buscar(b.dataset.pk));return}}
+    if(c.length===1)g=c[0];else{S.q=q;S.g=null;draw();if(c.length)$('#sugs').innerHTML=`<p class="sub" style="margin-top:12px">Você quis dizer:</p><div class="grid" style="margin-top:8px">${c.map(x=>{const m=own(x)[0]||ref(x)||x.m[0];return `<button class="pick" data-pk="${esc(x.k)}">${foto(x,m,'mini')}<span><b>${esc(m.c)}</b><br><small>${esc(x.n)}</small></span></button>`}).join('')}</div>`;document.querySelectorAll('[data-pk]').forEach(b=>b.onclick=()=>buscar(b.dataset.pk));return}}
   S.g=g;S.q='';logar('Pesquisou',g.k);reg('pesquisa',g.k);draw();
 }
 
@@ -677,7 +691,7 @@ function ligaRevd(){document.querySelectorAll('[data-rvt]').forEach(b=>b.onclick
 function tAbc(){
   let lst=G.filter(g=>(DIST()||own(g).length)&&(S.abcL==='todas'||g.l===S.abcL));if(S.abcL==='todas')lst=unico(lst);
   const by=c=>lst.filter(g=>(g.cl||'')===c);
-  const sec=(c,t)=>{const L=by(c);if(!L.length)return '';return `<section class="box"><div class="row"><h2>${abcTag(c)}</h2><span class="sub" style="margin:0">${L.length} perfis</span></div><div class="abcgrid" style="margin-top:12px">${L.map(g=>{const m=own(g)[0]||ref(g)||g.m[0];return `<article class="pc">${img(m)}<div class="bd"><span class="c">${esc(m.c)}</span><span class="w">${esc(g.n)}</span></div></article>`}).join('')}</div></section>`};
+  const sec=(c,t)=>{const L=by(c);if(!L.length)return '';return `<section class="box"><div class="row"><h2>${abcTag(c)}</h2><span class="sub" style="margin:0">${L.length} perfis</span></div><div class="abcgrid" style="margin-top:12px">${L.map(g=>{const m=own(g)[0]||ref(g)||g.m[0];return `<article class="pc">${foto(g,m,'g')}<div class="bd"><span class="c">${esc(m.c)}</span><span class="w">${esc(g.n)}</span></div></article>`}).join('')}</div></section>`};
   return `<section class="box"><h2>Curva ABC</h2><p class="sub">${DIST()?'Giro de cada perfil na compra de uma distribuidora. Use para priorizar reposição e estoque: classe A nunca pode faltar.':'Onde cada perfil da '+esc(EXTS[S.ext].n)+' se encaixa na compra de uma distribuidora. A classe mostra o giro do perfil no mercado, não quem vendeu.'}</p>
    <div class="tabs2" style="margin-top:12px">${[['todas','Todas as linhas'],...[...new Set(G.filter(g=>DIST()||own(g).length).map(g=>g.l))].filter(l=>G.some(g=>g.l===l&&g.cl&&(DIST()||own(g).length))).map(l=>[l,LIN[l]])].map(([k,t])=>`<button data-abcl="${k}" class="${S.abcL===k?'on':''}">${t}</button>`).join('')}</div>
    <div class="stat" style="margin-top:14px"><div><small>Classe A</small><b class="num">${by('A').length}</b></div><div><small>Classe B</small><b class="num">${by('B').length}</b></div><div><small>Classe C</small><b class="num">${by('C').length}</b></div><div><small>Em estudo</small><b class="num">${by('').length}</b></div></div></section>
@@ -694,8 +708,8 @@ function tRel(){
   const T=Object.entries(top).sort((a,b)=>b[1]-a[1]).slice(0,6);
   return `<section class="box"><h2>${S.role==='gest'?'Relatório por usuário':'Meu histórico'}</h2><p class="sub">${S.role==='gest'?'O que cada pessoa da equipe pesquisou e lançou.':'Tudo o que você pesquisou e lançou.'}</p>
    ${S.role==='gest'?`<div class="tabs2" style="margin-top:12px">${['todos',...us].map(u=>`<button data-relu="${esc(u)}" class="${S.relU===u?'on':''}">${u==='todos'?'Toda a equipe':esc(u)}</button>`).join('')}</div>`:''}</section>
-   ${T.length?`<section class="box"><h2>Mais pesquisados</h2><div class="abcgrid" style="margin-top:12px">${T.map(([k,n])=>{const g=BY[norm(k)];const m=g&&(own(g)[0]||ref(g));return `<article class="pc">${img(m)}<div class="bd"><span class="c">${esc(m?m.c:k)}</span><span class="w">${n} ${n===1?'vez':'vezes'}</span></div></article>`}).join('')}</div></section>`:''}
-   <section class="box"><div class="tw"><table><thead><tr><th>Desenho</th><th>Usuário</th><th>Quando</th><th>Ação</th><th>Perfil</th></tr></thead><tbody>${L.map(r=>{const g=r.gk&&BY[norm(r.gk)];const m=g&&(own(g)[0]||ref(g));return `<tr><td>${g?img(m,'mini'):''}</td><td><b>${esc(r.u)}</b></td><td>${esc(r.d)}</td><td>${esc(r.a)}</td><td>${esc(m?m.c:r.gk||'—')}</td></tr>`}).join('')||'<tr><td colspan="5" class="empty">Nada registrado ainda.</td></tr>'}</tbody></table></div></section>`;
+   ${T.length?`<section class="box"><h2>Mais pesquisados</h2><div class="abcgrid" style="margin-top:12px">${T.map(([k,n])=>{const g=BY[norm(k)];const m=g&&(own(g)[0]||ref(g));return `<article class="pc">${g?foto(g,m,'g'):img(null)}<div class="bd"><span class="c">${esc(m?m.c:k)}</span><span class="w">${n} ${n===1?'vez':'vezes'}</span></div></article>`}).join('')}</div></section>`:''}
+   <section class="box"><div class="tw"><table><thead><tr><th>Desenho</th><th>Usuário</th><th>Quando</th><th>Ação</th><th>Perfil</th></tr></thead><tbody>${L.map(r=>{const g=r.gk&&BY[norm(r.gk)];const m=g&&(own(g)[0]||ref(g));return `<tr><td>${g?foto(g,m,'mini'):''}</td><td><b>${esc(r.u)}</b></td><td>${esc(r.d)}</td><td>${esc(r.a)}</td><td>${esc(m?m.c:r.gk||'—')}</td></tr>`}).join('')||'<tr><td colspan="5" class="empty">Nada registrado ainda.</td></tr>'}</tbody></table></div></section>`;
 }
 
 /* Acessos */
