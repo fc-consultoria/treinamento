@@ -42,6 +42,8 @@ const CSS=`
 .pp-stat b small{font:600 12px var(--txt);opacity:.85}
 .pp-sw{display:inline-block;width:14px;height:14px;border-radius:50%;border:2px solid rgba(255,255,255,.7);vertical-align:-2px;margin-right:6px}
 .pp-stat .acab{font:600 13px/1.3 var(--txt)}
+button.pp-chip{cursor:pointer;transition:background .15s,color .15s}button.pp-chip:hover{border-color:var(--pc);color:var(--pc)}button.pp-chip[aria-pressed=true]{background:var(--pc);border-color:var(--pc);color:var(--pc-ink,#fff)}button.pp-chip.tds{background:none;border-style:dashed}
+@media print{button.pp-chip.tds{display:none}}
 /* corpo */
 .pp-body{padding:8px clamp(18px,4vw,44px) 10px}
 .pp-linhas{display:flex;gap:6px;flex-wrap:wrap;margin:18px 0 4px}
@@ -114,9 +116,12 @@ function heroIdx(it){let best=-1,bv=-1;it.forEach((t,i)=>{const r=(+t.L||1)/(+t.
 function render(el,D,op){op=op||{};css();const it=D.itens||[];const P=op.precos||null;
  if(op.simular&&op.estado){D._sim=op.estado.obra||null;it.forEach((t,i)=>{const s=op.estado.itens&&op.estado.itens[i];if(s)t._s=s;else delete t._s});aplicarSim(D)}
  const T3=window.TIP3D;const pc=D.marcaCor||"";
- const pecas=it.reduce((s,t)=>s+(+t.q||0),0),totM2=it.reduce((s,t)=>s+area(t),0);
  const linhas=[...new Set(it.map(t=>t.linha).filter(Boolean))];
- const p0=T3?T3.perfilDe(D.cor):null;const hi=heroIdx(it);
+ /* 05/11: clicando numa linha da obra, a apresentação mostra só essa linha */
+ if(op.estado&&"linha" in op.estado)D._linha=op.estado.linha;if(D._linha&&!linhas.includes(D._linha))D._linha=null;
+ const vis=it.map((t,i)=>i).filter(i=>!D._linha||it[i].linha===D._linha),itv=vis.map(i=>it[i]);
+ const pecas=itv.reduce((s,t)=>s+(+t.q||0),0),totM2=itv.reduce((s,t)=>s+area(t),0);
+ const p0=T3?T3.perfilDe(D.cor):null;const hi0=heroIdx(itv),hi=hi0>=0?vis[hi0]:-1;
  const marca=(D.logo?`<img class="pp-logo" src="${esc(D.logo)}" alt="">`:"")+(D.marca?`${esc(D.marca)}`:`FC Consultoria<small>e Representação</small>`);
  const data=D.emitida?new Date(D.emitida).toLocaleDateString("pt-BR"):new Date().toLocaleDateString("pt-BR");
  let h=`<article class="pp"${pc?` style="--pc:${esc(pc)}"`:""}>
@@ -125,17 +130,17 @@ function render(el,D,op){op=op||{};css();const it=D.itens||[];const P=op.precos|
   <div class="pp-hero"><div><div class="pp-eye">Esquadrias de alumínio e vidro</div><h1>${esc(D.obra||"Obra")}</h1><div class="pp-cli">Cliente: <b>${esc(D.cliente||"—")}</b></div></div>
    <figure class="pp-fig">${hi>=0&&T3?`<img data-pp="${hi}" data-px="1400" alt="Tipologia ${esc(it[hi].tipo)} em 3D" hidden><span class="ld">Gerando 3D…</span><figcaption>${esc(it[hi].tipo)} · ${n0(it[hi].L)} × ${n0(it[hi].H)} mm</figcaption>`:""}</figure></div>
   <div class="pp-stats">
-   <div class="pp-stat"><span>Tipologias</span><b class="num">${it.length}</b></div>
+   <div class="pp-stat"><span>Tipologias</span><b class="num">${itv.length}</b></div>
    <div class="pp-stat"><span>Peças</span><b class="num">${pecas}</b></div>
    <div class="pp-stat"><span>Área de vãos</span><b class="num">${m2(totM2)} <small>m²</small></b></div>
    <div class="pp-stat"><span>Acabamento</span><b class="acab">${D._sim&&D._sim.p&&T3?`<i class="pp-sw" style="background:${T3.perfilDe("",D._sim.p).hex}"></i>${esc(SIMP.find(x=>x[0]===D._sim.p)[1])} <small>(simulação)</small>`:`${p0?`<i class="pp-sw" style="background:${p0.hex}"></i>`:""}${esc(D.cor||"—")}`}</b></div>
   </div>
  </header>
- <div class="pp-body">${op.simular&&T3?(D._simRot=op.simRotulo,D._podeSalvar=!!op.onSalvar,barraSim(D,T3)):""}${simAtivo(D)?`<div class="pp-av">⚠ <b>Cor alterada apenas para demonstração.</b> A troca de cor pode alterar o valor — confirme com a vidraçaria.</div>`:D.corAlterada?`<div class="pp-av">ℹ <b>Cor atualizada na negociação.</b> A troca de cor pode alterar o valor — confirme com a vidraçaria.</div>`:""}${linhas.length?`<div class="pp-linhas"><span class="pp-chip" style="background:none;border-color:transparent;padding-left:0">Linhas da obra</span>${linhas.map(l=>`<span class="pp-chip">${esc(l)}</span>`).join("")}</div>`:""}`;
+ <div class="pp-body">${op.simular&&T3?(D._simRot=op.simRotulo,D._podeSalvar=!!op.onSalvar,barraSim(D,T3)):""}${simAtivo(D)?`<div class="pp-av">⚠ <b>Cor alterada apenas para demonstração.</b> A troca de cor pode alterar o valor — confirme com a vidraçaria.</div>`:D.corAlterada?`<div class="pp-av">ℹ <b>Cor atualizada na negociação.</b> A troca de cor pode alterar o valor — confirme com a vidraçaria.</div>`:""}${linhas.length?`<div class="pp-linhas"><span class="pp-chip" style="background:none;border-color:transparent;padding-left:0">Linhas da obra</span>${linhas.map(l=>`<button type="button" class="pp-chip" data-ln="${esc(l)}" aria-pressed="${D._linha===l}" title="${D._linha===l?"Mostrar todas as linhas":"Mostrar só a linha "+esc(l)}">${esc(l)}</button>`).join("")}${D._linha?`<button type="button" class="pp-chip tds" data-ln="">✕ Ver todas</button>`:""}</div>`:""}`;
  /* itens agrupados por local, na ordem do croqui */
- const grupos=[];it.forEach((t,i)=>{const g=grupos[grupos.length-1];if(g&&g.loc===t.loc)g.ix.push(i);else grupos.push({loc:t.loc,ix:[i]})});
+ const grupos=[];vis.forEach(i=>{const t=it[i];const g=grupos[grupos.length-1];if(g&&g.loc===t.loc)g.ix.push(i);else grupos.push({loc:t.loc,ix:[i]})});
  /* grade contínua: o local vai dentro do card, para não sobrar meia linha vazia nem pular página a cada local */
- h+=`<div class="pp-loc"><h2>Itens da obra</h2><span class="num">${it.length} ${it.length===1?"tipologia":"tipologias"} · ${pecas} ${pecas===1?"peça":"peças"} · ${m2(totM2)} m²</span></div><div class="pp-grid">`;
+ h+=`<div class="pp-loc"><h2>Itens da obra</h2><span class="num">${itv.length} ${itv.length===1?"tipologia":"tipologias"} · ${pecas} ${pecas===1?"peça":"peças"} · ${m2(totM2)} m²</span></div><div class="pp-grid">`;
  grupos.forEach(g=>{
   g.ix.forEach(i=>{const t=it[i];const p=T3?T3.perfilDe(D.cor,t.corPerfil):null,v=T3?T3.vidroDe(t.desc,t.vidroCor):null;const pv=P?+P[i]||0:0;
    h+=`<div class="pp-card"><figure>${t._s&&op.simular?`<span style="position:absolute;top:10px;right:10px;z-index:2;background:#fff6e5;color:#7a4b07;border:1px solid #f0d49a;border-radius:999px;padding:2px 9px;font-size:11.5px;font-weight:600">cor simulada neste item</span>`:""}${T3?`<img data-pp="${i}" alt="Tipologia ${esc(t.tipo)} em 3D" hidden><span class="ld">Gerando 3D…</span><button class="pp-vr" type="button" data-pv="${i}">Ver em 3D</button>`:""}<span class="pp-badge">Item ${esc(t.item)}</span>${op.editar&&t.orig?'<span class="pp-alt">alterado</span>':""}</figure>
@@ -148,12 +153,15 @@ function render(el,D,op){op=op||{};css();const it=D.itens||[];const P=op.precos|
    if(op.editar&&op.aberto===i&&op.editor)h+=`<div class="pp-edit">${op.editor(t,i)}</div>`;});
   });
  h+=`</div></div>`;
- if(P)h+=`<div class="pp-total"><div><span>Valor total da obra</span><small>${it.length} tipologias · ${pecas} peças · ${m2(totM2)} m²</small></div><b class="num">${brl(op.total!=null?op.total:P.reduce((s,v)=>s+(+v||0),0))}</b></div>`;
+ if(P)h+=`<div class="pp-total"><div><span>${D._linha?"Valor da linha "+esc(D._linha):"Valor total da obra"}</span><small>${itv.length} tipologias · ${pecas} peças · ${m2(totM2)} m²</small></div><b class="num">${brl(!D._linha&&op.total!=null?op.total:vis.reduce((s,k)=>s+(+P[k]||0),0))}</b></div>`;
  const c=op.condicoes||{};const cs=[["Validade da proposta",c.validade],["Condições de pagamento",c.cond],["Prazo de entrega",c.prazo],["Observações",c.obs]].filter(x=>x[1]);
  if(P&&cs.length)h+=`<div class="pp-cond">${cs.map(([k,v])=>`<div><span>${k}</span><b>${esc(v)}</b></div>`).join("")}</div>`;
  h+=`<footer class="pp-foot"><div>Medidas e quantidades conforme projeto, sujeitas a conferência na obra. Imagens 3D ilustrativas.</div>${typeof D.rodape==="string"?(D.rodape.trim()?`<div class="wm">${esc(D.rodape)}</div>`:""):`<div class="wm">${D.marca?"Desenvolvido por FC Consultoria em Esquadria · ©":"FC Consultoria em Esquadria · uso exclusivo · © FC Consultoria em Esquadria"}</div>`}</footer></article>`;
  el.innerHTML=h;
- if(T3){el.querySelectorAll("[data-pv]").forEach(b=>b.onclick=()=>T3.abrir(it[+b.dataset.pv],Object.assign({cor:D.cor,origem:b.closest("figure")},op.simular?{cores:{p:SIMP,v:SIMV},temVidro:temVidro(it[+b.dataset.pv]),simAtivo:()=>simAtivo(D),onSalvar:op.onSalvar?()=>{const sb2=el.querySelector('[data-sim="salvar"]');if(sb2)sb2.click()}:null,onCor:(k,id,obra)=>{const t=it[+b.dataset.pv];if(k==="reset")delete t._s;else if(obra){D._sim=Object.assign({},D._sim);D._sim[k]=id;(D.itens||[]).forEach(x=>{if(x._s){delete x._s[k];if(!x._s.p&&!x._s.v)delete x._s}})}else{t._s=Object.assign({},t._s);t._s[k]=id}aplicarSim(D);clearTimeout(el._simT);el._simT=setTimeout(()=>repinta(el,D,op),50)}}:{})));if(op.simular)ligarSim(el,D,op);if(!op.adiar)preencher(el,D)}
+ el.querySelectorAll("[data-ln]").forEach(b=>b.onclick=()=>{const l=b.dataset.ln;D._linha=l&&D._linha!==l?l:null;if(op.estado)op.estado.linha=D._linha;
+  const y=scrollY;render(el,D,op);if(op.adiar)preencher(el,D);scrollTo(0,y)});
+ if(T3){el.querySelectorAll("[data-pv]").forEach(b=>b.onclick=()=>T3.abrir(it[+b.dataset.pv],Object.assign({cor:D.cor,origem:b.closest("figure")},op.simular?{cores:{p:SIMP,v:SIMV},temVidro:temVidro(it[+b.dataset.pv]),simAtivo:()=>simAtivo(D),onSalvar:op.onSalvar?()=>{const sb2=el.querySelector('[data-sim="salvar"]');if(sb2)sb2.click()}:null,onCor:(k,id,obra)=>{const t=it[+b.dataset.pv];if(k==="reset")delete t._s;else if(obra){D._sim=Object.assign({},D._sim);D._sim[k]=id;(D.itens||[]).forEach(x=>{if(x._s){delete x._s[k];if(!x._s.p&&!x._s.v)delete x._s}})}else{t._s=Object.assign({},t._s);t._s[k]=id}aplicarSim(D);clearTimeout(el._simT);el._simT=setTimeout(()=>repinta(el,D,op),50)}}:{})));if(op.simular)ligarSim(el,D,op);
+ if(!op.adiar)preencher(el,D)}
 }
 /* 05/11/2026 · simular cor de perfil e de vidro na negociação (só demonstração; preço não muda) */
 const SIMP=[["branco","Branco"],["preto","Preto"],["fosco","Fosco"],["madeira","Madeira"],["linheiro","Linheiro"]];
