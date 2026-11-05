@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Envio de orçamento · Obra em 3D</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap">
+<style>
+/* Link de envio: a vidraçaria/serralheiro sobe o PDF do orçamento, a marca e o contato.
+   O pedido chega ao Painel da Matriz como "Recebido". Esta página só envia: não vê nada do painel.
+   © FC Consultoria em Esquadria */
+:root{--bg:#eef2f3;--surface:#fff;--line:#d3dddd;--fg:#16262a;--muted:#5b6d70;--pc:#0d5c63;--ok:#1f7a4a;--warn:#a45a00;--warn-soft:#fbefd9;--bad:#b3261e;
+ --display:"Space Grotesk",system-ui,sans-serif;--body:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1719;--surface:#162226;--line:#2c3f44;--fg:#e3eced;--muted:#93a6a9;--warn-soft:#3a2c14;--warn:#e3a14a;--ok:#52b783;--bad:#ef7a72;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0f1719;--surface:#162226;--line:#2c3f44;--fg:#e3eced;--muted:#93a6a9;--warn-soft:#3a2c14;--warn:#e3a14a;--ok:#52b783;--bad:#ef7a72;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 var(--body)}
+.wrap{max-width:760px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header{background:var(--pc);color:#fff;padding-top:env(safe-area-inset-top,0px)}
+header .wrap{padding-block:22px 20px;display:flex;gap:14px;align-items:center}
+header img{max-height:48px;max-width:150px;background:#fff;border-radius:8px;padding:4px 7px}
+header small{display:block;font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;opacity:.85}
+header h1{margin:2px 0 0;font:700 23px/1.15 var(--display);text-wrap:balance}
+main{padding-block:18px 36px}
+.sec{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:12px}
+.sec h2{margin:0 0 4px;font:700 17px var(--display);display:flex;gap:10px;align-items:center}
+.sec h2 i{font-style:normal;width:26px;height:26px;border-radius:50%;background:var(--pc);color:#fff;display:grid;place-items:center;font:700 13px var(--body);flex:none}
+.hint{color:var(--muted);font-size:13.5px;margin:0 0 12px}
+.drop{border:2px dashed var(--line);border-radius:12px;padding:22px 14px;text-align:center;cursor:pointer}
+.drop.on{border-color:var(--pc)}
+.drop b{display:block;font:700 16px var(--display);margin-bottom:2px}
+.f{display:flex;flex-direction:column;gap:5px;font-weight:600;font-size:13px;color:var(--muted);margin-bottom:10px}
+.f input,.f textarea{font:500 15px var(--body);color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:10px 11px;min-height:44px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+.sws{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.sw{width:32px;height:32px;border-radius:50%;border:2px solid var(--surface);box-shadow:0 0 0 1px var(--line);cursor:pointer;padding:0}
+.sw[aria-pressed="true"]{box-shadow:0 0 0 3px var(--fg)}
+.sws input[type=color]{width:40px;height:34px;border:1px solid var(--line);border-radius:8px;padding:0;background:none;cursor:pointer}
+.btn{font:600 14.5px var(--body);border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:11px;padding:11px 16px;cursor:pointer;min-height:46px}
+.btn.pri{background:var(--pc);border-color:var(--pc);color:#fff;width:100%;font-size:16px}
+.btn:disabled{opacity:.55;cursor:default}
+.btn:focus-visible,.drop:focus-visible,input:focus-visible,textarea:focus-visible,.sw:focus-visible{outline:3px solid #c9831a;outline-offset:2px}
+.res{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0 8px}
+.res div{background:var(--bg);border-radius:10px;padding:8px 12px;font-size:12px;color:var(--muted);font-weight:600}
+.res b{display:block;font:700 18px var(--display);color:var(--fg)}
+.lst{border:1px solid var(--line);border-radius:10px;max-height:300px;overflow:auto}
+.lst div{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:8px;padding:8px 10px;border-bottom:1px solid var(--line);font-size:13px}
+.lst div:last-child{border-bottom:0}
+.lst span{color:var(--muted)}.lst em{font-style:normal;white-space:nowrap;font-variant-numeric:tabular-nums}
+.av{background:var(--warn-soft);color:var(--fg);border:1px solid #e9c27a;border-radius:10px;padding:9px 12px;font-size:13.5px;margin-top:10px}
+.err{color:var(--bad);font-weight:600;font-size:14px;margin:8px 0 0}
+.logo{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.logo img{max-height:44px;max-width:150px;background:#fff;border:1px solid var(--line);border-radius:8px;padding:4px}
+.fim{text-align:center;padding:34px 18px}
+.fim .ic{width:56px;height:56px;border-radius:50%;background:var(--ok);color:#fff;display:grid;place-items:center;margin:0 auto 12px;font:700 28px var(--body)}
+.fim h2{justify-content:center}
+footer{text-align:center;color:var(--muted);font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;padding:6px 0 0}
+@media (max-width:520px){.g2{grid-template-columns:1fr}.lst div{grid-template-columns:36px minmax(0,1fr)}.lst em{grid-column:2}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header><div class="wrap" id="hd"><div><small>Apresentação 3D da obra</small><h1>Envio de orçamento</h1></div></div></header>
+<main class="wrap" id="main"><div class="sec">Carregando…</div></main>
+<footer class="wrap">FC Consultoria em Esquadria</footer>
+
+<script src="obra3d-ler.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+(async function(){
+"use strict";
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const CORES=["#1d5fa8","#0d5c63","#1f7a4a","#b3261e","#c9831a","#6d4bd8","#13232e","#8a4b2a"];
+const tok=new URLSearchParams(location.search).get("t")||"";
+const fim=(t,d)=>{$("main").innerHTML=`<div class="sec fim"><h2>${t}</h2><p class="hint" style="margin:0">${d}</p></div>`};
+if(tok.length<20){fim("Link incompleto","Confira se o link foi copiado inteiro ou peça um novo à FC Consultoria.");return}
+let sb,L;
+try{sb=window.supabase.createClient("https://cpkjphodruyxfouirhpd.supabase.co","sb_publishable_d0HEeWsaqOeZIQKGftlF-Q_B8BUOWWg",{auth:{persistSession:false}});
+ const r=await sb.rpc("obra3d_envio_info",{tok});if(r.error)throw r.error;L=r.data}catch(e){fim("Não foi possível abrir","Verifique a internet e abra o link de novo.");return}
+if(!L){fim("Este link não está mais ativo","Peça um link novo à FC Consultoria.");return}
+
+const S={O:null,pdf:"",empresa:L.empresa||"",cor:L.cor||"",logo:L.logo||"",nome:"",zap:"",obs:"",enviando:false};
+const pinta=()=>{document.documentElement.style.setProperty("--pc",S.cor||"#0d5c63");
+ $("hd").innerHTML=`${S.logo?`<img src="${esc(S.logo)}" alt="">`:""}<div><small>Apresentação 3D da obra</small><h1>${S.empresa?esc(S.empresa)+" · ":""}Envio de orçamento</h1></div>`};
+pinta();
+
+function tela(){const O=S.O;
+ $("main").innerHTML=`
+ <div class="sec"><h2><i>1</i>Orçamento em PDF</h2><p class="hint">O mesmo PDF que você mandaria ao cliente, com local, tipologia e medidas de cada item.</p>
+  <div class="drop" id="drop" tabindex="0" role="button" aria-label="Escolher o PDF do orçamento"><b>${O?"✓ "+esc(S.pdf):"Escolher o PDF"}</b><span class="hint" style="margin:0">${O?"Toque para trocar o arquivo":"Arraste aqui ou toque para escolher"}</span><input type="file" id="fi" accept="application/pdf,.pdf" hidden></div>
+  <p class="err" id="perr" role="alert"></p>
+  ${O?`<div class="res"><div>Itens<b>${O.itens.length}</b></div><div>Peças<b>${O.itens.reduce((s,t)=>s+(+t.q||0),0)}</b></div><div>Cliente<b style="font-size:15px">${esc(O.cliente||"—")}</b></div><div>Orçamento<b style="font-size:15px">${esc(O.numero||"—")}</b></div></div>
+   <div class="lst" aria-label="Itens lidos">${O.itens.map(t=>`<div><span>${esc(t.item)}</span><b style="font-weight:500">${esc(t.tipo)}<br><span>${esc(t.loc||"")}</span></b><em>${esc(t.q)} × ${esc(t.L)}×${esc(t.H)}</em></div>`).join("")}</div>
+   ${O.itens.some(t=>t.avisos.length)?`<div class="av">Alguns itens têm observações da leitura. A FC confere tudo antes de montar o 3D.</div>`:""}`:""}
+ </div>
+ <div class="sec"><h2><i>2</i>Sua marca na apresentação</h2><p class="hint">É assim que seu cliente vai ver a capa e o link.</p>
+  <label class="f">Nome da empresa<input id="emp" value="${esc(S.empresa)}" autocomplete="organization"></label>
+  <div class="f">Logo (opcional)<div class="logo">${S.logo?`<img src="${esc(S.logo)}" alt="Logo">`:""}<button class="btn" type="button" id="lg">${S.logo?"Trocar logo":"Escolher logo"}</button><input type="file" id="lgf" accept="image/*" hidden></div></div>
+  <div class="f">Cor da empresa<div class="sws">${CORES.map(c=>`<button type="button" class="sw" style="background:${c}" data-c="${c}" aria-label="Cor ${c}" aria-pressed="${S.cor===c}"></button>`).join("")}<input type="color" id="cor2" value="${esc(S.cor||"#0d5c63")}" aria-label="Outra cor"></div></div>
+ </div>
+ <div class="sec"><h2><i>3</i>Contato</h2><p class="hint">Para a FC avisar quando o link 3D estiver pronto.</p>
+  <div class="g2"><label class="f">Seu nome<input id="nome" value="${esc(S.nome)}" autocomplete="name"></label><label class="f">WhatsApp<input id="zap" value="${esc(S.zap)}" inputmode="tel" autocomplete="tel" placeholder="(66) 9 0000-0000"></label></div>
+  <label class="f">Observação (opcional)<textarea id="obs" rows="3" placeholder="Ex.: prazo para apresentar ao cliente">${esc(S.obs)}</textarea></label>
+ </div>
+ <button class="btn pri" type="button" id="env"${O?"":" disabled"}>${S.enviando?"Enviando…":"Enviar para a FC"}</button>
+ <p class="err" id="eerr" role="alert"></p>`;
+ const dr=$("drop"),fi=$("fi");dr.onclick=()=>fi.click();dr.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();fi.click()}};
+ fi.onchange=()=>{if(fi.files[0])ler(fi.files[0])};
+ dr.ondragover=e=>{e.preventDefault();dr.classList.add("on")};dr.ondragleave=()=>dr.classList.remove("on");dr.ondrop=e=>{e.preventDefault();dr.classList.remove("on");if(e.dataTransfer.files[0])ler(e.dataTransfer.files[0])};
+ $("emp").oninput=e=>{S.empresa=e.target.value;pinta()};
+ $("nome").oninput=e=>S.nome=e.target.value;$("zap").oninput=e=>S.zap=e.target.value;$("obs").oninput=e=>S.obs=e.target.value;
+ document.querySelectorAll(".sw").forEach(b=>b.onclick=()=>{S.cor=b.dataset.c;pinta();tela()});$("cor2").onchange=e=>{S.cor=e.target.value;pinta();tela()};
+ $("lg").onclick=()=>$("lgf").click();
+ $("lgf").onchange=e=>{const f=e.target.files[0];if(!f)return;const im=new Image(),u=URL.createObjectURL(f);
+  im.onload=()=>{const k=Math.min(1,400/im.width,160/im.height);const c=document.createElement("canvas");c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext("2d").drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(u);S.logo=c.toDataURL("image/png");pinta();tela()};
+  im.onerror=()=>{$("eerr").textContent="Não consegui abrir esta imagem. Tente um arquivo PNG ou JPG."};im.src=u};
+ $("env").onclick=enviar;
+}
+
+let pdfReady=null;
+function loadPdfJs(){if(pdfReady)return pdfReady;const add=src=>new Promise((res,rej)=>{const s=document.createElement("script");s.src=src;s.onload=res;s.onerror=()=>rej(new Error("load"));document.head.appendChild(s)});
+ const base="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/";pdfReady=add(base+"pdf.worker.min.js").then(()=>add(base+"pdf.min.js")).then(()=>window.pdfjsLib);pdfReady.catch(()=>{pdfReady=null});return pdfReady}
+async function ler(file){const pe=$("perr");
+ if(!/\.pdf$/i.test(file.name)&&file.type!=="application/pdf"){pe.textContent="Este arquivo não é PDF. Escolha o orçamento em PDF.";return}
+ pe.textContent="Lendo o PDF…";
+ try{const lib=await loadPdfJs();const d=await lib.getDocument({data:new Uint8Array(await file.arrayBuffer())}).promise;const P=[];
+  for(let p=1;p<=d.numPages;p++){const tc=await (await d.getPage(p)).getTextContent();P.push(tc.items.map(i=>({x:i.transform[4],y:i.transform[5],w:i.width,s:i.str})))}
+  const O=O3DLER.ler(P);
+  if(!O.itens.length){pe.textContent="Não encontrei itens neste PDF. Confira se é o orçamento com local, tipologia e medidas de cada item.";return}
+  S.O=O;S.pdf=file.name;if(!S.empresa&&O.empresa)S.empresa=O.empresa;pinta();tela()}
+ catch(e){console.warn(e);pe.textContent="Não consegui ler este PDF. Se ele for uma foto ou digitalização, mande o PDF gerado pelo sistema de orçamento."}}
+
+async function enviar(){const E=$("eerr");if(S.enviando||!S.O)return;
+ if(!S.empresa.trim()){E.textContent="Informe o nome da empresa.";$("emp").focus();return}
+ if(!S.nome.trim()||S.zap.replace(/\D/g,"").length<10){E.textContent="Informe seu nome e um WhatsApp com DDD.";(S.nome.trim()?$("zap"):$("nome")).focus();return}
+ S.enviando=true;tela();
+ const O=S.O;
+ const dados={pdf:S.pdf,empresa:S.empresa.trim(),cor:S.cor,logo:S.logo,obra:O.cliente||"Obra",cliente:O.cliente,numero:O.numero,emissao:O.emissao,vendedor:O.vendedor,corPerfil:O.cor,
+  itens:O.itens.map(it=>Object.assign(it,{lido:{kind:it.kind,f:it.f,enc:it.enc},ok:false})),avisos:O.avisos,
+  contato:{nome:S.nome.trim(),zap:S.zap.trim(),obs:S.obs.trim()}};
+ try{const r=await sb.rpc("obra3d_envio_enviar",{tok,dados});if(r.error)throw r.error;
+  $("main").innerHTML=`<div class="sec fim"><div class="ic" aria-hidden="true">✓</div><h2>Orçamento enviado</h2><p class="hint" style="margin:0 auto;max-width:440px">Recebemos os <b>${O.itens.length} itens</b> da obra <b>${esc(O.cliente||"")}</b>. A FC confere tudo, monta o 3D com a sua marca e manda o link no WhatsApp ${esc(S.zap)}.</p>
+   <p style="margin:18px 0 0"><button class="btn" type="button" id="outro">Enviar outro orçamento</button></p></div>`;
+  $("outro").onclick=()=>{S.O=null;S.pdf="";S.obs="";S.enviando=false;tela()}}
+ catch(e){S.enviando=false;tela();const m=String(e&&e.message||"");
+  $("eerr").textContent=/link_inativo/.test(m)?"Este link foi desativado. Peça um novo à FC Consultoria.":/limite_diario/.test(m)?"Limite de envios de hoje atingido. Tente amanhã ou fale com a FC.":/muito_grande/.test(m)?"O envio ficou grande demais. Tente uma logo menor.":"Não foi possível enviar. Verifique a internet e tente de novo."}}
+tela();
+})();
+</script>
+</body>
+</html>
