@@ -146,6 +146,10 @@ const brl=v=>Number(v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL
 const dt=v=>v?new Date(v).toLocaleDateString("pt-BR"):"—";
 const toast=t=>{const e=$("toast");e.textContent=t;e.classList.add("on");clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove("on"),2200)};
 const STATUS=[["recebido","Recebido","#a3620b"],["conferencia","Em conferência","#1f6fb2"],["entregue","Link entregue","#0d6b68"],["pago","Pago","#1f7a4a"]];
+let AVAL={},AVAL_OK=false;/* avaliação da empresa contratante (Plataforma FC 3D · Simulado de Obra 3D) */
+document.addEventListener("click",async e=>{const b=e.target.closest&&e.target.closest("#av-ok");if(!b||!P||!BD.liberarAval)return;b.disabled=true;b.textContent="Liberando…";
+ const r=await BD.liberarAval(P.id);if(r&&r.error){b.disabled=false;b.textContent="Ajuste feito · liberar nova avaliação";toast("Não foi possível liberar");return}
+ delete AVAL[P.id];toast("Liberado de novo para a empresa avaliar");abrir(P.id)});
 const stOf=k=>STATUS.find(s=>s[0]===k)||STATUS[0];
 const KINDS=[["giro","Porta de giro"],["correr","Correr"],["correr4","Correr 4 folhas (2 fixas + 2 móveis)"],["max","Maxim-ar"],["maxp","Maxim-ar com peitoril fixo"],["fixo","Fixo (vidro com vidro)"],["painel","Painel fixo temperado com perfil"],["piv","Pivotante com fixo"],["gen","Outro"]];
 const ENCS=[["vidro","Vidro"],["lambri","Lambri"],["vidlam","Vidro em cima + lambri embaixo"],["veneziana","Veneziana"]];
@@ -176,7 +180,7 @@ function hdr(sub){$("hdr").innerHTML=`<div>${P?`<button class="tomatriz" type="b
  <div class="meta">${sub}</div></div>`;if($("h-back"))$("h-back").onclick=()=>{location.hash="";}}
 
 /* ======================= INÍCIO ======================= */
-function home(){P=null;hdr("A vidraçaria manda o PDF do orçamento; a FC confere, monta a obra em 3D e entrega um link sem preço com a marca dela.");
+function home(){P=null;if(BD.avaliacoes&&!AVAL_OK){AVAL_OK=true;BD.avaliacoes().then(r=>{if(r){AVAL={};r.forEach(a=>AVAL[a.pid]=a);if(!P)home()}})}hdr("A vidraçaria manda o PDF do orçamento; a FC confere, monta a obra em 3D e entrega um link sem preço com a marca dela.");
  const tot={n:LIST.length,ent:0,fat:0,rec:0};const cli={};
  LIST.forEach(p=>{const v=+p.valor||0,e=p.status==="entregue"||p.status==="pago";if(e)tot.ent++;if(p.status==="pago")tot.fat+=v;else tot.rec+=v;
   const c=cli[p.empresa||"—"]||(cli[p.empresa||"—"]={n:0,ent:0,fat:0,rec:0,cor:p.cor});c.n++;if(e)c.ent++;if(p.status==="pago")c.fat+=v;else c.rec+=v});
@@ -188,7 +192,7 @@ function home(){P=null;hdr("A vidraçaria manda o PDF do orçamento; a FC confer
   <div class="drop" id="drop" tabindex="0" role="button" aria-label="Subir o PDF do orçamento"><b>＋ Novo projeto</b><span class="hint">Arraste aqui o PDF do orçamento da vidraçaria ou toque para escolher.</span><input type="file" id="file" accept="application/pdf,.pdf" hidden></div>
   <div class="hint" id="dmsg" role="status" style="margin:-6px 0 12px"></div>
   <div class="card sec"><h2>Projetos <span class="hint">${tot.n} no total</span></h2><div class="lst">${ord.length?ord.map(p=>{const s=stOf(p.status);const v=VISTAS[p.link&&p.link.tok];
-   return `<button class="pj" type="button" data-id="${esc(p.id)}"><i style="background:${esc(p.cor||"#0d5c63")}"></i><span><b>${esc(p.obra||"Obra")}${p.editavel?'<span class="tag">cópia editável</span>':""}${p.origem==="envio"?'<span class="tag" style="background:var(--amber-soft);color:var(--warn)">enviado pelo cliente</span>':""}</b><small>${esc(p.empresa||"—")} · ${p.itens.length} itens · ${dt(p.criado)}${v?` · link aberto ${v.vistas}×`:""}</small></span>
+   return `<button class="pj" type="button" data-id="${esc(p.id)}"><i style="background:${esc(p.cor||"#0d5c63")}"></i><span><b>${esc(p.obra||"Obra")}${p.editavel?'<span class="tag">cópia editável</span>':""}${p.origem==="envio"?'<span class="tag" style="background:var(--amber-soft);color:var(--warn)">enviado pelo cliente</span>':""}${AVAL[p.id]?(AVAL[p.id].ok?'<span class="tag" style="background:#dcf3e6;color:#1f7a4a">✓ aprovado pela empresa</span>':'<span class="tag" style="background:#fde2e2;color:#a3262b">⚠ empresa pediu ajuste</span>'):""}</b><small>${esc(p.empresa||"—")} · ${p.itens.length} itens · ${dt(p.criado)}${v?` · link aberto ${v.vistas}×`:""}</small></span>
    <span class="r"><span class="st" style="color:${s[2]}">${s[1]}</span><br><span class="num">${+p.valor?brl(p.valor):'<span class="hint">sem valor</span>'}</span></span></button>`}).join(""):`<div class="hint">Nenhum projeto ainda. Suba o primeiro PDF acima.</div>`}</div></div>
  </div>
  <div class="card sec"><h2>Por cliente</h2>${Object.keys(cli).length?`<table class="cli"><thead><tr><th>Vidraçaria</th><th class="n">Projetos</th><th class="n">Entregues</th><th class="n">Recebido</th><th class="n">A receber</th></tr></thead><tbody>${Object.entries(cli).sort((a,b)=>b[1].n-a[1].n).map(([k,c])=>`<tr><td><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${esc(c.cor||"#0d5c63")};margin-right:6px"></span>${esc(k)}</td><td class="n num">${c.n}</td><td class="n num">${c.ent}</td><td class="n num">${brl(c.fat)}</td><td class="n num">${brl(c.rec)}</td></tr>`).join("")}</tbody></table>
@@ -254,7 +258,8 @@ async function novo(file){const m=$("dmsg");
 function abrir(id){P=LIST.find(p=>p.id===id);if(!P){location.hash="";return}
  hdr(`${esc(P.empresa||"—")} · Orçamento ${esc(P.numero||"—")}${P.emissao?" de "+esc(P.emissao):""} · ${P.itens.length} itens`);
  const nOk=P.itens.filter(t=>t.ok).length;
- $("main").innerHTML=`
+ const AV=AVAL[P.id];
+ $("main").innerHTML=(AV?`<div class="card sec" style="border-left:4px solid ${AV.ok?"#1f7a4a":"#a3262b"};margin-bottom:12px"><b>${AV.ok?"✓ Aprovado pela empresa":"⚠ A empresa pediu ajuste"}</b> <span class="hint">em ${dt(AV.em)}</span>${AV.nota?`<p style="margin:6px 0 0">${esc(AV.nota)}</p>`:""}${AV.ok?"":`<p style="margin:10px 0 0"><button class="btn pri" type="button" id="av-ok">Ajuste feito · liberar nova avaliação</button></p>`}</div>`:"")+`
  <div class="card ptop">
   <label class="f">Empresa na apresentação<input id="p-emp" value="${esc(P.empresa)}" autocomplete="off"></label>
   <label class="f">Título da obra<input id="p-obra" value="${esc(P.obra)}" autocomplete="off"></label>
@@ -421,6 +426,8 @@ gateUI(async()=>{
   linkOff:token=>sb.from("orcobra_links").update({ativo:false}).eq("token",token),
   links:async()=>{const q=await sb.from("obra3d_envio_links").select("token,empresa,cor,ativo,envios,ultimo,criado,plano,limite,validade").order("criado",{ascending:false});return q.error?null:q.data},
   criarLink:row=>sb.from("obra3d_envio_links").insert(row),
+  avaliacoes:async()=>{const q=await sb.from("obra3d_avaliacoes").select("pid,ok,nota,em");return q.error?null:q.data},
+  liberarAval:pid=>sb.from("obra3d_avaliacoes").delete().eq("pid",pid),
   ajustarLink:(token,campos)=>sb.from("obra3d_envio_links").update(campos).eq("token",token),
   linkEnvioOff:token=>sb.from("obra3d_envio_links").update({ativo:false}).eq("token",token),
   recarregar:async()=>{const q=await sb.from("obra3d_projetos").select("dados");return q.error?null:q.data.map(x=>x.dados)},
