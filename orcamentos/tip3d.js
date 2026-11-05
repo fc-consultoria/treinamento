@@ -503,5 +503,5 @@ function loop(){V.raf=requestAnimationFrame(loop);if(V.modo==="v")passoVitrine()
   const p=Math.min(1,(performance.now()-V.giroT0)/GIRO_MS),e=.5-.5*Math.cos(Math.PI*p);V.conj.rotation.y=V.giroBase+e*Math.PI*2;
   if(p>=1){V.giro=0;if(!V.mexeu)V.conj.rotation.y=V.giroBase}}
  if(V.ctl)V.ctl.update();V.r.render(V.s,V.cam)}
-window.TIP3D={imagem,abrir,PERFIS,VIDROS,perfilDe,vidroDe,ehIntel,limparCache:()=>cache.clear()};
+window.TIP3D={filme:{montar:(t,cfg)=>montar(t,materiais(t,cfg||{})),cena,enquadrar,descartar},imagem,abrir,PERFIS,VIDROS,perfilDe,vidroDe,ehIntel,limparCache:()=>cache.clear()};
 })();

@@ -29,7 +29,8 @@ body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.45 "Inter",system
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/environments/RoomEnvironment.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/geometries/RoundedBoxGeometry.js"></script>
-<script src="tip3d.js?v=20261105s"></script>
+<script src="tip3d.js?v=20261105t"></script>
+<script src="filme.js?v=1"></script>
 <script src="proposta.js?v=20261105i"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
@@ -119,6 +120,10 @@ if(Array.isArray(D.precos)&&D.precos.some(v=>+v>0)){
   w.innerHTML=`<div style="position:absolute;inset:-50%;transform:rotate(-24deg);display:flex;flex-wrap:wrap;gap:60px 80px;align-content:center;justify-content:center;font:700 22px Inter,sans-serif;color:#0d1f24">${(`<span>${esc(txt)}</span>`).repeat(80)}</div>`;document.body.appendChild(w);
   if(ACESSO)document.querySelector(".bar .dica").insertAdjacentHTML("beforeend",` · Acesso de <b>${esc(ACESSO.nome)}</b> até ${new Date(ACESSO.valido_ate).toLocaleDateString("pt-BR")}`)}
 }else PROPOSTA.render($("main"),D,{simular:VIDRA||FCMODO,onSalvar:VIDRA?salvarCor:null});
+/* 05/11/2026 · filme da obra: abre a apresentação com o filme gerado a partir do orçamento (sem preço) */
+if(window.FILME&&(D.itens||[]).length){const bf=document.createElement("button");bf.className="btn";bf.type="button";bf.innerHTML="▶ Filme da obra";bf.style.cssText="background:"+(D.marcaCor||"#0d5c63")+";color:#fff;border-color:transparent";
+ bf.onclick=()=>FILME.abrir(D);const bp=$("b-print");bp.parentNode.insertBefore(bf,bp);
+ if(QS.get("filme")!=="0"&&!window.matchMedia("print").matches)FILME.abrir(D)}
 const b=$("b-print");b.hidden=false;b.onclick=()=>{PROPOSTA.preencher($("main"),D,true);setTimeout(()=>print(),80)};
 })();
 </script>
