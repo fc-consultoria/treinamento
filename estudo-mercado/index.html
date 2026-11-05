@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="robots" content="noindex">
 <meta http-equiv="Cache-Control" content="no-cache">
-<script>(function(){var B='20261104200400';try{fetch('versao.txt?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.text():''}).then(function(v){v=(v||'').trim();if(!v||v===B)return;var u=new URL(location.href);if(u.searchParams.get('v')===v)return;u.searchParams.set('v',v);location.replace(u.toString())}).catch(function(){})}catch(e){}})();</script>
+<script>(function(){var B='20261104200508';try{fetch('versao.txt?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.text():''}).then(function(v){v=(v||'').trim();if(!v||v===B)return;var u=new URL(location.href);if(u.searchParams.get('v')===v)return;u.searchParams.set('v',v);location.replace(u.toString())}).catch(function(){})}catch(e){}})();</script>
 
 <title>FC Estudo de Mercado</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -396,6 +396,7 @@ function foot(){return `<div class="foot">Os preços e clientes lançados perten
 
 /* ===== plataforma ===== */
 const IC={
+ rankp:'<path d="M12 3v3M5 21h14l-2.5-11h-9zM9 10a3 3 0 0 1 6 0"/>',
  rank:'<path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0zM7 6H4v1a3 3 0 0 0 3 3M17 6h3v1a3 3 0 0 1-3 3"/>',
  kg:'<path d="M12 3v18M17 7.5c0-1.9-2.2-3-5-3s-5 1.1-5 3 2 2.7 5 3.4 5 1.6 5 3.6-2.2 3-5 3-5-1.2-5-3"/>',
  pesq:'<path d="M11 19a8 8 0 1 1 5.3-2L21 21.7" />',
@@ -408,7 +409,7 @@ const IC={
  lck:'<path d="M6 11h12v10H6zM8.5 11V7.5a3.5 3.5 0 0 1 7 0V11"/>',
  aces:'<path d="M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM2 21c0-3.9 3.1-6 7-6s7 2.1 7 6M17 11l2 2 4-4"/>'};
 const ico=k=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[k]}</svg>`;
-function abas(){const a=[['pesq','Pesquisar e preços'],['kg','Preço por kg'],['rank','Melhor preço e peso'],...(DIST()?[]:[['cli','Clientes especiais']]),['abc','Curva ABC'],['rel',S.role==='gest'?'Relatório por usuário':'Meu histórico']];if(S.role==='gest')a.push(['aces','Acessos e licença'],['cont','Contrato']);return a}
+function abas(){const a=[['pesq','Pesquisar e preços'],['kg','Preço por kg'],['rank','Melhor preço'],['rankp','Melhor peso'],...(DIST()?[]:[['cli','Clientes especiais']]),['abc','Curva ABC'],['rel',S.role==='gest'?'Relatório por usuário':'Meu histórico']];if(S.role==='gest')a.push(['aces','Acessos e licença'],['cont','Contrato']);return a}
 
 function trialIni(){const k='fcext_ini_'+S.ext;let v=ls.get(k,0);if(!v){v=Date.now();ls.set(k,v)}return v}
 function trialRest(){return 96*36e5-(Date.now()-trialIni())}
@@ -433,11 +434,11 @@ function draw(){
    <div class="shell"><nav class="nav" aria-label="Abas">${abas().map(([k,t])=>`<button data-tab="${k}" class="${S.tab===k?'on':''}">${ico(k)}${t}</button>`).join('')}<button data-tutorial>${ico('tut')}Como usar</button><div class="who"><b>${esc(U.n)}</b>${esc(U.r)} · ${S.role==='gest'?'vê toda a equipe':'carteira própria'}</div></nav>
    <main class="panel" id="panel">${tela()}</main></div>${foot()}${marca()}${S.tut!=null?tutorial():''}`;
   document.querySelectorAll('[data-role]').forEach(b=>b.onclick=()=>{S.role=b.dataset.role;draw()});
-  document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{if(b.dataset.tab==='pesq'&&S.tab==='pesq'){novaPesq();return}if(b.dataset.tab==='kg'){if(S.tab!=='pesq'){S.tab='pesq';draw()}const x=$('#precos');if(x)x.scrollIntoView({behavior:'smooth',block:'start'});return}S.tab=b.dataset.tab;if(S.tab==='abc')logar('Abriu a Curva ABC','');if(S.tab==='rank')logar('Abriu Melhor preço e peso','');draw()});
+  document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{if(b.dataset.tab==='pesq'&&S.tab==='pesq'){novaPesq();return}if(b.dataset.tab==='kg'){if(S.tab!=='pesq'){S.tab='pesq';draw()}const x=$('#precos');if(x)x.scrollIntoView({behavior:'smooth',block:'start'});return}S.tab=b.dataset.tab;if(S.tab==='abc')logar('Abriu a Curva ABC','');if(S.tab==='rank')logar('Abriu Melhor preço','');if(S.tab==='rankp')logar('Abriu Melhor peso','');draw()});
   const vb0=$('#voltar');if(vb0)vb0.onclick=()=>{S.ext=null;draw()};
   ligar();
 }
-function tela(){return ({pesq:tPesq,rank:tRank,cli:tCli,abc:tAbc,rel:tRel,aces:tAces,cont:tCont})[S.tab]()}
+function tela(){return ({pesq:tPesq,rank:tRank,rankp:tRank,cli:tCli,abc:tAbc,rel:tRel,aces:tAces,cont:tCont})[S.tab]()}
 
 /* Pesquisar */
 function tPesq(){
@@ -514,7 +515,7 @@ function dias(d){const [dd,mm]=String(d).split(' ')[0].split('/').map(Number);if
 
 /* Curva ABC */
 /* ===== Melhor preço e peso (ranking por fornecedor) ===== */
-function rkSt(){const d={modo:'preco',f:null,lin:null,q:'',lim:40};const s=ls.get('fcext_rk_'+S.ext,null)||{};S.rk=S.rk||{...d,...s,q:'',lim:40};return S.rk}
+function rkSt(){const d={modo:'preco',f:null,lin:null,q:'',lim:40};const s=ls.get('fcext_rk_'+S.ext,null)||{};S.rk=S.rk||{...d,...s,q:'',lim:40};S.rk.modo=S.tab==='rankp'?'peso':'preco';return S.rk}
 function rkSave(){const r=S.rk;ls.set('fcext_rk_'+S.ext,{modo:r.modo,f:r.f,lin:r.lin})}
 function rkLinhas(){const c={};G.forEach(g=>{if(g.m.some(m=>m.f!=='alcoa'))c[g.l]=(c[g.l]||0)+1});return Object.keys(c).sort((a,b)=>c[b]-c[a]).map(k=>[k,LIN[k]||k,c[k]])}
 function rkCalc(){const r=rkSt(),F=precoForn(S.pcli),sel=r.lin?new Set(r.lin):null;
@@ -557,14 +558,13 @@ function tRank(){const r=rkSt(),L=rkLinhas(),sel=r.lin?new Set(r.lin):null,PESO=
       <div class="kv"><span>Linha <b>${esc(LIN[x.g.l]||x.g.l)}</b></span><span>Mercado <b>${esc(x.g.k)}</b></span><span><b class="num">${n3(w.p)}</b> kg/m</span><span>Barra 6 m <b class="num">${n3(w.p*6)} kg</b></span>${p?`<span><b class="num">${rs(p.rk*w.p*6)}</b> barra · ${rs(p.rk)}/kg</span>`:''}</div>
       ${dif(x)}${meu(x)}<span class="rkn">${x.np} de ${x.nf} fornecedores ${PESO?'comparados':'com preço'} · ver todos os desenhos →</span></div></article>`};
   const csvBtn=lst.length?`<button type="button" class="btn sm line" id="rkcsv">Baixar lista (Excel/CSV)</button>`:'';
-  return `<section class="box"><h2>Melhor preço e peso</h2><p class="sub">Veja quais perfis cada fornecedor ganha. ${PESO?'Melhor peso compara só o kg/m da ferramenta, sem considerar valor.':'Melhor preço = menor valor da barra de 6 m (R$/kg do natural × peso).'}</p>
-    <div class="ordbar" style="margin-top:12px"><span class="sub" style="margin:0">Filtro:</span><div class="seg2" role="group" aria-label="Filtro"><button data-rkm="preco" class="${!PESO?'on':''}">1 · Melhor preço <small>R$/kg × peso da barra</small></button><button data-rkm="peso" class="${PESO?'on':''}">2 · Melhor peso <small>sem considerar valor</small></button></div></div>
+  return `<section class="box"><h2>${PESO?'Melhor peso':'Melhor preço'}</h2><p class="sub">${PESO?'Quem tem a ferramenta mais leve em cada perfil. Compara só o kg/m, sem considerar valor; funciona mesmo sem preço lançado.':'Quem ganha no preço em cada perfil: menor valor da barra de 6 m (R$/kg do natural × peso).'}</p>
     ${!PESO&&cl.length?`<label class="fl" style="margin-top:12px;max-width:340px">Preços de<select id="rkcli" class="sel">${[['0','Mercado em geral'],...cl.map(c=>[String(c.id),(c.vip?'★ ':'')+c.nome])].map(([v,n])=>`<option value="${v}" ${String(S.pcli||0)===v?'selected':''}>${esc(n)}</option>`).join('')}</select></label>`:''}
     <details class="rklin" ${r.lin?'open':''}><summary><b>Linhas no filtro</b> <span>${sel?sel.size+' de '+L.length+' linhas':'todas as linhas'}</span></summary>
       <div class="rklbt"><button type="button" class="lk" data-rkall="1">marcar todas</button><button type="button" class="lk" data-rkall="0">desmarcar todas</button></div>
       <div class="cfgc">${L.map(([k,n,c])=>`<label class="ck ${!sel||sel.has(k)?'on':''}"><input type="checkbox" data-rkl="${k}" ${!sel||sel.has(k)?'checked':''}> ${esc(n)} <small>${c}</small></label>`).join('')}</div></details>
   </section>
-  ${!PESO&&!nPr?`<section class="box lock">${ico('prec')}<h3>Nenhum preço por kg lançado${S.pcli?' para este cliente':''}</h3><p>Lance o R$/kg do natural de cada fornecedor na tela Pesquisar e preços. Assim que houver preços, a lista mostra o que cada fornecedor ganha.</p><button class="btn" data-goprec2>＄ Lançar preços</button> <button class="btn line" data-rkm="peso">Ver melhor peso</button></section>`:`
+  ${!PESO&&!nPr?`<section class="box lock">${ico('prec')}<h3>Nenhum preço por kg lançado${S.pcli?' para este cliente':''}</h3><p>Lance o R$/kg do natural de cada fornecedor na tela Pesquisar e preços. Assim que houver preços, a lista mostra o que cada fornecedor ganha.</p><button class="btn" data-goprec2>＄ Lançar preços</button> <button class="btn line" data-gotab="rankp">Ver Melhor peso</button></section>`:`
   <section class="box"><div class="row"><h2 style="font-size:24px">${PESO?'Quem tem a ferramenta mais leve':'Quem ganha no preço'}</h2><span class="sub" style="margin:0">${tot} perfis em disputa (2 ou mais fornecedores)${!PESO&&semP?` · ${semP} sem nenhum preço`:''}${exc?` · ${exc} de fornecedor único fora da disputa`:''}</span></div>
     <div class="rkf" role="tablist" aria-label="Fornecedor">${FL.map(f=>`<button role="tab" aria-selected="${f===r.f}" data-rkf="${f}" class="${f===r.f?'on':''} ${f===S.ext?'me':''}"><b>${esc(FN(f))}</b><span class="num">${cnt[f]||0}</span><small>${(cnt[f]||0)===1?'item':'itens'}</small></button>`).join('')}</div>
     <div class="rkbar"><input id="rkq" class="sel" value="${esc(r.q)}" placeholder="Filtrar por código ou descrição" aria-label="Filtrar lista" autocomplete="off">${csvBtn}</div>
@@ -574,7 +574,7 @@ function tRank(){const r=rkSt(),L=rkLinhas(),sel=r.lin?new Set(r.lin):null,PESO=
   </section>`}
   `}
 function ligaRank(){const r=rkSt();const re=()=>{const y=window.scrollY;draw();window.scrollTo(0,y)};
-  document.querySelectorAll('[data-rkm]').forEach(b=>b.onclick=()=>{r.modo=b.dataset.rkm;r.lim=40;rkSave();logar('Melhor '+(r.modo==='peso'?'peso':'preço'),'');re()});
+  document.querySelectorAll('[data-gotab]').forEach(b=>b.onclick=()=>{S.tab=b.dataset.gotab;r.lim=40;draw();window.scrollTo(0,0)});
   document.querySelectorAll('[data-rkf]').forEach(b=>b.onclick=()=>{r.f=b.dataset.rkf;r.lim=40;rkSave();re()});
   document.querySelectorAll('[data-rkl]').forEach(c=>c.onchange=()=>{const all=rkLinhas().map(x=>x[0]);let s=new Set(r.lin||all);c.checked?s.add(c.dataset.rkl):s.delete(c.dataset.rkl);r.lin=s.size===all.length?null:[...s];r.lim=40;rkSave();re()});
   document.querySelectorAll('[data-rkall]').forEach(b=>b.onclick=()=>{r.lin=b.dataset.rkall==='1'?null:[];r.lim=40;rkSave();re()});
@@ -637,7 +637,7 @@ function passos(){const E=EXTS[S.ext].n;const v=[
   ['pesq','Pesquise qualquer código','Digite o código de qualquer fornecedor, o código de mercado (Alcoa)'+(DIST()?'':' ou o código '+E)+'. A plataforma encontra o perfil e todos os equivalentes.',['Ex.: SU-001, EX-0747, FASU-0001','Acabamento sempre natural']],
   ['pesq','Compare os desenhos e escolha o filtro','Use 1 · Melhor preço da barra (R$/kg × peso, em verde) ou 2 · Ferramenta mais leve (sem preço do kg, em laranja). Cada fornecedor aparece com o desenho do próprio catálogo, o peso por metro e o peso da barra de 6 m.',[DIST()?'O card verde é o menor preço lançado; sem preço, o de menor peso':'Borda amarela = perfil da '+E+'; borda verde = menor preço (ou menor peso, se não houver preço)','A Alcoa aparece só como referência de mercado']],
   ['pesq','Lance os preços na mesma tela','Logo abaixo dos desenhos, cada fornecedor tem um card: digite o R$/kg do natural, o pedido mínimo e clique em Salvar. O botão lançar em cada desenho leva direto ao card do fornecedor.'+(DIST()?'':' Escolha um cliente no topo para lançar o preço daquele cliente.'),['O valor da barra de 6 m de cada perfil é calculado automaticamente','Só a sua empresa vê esses preços']],
-  ['rank','Veja o que cada fornecedor ganha','Em Melhor preço e peso, escolha o filtro 1 · Melhor preço (valor da barra) ou 2 · Melhor peso (só o kg/m, sem valor), marque as linhas e clique no fornecedor para ver a lista de perfis que ele ganha, com o desenho.',['Clique em um perfil para abrir todos os equivalentes','Baixe a lista em CSV para abrir no Excel']],
+  ['rank','Veja o que cada fornecedor ganha','Em Melhor preço aparece o que cada fornecedor ganha pelo valor da barra; em Melhor peso, quem tem a ferramenta mais leve, sem considerar valor. Marque as linhas e clique no fornecedor para ver a lista com o desenho.',['Clique em um perfil para abrir todos os equivalentes','Baixe a lista em CSV para abrir no Excel']],
   ...(DIST()?[]:[['cli','Monte a carteira de clientes especiais','Cadastre os clientes VIP e acompanhe o preço da concorrência em cada um.',['Estrela = cliente VIP','Preço com mais de 60 dias aparece em destaque']]]),
   ['abc','Use a Curva ABC para priorizar',DIST()?'A classe mostra o giro de cada perfil. Priorize compra e estoque dos perfis da classe A.':'A classe mostra o giro de cada perfil na compra de uma distribuidora. Ofereça primeiro os perfis da classe A.',[]],
   ['rel',S.role==='gest'?'Acompanhe a equipe':'Consulte o seu histórico',S.role==='gest'?'No Relatório por usuário, veja o que cada pessoa pesquisou e lançou.':'Em Meu histórico ficam todas as suas pesquisas e lançamentos.',[]]];
@@ -662,7 +662,7 @@ function novaPesq(){window.scrollTo({top:0,behavior:'smooth'});setTimeout(()=>{c
 function fabUpd(){const f=$('#fab');if(!f)return;f.hidden=!(S.ext&&!S.cover&&S.tab==='pesq'&&S.tut==null&&window.scrollY>500)}
 window.addEventListener('scroll',fabUpd,{passive:true});
 function ligar(){
-  if(S.tab==='rank')ligaRank();
+  if(S.tab==='rank'||S.tab==='rankp')ligaRank();
   const fb=$('#fab');if(fb){fb.onclick=novaPesq;fabUpd()}
   const tb=$('[data-tutorial]');if(tb)tb.onclick=()=>{S.tut=0;draw()};
   if($('#ov')){const P=passos();$('#tsair').onclick=()=>{S.tut=null;draw()};const tv=$('#tvolta');if(tv)tv.onclick=()=>{S.tut--;draw()};
