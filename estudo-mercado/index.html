@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="robots" content="noindex">
 <meta http-equiv="Cache-Control" content="no-cache">
-<script>(function(){var B='20261104204856';try{fetch('versao.txt?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.text():''}).then(function(v){v=(v||'').trim();if(!v||v===B)return;var u=new URL(location.href);if(u.searchParams.get('v')===v)return;u.searchParams.set('v',v);location.replace(u.toString())}).catch(function(){})}catch(e){}})();</script>
+<script>(function(){var B='20261104212128';try{fetch('versao.txt?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.text():''}).then(function(v){v=(v||'').trim();if(!v||v===B)return;var u=new URL(location.href);if(u.searchParams.get('v')===v)return;u.searchParams.set('v',v);location.replace(u.toString())}).catch(function(){})}catch(e){}})();</script>
 
 <title>FC Estudo de Mercado</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -242,7 +242,7 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
 .rkf{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 .rkf button{border:1px solid var(--ln);background:var(--card);border-radius:12px;padding:8px 14px;display:flex;align-items:baseline;gap:6px;color:var(--ink);font:inherit;cursor:pointer}
 .rkf button b{font:700 16px var(--f-d)}.rkf button span{font:700 20px var(--f-d);color:var(--tl)}.rkf button small{color:var(--tm);font-size:12px}
-.rkf button.me{border-color:var(--B)}
+.rkf button.me{border-color:var(--B)}.rkf button.semp{border-style:dashed}
 .rkf button.on{background:var(--tl);border-color:var(--tl);color:#fff}.rkf button.on span,.rkf button.on small{color:#fff}
 .rkbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;align-items:center}.rkbar input{flex:1;min-width:200px}
 .rkl{display:grid;gap:10px;margin-top:12px}
@@ -401,6 +401,7 @@ function foot(){return `<div class="foot">Os preços e clientes lançados perten
 /* ===== plataforma ===== */
 const IC={
  forn:'<path d="M12 3v18M17 7.5c0-1.9-2.2-3-5-3s-5 1.1-5 3 2 2.7 5 3.4 5 1.6 5 3.6-2.2 3-5 3-5-1.2-5-3"/>',
+ revd:'<path d="M4 5h16v14H4zM8 15l3-3 2 2 3-4 2 3"/>',
  rankp:'<path d="M12 3v3M5 21h14l-2.5-11h-9zM9 10a3 3 0 0 1 6 0"/>',
  rank:'<path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0zM7 6H4v1a3 3 0 0 0 3 3M17 6h3v1a3 3 0 0 1-3 3"/>',
  kg:'<path d="M12 3v18M17 7.5c0-1.9-2.2-3-5-3s-5 1.1-5 3 2 2.7 5 3.4 5 1.6 5 3.6-2.2 3-5 3-5-1.2-5-3"/>',
@@ -414,7 +415,7 @@ const IC={
  lck:'<path d="M6 11h12v10H6zM8.5 11V7.5a3.5 3.5 0 0 1 7 0V11"/>',
  aces:'<path d="M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM2 21c0-3.9 3.1-6 7-6s7 2.1 7 6M17 11l2 2 4-4"/>'};
 const ico=k=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[k]}</svg>`;
-function abas(){const a=[['pesq','Pesquisa'],['forn','Preço de fornecedor','R$/kg do natural de cada fornecedor'],['rank','Melhor preço','Filtro com o melhor preço na barra'],['rankp','Melhor peso','Filtro com o melhor peso na barra'],...(DIST()?[]:[['cli','Clientes especiais']]),['abc','Curva ABC'],['rel',S.role==='gest'?'Relatório por usuário':'Meu histórico']];if(S.role==='gest')a.push(['aces','Acessos e licença'],['cont','Contrato']);return a}
+function abas(){const a=[['pesq','Pesquisa'],['forn','Preço de fornecedor','R$/kg do natural de cada fornecedor'],['rank','Melhor preço','Filtro com o melhor preço na barra'],['rankp','Melhor peso','Filtro com o melhor peso na barra'],...(DIST()?[]:[['cli','Clientes especiais']]),['abc','Curva ABC'],['rel',S.role==='gest'?'Relatório por usuário':'Meu histórico']];if(S.role==='gest')a.push(['aces','Acessos e licença'],['cont','Contrato']);if(FCM)a.push(['revd','Revisão de desenhos','Só a FC vê este item']);return a}
 
 function trialIni(){const k='fcext_ini_'+S.ext;let v=ls.get(k,0);if(!v){v=Date.now();ls.set(k,v)}return v}
 function trialRest(){return 96*36e5-(Date.now()-trialIni())}
@@ -443,7 +444,7 @@ function draw(){
   const vb0=$('#voltar');if(vb0)vb0.onclick=()=>{S.ext=null;draw()};
   ligar();
 }
-function tela(){return ({pesq:tPesq,forn:tForn,rank:tRank,rankp:tRank,cli:tCli,abc:tAbc,rel:tRel,aces:tAces,cont:tCont})[S.tab]()}
+function tela(){return ({revd:tRevd,pesq:tPesq,forn:tForn,rank:tRank,rankp:tRank,cli:tCli,abc:tAbc,rel:tRel,aces:tAces,cont:tCont})[S.tab]()}
 
 /* Pesquisar */
 function tPesq(){
@@ -523,31 +524,31 @@ function rkSave(){const r=S.rk;ls.set('fcext_rk_'+S.ext,{modo:r.modo,f:r.f,lin:r
 function rkLinhas(){const c={};G.forEach(g=>{if(g.m.some(m=>m.f!=='alcoa'))c[g.l]=(c[g.l]||0)+1});return Object.keys(c).sort((a,b)=>c[b]-c[a]).map(k=>[k,LIN[k]||k,c[k]])}
 function rkCalc(){const r=rkSt(),F=precoForn(S.pcli),sel=r.lin?new Set(r.lin):null;
   const vb=m=>F[m.f]?F[m.f].rk*m.p*6:null;
-  const out=[];let semP=0,tot=0,exc=0;
+  const out=[],sem=[];let semP=0,tot=0,exc=0;
   G.forEach(g=>{if(sel&&!sel.has(g.l))return;
-    const fo=g.m.filter(m=>m.f!=='alcoa'&&m.p>0);if(!fo.length)return;if(new Set(fo.map(m=>m.f)).size<2){exc++;return}tot++;
+    const fo=g.m.filter(m=>m.f!=='alcoa');if(!fo.length)return;const excl=new Set(fo.map(m=>m.f)).size<2;if(excl)exc++;tot++;
     const val=r.modo==='peso'?(m=>m.p):vb;
     const cand=fo.filter(m=>val(m)!=null);
-    if(!cand.length){semP++;return}
+    if(!cand.length){semP++;const lv=fo.slice().sort((a,b)=>(a.p||1e9)-(b.p||1e9))[0];sem.push({g,w:lv,seg:null,emp:false,mine:fo.find(m=>m.f===S.ext)||null,vw:null,vs:null,vm:null,np:0,nf:new Set(fo.map(m=>m.f)).size,F,excl,semp:true});return}
     cand.sort((a,b)=>(val(a)-val(b))||((a.f===S.ext)?-1:(b.f===S.ext)?1:0)||(a.p-b.p));
     const w=cand[0],seg=cand.find(m=>m.f!==w.f)||null,emp=seg&&Math.abs(val(seg)-val(w))<1e-9;
     const mine=fo.filter(m=>m.f===S.ext).sort((a,b)=>(val(a)??1e9)-(val(b)??1e9))[0]||null;
-    out.push({g,w,seg,emp,mine,vw:val(w),vs:seg?val(seg):null,vm:mine?val(mine):null,np:new Set(cand.map(m=>m.f)).size,nf:new Set(fo.map(m=>m.f)).size,F});
+    out.push({g,w,seg,emp,mine,vw:val(w),vs:seg?val(seg):null,vm:mine?val(mine):null,np:new Set(cand.map(m=>m.f)).size,nf:new Set(fo.map(m=>m.f)).size,F,excl});
   });
-  return {out,semP,tot,exc,vb}}
+  return {out,sem,semP,tot,exc,vb}}
 function tRank(){const r=rkSt(),L=rkLinhas(),sel=r.lin?new Set(r.lin):null,PESO=r.modo==='peso';
-  const {out,semP,tot,exc,vb}=rkCalc();
+  const {out,sem,semP,tot,exc,vb}=rkCalc();
   const cnt={};out.forEach(x=>cnt[x.w.f]=(cnt[x.w.f]||0)+1);
   const FL=fornLista();
-  if(!r.f||!FL.includes(r.f))r.f=DIST()?(FL.slice().sort((a,b)=>(cnt[b]||0)-(cnt[a]||0))[0]):S.ext;
+  if(r.f==='__sem'&&(PESO||!sem.length))r.f=null;if(!r.f||(r.f!=='__sem'&&!FL.includes(r.f)))r.f=DIST()?(FL.slice().sort((a,b)=>(cnt[b]||0)-(cnt[a]||0))[0]):S.ext;
   const q=norm(r.q);
-  let lst=out.filter(x=>x.w.f===r.f);
+  let lst=r.f==='__sem'?sem.slice():out.filter(x=>x.w.f===r.f);
   if(q)lst=lst.filter(x=>norm(x.g.k).includes(q)||x.g.m.some(m=>norm(m.c).includes(q))||norm(x.g.n).includes(q));
-  lst.sort((a,b)=>(b.g.cl==='A')-(a.g.cl==='A')||(b.np>1)-(a.np>1)||(LIN[a.g.l]||'').localeCompare(LIN[b.g.l]||'')||a.g.k.localeCompare(b.g.k,'pt',{numeric:true}));
+  lst.sort((a,b)=>(b.g.cl==='A')-(a.g.cl==='A')||(a.excl-b.excl)||(b.np>1)-(a.np>1)||(LIN[a.g.l]||'').localeCompare(LIN[b.g.l]||'')||a.g.k.localeCompare(b.g.k,'pt',{numeric:true}));
   const cl=DIST()?[]:db.clientes().filter(c=>S.role==='gest'||c.vend===USERS[S.role].n);
   if(S.pcli&&!cl.some(c=>c.id===S.pcli))S.pcli=null;
   const nPr=Object.keys(precoForn(S.pcli)).length;
-  const dif=(x)=>{if(!x.seg)return `<span class="rkd solo">${PESO?'único fornecedor com peso':'único fornecedor com preço lançado'}</span>`;
+  const dif=(x)=>{if(x.semp)return `<span class="rkd solo">Nenhum fornecedor com preço lançado · ferramenta mais leve: ${esc(FN(x.w.f))}</span>`;if(x.excl)return `<span class="rkd solo">Só a ${esc(FN(x.w.f))} tem este perfil no cadastro · sem concorrente</span>`;if(!x.seg)return `<span class="rkd solo">Único fornecedor com preço lançado · ${x.nf-1} ${x.nf-1===1?'concorrente':'concorrentes'} sem preço</span>`;
     if(x.emp)return `<span class="rkd eq">empate com ${esc(FN(x.seg.f))}</span>`;
     const d=x.vs-x.vw,pc=d/x.vs*100;
     return `<span class="rkd up">${PESO?n3(d*6)+' kg mais leve na barra':rs(d)+' mais barato na barra'} (${n2(pc)}%) que ${esc(FN(x.seg.f))} · ${esc(x.seg.c)}</span>`};
@@ -559,8 +560,8 @@ function tRank(){const r=rkSt(),L=rkLinhas(),sel=r.lin?new Set(r.lin):null,PESO=
       <div class="rkt"><span class="f">${esc(FN(w.f))}${w.f===S.ext?' · sua':''}</span>${x.g.cl?abcTag(x.g.cl):''}</div>
       <span class="c">${esc(w.c)}</span><span class="nm">${esc(x.g.n)}</span>
       <div class="kv"><span>Linha <b>${esc(LIN[x.g.l]||x.g.l)}</b></span><span>Mercado <b>${esc(x.g.k)}</b></span><span><b class="num">${n3(w.p)}</b> kg/m</span><span>Barra 6 m <b class="num">${n3(w.p*6)} kg</b></span>${p?`<span><b class="num">${rs(p.rk*w.p*6)}</b> barra · ${rs(p.rk)}/kg</span>`:''}</div>
-      ${dif(x)}${meu(x)}<span class="rkn">${x.np} de ${x.nf} fornecedores ${PESO?'comparados':'com preço'} · ver todos os desenhos →</span></div></article>`};
-  const csvBtn=lst.length?`<button type="button" class="btn sm line" id="rkcsv">Baixar lista (Excel/CSV)</button>`:'';
+      ${dif(x)}${meu(x)}<span class="rkn">${x.excl?'1 fornecedor no cadastro':PESO?x.nf+' fornecedores comparados':x.np+' de '+x.nf+' fornecedores com preço'} · ver ${x.excl?'o desenho':'todos os desenhos'} →</span></div></article>`};
+  const csvBtn=lst.length&&r.f!=='__sem'?`<button type="button" class="btn sm line" id="rkcsv">Baixar lista (Excel/CSV)</button>`:'';
   return `<section class="box"><h2>${PESO?'Melhor peso':'Melhor preço'}</h2><p class="sub">${PESO?'Quem tem a ferramenta mais leve em cada perfil. Compara só o kg/m, sem considerar valor; funciona mesmo sem preço lançado.':'Quem ganha no preço em cada perfil: menor valor da barra de 6 m (R$/kg do natural × peso).'}</p>
     ${!PESO&&cl.length?`<label class="fl" style="margin-top:12px;max-width:340px">Preços de<select id="rkcli" class="sel">${[['0','Mercado em geral'],...cl.map(c=>[String(c.id),(c.vip?'★ ':'')+c.nome])].map(([v,n])=>`<option value="${v}" ${String(S.pcli||0)===v?'selected':''}>${esc(n)}</option>`).join('')}</select></label>`:''}
     <details class="rklin" ${r.lin?'open':''}><summary><b>Linhas no filtro</b> <span>${sel?sel.size+' de '+L.length+' linhas':'todas as linhas'}</span></summary>
@@ -568,10 +569,10 @@ function tRank(){const r=rkSt(),L=rkLinhas(),sel=r.lin?new Set(r.lin):null,PESO=
       <div class="cfgc">${L.map(([k,n,c])=>`<label class="ck ${!sel||sel.has(k)?'on':''}"><input type="checkbox" data-rkl="${k}" ${!sel||sel.has(k)?'checked':''}> ${esc(n)} <small>${c}</small></label>`).join('')}</div></details>
   </section>
   ${!PESO&&!nPr?`<section class="box lock">${ico('prec')}<h3>Nenhum preço por kg lançado${S.pcli?' para este cliente':''}</h3><p>Lance o R$/kg do natural de cada fornecedor na tela Preço de fornecedor. Assim que houver preços, a lista mostra o que cada fornecedor ganha.</p><button class="btn" data-goprec2>＄ Lançar preços</button> <button class="btn line" data-gotab="rankp">Ver Melhor peso</button></section>`:`
-  <section class="box"><div class="row"><h2 style="font-size:24px">${PESO?'Quem tem a ferramenta mais leve':'Quem ganha no preço'}</h2><span class="sub" style="margin:0">${tot} perfis em disputa (2 ou mais fornecedores)${!PESO&&semP?` · ${semP} sem nenhum preço`:''}${exc?` · ${exc} de fornecedor único fora da disputa`:''}</span></div>
-    <div class="rkf" role="tablist" aria-label="Fornecedor">${FL.map(f=>`<button role="tab" aria-selected="${f===r.f}" data-rkf="${f}" class="${f===r.f?'on':''} ${f===S.ext?'me':''}"><b>${esc(FN(f))}</b><span class="num">${cnt[f]||0}</span><small>${(cnt[f]||0)===1?'item':'itens'}</small></button>`).join('')}</div>
+  <section class="box"><div class="row"><h2 style="font-size:24px">${PESO?'Quem tem a ferramenta mais leve':'Quem ganha no preço'}</h2><span class="sub" style="margin:0"><b>${tot}</b> perfis no filtro${exc?` · ${exc} com um só fornecedor no cadastro`:''}${!PESO&&semP?` · ${semP} sem nenhum preço`:''}</span></div>
+    <div class="rkf" role="tablist" aria-label="Fornecedor">${FL.map(f=>`<button role="tab" aria-selected="${f===r.f}" data-rkf="${f}" class="${f===r.f?'on':''} ${f===S.ext?'me':''}"><b>${esc(FN(f))}</b><span class="num">${cnt[f]||0}</span><small>${(cnt[f]||0)===1?'item':'itens'}</small></button>`).join('')}${!PESO&&sem.length?`<button role="tab" aria-selected="${r.f==='__sem'}" data-rkf="__sem" class="${r.f==='__sem'?'on':''} semp"><b>Sem preço</b><span class="num">${sem.length}</span><small>${sem.length===1?'item':'itens'}</small></button>`:''}</div>
     <div class="rkbar"><input id="rkq" class="sel" value="${esc(r.q)}" placeholder="Filtrar por código ou descrição" aria-label="Filtrar lista" autocomplete="off">${csvBtn}</div>
-    ${lst.length?`<p class="sub" style="margin:10px 0 0"><b>${esc(FN(r.f))}</b> ${PESO?'tem a ferramenta mais leve em':'ganha no preço em'} <b>${lst.length}</b> ${lst.length===1?'perfil':'perfis'}${q?' com esse filtro':''}.</p>
+    ${lst.length?`<p class="sub" style="margin:10px 0 0">${r.f==='__sem'?`<b>${lst.length}</b> ${lst.length===1?'perfil ainda não tem':'perfis ainda não têm'} preço de nenhum fornecedor${q?' com esse filtro':''}. Lance em Preço de fornecedor para entrarem na disputa.`:`<b>${esc(FN(r.f))}</b> ${PESO?'tem a ferramenta mais leve em':'ganha no preço em'} <b>${lst.length}</b> ${lst.length===1?'perfil':'perfis'}${q?' com esse filtro':''}${(()=>{const e=lst.filter(x=>x.excl).length;return e?` (${e} sem concorrente no cadastro)`:''})()}.`}</p>
       <div class="rkl">${lst.slice(0,r.lim).map(row).join('')}</div>${lst.length>r.lim?`<div style="text-align:center;margin-top:12px"><button class="btn line" id="rkmais">Mostrar mais ${Math.min(40,lst.length-r.lim)} (${lst.length-r.lim} restantes)</button></div>`:''}`
     :`<p class="empty" style="padding:22px 0">${q?'Nenhum perfil com esse filtro.':`${esc(FN(r.f))} não ganha nenhum perfil ${PESO?'no peso':'no preço'} nas linhas selecionadas${!PESO&&!precoForn(S.pcli)[r.f]?' (ainda sem preço por kg lançado)':''}.`}</p>`}
   </section>`}
@@ -588,11 +589,26 @@ function ligaRank(){const r=rkSt();const re=()=>{const y=window.scrollY;draw();w
   document.querySelectorAll('[data-rkg]').forEach(a=>a.onclick=()=>{const g=BY[norm(a.dataset.rkg)];if(!g)return;S.g=g;S.q=g.k;S.ord=r.modo==='peso'?'peso':'preco';ls.set('fcext_ord',S.ord);S.tab='pesq';logar('Abriu pelo ranking',g.k);draw();window.scrollTo(0,0)});
   const cv=$('#rkcsv');if(cv)cv.onclick=()=>{const {out}=rkCalc(),PESO=r.modo==='peso';const L=out.filter(x=>x.w.f===r.f);
     const c=v=>'"'+String(v??'').replace(/"/g,'""')+'"',nb=v=>v==null?'':String(Math.round(v*1000)/1000).replace('.',',');
-    const H=['Fornecedor vencedor','Código','Descrição','Linha','Código mercado','Curva','kg/m','Barra 6 m (kg)','R$/kg','Valor barra (R$)','2º fornecedor','2º código','2º kg/m','2º valor barra (R$)'];
-    const rows=L.map(x=>{const p=x.F[x.w.f],p2=x.seg?x.F[x.seg.f]:null;return [FN(x.w.f),x.w.c,x.g.n,LIN[x.g.l]||x.g.l,x.g.k,x.g.cl||'',nb(x.w.p),nb(x.w.p*6),p?nb(p.rk):'',p?nb(p.rk*x.w.p*6):'',x.seg?FN(x.seg.f):'',x.seg?x.seg.c:'',x.seg?nb(x.seg.p):'',p2?nb(p2.rk*x.seg.p*6):'']});
+    const H=['Fornecedor vencedor','Código','Descrição','Linha','Código mercado','Curva','kg/m','Barra 6 m (kg)','R$/kg','Valor barra (R$)','2º fornecedor','2º código','2º kg/m','2º valor barra (R$)','Observação'];
+    const rows=L.map(x=>{const p=x.F[x.w.f],p2=x.seg?x.F[x.seg.f]:null;return [FN(x.w.f),x.w.c,x.g.n,LIN[x.g.l]||x.g.l,x.g.k,x.g.cl||'',nb(x.w.p),nb(x.w.p*6),p?nb(p.rk):'',p?nb(p.rk*x.w.p*6):'',x.seg?FN(x.seg.f):'',x.seg?x.seg.c:'',x.seg?nb(x.seg.p):'',p2?nb(p2.rk*x.seg.p*6):'',x.excl?'Sem concorrente no cadastro':(!x.seg&&!PESO?'Único com preço lançado':'')]});
     const csv='﻿'+[H,...rows].map(a=>a.map(c).join(';')).join('\r\n');
     const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download=`melhor-${PESO?'peso':'preco'}-${FN(r.f)}.csv`.toLowerCase().replace(/\s+/g,'-');document.body.appendChild(a);a.click();a.remove();logar('Baixou lista melhor '+(PESO?'peso':'preço')+' · '+FN(r.f),'')};
 }
+
+/* Revisão de desenhos (só FC) */
+let REV=null;
+function tRevd(){if(!REV){fetch('revisao.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.json()).then(j=>{REV=j;draw()}).catch(()=>{REV=[];draw()});return `<section class="box"><p class="empty">Carregando…</p></section>`}
+  S.rvT=S.rvT||'todos';S.rvF=S.rvF||'todos';
+  const ok=libera(S.ext);let L=REV.filter(e=>ok(e.f));
+  const fs=[...new Set(L.map(e=>e.f))].sort((a,b)=>FN(a).localeCompare(FN(b)));
+  if(S.rvT!=='todos')L=L.filter(e=>e.t.some(x=>x.startsWith(S.rvT)));if(S.rvF!=='todos')L=L.filter(e=>e.f===S.rvF);
+  const nC=REV.filter(e=>e.t.includes('possível corte')).length,nD=REV.length-REV.filter(e=>e.t.length===1&&e.t[0]==='possível corte').length;
+  return `<section class="box"><h2>Revisão de desenhos</h2><p class="sub">Só a FC vê este item. Desenhos com possível corte (o perfil encosta na borda da imagem) ou que tinham dois perfis na mesma imagem. Confira cada um; os que estiverem realmente cortados só se corrigem com a página original do catálogo (PDF) do fornecedor.</p>
+   <div class="rkf" style="margin-top:12px">${[['todos','Todos',REV.length],['possível','Possível corte',nC],['dois','Dois perfis',nD]].map(([k,n,c])=>`<button data-rvt="${k}" class="${S.rvT===k?'on':''}"><b>${n}</b><span class="num">${c}</span></button>`).join('')}</div>
+   <div class="chips" style="margin-top:10px"><button class="chip ${S.rvF==='todos'?'fix':''}" data-rvf="todos">Todos os fornecedores</button>${fs.map(f=>`<button class="chip ${S.rvF===f?'fix':''}" data-rvf="${f}">${esc(FN(f))}</button>`).join('')}</div>
+   <p class="sub" style="margin-top:10px"><b>${L.length}</b> desenhos nesta seleção.</p>
+   <div class="grid" style="margin-top:8px">${L.map(e=>`<article class="pc">${img({src:'d/'+e.p+'?v=4',o:EQ+e.p,c:e.c})}<div class="bd"><span class="f">${esc(FN(e.f))}</span><span class="c" style="font-size:18px">${esc(e.c)}</span><span class="w">${esc(e.l)} · mercado ${esc(e.k)}</span>${e.t.map(x=>`<span class="dif ${x==='possível corte'?'up':'eq'}">${esc(x)}</span>`).join('')}</div></article>`).join('')}</div></section>`}
+function ligaRevd(){document.querySelectorAll('[data-rvt]').forEach(b=>b.onclick=()=>{S.rvT=b.dataset.rvt;draw()});document.querySelectorAll('[data-rvf]').forEach(b=>b.onclick=()=>{S.rvF=b.dataset.rvf;draw()})}
 function tAbc(){
   const lst=G.filter(g=>(DIST()||own(g).length)&&(S.abcL==='todas'||g.l===S.abcL));
   const by=c=>lst.filter(g=>(g.cl||'')===c);
@@ -666,6 +682,7 @@ function fabUpd(){const f=$('#fab');if(!f)return;f.hidden=!(S.ext&&!S.cover&&S.t
 window.addEventListener('scroll',fabUpd,{passive:true});
 function ligar(){
   if(S.tab==='rank'||S.tab==='rankp')ligaRank();
+  if(S.tab==='revd')ligaRevd();
   const fb=$('#fab');if(fb){fb.onclick=novaPesq;fabUpd()}
   const tb=$('[data-tutorial]');if(tb)tb.onclick=()=>{S.tut=0;draw()};
   if($('#ov')){const P=passos();$('#tsair').onclick=()=>{S.tut=null;draw()};const tv=$('#tvolta');if(tv)tv.onclick=()=>{S.tut--;draw()};
