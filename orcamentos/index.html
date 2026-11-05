@@ -293,6 +293,8 @@ function pComp(pages){
  })});
  return out;
 }
+/* tipo de vidro (chave da aba Vidros) a partir da descrição da tipologia */
+function vidKey(desc){const vm=String(desc||"").toUpperCase().match(/VIDRO\s+(.+?)(?:\s+-\s+|$)/);return vm?vm[1].trim():"NÃO INFORMADO"}
 function pCroqui(pages){
  const out=[];let cur=null,afterQ=false;
  const LAB={"Item":"item","Tipo":"tipo","Linha":"linha","Quantidade":"q","Largura":"L","Altura":"H","Acabamento":"acab","Localização":"loc","Localizacao":"loc"};
@@ -312,7 +314,7 @@ function pCroqui(pages){
  return out.filter(t=>t.item!=="").map(t=>{
   const d=(t.desc||"").toUpperCase();
   const q=parseInt(t.q)||1,L=pNum(t.L),H=pNum(t.H);
-  let vm=d.match(/VIDRO\s+(.+?)(?:\s+-\s+|$)/);let vid=vm?vm[1].trim():"NÃO INFORMADO";
+  const vid=vidKey(d);
   let kind="gen";
   if(/PIVOTANTE/.test(d))kind="piv";else if(/CORRER/.test(d))kind="correr";else if(/GIRO|ABRIR/.test(d))kind="giro";
   else if(/MAXIM-AR|MAXIMAR|BASCULANTE/.test(d))kind=/PEITORIL/.test(d)?"maxp":"max";else if(/FIXO/.test(d))kind="fixo";
@@ -1038,7 +1040,7 @@ function aprDuplicar(i){const s=O.tips[i];if(!s)return;const uid=()=>Date.now().
  O.tips.splice(j,0,c);if(window.__simEst)delete window.__simEst[O.id];aprAberto=j;touch();refresh();
  setTimeout(()=>{const ed=$("p-doc")&&$("p-doc").querySelector(".pp-edit");if(ed)ed.scrollIntoView({block:"center",behavior:"smooth"})},120);avisoCor&&avisoCor("Tipologia duplicada: ajuste medida, local ou quantidade e clique em Aplicar.")}
 
-function refresh(){const gs=groups(O);gs.forEach(paintPanel);paintAlu();paintVid();paintRes(gs);paintApr(gs)}
+function refresh(){O.tips.forEach(t=>{if(t.orig||t.dup){const k=vidKey(t.desc);if(t.vid!==k){t.vid=k;if(!O.st.vidPrice[k]&&DB.lib.vid&&DB.lib.vid[k])O.st.vidPrice[k]=DB.lib.vid[k]}}});const gs=groups(O);gs.forEach(paintPanel);paintAlu();paintVid();paintRes(gs);paintApr(gs)}
 
 // ---------- INÍCIO ----------
 loadCats().then(()=>{if(autoFotos()){if(O&&!$("view-obra").hidden)buildComp();else if(HOMETAB==="banco"&&!$("view-home").hidden)renderBanco()}});
