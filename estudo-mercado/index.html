@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="robots" content="noindex">
 <meta http-equiv="Cache-Control" content="no-cache">
-<script>(function(){var B='20261104200508';try{fetch('versao.txt?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.text():''}).then(function(v){v=(v||'').trim();if(!v||v===B)return;var u=new URL(location.href);if(u.searchParams.get('v')===v)return;u.searchParams.set('v',v);location.replace(u.toString())}).catch(function(){})}catch(e){}})();</script>
+<script>(function(){var B='20261104204246';try{fetch('versao.txt?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.text():''}).then(function(v){v=(v||'').trim();if(!v||v===B)return;var u=new URL(location.href);if(u.searchParams.get('v')===v)return;u.searchParams.set('v',v);location.replace(u.toString())}).catch(function(){})}catch(e){}})();</script>
 
 <title>FC Estudo de Mercado</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -63,6 +63,7 @@ button{cursor:pointer}
 .nav{position:sticky;top:max(12px,env(safe-area-inset-top,0px));display:flex;flex-direction:column;gap:4px;background:var(--card);border:1px solid var(--ln);border-radius:16px;padding:10px}
 .nav button{display:flex;align-items:center;gap:10px;border:0;background:transparent;text-align:left;padding:10px 12px;border-radius:10px;font-weight:600;color:var(--tm)}
 .nav button svg{width:18px;height:18px;flex:none}
+.nav .nt{display:flex;flex-direction:column;line-height:1.2}.nav .nt small{font-weight:500;font-size:11.5px;color:var(--tm);margin-top:2px}
 .nav button.on{background:var(--tlc);color:var(--tl2)}
 .nav button:hover:not(.on){background:var(--bg)}
 .nav .who{border-top:1px solid var(--ln);margin-top:6px;padding:10px 12px 4px;font-size:13px;color:var(--tm)}
@@ -234,7 +235,7 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
 .clist{display:grid;gap:8px;margin-top:12px}
 .clist div{display:flex;gap:10px;align-items:flex-start;background:var(--bg);border-radius:10px;padding:10px 12px;font-size:14px}
 .clist b{font:700 16px var(--f-d);color:var(--tl);min-width:22px}
-@media (max-width:820px){.shell{grid-template-columns:1fr}.nav{position:static;flex-direction:row;overflow-x:auto}.nav button{white-space:nowrap}.nav .who{display:none}.hero{grid-template-columns:1fr}}
+@media (max-width:820px){.nav .nt small{display:none}.shell{grid-template-columns:1fr}.nav{position:static;flex-direction:row;overflow-x:auto}.nav button{white-space:nowrap}.nav .who{display:none}.hero{grid-template-columns:1fr}}
 .rkf{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 .rkf button{border:1px solid var(--ln);background:var(--card);border-radius:12px;padding:8px 14px;display:flex;align-items:baseline;gap:6px;color:var(--ink);font:inherit;cursor:pointer}
 .rkf button b{font:700 16px var(--f-d)}.rkf button span{font:700 20px var(--f-d);color:var(--tl)}.rkf button small{color:var(--tm);font-size:12px}
@@ -409,7 +410,7 @@ const IC={
  lck:'<path d="M6 11h12v10H6zM8.5 11V7.5a3.5 3.5 0 0 1 7 0V11"/>',
  aces:'<path d="M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM2 21c0-3.9 3.1-6 7-6s7 2.1 7 6M17 11l2 2 4-4"/>'};
 const ico=k=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[k]}</svg>`;
-function abas(){const a=[['pesq','Pesquisar e preços'],['kg','Preço por kg'],['rank','Melhor preço'],['rankp','Melhor peso'],...(DIST()?[]:[['cli','Clientes especiais']]),['abc','Curva ABC'],['rel',S.role==='gest'?'Relatório por usuário':'Meu histórico']];if(S.role==='gest')a.push(['aces','Acessos e licença'],['cont','Contrato']);return a}
+function abas(){const a=[['pesq','Pesquisa'],['rank','Melhor preço','Filtro com o melhor preço na barra'],['rankp','Melhor peso','Filtro com o melhor peso na barra'],...(DIST()?[]:[['cli','Clientes especiais']]),['abc','Curva ABC'],['rel',S.role==='gest'?'Relatório por usuário':'Meu histórico']];if(S.role==='gest')a.push(['aces','Acessos e licença'],['cont','Contrato']);return a}
 
 function trialIni(){const k='fcext_ini_'+S.ext;let v=ls.get(k,0);if(!v){v=Date.now();ls.set(k,v)}return v}
 function trialRest(){return 96*36e5-(Date.now()-trialIni())}
@@ -431,7 +432,7 @@ function draw(){
   const E=EXTS[S.ext],U=USERS[S.role];
   $('#app').innerHTML=`<header class="top"><div class="brand"><div class="logo"><img src="${LOGO}" alt="FC Consultoria em Esquadria"></div><div class="t"><small>FC Consultoria · Estudo de Mercado</small><h1>FC &amp; ${esc(E.n)}</h1></div></div>
    <div class="r"><span class="trial">${trialTxt()}</span><div class="seg" role="group" aria-label="Ver como"><button data-role="vend" class="${S.role==='vend'?'on':''}">Vendedor</button><button data-role="gest" class="${S.role==='gest'?'on':''}">Gestor</button></div>${QP.get('e')&&!FCM?'':'<button class="ghost" id="voltar">← Cards</button>'}</div></header>
-   <div class="shell"><nav class="nav" aria-label="Abas">${abas().map(([k,t])=>`<button data-tab="${k}" class="${S.tab===k?'on':''}">${ico(k)}${t}</button>`).join('')}<button data-tutorial>${ico('tut')}Como usar</button><div class="who"><b>${esc(U.n)}</b>${esc(U.r)} · ${S.role==='gest'?'vê toda a equipe':'carteira própria'}</div></nav>
+   <div class="shell"><nav class="nav" aria-label="Abas">${abas().map(([k,t,s])=>`<button data-tab="${k}" class="${S.tab===k?'on':''}">${ico(k)}${s?`<span class="nt">${t}<small>${s}</small></span>`:t}</button>`).join('')}<button data-tutorial>${ico('tut')}Como usar</button><div class="who"><b>${esc(U.n)}</b>${esc(U.r)} · ${S.role==='gest'?'vê toda a equipe':'carteira própria'}</div></nav>
    <main class="panel" id="panel">${tela()}</main></div>${foot()}${marca()}${S.tut!=null?tutorial():''}`;
   document.querySelectorAll('[data-role]').forEach(b=>b.onclick=()=>{S.role=b.dataset.role;draw()});
   document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{if(b.dataset.tab==='pesq'&&S.tab==='pesq'){novaPesq();return}if(b.dataset.tab==='kg'){if(S.tab!=='pesq'){S.tab='pesq';draw()}const x=$('#precos');if(x)x.scrollIntoView({behavior:'smooth',block:'start'});return}S.tab=b.dataset.tab;if(S.tab==='abc')logar('Abriu a Curva ABC','');if(S.tab==='rank')logar('Abriu Melhor preço','');if(S.tab==='rankp')logar('Abriu Melhor peso','');draw()});
@@ -564,7 +565,7 @@ function tRank(){const r=rkSt(),L=rkLinhas(),sel=r.lin?new Set(r.lin):null,PESO=
       <div class="rklbt"><button type="button" class="lk" data-rkall="1">marcar todas</button><button type="button" class="lk" data-rkall="0">desmarcar todas</button></div>
       <div class="cfgc">${L.map(([k,n,c])=>`<label class="ck ${!sel||sel.has(k)?'on':''}"><input type="checkbox" data-rkl="${k}" ${!sel||sel.has(k)?'checked':''}> ${esc(n)} <small>${c}</small></label>`).join('')}</div></details>
   </section>
-  ${!PESO&&!nPr?`<section class="box lock">${ico('prec')}<h3>Nenhum preço por kg lançado${S.pcli?' para este cliente':''}</h3><p>Lance o R$/kg do natural de cada fornecedor na tela Pesquisar e preços. Assim que houver preços, a lista mostra o que cada fornecedor ganha.</p><button class="btn" data-goprec2>＄ Lançar preços</button> <button class="btn line" data-gotab="rankp">Ver Melhor peso</button></section>`:`
+  ${!PESO&&!nPr?`<section class="box lock">${ico('prec')}<h3>Nenhum preço por kg lançado${S.pcli?' para este cliente':''}</h3><p>Lance o R$/kg do natural de cada fornecedor na tela Pesquisa (painel Preço por kg, ao lado dos desenhos). Assim que houver preços, a lista mostra o que cada fornecedor ganha.</p><button class="btn" data-goprec2>＄ Lançar preços</button> <button class="btn line" data-gotab="rankp">Ver Melhor peso</button></section>`:`
   <section class="box"><div class="row"><h2 style="font-size:24px">${PESO?'Quem tem a ferramenta mais leve':'Quem ganha no preço'}</h2><span class="sub" style="margin:0">${tot} perfis em disputa (2 ou mais fornecedores)${!PESO&&semP?` · ${semP} sem nenhum preço`:''}${exc?` · ${exc} de fornecedor único fora da disputa`:''}</span></div>
     <div class="rkf" role="tablist" aria-label="Fornecedor">${FL.map(f=>`<button role="tab" aria-selected="${f===r.f}" data-rkf="${f}" class="${f===r.f?'on':''} ${f===S.ext?'me':''}"><b>${esc(FN(f))}</b><span class="num">${cnt[f]||0}</span><small>${(cnt[f]||0)===1?'item':'itens'}</small></button>`).join('')}</div>
     <div class="rkbar"><input id="rkq" class="sel" value="${esc(r.q)}" placeholder="Filtrar por código ou descrição" aria-label="Filtrar lista" autocomplete="off">${csvBtn}</div>
