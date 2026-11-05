@@ -457,6 +457,7 @@ function fila(){cancelAnimationFrame(filaRaf);const passo=()=>{const im=document
 
 /* ---------- apresentação no modelo da proposta + link sem preço ---------- */
 function urlDe(tok){return new URL("apresentacao.html?t="+tok,location.href).href}
+function urlTeste(tok,vt){return new URL("apresentacao.html?t="+tok+"&vt="+vt,location.href).href}
 function apr(){const nOk=P.itens.filter(t=>t.ok).length,lk=P.link;const v=lk&&VISTAS[lk.tok];
  $("tab").innerHTML=`${nOk<P.itens.length?`<div class="aviso">Faltam <b>${P.itens.length-nOk}</b> itens para conferir antes de entregar o link.</div>`:""}
  <div class="card noprint" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px;padding:12px 14px"><span style="flex:1;min-width:220px"><b>Perfis reais no 3D:</b> ${P.itens.filter(t=>t.cortes).length} de ${P.itens.length} itens${P.pdfOri?` <span class="hint">· Orientativo: ${esc(P.pdfOri)}</span>`:""}<br><span class="hint" id="o-msg" role="status">${P.itens.some(t=>t.cortes)?"Toque em um perfil no Ver em 3D para ver o desenho real.":"Sem o Orientativo de Montagem, o 3D mostra perfis genéricos. Anexe o Orientativo deste orçamento."}</span></span><label class="btn${P.itens.some(t=>t.cortes)?"":" amb"}" style="cursor:pointer">📎 ${P.itens.some(t=>t.cortes)?"Trocar":"Anexar"} Orientativo de Montagem<input type="file" id="o-file" accept="application/pdf,.pdf" hidden></label></div>
@@ -464,6 +465,9 @@ function apr(){const nOk=P.itens.filter(t=>t.ok).length,lk=P.link;const v=lk&&VI
   <span class="hint" style="flex-basis:100%">Link sem preço, com a marca de ${esc(P.empresa||"—")}.${v?` Aberto ${v.vistas} ${v.vistas===1?"vez":"vezes"}${v.ultima_vista?` (último em ${new Date(v.ultima_vista).toLocaleString("pt-BR")})`:""}.`:" Ainda não foi aberto."} Depois de ajustar desenhos ou nomes, toque em <b>Atualizar link</b>.</span>`
   :`<span class="hint" style="flex:1">${lk?"O link anterior foi desativado. ":""}Gere o link sem preço para enviar à ${esc(P.empresa||"vidraçaria")}.</span><button class="btn pri" type="button" id="l-new">Gerar link sem preço</button>`}
   <button class="btn" type="button" id="l-pr">🖨 Imprimir sem preço</button><span class="hint" id="l-msg" role="status"></span></div>
+ ${lk&&lk.ativo!==false?`<div class="card lnk noprint" style="border-left:4px solid #a3620b"><span style="flex-basis:100%"><b>Link de teste da vidraçaria</b> <span class="hint">· a vidraçaria simula e troca cor de perfil e vidro (obra toda e por item), com código próprio e sem entrar na plataforma. O link do cliente continua sem troca de cor.</span></span>
+  ${P.teste&&P.teste.ativo!==false?`<input readonly id="t-url" value="${esc(urlTeste(lk.tok,P.teste.tok))}" aria-label="Link de teste da vidraçaria"><span class="vl" style="min-width:auto">Código<b class="num" style="letter-spacing:.15em">${esc(P.teste.cod)}</b></span><button class="btn pri" type="button" id="t-cp">Copiar link + código</button><a class="btn" id="t-wa" target="_blank" rel="noopener">WhatsApp</a><a class="btn" href="${esc(urlTeste(lk.tok,P.teste.tok))}" target="_blank" rel="noopener">Abrir ↗</a><button class="btn dan" type="button" id="t-off">Encerrar teste</button>`
+  :`<span class="hint" style="flex:1">${P.teste?"O teste anterior foi encerrado. ":""}Gere o link de teste para a ${esc(P.empresa||"vidraçaria")} fazer as simulações de cor.</span><button class="btn amb" type="button" id="t-new">Gerar link de teste</button>`}</div>`:""}
  <div class="card pre noprint"><span class="tt">Preços no PDF impresso <span class="hint" style="font:500 12px var(--body)">· o link do cliente nunca mostra preço</span></span>
   <span class="vl">Total do PDF recebido<b class="num">${brl(somaPdf(P))}</b></span>
   <label class="f">Margem em todas as tipologias (%)<input id="m-pct" type="number" step="0.5" inputmode="decimal" value="${esc(+P.margem||0)}"></label>
@@ -494,6 +498,13 @@ function apr(){const nOk=P.itens.filter(t=>t.ok).length,lk=P.link;const v=lk&&VI
  if($("l-cp"))$("l-cp").onclick=async()=>{try{await navigator.clipboard.writeText(urlDe(lk.tok));toast("Link copiado")}catch(e){$("l-url").select();document.execCommand("copy");toast("Link copiado")}};
  if($("l-wa"))$("l-wa").href="https://wa.me/?text="+encodeURIComponent(`Apresentação 3D da obra ${P.obra||""}: ${urlDe(lk.tok)}`);
  $("l-pr").onclick=()=>{PROPOSTA.preencher($("pdoc"),D,true);setTimeout(()=>print(),80)};
+ /* 05/11/2026 · link de teste da vidraçaria: token + código de 6 números guardados no projeto */
+ const txtTeste=()=>`Teste da apresentação 3D da obra ${P.obra||""}\nLink: ${urlTeste(lk.tok,P.teste.tok)}\nCódigo de acesso: ${P.teste.cod}\nNo teste você pode trocar a cor dos perfis e do vidro (obra toda ou por item). As cores são demonstrativas; confirme valores com a sua vidraçaria.`;
+ if($("t-new"))$("t-new").onclick=()=>{const b=new Uint8Array(18);crypto.getRandomValues(b);const vt=btoa(String.fromCharCode(...b)).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+  const n=new Uint32Array(1);crypto.getRandomValues(n);P.teste={tok:vt,cod:String(n[0]%1000000).padStart(6,"0"),ativo:true,em:new Date().toISOString()};touch(P);abrir(P.id);toast("Link de teste gerado")};
+ if($("t-cp"))$("t-cp").onclick=async()=>{try{await navigator.clipboard.writeText(txtTeste())}catch(e){$("t-url").select();document.execCommand("copy")}toast("Link e código copiados")};
+ if($("t-wa"))$("t-wa").href="https://wa.me/?text="+encodeURIComponent(txtTeste());
+ if($("t-off"))$("t-off").onclick=()=>{if(!confirm("Encerrar o teste? O link de teste para de abrir. O link do cliente continua."))return;P.teste.ativo=false;touch(P);abrir(P.id)};
  $("m-pct").oninput=e=>{P.margem=Math.round((+String(e.target.value).replace(",",".")||0)*100)/100;touch(P);$("m-tot").textContent=brl(precos(P).reduce((a,b)=>a+b,0))};
  /* com preço: monta a proposta com valores só para imprimir e volta à versão sem preço depois */
  $("l-prc").onclick=()=>{const pr=precos(P);PROPOSTA.render($("pdoc"),D,{precos:pr,total:pr.reduce((a,b)=>a+b,0),rotulo:"Proposta comercial",adiar:true,simular:true,estado:((window.__simEst=window.__simEst||{})[P.id]=window.__simEst[P.id]||{})});PROPOSTA.preencher($("pdoc"),D,true);

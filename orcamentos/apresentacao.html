@@ -81,8 +81,27 @@ if(D.protegido){
 document.title=(D.obra||"Obra")+" · Apresentação 3D";
 /* 05/11/2026 · troca de cor só para a vidraçaria: aberto pelo painel dela (vid = link de envio dono deste projeto). O link do cliente/arquiteto nunca mostra. */
 let VIDRA=false;const vid=QS.get("vid")||"";if(vid.length>=20){try{const r=await sbp.rpc("obra3d_link_vidraceiro",{link:tok,vid});VIDRA=!r.error&&r.data===true}catch(_){}}
+/* 05/11/2026 · Link de teste da vidraçaria (projetos teste da Obra em 3D): vt = token do teste + código de 6 números, sem entrar na plataforma */
+const vt=QS.get("vt")||"";let VCOD="";
+if(!VIDRA&&vt.length>=20){
+ const KVT="o3vt_"+tok,ok=async c=>{try{const r=await sbp.rpc("obra3d_teste_entrar",{link:tok,vt,cod:c});return !r.error&&r.data===true}catch(_){return false}};
+ const salvo=lsg(KVT);if(salvo&&await ok(salvo))VCOD=salvo;else{lss(KVT,null);
+  const cor=D.marcaCor||"#0d5c63";
+  VCOD=await new Promise(res=>{$("main").innerHTML=`<div class="msg" style="max-width:420px;margin:40px auto;text-align:left">
+   <div style="font:700 13px Inter,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:${esc(cor)}">Teste da vidraçaria</div>
+   <h2 style="margin:6px 0 8px;font:700 22px 'Space Grotesk',sans-serif">${esc(D.obra||"Obra em 3D")}</h2>
+   <p style="margin:0 0 14px;color:#5d6e73;font-size:14px">Digite o código de 6 números que a FC enviou junto com este link.</p>
+   <input id="vc" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="000000" style="width:100%;box-sizing:border-box;font:600 22px Inter,sans-serif;letter-spacing:.3em;text-align:center;padding:12px;border:1px solid #c9d6d8;border-radius:10px">
+   <button id="vb" class="btn" type="button" style="width:100%;margin-top:12px;background:${esc(cor)};color:#fff;border-color:${esc(cor)};min-height:48px;font-size:15px">Entrar no teste</button>
+   <p id="ve" role="status" style="color:#b3261e;font-size:13px;margin:10px 0 0"></p>
+   <p style="color:#5d6e73;font-size:12px;margin:14px 0 0">Sem o código, abra o link do cliente normalmente (sem troca de cor).</p></div>`;
+   const go=async()=>{const c=$("vc").value.replace(/\D/g,"");if(c.length!==6){$("ve").textContent="O código tem 6 números.";return}
+    $("vb").disabled=true;$("ve").textContent="";if(await ok(c)){lss(KVT,c);res(c)}else{$("vb").disabled=false;$("ve").textContent="Código não confere ou o teste foi encerrado. Confira com a FC."}};
+   $("vb").onclick=go;$("vc").onkeydown=e=>{if(e.key==="Enter")go()};$("vc").focus()});
+  $("main").innerHTML=""}
+ VIDRA=true}
 async function salvarCor(cores){if(!confirm("Salvar estas cores? O link do cliente passa a mostrar a obra nessas cores (os valores não mudam)."))return false;
- const r=await sbp.rpc("obra3d_cor_salvar",{link:tok,vid,cores});if(r.error){alert("Não foi possível salvar. Tente de novo.");return false}return true}
+ const r=VCOD?await sbp.rpc("obra3d_teste_cor_salvar",{link:tok,vt,cod:VCOD,cores}):await sbp.rpc("obra3d_cor_salvar",{link:tok,vid,cores});if(r.error){alert("Não foi possível salvar. Tente de novo.");return false}return true}
 if(VIDRA){const dc=document.querySelector(".bar .dica");if(dc)dc.innerHTML="<b>Modo vidraçaria</b> · a troca de cor aparece só para você. O link que você envia ao cliente não tem esta opção."}
 if(!window.PROPOSTA){erro("Não foi possível carregar","Verifique a internet e abra o link de novo.");return}
 /* link aberto (antigo): sem preço. Proposta protegida: com preço, só para quem tem o código (ou a própria empresa) */
