@@ -135,9 +135,9 @@ table.cli td.n,table.cli th.n{text-align:right}
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/environments/RoomEnvironment.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/geometries/RoundedBoxGeometry.js"></script>
-<script src="tip3d.js?v=20261105k"></script>
+<script src="tip3d.js?v=20261105p"></script>
 <script src="proposta.js?v=20261105i"></script>
-<script src="obra3d-ler.js?v=20261105b"></script>
+<script src="obra3d-ler.js?v=20261105c"></script>
 <script src="orientativo-ler.js?v=3"></script>
 <script src="secao-ler.js?v=2"></script>
 <script>
@@ -171,7 +171,7 @@ async function enviar(){const ids=[...pend];pend.clear();if(!ids.length)return t
 addEventListener("beforeunload",e=>{if(pend.size){e.preventDefault();e.returnValue=""}});
 
 /* ---------- dados para a apresentação (nunca leva preço) ---------- */
-function t3(it){const o={item:it.item,tipo:it.tipo,loc:it.loc,kind:it.kind,f:it.f,enc:it.enc,L:it.L,H:it.H,q:it.q,linha:it.linha,desc:it.vidro+(it.obs?" · "+it.obs:"")};if(it.cortes)o.cortes=it.cortes;if(it.corPerfil)o.corPerfil=it.corPerfil;if(it.vidroCor)o.vidroCor=it.vidroCor;return o}
+function t3(it){const o={item:it.item,tipo:it.tipo,loc:it.loc,kind:it.kind,f:it.f,enc:it.enc,per:it.per||"",L:it.L,H:it.H,q:it.q,linha:it.linha,desc:it.vidro+(it.obs?" · "+it.obs:"")};if(it.cortes)o.cortes=it.cortes;if(it.corPerfil)o.corPerfil=it.corPerfil;if(it.vidroCor)o.vidroCor=it.vidroCor;return o}
 function doc(p){const d={marca:p.empresa,marcaCor:p.cor,numero:p.numero,obra:p.obra,cliente:p.cliente,cor:p.corPerfil,emitida:p.emitida||p.criado,itens:p.itens.map(t3)};
  if(p.logo)d.logo=p.logo;if(p.editavel&&typeof p.rodape==="string")d.rodape=p.rodape;if(p.corAlterada)d.corAlterada=true;return d}
 /* preços: só para o PDF impresso (valor do item no PDF + margem em lote); o link nunca recebe isto */
@@ -338,7 +338,7 @@ async function lerOri(file){NV.err="";if(!ehPdf(file)){NV.err=`"${file.name}" n�
   await O3DORI.secoes(d,R);O3DORI.limpar(R);NV.ORI=R;NV.oriPdf=file.name;NV.lendo="";nvLigar()}catch(e){console.warn(e);NV.lendo="";NV.err="Não consegui ler o Orientativo. Use o PDF gerado pelo sistema."}homeOrc()}
 function criarOrc(){const O=NV.O;if(!O||!NV.lig||!NV.lig.ligados)return;const id=novoId();
  const p={id,criado:new Date().toISOString(),origem:"orc",pdf:NV.pdf,pdfOri:NV.oriPdf,empresa:O.empresa,cor:"",obra:O.cliente||"Obra",cliente:O.cliente,numero:O.numero,emissao:O.emissao,vendedor:O.vendedor,corPerfil:O.cor,
-  itens:O.itens.map(it=>Object.assign(it,{lido:{kind:it.kind,f:it.f,enc:it.enc},ok:false})),avisos:O.avisos,margem:0,valor:"",status:"recebido",entregue:"",pago:"",notas:"",link:null};
+  itens:O.itens.map(it=>Object.assign(it,{lido:{kind:it.kind,f:it.f,enc:it.enc,per:it.per||""},ok:false})),avisos:O.avisos,margem:0,valor:"",status:"recebido",entregue:"",pago:"",notas:"",link:null};
  Object.assign(NV,{O:null,ORI:null,lig:null,pdf:"",oriPdf:"",err:""});LIST.push(p);touch(p);location.hash="p-"+id;toast(`${p.itens.length} itens lidos · ${p.itens.filter(t=>t.cortes).length} com perfis reais`)}
 
 /* ---------- novo projeto a partir do PDF ---------- */
@@ -354,7 +354,7 @@ async function novo(file){const m=$("dmsg");
  if(!O.itens.length){m.textContent=O.avisos[0]||"Nenhum item encontrado neste PDF.";return}
  const id=novoId();
  const p={id,criado:new Date().toISOString(),pdf:file.name,empresa:O.empresa,cor:"",obra:O.cliente||"Obra",cliente:O.cliente,numero:O.numero,emissao:O.emissao,vendedor:O.vendedor,corPerfil:O.cor,
-  itens:O.itens.map(it=>Object.assign(it,{lido:{kind:it.kind,f:it.f,enc:it.enc},ok:false})),avisos:O.avisos,margem:0,valor:"",status:"recebido",entregue:"",pago:"",notas:"",link:null};
+  itens:O.itens.map(it=>Object.assign(it,{lido:{kind:it.kind,f:it.f,enc:it.enc,per:it.per||""},ok:false})),avisos:O.avisos,margem:0,valor:"",status:"recebido",entregue:"",pago:"",notas:"",link:null};
  LIST.push(p);touch(p);location.hash="p-"+id;toast(`${p.itens.length} itens lidos`)}
 
 /* ======================= PROJETO ======================= */
@@ -400,7 +400,7 @@ function conf(){if(P.editavel)return confEd();const it=P.itens,nOk=it.filter(t=>
   <button class="btn noprint" type="button" id="c-all">✓ Marcar todos como conferidos</button></div>
   ${av.length?`<div class="aviso">${av.map(esc).join("<br>")}</div>`:""}
   <p class="hint" style="margin:0 0 12px">Os textos e medidas vêm do PDF e ficam travados. Se o desenho 3D saiu diferente da tipologia, ajuste só o desenho ao lado.</p>
-  ${it.map((t,i)=>{const mud=t.kind!==t.lido.kind||t.f!==t.lido.f||t.enc!==t.lido.enc;const o=t.orig;
+  ${it.map((t,i)=>{const mud=t.kind!==t.lido.kind||t.f!==t.lido.f||t.enc!==t.lido.enc||(t.per||"")!==(t.lido.per||"");const o=t.orig;
   return `<div class="card it${t.ok?" ok":""}">
    <button class="thumb" type="button" data-v="${i}" aria-label="Ver item ${esc(o.item)} em 3D"><img data-i="${i}" alt="" hidden><span class="ld">Gerando 3D…</span><span class="v3">Ver em 3D</span></button>
    <div class="orig"><span class="badge">Item ${esc(o.item)} · bloco ${t.n} de ${it.length}</span><h3>${esc(o.tipo)}</h3>
@@ -413,6 +413,7 @@ function conf(){if(P.editavel)return confEd();const it=P.itens,nOk=it.filter(t=>
     <label class="f">Tipologia<select data-k="kind" data-i="${i}">${KINDS.map(([k,n])=>`<option value="${k}"${t.kind===k?" selected":""}>${n}</option>`).join("")}</select></label>
     <div class="row" style="gap:8px"><label class="f" style="flex:1">Folhas / módulos<input type="number" min="1" max="12" data-k="f" data-i="${i}" value="${t.f}"></label>
     <label class="f" style="flex:2">Preenchimento<select data-k="enc" data-i="${i}">${ENCS.map(([k,n])=>`<option value="${k}"${t.enc===k?" selected":""}>${n}</option>`).join("")}</select></label></div>
+    <label class="f">Persiana integrada<select data-k="per" data-i="${i}"><option value=""${t.per?"":" selected"}>Sem persiana</option><option value="1"${t.per?" selected":""}>Com persiana (caixa em cima)</option></select></label>
     ${mud?`<button class="btn" type="button" data-r="${i}">↺ Voltar ao desenho lido</button>`:""}
     <label class="ckb"><input type="checkbox" data-ok="${i}"${t.ok?" checked":""}> Conferido</label></div>
   </div>`}).join("")}`;
@@ -449,7 +450,8 @@ function confEd(){const it=P.itens;
   <div class="des"><h4>Desenho 3D</h4>
    <label class="f">Tipologia<select data-k="kind" data-i="${i}">${KINDS.map(([k,n])=>`<option value="${k}"${t.kind===k?" selected":""}>${n}</option>`).join("")}</select></label>
    <div class="row" style="gap:8px"><label class="f" style="flex:1">Folhas / módulos<input type="number" min="1" max="12" data-k="f" data-i="${i}" value="${t.f}"></label>
-   <label class="f" style="flex:2">Preenchimento<select data-k="enc" data-i="${i}">${ENCS.map(([k,n])=>`<option value="${k}"${t.enc===k?" selected":""}>${n}</option>`).join("")}</select></label></div></div>
+   <label class="f" style="flex:2">Preenchimento<select data-k="enc" data-i="${i}">${ENCS.map(([k,n])=>`<option value="${k}"${t.enc===k?" selected":""}>${n}</option>`).join("")}</select></label></div>
+    <label class="f">Persiana integrada<select data-k="per" data-i="${i}"><option value=""${t.per?"":" selected"}>Sem persiana</option><option value="1"${t.per?" selected":""}>Com persiana (caixa em cima)</option></select></label></div>
  </div>`).join("")}
  <button class="btn pri" type="button" id="e-add">＋ Adicionar item</button></div><div id="pdoc-imp" class="soimp"></div>`;
  calcEd();
@@ -462,7 +464,7 @@ function confEd(){const it=P.itens;
  document.querySelectorAll("[data-e]").forEach(el=>el.onchange=()=>{const i=+el.dataset.i,k=el.dataset.e,t=P.itens[i];let v=el.value;
   if(k==="q"||k==="L"||k==="H")v=Math.max(0,Math.round(+v||0));else if(k==="pv")v=Math.max(0,+String(v).replace(",",".")||0);
   t[k]=v;if(t.orig)t.orig[k]=v;
-  if(k==="tipo"){const d=O3DLER.desenho(v,t.linha);Object.assign(t,{kind:d.kind,f:d.f,enc:d.enc});t.lido={kind:d.kind,f:d.f,enc:d.enc};touch(P);confEd();return}
+  if(k==="tipo"){const d=O3DLER.desenho(v,t.linha);Object.assign(t,{kind:d.kind,f:d.f,enc:d.enc,per:d.per});t.lido={kind:d.kind,f:d.f,enc:d.enc,per:d.per};touch(P);confEd();return}
   touch(P);if(k==="q"||k==="L"||k==="H"||k==="vidro")thumb(i)});
  document.querySelectorAll("[data-k]").forEach(el=>el.onchange=()=>{const t=P.itens[+el.dataset.i];const k=el.dataset.k;t[k]=k==="f"?Math.max(1,Math.min(12,+el.value||1)):el.value;touch(P);thumb(+el.dataset.i)});
  document.querySelectorAll("[data-x]").forEach(b=>b.onclick=()=>{const i=+b.dataset.x;if(b.dataset.ok!=="1"){b.dataset.ok="1";b.textContent="Confirmar exclusão";setTimeout(()=>{if(b.isConnected){b.dataset.ok="";b.textContent="Excluir"}},3000);return}P.itens.splice(i,1);P.itens.forEach((t,j)=>t.n=j+1);touch(P);confEd()});

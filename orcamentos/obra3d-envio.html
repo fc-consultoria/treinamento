@@ -69,7 +69,7 @@ footer{text-align:center;color:var(--muted);font-size:11.5px;letter-spacing:.08e
 <main class="wrap" id="main"><div class="sec">Carregando…</div></main>
 <footer class="wrap">FC Consultoria em Esquadria</footer>
 
-<script src="obra3d-ler.js?v=20261105b"></script>
+<script src="obra3d-ler.js?v=20261105c"></script>
 <script src="orientativo-ler.js?v=3"></script>
 <script src="secao-ler.js?v=2"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
@@ -268,7 +268,7 @@ async function enviar(){const E=$("eerr");if(S.enviando||!S.O)return;
  S.enviando=true;tela();
  const O=S.O;
  const dados={pdf:S.pdf,empresa:S.empresa.trim(),cor:S.cor,logo:S.logo,obra:O.cliente||"Obra",cliente:O.cliente,numero:O.numero,emissao:O.emissao,vendedor:O.vendedor,corPerfil:O.cor,
-  itens:O.itens.map(it=>Object.assign(it,{lido:{kind:it.kind,f:it.f,enc:it.enc},ok:false})),avisos:O.avisos,
+  itens:O.itens.map(it=>Object.assign(it,{lido:{kind:it.kind,f:it.f,enc:it.enc,per:it.per||""},ok:false})),avisos:O.avisos,
   ori:{pdf:S.oriPdf,numero:S.ORI.numero,tipologias:S.ORI.itens.length,perfis3d:Object.keys(S.ORI.secoes||{}).length,ligados:S.lig.ligados,total:S.lig.total,avisos:S.ORI.avisos},
   contato:{nome:S.nome.trim(),zap:S.zap.trim(),obs:S.obs.trim()}};
  try{const r=await sb.rpc("obra3d_envio_enviar",{tok,dados});if(r.error)throw r.error;

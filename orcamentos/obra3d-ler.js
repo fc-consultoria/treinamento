@@ -35,7 +35,8 @@ function desenho(tipo,linha){
  if(/VENEZIANA/.test(d))enc="veneziana";
  else if(/VIDRO\s+SUPERIOR/.test(d)&&/LAMBRI/.test(d))enc="vidlam";
  else if(/LAMBRI/.test(d))enc="lambri";
- return {kind,f:Math.max(1,Math.min(f,12)),enc,reconhecido:kind!=="gen"};
+ const per=/PERSIANA|INTEGRADA/.test(d)?"1":"";
+ return {kind,f:Math.max(1,Math.min(f,12)),enc,per,reconhecido:kind!=="gen"};
 }
 
 /* PDF da Proposta comercial em layout de cards (cada item: descrição, Cor:, Vidros:, linha "L x H: Área: Tipo: Qtd: Linha: Localização:" e os valores logo abaixo) */
@@ -119,7 +120,7 @@ function ler(P){
  /* sugestão do desenho e conferências automáticas (nunca alteram o texto original) */
  const vistos={};
  O.itens.forEach((it,i)=>{it.n=i+1;
-  const d=desenho(it.tipo,it.linha);it.kind=d.kind;it.f=d.f;it.enc=d.enc;
+  const d=desenho(it.tipo,it.linha);it.kind=d.kind;it.f=d.f;it.enc=d.enc;it.per=d.per;
   if(!d.reconhecido)it.avisos.push("Tipologia não reconhecida: escolha o desenho 3D.");
   if(vistos[it.item])it.avisos.push(`Número de item ${it.item} repetido no original (também no ${vistos[it.item]}º bloco).`);else vistos[it.item]=i+1;
   const ult=String(it.loc||"").split(",").pop().trim();
@@ -131,6 +132,10 @@ function ler(P){
   /* valor do item no PDF: fica só no painel da Matriz (base da margem no PDF impresso); o link nunca leva preço */
   it.pv=it.vt||0;it.orig.pv=it.pv;delete it.vu;delete it.vt;
  });
+ /* proposta só com o total (layout em cards): o total é rateado pela área de cada item (m² × qtde), para a margem em lote ter base por item */
+ if(O.total&&O.itens.length&&!O.itens.some(t=>t.pv)){const ar=O.itens.map(t=>t.m2||(t.L*t.H*(t.q||1)/1e6)||0),sa=ar.reduce((a,b)=>a+b,0);
+  if(sa>0){let acc=0;O.itens.forEach((t,i)=>{t.pv=i<O.itens.length-1?Math.round(O.total*ar[i]/sa*100)/100:Math.round((O.total-acc)*100)/100;acc+=t.pv;t.orig.pv=t.pv;t.rateado=true});
+   O.avisos.push("O PDF traz só o valor total: ele foi distribuído pelos itens conforme a área (m²) de cada um.")}}
  const cores=[...new Set(O.itens.map(t=>t.corPerfil).filter(Boolean))];O.cor=cores[0]||"";
  if(!O.itens.length)O.avisos.push("Nenhum item encontrado. Confira se o PDF é o orçamento com Local/Ambiente, Tipo e medidas.");
  return O;

@@ -85,7 +85,7 @@ if(opts&&opts.puxador){NM="Puxador";const px=opts.puxador==="esq"?-w/2+face/2:w/
 function vidroFixo(w,h,m){return vidro(w+.01,h+.01,m)}
 
 /* monta a tipologia: devolve {grupo, animar(t 0..1)} */
-function montar(t,m){
+function montarBase(t,m){
  const L=Math.max(+t.L||1000,200)/1000,H=Math.max(+t.H||1000,200)/1000;
  const g=new (T().Group)();const moveis=[];
  const f=Math.max(1,Math.min(+t.f||1,12));const kind=t.kind||"gen";
@@ -140,6 +140,27 @@ NM=kind==="painel"?"Perfil U":"Marco"; g.add(quadro(L,H,MQ,kind==="painel"?.03:P
  return {grupo:g,animar:k=>moveis.forEach(fn=>fn(k)),temMovel:moveis.length>0,L,H,kind};
 }
 
+/* 05/11/2026 · porta/janela com persiana integrada: caixa da persiana em cima, guias nas laterais e a cortina meio descida
+   (é apresentação: medidas aproximadas, a esquadria fica abaixo da caixa dentro do L × A do orçamento) */
+function laminas(hex,rep){const c=document.createElement("canvas");c.width=8;c.height=64;const x=c.getContext("2d");
+ x.fillStyle=hex;x.fillRect(0,0,8,64);x.fillStyle="rgba(255,255,255,.18)";x.fillRect(0,4,8,10);x.fillStyle="rgba(0,0,0,.38)";x.fillRect(0,58,8,6);
+ const tx=new (T().CanvasTexture)(c);tx.wrapS=tx.wrapT=T().RepeatWrapping;tx.repeat.set(1,rep);if(T().sRGBEncoding)tx.encoding=T().sRGBEncoding;return tx}
+function montar(t,m){
+ if(!t.per)return montarBase(t,m);
+ const Hmm=Math.max(+t.H||1000,400),hcm=Math.round(Math.min(260,Math.max(170,Hmm*.09)));
+ const base=montarBase(Object.assign({},t,{per:"",H:Hmm-hcm}),m);
+ const g=new (T().Group)();const L=base.L,H=Hmm/1000,hc=hcm/1000,hl=H-hc;
+ base.grupo.position.y=-hc/2;g.add(base.grupo);
+ const zf=PROF/2+.022;
+ NM="Caixa da persiana";const cx=perf(L,hc,PROF+.05,m.alu,0,H/2-hc/2,.025);cx.userData.len=L;g.add(cx);
+ NM="Guia da persiana";[-1,1].forEach(sd=>{const gu=perf(.028,hl,.03,m.alu,sd*(L/2-.014),-hc/2,zf);gu.userData.len=hl;g.add(gu)});
+ /* cortina: uma peça só, lâminas desenhadas na textura; desce cerca de 1/3 da altura livre */
+ const dc=Math.max(.12,hl*.34),cw=L-.05;
+ const mat=new (T().MeshStandardMaterial)({map:laminas(m.p.hex,dc/.045),metalness:m.p.met,roughness:Math.min(.85,m.p.rug+.1)});
+ NM="Cortina da persiana";const ct=box(cw,dc,.012,mat,0,H/2-hc-dc/2,zf);g.add(ct);
+ NM="Lâmina final";g.add(perf(cw,.03,.02,m.alu,0,H/2-hc-dc-.012,zf));
+ return {grupo:g,animar:base.animar,temMovel:base.temMovel,L,H,kind:base.kind}}
+
 /* faixas de reflexo no vidro (textura gerada, sem imagem externa) */
 let REF=null;
 function reflexo(){if(REF)return REF;const c=document.createElement("canvas");c.width=c.height=256;const g=c.getContext("2d");
@@ -174,7 +195,7 @@ let R=null;
 function renderer(){if(R)return R;R=new (T().WebGLRenderer)({antialias:true,alpha:true,preserveDrawingBuffer:true});
  R.setPixelRatio(1);R.toneMapping=T().ACESFilmicToneMapping;R.toneMappingExposure=1.05;R.shadowMap.enabled=true;R.shadowMap.type=T().PCFSoftShadowMap;if(T().sRGBEncoding)R.outputEncoding=T().sRGBEncoding;return R}
 const cache=new Map();
-function chave(t,cfg){return [t.kind,t.f,t.enc||"",t.L,t.H,t.desc,t.vidroCor||"",t.corPerfil||"",cfg.cor||"",cfg.px||0,cfg.aberto?1:0].join("|")}
+function chave(t,cfg){return [t.kind,t.f,t.enc||"",t.per?"P":"",t.L,t.H,t.desc,t.vidroCor||"",t.corPerfil||"",cfg.cor||"",cfg.px||0,cfg.aberto?1:0].join("|")}
 function imagem(t,cfg){cfg=cfg||{};const k=chave(t,cfg);if(cache.has(k))return cache.get(k);
  if(!T())return "";const r=renderer();const px=cfg.px||900;
  const mt=materiais(t,cfg),mo=montar(t,mt);if(cfg.aberto)mo.animar(.55);
