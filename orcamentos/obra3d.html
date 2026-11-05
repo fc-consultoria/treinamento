@@ -134,7 +134,7 @@ table.cli td.n,table.cli th.n{text-align:right}
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/environments/RoomEnvironment.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/geometries/RoundedBoxGeometry.js"></script>
-<script src="tip3d.js?v=20261104q"></script>
+<script src="tip3d.js?v=20261105a"></script>
 <script src="proposta.js?v=20261104r"></script>
 <script src="obra3d-ler.js"></script>
 <script src="orientativo-ler.js?v=1"></script>
@@ -459,6 +459,7 @@ function fila(){cancelAnimationFrame(filaRaf);const passo=()=>{const im=document
 function urlDe(tok){return new URL("apresentacao.html?t="+tok,location.href).href}
 function apr(){const nOk=P.itens.filter(t=>t.ok).length,lk=P.link;const v=lk&&VISTAS[lk.tok];
  $("tab").innerHTML=`${nOk<P.itens.length?`<div class="aviso">Faltam <b>${P.itens.length-nOk}</b> itens para conferir antes de entregar o link.</div>`:""}
+ <div class="card noprint" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px;padding:12px 14px"><span style="flex:1;min-width:220px"><b>Perfis reais no 3D:</b> ${P.itens.filter(t=>t.cortes).length} de ${P.itens.length} itens${P.pdfOri?` <span class="hint">· Orientativo: ${esc(P.pdfOri)}</span>`:""}<br><span class="hint" id="o-msg" role="status">${P.itens.some(t=>t.cortes)?"Toque em um perfil no Ver em 3D para ver o desenho real.":"Sem o Orientativo de Montagem, o 3D mostra perfis genéricos. Anexe o Orientativo deste orçamento."}</span></span><label class="btn${P.itens.some(t=>t.cortes)?"":" amb"}" style="cursor:pointer">📎 ${P.itens.some(t=>t.cortes)?"Trocar":"Anexar"} Orientativo de Montagem<input type="file" id="o-file" accept="application/pdf,.pdf" hidden></label></div>
  <div class="card lnk noprint">${lk&&lk.ativo!==false?`<input readonly id="l-url" value="${esc(urlDe(lk.tok))}" aria-label="Link do cliente"><button class="btn pri" type="button" id="l-cp">Copiar link</button><a class="btn" id="l-wa" target="_blank" rel="noopener">WhatsApp</a><a class="btn" href="${esc(urlDe(lk.tok))}" target="_blank" rel="noopener">Abrir ↗</a><button class="btn" type="button" id="l-up">Atualizar link</button><button class="btn dan" type="button" id="l-off">Desativar</button>
   <span class="hint" style="flex-basis:100%">Link sem preço, com a marca de ${esc(P.empresa||"—")}.${v?` Aberto ${v.vistas} ${v.vistas===1?"vez":"vezes"}${v.ultima_vista?` (último em ${new Date(v.ultima_vista).toLocaleString("pt-BR")})`:""}.`:" Ainda não foi aberto."} Depois de ajustar desenhos ou nomes, toque em <b>Atualizar link</b>.</span>`
   :`<span class="hint" style="flex:1">${lk?"O link anterior foi desativado. ":""}Gere o link sem preço para enviar à ${esc(P.empresa||"vidraçaria")}.</span><button class="btn pri" type="button" id="l-new">Gerar link sem preço</button>`}
@@ -475,6 +476,18 @@ function apr(){const nOk=P.itens.filter(t=>t.ok).length,lk=P.link;const v=lk&&VI
  const msg=t=>{$("l-msg").textContent=t};
  const publicar=async tok=>{msg("Publicando…");const r=await BD.link(tok,"o3d-"+P.id,doc(P));if(r&&r.error){msg("Não foi possível publicar: "+r.error.message);return false}
   P.link={tok,ativo:true,em:new Date().toISOString()};if(P.status==="recebido"||P.status==="conferencia"){P.status="entregue";P.entregue=P.entregue||new Date().toISOString().slice(0,10)}touch(P);return true};
+ /* 05/11/2026 · anexar o Orientativo a um projeto já criado: liga os perfis reais e atualiza o link ativo */
+ $("o-file").onchange=async e=>{const f=e.target.files[0];if(!f)return;const om=t=>{$("o-msg").textContent=t};
+  if(!ehPdf(f)){om(`"${f.name}" não é PDF.`);return}om("Lendo o Orientativo e recortando os perfis…");
+  try{const {d,P:pg}=await abrirDoc(f);const R=O3DORI.ler(pg);
+   if(!R.itens.length||!R.itens.some(t=>t.perfis.length)){om("Não encontrei a lista de corte neste PDF. Confira se é o Orientativo de Montagem.");return}
+   if(P.numero&&R.numero&&String(P.numero)!==String(R.numero)){om(`Este Orientativo é do orçamento ${R.numero} e o projeto é do ${P.numero}. Anexe o do mesmo orçamento.`);return}
+   await O3DORI.secoes(d,R);O3DORI.limpar(R);
+   const bk=P.itens.map(t=>t.cortes);P.itens.forEach(t=>delete t.cortes);const lg=O3DORI.ligar(P.itens,R);
+   if(!lg||!lg.ligados){P.itens.forEach((t,i)=>{if(bk[i])t.cortes=bk[i]});om("Nenhuma tipologia do Orientativo corresponde aos itens deste projeto.");return}
+   P.pdfOri=f.name;touch(P);
+   if(lk&&lk.ativo!==false){await publicar(lk.tok);toast(`${lg.ligados} itens com perfis reais · link do cliente atualizado`)}else toast(`${lg.ligados} itens com perfis reais`);
+   abrir(P.id)}catch(err){console.warn(err);om("Não consegui ler o Orientativo. Use o PDF gerado pelo sistema.")}};
  if($("l-new"))$("l-new").onclick=async()=>{const b=new Uint8Array(18);crypto.getRandomValues(b);const tok=btoa(String.fromCharCode(...b)).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");if(await publicar(tok)){abrir(P.id);toast("Link gerado · status: Link entregue")}};
  if($("l-up"))$("l-up").onclick=async()=>{if(await publicar(lk.tok)){toast("Link atualizado");abrir(P.id)}};
  if($("l-off"))$("l-off").onclick=async()=>{if(!confirm("Desativar este link? Quem tiver o link não verá mais a apresentação."))return;const r=await BD.linkOff(lk.tok);if(r&&r.error){msg("Não foi possível desativar: "+r.error.message);return}P.link.ativo=false;touch(P);abrir(P.id)};

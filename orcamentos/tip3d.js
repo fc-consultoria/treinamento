@@ -345,7 +345,7 @@ function vitrine(p){const r=p.ct&&p.ct.row,S=r&&V.cortes.secoes[r.s];if(!S)retur
 function legendaVitrine(p){const r=p.ct.row,lb=p.ct.lbl||frase(r.desc||r.nome),nm=esc(p.nm);
  return `${svgSecao(r).replace('width="34" height="34"','width="54" height="54"')}<span><b>${nm}</b>${lb&&lb.toUpperCase()!==p.nm.toUpperCase()?" · "+esc(lb):""}<br>Perfil usado nesta obra · corte <b>${r.tam} mm</b> · ${txtCorte(r.corte)} · ${qt(r.q)} por esquadria<br><small>Imagem demonstrativa · arraste para girar · afaste os dedos para aproximar</small></span>`}
 function passoVitrine(){const v=V.vit;if(!v)return;const g=v.g,now=performance.now(),e=Math.min(1,(now-v.t0)/650),ez=1-Math.pow(1-e,3),sc=g.userData.sc*ez;
- g.scale.set(Math.max(sc,.001),Math.max(sc,.001),Math.max(sc,.001));if(!V.mexeu&&e>=1)g.rotation.y+=.0035}
+ g.scale.set(Math.max(sc,.001),Math.max(sc,.001),Math.max(sc,.001));}
 function sairVitrine(){const v=V.vit;if(v){V.conj.remove(v.g);v.g.traverse(o=>{if(o.geometry)o.geometry.dispose()});V.vit=null}
  V.pc.forEach(q=>q.o.visible=true);frente(0);V.modo="k";botoes()}
 function linhas(v){V.mo.grupo.traverse(o=>{if(o.isLine&&!o.userData.aresta)o.visible=v})}
@@ -374,7 +374,7 @@ function passoPecas(){const now=performance.now();V.s.updateMatrixWorld();const 
  V.pc.forEach((p,i)=>{const o=p.o;if(now<p.t0)return;ult=i;if(p.pend){p.pend=false;o.visible=true;o.position.copy(p.ex);o.rotation.set(p.er[0],p.er[1],p.er[2]);o.scale.set(1,1,1)}
   let tp,tr,ts;if(p.tg==="home"){tp=p.hp;tr=p.hr;ts=1}
   else if(p.tg==="kit"){tp=o.parent.worldToLocal(V.conj.localToWorld(v.copy(p.kp)));tr=p.gr?(p.krz?[.5,.45,p.krz]:[.5,.45,0]):[0,0,p.krz];ts=p.ks}
-  else{tp=o.parent.worldToLocal(v.copy(V.cam.position).multiplyScalar(.45));tr=p.gr?[.32,.75+Math.sin(now*.0007)*.75,p.krz]:[.3,now*.0008,p.krz];ts=p.fs}
+  else{tp=o.parent.worldToLocal(v.copy(V.cam.position).multiplyScalar(.45));tr=p.gr?[.32,.75,p.krz]:[.3,.6,p.krz];ts=p.fs}
   o.position.lerp(tp,a);o.rotation.set(o.rotation.x+(tr[0]-o.rotation.x)*a,o.rotation.y+(tr[1]-o.rotation.y)*a,o.rotation.z+(tr[2]-o.rotation.z)*a);const sc=o.scale.x+(ts-o.scale.x)*a;o.scale.set(sc,sc,sc)});
  const cap=V.d.querySelector("#t3d-cap");
  if(V.modo==="m"){if(ult>=0)cap.innerHTML=`Montagem · <b>${esc(V.pc[ult].nm)}</b> · peça ${ult+1} de ${V.pc.length}`;
