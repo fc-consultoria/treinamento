@@ -868,7 +868,8 @@ function avisosWhatsAppPendentes(){
   const lista = [];
   CLIENTS.forEach(c=>{
     // 1) Marcos de progresso por quantidade de itens, por linha — só pra quem está com "Sim" no acompanhamento
-    if(c.notificar_prazo && !(PORTAIS[c.id] && PORTAIS[c.id].ativo)){
+    // Desligado (nov/2026): o acompanhamento do cliente é só pelo portal, em %. Avisos por quantidade não são mais gerados.
+    if(false){
       const cats = linhasDeProgressoCliente(c).map(x=>({key:x.key, nome:x.nome}));
       cats.forEach(cat=>{
         const p = categoriaProgress(c, cat.key);
@@ -4234,14 +4235,14 @@ function renderClienteCadastro(c){
           <button class="chip ${c.tipo_cliente!=='ativo'?'active':''}" data-action="set-cliente-campo" data-campo="tipo_cliente" data-valor="novo">Cliente novo</button>
           <button class="chip ${c.tipo_cliente==='ativo'?'active':''}" data-action="set-cliente-campo" data-campo="tipo_cliente" data-valor="ativo">Cliente ativo (revisão)</button>
         </div>
-        <div class="desc" style="margin-top:6px;">"Cliente ativo" é para quem já usou nosso serviço antes e está retomando — os avisos automáticos de progresso (por quantidade de itens) passam a falar em "revisão" em vez de "implantação". No link de acompanhamento o cliente passa a ver "Seu sistema está em revisão de preços" (muda na hora).</div>
+        <div class="desc" style="margin-top:6px;">"Cliente ativo" é para quem já usou nosso serviço antes e está retomando — no link de acompanhamento o cliente passa a ver "Seu sistema está em revisão de preços" (muda na hora).</div>
       </div>
       <div>
         <label style="display:block; font-size:12px; font-weight:650; color:var(--text-2); margin-bottom:6px;">Linhas contratadas</label>
         <div class="chiprow">
           ${Object.keys(PRICE_DB).sort().map(nome=>`<button class="chip ${(c.linhas_componentes||[]).includes(nome)?'active':''}" data-action="toggle-linha-componente" data-linha="${nome}">${nome}</button>`).join('')}
         </div>
-        <div class="desc" style="margin-top:6px;">Marque as linhas que ${c.nome} contratou (ex: Chroma, Ecoline). Valem para componentes e perfis: só essas aparecem na aba "Componentes" e no portal do cliente, entram na % geral de Componentes e nos avisos automáticos de progresso — cada linha avisa separadamente, dizendo qual delas bateu o marco.</div>
+        <div class="desc" style="margin-top:6px;">Marque as linhas que ${c.nome} contratou (ex: Chroma, Ecoline). Valem para componentes e perfis: só essas aparecem na aba "Componentes" e no portal do cliente, entram na % geral de Componentes e no andamento em % que o cliente vê no portal.</div>
         ${(c.linhas_componentes||[]).length?`<div style="margin-top:14px;">
           <label style="display:block; font-size:12px; font-weight:650; color:var(--text-2); margin-bottom:6px;">Situação de cada linha (o cliente vê no portal)</label>
           ${[...(c.linhas_componentes||[]),'Vidro'].map(l=>{const st=(c.linhas_status||{})[l]||'';const op=[['','Automática','#6b7a83'],['aguardando','⚪ Aguardando','#6b7a83'],['alimentando','🟢 Em alimentação','#1f7a45'],['manual','🚨 Liberada · em revisão','#b45309'],['concluida','✅ 100% revisada','#0a6d6f']];
@@ -4316,30 +4317,7 @@ function renderClienteCadastro(c){
   </div>
 
   <div class="panel">
-    <div class="panel-head"><div><h3>${icon('message-circle')} Acompanhamento de progresso (cliente)</h3><div class="desc">Com "Sim" ativado, o aviso é gerado pela quantidade de itens alimentados, em cada linha (Componentes, Vidro, Perfis) separadamente — ex.: "Dos 283 itens da linha Suprema-Gold, 200 já foram alimentados". O aviso é enviado pelo WhatsApp. Você escolhe cliente por cliente.</div></div></div>
-    <div style="padding:16px 18px; display:flex; flex-direction:column; gap:14px;">
-      <div class="chiprow">
-        <button class="chip ${c.notificar_prazo?'active':''}" data-action="set-cliente-campo" data-campo="notificar_prazo" data-tipo="bool" data-valor="true">Sim, enviar</button>
-        <button class="chip ${!c.notificar_prazo?'active':''}" data-action="set-cliente-campo" data-campo="notificar_prazo" data-tipo="bool" data-valor="false">Não enviar</button>
-      </div>
-      <div>
-        <label style="display:block; font-size:12px; font-weight:650; color:var(--text-2); margin-bottom:6px;">Intervalo dos avisos</label>
-        <table style="border-collapse:collapse; font-size:12.5px; margin-bottom:10px;">
-          <tr style="color:var(--text-3);"><td style="padding:3px 16px 3px 0;">Total de itens da linha</td><td style="padding:3px 0;">Avisa a cada</td></tr>
-          <tr><td style="padding:3px 16px 3px 0;">até 50</td><td>só ao concluir</td></tr>
-          <tr><td style="padding:3px 16px 3px 0;">51 a 200</td><td>50 itens</td></tr>
-          <tr><td style="padding:3px 16px 3px 0;">201 a 500</td><td>100 itens</td></tr>
-          <tr><td style="padding:3px 16px 3px 0;">acima de 500</td><td>200 itens</td></tr>
-        </table>
-        <div class="field" style="max-width:260px;"><label>Usar outro intervalo para ${escapeHtml(c.nome)}</label><input type="number" min="1" step="1" value="${Number(c.aviso_passo)>0 ? Number(c.aviso_passo) : ''}" placeholder="Vazio = automático pela tabela" data-action="edit-cliente-campo" data-campo="aviso_passo" data-tipo="numero"></div>
-        <div class="desc" style="margin-top:4px;">Ex.: digite 100 para avisar a cada 100 itens em todas as linhas deste cliente. O aviso de conclusão sai sempre no total.</div>
-      </div>
-      <div class="desc"><b>WhatsApp:</b> os avisos aparecem na "Central de avisos" no topo da página Clientes (usa o telefone cadastrado acima) — é só clicar em "Enviar" e o WhatsApp abre com a mensagem pronta.</div>
-    </div>
-  </div>
-
-  <div class="panel">
-    <div class="panel-head"><div><h3>${icon('bell')} Lembrete para você (nota fiscal e boleto)</h3><div class="desc">Independente do toggle acima, 5 dias antes da data de vencimento cadastrada, você recebe um e-mail no seu próprio endereço avisando para emitir a nota fiscal e o boleto deste cliente.</div></div></div>
+    <div class="panel-head"><div><h3>${icon('bell')} Lembrete para você (nota fiscal e boleto)</h3><div class="desc">5 dias antes da data de vencimento cadastrada, você recebe um e-mail no seu próprio endereço avisando para emitir a nota fiscal e o boleto deste cliente.</div></div></div>
   </div>
 
   <div class="panel">
@@ -4823,7 +4801,7 @@ function renderClienteComponentes(c){
     <div class="panel">
       <div class="panel-head"><div><h3>${icon('box')} Componentes</h3><div class="desc">Nenhuma linha de Componentes contratada ainda para ${c.nome}.</div></div></div>
       <div style="padding:16px 18px;">
-        ${emptyState('box','Escolha as linhas contratadas', `Vá na aba "Contrato & Acesso" e marque quais linhas de Componentes (ex: Chroma, Ecoline, Atlanta...) ${c.nome} contratou. Assim que marcar, o checklist de alimentação e os avisos automáticos de progresso (por quantidade de itens) passam a valer para cada linha marcada.`)}
+        ${emptyState('box','Escolha as linhas contratadas', `Vá na aba "Contrato & Acesso" e marque quais linhas de Componentes (ex: Chroma, Ecoline, Atlanta...) ${c.nome} contratou. Assim que marcar, o checklist de alimentação e o andamento em % do portal passam a valer para cada linha marcada.`)}
       </div>
     </div>`;
   }
@@ -8588,7 +8566,7 @@ function openNovoClienteModal(versaoNova){
           <button type="button" class="chip active" data-tipo="novo">Cliente novo</button>
           <button type="button" class="chip" data-tipo="ativo">Cliente ativo (revisão)</button>
         </div>
-        <div class="desc" style="margin-top:6px;">"Cliente ativo" é para quem já usou nosso serviço antes e está retomando agora — os avisos automáticos de progresso passam a falar em "revisão" em vez de "implantação". No link de acompanhamento o cliente passa a ver "Seu sistema está em revisão de preços" (muda na hora).</div>
+        <div class="desc" style="margin-top:6px;">"Cliente ativo" é para quem já usou nosso serviço antes e está retomando agora — no link de acompanhamento o cliente passa a ver "Seu sistema está em revisão de preços" (muda na hora).</div>
       </div>
       <div>
         <label style="display:block; font-size:12px; font-weight:650; color:var(--text-2); margin-bottom:6px;">${versaoNova ? 'Linhas sendo alimentadas' : 'Linhas de Componentes contratadas'}</label>
