@@ -286,7 +286,9 @@ const MOD={
 /* 29/10/2026 · ferramentas passaram para a Plataforma FC 3D (todos os usuários).
    No portal fica só Acesso + Agenda da FC; os outros módulos ficam OCULTOS (não apagados):
    os acessos já gravados de cada pessoa continuam no banco. Para voltar um módulo, tire-o desta lista. */
-const OCULTO=new Set(['cat','esq','casa','dia','orc','pcod','conv','comp','dist','est','pla','rvi','sol']);
+/* 06/11/2026 · cada empresa concentrada no próprio card: o portal volta a mostrar os cards liberados de cada login
+   (igual à prévia da Matriz). O atalho para a Plataforma FC 3D geral saiu. */
+const OCULTO=new Set([]);
 const VIS=k=>MOD[k]&&!OCULTO.has(k);
 const FC3D='https://fc-consultoria.github.io/fc3d/clientes/';
 const COLORS={cat:'#d5604a',ori:'var(--amber)',esq:'#c98a2b',casa:'#8a6bd6',dia:'#3aa0c9',orc:'var(--brand)',pcod:'#2f8f6f',conv:'#6b7fd6',comp:'#1d5fa8',dist:'#5aa3d6',est:'#7a5c3a',pla:'#9a7b2f',rvi:'#4a8a8a',sol:'#b0627e',age:'#7a8794'};
@@ -471,16 +473,13 @@ function vSetor(papel){
  if(ADM&&!verComo[papel])verComo[papel]='__fc';
  let me=G()?(verComo[papel]==='__fc'&&ADM?FCP:L.find(p=>p.id===verComo[papel])||L[0]):(D.equipe||[]).find(p=>p.id===D.eu.id);
  if(!me)return `<div class="hello"><div><h1>${esc(s[1])}</h1><p>Painel do setor ${esc(s[1])}.</p></div></div><div class="empty">Ninguém no setor ${esc(s[1])} ainda. O gestor cadastra em "+ Cadastrar pessoa", na Central do Gestor.</div>`;
- const ord=[...s[3],...(me.abas||[]).filter(k=>!s[3].includes(k))].filter(VIS);
+ const ord=[...s[3],...(me.abas||[]).filter(k=>!s[3].includes(k))].filter(k=>VIS(k)&&(me.abas||[]).includes(k));
  const meus=(D.atends||[]).filter(a=>!G()||me.id==='__fc'||a.vend===me.nome);
  return `
  ${G()?`<span class="demo-note">Você está vendo o painel como gestor · ver painel de: <select id="verSel" data-p="${papel}" style="width:auto;display:inline-block;padding:2px 6px">${ADM?`<option value="__fc" ${me.id==='__fc'?'selected':''}>🏢 Matriz · FC (você)</option>`:''}${L.map(p=>`<option value="${p.id}" ${p.id===me.id?'selected':''}>${esc(p.nome)}</option>`).join('')}</select></span>`:''}
  <div class="hello"><div><h1>${me.id==='__fc'?'Matriz · setor '+esc(s[1]):'Olá, '+esc(me.nome.split(' ')[0])}</h1><p>${me.id==='__fc'?'Você abre cada ferramenta com o login da FC: vê, simula, faz pedidos e edita o que a equipe fez.':'Suas ferramentas do setor '+esc(s[1])+'.'}</p></div></div>
  ${!me.ativo?'<div class="empty" style="margin-bottom:14px">Este acesso está pausado pelo gestor.</div>':''}
  <div class="grid mods" id="t-mods">
-  <a class="mod" href="${FC3D+(G()?'?emp='+encodeURIComponent(D.slug||'guapore-vidros')+'&ver='+(me.id==='__fc'?'gestor':'vendedor'):'')}" target="_blank" rel="noopener" id="mod-fc3d" style="text-decoration:none;color:inherit;border-color:var(--brand)">
-   <span class="tag" style="background:var(--brand);color:#fff">novo</span>
-   <div class="ic" style="font-size:20px">🧊</div><h3>Plataforma FC 3D</h3><p>Tipologias 3D, Catálogo de Perfis e Substituir perfil. Entre com o mesmo login e senha.</p></a>
   ${ord.map(k=>{const ok=me.ativo&&(me.abas||[]).includes(k);return `
   <button class="mod ${ok?'':'locked'}" data-act="open" data-m="${k}" data-ok="${ok}" id="mod-${k}">
    ${ok?'':'<span class="tag">🔒 bloqueado</span>'}
