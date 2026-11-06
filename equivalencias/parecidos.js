@@ -44,11 +44,18 @@
       ${L.length?`<div class="gr">${L.map(o=>card(g,ref,o)).join('')}</div>`:`<p><b>Nenhum perfil com peso até ±${TOL}%.</b> Aumente a tolerância.</p>`}</div>`;}
   /* ===== varredura (só FC): todos os perfis com uma opção de compra ===== */
   const EXCL=new Set(['doro','sha','vg','urb','tc']);/* linhas exclusivas (CDA, Texa Urban) e tubos ficam fora */
-  let VQ='cli',VL='',VN=30;const SELV={};let DIS={};try{DIS=JSON.parse(localStorage.getItem('par-dis')||'{}');}catch(_){}
+  let VQ='cli',VL='',VN=30;const SELV={};let DIS={},DISok=0;
+  /* "Nenhum é igual" fica gravado online (trein_eventos 'par_dis'): vale em qualquer acesso e para todos os clientes */
+  async function disCarrega(){if(DISok)return;DISok=1;let loc={};try{loc=JSON.parse(localStorage.getItem('par-dis')||'{}');}catch(_){}
+    try{const r=await sb.from('trein_eventos').select('detalhe').eq('tipo','par_dis');(r.data||[]).forEach(x=>{if(x.detalhe&&x.detalhe.k)DIS[x.detalhe.k]=1;});
+      const sobe=Object.keys(loc).filter(k=>!DIS[k]);/* leva para o banco o que estava só neste navegador */
+      if(sobe.length){const {error}=await sb.from('trein_eventos').insert(sobe.map(k=>({tipo:'par_dis',detalhe:{k,em:new Date().toLocaleDateString('pt-BR')}})));if(!error){sobe.forEach(k=>DIS[k]=1);try{localStorage.removeItem('par-dis');}catch(_){}}}
+    }catch(_){Object.assign(DIS,loc);}
+    tela();}
   function doCliente(g){const A=(typeof DADOS!=='undefined'&&DADOS.abc)||{};const ks=new Set(Object.keys(A).map(norm));
     return g.m.some(m=>ks.has(norm(m[1]))||(typeof CLIV!=='undefined'&&CLIV.has(norm(m[1]))))||(window.FCCli&&FCCli.ativo&&FCCli.ativo()&&g.m.some(m=>FCCli.acha&&FCCli.acha(m[1]).length));}
   const confBt=gi=>{const n=(SELV[gi]||[]).length;return `<div class="bts"><button type="button" class="ok" data-parconf="${gi}" ${n?'':'disabled'}>Confirmar iguais${n?' ('+n+')':''}</button></div>`;};
-  function tela_(){st();if(!SIG){sigs().then(()=>tela());return '<div class="box"><p class="vazio">Carregando os desenhos…</p></div>';}
+  function tela_(){st();if(!DISok){disCarrega();return '<div class="box"><p class="vazio">Carregando a varredura…</p></div>';}if(!SIG){sigs().then(()=>tela());return '<div class="box"><p class="vazio">Carregando os desenhos…</p></div>';}
     const todos=IDX.g.filter(g=>!EXCL.has(g.l)&&g.m.some(m=>m[0]!=='alcoa')&&fornDe(g).size<=1&&!DIS[g.l+'|'+g.k]);
     const cli=todos.filter(doCliente);let L=VQ==='cli'?cli:todos;if(VL)L=L.filter(g=>g.l===VL);
     const lin=[...new Set(todos.map(g=>g.l))];
@@ -94,7 +101,7 @@
     else if(d.parconf){if(!t.disabled)confirmaVarios(d.parconf);}
     else if(d.varq){VQ=d.varq;VN=30;tela();}
     else if(d.varmais!=null){VN+=30;tela();}
-    else if(d.pardis){DIS[d.pardis]=1;try{localStorage.setItem('par-dis',JSON.stringify(DIS));}catch(_){}tela();}
+    else if(d.pardis){const k=d.pardis;DIS[k]=1;tela();sb.from('trein_eventos').insert({tipo:'par_dis',detalhe:{k,em:new Date().toLocaleDateString('pt-BR')}}).then(({error})=>{if(error){delete DIS[k];toast('Não gravou: '+error.message);tela();}});}
     else if(d.aba2){ABA=d.aba2;}});
   document.addEventListener('change',e=>{const s=e.target.closest('[data-parsel]');if(!s)return;const gi=s.dataset.parsel;const A=SELV[gi]=SELV[gi]||[];
     const i=A.indexOf(s.value);if(s.checked&&i<0)A.push(s.value);if(!s.checked&&i>=0)A.splice(i,1);
