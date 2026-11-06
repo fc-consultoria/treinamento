@@ -64,7 +64,7 @@
       ${ADM?`<form data-pedf="${esc(k)}" data-ref="${esc(ref.f+'|'+ref.c)}"><input name="f" list="pedForn" placeholder="Empresa" required><input name="c" placeholder="Código do item" required><button type="submit" class="ok">Enviar</button></form>`:''}</div>`;};
   function tela_(){st();if(!DISok){disCarrega();return '<div class="box"><p class="vazio">Carregando a varredura…</p></div>';}if(!SIG){sigs().then(()=>tela());return '<div class="box"><p class="vazio">Carregando os desenhos…</p></div>';}
     const todos=IDX.g.filter(g=>!EXCL.has(g.l)&&g.m.some(m=>m[0]!=='alcoa')&&fornDe(g).size<=1&&!DIS[g.l+'|'+g.k]);
-    const cli=todos.filter(doCliente);let L=VQ==='cli'?cli:todos;if(VL)L=L.filter(g=>g.l===VL);
+    const base=typeof EMP!=='undefined'&&EMP==='fc';const cli=base?[]:todos.filter(doCliente);let L=(VQ==='cli'&&!base)?cli:todos;if(VL)L=L.filter(g=>g.l===VL);
     const lin=[...new Set(todos.map(g=>g.l))];
     const linhas=L.slice(0,VN).map(g=>{const ref=refDe(g);const C=candidatos(g,ref).slice(0,4);
       return `<div class="vr"><div class="vo"><div class="th" data-zoom="${esc(ref.img)}" data-t="${esc(IDX.forn[ref.f]+' '+ref.c)}">${ref.img?`<img src="${esc(ref.img)}" alt="" loading="lazy" onerror="this.replaceWith(document.createTextNode('sem desenho'))">`:'<small>sem desenho</small>'}</div>
@@ -73,7 +73,7 @@
         <div class="gr">${C.length?C.map(o=>card(g,ref,o,1)).join(''):pedBox(g,ref)}</div></div>`;}).join('');
     return `<section class="box par" style="background:#fff"><h1 class="t" style="margin:0">🔁 Varredura · perfis com uma só opção de compra</h1>
       <p>Para cada perfil que hoje só tem um fornecedor, o sistema mostra os perfis dos outros fornecedores da mesma linha com peso próximo, começando pelos de desenho mais parecido. Confira os desenhos, marque <b>Selecionar</b> nos candidatos iguais (pode marcar mais de um) e clique em <b>Confirmar iguais</b>: cada par entra na Conversão de códigos e o item passa a ter comparação de preço. Linhas exclusivas (CDA, Texa Urban) e tubos ficam fora.</p>
-      <div class="tl"><button type="button" data-varq="cli" class="${VQ==='cli'?'on':''}">Itens do cliente (${cli.length})</button><button type="button" data-varq="todos" class="${VQ==='todos'?'on':''}">Todos (${todos.length})</button>
+      <div class="tl">${base?`<button type="button" class="on">Todos os perfis (${todos.length})</button>`:`<button type="button" data-varq="cli" class="${VQ==='cli'?'on':''}">Itens do cliente (${cli.length})</button><button type="button" data-varq="todos" class="${VQ==='todos'?'on':''}">Todos (${todos.length})</button>`}
         <select data-varl style="border:1px solid #d6c08a;border-radius:999px;padding:4px 10px;font:600 13px inherit"><option value="">Todas as linhas</option>${lin.map(l=>`<option value="${l}" ${VL===l?'selected':''}>${esc(IDX.linhas[l].n)}</option>`).join('')}</select></div>
       <datalist id="pedForn">${Object.values(IDX.forn||{}).map(n=>`<option value="${esc(n)}">`).join('')}</datalist>${tolBts()}<p><b>${L.length}</b> perfis nesta lista.</p>${linhas||'<p class="vazio">Nenhum perfil com uma só opção nesta lista. 👏</p>'}
       ${L.length>VN?`<p style="text-align:center"><button type="button" class="bt p" data-varmais>Ver mais ${Math.min(30,L.length-VN)}</button></p>`:''}</section>`;}

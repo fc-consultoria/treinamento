@@ -168,7 +168,7 @@ tr.hl td{background:#fff3c4!important;transition:background .4s}
 <script src="foto-busca.js?v=2"></script>
 <script src="importa-lista.js?v=7"></script>
 <script src="cliente-codigos.js?v=1"></script>
-<script src="parecidos.js?v=5"></script>
+<script src="parecidos.js?v=6"></script>
 <script>
 const $=s=>document.querySelector(s),esc=t=>String(t??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const KEY=new URLSearchParams(location.search).get('k')||'';const EMPFIX=new URLSearchParams(location.search).get('emp')||'';
@@ -281,8 +281,10 @@ function frase(o,r,b){
   return `${partes[0]}${contra?', mas':' e'} ${prc}: ${fim}.`;}
 
 /* ===== telas ===== */
+const BASE=()=>ADM&&EMP==='fc';/* FC Consultoria Compras: base central, só a FC vê */
 function abas(){const n=REL.length;const A=[['busca','🔎 Pesquisar'],['precos','💲 Preços dos fornecedores'],['sim','🧮 Simular pedido'+(SIM.length?` <span class="ct">${SIM.length}</span>`:'')],['rel','📄 Relatório'+(n?` <span class="ct">${n}</span>`:'')]];
-  if(ADM)A.push(['abc','📊 Curva ABC'],['uso','👀 Acompanhamento'],['var','🔁 Varredura']);
+  if(ADM){if(BASE())A.push(['uso','👀 Acompanhamento'],['var','🔁 Varredura']);else A.push(['abc','📊 Curva ABC'],['uso','👀 Acompanhamento']);}
+  if((ABA==='var'&&!BASE())||(ABA==='abc'&&BASE()))ABA='busca';
   return `<nav class="abas noprint">${A.map(([k,t])=>`<button type="button" data-aba="${k}" class="${ABA===k?'on':''}">${t}</button>`).join('')}</nav>`;}
 function tela(){const a=$('#app');
   const demo=LOCAL?`<div class="aviso noprint">🧪 <b>Modo demonstração.</b> Os preços ficam guardados só neste aparelho até a FC ativar o banco de dados desta ferramenta.</div>`:'';
@@ -354,8 +356,8 @@ document.addEventListener('input',e=>{if(e.target.id==='q')aoDigitar(e.target.va
 
 /* ===== preços ===== */
 function telaPrecos(){
-  return `<section class="box"><h1 class="t">Preços dos fornecedores</h1><p class="sub">Preencha o custo que cada fornecedor passa para ${esc(DADOS.nome||'a empresa')}. Só o <b>preço natural</b> é obrigatório. A pintura é opcional: informe o <b>acréscimo por kg</b> de cada cor (ex.: natural R$ 30,00 + preto R$ 5,20 = R$ 35,20/kg). Os mínimos são sempre em kg.</p></section>
-  ${ADM?`<section class="box" style="border:2px solid #f2a51e"><h2 class="t" style="margin-top:0">🏭 Fornecedores liberados para ${esc(DADOS.nome||EMP)}</h2><p class="sub">Marque as extrusoras que este cliente pode comparar e comprar. Sem nenhuma marcada, o cliente vê todas.</p>
+  return `<section class="box"><h1 class="t">Preços dos fornecedores</h1><p class="sub">${BASE()?'<b>Preços da FC</b> para as suas simulações. Ficam só aqui: os clientes não veem e cada cliente tem os seus no card dele. ':''}Preencha o custo que cada fornecedor passa para ${esc(DADOS.nome||'a empresa')}. Só o <b>preço natural</b> é obrigatório. A pintura é opcional: informe o <b>acréscimo por kg</b> de cada cor (ex.: natural R$ 30,00 + preto R$ 5,20 = R$ 35,20/kg). Os mínimos são sempre em kg.</p></section>
+  ${ADM&&!BASE()?`<section class="box" style="border:2px solid #f2a51e"><h2 class="t" style="margin-top:0">🏭 Fornecedores liberados para ${esc(DADOS.nome||EMP)}</h2><p class="sub">Marque as extrusoras que este cliente pode comparar e comprar. Sem nenhuma marcada, o cliente vê todas.</p>
    <div style="display:flex;gap:10px;flex-wrap:wrap;margin:8px 0">${FC_.map(f=>`<label style="display:inline-flex;gap:6px;align-items:center;border:1px solid #d6dee4;border-radius:10px;padding:8px 12px;font-weight:700;cursor:pointer;background:#fff"><input type="checkbox" data-lib="${f}" ${!LIB()||LIB().includes(f)?'checked':''}> ${esc(IDX.forn[f])}</label>`).join('')}</div>
    <button type="button" class="btn" id="libSalva" style="background:#0f6b70;color:#fff;border:0;border-radius:10px;padding:9px 16px;font-weight:700;cursor:pointer">💾 Salvar fornecedores do cliente</button> <span id="libMsg" style="color:#5d6f7a"></span></section>`:''}
   <div class="fgrid">${FL().map(f=>{const P=DADOS.forn[f]||{};const d=dias(P.em);
@@ -811,8 +813,8 @@ async function trocaEmp(id){EMP=id;if(!EMPFIX)ls.set('fc_compra_emp',id);REL=ls.
 async function iniciar(){
   await carregaIndice();
   if(ADM){const r=await sb.from('rotina_docs').select('id,data').eq('col','consultoria');EMPS=(r.data||[]).map(x=>({id:x.id,nome:(x.data&&x.data.nome)||x.id})).sort((a,b)=>a.nome.localeCompare(b.nome,'pt'));
-    const s=$('#selEmp');s.hidden=false;s.innerHTML=EMPS.map(e=>`<option value="${esc(e.id)}">${esc(e.nome)}</option>`).join('');
-    let e0=EMPFIX||ls.get('fc_compra_emp','');if(!EMPS.some(e=>e.id===e0))e0=EMPS[0]&&EMPS[0].id;s.value=e0;if(EMPFIX&&e0===EMPFIX)s.hidden=true;s.onchange=async()=>{await trocaEmp(s.value);SEL=null;tela();};
+    const s=$('#selEmp');s.hidden=false;s.innerHTML=`<option value="fc">🏠 FC Consultoria Compras · Base</option><optgroup label="Clientes">${EMPS.map(e=>`<option value="${esc(e.id)}">${esc(e.nome)}</option>`).join('')}</optgroup>`;
+    let e0=EMPFIX||'fc';if(e0!=='fc'&&!EMPS.some(e=>e.id===e0))e0='fc';s.value=e0;if(EMPFIX&&e0===EMPFIX)s.hidden=true;s.onchange=async()=>{await trocaEmp(s.value);SEL=null;tela();};
     await trocaEmp(e0);}
   else{const ok=await carregaDados();if(!ok&&!LOCAL){$('#app').innerHTML='<p class="vazio">Link inválido ou expirado. Fale com a FC Consultoria.</p>';return;}
     if(LOCAL){const v=await sb.rpc('cons_portal_ver',{p_chave:KEY}).catch(()=>({}));if(!v||v.error||!v.data){$('#app').innerHTML='<p class="vazio">Link inválido ou expirado. Fale com a FC Consultoria.</p>';return;}EMP=v.data.id;DADOS.nome=v.data.nome||'';DADOS.forn=ls.get('fc_compra_local_'+EMP,{});}
