@@ -26,7 +26,8 @@
 .par .it .th{height:90px;display:flex;align-items:center;justify-content:center;background:#fafafa;border-radius:8px;cursor:zoom-in;overflow:hidden}.par .it .th img{max-width:100%;max-height:86px;object-fit:contain}
 .par .it b{font-size:15px}.par .it small{color:#5d6b76;font-size:12.5px}.par .tg{display:inline-block;border-radius:999px;padding:2px 8px;font-size:11.5px;font-weight:700}.par .tg.a{background:#dcfce7;color:#166534}.par .tg.m{background:#fef9c3;color:#854d0e}.par .tg.b{background:#f1f5f9;color:#475569}
 .par .bts{display:flex;gap:6px;flex-wrap:wrap}.par .bts button{border:1px solid #0f6b70;background:#fff;color:#0f6b70;border-radius:8px;padding:5px 9px;font:600 12.5px inherit;cursor:pointer}.par .bts button.ok{background:#0f6b70;color:#fff}.par .bts button:disabled{opacity:.45;cursor:not-allowed}
-.par .it.sv{border-width:2px}.par .it.sv.on{border-color:#16a34a;box-shadow:0 0 0 2px #dcfce7}.par .sel{display:inline-flex;align-items:center;gap:6px;border:1px solid #0f6b70;border-radius:8px;padding:5px 9px;font:600 12.5px inherit;color:#0f6b70;cursor:pointer;user-select:none}.par .sel input{accent-color:#16a34a;width:15px;height:15px;margin:0;cursor:pointer}.par .sel.on{background:#16a34a;border-color:#16a34a;color:#fff}`;
+.par .it.sv{border-width:2px}.par .it.sv.on{border-color:#16a34a;box-shadow:0 0 0 2px #dcfce7}.par .sel{display:inline-flex;align-items:center;gap:6px;border:1px solid #0f6b70;border-radius:8px;padding:5px 9px;font:600 12.5px inherit;color:#0f6b70;cursor:pointer;user-select:none}.par .sel input{accent-color:#16a34a;width:15px;height:15px;margin:0;cursor:pointer}.par .sel.on{background:#16a34a;border-color:#16a34a;color:#fff}
+.par .ped{grid-column:1/-1;display:flex;flex-direction:column;gap:8px;background:#fffbeb;border:1px dashed #d6c08a;border-radius:12px;padding:10px}.par .ped small{color:#5d6b76;font-size:12.5px}.par .ped form{display:flex;gap:6px;flex-wrap:wrap}.par .ped input{border:1px solid #d6c08a;border-radius:8px;padding:6px 9px;font:13px inherit;min-width:140px;flex:1;max-width:220px}.par .ped button{border:1px solid #0f6b70;background:#0f6b70;color:#fff;border-radius:8px;padding:6px 12px;font:600 12.5px inherit;cursor:pointer}.par .ped .pl{display:flex;gap:6px;flex-wrap:wrap;align-items:center}.par .ped .pl span{background:#dcfce7;color:#166534;border-radius:999px;padding:2px 9px;font-size:12px;font-weight:700}`;
   function st(){if(document.getElementById('parCss'))return;const s=document.createElement('style');s.id='parCss';s.textContent=css+css2;document.head.appendChild(s);}
   const card=(g,ref,o,mini)=>{const n=nota(o);const c=calc(o.h,o.m);const img=imgDe(o.h,o.m);
     const par=g.i+'|'+o.h.l+'|'+o.h.k+'|'+o.m[0]+'|'+o.m[1];const sv=mini&&ADM;const on=sv&&(SELV[g.i]||[]).includes(par);
@@ -44,10 +45,11 @@
       ${L.length?`<div class="gr">${L.map(o=>card(g,ref,o)).join('')}</div>`:`<p><b>Nenhum perfil com peso até ±${TOL}%.</b> Aumente a tolerância.</p>`}</div>`;}
   /* ===== varredura (só FC): todos os perfis com uma opção de compra ===== */
   const EXCL=new Set(['doro','sha','vg','urb','tc']);/* linhas exclusivas (CDA, Texa Urban) e tubos ficam fora */
-  let VQ='cli',VL='',VN=30;const SELV={};let DIS={},DISok=0;
+  let VQ='cli',VL='',VN=30;const SELV={};let DIS={},DISok=0;const PED={};
   /* "Nenhum é igual" fica gravado online (trein_eventos 'par_dis'): vale em qualquer acesso e para todos os clientes */
   async function disCarrega(){if(DISok)return;DISok=1;let loc={};try{loc=JSON.parse(localStorage.getItem('par-dis')||'{}');}catch(_){}
-    try{const r=await sb.from('trein_eventos').select('detalhe').eq('tipo','par_dis');(r.data||[]).forEach(x=>{if(x.detalhe&&x.detalhe.k)DIS[x.detalhe.k]=1;});
+    try{const q=await sb.from('trein_eventos').select('detalhe').eq('tipo','par_pedido');(q.data||[]).forEach(x=>{const e=x.detalhe;if(e&&e.k)(PED[e.k]=PED[e.k]||[]).push(e);});
+    const r=await sb.from('trein_eventos').select('detalhe').eq('tipo','par_dis');(r.data||[]).forEach(x=>{if(x.detalhe&&x.detalhe.k)DIS[x.detalhe.k]=1;});
       const sobe=Object.keys(loc).filter(k=>!DIS[k]);/* leva para o banco o que estava só neste navegador */
       if(sobe.length){const {error}=await sb.from('trein_eventos').insert(sobe.map(k=>({tipo:'par_dis',detalhe:{k,em:new Date().toLocaleDateString('pt-BR')}})));if(!error){sobe.forEach(k=>DIS[k]=1);try{localStorage.removeItem('par-dis');}catch(_){}}}
     }catch(_){Object.assign(DIS,loc);}
@@ -55,6 +57,11 @@
   function doCliente(g){const A=(typeof DADOS!=='undefined'&&DADOS.abc)||{};const ks=new Set(Object.keys(A).map(norm));
     return g.m.some(m=>ks.has(norm(m[1]))||(typeof CLIV!=='undefined'&&CLIV.has(norm(m[1]))))||(window.FCCli&&FCCli.ativo&&FCCli.ativo()&&g.m.some(m=>FCCli.acha&&FCCli.acha(m[1]).length));}
   const confBt=gi=>{const n=(SELV[gi]||[]).length;return `<div class="bts"><button type="button" class="ok" data-parconf="${gi}" ${n?'':'disabled'}>Confirmar iguais${n?' ('+n+')':''}</button></div>`;};
+  /* sem candidato: a FC informa empresa e código para o Claude procurar no banco e nos catálogos */
+  const pedBox=(g,ref)=>{const k=g.l+'|'+g.k;const L=PED[k]||[];
+    return `<div class="ped"><small>Nenhum perfil com peso até ±${TOL}%. Se você sabe quem tem este perfil, informe a empresa e o código para o Claude procurar no banco de dados e nos catálogos.</small>
+      ${L.length?`<div class="pl">${L.map(e=>`<span>📨 ${esc(e.f)} · ${esc(e.c)}</span>`).join('')}<small>Enviado para o Claude conferir.</small></div>`:''}
+      ${ADM?`<form data-pedf="${esc(k)}" data-ref="${esc(ref.f+'|'+ref.c)}"><input name="f" list="pedForn" placeholder="Empresa" required><input name="c" placeholder="Código do item" required><button type="submit" class="ok">Enviar</button></form>`:''}</div>`;};
   function tela_(){st();if(!DISok){disCarrega();return '<div class="box"><p class="vazio">Carregando a varredura…</p></div>';}if(!SIG){sigs().then(()=>tela());return '<div class="box"><p class="vazio">Carregando os desenhos…</p></div>';}
     const todos=IDX.g.filter(g=>!EXCL.has(g.l)&&g.m.some(m=>m[0]!=='alcoa')&&fornDe(g).size<=1&&!DIS[g.l+'|'+g.k]);
     const cli=todos.filter(doCliente);let L=VQ==='cli'?cli:todos;if(VL)L=L.filter(g=>g.l===VL);
@@ -63,12 +70,12 @@
       return `<div class="vr"><div class="vo"><div class="th" data-zoom="${esc(ref.img)}" data-t="${esc(IDX.forn[ref.f]+' '+ref.c)}">${ref.img?`<img src="${esc(ref.img)}" alt="" loading="lazy" onerror="this.replaceWith(document.createTextNode('sem desenho'))">`:'<small>sem desenho</small>'}</div>
         <b>${esc(ref.c)}</b><small>${esc(IDX.forn[ref.f]||ref.f)} · ${esc(IDX.linhas[g.l].n)} · ${n3(ref.p)} kg/m</small>
         <div class="bts"><button type="button" data-sug="${esc(ref.c)}" data-aba2="busca">Abrir</button><button type="button" data-pardis="${esc(g.l+'|'+g.k)}">Nenhum é igual</button></div>${ADM?confBt(g.i):''}</div>
-        <div class="gr">${C.length?C.map(o=>card(g,ref,o,1)).join(''):`<p><small>Nenhum perfil com peso até ±${TOL}%.</small></p>`}</div></div>`;}).join('');
+        <div class="gr">${C.length?C.map(o=>card(g,ref,o,1)).join(''):pedBox(g,ref)}</div></div>`;}).join('');
     return `<section class="box par" style="background:#fff"><h1 class="t" style="margin:0">🔁 Varredura · perfis com uma só opção de compra</h1>
       <p>Para cada perfil que hoje só tem um fornecedor, o sistema mostra os perfis dos outros fornecedores da mesma linha com peso próximo, começando pelos de desenho mais parecido. Confira os desenhos, marque <b>Selecionar</b> nos candidatos iguais (pode marcar mais de um) e clique em <b>Confirmar iguais</b>: cada par entra na Conversão de códigos e o item passa a ter comparação de preço. Linhas exclusivas (CDA, Texa Urban) e tubos ficam fora.</p>
       <div class="tl"><button type="button" data-varq="cli" class="${VQ==='cli'?'on':''}">Itens do cliente (${cli.length})</button><button type="button" data-varq="todos" class="${VQ==='todos'?'on':''}">Todos (${todos.length})</button>
         <select data-varl style="border:1px solid #d6c08a;border-radius:999px;padding:4px 10px;font:600 13px inherit"><option value="">Todas as linhas</option>${lin.map(l=>`<option value="${l}" ${VL===l?'selected':''}>${esc(IDX.linhas[l].n)}</option>`).join('')}</select></div>
-      ${tolBts()}<p><b>${L.length}</b> perfis nesta lista.</p>${linhas||'<p class="vazio">Nenhum perfil com uma só opção nesta lista. 👏</p>'}
+      <datalist id="pedForn">${Object.values(IDX.forn||{}).map(n=>`<option value="${esc(n)}">`).join('')}</datalist>${tolBts()}<p><b>${L.length}</b> perfis nesta lista.</p>${linhas||'<p class="vazio">Nenhum perfil com uma só opção nesta lista. 👏</p>'}
       ${L.length>VN?`<p style="text-align:center"><button type="button" class="bt p" data-varmais>Ver mais ${Math.min(30,L.length-VN)}</button></p>`:''}</section>`;}
   const css2=`.par .vr{display:grid;grid-template-columns:200px 1fr;gap:12px;border-top:1px solid #eadfc2;padding:12px 0}.par .vo{display:flex;flex-direction:column;gap:4px}.par .vo .th{height:80px;display:flex;align-items:center;justify-content:center;background:#fafafa;border-radius:8px;cursor:zoom-in;overflow:hidden}.par .vo .th img{max-width:100%;max-height:76px;object-fit:contain}.par .vo small{color:#5d6b76;font-size:12.5px}.par .vr .gr{grid-template-columns:repeat(auto-fill,minmax(170px,1fr))}.par .vr .it .th{height:64px}.par .vr .it .th img{max-height:60px}
 @media(max-width:640px){.par .vr{grid-template-columns:1fr}}`;
@@ -103,6 +110,12 @@
     else if(d.varmais!=null){VN+=30;tela();}
     else if(d.pardis){const k=d.pardis;DIS[k]=1;tela();sb.from('trein_eventos').insert({tipo:'par_dis',detalhe:{k,em:new Date().toLocaleDateString('pt-BR')}}).then(({error})=>{if(error){delete DIS[k];toast('Não gravou: '+error.message);tela();}});}
     else if(d.aba2){ABA=d.aba2;}});
+  document.addEventListener('submit',async e=>{const fm=e.target.closest('[data-pedf]');if(!fm)return;e.preventDefault();
+    const f=fm.f.value.trim(),c=fm.c.value.trim();if(!f||!c)return;const [rf,rc]=fm.dataset.ref.split('|');const b=fm.querySelector('button');b.disabled=true;b.textContent='Enviando…';
+    const ed={k:fm.dataset.pedf,ref_f:rf,ref_c:rc,f,c,em:new Date().toLocaleDateString('pt-BR')};
+    const {error}=await sb.from('trein_eventos').insert({tipo:'par_pedido',detalhe:ed});
+    if(error){b.disabled=false;b.textContent='Enviar';toast('Não gravou: '+error.message);return;}
+    (PED[ed.k]=PED[ed.k]||[]).push(ed);toast('📨 Enviado: '+f+' · '+c);tela();});
   document.addEventListener('change',e=>{const s=e.target.closest('[data-parsel]');if(!s)return;const gi=s.dataset.parsel;const A=SELV[gi]=SELV[gi]||[];
     const i=A.indexOf(s.value);if(s.checked&&i<0)A.push(s.value);if(!s.checked&&i>=0)A.splice(i,1);
     const lb=s.closest('.sel');lb.classList.toggle('on',s.checked);lb.querySelector('span').textContent=s.checked?'✓ Selecionado':'Selecionar';s.closest('.it').classList.toggle('on',s.checked);
