@@ -166,7 +166,7 @@ tr.hl td{background:#fff3c4!important;transition:background .4s}
 <script src="../atualiza.js"></script>
 <script src="../auth.js"></script>
 <script src="foto-busca.js?v=2"></script>
-<script src="importa-lista.js?v=7"></script>
+<script src="importa-lista.js?v=8"></script>
 <script src="cliente-codigos.js?v=3"></script>
 <script src="parecidos.js?v=6"></script>
 <script>
@@ -227,9 +227,10 @@ const CLIV=new Set();/* códigos que o cliente já compra (planilha dele): sempr
 const visivel=(g,m)=>{if(CLIV.has(norm(m[1])))return true;if(!ADM&&LIB()&&m[3]!=='base'&&m[0]!==REFF&&!LIB().includes(m[0]))return false;return ADM||m[3]==='base'||m[3]==='alta'||OK[g.k+'|'+m[1]];};
 function imgDe(g,m){if(m[4])return m[4];if(g.l==='tc')return '';const L=IDX.linhas[g.l];const pasta=(m[3]==='base'&&!g.sp)?'alcoa':m[0];return L.img+pasta+'/'+encodeURIComponent(m[1])+'.webp?v=3';}
 const linhaF=(g,f)=>((IDX.lnf[g.l]||{})[f])||IDX.linhas[g.l].n;
-function buscar(q){const k=norm(q);if(!k)return [];
-  /* código próprio do cliente (ex.: Guaporé PLK544 = Texa TBXL028): grupos do código que ele compra vêm primeiro */
-  const cl=window.FCCli?FCCli.cods(q):[];const cid=[];cl.forEach(c=>(BY[c]||[]).forEach(i=>{if(!cid.includes(i))cid.push(i);}));
+function buscar(q,semCli){const k=norm(q);if(!k)return [];
+  /* código próprio do cliente (ex.: Guaporé PLK544 = Texa TBXL028): grupos do código que ele compra vêm primeiro.
+     semCli: busca só pelo código digitado, sem a lista do cliente (a importação usa para achar conflitos) */
+  const cl=(!semCli&&window.FCCli)?FCCli.cods(q):[];const cid=[];cl.forEach(c=>(BY[c]||[]).forEach(i=>{if(!cid.includes(i))cid.push(i);}));
   let ids=[...new Set(BY[k]||[])];
   if(!ids.length){/* código digitado sem os zeros (PTQ013 = PTQ-0013) ou com a cor no fim (PTQ013.FCO) */
     const z=c=>c.replace(/\d+/g,d=>String(+d));

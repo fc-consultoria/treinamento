@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Conferência de códigos · FC Consultoria</title>
+<link rel="icon" href="/img/logo-fc-160.jpg">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600;700&display=swap">
+<style>
+:root{--tl:#0f6b70;--tlc:#e5f2f2;--or:#f2a51e;--orc:#fff4dc;--ink:#13232e;--tm:#5a6b75;--ln:#d8e2e6;--bg:#f2f6f7;--ok:#15803d;--okc:#e7f6ec;--md:#b45309;--mdc:#fdf3e2;--bx:#b42318;--bxc:#fdecea;--f-d:'Barlow Condensed',system-ui,sans-serif;--f-b:'Barlow',system-ui,sans-serif}
+*{box-sizing:border-box}html,body{margin:0}body{background:var(--bg);color:var(--ink);font:400 16px/1.5 var(--f-b)}
+button,input,select,textarea{font-family:inherit}
+.rgate{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;background:#e9f0f0;padding:16px}.rgate[hidden]{display:none}
+.rgate form{width:min(360px,100%);background:#fff;border:1px solid #d6e1e1;border-radius:14px;padding:26px 22px;display:flex;flex-direction:column;gap:12px}
+.rgate h1{margin:0;font:800 28px var(--f-d);color:#13262a}.rgate small{color:#5a6e72;font-size:12px;letter-spacing:.06em;text-transform:uppercase}
+.rgate label{display:flex;flex-direction:column;gap:5px;font-weight:600;font-size:14px}.rgate input{font-size:15px;padding:9px 10px;border:1px solid #c4ccd2;border-radius:8px}
+.rgate button{background:var(--tl);color:#fff;border:0;border-radius:9px;padding:11px;font-weight:700;font-size:15px;cursor:pointer}
+.top{background:var(--tl);color:#fff;box-shadow:0 2px 0 var(--or)}
+.top .w{max-width:1240px;margin:0 auto;padding:10px 18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.top img{width:40px;height:40px;border-radius:9px}.top b{font:800 22px/1 var(--f-d)}.top small{display:block;font:600 11.5px var(--f-b);letter-spacing:.12em;text-transform:uppercase;color:#ffd58a}
+.top a.vt{margin-left:auto;border:1px solid rgba(255,255,255,.55);color:#fff;text-decoration:none;border-radius:9px;padding:7px 12px;font-weight:700;font-size:14px;white-space:nowrap}
+main{max-width:1240px;margin:0 auto;padding:16px 16px 60px}
+.box{background:#fff;border:1px solid var(--ln);border-radius:16px;padding:16px 18px}
+h1.t{margin:0 0 4px;font:800 30px/1.05 var(--f-d);color:#0f4f53}h2.t{margin:22px 0 8px;font:800 24px/1.1 var(--f-d);color:#0f4f53}
+.sub{margin:0;color:var(--tm);font-size:15px}
+.cont{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.cont button{border:1px solid var(--ln);background:#fff;border-radius:12px;padding:8px 12px;font:700 14px var(--f-b);cursor:pointer;color:var(--ink);text-align:left}
+.cont button b{display:block;font:800 24px/1 var(--f-d)}.cont button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.card{background:#fff;border:1px solid var(--ln);border-radius:16px;padding:14px 16px;margin-top:12px;scroll-margin-top:12px}
+.card.alvo{box-shadow:0 0 0 3px var(--or)}
+.card.feito{opacity:.72}
+.ch{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}.ch b.cod{font:800 26px/1 var(--f-d)}
+.tag{border-radius:99px;padding:1px 9px;font-size:12.5px;font-weight:700}
+.tag.cf{background:var(--mdc);color:var(--md)}.tag.ok{background:var(--okc);color:var(--ok)}.tag.fx{background:var(--tlc);color:var(--tl)}
+.lados{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px}
+@media(max-width:760px){.lados{grid-template-columns:1fr}}
+.lado{border:1px solid var(--ln);border-radius:12px;padding:10px;background:#fafcfc}
+.lado>small{font:700 12px var(--f-b);letter-spacing:.08em;text-transform:uppercase;color:var(--tm)}
+.grp{margin-top:6px}.grp>div:first-child{font-weight:700}.grp>div:first-child small{font-weight:500;color:var(--tm)}
+.mems{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:8px;margin-top:6px}
+.mem{border:1px solid var(--ln);border-radius:10px;background:#fff;padding:6px;text-align:center;font-size:13px;line-height:1.25}
+.mem.eu{border:2px solid var(--tl);background:var(--tlc)}
+.mem img{width:100%;height:96px;object-fit:contain;cursor:zoom-in;display:block;margin-bottom:4px}
+.mem .sd{height:96px;display:grid;place-items:center;color:var(--tm);font-size:12px}
+.mem small{color:var(--tm)}
+.vz{color:var(--tm);font-style:italic;margin:6px 0 0}
+.dec{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;align-items:center}
+.dec button{border:1px solid var(--ln);background:#fff;border-radius:10px;padding:8px 12px;font:700 14px var(--f-b);cursor:pointer;color:var(--ink)}
+.dec button.p{background:var(--tl);color:#fff;border-color:var(--tl)}.dec button:disabled{opacity:.5;cursor:default}
+.dec input{flex:1;min-width:200px;border:1px solid #c4ccd2;border-radius:9px;padding:8px 10px;font-size:14px}
+.st{margin-top:8px;font-size:14px;font-weight:600}
+.lista{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.lista span{background:#fff;border:1px solid var(--ln);border-radius:9px;padding:4px 9px;font-size:14px}
+.zm{position:fixed;inset:0;z-index:90;background:rgba(10,20,28,.8);display:grid;place-items:center;padding:16px}.zm[hidden]{display:none}
+.zm div{background:#fff;border-radius:14px;padding:12px;max-width:min(720px,100%);text-align:center}.zm img{max-width:100%;max-height:72vh}
+.bt{border:1px solid var(--ln);background:#fff;border-radius:10px;padding:8px 12px;font:700 14px var(--f-b);cursor:pointer}
+</style>
+</head>
+<body>
+<div class="rgate" id="gate" hidden><form id="gateForm"><small>FC Consultoria · Matriz</small><h1>🔎 Conferência de códigos</h1>
+<label>Login<input name="login" autocomplete="username" required placeholder="matriz"></label>
+<label>Senha<input name="senha" type="password" autocomplete="current-password" required></label>
+<button type="submit">Entrar</button><p id="gateMsg" role="alert"></p></form></div>
+<header class="top"><div class="w"><img src="/img/logo-fc-160.jpg" alt=""><div><small>FC Consultoria · Conversão de códigos</small><b id="hd">Conferência de códigos do cliente</b></div><a class="vt" href="/treinamento/painel.html">← Painel matriz</a></div></header>
+<main id="app"><p class="sub">Carregando…</p></main>
+<div class="zm" id="zm" hidden><div><img id="zmI" alt=""><p id="zmT" style="margin:6px 0"></p><button type="button" class="bt" id="zmX">✕ Fechar</button></div></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="../auth.js"></script>
+<script src="cliente-conflitos.js?v=1"></script>
+<script>
+/* Folha de conferência: códigos do cliente cujo próprio código e o código que ele compra caem em perfis diferentes.
+   Para cada caso a FC decide: unir na base (são o mesmo perfil), erro na planilha do cliente, ou perfis diferentes (está certo).
+   "Unir" grava equiv_edit (o mesmo das edições da Conversão de códigos), então vale na hora no painel e no link do cliente.
+   As decisões ficam em trein_eventos (tipo cli_conf). Cliente: ?c=guapore (padrão). */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const CLI=(new URLSearchParams(location.search).get('c')||'guapore').toLowerCase().replace(/[^a-z0-9-]/g,'');
+const DKEY='fc_conf_cli_'+CLI;
+let IDX,AP,C,R=[],DEC={},FIL='conflito';
+const F=FCConflitos,norm=F.norm;
+const fn=f=>(IDX.forn&&IDX.forn[f])||String(f).toUpperCase();
+const lnome=l=>(IDX.linhas[l]||{}).n||l;
+const kgm=p=>p!=null&&p!==''?String(p).replace('.',',')+' kg/m':'';
+
+/* aplica as edições de pares feitas pela FC (mesma regra do comprar.html) */
+function aplicaEdits(ed){const last={};ed.forEach(x=>{if(x&&x.f&&x.c)last[(x.l||'suprema')+'|'+x.f+'|'+x.c]=x;});
+  Object.values(last).forEach(x=>{const l=x.l||'suprema';
+    IDX.g.forEach(g=>{if(g.l===l&&!(x.a&&g.k===x.a))g.m=g.m.filter(m=>!(m[0]===x.f&&norm(m[1])===norm(x.c)&&(m[3]!=='base'||(g.sp&&x.a)||x.off)));});
+    if(!x.a)return;const g=IDX.g.find(y=>y.l===l&&y.k===x.a);const p=x.p!=null&&x.p!==''?+x.p:null;if(!g||!p)return;
+    const ex=g.m.find(m=>m[0]===x.f&&norm(m[1])===norm(x.c));if(ex){ex[2]=p;if(x.img&&!ex[4])ex[4]=x.img;return;}
+    g.m.push([x.f,x.c,p,x.n||'media',x.img||'',x.pg||'—',1]);});
+  IDX.g.forEach(g=>{const vis=new Set();g.m=g.m.filter(m=>{const k=m[0]+'|'+norm(m[1]);if(vis.has(k))return false;vis.add(k);return true;});});}
+
+async function carrega(){
+  const [i,a,c]=await Promise.all([fetch('indice.json?v=17',{cache:'no-cache'}).then(r=>r.json()),fetch('apelidos.json?v=4',{cache:'no-cache'}).then(r=>r.json()).catch(()=>({})),fetch('clientes/'+CLI+'.json?v=3',{cache:'no-cache'}).then(r=>r.json())]);
+  IDX=i;AP=a;C=c;
+  try{const r=await sb.from('trein_eventos').select('detalhe,criado_em').eq('tipo','equiv_edit').order('criado_em');aplicaEdits((r.data||[]).map(x=>x.detalhe));}catch(_){}
+  DEC={};try{DEC=JSON.parse(localStorage.getItem(DKEY)||'{}');}catch(_){}
+  try{const r=await sb.from('trein_eventos').select('detalhe,criado_em').eq('tipo','cli_conf').order('criado_em');(r.data||[]).forEach(x=>{const d=x.detalhe;if(d&&d.cli===CLI&&d.c)DEC[norm(d.c)]=d;});}catch(_){}
+  R=F.analisa(IDX,AP,C);}
+
+function membro(g,m,eu){const u=F.imgDe(IDX,g,m);const base=m[3]==='base';
+  return `<div class="mem ${eu?'eu':''}">${u?`<img src="${esc(u)}" alt="${esc(m[1])}" loading="lazy" data-zm="${esc(u)}" data-zt="${esc(fn(m[0])+' '+m[1])}" onerror="this.outerHTML='<div class=sd>sem desenho</div>'">`:'<div class="sd">sem desenho</div>'}
+    <b>${esc(m[1])}</b><br><small>${esc(fn(m[0]))}${base?' · referência':''}</small>${m[2]?'<br><small>'+esc(kgm(m[2]))+'</small>':''}</div>`;}
+function grupo(gi,meus){const g=IDX.g[gi];const ms=new Set(meus.map(norm));
+  return `<div class="grp"><div>${esc(g.k)} <small>· ${esc(lnome(g.l))}${g.n?' · '+esc(g.n):''}</small></div><div class="mems">${g.m.map(m=>membro(g,m,ms.has(norm(m[1])))).join('')}</div></div>`;}
+/* par que dá para unir: um grupo do código do cliente e um do código que compra na MESMA linha */
+/* tubos e cantoneiras (tc) não unem: cada grupo é uma medida, parede diferente é outro perfil */
+function parUniao(x){for(const d of x.dir)for(const c of x.cid){if(IDX.g[d].l===IDX.g[c].l&&IDX.g[d].l!=='tc')return [d,c];}return null;}
+const NOMED={unir:'🔗 Unido na base',planilha:'📄 Erro na planilha do cliente',ok:'✅ Perfis diferentes · está certo'};
+function card(x){const d=DEC[norm(x.c)];const par=parUniao(x);const meusDir=[x.c,...x.comp.map(c=>c.c)],meusCid=x.comp.map(c=>c.c);
+  return `<div class="card ${d?'feito':''}" id="c-${esc(norm(x.c))}"><div class="ch"><b class="cod">${esc(C.cliente)} ${esc(x.c)}</b>
+    ${x.p?`<span class="tag fx">planilha: ${esc(kgm(x.p))}</span>`:''}<span class="tag cf">compra hoje: ${x.comp.map(c=>esc(fn(c.f))+' '+esc(c.c)).join(' / ')||'—'}</span>${d?`<span class="tag ok">${esc(NOMED[d.d]||d.d)}</span>`:''}</div>
+    ${x.obs?`<p class="sub" style="font-size:14px;margin-top:4px">⚠️ ${esc(x.obs)}</p>`:''}
+    <div class="lados"><div class="lado"><small>Pelo código ${esc(x.c)}</small>${x.dir.map(i=>grupo(i,meusDir)).join('')||'<p class="vz">não está na base</p>'}</div>
+      <div class="lado"><small>Pelo código que compra hoje</small>${x.cid.map(i=>grupo(i,meusCid)).join('')||'<p class="vz">não está na base</p>'}</div></div>
+    <div class="dec">${par?`<button type="button" class="p" data-d="unir" data-c="${esc(x.key)}" title="Leva o código que compra para o grupo de ${esc(IDX.g[par[0]].k)}">🔗 Mesmo perfil: unir em ${esc(IDX.g[par[0]].k)}</button>`:''}
+      <button type="button" data-d="planilha" data-c="${esc(x.key)}">📄 Erro na planilha</button>
+      <button type="button" data-d="ok" data-c="${esc(x.key)}">✅ Perfis diferentes · está certo</button>
+      <input data-nota="${esc(x.key)}" placeholder="Observação (ex.: o certo é Texa TBX123)" value="${esc(d&&d.nota||'')}"></div>
+    <div class="st" id="st-${esc(norm(x.c))}">${d?`Decidido: ${esc(NOMED[d.d]||d.d)}${d.nota?' · '+esc(d.nota):''} <button type="button" class="bt" data-desfaz="${esc(x.key)}" style="padding:3px 9px;margin-left:6px">desfazer</button>`:''}</div></div>`;}
+
+const SIT=[['conflito','Em conflito','código do cliente e o que compra caem em perfis diferentes'],['solo','Sem comparação','só 1 fornecedor no grupo'],['fora','Código que compra fora da base','achou pelo código de mercado'],['nao','Não encontrados','nem pelo código nem pelo que compra'],['ok','Certos','código e compra no mesmo perfil']];
+function tela(){const n={};R.forEach(x=>n[x.sit]=(n[x.sit]||0)+1);const pend=R.filter(x=>x.sit==='conflito'&&!DEC[norm(x.c)]).length;
+  const L=R.filter(x=>x.sit===FIL);
+  let h=`<section class="box"><h1 class="t">Conferência de códigos · ${esc(C.cliente)}</h1>
+    <p class="sub">${R.length} códigos da planilha do cliente comparados com a base de perfis. Em cada conflito, o desenho do código dele fica à esquerda e o do que ele compra hoje à direita (o código destacado em verde é o dele). Decida caso a caso: <b>unir</b> grava o par na Conversão de códigos e vale na hora no painel e no link do cliente; <b>erro na planilha</b> e <b>está certo</b> ficam registrados para a correção da lista do cliente.</p>
+    <div class="cont">${SIT.map(([k,t])=>`<button type="button" data-fil="${k}" class="${FIL===k?'on':''}"><b>${n[k]||0}</b>${esc(t)}</button>`).join('')}</div>
+    ${FIL==='conflito'?`<p class="sub" style="margin-top:10px"><b>${pend}</b> ainda sem decisão. <button type="button" class="bt" id="copia">📋 Copiar resumo das decisões</button> <span id="copMsg"></span></p>`:''}</section>`;
+  const info=SIT.find(s=>s[0]===FIL);h+=`<h2 class="t">${esc(info[1])} <small style="font:500 15px var(--f-b);color:var(--tm)">· ${esc(info[2])}</small></h2>`;
+  if(FIL==='conflito'||FIL==='solo')h+=L.length?L.map(FIL==='conflito'?card:cardSolo).join(''):'<p class="sub">Nenhum.</p>';
+  else h+=`<div class="lista">${L.map(x=>`<span><b>${esc(x.c)}</b>${x.comp.length?' → '+x.comp.map(c=>esc(fn(c.f))+' '+esc(c.c)).join(' / '):''}</span>`).join('')||'<span>Nenhum.</span>'}</div>`;
+  $('#app').innerHTML=h;}
+function cardSolo(x){const ids=x.cid.length?x.cid:x.dir;return `<div class="card" id="c-${esc(norm(x.c))}"><div class="ch"><b class="cod">${esc(C.cliente)} ${esc(x.c)}</b><span class="tag cf">compra hoje: ${x.comp.map(c=>esc(fn(c.f))+' '+esc(c.c)).join(' / ')||'—'}</span></div>
+  <div class="lado" style="margin-top:10px"><small>Na base</small>${ids.map(i=>grupo(i,[x.c,...x.comp.map(c=>c.c)])).join('')}</div>
+  <p class="sub" style="font-size:14px;margin-top:6px">Para ter comparação, una este perfil ao de outra extrusora na Conversão de códigos.</p></div>`;}
+
+async function grava(x,d,nota){const det={cli:CLI,c:x.c,d,nota:nota||'',quando:new Date().toISOString()};
+  if(d==='unir'){const par=parUniao(x);if(!par)return 'Não há par na mesma linha para unir.';const gd=IDX.g[par[0]],gc=IDX.g[par[1]];
+    const zz=c=>norm(c).replace(/\d+/g,d=>String(+d));const igual=(a,b)=>{a=zz(a);b=zz(b);return a===b||(a[0]==='T'&&a.slice(1)===b)||(b[0]==='T'&&b.slice(1)===a);};
+    const mov=gc.m.filter(m=>(m[3]!=='base'||gc.sp)&&m[0]!=='alcoa'&&x.comp.some(c=>igual(c.c,m[1])));
+    if(!mov.length)return 'Não achei o código que compra no grupo para levar.';
+    for(const m of mov){const ed={l:gd.l,f:m[0],c:m[1],a:gd.k,p:m[2]||null,n:'alta',t:'padrao',o:'Unido pela conferência de códigos do cliente ('+C.cliente+' '+x.c+').',img:m[4]||'',pg:m[5]||'—',em:new Date().toLocaleDateString('pt-BR')};
+      if(!ed.p)return 'O código '+m[1]+' está sem peso na base; não dá para unir sem o peso.';
+      const r=await sb.from('trein_eventos').insert({tipo:'equiv_edit',detalhe:ed});if(r.error)return 'Não uniu: '+r.error.message;
+      aplicaEdits([ed]);}
+    det.unidos=mov.map(m=>fn(m[0])+' '+m[1]+' → '+gd.k);}
+  DEC[norm(x.c)]=det;try{localStorage.setItem(DKEY,JSON.stringify(DEC));}catch(_){}
+  const r=await sb.from('trein_eventos').insert({tipo:'cli_conf',detalhe:det});
+  R=F.analisa(IDX,AP,C);
+  return r.error?'Decisão guardada só neste navegador (o registro online falhou: '+r.error.message+').':'';}
+
+document.addEventListener('click',async e=>{const t=e.target;
+  const f=t.closest('[data-fil]');if(f){FIL=f.dataset.fil;tela();return;}
+  const z=t.closest('[data-zm]');if(z){$('#zmI').src=z.dataset.zm;$('#zmT').textContent=z.dataset.zt;$('#zm').hidden=false;return;}
+  if(t.id==='zmX'||t.id==='zm'){$('#zm').hidden=true;return;}
+  const b=t.closest('[data-d]');if(b){const x=R.find(y=>y.key===b.dataset.c);if(!x)return;
+    const nota=(document.querySelector(`[data-nota="${CSS.escape(x.key)}"]`)||{}).value||'';
+    if(b.dataset.d==='unir'&&!confirm('Unir '+x.comp.map(c=>c.c).join(' / ')+' ao perfil de '+x.c+' na Conversão de códigos?'))return;
+    b.closest('.dec').querySelectorAll('button').forEach(y=>y.disabled=true);
+    const msg=await grava(x,b.dataset.d,nota);const id='c-'+norm(x.c);tela();const el=document.getElementById(id);
+    if(el){el.scrollIntoView({block:'center'});if(msg){const s=document.getElementById('st-'+norm(x.c));if(s)s.insertAdjacentHTML('beforeend','<br><span style="color:var(--md)">'+esc(msg)+'</span>');}}
+    else if(msg)alert(msg);return;}
+  const u=t.closest('[data-desfaz]');if(u){const x=R.find(y=>y.key===u.dataset.desfaz);if(!x)return;const d=DEC[norm(x.c)];
+    if(d&&d.d==='unir'){alert('A união já foi gravada na Conversão de códigos. Para desfazer, edite o par lá.');}
+    delete DEC[norm(x.c)];try{localStorage.setItem(DKEY,JSON.stringify(DEC));}catch(_){}
+    await sb.from('trein_eventos').insert({tipo:'cli_conf',detalhe:{cli:CLI,c:x.c,d:'',nota:'desfeito',quando:new Date().toISOString()}});
+    tela();const el=document.getElementById('c-'+norm(x.c));if(el)el.scrollIntoView({block:'center'});return;}
+  if(t.id==='copia'){const L=R.filter(x=>DEC[norm(x.c)]&&DEC[norm(x.c)].d).map(x=>{const d=DEC[norm(x.c)];return `${x.c} (compra ${x.comp.map(c=>c.c).join('/')}): ${NOMED[d.d]}${d.nota?' · '+d.nota:''}${d.unidos?' · '+d.unidos.join('; '):''}`;});
+    const txt=`Conferência de códigos ${C.cliente} · ${new Date().toLocaleDateString('pt-BR')}\n`+(L.join('\n')||'(nenhuma decisão ainda)');
+    try{await navigator.clipboard.writeText(txt);$('#copMsg').textContent='✓ Copiado';}catch(_){prompt('Copie o resumo:',txt);}}});
+/* decisões com d vazio = desfeitas */
+function limpa(){Object.keys(DEC).forEach(k=>{if(!DEC[k]||!DEC[k].d)delete DEC[k];});}
+
+gateUI(async()=>{let adm=false;try{const r=await sb.rpc('trein_is_admin');adm=!!r.data;}catch(_){}
+  if(!adm){$('#app').innerHTML='<p class="sub">Esta área é da FC Consultoria.</p>';return;}
+  try{await carrega();}catch(_){$('#app').innerHTML='<p class="sub">Não consegui carregar os códigos do cliente "'+esc(CLI)+'".</p>';return;}
+  limpa();$('#hd').textContent='Conferência de códigos · '+C.cliente;
+  const alvo=decodeURIComponent(location.hash.slice(1)||'');const xa=alvo&&R.find(x=>norm(x.c)===norm(alvo));if(xa)FIL=xa.sit==='ok'?'ok':xa.sit;
+  tela();if(xa){const el=document.getElementById('c-'+norm(xa.c));if(el){el.classList.add('alvo');el.scrollIntoView({block:'center'});}}});
+</script>
+</body>
+</html>

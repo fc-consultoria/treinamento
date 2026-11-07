@@ -14,8 +14,32 @@
     const g=s.match(/^(.*\d)([A-Z]{3,9})$/);if(g){const c=corDe(g[2]);if(c)return {base:g[1],cor:c};}return {base:s,cor:null};}
   function variantes(c){const n=norm(c),out=[n];const m=n.match(/^([A-Z]+)(\d+)([A-Z]?)$/);if(m){const d=String(+m[2]);[d,d.padStart(3,'0'),d.padStart(4,'0'),d.padStart(5,'0')].forEach(x=>out.push(m[1]+x+m[3]));}
     if(/^T[A-Z]{2}\d/.test(n))out.push(n.slice(1));return [...new Set(out)];}
-  function acha(base,desc){for(const v of variantes(base)){const r=buscar(v);if(r.length)return {g:r[0],cod:v,n:r.length};}
-    const t=sa(desc).split(/\s+/)[0];if(t&&t!==sa(base)){for(const v of variantes(t)){const r=buscar(v);if(r.length)return {g:r[0],cod:v,n:r.length};}}return null;}
+  /* origem do achado quando o código é do cliente (ex.: Guaporé PLK544):
+     via 'cli' = achou pelo código que ele compra hoje; via 'mercado' = achou pelo próprio código, mas o código que ele compra não está no grupo;
+     alt = pelo código dele a base aponta OUTRO perfil (conflito: o usuário escolhe qual vale) */
+  function origem(v,g){if(!window.FCCli||!FCCli.ativo())return null;const E=FCCli.acha(v);if(!E.length)return null;const e=E[0];
+    const fs=(e.f||[]).filter(f=>g.m.some(m=>norm(m[1])===norm(f[1])));const o={e,via:fs.length?'cli':'mercado',fs:fs.length?fs:(e.f||[])};
+    if(fs.length){const d=buscar(v,true);if(d.length&&!d.includes(g))o.alt=d[0];}return o;}
+  const um=(r,v)=>{const g=r[0];return {g,cod:v,n:r.length,o:origem(v,g),gc:g,esc:'compra'};};
+  function acha(base,desc){for(const v of variantes(base)){const r=buscar(v);if(r.length)return um(r,v);}
+    const t=sa(desc).split(/\s+/)[0];if(t&&t!==sa(base)){for(const v of variantes(t)){const r=buscar(v);if(r.length)return um(r,v);}}return null;}
+  const forns=g=>[...new Set(g.m.filter(m=>m[0]!==REFF&&(m[3]!=='base'||g.sp)).map(m=>m[0]))];const nforn=g=>forns(g).length;
+  const fnome=f=>(IDX.forn&&IDX.forn[f])||String(f).toUpperCase();
+  function mini(g){const m=g.m.find(m=>m[3]==='base')||g.m[0];const u=m&&imgDe(g,m);return u?`<img src="${esc(u)}" alt="" loading="lazy" onerror="this.remove()" style="width:56px;height:56px;object-fit:contain;background:#fff;border:1px solid #e3e8ec;border-radius:6px;vertical-align:middle;margin-right:6px">`:'';}
+  const ehConf=x=>x.ok&&x.ach.o&&x.ach.o.alt;
+  function achado(x,i){const a=x.ach,o=a.o,g=a.g;
+    let h=`<b>${esc(g.k)}</b><br><small>${esc(IDX.linhas[g.l].n)}${g.n?' · '+esc(g.n):''}${a.n>1?' · aparece em '+a.n+' linhas':''}</small>`;
+    if(o&&o.via==='cli')h+=`<br><small class="imp-cli">🔁 ${esc(o.e.cli)} <b>${esc(o.e.c)}</b> → hoje compra ${o.fs.map(f=>esc(fnome(f[0]))+' <b>'+esc(f[1])+'</b>').join(' / ')}</small>`;
+    else if(o&&o.via==='mercado')h+=`<br><small class="imp-cli">🔁 ${esc(o.e.cli)} <b>${esc(o.e.c)}</b> · achado pelo código de mercado${o.fs.length?'; o código que compra ('+o.fs.map(f=>esc(fnome(f[0]))+' '+esc(f[1])).join(' / ')+') ainda não está neste perfil da base':''}</small>`;
+    if(nforn(g)<2)h+=`<br><small style="color:#b3541e">só ${nforn(g)?esc(fnome(forns(g)[0])):'a referência'} na base · sem comparação com outras extrusoras</small>`;
+    if(o&&o.alt){const c=a.gc,d=o.alt;
+      h+=`<div class="imp-cf">⚠️ <b>Confira:</b> pelo código ${esc(o.e.c)} a base indica outro perfil.
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin:6px 0">
+          <label class="imp-op ${a.esc==='compra'?'on':''}"><input type="radio" name="ialt${i}" data-ialt="${i}" value="compra" ${a.esc==='compra'?'checked':''}> ${mini(c)}<span><b>${esc(c.k)}</b><br><small>o que compra hoje · ${esc(IDX.linhas[c.l].n)}</small></span></label>
+          <label class="imp-op ${a.esc==='cod'?'on':''}"><input type="radio" name="ialt${i}" data-ialt="${i}" value="cod" ${a.esc==='cod'?'checked':''}> ${mini(d)}<span><b>${esc(d.k)}</b><br><small>pelo código ${esc(o.e.c)} · ${esc(IDX.linhas[d.l].n)}</small></span></label>
+        </div><small>Na dúvida, fica o que ela compra hoje. Para resolver de vez, use a <a href="conferencia-cliente.html#${esc(norm(o.e.c))}" target="_blank" rel="noopener">folha de conferência</a>.</small></div>`;}
+    return h;}
+  let SO=false;
   let carregando=null;const lib=()=>window.XLSX?Promise.resolve():(carregando=carregando||new Promise((ok,no)=>{const s=document.createElement('script');s.src=XLSX_URL;s.onload=ok;s.onerror=()=>{carregando=null;no(new Error('xlsx'));};document.head.appendChild(s);}));
   /* cabeçalho: código (prefere o da empresa, ex.: CÓD GUAPORÉ), descrição, cor, tamanho da barra (T.B) e quantidade de barras (COMPRAS).
      Colunas de peso, sugestão e venda nunca contam como quantidade. */
@@ -58,12 +82,13 @@
   function monta(L){return L.map(x=>{const s=separa(x.raw);const cor=corDe(x.corTxt)||s.cor||corNoTexto(x.prod)||COR;let mt=x.tam>0?(x.tam>=100?x.tam/1000:x.tam):BARRA;mt=Math.round(mt*100)/100;
       const a=acha(s.base,x.prod);return {...x,base:s.base,cor,corAb:s.cor,mt,q:Math.round(x.q),ach:a,ok:!!a,cod:a?a.cod:s.base};});}
   let IT=[],ARQ='';
-  function tabela(){const ok=IT.filter(x=>x.ok).length;
+  function tabela(){const ok=IT.filter(x=>x.ok).length,cf=IT.filter(ehConf).length,nf=IT.length-ok;
     return `<div class="imp-md" role="dialog" aria-label="Importar lista"><div class="imp-h"><b>📎 Lista do cliente · ${esc(ARQ)}</b><button type="button" class="bt" data-impx>✕ Fechar</button></div>
-     <p class="sub" style="margin:0">${IT.length} linhas lidas · <b style="color:var(--ok,#16a34a)">${ok} encontradas</b>${IT.length-ok?` · <b style="color:var(--md,#d97706)">${IT.length-ok} para conferir</b> (entram na simulação como “não encontrado”: corrija o código aqui ou ajuste depois com ＋ 2ª opção)`:''}. A cor vem da coluna Cor ou da abreviação no fim do código (.BCO, -PTO, -NAT…).</p>
+     <p class="sub" style="margin:0">${IT.length} linhas lidas · <b style="color:var(--ok,#16a34a)">${ok} encontradas</b>${IT.length-ok?` · <b style="color:var(--md,#d97706)">${IT.length-ok} para conferir</b> (entram na simulação como “não encontrado”: corrija o código aqui ou ajuste depois com ＋ 2ª opção)`:''}${cf?` · <b style="color:#b45309">${cf} com conflito</b> (o código do cliente e o que ele compra apontam perfis diferentes: escolha qual vale)`:''}. A cor vem da coluna Cor ou da abreviação no fim do código (.BCO, -PTO, -NAT…).</p>
+     ${cf||nf?`<label style="font-size:14px;font-weight:600"><input type="checkbox" data-iso ${SO?'checked':''}> Mostrar só o que precisa conferir (${cf+nf})</label>`:''}
      <div style="overflow:auto;max-height:58vh;border:1px solid #d6dee4;border-radius:10px"><table class="imp-t"><thead><tr><th></th><th>Código na lista</th><th>Produto</th><th>Achado como</th><th>Curva</th><th>Cor</th><th class="n">Barras</th><th>Barra</th></tr></thead><tbody>
-     ${IT.map((x,i)=>`<tr class="${x.ok?'':'nf'}"><td><input type="checkbox" data-iu="${i}" ${x.use!==false?'checked':''} aria-label="Usar"></td><td><b>${esc(x.raw)}</b>${x.corAb?`<br><small>cor no código: ${esc(CORN[x.corAb])}</small>`:''}</td><td><small>${esc(x.prod)}</small></td>
-      <td>${x.ok?`<b>${esc(x.ach.g.k)}</b><br><small>${esc(IDX.linhas[x.ach.g.l].n)}${x.ach.g.n?' · '+esc(x.ach.g.n):''}${x.ach.n>1?' · aparece em '+x.ach.n+' linhas':''}</small>`:`<input data-ic="${i}" value="${esc(x.base)}" style="width:120px" aria-label="Corrigir código"> <small style="color:var(--md,#d97706)">não achei · entra assim e você ajusta com ＋ 2ª opção</small>`}</td>
+     ${IT.map((x,i)=>SO&&x.ok&&!ehConf(x)?'':`<tr class="${x.ok?(ehConf(x)?'cf':''):'nf'}"><td><input type="checkbox" data-iu="${i}" ${x.use!==false?'checked':''} aria-label="Usar"></td><td><b>${esc(x.raw)}</b>${x.corAb?`<br><small>cor no código: ${esc(CORN[x.corAb])}</small>`:''}</td><td><small>${esc(x.prod)}</small></td>
+      <td>${x.ok?achado(x,i):`<input data-ic="${i}" value="${esc(x.base)}" style="width:120px" aria-label="Corrigir código"> <small style="color:var(--md,#d97706)">não achei · entra assim e você ajusta com ＋ 2ª opção</small>`}</td>
       <td>${x.ok?(c=>c?`<span class="abcb ${c}">${c}</span>`:'<small>—</small>')(classe(x.ach.g,x.ach.cod)):''}</td>
       <td><select data-icor="${i}" aria-label="Cor">${CORES.map(([k,t])=>`<option value="${k}" ${x.cor===k?'selected':''}>${esc(t)}</option>`).join('')}</select></td>
       <td class="n"><input data-iq="${i}" value="${x.q}" inputmode="numeric" style="width:70px;text-align:right" aria-label="Barras"></td>
@@ -75,7 +100,9 @@
   .imp-h{display:flex;align-items:center;gap:10px}.imp-h b{flex:1;font:800 22px var(--f-d,system-ui)}
   .imp-t{width:100%;border-collapse:collapse;font-size:14px}.imp-t th{position:sticky;top:0;background:#f3f6f7;text-align:left;font-size:12px;letter-spacing:.08em;text-transform:uppercase;padding:7px 8px;color:#5d6b76}
   .imp-t td{padding:7px 8px;border-top:1px solid #eef1f3;vertical-align:top}.imp-t tr.nf td{background:#fff7ec}.imp-t select,.imp-t input{border:1px solid #c4ccd2;border-radius:7px;padding:4px 6px;font:600 14px var(--f-b,system-ui)}
-  .imp-t small{color:#5d6b76}`;
+  .imp-t small{color:#5d6b76}.imp-t tr.cf td{background:#fffbea}.imp-cli{color:#0f6b70!important}
+  .imp-cf{margin-top:6px;padding:8px 10px;border:1px solid #f0c36d;border-radius:9px;background:#fff8e1;font-size:13px}
+  .imp-op{display:flex;align-items:center;gap:4px;padding:6px 8px;border:1px solid #d6dee4;border-radius:9px;background:#fff;cursor:pointer;min-width:220px}.imp-op.on{border-color:#0f6b70;box-shadow:0 0 0 2px rgba(15,107,112,.2)}`;
   let stOk=false;
   async function arquivo(f){if(!stOk){const s=document.createElement('style');s.textContent=css;document.head.appendChild(s);stOk=true;}
     ARQ=f.name;ABA_LIDA='';toast('Lendo a lista…');let rows=[];
@@ -93,6 +120,8 @@
       if(ok.dataset.impok==='novo')SIM.length=0;U.forEach(x=>{const q=x.ok?x.ach.g.k:String(x.base||x.raw).toUpperCase();simAdd(q,x.q,x.ok?x.ach.g.l+'|'+x.ach.g.k:null,x.cor,x.mt);const it=SIM.find(y=>norm(y.q)===norm(q)&&y.cor===x.cor&&+y.m===x.mt);if(it){if(!it.orig)it.orig=x.raw;if(x.prod&&!it.desc)it.desc=String(x.prod).slice(0,90);ls.set(SKEY(),SIM);}});
       document.getElementById('impOv').remove();ABA='sim';tela();scrollTo(0,0);setTimeout(()=>{if(window.__minLembra)window.__minLembra();},2900);const nf=U.filter(x=>!x.ok).length;toast(U.length+' itens na simulação.'+(nf?' '+nf+' não encontrado'+(nf>1?'s':'')+': ajuste com ＋ 2ª opção.':'')+(IT.length-U.length?' Ficaram de fora: '+(IT.length-U.length)+'.':''));}});
   document.addEventListener('change',e=>{const t=e.target;if(!t.closest||!t.closest('#impOv'))return;const d=t.dataset;
+    if(d.iso!=null){SO=t.checked;abre();return;}
+    if(d.ialt!=null){const a=IT[+d.ialt].ach;a.esc=t.value;a.g=t.value==='cod'?a.o.alt:a.gc;abre();return;}
     if(d.iu!=null)IT[+d.iu].use=t.checked;
     else if(d.icor!=null)IT[+d.icor].cor=t.value;
     else if(d.iq!=null)IT[+d.iq].q=Math.max(1,parseInt(t.value)||1);
