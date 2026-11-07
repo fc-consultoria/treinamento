@@ -204,7 +204,7 @@ const nomeQ=()=>{let n=ls.get('cons-nome-v','');if(!n){try{n=localStorage.getIte
 
 /* ===== índice de todas as linhas ===== */
 async function carregaIndice(){
-  IDX=await fetch('indice.json?v=13',{cache:'no-cache'}).then(r=>r.json());
+  IDX=await fetch('indice.json?v=14',{cache:'no-cache'}).then(r=>r.json());
   /* códigos de mercado que também acham o grupo (ex.: GS-034 = lambri tubular LB-061) */
   try{const AP=await fetch('apelidos.json?v=4',{cache:'no-cache'}).then(r=>r.json());IDX.g.forEach(g=>{const a=AP[g.l+'|'+g.k];if(Array.isArray(a))g.al=a;});}catch(_){}
   /* edições de pares feitas pela FC na Conversão de códigos */
