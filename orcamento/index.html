@@ -224,7 +224,7 @@ function waLink(){const c=O.cliente,k=calc(),f=String(c.fone||'').replace(/\D/g,
 /* ---------- conversão de códigos de mercado (equivalências FC) ---------- */
 let EQ=null;const TKR=/\b\d{0,3}[A-Z]{1,6}-?\d{2,6}[A-Z]?\b/g;
 function tokItem(i){const t=new Set();[i.cod,...String(i.ref||'').split(/[|\/,;]+/)].forEach(x=>{const k=nk(x);if(k.length>=3)t.add(k);});(String(i.desc||'').toUpperCase().match(TKR)||[]).forEach(x=>{if(!/^L-?\d{2}$/.test(x)){const k=nk(x);if(k.length>=3)t.add(k);}});return t;}
-async function carregaEQ(){if(EQ)return EQ;try{const [a,b]=await Promise.all([fetch('../equivalencias/indice.json?v=11').then(r=>r.json()),fetch('../equivalencias/distribuidoras/dados.json?v=2').then(r=>r.json()).catch(()=>({g:[]}))]);
+async function carregaEQ(){if(EQ)return EQ;try{const [a,b]=await Promise.all([fetch('../equivalencias/indice.json?v=12').then(r=>r.json()),fetch('../equivalencias/distribuidoras/dados.json?v=2').then(r=>r.json()).catch(()=>({g:[]}))]);
   const FN=a.forn||{},G=[],byK={};
   (a.g||[]).forEach(g=>{const al=(g.m||[]).find(m=>m[0]==='alcoa');const x={mk:al?al[1]:g.k,n:g.n||'',c:new Map()};x.c.set(nk(g.k),g.k);(g.m||[]).forEach(m=>{if(m[3]!=='baixa'&&m[1])x.c.set(nk(m[1]),m[1]+' ('+(FN[m[0]]||m[0])+')');});byK[nk(g.k)]=G.length;G.push(x);});
   const DN=(b.dist||{});(b.g||[]).forEach(g=>{let gi=byK[nk(g.gk||g.k)];if(gi==null){gi=G.length;G.push({mk:g.mk||g.k,n:g.n||'',c:new Map([[nk(g.k),g.mk||g.k]])});byK[nk(g.k)]=gi;}(g.m||[]).forEach(m=>{const k=nk(m[1]);if(k.length>=3&&!G[gi].c.has(k))G[gi].c.set(k,m[1]+' ('+(DN[m[0]]||m[0])+')');});});
