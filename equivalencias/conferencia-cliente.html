@@ -76,7 +76,7 @@ const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const CLI=(new URLSearchParams(location.search).get('c')||'guapore').toLowerCase().replace(/[^a-z0-9-]/g,'');
 const DKEY='fc_conf_cli_'+CLI;
-let IDX,AP,C,R=[],DEC={},FIL='conflito';
+let IDX,AP,C,R=[],DEC={},FIL='conflito',IX=null;
 const F=FCConflitos,norm=F.norm;
 const fn=f=>(IDX.forn&&IDX.forn[f])||String(f).toUpperCase();
 const lnome=l=>(IDX.linhas[l]||{}).n||l;
@@ -97,78 +97,116 @@ async function carrega(){
   try{const r=await sb.from('trein_eventos').select('detalhe,criado_em').eq('tipo','equiv_edit').order('criado_em');aplicaEdits((r.data||[]).map(x=>x.detalhe));}catch(_){}
   DEC={};try{DEC=JSON.parse(localStorage.getItem(DKEY)||'{}');}catch(_){}
   try{const r=await sb.from('trein_eventos').select('detalhe,criado_em').eq('tipo','cli_conf').order('criado_em');(r.data||[]).forEach(x=>{const d=x.detalhe;if(d&&d.cli===CLI&&d.c)DEC[norm(d.c)]=d;});}catch(_){}
-  R=F.analisa(IDX,AP,C);}
+  R=F.analisa(IDX,AP,C);IX=F.indexa(IDX,AP);}
 
 function membro(g,m,eu){const u=F.imgDe(IDX,g,m);const base=m[3]==='base';
   return `<div class="mem ${eu?'eu':''}">${u?`<img src="${esc(u)}" alt="${esc(m[1])}" loading="lazy" data-zm="${esc(u)}" data-zt="${esc(fn(m[0])+' '+m[1])}" onerror="this.outerHTML='<div class=sd>sem desenho</div>'">`:'<div class="sd">sem desenho</div>'}
     <b>${esc(m[1])}</b><br><small>${esc(fn(m[0]))}${base?' · referência':''}</small>${m[2]?'<br><small>'+esc(kgm(m[2]))+'</small>':''}</div>`;}
 function grupo(gi,meus){const g=IDX.g[gi];const ms=new Set(meus.map(norm));
   return `<div class="grp"><div>${esc(g.k)} <small>· ${esc(lnome(g.l))}${g.n?' · '+esc(g.n):''}</small></div><div class="mems">${g.m.map(m=>membro(g,m,ms.has(norm(m[1])))).join('')}</div></div>`;}
-/* par que dá para unir: um grupo do código do cliente e um do código que compra na MESMA linha */
-/* tubos e cantoneiras (tc) não unem: cada grupo é uma medida, parede diferente é outro perfil */
-function parUniao(x){for(const d of x.dir)for(const c of x.cid){if(IDX.g[d].l===IDX.g[c].l&&IDX.g[d].l!=='tc')return [d,c];}return null;}
-const NOMED={unir:'🔗 Unido na base',planilha:'📄 Erro na planilha do cliente',ok:'✅ Perfis diferentes · está certo'};
-function card(x){const d=DEC[norm(x.c)];const par=parUniao(x);const meusDir=[x.c,...x.comp.map(c=>c.c)],meusCid=x.comp.map(c=>c.c);
-  return `<div class="card ${d?'feito':''}" id="c-${esc(norm(x.c))}"><div class="ch"><b class="cod">${esc(C.cliente)} ${esc(x.c)}</b>
-    ${x.p?`<span class="tag fx">planilha: ${esc(kgm(x.p))}</span>`:''}<span class="tag cf">compra hoje: ${x.comp.map(c=>esc(fn(c.f))+' '+esc(c.c)).join(' / ')||'—'}</span>${d?`<span class="tag ok">${esc(NOMED[d.d]||d.d)}</span>`:''}</div>
-    ${x.obs?`<p class="sub" style="font-size:14px;margin-top:4px">⚠️ ${esc(x.obs)}</p>`:''}
+/* par que dá para unir: um grupo do código do cliente e um do código que compra na MESMA linha (e grupos diferentes).
+   Tubos e cantoneiras (tc) não unem: cada grupo é uma medida, parede diferente é outro perfil */
+function parUniao(x){for(const d of x.dir)for(const c of x.cid){if(d!==c&&IDX.g[d].l===IDX.g[c].l&&IDX.g[d].l!=='tc')return [d,c];}return null;}
+const NOMED={unir:'🔗 Unido na base',planilha:'📄 Erro na planilha do cliente',ok:'✅ Perfis diferentes · está certo',incluir:'➕ Código incluído na base',conferido:'✅ Conferido',errado:'❌ Marcado como errado'};
+const BUSCA={};
+const recalc=()=>{R=F.analisa(IDX,AP,C);IX=F.indexa(IDX,AP);};
+/* "está errado" num item certo manda ele para os conflitos */
+const sitDe=x=>{const d=DEC[norm(x.c)];return d&&d.d==='errado'?'conflito':x.sit;};
+const compraTxt=x=>x.comp.map(c=>esc(fn(c.f))+' '+esc(c.c)).join(' / ')||'—';
+function cab(x,d){return `<div class="ch"><b class="cod">${esc(C.cliente)} ${esc(x.c)}</b>
+    ${x.p?`<span class="tag fx">planilha: ${esc(kgm(x.p))}</span>`:''}<span class="tag cf">compra hoje: ${compraTxt(x)}</span>${d?`<span class="tag ok">${esc(NOMED[d.d]||d.d)}</span>`:''}</div>
+    ${x.obs?`<p class="sub" style="font-size:14px;margin-top:4px">⚠️ ${esc(x.obs)}</p>`:''}`;}
+const nota=(x,ph)=>`<input data-nota="${esc(x.key)}" placeholder="${esc(ph||'Observação (ex.: o certo é Texa TBX123)')}" value="${esc((DEC[norm(x.c)]||{}).nota||'')}">`;
+const bt=(x,d,txt,p,extra)=>`<button type="button" ${p?'class="p"':''} data-d="${d}" data-c="${esc(x.key)}" ${extra||''}>${txt}</button>`;
+function status(x,d){return `<div class="st" id="st-${esc(norm(x.c))}">${d?`Decidido: ${esc(NOMED[d.d]||d.d)}${d.nota?' · '+esc(d.nota):''}${d.unidos?' · '+esc(d.unidos.join('; ')):''} <button type="button" class="bt" data-desfaz="${esc(x.key)}" style="padding:3px 9px;margin-left:6px">desfazer</button>`:''}</div>`;}
+const abre=(x,d,cls)=>`<div class="card ${d?'feito':''} ${cls||''}" id="c-${esc(norm(x.c))}">`;
+/* botões para incluir o código que o cliente compra num grupo da base (com o peso da planilha) */
+function incluir(x,ids){if(!x.comp.length||!ids.length)return '';
+  return ids.slice(0,3).flatMap(gi=>x.comp.map(c=>bt(x,'incluir',`➕ Incluir ${esc(fn(c.f))} ${esc(c.c)} em ${esc(IDX.g[gi].k)}`,1,`data-g="${gi}" data-cod="${esc(c.c)}" data-f="${esc(c.f)}"`))).join('')
+    +`<label style="font-size:14px;font-weight:600">peso <input data-peso="${esc(x.key)}" value="${x.p?String(x.p).replace('.',','):''}" inputmode="decimal" style="width:70px;min-width:0;flex:none"> kg/m</label>`;}
+
+function cardConflito(x){const d=DEC[norm(x.c)];const par=parUniao(x);const meusDir=[x.c,...x.comp.map(c=>c.c)],meusCid=x.comp.map(c=>c.c);
+  return abre(x,d)+cab(x,d)+`
     <div class="lados"><div class="lado"><small>Pelo código ${esc(x.c)}</small>${x.dir.map(i=>grupo(i,meusDir)).join('')||'<p class="vz">não está na base</p>'}</div>
       <div class="lado"><small>Pelo código que compra hoje</small>${x.cid.map(i=>grupo(i,meusCid)).join('')||'<p class="vz">não está na base</p>'}</div></div>
-    <div class="dec">${par?`<button type="button" class="p" data-d="unir" data-c="${esc(x.key)}" title="Leva o código que compra para o grupo de ${esc(IDX.g[par[0]].k)}">🔗 Mesmo perfil: unir em ${esc(IDX.g[par[0]].k)}</button>`:''}
-      <button type="button" data-d="planilha" data-c="${esc(x.key)}">📄 Erro na planilha</button>
-      <button type="button" data-d="ok" data-c="${esc(x.key)}">✅ Perfis diferentes · está certo</button>
-      <input data-nota="${esc(x.key)}" placeholder="Observação (ex.: o certo é Texa TBX123)" value="${esc(d&&d.nota||'')}"></div>
-    <div class="st" id="st-${esc(norm(x.c))}">${d?`Decidido: ${esc(NOMED[d.d]||d.d)}${d.nota?' · '+esc(d.nota):''} <button type="button" class="bt" data-desfaz="${esc(x.key)}" style="padding:3px 9px;margin-left:6px">desfazer</button>`:''}</div></div>`;}
+    <div class="dec">${par?bt(x,'unir',`🔗 Mesmo perfil: unir em ${esc(IDX.g[par[0]].k)}`,1):''}${bt(x,'planilha','📄 Erro na planilha')}${bt(x,'ok','✅ Perfis diferentes · está certo')}${nota(x)}</div>`+status(x,d)+'</div>';}
+function cardSolo(x){const d=DEC[norm(x.c)];const ids=x.cid.length?x.cid:x.dir;
+  return abre(x,d)+cab(x,d)+`<div class="lado" style="margin-top:10px"><small>Na base</small>${ids.map(i=>grupo(i,[x.c,...x.comp.map(c=>c.c)])).join('')}</div>
+  <p class="sub" style="font-size:14px;margin-top:6px">Só uma extrusora neste perfil. Para ter comparação, una este perfil ao de outra extrusora na Conversão de códigos.</p>
+  <div class="dec">${bt(x,'conferido','✅ Conferido')}${bt(x,'planilha','📄 Erro na planilha')}${nota(x)}</div>`+status(x,d)+'</div>';}
+function cardFora(x){const d=DEC[norm(x.c)];
+  return abre(x,d)+cab(x,d)+`
+    <div class="lados"><div class="lado"><small>Achado pelo código ${esc(x.c)}</small>${x.dir.map(i=>grupo(i,[x.c])).join('')}</div>
+      <div class="lado"><small>O que compra hoje</small>${x.comp.map(c=>`<div class="grp"><div>${esc(fn(c.f))} ${esc(c.c)}${c.cor?' <small>· '+esc(c.cor)+'</small>':''}</div></div>`).join('')}
+        <p class="vz">Este código ainda não está em nenhum perfil da base. Se o desenho ao lado é o perfil que o cliente compra, inclua o código nele: a importação passa a marcar qual é o dele.</p></div></div>
+    <div class="dec">${incluir(x,x.dir)}${bt(x,'planilha','📄 Erro na planilha')}${nota(x)}</div>`+status(x,d)+'</div>';}
+function cardOk(x){const d=DEC[norm(x.c)];const ids=x.cid.filter(i=>!x.dir.length||x.dir.includes(i));const L=ids.length?ids:(x.cid.length?x.cid:x.dir);
+  return abre(x,d)+cab(x,d)+`<div class="lado" style="margin-top:10px"><small>Código e compra no mesmo perfil</small>${L.map(i=>grupo(i,[x.c,...x.comp.map(c=>c.c)])).join('')}</div>
+    <div class="dec">${bt(x,'conferido','✅ Conferido',1)}${bt(x,'errado','❌ Está errado')}${nota(x,'Se está errado, diga o que está diferente')}</div>`+status(x,d)+'</div>';}
+function cardNao(x){const d=DEC[norm(x.c)];const q=BUSCA[x.key]||'';const ids=q?F.acha(IX,q):[];
+  return abre(x,d)+cab(x,d)+`
+    <div class="lado" style="margin-top:10px"><small>Procurar o código certo</small>
+      <div class="dec" style="margin-top:6px"><input data-certo="${esc(x.key)}" value="${esc(q)}" placeholder="Digite o código certo (de qualquer fornecedor ou o de mercado)" style="text-transform:uppercase"><button type="button" class="p" data-busca="${esc(x.key)}" style="border:0;border-radius:10px;padding:8px 14px;font-weight:700;background:var(--tl);color:#fff;cursor:pointer">🔎 Procurar</button></div>
+      ${q?(ids.length?ids.map(i=>grupo(i,[q])).join(''):`<p class="vz">Não achei ${esc(q.toUpperCase())} na base.</p>`):'<p class="vz">Nem o código do cliente nem o que ele compra estão na base.</p>'}</div>
+    <div class="dec">${ids.length?incluir(x,ids):''}${q?bt(x,'planilha',`📄 Registrar: o certo é ${esc(q.toUpperCase())}`,!ids.length||!x.comp.length,`data-certo-v="${esc(q.toUpperCase())}"`):''}${bt(x,'ok','✅ Não está na base · fica assim')}${nota(x)}</div>`+status(x,d)+'</div>';}
+const CARD={conflito:cardConflito,solo:cardSolo,fora:cardFora,ok:cardOk,nao:cardNao};
 
-const SIT=[['conflito','Em conflito','código do cliente e o que compra caem em perfis diferentes'],['solo','Sem comparação','só 1 fornecedor no grupo'],['fora','Código que compra fora da base','achou pelo código de mercado'],['nao','Não encontrados','nem pelo código nem pelo que compra'],['ok','Certos','código e compra no mesmo perfil']];
-function tela(){const n={};R.forEach(x=>n[x.sit]=(n[x.sit]||0)+1);const pend=R.filter(x=>x.sit==='conflito'&&!DEC[norm(x.c)]).length;
-  const L=R.filter(x=>x.sit===FIL);
+const SIT=[['conflito','Em conflito','código do cliente e o que compra caem em perfis diferentes'],['solo','Sem comparação','só 1 fornecedor no grupo'],['fora','Código que compra fora da base','achou pelo código de mercado'],['nao','Não encontrados','nem pelo código nem pelo que compra'],['ok','Certos','código e compra no mesmo perfil · confira por amostragem']];
+function tela(){const n={},feitos={};R.forEach(x=>{const s=sitDe(x);n[s]=(n[s]||0)+1;if(DEC[norm(x.c)])feitos[s]=(feitos[s]||0)+1;});
+  const L=R.filter(x=>sitDe(x)===FIL);const nd=n[FIL]||0,fd=feitos[FIL]||0;
   let h=`<section class="box"><h1 class="t">Conferência de códigos · ${esc(C.cliente)}</h1>
-    <p class="sub">${R.length} códigos da planilha do cliente comparados com a base de perfis. Em cada conflito, o desenho do código dele fica à esquerda e o do que ele compra hoje à direita (o código destacado em verde é o dele). Decida caso a caso: <b>unir</b> grava o par na Conversão de códigos e vale na hora no painel e no link do cliente; <b>erro na planilha</b> e <b>está certo</b> ficam registrados para a correção da lista do cliente.</p>
-    <div class="cont">${SIT.map(([k,t])=>`<button type="button" data-fil="${k}" class="${FIL===k?'on':''}"><b>${n[k]||0}</b>${esc(t)}</button>`).join('')}</div>
-    ${FIL==='conflito'?`<p class="sub" style="margin-top:10px"><b>${pend}</b> ainda sem decisão. <button type="button" class="bt" id="copia">📋 Copiar resumo das decisões</button> <span id="copMsg"></span></p>`:''}</section>`;
+    <p class="sub">${R.length} códigos da planilha do cliente comparados com a base de perfis. O código destacado em verde é o do cliente ou o que ele compra. <b>Unir</b> e <b>incluir</b> gravam na Conversão de códigos e valem na hora no painel e no link do cliente; as outras decisões ficam registradas para a correção da lista do cliente.</p>
+    <div class="cont">${SIT.map(([k,t])=>`<button type="button" data-fil="${k}" class="${FIL===k?'on':''}"><b>${n[k]||0}</b>${esc(t)}${feitos[k]?`<br><small style="font-weight:600;opacity:.75">${feitos[k]} decididos</small>`:''}</button>`).join('')}</div>
+    <p class="sub" style="margin-top:10px"><b>${nd-fd}</b> de ${nd} ainda sem decisão nesta aba. <button type="button" class="bt" id="copia">📋 Copiar resumo das decisões</button> <span id="copMsg"></span></p></section>`;
   const info=SIT.find(s=>s[0]===FIL);h+=`<h2 class="t">${esc(info[1])} <small style="font:500 15px var(--f-b);color:var(--tm)">· ${esc(info[2])}</small></h2>`;
-  if(FIL==='conflito'||FIL==='solo')h+=L.length?L.map(FIL==='conflito'?card:cardSolo).join(''):'<p class="sub">Nenhum.</p>';
-  else h+=`<div class="lista">${L.map(x=>`<span><b>${esc(x.c)}</b>${x.comp.length?' → '+x.comp.map(c=>esc(fn(c.f))+' '+esc(c.c)).join(' / '):''}</span>`).join('')||'<span>Nenhum.</span>'}</div>`;
+  /* sem decisão primeiro */
+  const ord=[...L.filter(x=>!DEC[norm(x.c)]),...L.filter(x=>DEC[norm(x.c)])];
+  h+=ord.length?ord.map(x=>(FIL==='conflito'?cardConflito:CARD[FIL])(x)).join(''):'<p class="sub">Nenhum.</p>';
   $('#app').innerHTML=h;}
-function cardSolo(x){const ids=x.cid.length?x.cid:x.dir;return `<div class="card" id="c-${esc(norm(x.c))}"><div class="ch"><b class="cod">${esc(C.cliente)} ${esc(x.c)}</b><span class="tag cf">compra hoje: ${x.comp.map(c=>esc(fn(c.f))+' '+esc(c.c)).join(' / ')||'—'}</span></div>
-  <div class="lado" style="margin-top:10px"><small>Na base</small>${ids.map(i=>grupo(i,[x.c,...x.comp.map(c=>c.c)])).join('')}</div>
-  <p class="sub" style="font-size:14px;margin-top:6px">Para ter comparação, una este perfil ao de outra extrusora na Conversão de códigos.</p></div>`;}
+const mostra=(c,msg)=>{tela();const el=document.getElementById('c-'+norm(c));if(el){el.scrollIntoView({block:'center'});if(msg){const s=document.getElementById('st-'+norm(c));if(s)s.insertAdjacentHTML('beforeend','<br><span style="color:var(--md)">'+esc(msg)+'</span>');}}else if(msg)alert(msg);};
 
-async function grava(x,d,nota){const det={cli:CLI,c:x.c,d,nota:nota||'',quando:new Date().toISOString()};
+async function gravaEd(ed){const r=await sb.from('trein_eventos').insert({tipo:'equiv_edit',detalhe:ed});if(r.error)return 'Não gravou na base: '+r.error.message;aplicaEdits([ed]);return '';}
+async function grava(x,d,nt,op){const det={cli:CLI,c:x.c,d,nota:nt||'',quando:new Date().toISOString()};const hoje=new Date().toLocaleDateString('pt-BR');
   if(d==='unir'){const par=parUniao(x);if(!par)return 'Não há par na mesma linha para unir.';const gd=IDX.g[par[0]],gc=IDX.g[par[1]];
     const zz=c=>norm(c).replace(/\d+/g,d=>String(+d));const igual=(a,b)=>{a=zz(a);b=zz(b);return a===b||(a[0]==='T'&&a.slice(1)===b)||(b[0]==='T'&&b.slice(1)===a);};
     const mov=gc.m.filter(m=>(m[3]!=='base'||gc.sp)&&m[0]!=='alcoa'&&x.comp.some(c=>igual(c.c,m[1])));
     if(!mov.length)return 'Não achei o código que compra no grupo para levar.';
-    for(const m of mov){const ed={l:gd.l,f:m[0],c:m[1],a:gd.k,p:m[2]||null,n:'alta',t:'padrao',o:'Unido pela conferência de códigos do cliente ('+C.cliente+' '+x.c+').',img:m[4]||'',pg:m[5]||'—',em:new Date().toLocaleDateString('pt-BR')};
-      if(!ed.p)return 'O código '+m[1]+' está sem peso na base; não dá para unir sem o peso.';
-      const r=await sb.from('trein_eventos').insert({tipo:'equiv_edit',detalhe:ed});if(r.error)return 'Não uniu: '+r.error.message;
-      aplicaEdits([ed]);}
+    for(const m of mov){if(!m[2])return 'O código '+m[1]+' está sem peso na base; não dá para unir sem o peso.';
+      const e=await gravaEd({l:gd.l,f:m[0],c:m[1],a:gd.k,p:m[2],n:'alta',t:'padrao',o:'Unido pela conferência de códigos do cliente ('+C.cliente+' '+x.c+').',img:m[4]||'',pg:m[5]||'—',em:hoje});if(e)return e;}
     det.unidos=mov.map(m=>fn(m[0])+' '+m[1]+' → '+gd.k);}
+  if(d==='incluir'){const g=IDX.g[+op.g];if(!g)return 'Perfil não encontrado.';if(!(op.p>0))return 'Informe o peso (kg/m) para incluir.';
+    const e=await gravaEd({l:g.l,f:op.f,c:String(op.cod).toUpperCase(),a:g.k,p:op.p,n:'alta',t:'padrao',o:'Incluído pela conferência de códigos do cliente ('+C.cliente+' '+x.c+'), peso da planilha do cliente.',img:'',pg:'—',em:hoje});if(e)return e;
+    det.unidos=[fn(op.f)+' '+String(op.cod).toUpperCase()+' → '+g.k];}
+  if(d==='planilha'&&op&&op.certo&&!det.nota)det.nota='o certo é '+op.certo;
   DEC[norm(x.c)]=det;try{localStorage.setItem(DKEY,JSON.stringify(DEC));}catch(_){}
   const r=await sb.from('trein_eventos').insert({tipo:'cli_conf',detalhe:det});
-  R=F.analisa(IDX,AP,C);
+  recalc();
   return r.error?'Decisão guardada só neste navegador (o registro online falhou: '+r.error.message+').':'';}
 
 document.addEventListener('click',async e=>{const t=e.target;
-  const f=t.closest('[data-fil]');if(f){FIL=f.dataset.fil;tela();return;}
+  const f=t.closest('[data-fil]');if(f){FIL=f.dataset.fil;tela();scrollTo(0,0);return;}
   const z=t.closest('[data-zm]');if(z){$('#zmI').src=z.dataset.zm;$('#zmT').textContent=z.dataset.zt;$('#zm').hidden=false;return;}
   if(t.id==='zmX'||t.id==='zm'){$('#zm').hidden=true;return;}
-  const b=t.closest('[data-d]');if(b){const x=R.find(y=>y.key===b.dataset.c);if(!x)return;
-    const nota=(document.querySelector(`[data-nota="${CSS.escape(x.key)}"]`)||{}).value||'';
-    if(b.dataset.d==='unir'&&!confirm('Unir '+x.comp.map(c=>c.c).join(' / ')+' ao perfil de '+x.c+' na Conversão de códigos?'))return;
+  const bs=t.closest('[data-busca]');if(bs){const k=bs.dataset.busca;const i=document.querySelector(`[data-certo="${CSS.escape(k)}"]`);BUSCA[k]=(i&&i.value||'').trim();const x=R.find(y=>y.key===k);if(x)mostra(x.c);return;}
+  const b=t.closest('[data-d]');if(b){const x=R.find(y=>y.key===b.dataset.c);if(!x)return;const D=b.dataset.d;
+    const nt=(document.querySelector(`[data-nota="${CSS.escape(x.key)}"]`)||{}).value||'';
+    const op={g:b.dataset.g,cod:b.dataset.cod,f:b.dataset.f,certo:b.dataset.certoV};
+    if(D==='incluir'){const pi=document.querySelector(`[data-peso="${CSS.escape(x.key)}"]`);op.p=+String(pi&&pi.value||'').replace(',','.');
+      if(!(op.p>0)){alert('Informe o peso em kg/m para incluir o código.');return;}
+      if(!confirm('Incluir '+fn(op.f)+' '+op.cod+' no perfil '+IDX.g[+op.g].k+' com '+String(op.p).replace('.',',')+' kg/m?'))return;}
+    if(D==='unir'&&!confirm('Unir '+x.comp.map(c=>c.c).join(' / ')+' ao perfil de '+x.c+' na Conversão de códigos?'))return;
     b.closest('.dec').querySelectorAll('button').forEach(y=>y.disabled=true);
-    const msg=await grava(x,b.dataset.d,nota);const id='c-'+norm(x.c);tela();const el=document.getElementById(id);
-    if(el){el.scrollIntoView({block:'center'});if(msg){const s=document.getElementById('st-'+norm(x.c));if(s)s.insertAdjacentHTML('beforeend','<br><span style="color:var(--md)">'+esc(msg)+'</span>');}}
-    else if(msg)alert(msg);return;}
+    const msg=await grava(x,D,nt,op);mostra(x.c,msg);return;}
   const u=t.closest('[data-desfaz]');if(u){const x=R.find(y=>y.key===u.dataset.desfaz);if(!x)return;const d=DEC[norm(x.c)];
-    if(d&&d.d==='unir'){alert('A união já foi gravada na Conversão de códigos. Para desfazer, edite o par lá.');}
+    if(d&&(d.d==='unir'||d.d==='incluir'))alert('O código já foi gravado na Conversão de códigos. Para desfazer, edite o par lá.');
     delete DEC[norm(x.c)];try{localStorage.setItem(DKEY,JSON.stringify(DEC));}catch(_){}
     await sb.from('trein_eventos').insert({tipo:'cli_conf',detalhe:{cli:CLI,c:x.c,d:'',nota:'desfeito',quando:new Date().toISOString()}});
-    tela();const el=document.getElementById('c-'+norm(x.c));if(el)el.scrollIntoView({block:'center'});return;}
-  if(t.id==='copia'){const L=R.filter(x=>DEC[norm(x.c)]&&DEC[norm(x.c)].d).map(x=>{const d=DEC[norm(x.c)];return `${x.c} (compra ${x.comp.map(c=>c.c).join('/')}): ${NOMED[d.d]}${d.nota?' · '+d.nota:''}${d.unidos?' · '+d.unidos.join('; '):''}`;});
-    const txt=`Conferência de códigos ${C.cliente} · ${new Date().toLocaleDateString('pt-BR')}\n`+(L.join('\n')||'(nenhuma decisão ainda)');
+    mostra(x.c);return;}
+  if(t.id==='copia'){const L=R.filter(x=>DEC[norm(x.c)]&&DEC[norm(x.c)].d&&DEC[norm(x.c)].d!=='conferido').map(x=>{const d=DEC[norm(x.c)];return `${x.c} (compra ${x.comp.map(c=>c.c).join('/')||'—'}): ${NOMED[d.d]||d.d}${d.nota?' · '+d.nota:''}${d.unidos?' · '+d.unidos.join('; '):''}`;});
+    const nc=R.filter(x=>DEC[norm(x.c)]&&DEC[norm(x.c)].d==='conferido').length;
+    const txt=`Conferência de códigos ${C.cliente} · ${new Date().toLocaleDateString('pt-BR')}\n`+(L.join('\n')||'(nenhuma correção)')+(nc?`\n${nc} itens conferidos sem correção.`:'');
     try{await navigator.clipboard.writeText(txt);$('#copMsg').textContent='✓ Copiado';}catch(_){prompt('Copie o resumo:',txt);}}});
+document.addEventListener('keydown',e=>{const i=e.target.closest&&e.target.closest('[data-certo]');if(i&&e.key==='Enter'){e.preventDefault();const b=document.querySelector(`[data-busca="${CSS.escape(i.dataset.certo)}"]`);if(b)b.click();}});
 /* decisões com d vazio = desfeitas */
 function limpa(){Object.keys(DEC).forEach(k=>{if(!DEC[k]||!DEC[k].d)delete DEC[k];});}
 
@@ -176,7 +214,7 @@ gateUI(async()=>{let adm=false;try{const r=await sb.rpc('trein_is_admin');adm=!!
   if(!adm){$('#app').innerHTML='<p class="sub">Esta área é da FC Consultoria.</p>';return;}
   try{await carrega();}catch(_){$('#app').innerHTML='<p class="sub">Não consegui carregar os códigos do cliente "'+esc(CLI)+'".</p>';return;}
   limpa();$('#hd').textContent='Conferência de códigos · '+C.cliente;
-  const alvo=decodeURIComponent(location.hash.slice(1)||'');const xa=alvo&&R.find(x=>norm(x.c)===norm(alvo));if(xa)FIL=xa.sit==='ok'?'ok':xa.sit;
+  const alvo=decodeURIComponent(location.hash.slice(1)||'');const xa=alvo&&R.find(x=>norm(x.c)===norm(alvo));if(xa)FIL=sitDe(xa);
   tela();if(xa){const el=document.getElementById('c-'+norm(xa.c));if(el){el.classList.add('alvo');el.scrollIntoView({block:'center'});}}});
 </script>
 </body>
