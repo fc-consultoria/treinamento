@@ -15,7 +15,9 @@ if(FC_SILENCIO){try{
   try{navigator.vibrate=function(){return false;};}catch(_){}
   const td=Object.getOwnPropertyDescriptor(Document.prototype,'title');let t0=td.get.call(document)||null;
   Object.defineProperty(document,'title',{configurable:true,get(){return td.get.call(this);},set(v){if(t0===null){t0=String(v).replace(/^\(\d+\)\s*/,'');td.set.call(this,t0);}}});
-  const st=document.createElement('style');st.textContent='#bigAl,#fcAvPerm,#autocadAv,[id^="estAv_"],#fcAvisoPede,#fcHoje,#bNot,#cxBtn .cx-n,#fcvMN{display:none!important}';
+  const st=document.createElement('style');st.textContent='#bigAl,#fcAvPerm,#autocadAv,[id^="estAv_"],#fcAvisoPede,#fcHoje,#bNot,#cxBtn,#fcvBtn,#fcvMat,.pg[data-g="resp"],section[data-tab="ped"],section[data-tab="sug"],section[data-tab="sim"],#cvCard,#sugCard,#osChat{display:none!important}';
+  window.__FC_SEM_MSG=true; /* sem acesso às mensagens dos clientes */
+  try{if(['ped','sug','sim'].includes(localStorage.getItem('treinFC-ptab')))localStorage.setItem('treinFC-ptab','home');}catch(_){}
   (document.head||document.documentElement).appendChild(st);
 }catch(_){}}
 /* "aluno01" vira aluno01@treinamento.fc; "matriz" vira o e-mail da Central FC */
