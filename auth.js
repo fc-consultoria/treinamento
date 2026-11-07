@@ -3,6 +3,21 @@ const SB_URL='https://cpkjphodruyxfouirhpd.supabase.co';
 const SB_KEY='sb_publishable_d0HEeWsaqOeZIQKGftlF-Q_B8BUOWWg';
 const sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,storageKey:'trein-fc-auth'}});
 const MATRIZ_EMAIL='painel.fc@fcconsultoria.com';
+const MATRIZ_UID='0cf32a33-c9dd-4249-acbd-7f448562ba94';
+/* Modo silencioso: outra pessoa da equipe com acesso de admin (ex.: Regina) não recebe avisos,
+   sons, notificações do computador nem título piscando; tudo isso continua só para o Fernando.
+   Decidido antes dos outros scripts carregarem, pela sessão salva neste navegador. */
+const FC_SILENCIO=(function(){try{const s=JSON.parse(localStorage.getItem('trein-fc-auth')||'null');const id=s&&s.user&&s.user.id;return !!id&&id!==MATRIZ_UID&&localStorage.getItem('fc_silencio')===id;}catch(_){return false;}})();
+if(FC_SILENCIO){try{
+  const nada=new Proxy(function(){},{get:(t,k)=>k==='then'?undefined:(k===Symbol.toPrimitive?()=>0:nada),apply:()=>nada,construct:()=>nada,set:()=>true});
+  function N(){} N.permission='denied'; N.requestPermission=function(cb){try{cb&&cb('denied');}catch(_){}return Promise.resolve('denied');};
+  window.Notification=N;window.AudioContext=nada;window.webkitAudioContext=nada;
+  try{navigator.vibrate=function(){return false;};}catch(_){}
+  const td=Object.getOwnPropertyDescriptor(Document.prototype,'title');let t0=td.get.call(document)||null;
+  Object.defineProperty(document,'title',{configurable:true,get(){return td.get.call(this);},set(v){if(t0===null){t0=String(v).replace(/^\(\d+\)\s*/,'');td.set.call(this,t0);}}});
+  const st=document.createElement('style');st.textContent='#bigAl,#fcAvPerm,#autocadAv,[id^="estAv_"],#fcAvisoPede,#fcHoje,#bNot,#cxBtn .cx-n,#fcvMN{display:none!important}';
+  (document.head||document.documentElement).appendChild(st);
+}catch(_){}}
 /* "aluno01" vira aluno01@treinamento.fc; "matriz" vira o e-mail da Central FC */
 function loginToEmail(v){v=(v||'').trim().toLowerCase();if(v==='matriz')return MATRIZ_EMAIL;return v.includes('@')?v:v+'@treinamento.fc';}
 async function perfilAtual(){
@@ -29,6 +44,9 @@ function gateUI(onOk,{soMatriz=false,permitir=[]}={}){
     if(r.perfil.papel==='orcamentista'&&!lib){await sb.auth.signOut();gate.hidden=false;msg.innerHTML='Este login é só para os Orçamentos de obra. <a href="https://fc-consultoria.github.io/treinamento/orcamentos/">Abrir Orçamentos de obra</a>';return;}
     if(soMatriz&&r.perfil.papel!=='admin'&&!lib){gate.hidden=false;msg.textContent='Esta área é só da matriz.';await sb.auth.signOut();return;}
     if(r.perfil.papel!=='admin'){try{await senhaNovaPasso(r.perfil);}catch(_){}}
+    const quieto=r.perfil.papel==='admin'&&r.session.user.id!==MATRIZ_UID;
+    try{if(quieto)localStorage.setItem('fc_silencio',r.session.user.id);else localStorage.removeItem('fc_silencio');}catch(_){}
+    if(quieto&&!FC_SILENCIO){location.reload();return;}
     gate.hidden=true;onOk(r);
   }
   form.addEventListener('submit',async e=>{
@@ -70,4 +88,4 @@ function fcStatusUI(){const upd=async()=>{const on=await fcOnline();document.que
   el.innerHTML=on?'🟢 <b>Suporte FC online agora</b> · pode mandar a sua dúvida':'⚪ <b>Suporte offline</b> · atendimento '+FC_HOR+'. Deixe a sua mensagem: respondemos no próximo horário.';});
   const b=document.getElementById('sugBtn');if(b)b.classList.toggle('fcon',on);};
   upd();setInterval(()=>{if(document.visibilityState==='visible')upd();},60000);}
-function fcPing(){const p=()=>{if(document.visibilityState==='visible')sb.from('fc_status').update({visto:new Date().toISOString()}).eq('id',1).then(()=>{});};p();setInterval(p,60000);document.addEventListener('visibilitychange',p);}
+function fcPing(){if(FC_SILENCIO)return;const p=()=>{if(document.visibilityState==='visible')sb.from('fc_status').update({visto:new Date().toISOString()}).eq('id',1).then(()=>{});};p();setInterval(p,60000);document.addEventListener('visibilitychange',p);}

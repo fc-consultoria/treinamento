@@ -447,7 +447,7 @@ w.addEventListener('click',e=>{const x=e.target.closest('[data-cp]');if(!x)retur
 <section class="card" id="acompCard" data-tab="acomp"><h2 style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">📡 Acompanhamento online dos clientes<span class="note" style="font-weight:500;text-transform:none;letter-spacing:0">link do cliente, publicação e situação do dia</span><button type="button" onclick="acompLoad()" style="margin-left:auto;font:600 14px var(--f-display);text-transform:none;letter-spacing:0;background:#fff;color:var(--fg);border:1px solid var(--line);padding:7px 12px;border-radius:9px;cursor:pointer">Atualizar</button></h2><div id="acompBody"><p class="note" style="padding:14px 16px">Carregando…</p></div></section>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="auth.js"></script>
+<script src="auth.js?v=20261107"></script>
 <script src="sessao.js?v=3"></script>
 <script src="noticias.js?v=5"></script>
 <script src="mapa.js?v=1792037768"></script><script src="acompanhamento-admin.js?v=15"></script><script src="compra-sim-admin.js?v=3"></script><script src="orc-suporte-admin.js?v=2"></script><script src="presenca-admin.js?v=2"></script><script src="horarios-admin.js?v=2"></script><script src="festa-admin.js?v=1"></script><script src="vitrine-admin.js?v=2"></script><script src="vitrine-convite-adm.js?v=1"></script><script src="conclusao-admin.js?v=1"></script><script src="dicas.js?v=20261029202545"></script>
@@ -1790,7 +1790,7 @@ document.getElementById('mpF').onsubmit=async e=>{e.preventDefault();let c=docum
   document.getElementById('mpC').value='';document.getElementById('mpN').value=1;document.getElementById('mpFi').value=0;const m=document.getElementById('mpMsg');m.textContent=MPUB?'✔ Salvo · já aparece para os alunos':'✔ Salvo · mapa em atualização (oculto)';setTimeout(()=>m.textContent='',4000);mpRender();};
 document.querySelector('#ptabs [data-tab=map]').addEventListener('click',()=>{if(MPD)setTimeout(mpRender,50);else mpCarregar();});
 if(PTAB==='map')setTimeout(mpCarregar,800);
-gateUI(()=>{try{localStorage.setItem('fc_eu','1');}catch(_){}carregar();o3dAviso();acEuUI();try{window.FCNoticias&&FCNoticias.iniciar({rodape:true});}catch(_){}},{soMatriz:true});
+gateUI(()=>{try{localStorage.setItem('fc_eu','1');}catch(_){}carregar();try{window.FCRelEquipe&&FCRelEquipe.iniciar();}catch(_){}o3dAviso();acEuUI();try{window.FCNoticias&&FCNoticias.iniciar({rodape:true});}catch(_){}},{soMatriz:true});
 (function(){const b=document.getElementById('fcOn');let off=false;
  const draw=()=>{b.textContent=off?'⚪ Suporte fechado':'🟢 Suporte aberto';b.title=off?'Os clientes veem: suporte offline. Clique para ficar online':'Os clientes veem: suporte online enquanto o painel estiver aberto. Clique para ficar offline';b.style.cssText=off?'':'background:#e6f5ec;border-color:#9fd6b4;color:#1f6b3f;font-weight:700';};
  const ld=async()=>{const {data}=await sb.from('fc_status').select('off').eq('id',1).maybeSingle();off=!!(data&&data.off);draw();};
@@ -2012,7 +2012,7 @@ setTimeout(()=>{if(PTAB==='cat')ui();},2500);
 <script src="conversas.js?v=8"></script><script>setTimeout(()=>window.FCConversas&&FCConversas.matriz({semBotao:true}),2500);</script><script src="caixa-fc.js?v=6"></script><script src="acessos-todos.js?v=7"></script><script src="central-cliente.js?v=7"></script>
 <script src="painel-skin.js?v=4"></script><script src="painel-hoje.js?v=2"></script>
 <script>window.FCM_MODO="matriz";window.FCM_BARRA={sel:"header.mx .mxutil, header .acts",lado:"dir",nome:"Na barra de cima"};</script><script src="esquadrias/musica.js?v=7"></script>
-<script src="estoque-aviso.js?v=2"></script><script>setTimeout(()=>FCEstAviso.matriz(),3000);</script><script src="autocad-aviso.js?v=2"></script><script src="fc-avisos.js?v=1"></script><script src="demo-pl.js?v=6"></script><script>setTimeout(()=>FCAutocadAviso.matriz(),3200);</script>
+<script src="estoque-aviso.js?v=2"></script><script>setTimeout(()=>FCEstAviso.matriz(),3000);</script><script src="autocad-aviso.js?v=2"></script><script src="fc-avisos.js?v=1"></script><script src="demo-pl.js?v=6"></script><script src="relatorio-equipe.js?v=1"></script><script>setTimeout(()=>FCAutocadAviso.matriz(),3200);</script>
 <script>
 (function(){const ESQ='https://fc-consultoria.github.io/treinamento/esquadrias/';
  async function tr(){const el=document.getElementById('trList');if(!el)return;const S=(typeof sb!=='undefined'&&sb)||window.sb;if(!S){setTimeout(tr,1500);return;}
