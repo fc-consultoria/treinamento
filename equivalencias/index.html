@@ -149,7 +149,7 @@ const ehead=r=>r.fora&&r.ref?(r.ref.f==='texa'?((r.eq.find(e=>e.f==='texa'&&e.c=
 /* ===== busca por descrição (todas as linhas) ===== */
 let IDXD=null,IDXP=null;
 const sa=t=>String(t||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
-function idxD(){if(IDXD)return Promise.resolve(IDXD);if(!IDXP)IDXP=fetch('indice.json?v=12').then(r=>r.json()).then(j=>{IDXD=j;return j;}).catch(()=>null);return IDXP;}
+function idxD(){if(IDXD)return Promise.resolve(IDXD);if(!IDXP)IDXP=fetch('indice.json?v=13').then(r=>r.json()).then(j=>{IDXD=j;return j;}).catch(()=>null);return IDXP;}
 function descRes(q){const ws=sa(q).split(/\s+/).filter(w=>w.length>1);if(!ws.length||!IDXD)return [];
  const R=[];IDXD.g.forEach(g=>{if(g.l==='tc'||!g.n||!LINHAS[g.l])return;const t=sa(g.n+' '+IDXD.linhas[g.l].n);if(ws.every(w=>t.includes(w)))R.push(g);});
  R.sort((a,b)=>(a.l===LIN?0:1)-(b.l===LIN?0:1)||a.l.localeCompare(b.l)||a.k.localeCompare(b.k,'pt',{numeric:true}));return R;}
@@ -313,7 +313,7 @@ document.addEventListener('click',ev=>{const t=ev.target.closest('[data-lin]');i
   if(!ok){$('#app').innerHTML='<p class="vazio">Link inválido ou expirado. Fale com a FC Consultoria.</p>';return;}marca('uso exclusivo do cliente');voltaBtn(false);iniciar();}
  else gateUI(async()=>{try{const r=await sb.rpc('trein_is_admin');ADM=!!r.data;}catch(_){}marca('uso interno');voltaBtn(true);
   if(ADM&&window.FCFoto){let CS=null;idxD().then(j=>{if(!j)return;CS=new Set();j.g.forEach(g=>{CS.add(norm(g.k));g.m.forEach(m=>CS.add(norm(m[1])));});});
-   FCFoto.ligar({idx:'foto-ext.json',tem:c=>!!CS&&CS.has(norm(c)),ir:c=>{$('#q').value=c;$('#fb').requestSubmit();},forn:f=>({alcoa:'Alcoa',texa:'Texa',selta:'Selta',fbk:'FBK',ecoalumi:'Ecoalumi',perfileve:'Perfileve',cda:'CDA',aluvid:'Aluvid',hyspex:'Hyspex',tambore:'Tamboré'})[f]||f});}
+   FCFoto.ligar({idx:'foto-ext.json',tem:c=>!!CS&&CS.has(norm(c)),ir:c=>{$('#q').value=c;$('#fb').requestSubmit();},forn:f=>({alcoa:'Alcoa',texa:'Texa',selta:'Selta',fbk:'FBK',ecoalumi:'Ecoalumi',perfileve:'Perfileve',cda:'CDA',aluvid:'Aluvid',hyspex:'Hyspex',tambore:'Tamboré',alumax:'Alumax'})[f]||f});}
   iniciar();});})();
 </script>
 <script src="../conversa-equipe.js?v=11"></script>
