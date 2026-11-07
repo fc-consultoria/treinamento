@@ -11,7 +11,7 @@
   async function liga(nome,todos){
     M={};NOME='';ON=false;
     const L=todos?ARQ:ARQ.filter(x=>x.t.test(sa(nome)));
-    for(const x of L){try{const j=await fetch(x.a+'?v=1',{cache:'no-cache'}).then(r=>r.json());
+    for(const x of L){try{const j=await fetch(x.a+'?v=2',{cache:'no-cache'}).then(r=>r.json());
       Object.entries(j.itens||{}).forEach(([k,e])=>{e.cli=j.cliente;(M[z(k)]=M[z(k)]||[]).push(e);});NOME=NOME?NOME+', '+j.cliente:j.cliente;ON=true;}catch(_){}}
     return ON;}
   /* tenta o código como veio, sem a cor e sem o tamanho da barra (-3M/-6M) */

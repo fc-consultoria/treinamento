@@ -66,7 +66,7 @@ h2.t{margin:4px 0 0;font:800 22px var(--f-d)}
 <script src="../atualiza.js"></script>
 <script src="../auth.js"></script>
 <script src="foto-busca.js?v=2"></script>
-<script src="cliente-codigos.js?v=1"></script>
+<script src="cliente-codigos.js?v=2"></script>
 <script>
 const $=s=>document.querySelector(s),esc=t=>String(t??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const KEY=new URLSearchParams(location.search).get('k')||'';
@@ -86,7 +86,7 @@ function busca(q){/* código próprio do cliente (ex.: Guaporé PLK544 = Texa TB
   cl.forEach(c=>(BY[c]||[]).forEach(i=>{if(!ids.includes(i))ids.push(i);}));(BY[nk(q)]||[]).forEach(i=>{if(!ids.includes(i))ids.push(i);});
   return ids.map(i=>D.g[i]);}
 function cliBanner(q){if(!window.FCCli||!FCCli.ativo())return '';const E=FCCli.acha(q);if(!E.length)return '';
-  return E.map(e=>`<div class="box" style="margin-top:16px;border:2px solid var(--tl,#0f6b70)"><small style="font-weight:700;color:var(--tl,#0f6b70)">🔁 Código ${esc(e.cli)}</small><div style="font-size:18px;margin:4px 0 6px"><b>${esc(e.c)}</b> <span style="opacity:.6">= hoje compra na extrusora</span></div><div class="ext">${e.f.length?e.f.map(f=>`<a href="comprar.html${KEY?'?k='+encodeURIComponent(KEY):''}#${encodeURIComponent(f[1])}">${esc(IDX&&IDX.forn[f[0]]||f[0].toUpperCase())} · <b>${esc(f[1])}</b>${f[2]?' <small>('+esc(f[2])+')</small>':''}</a>`).join(''):'<i>sem código de fornecedor na planilha</i>'}</div>${e.obs?`<p class="sub" style="font-size:13px;margin:6px 0 0">⚠️ ${esc(e.obs)}</p>`:''}<p class="sub" style="font-size:13px;margin:6px 0 0">Conforme a planilha de precificação do cliente (sem a cor). Abaixo, as distribuidoras com o mesmo perfil. Para comparar preço por kg na extrusora, clique no código acima (Onde comprar).</p></div>`).join('');}
+  return E.map(e=>`<div class="box" style="margin-top:16px;border:2px solid var(--tl,#0f6b70)"><small style="font-weight:700;color:var(--tl,#0f6b70)">🔁 Código ${esc(e.cli)}</small><div style="font-size:18px;margin:4px 0 6px"><b>${esc(e.c)}</b> <span style="opacity:.6">${e.cat?'= catálogo '+esc(e.cli)+(e.pg?', pág. '+e.pg:''):'= hoje compra na extrusora'}</span></div><div class="ext">${e.f.length?e.f.map(f=>`<a href="comprar.html${KEY?'?k='+encodeURIComponent(KEY):''}#${encodeURIComponent(f[1])}">${esc(IDX&&IDX.forn[f[0]]||f[0].toUpperCase())} · <b>${esc(f[1])}</b>${f[2]?' <small>('+esc(f[2])+')</small>':''}</a>`).join(''):(e.cat?'<i>sem par na base da FC</i>':'<i>sem código de fornecedor na planilha</i>')}</div>${e.obs?`<p class="sub" style="font-size:13px;margin:6px 0 0">⚠️ ${esc(e.obs)}</p>`:''}<p class="sub" style="font-size:13px;margin:6px 0 0">${e.cat?(e.f.length?'Código do catálogo de perfis do cliente, conferido pelo desenho. Abaixo, as distribuidoras com o mesmo perfil.':'Código do catálogo de perfis do cliente. Ainda não há perfil igual na base da FC.'):'Conforme a planilha de precificação do cliente (sem a cor). Abaixo, as distribuidoras com o mesmo perfil.'} Para comparar preço por kg na extrusora, clique no código acima (Onde comprar).</p></div>`).join('');}
 function semDist(q){return window.FCCli&&FCCli.acha(q).length?`<div class="box" style="margin-top:16px"><p class="vazio">Nenhuma distribuidora da base tem este perfil cadastrado ainda.</p></div>`:'';}
 function tela(){const r=Q?busca(Q):[];const tot={};D.g.forEach(g=>g.m.forEach(m=>tot[m[0]]=(tot[m[0]]||0)+1));
   const multi=D.g.filter(g=>new Set(g.m.map(m=>m[0])).size>1).length;
