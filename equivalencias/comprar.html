@@ -174,7 +174,7 @@ const $=s=>document.querySelector(s),esc=t=>String(t??'').replace(/[&<>"]/g,c=>(
 const KEY=new URLSearchParams(location.search).get('k')||'';const EMPFIX=new URLSearchParams(location.search).get('emp')||'';
 const norm=s=>String(s||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
 const BARRA=6;
-const FORN=['alcoa','texa','selta','fbk','ecoalumi','perfileve','cda'];
+const FORN=['alcoa','texa','selta','fbk','ecoalumi','perfileve','cda','hyspex'];
 const REFF='alcoa';/* Alcoa = catálogo de referência: confere desenho e peso, não entra na compra */
 const FC_=FORN.filter(f=>f!==REFF);
 const LIB=()=>Array.isArray(DADOS.lib)&&DADOS.lib.length?DADOS.lib:null;const FL=()=>ADM?FC_:(LIB()?FC_.filter(f=>LIB().includes(f)):FC_);
@@ -204,9 +204,9 @@ const nomeQ=()=>{let n=ls.get('cons-nome-v','');if(!n){try{n=localStorage.getIte
 
 /* ===== índice de todas as linhas ===== */
 async function carregaIndice(){
-  IDX=await fetch('indice.json?v=10',{cache:'no-cache'}).then(r=>r.json());
+  IDX=await fetch('indice.json?v=11',{cache:'no-cache'}).then(r=>r.json());
   /* códigos de mercado que também acham o grupo (ex.: GS-034 = lambri tubular LB-061) */
-  try{const AP=await fetch('apelidos.json?v=3',{cache:'no-cache'}).then(r=>r.json());IDX.g.forEach(g=>{const a=AP[g.l+'|'+g.k];if(Array.isArray(a))g.al=a;});}catch(_){}
+  try{const AP=await fetch('apelidos.json?v=4',{cache:'no-cache'}).then(r=>r.json());IDX.g.forEach(g=>{const a=AP[g.l+'|'+g.k];if(Array.isArray(a))g.al=a;});}catch(_){}
   /* edições de pares feitas pela FC na Conversão de códigos */
   let ed=[];
   try{if(ADM){const r=await sb.from('trein_eventos').select('detalhe,criado_em').eq('tipo','equiv_edit').order('criado_em');ed=(r.data||[]).map(x=>x.detalhe);}
@@ -309,7 +309,7 @@ function espelhoSim(){if(VSIM==null||!SIM[VSIM])return '';const x=SIM[VSIM];if(n
   return `<div class="esp noprint"><div><small>ESPELHO DA SIMULAÇÃO · PROVA REAL</small><b>${esc(x.orig||x.q)} · ${esc(CORN[sCor(x)])} · ${x.b} barras de ${String(sM(x)).replace('.',',')} m</b><span>${ch}. Abaixo, a pesquisa completa deste perfil em todos os fornecedores (preço natural, barra de 6 m).</span></div><button type="button" class="bt p" data-voltasim>← Voltar para Simular pedido</button></div>`;}
 function telaBusca(){
   const r=Q?buscar(Q):[];if(r.length&&(!SEL||!r.includes(SEL)))SEL=r[0];
-  return `${espelhoSim()}<section class="box"><h1 class="t">Onde comprar</h1><p class="sub">Digite o código de qualquer fornecedor (Texa, Selta, FBK, Ecoalumi, Perfileve ou CDA), o código de mercado (Alcoa) ou a medida do tubo (ex.: 25,4 x 1,58). A ferramenta junta os equivalentes e mostra onde a barra de 6 m sai mais barata. A Alcoa aparece só como 📘 referência, para conferir o desenho e o peso.${window.FCCli&&FCCli.ativo()?` <b>Também aceita o código da ${esc(FCCli.nome())}</b>, sem a cor (ex.: PLK544, SU-049, LG-028).`:''}</p>
+  return `${espelhoSim()}<section class="box"><h1 class="t">Onde comprar</h1><p class="sub">Digite o código de qualquer fornecedor (Texa, Selta, FBK, Ecoalumi, Perfileve, CDA ou Hyspex), o código de mercado (Alcoa) ou a medida do tubo (ex.: 25,4 x 1,58). A ferramenta junta os equivalentes e mostra onde a barra de 6 m sai mais barata. A Alcoa aparece só como 📘 referência, para conferir o desenho e o peso.${window.FCCli&&FCCli.ativo()?` <b>Também aceita o código da ${esc(FCCli.nome())}</b>, sem a cor (ex.: PLK544, SU-049, LG-028).`:''}</p>
   <form class="sb" id="fb"><input id="q" value="${esc(Q)}" placeholder="Ex.: SU-001, TBX028, VT-0161, PMB-0001" autocomplete="off" aria-label="Código"><button>Comparar</button></form>
   <div class="opc"><div class="g"><span>Acabamento</span><div class="chips">${CORES.map(([k,t,c])=>`<button type="button" data-cor="${k}" class="${COR===k?'on':''}"><span class="dot" style="background:${c}"></span>${t}</button>`).join('')}</div></div>
   <div class="g"><span>Ordenar por</span><div class="chips"><button type="button" data-modo="barra" class="${MODO==='barra'?'on':''}">Melhor preço por barra</button><button type="button" data-modo="min" class="${MODO==='min'?'on':''}">Melhor compra mínima</button></div></div></div>
