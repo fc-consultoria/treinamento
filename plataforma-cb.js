@@ -100,6 +100,7 @@ const CARD={
  dem:'Em Demandas e entregas você vê o que foi pedido à FC e o que já foi entregue.',
  pla:'Nas Planilhas de precificação ficam os custos e as tabelas de preço. As fórmulas ficam travadas; você só preenche o que estiver liberado.',
  est:'Em Estoque e importação você atualiza o estoque da plataforma com a planilha do sistema da empresa.',
+ sim:'No Simulador de Compras você vê, item por item, o que a Distribuidora precisa comprar do fornecedor e o que a Fábrica precisa receber da Distribuidora, com base no estoque e nas vendas dos últimos 90 dias. Atualize com o relatório do sistema e confira a Lista de compra.',
  rvi:'O Relatório de vendas mostra os itens orçados e os itens em pedidos, somados por código e cor. Escolha o período, a linha e a cor, e baixe em Excel para planejar as compras.',
  comp:'Onde comprar mostra em quais extrusoras cada perfil é fabricado.',
  conv:'O Conversor de códigos traduz o código de um fornecedor para o código padrão, com o desenho para conferir antes de comprar.',
@@ -148,7 +149,7 @@ const nomePapel=()=>{try{if(temP())return PAPEL_NOME[PESSOA.papel]||PESSOA.papel
 const sair=()=>{const b=document.getElementById('pesSair');if(b)b.click();else location.reload();};
 
 /* ---------- Matriz: "Ver como" cada perfil da CB (prévia, não grava nada) ---------- */
-const ORD=['gestor','compras','estoque','gerente','marketing','fabrica'],PAD={compras:['comp','dist','est','pla','conv','age','sol'],estoque:['est','pcod','conv','cat','esq','ori','sol','age'],gerente:['orc','cat','pcod'],marketing:['cat'],fabrica:['esq','cat']};
+const ORD=['gestor','compras','estoque','gerente','marketing','fabrica'],PAD={compras:['sim','comp','dist','est','pla','conv','age','sol'],estoque:['est','pcod','conv','cat','esq','ori','sol','age'],gerente:['orc','cat','pcod'],marketing:['cat'],fabrica:['esq','cat']};
 let LISTA=null,carregando=false;
 function perfis(){const r=[];ORD.forEach(pp=>{const ps=(LISTA||[]).filter(p=>p.papel===pp&&p.ativo!==false);
   if(!ps.length&&pp!=='fabrica')return;const p=ps[0]||{nome:'Fábrica',papel:'fabrica'};
@@ -169,7 +170,7 @@ function barraVer(hero){
   hero.before(b);}
 
 /* 30/10/2026 · gestor: Central do Gestor e Painel da Equipe em destaque; demais ferramentas agrupadas em chips */
-const GRUPOS=[['🛒','Vendas',['orc','pcom','cat','rvi','pcod']],['📦','Compras e estoque',['pla','est','conv','comp','dist']],
+const GRUPOS=[['🛒','Vendas',['orc','pcom','cat','rvi','pcod']],['📦','Compras e estoque',['sim','pla','est','conv','comp','dist']],
  ['🎓','Treinamento',['ori','esq','mos','casa','dia','e3d']],['🤝','Consultoria FC',['proc','acao','gal','dem','sol','age','mkt','div']]];
 const PAP={gestor:'Gestor',compras:'Compras',vendas:'Vendas',gerente:'Coordenação',marketing:'Marketing',fabrica:'Fábrica',estoque:'Estoque'};
 let EQ=null,EQc=false,EQab=false,EQf='';
