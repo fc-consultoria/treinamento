@@ -3,7 +3,7 @@
    e não muda a tela de ninguém mais. */
 (function(){
   const CORES = [
-    {id:'padrao',   nome:'Padrão',      c:null, g:['#3452eb','#6f8bff']},
+    {id:'padrao',   nome:'Padrão FC',   c:null, g:['#037480','#0bb2ba']},
     {id:'oceano',   nome:'Oceano',      c:'#2563eb', c2:'#06b6d4'},
     {id:'esmeralda',nome:'Esmeralda',   c:'#059669', c2:'#84cc16'},
     {id:'por-do-sol',nome:'Pôr do sol', c:'#ea580c', c2:'#ec4899'},

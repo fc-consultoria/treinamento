@@ -75,6 +75,23 @@
   html[data-mx=escuro] main .card [style*="background:#fff"],html[data-mx=escuro] main .card [style*="background:#f"]{background:#1d2731!important;color:var(--fg)!important}
   html[data-mx=escuro] tbody tr:hover td{background:#1d2731}
   html[data-mx=escuro] input,html[data-mx=escuro] select,html[data-mx=escuro] textarea,html[data-mx=escuro] main button:not(.ok):not(.pri){background:#1d2731;color:var(--fg);border-color:var(--line)}
+  /* Identidade oficial FC (08/11/2026): fundo claro como o logo, azul-petróleo e prata */
+  :root{--bg:#f4f3f0}
+  html:not([data-mx=escuro]) header.mx{background:linear-gradient(120deg,#fcfbf9 0,#f0efeb 55%,#e3f1f2 100%);color:#1f2a30;border-bottom:1px solid #e2e1dd}
+  html:not([data-mx=escuro]) header.mx::after{background:radial-gradient(circle,rgba(11,178,186,.16),transparent 65%)}
+  html:not([data-mx=escuro]) header.mx .eb{color:#037480}
+  html:not([data-mx=escuro]) header.mx h1{color:#1f2a30!important;-webkit-text-fill-color:#1f2a30}
+  html:not([data-mx=escuro]) header.mx .mxola{color:#4a5359}
+  html:not([data-mx=escuro]) header.mx .mxtop img{border:1px solid #e2e1dd;box-shadow:0 4px 14px rgba(30,42,48,.12);background:#faf9f7}
+  html:not([data-mx=escuro]) header.mx .mxutil>*:not(#recarregar):not(#fcOn):not(.mxtw),html:not([data-mx=escuro]) header.mx #mxTema{background:#fff!important;border:1px solid #d7dadd!important;color:#1f2a30!important}
+  html:not([data-mx=escuro]) header.mx .mxutil>*:not(#recarregar):not(#fcOn):not(.mxtw):hover{background:#eaf7f8!important;border-color:#0bb2ba!important}
+  html:not([data-mx=escuro]) header.mx .mxrel{color:#037480;background:#fff;border:1px solid #d7dadd}
+  html:not([data-mx=escuro]) header.mx .mxapps>*{background:#fff;border:1px solid #e1e3e5;color:#1f2a30;box-shadow:0 2px 8px rgba(30,42,48,.06)}
+  html:not([data-mx=escuro]) header.mx .mxapps>*:hover,html:not([data-mx=escuro]) header.mx .mxapps>*:focus-visible{background:#f2fbfb;border-color:#0bb2ba}
+  html:not([data-mx=escuro]) header.mx .mxlinks a{color:#037480!important}
+  html:not([data-mx=escuro]) header.mx *{text-shadow:none}
+  html:not([data-mx=escuro]) header.mx .mxfz,html:not([data-mx=escuro]) header.mx .mxfz *{color:#4a5359!important}
+  html:not([data-mx=escuro]) header.mx #mxAj{background:#fff!important;border:1px solid #d7dadd!important;color:#1f2a30!important}
   @media(max-width:700px){header.mx h1{font-size:23px}header.mx .mxutil{margin-left:0}header.mx .mxapps{grid-template-columns:repeat(2,1fr)}.kpi b{font-size:24px!important}}
   `;
   const st = document.createElement('style'); st.id='mxSkin'; st.textContent = css; document.head.appendChild(st);
@@ -116,7 +133,7 @@
     const tb = document.createElement('button'); tb.type='button'; tb.id='mxTema'; tb.textContent='🎨 Cor da tela';
     const pop = document.createElement('div'); pop.className='mxpop'; pop.hidden=true;
     const desenhaPop = ()=>{
-      const at = ler('fc_mx_tema','oceano'), md = ler('fc_mx_modo','claro');
+      const at = ler('fc_mx_tema','petroleo'), md = ler('fc_mx_modo','claro');
       pop.innerHTML = `<b style="font:700 14px var(--f-display)">Cor da tela</b><button type="button" data-cor="1" style="padding:9px;border-radius:10px;font-weight:700;background:linear-gradient(135deg,var(--H1),var(--H2));color:#fff;border:0">🎨 Escolher a cor</button><span style="font-size:12.5px;color:#5d6b76">Fundo da tela</span>
         <div class="md">${[['auto','Automático'],['claro','Claro'],['escuro','Escuro']].map(([k,n])=>`<button type="button" data-m="${k}" class="${k===md?'on':''}">${n}</button>`).join('')}</div>`;
     };
