@@ -77,9 +77,12 @@ const css=`
 .platC:hover{border-color:var(--plat);color:var(--plat)}
 @media (max-width:560px){.platGrid{grid-template-columns:1fr 1fr;gap:9px;padding:12px}.platK{min-height:104px;padding:12px}.platHero{margin:10px 10px 0}}`;
 const st=document.createElement('style');st.textContent=css;document.head.appendChild(st);cores();
+/* 08/11/2026 · dentro da Plataforma FC 3D (?plat=1): sem capa, sem o topo roxo (Olá/Tutorial/Fundo/Sair) e sem tutorial automático — a plataforma já tem os seus */
+const EM_PLAT_CB=new URLSearchParams(location.search).get('plat')==='1';
+if(EM_PLAT_CB){const s2=document.createElement('style');s2.textContent='.platHero{display:none!important}.platVolta{padding-top:4px}';document.head.appendChild(s2);}
 
 /* capa fixa: sempre aparece ao abrir o link da CB */
-try{const q=new URLSearchParams(location.search),qe=(q.get('e')||'').toLowerCase();if(PLATS[qe]){EMP=qe;cores();
+try{const q=new URLSearchParams(location.search),qe=(q.get('e')||'').toLowerCase();if(PLATS[qe]){EMP=qe;cores();if(EM_PLAT_CB)throw 0;
   const c=document.createElement('div');c.id='platCapa';c.setAttribute('role','button');c.tabIndex=0;
   c.innerHTML=`<div class="lg">${CFG().sig}</div><h1>${CFG().nome}</h1><p>Plataforma ${CFG().nome} &amp; FC 3D</p><div class="bt">Entrar</div><div class="wm">FC CONSULTORIA EM ESQUADRIA · uso exclusivo</div>`;
   const fecha=()=>{c.remove();const u=document.getElementById('lgU');if(u)u.focus();};
@@ -243,7 +246,7 @@ function pinta(forca){
       return `<button type="button" class="platK${k==='cen'?' dest':''}" data-t="${h(k)}"><span class="ic" aria-hidden="true">${h(ic)}</span><b>${h(lb)}</b>${d?`<span class="d">${h(d)}</span>`:''}</button>`;}).join('');
     g.querySelectorAll('.platK').forEach(k=>k.onclick=()=>abre(k.dataset.t));}
     hero.after(g);
-    if(!tutAuto&&typeof PESSOA!=='undefined'&&PESSOA){tutAuto=true;let visto='1';try{visto=localStorage.getItem(chaveTut());}catch(_){}if(!visto)setTimeout(()=>{if(!window.FCTour||!FCTour.ativo())tutorial();},900);}
+    if(!tutAuto&&!EM_PLAT_CB&&typeof PESSOA!=='undefined'&&PESSOA){tutAuto=true;let visto='1';try{visto=localStorage.getItem(chaveTut());}catch(_){}if(!visto)setTimeout(()=>{if(!window.FCTour||!FCTour.ativo())tutorial();},900);}
     const wm=document.createElement('div');wm.className='platWm';wm.textContent='© FC Consultoria em Esquadria';g.after(wm);
   }else{
     if(body)body.style.display='';
