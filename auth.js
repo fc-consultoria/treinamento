@@ -2,6 +2,13 @@
 const SB_URL='https://cpkjphodruyxfouirhpd.supabase.co';
 const SB_KEY='sb_publishable_d0HEeWsaqOeZIQKGftlF-Q_B8BUOWWg';
 const sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,storageKey:'trein-fc-auth'}});
+/* Sem internet (08/11/2026): o login guardado neste aparelho continua valendo, mesmo que tenha vencido,
+   para o Painel abrir com a última versão guardada. Com internet tudo segue igual. */
+function fcSemRede(err){return !navigator.onLine||!!(err&&/fetch|network|Failed|Load failed/i.test(String(err.message||err)));}
+function fcSessaoGuardada(){try{const s=JSON.parse(localStorage.getItem('trein-fc-auth')||'null');return s&&s.user&&s.user.id?s:null;}catch(_){return null;}}
+(function(){const gs=sb.auth.getSession.bind(sb.auth);
+  sb.auth.getSession=async function(){const r=await gs();if(r&&r.data&&r.data.session)return r;
+    if(fcSemRede(r&&r.error)){const s=fcSessaoGuardada();if(s)return {data:{session:s},error:null};}return r;};})();
 const MATRIZ_EMAIL='painel.fc@fcconsultoria.com';
 const MATRIZ_UID='0cf32a33-c9dd-4249-acbd-7f448562ba94';
 /* Modo silencioso: outra pessoa da equipe com acesso de admin (ex.: Regina) não recebe avisos,
@@ -25,6 +32,10 @@ function loginToEmail(v){v=(v||'').trim().toLowerCase();if(v==='matriz')return M
 async function perfilAtual(){
   const {data:{session}}=await sb.auth.getSession();if(!session)return null;
   const {data,error}=await sb.from('trein_alunos').select('user_id,login,nome,papel,ativo').eq('user_id',session.user.id).maybeSingle();
+  const PK='fc-perfil-off-'+session.user.id;
+  if(data){try{localStorage.setItem(PK,JSON.stringify(data));}catch(_){}
+    try{const c=navigator.serviceWorker&&navigator.serviceWorker.controller;if(c)c.postMessage({tipo:'fc-usuario',id:session.user.id,token:session.access_token});}catch(_){}}
+  if((error||!data)&&fcSemRede(error)){try{const g=JSON.parse(localStorage.getItem(PK)||'null');if(g)return {session,perfil:g,offline:true};}catch(_){}}
   if(error||!data)return {session,perfil:null};return {session,perfil:data};
 }
 /* Acesso desativado: aviso da nova Plataforma FC 3D com botão para o WhatsApp da FC */
@@ -39,6 +50,7 @@ function gateUI(onOk,{soMatriz=false,permitir=[]}={}){
   async function check(){
     const r=await perfilAtual();
     if(!r){gate.hidden=false;return;}
+    if(!r.perfil&&!navigator.onLine){gate.hidden=false;msg.textContent='Sem internet: abra este painel uma vez com internet para ele ficar guardado neste aparelho.';return;}
     if(r.perfil&&!r.perfil.ativo&&r.perfil.papel==='aluno'){await sb.auth.signOut();gate.hidden=false;msgEvoluiu(msg);return;}
     if(!r.perfil||!r.perfil.ativo){await sb.auth.signOut();gate.hidden=false;msg.textContent='Este acesso não está liberado. Fale com a FC Consultoria.';return;}
     const lib=permitir.includes(r.perfil.papel);
