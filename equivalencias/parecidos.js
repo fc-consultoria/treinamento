@@ -28,7 +28,7 @@
 .par .bts{display:flex;gap:6px;flex-wrap:wrap}.par .bts button{border:1px solid #0f6b70;background:#fff;color:#0f6b70;border-radius:8px;padding:5px 9px;font:600 12.5px inherit;cursor:pointer}.par .bts button.ok{background:#0f6b70;color:#fff}.par .bts button:disabled{opacity:.45;cursor:not-allowed}
 .par .it.sv{border-width:2px}.par .it.sv.on{border-color:#16a34a;box-shadow:0 0 0 2px #dcfce7}.par .sel{display:inline-flex;align-items:center;gap:6px;border:1px solid #0f6b70;border-radius:8px;padding:5px 9px;font:600 12.5px inherit;color:#0f6b70;cursor:pointer;user-select:none}.par .sel input{accent-color:#16a34a;width:15px;height:15px;margin:0;cursor:pointer}.par .sel.on{background:#16a34a;border-color:#16a34a;color:#fff}
 .par .ped{grid-column:1/-1;display:flex;flex-direction:column;gap:8px;background:#fffbeb;border:1px dashed #d6c08a;border-radius:12px;padding:10px}.par .ped small{color:#5d6b76;font-size:12.5px}.par .ped form{display:flex;gap:6px;flex-wrap:wrap}.par .ped input{border:1px solid #d6c08a;border-radius:8px;padding:6px 9px;font:13px inherit;min-width:140px;flex:1;max-width:220px}.par .ped button{border:1px solid #0f6b70;background:#0f6b70;color:#fff;border-radius:8px;padding:6px 12px;font:600 12.5px inherit;cursor:pointer}.par .ped .pl{display:flex;gap:6px;flex-wrap:wrap;align-items:center}.par .ped .pl span{background:#dcfce7;color:#166534;border-radius:999px;padding:2px 9px;font-size:12px;font-weight:700}`;
-  function st(){if(document.getElementById('parCss'))return;const s=document.createElement('style');s.id='parCss';s.textContent=css+css2;document.head.appendChild(s);}
+  function st(){if(document.getElementById('parCss'))return;const s=document.createElement('style');s.id='parCss';s.textContent=css+css2+css3;document.head.appendChild(s);}
   const card=(g,ref,o,mini)=>{const n=nota(o);const c=calc(o.h,o.m);const img=imgDe(o.h,o.m);
     const par=g.i+'|'+o.h.l+'|'+o.h.k+'|'+o.m[0]+'|'+o.m[1];const sv=mini&&ADM;const on=sv&&(SELV[g.i]||[]).includes(par);
     return `<div class="it${sv?' sv':''}${on?' on':''}"><div class="th" data-zoom="${esc(img)}" data-t="${esc(IDX.forn[o.m[0]]+' '+o.m[1])}">${img?`<img src="${esc(img)}" alt="" loading="lazy" onerror="this.replaceWith(document.createTextNode('sem desenho'))">`:'<small>sem desenho</small>'}</div>
@@ -62,6 +62,38 @@
     return `<div class="ped"><small>Nenhum perfil com peso até ±${TOL}%. Se você sabe quem tem este perfil, informe a empresa e o código para o Claude procurar no banco de dados e nos catálogos.</small>
       ${L.length?`<div class="pl">${L.map(e=>`<span>📨 ${esc(e.f)} · ${esc(e.c)}</span>`).join('')}<small>Enviado para o Claude conferir.</small></div>`:''}
       ${ADM?`<form data-pedf="${esc(k)}" data-ref="${esc(ref.f+'|'+ref.c)}"><input name="f" list="pedForn" placeholder="Empresa" required><input name="c" placeholder="Código do item" required><button type="submit" class="ok">Enviar</button></form>`:''}</div>`;};
+
+  /* ===== andamento da varredura (FC e Regina): % feito, pendente e "nenhum é igual" =====
+     Base: os perfis que tinham uma só opção de compra na lista original (antes das confirmações).
+     Feito = hoje o código já tem 2 ou mais fornecedores · Nenhum é igual = marcado como sem compatível · Pendente = o resto. */
+  let PV=null;
+  function andamento(){if(!window.IDX0)return null;
+    const f1=g=>new Set(g.m.filter(m=>m[0]!=='alcoa').map(m=>m[0]));
+    const U=IDX0.filter(g=>!EXCL.has(g.l)&&g.m.some(m=>m[0]!=='alcoa')&&f1(g).size<=1);
+    const R={t:0,f:0,d:0,p:0,L:{}};
+    U.forEach(g0=>{const ref=g0.m.find(m=>m[0]!=='alcoa');let multi=false;
+      (BY[norm(ref[1])]||[]).forEach(i=>{const g=IDX.g[i];if(g&&g.l===g0.l&&g.m.some(m=>m[0]===ref[0]&&norm(m[1])===norm(ref[1]))&&f1(g).size>1)multi=true;});
+      const st=multi?'f':(DIS[g0.l+'|'+g0.k]?'d':'p');
+      const L=R.L[g0.l]=R.L[g0.l]||{t:0,f:0,d:0,p:0};R.t++;R[st]++;L.t++;L[st]++;});
+    return R;}
+  const pc=(n,t)=>t?Math.round(n*1000/t)/10:0;
+  function progresso(){const R=andamento();if(!R||!R.t)return '';PV=R;
+    const bar=(x)=>`<div class="pv-bar" role="img" aria-label="${pc(x.f,x.t)}% feito, ${pc(x.d,x.t)}% nenhum é igual, ${pc(x.p,x.t)}% pendente"><i class="f" style="width:${pc(x.f,x.t)}%"></i><i class="d" style="width:${pc(x.d,x.t)}%"></i></div>`;
+    const ls=Object.entries(R.L).sort((a,b)=>b[1].p-a[1].p);
+    return `<section class="box pv"><div class="pv-hd"><h2>📊 Andamento da varredura</h2><span class="pv-tot"><b>${pc(R.f+R.d,R.t)}%</b> concluído · ${R.t} perfis no total</span></div>
+      ${bar(R)}
+      <div class="pv-k"><div class="f"><b>${pc(R.f,R.t)}%</b><span>✅ Feito · ${R.f}</span><small>já têm comparação de compra</small></div>
+        <div class="d"><b>${pc(R.d,R.t)}%</b><span>🚫 Nenhum é igual · ${R.d}</span><small>definido que não tem compatível</small></div>
+        <div class="p"><b>${pc(R.p,R.t)}%</b><span>⏳ Pendente · ${R.p}</span><small>falta conferir</small></div></div>
+      <details class="pv-l"><summary>Ver por linha (${ls.length})</summary><table><thead><tr><th>Linha</th><th>Total</th><th>✅ Feito</th><th>🚫 Nenhum é igual</th><th>⏳ Pendente</th><th>Concluído</th></tr></thead><tbody>
+        ${ls.map(([l,x])=>`<tr><td>${esc((IDX.linhas[l]||{}).n||l)}</td><td>${x.t}</td><td>${x.f}</td><td>${x.d}</td><td>${x.p}</td><td><div class="pv-mini">${bar(x)}<b>${pc(x.f+x.d,x.t)}%</b></div></td></tr>`).join('')}</tbody></table></details></section>`;}
+  const css3=`.pv{background:#fff}.pv-hd{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}.pv-hd h2{margin:0;font-size:18px}.pv-tot{font-size:14px;color:#4a5b66}.pv-tot b{font-size:22px;color:#13232e}
+.pv-bar{display:flex;height:14px;border-radius:99px;background:#f3c969;overflow:hidden;margin:10px 0}.pv-bar i{display:block;height:100%}.pv-bar .f{background:#1f9d55}.pv-bar .d{background:#8a96a0}
+.pv-k{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.pv-k>div{border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:2px}.pv-k b{font-size:24px}.pv-k span{font-weight:700;font-size:14px}.pv-k small{color:#4a5b66;font-size:12.5px}
+.pv-k .f{background:#e7f7ee}.pv-k .d{background:#eef1f3}.pv-k .p{background:#fff5dc}
+.pv-l{margin-top:10px}.pv-l summary{cursor:pointer;font-weight:700;font-size:14px}.pv-l table{width:100%;border-collapse:collapse;margin-top:8px;font-size:13.5px}.pv-l th,.pv-l td{text-align:left;padding:6px;border-bottom:1px solid #eadfc2}.pv-l td:not(:first-child),.pv-l th:not(:first-child){text-align:right;font-variant-numeric:tabular-nums}
+.pv-mini{display:flex;align-items:center;gap:6px;justify-content:flex-end}.pv-mini .pv-bar{width:80px;height:8px;margin:0}
+@media(max-width:640px){.pv-k{grid-template-columns:1fr}.pv-l table{font-size:12.5px}.pv-mini .pv-bar{display:none}}`;
   function tela_(){st();if(!DISok){disCarrega();return '<div class="box"><p class="vazio">Carregando a varredura…</p></div>';}if(!SIG){sigs().then(()=>tela());return '<div class="box"><p class="vazio">Carregando os desenhos…</p></div>';}
     const todos=IDX.g.filter(g=>!EXCL.has(g.l)&&g.m.some(m=>m[0]!=='alcoa')&&fornDe(g).size<=1&&!DIS[g.l+'|'+g.k]);
     const base=typeof EMP!=='undefined'&&EMP==='fc';const cli=base?[]:todos.filter(doCliente);let L=(VQ==='cli'&&!base)?cli:todos;if(VL)L=L.filter(g=>g.l===VL);
@@ -71,7 +103,7 @@
         <b>${esc(ref.c)}</b><small>${esc(IDX.forn[ref.f]||ref.f)} · ${esc(IDX.linhas[g.l].n)} · ${n3(ref.p)} kg/m</small>
         <div class="bts"><button type="button" data-sug="${esc(ref.c)}" data-aba2="busca">Abrir</button><button type="button" data-pardis="${esc(g.l+'|'+g.k)}">Nenhum é igual</button></div>${ADM?confBt(g.i):''}</div>
         <div class="gr">${C.length?C.map(o=>card(g,ref,o,1)).join(''):pedBox(g,ref)}</div></div>`;}).join('');
-    return `<section class="box par" style="background:#fff"><h1 class="t" style="margin:0">🔁 Varredura · perfis com uma só opção de compra</h1>
+    return progresso()+`<section class="box par" style="background:#fff"><h1 class="t" style="margin:0">🔁 Varredura · perfis com uma só opção de compra</h1>
       <p>Para cada perfil que hoje só tem um fornecedor, o sistema mostra os perfis dos outros fornecedores da mesma linha com peso próximo, começando pelos de desenho mais parecido. Confira os desenhos, marque <b>Selecionar</b> nos candidatos iguais (pode marcar mais de um) e clique em <b>Confirmar iguais</b>: cada par entra na Conversão de códigos e o item passa a ter comparação de preço. Linhas exclusivas (CDA, Texa Urban) e tubos ficam fora.</p>
       <div class="tl">${base?`<button type="button" class="on">Todos os perfis (${todos.length})</button>`:`<button type="button" data-varq="cli" class="${VQ==='cli'?'on':''}">Itens do cliente (${cli.length})</button><button type="button" data-varq="todos" class="${VQ==='todos'?'on':''}">Todos (${todos.length})</button>`}
         <select data-varl style="border:1px solid #d6c08a;border-radius:999px;padding:4px 10px;font:600 13px inherit"><option value="">Todas as linhas</option>${lin.map(l=>`<option value="${l}" ${VL===l?'selected':''}>${esc(IDX.linhas[l].n)}</option>`).join('')}</select></div>
@@ -121,5 +153,5 @@
     const lb=s.closest('.sel');lb.classList.toggle('on',s.checked);lb.querySelector('span').textContent=s.checked?'✓ Selecionado':'Selecionar';s.closest('.it').classList.toggle('on',s.checked);
     const b=s.closest('.vr')&&s.closest('.vr').querySelector('[data-parconf]');if(b){b.disabled=!A.length;b.textContent='Confirmar iguais'+(A.length?' ('+A.length+')':'');}});
   document.addEventListener('change',e=>{const t=e.target.closest('[data-varl]');if(!t)return;VL=t.value;VN=30;tela();});
-  window.FCPar={bloco,candidatos,sigs,fornDe,tela:tela_};
+  window.FCPar={bloco,candidatos,sigs,fornDe,tela:tela_,andamento};
 })();

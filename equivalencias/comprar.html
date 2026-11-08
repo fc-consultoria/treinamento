@@ -168,7 +168,7 @@ tr.hl td{background:#fff3c4!important;transition:background .4s}
 <script src="foto-busca.js?v=2"></script>
 <script src="importa-lista.js?v=8"></script>
 <script src="cliente-codigos.js?v=3"></script>
-<script src="parecidos.js?v=6"></script>
+<script src="parecidos.js?v=7"></script>
 <script>
 const $=s=>document.querySelector(s),esc=t=>String(t??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const KEY=new URLSearchParams(location.search).get('k')||'';const EMPFIX=new URLSearchParams(location.search).get('emp')||'';
@@ -205,6 +205,7 @@ const nomeQ=()=>{let n=ls.get('cons-nome-v','');if(!n){try{n=localStorage.getIte
 /* ===== índice de todas as linhas ===== */
 async function carregaIndice(){
   IDX=await fetch('indice.json?v=17',{cache:'no-cache'}).then(r=>r.json());
+  try{window.IDX0=JSON.parse(JSON.stringify(IDX.g.map(g=>({l:g.l,k:g.k,m:g.m.map(m=>[m[0],m[1]])}))));}catch(_){window.IDX0=null;}/* lista original, antes das edições: base do andamento da varredura */
   /* códigos de mercado que também acham o grupo (ex.: GS-034 = lambri tubular LB-061) */
   try{const AP=await fetch('apelidos.json?v=4',{cache:'no-cache'}).then(r=>r.json());IDX.g.forEach(g=>{const a=AP[g.l+'|'+g.k];if(Array.isArray(a))g.al=a;});}catch(_){}
   /* edições de pares feitas pela FC na Conversão de códigos */
