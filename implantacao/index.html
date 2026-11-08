@@ -611,6 +611,8 @@ async function carregarClientes(){
   // Revisão de implantação (componentes): código sistema e itens enviados para revisão
   carregarFotos();
   CLIENTS.forEach(cl=>{ cl.fixoChecklist = {}; checklistRows.filter(r=>r.cliente_id===cl.id && r.fornecedor_fixo).forEach(r=>{ cl.fixoChecklist[(r.linha||'')+'|'+r.codigo] = r.fornecedor_fixo; }); });
+  // Preço para alimentação ajustado à mão (por cliente/linha/código). Vazio = segue o automático.
+  CLIENTS.forEach(cl=>{ cl.ajustePreco = {}; checklistRows.filter(r=>r.cliente_id===cl.id && r.preco_ajustado!=null).forEach(r=>{ cl.ajustePreco[(r.linha||'')+'|'+r.codigo] = Number(r.preco_ajustado); }); });
   CLIENTS.forEach(cl=>{ cl.wvLinhas = {}; cl._wvCache = {}; checklistRows.filter(r=>r.cliente_id===cl.id && r.base_codigo && r.linha).forEach(r=>{ (cl.wvLinhas[r.linha] = cl.wvLinhas[r.linha]||[]).push({codigo:r.codigo, base:r.base_codigo, desc:r.desc_sistema||''}); }); });
   // Itens do WVetro do cliente que não estão no Banco de Preços nas linhas contratadas → painel "Em avaliação"
   try{ const {data:avRows} = await fetchAllRows('impl_wv_avaliacao', '*', 'codigo'); CLIENTS.forEach(cl=>{ cl.wvAval = (avRows||[]).filter(r=>r.cliente_id===cl.id); }); }
@@ -4348,15 +4350,23 @@ function precoAlimentacao(c, key, db, it){
   if(!esc) esc = comPreco[0] || null;
   let alerta = null;
   if(comPreco.length>=2){ const a = comPreco[0], b = comPreco[1], d = Math.abs(a.v-b.v)/Math.min(a.v,b.v); if(d>LIMITE_DIF_FORN) alerta = {a, b, pct:Math.round(d*100)}; }
+  const aj = (c.ajustePreco||{})[key+'|'+it.codigo];
+  if(aj!=null && aj>0){ esc = {f:'Ajuste manual', pos:null, v:aj, ajuste:true, auto:esc}; alerta = null; }
   return {esc, comPreco, alerta, ordem};
 }
+function temAjustePreco(c, key, codigo){ const v = (c.ajustePreco||{})[key+'|'+codigo]; return v!=null && v>0; }
+function fmtPrecoInput(v){ return v==null ? '' : Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2, maximumFractionDigits:4}); }
+function inputPrecoAlimentacao(key, it, esc, big){
+  return `<input class="editable-price" inputmode="decimal" style="width:96px; text-align:right; font-weight:700;${big?' font-size:15px;':''}${esc&&esc.ajuste?' background:#fff4d6; border-color:#e8a317;':''}" value="${esc?fmtPrecoInput(esc.v):''}" placeholder="—" data-action="ajustar-preco-alim" data-key="${escapeHtml(key)}" data-codigo="${escapeHtml(it.codigo)}" title="Digite o preço para ajustar. Apague para voltar ao preço automático.">`;
+}
+function legendaAjuste(esc){ return esc && esc.ajuste ? `<div style="font-size:11.5px; color:#b26b00; font-weight:650;">✏️ Ajustado${esc.auto?` · auto ${fmtMoney(esc.auto.v)} (${escapeHtml(esc.auto.f)})`:''}</div>` : ''; }
 function celulaPrecoAlimentacao(c, key, db, it){
   const {esc, comPreco, alerta} = precoAlimentacao(c, key, db, it);
   const fixo = (c.fixoChecklist||{})[key+'|'+it.codigo] || '';
   const sel = ehAdminEspelho() && comPreco.length>1 ? `<select class="select-inline" style="font-size:11.5px; padding:2px 4px; margin-top:4px; max-width:150px;" data-action="fixar-fornecedor-item" data-key="${escapeHtml(key)}" data-codigo="${escapeHtml(it.codigo)}" title="Só a matriz muda: fixa este item num fornecedor">
       <option value="">Automático (ordem)</option>${comPreco.map(x=>`<option value="${escapeHtml(x.f)}" ${chaveFornAjuste(fixo)===chaveFornAjuste(x.f)?'selected':''}>📌 ${escapeHtml(x.f)} · ${fmtMoney(x.v)}</option>`).join('')}</select>` : '';
-  if(!esc) return `<td><span class="desc">—</span>${sel}</td>`;
-  return `<td style="white-space:nowrap;"><b>${fmtMoney(esc.v)}</b><div style="font-size:11.5px; color:var(--text-3);">${esc.fixo?'📌 ':''}${escapeHtml(esc.f)} · ${esc.pos}º</div>${alerta?`<div style="font-size:11.5px; font-weight:650; color:#b42318;" title="${escapeHtml(alerta.a.f)}: ${fmtMoney(alerta.a.v)} · ${escapeHtml(alerta.b.f)}: ${fmtMoney(alerta.b.v)}">⚠️ diferença de ${alerta.pct}%</div>`:''}${sel}</td>`;
+  if(!esc) return `<td style="white-space:nowrap;">${inputPrecoAlimentacao(key, it, null)}${sel}</td>`;
+  return `<td style="white-space:nowrap;">${inputPrecoAlimentacao(key, it, esc)}${esc.ajuste ? legendaAjuste(esc) : `<div style="font-size:11.5px; color:var(--text-3);">${esc.fixo?'📌 ':''}${escapeHtml(esc.f)} · ${esc.pos}º</div>`}${alerta?`<div style="font-size:11.5px; font-weight:650; color:#b42318;" title="${escapeHtml(alerta.a.f)}: ${fmtMoney(alerta.a.v)} · ${escapeHtml(alerta.b.f)}: ${fmtMoney(alerta.b.v)}">⚠️ diferença de ${alerta.pct}%</div>`:''}${sel}</td>`;
 }
 // Liberação de preços por linha: a equipe só alimenta o que a matriz conferiu e liberou
 function vistaEquipe(){ return !ehAdminEspelho() || !!STATE.verComoEquipe; }
@@ -4412,7 +4422,7 @@ function renderChecklistEquipe(cliente, todas, titulo, bloqueadas){
         <td class="mono">${escapeHtml(r.it.codigo)}</td>
         ${inpCodSisComp(cliente, r.key, r.it.codigo)}
         <td>${escapeHtml(r.it.descricao||'—')}</td>
-        <td class="tright" style="white-space:nowrap;">${r.duvida ? '<span class="badge badge-warn">⏳ aguardando conferência da matriz</span>' : r.pa.esc ? `<b style="font-size:15px;">${fmtMoney(r.pa.esc.v)}</b>` : '<span class="desc">sem preço</span>'}</td>
+        <td class="tright" style="white-space:nowrap;">${r.duvida ? '<span class="badge badge-warn">⏳ aguardando conferência da matriz</span>' : `${inputPrecoAlimentacao(r.key, r.it, r.pa.esc, true)}${legendaAjuste(r.pa.esc)}`}</td>
         <td>${r.fed ? `<span class="badge badge-ok">${icon('check')} Alimentado</span>` : '<span class="badge badge-muted">Pendente</span>'}</td>
         ${chkRevComp(cliente, r.key, r.it.codigo)}
       </tr>`).join('')}</tbody></table></div>`}
@@ -4885,7 +4895,7 @@ function renderChecklistComponentesTodas(cliente, contratadas){
           if(v!=null && v>0 && (menorFornecedor===null || v<precoFornecedor(it, menorFornecedor, 'componentes'))) menorFornecedor = f;
         });
       }
-      const temPreco = (selecionados.length?selecionados:(db.fornecedores||[])).some(f=>{ const v = precoFornecedor(it, f, 'componentes'); return v!=null && v>0; });
+      const temPreco = temAjustePreco(cliente, linha, it.codigo) || (selecionados.length?selecionados:(db.fornecedores||[])).some(f=>{ const v = precoFornecedor(it, f, 'componentes'); return v!=null && v>0; });
       todasLinhasRows.push({it, linha, db, fed, cotacao, semPreco, menorFornecedor, temPreco});
     });
   });
@@ -5049,7 +5059,7 @@ function renderChecklistCategoria(nome, db, key, cliente){
         if(v!=null && v>0 && (menorFornecedor===null || v<precoFornecedor(it, menorFornecedor, catDeKey(key)))) menorFornecedor = f;
       });
     }
-    const temPreco = (selecionados.length?selecionados:fornecedoresDb).some(f=>{ const v = precoFornecedor(it, f, catDeKey(key)); return v!=null && v>0; });
+    const temPreco = temAjustePreco(cliente, key, it.codigo) || (selecionados.length?selecionados:fornecedoresDb).some(f=>{ const v = precoFornecedor(it, f, catDeKey(key)); return v!=null && v>0; });
     return {it, fed, cotacao, semPreco, menorFornecedor, temPreco};
   }).filter(r=>{
     if(search && !(searchCodigo && normalizeCodigo(r.it.codigo).includes(searchCodigo)) && !normalizeText(r.it.descricao||'').includes(search)) return false;
@@ -6754,6 +6764,27 @@ function wireEvents(){
         item.emRevisao = e.target.checked; item.revisaoEm = item.emRevisao ? new Date().toISOString() : null;
         render();
         salvarMetroItem(item._id, {em_revisao:item.emRevisao, revisao_em:item.revisaoEm});
+      };
+      return;
+    }
+    if(action==='ajustar-preco-alim'){
+      el.onkeydown = (e)=>{ if(e.key==='Enter') el.blur(); };
+      el.onchange = async (e)=>{
+        const c = CLIENTS.find(x=>x.id===STATE.clientId); if(!c) return;
+        const {key, codigo} = el.dataset, k = key+'|'+codigo;
+        const t = e.target.value.trim(), v = t ? Number(t.replace(/\s|R\$/g,'').replace(/\.(?=\d{3}(\D|$))/g,'').replace(',','.')) : null;
+        if(t && !(v>0)){ alert('Preço inválido. Use, por exemplo, 12,50'); render(); return; }
+        c.ajustePreco = c.ajustePreco || {};
+        const anterior = c.ajustePreco[k];
+        delete c.ajustePreco[k];
+        const db = (typeof dbCliente==='function') ? dbCliente(c, key) : null, it = db && (db.itens||[]).find(x=>x.codigo===codigo);
+        const auto = it ? precoAlimentacao(c, key, db, it).esc : null;
+        const novo = (v!=null && !(auto && Math.abs(auto.v - v) < 0.00001)) ? v : null;
+        if(novo!=null) c.ajustePreco[k] = novo;
+        render();
+        const {error} = await sb.from('impl_checklist').upsert({cliente_id:c.id, codigo, linha:key, preco_ajustado:novo, preco_ajustado_em: novo!=null ? new Date().toISOString() : null, preco_ajustado_por: novo!=null ? (meuEmail()||null) : null}, {onConflict:'cliente_id,codigo,linha'});
+        if(error){ if(anterior!=null) c.ajustePreco[k]=anterior; else delete c.ajustePreco[k]; render(); avisarErroSalvar(error); }
+        else toastSalvo(novo!=null ? 'Preço ajustado: '+fmtMoney(novo) : 'Voltou ao preço automático');
       };
       return;
     }
