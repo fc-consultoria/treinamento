@@ -4355,18 +4355,56 @@ function precoAlimentacao(c, key, db, it){
   return {esc, comPreco, alerta, ordem};
 }
 function temAjustePreco(c, key, codigo){ const v = (c.ajustePreco||{})[key+'|'+codigo]; return v!=null && v>0; }
-function fmtPrecoInput(v){ return v==null ? '' : Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2, maximumFractionDigits:4}); }
+function fmtPrecoAlim(v){ return v==null ? '' : Number(v).toFixed(2).replace('.', ','); }
 function inputPrecoAlimentacao(key, it, esc, big){
-  return `<input class="editable-price" inputmode="decimal" style="width:96px; text-align:right; font-weight:700;${big?' font-size:15px;':''}${esc&&esc.ajuste?' background:#fff4d6; border-color:#e8a317;':''}" value="${esc?fmtPrecoInput(esc.v):''}" placeholder="—" data-action="ajustar-preco-alim" data-key="${escapeHtml(key)}" data-codigo="${escapeHtml(it.codigo)}" title="Digite o preço para ajustar. Apague para voltar ao preço automático.">`;
+  return `<input class="editable-price" inputmode="decimal" style="width:96px; text-align:right; font-weight:700;${big?' font-size:15px;':''}${esc&&esc.ajuste?' background:#fff4d6; border-color:#e8a317;':''}" value="${esc?fmtPrecoAlim(esc.v):''}" placeholder="—" data-action="ajustar-preco-alim" data-key="${escapeHtml(key)}" data-codigo="${escapeHtml(it.codigo)}" title="Digite o preço para ajustar. Apague para voltar ao preço automático.">`;
 }
-function legendaAjuste(esc){ return esc && esc.ajuste ? `<div style="font-size:11.5px; color:#b26b00; font-weight:650;">✏️ Ajustado${esc.auto?` · auto ${fmtMoney(esc.auto.v)} (${escapeHtml(esc.auto.f)})`:''}</div>` : ''; }
+// Leva o preço ajustado do cliente para o Banco de Preços geral, no fornecedor de onde vinha o preço automático
+// (sem o reajuste % do fornecedor, que o painel aplica sozinho). Depois o ajuste do cliente é limpo, porque o
+// automático passa a dar o mesmo valor — e os outros clientes também passam a usar esse preço.
+async function ajusteParaBanco(c, key, codigo, silencioso){
+  const k = key+'|'+codigo, aj = (c.ajustePreco||{})[k]; if(!(aj>0)) return {ok:false, motivo:'sem ajuste'};
+  const vdb = dbCliente(c, key) || getCategoriaDB(key), it = vdb && (vdb.itens||[]).find(i=>i.codigo===codigo);
+  const db = getCategoriaDB(key); if(!it || !db) return {ok:false, motivo:'item não encontrado'};
+  delete c.ajustePreco[k];
+  const pa = precoAlimentacao(c, key, vdb, it);
+  c.ajustePreco[k] = aj;
+  const f = (pa.esc && pa.esc.f) || (pa.ordem||[])[0];
+  const fid = f && db._fornecedorIds[f];
+  const bitem = db.itens.find(i=>i.codigo===(it._base||it.codigo)) || db.itens.find(i=>i.codigo===codigo);
+  if(!fid || !bitem || !bitem._id){ if(!silencioso) alert('Não achei o fornecedor/item no Banco de Preços para gravar '+codigo+'.'); return {ok:false, motivo:'sem fornecedor'}; }
+  const pct = ajusteFornecedor(f, catDeKey(key)), base = Math.round(aj/(1+(pct||0)/100)*10000)/10000;
+  const {error} = await sb.from('impl_precos').upsert({item_id:bitem._id, fornecedor_id:fid, preco:base}, {onConflict:'item_id,fornecedor_id'});
+  if(error){ avisarErroSalvar(error); return {ok:false, motivo:'erro'}; }
+  bitem.precos = bitem.precos || {}; bitem.precos[f] = base;
+  if(c._wvCache) c._wvCache = {};
+  delete c.ajustePreco[k];
+  await sb.from('impl_checklist').upsert({cliente_id:c.id, codigo, linha:key, preco_ajustado:null, preco_ajustado_em:null, preco_ajustado_por:null}, {onConflict:'cliente_id,codigo,linha'});
+  if(!silencioso){ render(); toastSalvo(codigo+' gravado no banco geral: '+f+' '+fmtMoney(aj)); }
+  return {ok:true, f};
+}
+async function todosAjustesParaBanco(c){
+  const chaves = Object.keys(c.ajustePreco||{}).filter(k=>c.ajustePreco[k]>0);
+  if(!chaves.length) return;
+  if(!confirm('Gravar '+chaves.length+' preço(s) ajustado(s) de '+c.nome+' no Banco de Preços geral?\nOs outros clientes que usam o mesmo fornecedor também passam a usar esses preços.')) return;
+  let ok=0, falhou=[];
+  for(const k of chaves){ const i = k.indexOf('|'), r = await ajusteParaBanco(c, k.slice(0,i), k.slice(i+1), true); if(r.ok) ok++; else falhou.push(k.slice(i+1)); }
+  render();
+  toastSalvo(ok+' preço(s) gravado(s) no banco geral'+(falhou.length?' · não gravados: '+falhou.join(', '):''), !!falhou.length);
+}
+function btnAjustesParaBanco(c){
+  if(!ehAdminEspelho() || vistaEquipe()) return '';
+  const n = Object.values(c.ajustePreco||{}).filter(v=>v>0).length;
+  return n ? `<button class="btn btn-sm" data-action="ajustes-para-banco" title="Grava os preços ajustados deste cliente no Banco de Preços geral">⬆ Gravar ${n} ajuste(s) no banco geral</button>` : '';
+}
+function legendaAjusteAlim(esc){ return esc && esc.ajuste ? `<div style="font-size:11.5px; color:#b26b00; font-weight:650;">✏️ Ajustado${esc.auto?` · auto ${fmtMoney(esc.auto.v)} (${escapeHtml(esc.auto.f)})`:''}</div>` : ''; }
 function celulaPrecoAlimentacao(c, key, db, it){
   const {esc, comPreco, alerta} = precoAlimentacao(c, key, db, it);
   const fixo = (c.fixoChecklist||{})[key+'|'+it.codigo] || '';
   const sel = ehAdminEspelho() && comPreco.length>1 ? `<select class="select-inline" style="font-size:11.5px; padding:2px 4px; margin-top:4px; max-width:150px;" data-action="fixar-fornecedor-item" data-key="${escapeHtml(key)}" data-codigo="${escapeHtml(it.codigo)}" title="Só a matriz muda: fixa este item num fornecedor">
       <option value="">Automático (ordem)</option>${comPreco.map(x=>`<option value="${escapeHtml(x.f)}" ${chaveFornAjuste(fixo)===chaveFornAjuste(x.f)?'selected':''}>📌 ${escapeHtml(x.f)} · ${fmtMoney(x.v)}</option>`).join('')}</select>` : '';
   if(!esc) return `<td style="white-space:nowrap;">${inputPrecoAlimentacao(key, it, null)}${sel}</td>`;
-  return `<td style="white-space:nowrap;">${inputPrecoAlimentacao(key, it, esc)}${esc.ajuste ? legendaAjuste(esc) : `<div style="font-size:11.5px; color:var(--text-3);">${esc.fixo?'📌 ':''}${escapeHtml(esc.f)} · ${esc.pos}º</div>`}${alerta?`<div style="font-size:11.5px; font-weight:650; color:#b42318;" title="${escapeHtml(alerta.a.f)}: ${fmtMoney(alerta.a.v)} · ${escapeHtml(alerta.b.f)}: ${fmtMoney(alerta.b.v)}">⚠️ diferença de ${alerta.pct}%</div>`:''}${sel}</td>`;
+  return `<td style="white-space:nowrap;">${inputPrecoAlimentacao(key, it, esc)}${esc.ajuste ? legendaAjusteAlim(esc)+(ehAdminEspelho()?`<button class="btn btn-sm" style="margin-top:4px; font-size:11px; padding:2px 8px;" data-action="ajuste-para-banco" data-key="${escapeHtml(key)}" data-codigo="${escapeHtml(it.codigo)}" title="Grava este preço no Banco de Preços geral (${escapeHtml(esc.auto?esc.auto.f:'1º fornecedor da ordem')})">⬆ Gravar no banco geral</button>`:'') : `<div style="font-size:11.5px; color:var(--text-3);">${esc.fixo?'📌 ':''}${escapeHtml(esc.f)} · ${esc.pos}º</div>`}${alerta?`<div style="font-size:11.5px; font-weight:650; color:#b42318;" title="${escapeHtml(alerta.a.f)}: ${fmtMoney(alerta.a.v)} · ${escapeHtml(alerta.b.f)}: ${fmtMoney(alerta.b.v)}">⚠️ diferença de ${alerta.pct}%</div>`:''}${sel}</td>`;
 }
 // Liberação de preços por linha: a equipe só alimenta o que a matriz conferiu e liberou
 function vistaEquipe(){ return !ehAdminEspelho() || !!STATE.verComoEquipe; }
@@ -4422,7 +4460,7 @@ function renderChecklistEquipe(cliente, todas, titulo, bloqueadas){
         <td class="mono">${escapeHtml(r.it.codigo)}</td>
         ${inpCodSisComp(cliente, r.key, r.it.codigo)}
         <td>${escapeHtml(r.it.descricao||'—')}</td>
-        <td class="tright" style="white-space:nowrap;">${r.duvida ? '<span class="badge badge-warn">⏳ aguardando conferência da matriz</span>' : `${inputPrecoAlimentacao(r.key, r.it, r.pa.esc, true)}${legendaAjuste(r.pa.esc)}`}</td>
+        <td class="tright" style="white-space:nowrap;">${r.duvida ? '<span class="badge badge-warn">⏳ aguardando conferência da matriz</span>' : `${inputPrecoAlimentacao(r.key, r.it, r.pa.esc, true)}${legendaAjusteAlim(r.pa.esc)}`}</td>
         <td>${r.fed ? `<span class="badge badge-ok">${icon('check')} Alimentado</span>` : '<span class="badge badge-muted">Pendente</span>'}</td>
         ${chkRevComp(cliente, r.key, r.it.codigo)}
       </tr>`).join('')}</tbody></table></div>`}
@@ -4933,6 +4971,7 @@ function renderChecklistComponentesTodas(cliente, contratadas){
         <button class="chip ${filtro==='diferenca'?'active':''}" data-action="set-filtro" data-filtro="diferenca">⚠️ Diferença &gt; ${Math.round(LIMITE_DIF_FORN*100)}% (${todasLinhasRows.filter(r=>precoAlimentacao(cliente, r.linha, r.db, r.it).alerta).length})</button>
         <button class="chip ${filtro==='revisao'?'active':''}" data-action="set-filtro" data-filtro="revisao">🔎 Em revisão (${todasLinhasRows.filter(r=>emRevComp(cliente, r.linha, r.it.codigo)).length})</button>
         ${btnMarcarTodosAlimentados(rows, r=>r.linha)}
+        ${btnAjustesParaBanco(cliente)}
       </div>
       <div class="searchbox">${icon('search')}<input placeholder="Buscar código ou descrição em todas as linhas" value="${STATE.search}" data-action="buscar-item"></div>
     </div>
@@ -5095,6 +5134,7 @@ function renderChecklistCategoria(nome, db, key, cliente){
         <button class="chip ${filtro==='diferenca'?'active':''}" data-action="set-filtro" data-filtro="diferenca">⚠️ Diferença &gt; ${Math.round(LIMITE_DIF_FORN*100)}% (${db.itens.filter(it=>precoAlimentacao(cliente, key, db, it).alerta).length})</button>
         <button class="chip ${filtro==='revisao'?'active':''}" data-action="set-filtro" data-filtro="revisao">🔎 Em revisão (${db.itens.filter(it=>emRevComp(cliente, key, it.codigo)).length})</button>
         ${btnMarcarTodosAlimentados(rows, r=>key)}
+        ${btnAjustesParaBanco(cliente)}
       </div>
       <div class="searchbox">${icon('search')}<input placeholder="Buscar código ou descrição" value="${STATE.search}" data-action="buscar-item"></div>
     </div>
@@ -7837,6 +7877,12 @@ function wireEvents(){
         render();
         excluirMetroItensDB(remover.filter(it=>it._id).map(it=>it._id));
         atualizarAlimentado.forEach(it=>{ if(it._id) salvarMetroItem(it._id, {alimentado:true}); });
+        return;
+      }
+      if(action==='ajuste-para-banco' || action==='ajustes-para-banco'){
+        if(!ehAdminEspelho()){ alert('Só o login da matriz grava preços no banco geral.'); return; }
+        const c = CLIENTS.find(x=>x.id===STATE.clientId); if(!c) return;
+        if(action==='ajuste-para-banco') ajusteParaBanco(c, el.dataset.key, el.dataset.codigo); else todosAjustesParaBanco(c);
         return;
       }
       if(action==='liberar-precos'){
