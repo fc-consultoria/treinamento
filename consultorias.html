@@ -769,7 +769,7 @@ function esqWire(e){agWire(e);const q=id=>document.getElementById(id);const novo
  document.querySelectorAll('[data-esqrm]').forEach(b=>b.onclick=()=>{e.treinFunc.splice(+b.dataset.esqrm,1);salvar(at);ficha();});}
 /* ---------- TERMO DE LICENÇA DO CATÁLOGO (registrado no link do cliente) ---------- */
 const LIC_V='1';
-const LIC_PL={ess:['Essencial',149.90,1708.86],pro:['Profissional',249.90,2848.86],pre:['Premium',359.90,4102.86]};
+const LIC_PL={ess:['Essencial'],pro:['Profissional'],pre:['Premium']};
 const brlL=v=>'R$ '+Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2});
 const dBRL=d=>d?String(d).slice(0,10).split('-').reverse().join('/'):'____/____/______';
 function licAceite(){const L=PUB?(PUBSOL||[]):SOL.filter(x=>x.empresa_id===at);return L.filter(x=>x.tipo==='licenca').sort((a,b)=>String(b.em||b.criado_em).localeCompare(String(a.em||a.criado_em)))[0]||null;}
@@ -778,7 +778,7 @@ function licTermoTexto(e,c){const L=c.licenca||{},P=LIC_PL[L.plano]||LIC_PL.pro,
  <p><b>LICENCIANTE:</b> FC Desenvolvimento de Projetos de Compra e Venda LTDA (FC Consultoria em Esquadria), CNPJ 52.985.682/0001-32, Sinop-MT.<br><b>LICENCIADO:</b> ${esc(e.nome)}.</p>
  <p><b>1. Objeto.</b> A LICENCIANTE concede ao LICENCIADO licença de uso, não exclusiva e intransferível, do Catálogo Virtual FC (sistema, layout, visualizador 3D, painel do gestor e vitrine de destaques), publicado em ${esc(u)}, no plano <b>${P[0]}</b>.</p>
  <p><b>2. Cortesia.</b> A licença é concedida <b>sem custo</b> durante a vigência do contrato de consultoria firmado entre as partes e por <b>12 (doze) meses após o seu término</b>. Término do contrato de consultoria: <b>${dBRL(L.fim_contrato)}</b>. Cortesia válida até: <b>${dBRL(L.cortesia_ate)}</b>.</p>
- <p><b>3. Após a cortesia.</b> A continuidade do uso depende da contratação do plano anual vigente, com implantação sem custo. Valores na data deste termo: Essencial 12x ${brlL(LIC_PL.ess[1])} (${brlL(LIC_PL.ess[2])} à vista no PIX), Profissional 12x ${brlL(LIC_PL.pro[1])} (${brlL(LIC_PL.pro[2])} à vista no PIX) e Premium 12x ${brlL(LIC_PL.pre[1])} (${brlL(LIC_PL.pre[2])} à vista no PIX), reajustáveis anualmente. A LICENCIANTE avisará o LICENCIADO com 30 (trinta) dias de antecedência do fim da cortesia. Sem a contratação, o catálogo sai do ar e o conteúdo do LICENCIADO é devolvido a ele.</p>
+ <p><b>3. Após a cortesia.</b> A continuidade do uso depende da contratação do plano anual vigente, com implantação sem custo. Os valores e as condições são os da proposta comercial vigente, apresentada pela LICENCIANTE. A LICENCIANTE avisará o LICENCIADO com 30 (trinta) dias de antecedência do fim da cortesia. Sem a contratação, o catálogo sai do ar e o conteúdo do LICENCIADO é devolvido a ele.</p>
  <p><b>4. Propriedade.</b> O sistema, o código, o layout, o visualizador 3D e o método de organização do catálogo são de propriedade exclusiva da LICENCIANTE, protegidos pelas Leis 9.609/98 e 9.610/98. A marca, o logotipo, as fotos, os preços e os dados comerciais inseridos pertencem ao LICENCIADO.</p>
  <p><b>5. Vedações.</b> É vedado ao LICENCIADO copiar, reproduzir, revender, sublicenciar, fazer engenharia reversa ou contratar terceiros para reproduzir o sistema, no todo ou em parte, e remover o crédito "tecnologia FC" sem acordo por escrito com a LICENCIANTE.</p>
  <p><b>6. Informações técnicas.</b> Medidas, pesos e usinagens do catálogo são demonstrativos e seguem os catálogos dos fabricantes. O LICENCIADO deve confirmar com o seu fornecedor antes de comprar, cortar ou usinar. A LICENCIANTE mantém o catálogo no ar e atualizado com esforços razoáveis, sem garantia de funcionamento ininterrupto.</p>
@@ -978,7 +978,7 @@ async function relatorioDespesas(e){const D=(e.desp||[]).slice().sort((a,b)=>(a.
   <table><tr><th>Data</th><th>Tipo</th><th>Descrição</th><th>Pago por</th><th class="v">Valor</th></tr>${L.map(x=>`<tr><td>${dBR2(x.data)}</td><td>${(DS_C[x.cat]||DS_C.outro)[1]}</td><td>${esc(x.desc||'')}${(x.comp||[]).length?` <small>(${x.comp.length} comprovante${x.comp.length>1?'s':''})</small>`:''}</td><td>${x.quem==='cliente'?'Cliente':'FC'}</td><td class="v">${brl(x.valor)}</td></tr>`).join('')}
   <tr><th colspan="4">Total a reembolsar à FC</th><th class="v">${brl(tot)}</th></tr></table>
   <h2 style="font-size:16px;margin-top:22px">Comprovantes</h2><div class="comp">${L.flatMap(x=>(x.comp||[]).map(c=>`<div class="cp">${/^image\//.test(c.tipo||'')?`<img src="${U[c.path]}" alt="">`:`<p>📄 <a href="${U[c.path]}" target="_blank">${esc(c.nome)}</a> (PDF)</p>`}<p><b>${dBR2(x.data)} · ${brl(x.valor)}</b> · ${esc(x.desc||(DS_C[x.cat]||DS_C.outro)[1])}</p></div>`)).join('')||'<p>Nenhum comprovante anexado.</p>'}</div>
-  <p style="margin-top:24px;color:#5d6f7a;font-size:12px">Dados para o acerto: PIX CNPJ 52.985.682/0001-32 · FC Consultoria · (66) 9 9986-7984</p></body></html>`;
+  <p style="margin-top:24px;color:#5d6f7a;font-size:12px">Dúvidas sobre este relatório: FC Consultoria em Esquadria · (66) 9 9986-7984</p></body></html>`;
   w.document.open();w.document.write(html);w.document.close();}
 function wireAgeDsp(e,q){const g=id=>document.getElementById(id);
   if(g('ageNovo'))g('ageNovo').onclick=()=>{ageForm={tipo:'visita',cli:true};ficha();};

@@ -92,7 +92,7 @@ let sb,L;
 try{sb=window.supabase.createClient("https://cpkjphodruyxfouirhpd.supabase.co","sb_publishable_d0HEeWsaqOeZIQKGftlF-Q_B8BUOWWg",{auth:{persistSession:false}});
  const r=await sb.rpc("obra3d_envio_info",{tok});if(r.error)throw r.error;L=r.data}catch(e){fim("Não foi possível abrir","Verifique a internet e abra o link de novo.");return}
 if(!L){fim("Este link não está mais ativo","Peça um link novo à FC Consultoria.");return}
-/* ===== 05/11/2026 · avulso: cadastro (1 min), dados da empresa, teste de 3 dias, contratação por PIX ===== */
+/* ===== 05/11/2026 · avulso: cadastro (1 min), dados da empresa, teste de 3 dias, contratação pela FC ===== */
 let C=null;try{const r=await sb.rpc("obra3d_cad_info",{tok});if(!r.error)C=r.data}catch(_){}
 /* ===== 05/11/2026 · "Ver como o cliente": visualização da FC, nada é gravado ===== */
 const QS=new URLSearchParams(location.search),VER=QS.get("ver")==="fc",TELA=VER?(QS.get("tela")||""):"";
@@ -100,7 +100,7 @@ if(VER){
  const rpc0=sb.rpc.bind(sb);
  const aviso=()=>{let t=document.getElementById("vfc-t");if(!t){t=document.createElement("div");t.id="vfc-t";t.style.cssText="position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#13232e;color:#fff;padding:10px 16px;border-radius:10px;font-size:14px;z-index:99";document.body.appendChild(t)}t.textContent="Visualização da FC: nada foi gravado";clearTimeout(t._h);t._h=setTimeout(()=>t.remove(),2600)};
  const agora=new Date().toISOString(),fut=new Date(Date.now()+3*864e5).toISOString(),pas=new Date(Date.now()-864e5).toISOString();
- const base={projetos:(C&&C.projetos)||20,valor:(C&&C.valor)||200,pix:(C&&C.pix)||"52.985.682/0001-32"};
+ const base={projetos:(C&&C.projetos)||20};
  if(TELA==="1")C=Object.assign({},base,{plano:"avulso"});
  if(TELA==="2")C=Object.assign({},base,{plano:"avulso",pedido:agora,agora,liberado:false});
  if(TELA==="3")C=Object.assign({},base,{plano:"avulso",pedido:agora,agora,liberado:true});
@@ -110,7 +110,7 @@ if(VER){
  const op=(v,t)=>`<option value="${v}"${TELA===v?" selected":""}>${t}</option>`;
  document.querySelector("header").insertAdjacentHTML("afterend",`<div style="background:#fff6e5;border-bottom:1px solid #f0d49a"><div class="wrap" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding-top:10px;padding-bottom:10px;font-size:14px">
   <span>👁 <b>Visualização da FC</b> · é assim que o cliente vê. Os botões não gravam nada.</span>
-  <label style="margin-left:auto;display:flex;gap:6px;align-items:center">Ver tela<select id="vfc-s" style="font:inherit;padding:6px 8px;border:1px solid #c9d4d6;border-radius:8px">${op("","Atual do cliente")}${op("1","1 · Cadastro (nome e WhatsApp)")}${op("2","2 · Liberando o acesso")}${op("3","3 · Dados da empresa")}${op("4","4 · Envio do orçamento (teste)")}${op("5","5 · Contratação por PIX")}</select></label></div></div>`);
+  <label style="margin-left:auto;display:flex;gap:6px;align-items:center">Ver tela<select id="vfc-s" style="font:inherit;padding:6px 8px;border:1px solid #c9d4d6;border-radius:8px">${op("","Atual do cliente")}${op("1","1 · Cadastro (nome e WhatsApp)")}${op("2","2 · Liberando o acesso")}${op("3","3 · Dados da empresa")}${op("4","4 · Envio do orçamento (teste)")}${op("5","5 · Contratação (fale com a FC)")}</select></label></div></div>`);
  document.getElementById("vfc-s").onchange=e=>{const q=new URLSearchParams(location.search);if(e.target.value)q.set("tela",e.target.value);else q.delete("tela");location.search=q.toString()};
 }
 const brl=v=>Number(v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
@@ -155,24 +155,13 @@ async function meus(){let r;try{r=await sb.rpc("obra3d_envio_meus",{tok})}catch(
    <span class="hint" style="font-size:12.5px">Orçamento ${esc(x.numero||"—")} · ${x.itens} itens · enviado em ${d(x.criado)}</span>
    <span style="display:flex;gap:6px;flex-wrap:wrap">${x.link?`<button class="btn" type="button" data-mc="${esc(urlA(x.link))}">Copiar link 3D</button><a class="btn" style="text-decoration:none" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent("Apresentação 3D da obra "+(x.obra||"")+": "+urlA(x.link))}">WhatsApp</a><a class="btn" style="text-decoration:none" target="_blank" rel="noopener" href="${esc(urlA(x.link))}">Abrir 3D ↗</a><a class="btn" style="text-decoration:none" target="_blank" rel="noopener" href="${esc(urlA(x.link)+"&vid="+encodeURIComponent(tok))}" title="Só para você: mostra ao cliente a obra em outras cores">🎨 Apresentar com troca de cor</a>`:""}${x.preco?`<a class="btn" style="text-decoration:none" target="_blank" rel="noopener" href="${esc(urlP(x.id))}">📄 PDF da proposta</a>`:""}${!x.link&&!x.preco?`<span class="hint" style="font-size:12.5px">O link aparece aqui quando a FC terminar.</span>`:""}</span></div>`}).join("")}</div>`:`<p class="hint" style="margin:0">Nenhum orçamento enviado ainda.</p>`}</div>`;
  el.querySelectorAll("[data-mc]").forEach(b=>b.onclick=async()=>{try{await navigator.clipboard.writeText(b.dataset.mc);b.textContent="✓ Copiado";setTimeout(()=>{b.textContent="Copiar link 3D"},2000)}catch(_){prompt("Copie o link:",b.dataset.mc)}})}
-/* 3) contratação / renovação por PIX: 20 projetos por R$ 200,00 */
-function cobrar(tipo,tit,txt){const cob=C&&C.cob;
- if(cob&&cob.status==="enviado"){caixa(`<h2 style="margin:0 0 4px">Comprovante recebido ✓</h2><p class="hint" style="margin:0">A FC Consultoria vai conferir o pagamento e liberar os seus ${C.projetos} projetos. Você recebe o aviso no WhatsApp.</p>`);return}
- const nao=C&&C.cad&&C.cad.nao;
+/* 3) contratação / renovação: sem preço e sem PIX na tela (09/11/2026) · a empresa fala com a FC pelo WhatsApp */
+function cobrar(tipo,tit,txt){
+ const msg=encodeURIComponent((tipo==="renovacao"?"Olá Fernando! Quero renovar o Simulador de Obra 3D.":"Olá Fernando! Quero contratar o Simulador de Obra 3D.")+(C&&C.cad&&C.cad.empresa?"\nEmpresa: "+C.cad.empresa:""));
  caixa(`<h2 style="margin:0 0 4px">${tit}</h2><p class="hint" style="margin:0 0 12px">${txt}</p>
-  ${cob&&cob.status==="recusado"?`<p style="color:#a3262b;font-size:13px">O último comprovante não foi aceito${cob.nota?": "+esc(cob.nota):""}. Envie de novo.</p>`:""}
-  <div style="border:1px solid #c9d4d6;border-radius:12px;padding:14px;display:grid;gap:6px"><span class="hint">${C.projetos} projetos (orçamentos) · PIX à vista</span><b style="font-size:26px">${brl(C.valor)}</b>
-   <span class="hint">Chave PIX (CNPJ) · FC Desenvolvimento de Projetos de Compra e Venda LTDA</span><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><b style="font:700 18px ui-monospace,monospace">${esc(C.pix)}</b><button class="btn" id="cpx" type="button">Copiar chave</button></div></div>
-  <label style="display:block;margin:12px 0 0;font-size:13px;color:#5d6e73">Comprovante do PIX (imagem ou PDF)<input type="file" id="cf" accept="image/*,application/pdf" style="display:block;margin-top:6px"></label>
-  <button class="btn pri" id="cgo" type="button" style="width:100%;margin-top:12px;min-height:46px">Enviar comprovante</button><p id="cer" role="alert" style="color:#a3262b;font-size:13px;min-height:1.2em"></p>
-  <details style="margin-top:6px"${nao?" open":""}><summary style="cursor:pointer;color:#5d6e73;font-size:13px">Não quero contratar agora</summary>
-   ${nao?`<p class="hint">Recebemos o seu retorno. Obrigado! Se mudar de ideia, é só voltar a este link.</p>`:`<textarea id="cm" rows="3" placeholder="Conte o motivo (opcional): preço, ainda testando, não atendeu…" style="width:100%;margin-top:8px;padding:10px;border:1px solid #c9d4d6;border-radius:10px;font:inherit"></textarea><button class="btn" id="cno" type="button" style="margin-top:8px">Enviar e não contratar agora</button>`}</details>`);
+  <a class="btn pri" style="display:flex;justify-content:center;align-items:center;text-decoration:none;width:100%;min-height:46px" target="_blank" rel="noopener" href="https://wa.me/5566999867984?text=${msg}">💬 Falar com a FC no WhatsApp</a>
+  <p class="hint" style="margin:10px 0 0;font-size:13px">A FC Consultoria apresenta as condições e libera os seus projetos.</p>`);
  meus();
- $("cpx").onclick=async()=>{try{await navigator.clipboard.writeText(C.pix.replace(/\D/g,""));$("cpx").textContent="✓ Copiada"}catch(_){prompt("Copie a chave PIX:",C.pix)}};
- $("cgo").onclick=async()=>{const f=$("cf").files[0];if(!f){$("cer").textContent="Anexe o comprovante do PIX.";return}if(f.size>3e6){$("cer").textContent="Arquivo muito grande (máx. 3 MB).";return}
-  $("cgo").disabled=true;$("cer").textContent="Enviando…";const du=await new Promise(res=>{const rd=new FileReader();rd.onload=()=>res(rd.result);rd.readAsDataURL(f)});
-  const r=await sb.rpc("obra3d_cob_enviar",{tok,tipo,comprovante:du,arquivo:f.name});if(r.error){$("cgo").disabled=false;$("cer").textContent=/arquivo/.test(r.error.message)?"Envie uma imagem (JPG, PNG) ou PDF.":"Não foi possível enviar. Tente de novo.";return}recarrega()};
- if($("cno"))$("cno").onclick=async()=>{$("cno").disabled=true;await sb.rpc("obra3d_cad_nao",{tok,motivo:$("cm").value});recarrega()};
 }
 const avulso=!!(C&&C.cad&&C.cad.completo);
 if(L.pausado){fim("Envios pausados no momento","Este link está pausado pela FC Consultoria. Fale com a FC no WhatsApp (66) 9 9986-7984 para retomar.");return}
