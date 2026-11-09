@@ -157,10 +157,10 @@ async function meus(){let r;try{r=await sb.rpc("obra3d_envio_meus",{tok})}catch(
  el.querySelectorAll("[data-mc]").forEach(b=>b.onclick=async()=>{try{await navigator.clipboard.writeText(b.dataset.mc);b.textContent="✓ Copiado";setTimeout(()=>{b.textContent="Copiar link 3D"},2000)}catch(_){prompt("Copie o link:",b.dataset.mc)}})}
 /* 3) contratação / renovação: sem preço e sem PIX na tela (09/11/2026) · a empresa fala com a FC pelo WhatsApp */
 function cobrar(tipo,tit,txt){
- const msg=encodeURIComponent((tipo==="renovacao"?"Olá Fernando! Quero renovar o Simulador de Obra 3D.":"Olá Fernando! Quero contratar o Simulador de Obra 3D.")+(C&&C.cad&&C.cad.empresa?"\nEmpresa: "+C.cad.empresa:""));
+ const msg=encodeURIComponent((tipo==="renovacao"?"Olá Fernando! Quero renovar o Simulador de Obra 3D.":"Olá Fernando! Quero agendar uma apresentação do Simulador de Obra 3D.")+(C&&C.cad&&C.cad.empresa?"\nEmpresa: "+C.cad.empresa:""));
  caixa(`<h2 style="margin:0 0 4px">${tit}</h2><p class="hint" style="margin:0 0 12px">${txt}</p>
-  <a class="btn pri" style="display:flex;justify-content:center;align-items:center;text-decoration:none;width:100%;min-height:46px" target="_blank" rel="noopener" href="https://wa.me/5566999867984?text=${msg}">💬 Falar com a FC no WhatsApp</a>
-  <p class="hint" style="margin:10px 0 0;font-size:13px">A FC Consultoria apresenta as condições e libera os seus projetos.</p>`);
+  <a class="btn pri" style="display:flex;justify-content:center;align-items:center;text-decoration:none;width:100%;min-height:46px" target="_blank" rel="noopener" href="https://wa.me/5566999867984?text=${msg}">📅 Agendar apresentação no WhatsApp</a>
+  <p class="hint" style="margin:10px 0 0;font-size:13px">A FC Consultoria agenda uma apresentação e combina com você a continuidade.</p>`);
  meus();
 }
 const avulso=!!(C&&C.cad&&C.cad.completo);
