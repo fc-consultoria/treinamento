@@ -410,7 +410,7 @@ function vGestor(){
    <div class="list">${S.vend.map(v=>{const t=totalAc(v);return `<div class="meter"><span><b>${esc(v.nome)}</b>${v.ativo?'':' <span class="pill novo">bloq.</span>'}</span><div class="bar" style="width:${Math.max(t/maxAc*100,4)}%">${MODS.map(m=>`<i title="${m.n}: ${v.ac[m.k]}" style="width:${t?v.ac[m.k]/t*100:0}%;background:${COLORS[m.k]}"></i>`).join('')}</div><span style="font-family:var(--f-mono)">${t}</span></div>`}).join('')}</div>
    <div class="legend">${MODS.map(m=>`<span><i style="background:${COLORS[m.k]}"></i>${m.n}</span>`).join('')}</div>
   </section>
-  <section class="panel" id="t-cmd">
+  <section class="panel" id="t-cmd" style="grid-column:1/-1">
    <h2>🎛 Comandos</h2><p class="sub">Libere ou bloqueie cada módulo por vendedor. Desligar na linha "Todos" tira o módulo da equipe inteira.</p>
    <div class="tablewrap"><table><thead><tr><th>Vendedor</th><th class="c">Acesso</th>${MODS.map(m=>`<th class="c" title="${m.n}">${m.i}</th>`).join('')}</tr></thead><tbody>
     <tr><td><b>Todos</b></td><td class="c">—</td>${MODS.map(m=>`<td class="c"><button class="sw" role="switch" aria-checked="${S.modsOn[m.k]}" aria-label="${m.n} para todos" data-act="gmod" data-m="${m.k}"></button></td>`).join('')}</tr>
@@ -421,19 +421,7 @@ function vGestor(){
     <span style="flex:1"></span><button class="btn sm" data-act="addvend">+ Cadastrar vendedor</button>
    </div>
   </section>
- </div>
- <section class="panel" id="t-orc" style="margin-top:14px">
-  <div class="ph"><div><h2>🧾 Orçamentos solicitados pelos clientes</h2><p class="sub">Tudo que o cliente enviou pelo catálogo, com o vendedor que ele escolheu.</p></div>
-  <div class="toolbar"><select id="fVend" aria-label="Filtrar vendedor"><option value="todos">Todos os vendedores</option>${S.vend.map(v=>`<option value="${v.id}" ${fVend===v.id?'selected':''}>${esc(v.nome)}</option>`).join('')}</select>
-  <select id="fStat" aria-label="Filtrar situação"><option value="todos">Todas as situações</option>${Object.entries(STAT).map(([k,v])=>`<option value="${k}" ${fStat===k?'selected':''}>${v[0]}</option>`).join('')}</select></div></div>
-  ${orcs.length?`<div class="tablewrap"><table><thead><tr><th>Nº</th><th>Data</th><th>Cliente</th><th>Vendedor</th><th>Canal</th><th class="c">Itens</th><th>Situação</th><th></th></tr></thead><tbody>
-  ${orcs.map(o=>`<tr><td style="font-family:var(--f-mono)">${o.id}</td><td>${fmtD(o.data)}</td><td>${esc(cli(o.cli).nome)}<br><span style="color:var(--muted);font-size:12px">${esc(cli(o.cli).empresa)}</span></td><td>${esc(vName(o.vend))}</td><td>${o.canal}</td><td class="c">${o.itens.reduce((a,i)=>a+ +i.q,0)}</td><td><span class="pill ${STAT[o.status][1]}">${STAT[o.status][0]}</span></td><td><button class="btn sm" data-act="verorc" data-id="${o.id}">Abrir</button></td></tr>`).join('')}
-  </tbody></table></div>`:'<div class="empty">Nenhum orçamento com esse filtro.</div>'}
- </section>
- <section class="panel" style="margin-top:14px" id="t-agg">
-  <div class="ph"><div><h2>🗓 Treinamento on-line · agenda</h2><p class="sub">Turmas abertas para a equipe. O vendedor se inscreve pelo painel dele.</p></div><button class="btn sm" data-act="addslot">+ Nova turma</button></div>
-  <div class="slots">${S.slots.map(s=>`<div class="slot"><b>${s.d} · ${s.h}</b><span>${esc(s.tema)}</span><br><span>${s.ins.length}/${s.cap} inscritos${s.ins.length?': '+s.ins.map(vName).join(', '):''}</span></div>`).join('')}</div>
- </section>${histHTML()}`;
+ </div>`;
 }
 
 /* ---------- VENDEDOR ---------- */
@@ -758,9 +746,6 @@ const TOURS={
   ['#t-cat','Este gráfico mede o acesso ao Catálogo 3D: visitas por dia, novos cadastros e quanto disso virou pedido de orçamento.'],
   ['#t-eq','O medidor da equipe mostra quantas vezes cada vendedor abriu cada ferramenta. Assim você vê quem está usando o catálogo e o treinamento.'],
   ['#t-cmd','Em Comandos você libera ou bloqueia cada módulo por vendedor, pausa o acesso de alguém, liga ou desliga o aceite automático e cadastra vendedores novos.'],
-  ['#t-orc','Aqui estão todos os orçamentos que os clientes pediram, com o vendedor escolhido. Filtre por vendedor ou situação, abra um pedido e, se precisar, transfira para outro vendedor.'],
-  ['#t-agg','A agenda do treinamento on-line: crie turmas e acompanhe quem se inscreveu.'],
-  ['#t-hist','Por fim, o histórico das conversas da equipe. As conversas são individuais, e você acompanha todas aqui, só para leitura.']
  ],
  vendedor:[
   ['#t-mods','Este é o painel do vendedor. São três ferramentas: Catálogo 3D, Treinamento 3D e Solicitação com a FC. Toque no cartão e depois em Abrir para entrar no módulo. Cada acesso conta no medidor do gestor.'],
