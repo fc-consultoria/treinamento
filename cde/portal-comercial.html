@@ -49,6 +49,8 @@ main{padding-block:22px 40px}
 .pv-card:hover{border-color:#1f8a5b}
 .pv-ic{font-size:26px;width:46px;height:46px;border-radius:12px;display:grid;place-items:center;background:#e4f4ec;flex:none}
 .pv-tx{flex:1;display:flex;flex-direction:column;gap:3px;min-width:0}.pv-tx span{color:var(--muted);font-size:13px}
+.gm-eq{border-style:dashed}
+.gm-mais{margin-top:auto;font-size:12.5px;font-weight:600;color:var(--brand)}
 .hello{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:18px}
 .hello h1{font-size:24px}
 .hello p{margin:2px 0 0;color:var(--muted)}
@@ -273,30 +275,37 @@ label{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:4
 
 <script>
 (function(){
-const KEY='cde-portal-v1';
+const KEY='cde-portal-v2';
+/* Links de cada módulo (troque aqui se mudar o endereço) */
+const LINK={tipo:'https://fc-consultoria.github.io/treinamento/esquadrias/',cat:'https://fc-consultoria.github.io/treinamento/catalogo3d.html',sim:'https://fc-consultoria.github.io/treinamento/esquadrias/monte-casa.html',comp:'https://fc-consultoria.github.io/treinamento/equivalencias/comprar.html',dist:'https://fc-consultoria.github.io/treinamento/equivalencias/distribuidoras.html'};
 const MODS=[
- {k:'cat',n:'Catálogo 3D',d:'Perfis das linhas Suprema e Gold em 3D para mostrar ao cliente.',i:'▦'},
- {k:'trein',n:'Treinamento 3D',d:'Montagem e conceitos em 3D + treinamento on-line com agenda.',i:'◈'},
- {k:'casa',n:'Monte sua Casa 3D',d:'Coloque as esquadrias na planta e apresente o projeto.',i:'⌂'},
- {k:'vento',n:'Diagrama de pressão de vento',d:'Consulta rápida de pressão por região e altura.',i:'≋'},
- {k:'fc',n:'Solicitação com a FC',d:'Dúvidas e pedidos de suporte direto com a FC.',i:'✉'}
+ {k:'tipo',n:'Tipologia',d:'Tipologias das linhas em 3D, passo a passo e desenho técnico.',i:'◈'},
+ {k:'cat',n:'Catálogo 3D',d:'Perfis em 3D para mostrar ao cliente.',i:'▦'},
+ {k:'fc',n:'Solicitação com a FC',d:'Dúvidas e pedidos de suporte direto com a FC.',i:'✉'},
+ {k:'sim',n:'Simulador de obra 3D',d:'Coloque as esquadrias na planta e apresente a obra.',i:'⌂'}
 ];
 const CMODS=[
- {k:'comp',n:'Onde comprar',d:'Perfis nas extrusoras: quem fabrica cada linha.',i:'🛒',g:'Compras',u:'https://fc-consultoria.github.io/treinamento/equivalencias/comprar.html'},
- {k:'dist',n:'Compras com distribuidoras',d:'Distribuidoras e os códigos que cada uma usa.',i:'🏬',g:'Compras',u:'https://fc-consultoria.github.io/treinamento/equivalencias/distribuidoras.html'},
- {k:'precif',n:'Precificação de Kits',d:'Custo e venda por kit, ligados ao catálogo TEXA.',i:'💲',g:'Compras'},
- {k:'conv',n:'Conversor de códigos',d:'Converta o código do fornecedor para o código de mercado.',i:'🔁',g:'Compras',u:'https://fc-consultoria.github.io/treinamento/equivalencias/'},
- {k:'pcod',n:'Pesquisa de código',d:'Busca no cadastro WVetro e nos códigos de mercado.',i:'🔎',g:'Compras',u:'https://fc-consultoria.github.io/treinamento/equivalencias/pesquisa/?f=wvetro,alcoa'},
- {k:'cat',n:'Catálogo 3D',d:'Perfis do catálogo da CDE em 3D.',i:'▦',g:'Treinamento e consulta',u:'https://fc-consultoria.github.io/treinamento/catalogo3d.html'},
- {k:'trein',n:'Treinamento 3D',d:'Montagem e conceitos em 3D + turmas on-line.',i:'◈',g:'Treinamento e consulta',u:'https://fc-consultoria.github.io/treinamento/esquadrias/'},
- {k:'casa',n:'Monte sua Casa 3D',d:'Coloque as esquadrias na planta.',i:'⌂',g:'Treinamento e consulta',u:'https://fc-consultoria.github.io/treinamento/esquadrias/monte-casa.html'},
+ {k:'comp',n:'Onde comprar',d:'Perfis nas extrusoras: quem fabrica cada linha.',i:'🛒',g:'Compras',u:LINK.comp},
+ {k:'dist',n:'Compras com distribuidoras',d:'Distribuidoras e os códigos que cada uma usa.',i:'🏬',g:'Compras',u:LINK.dist},
+ {k:'tipo',n:'Tipologia',d:'Tipologias das linhas em 3D, passo a passo e desenho técnico.',i:'◈',g:'Consulta',u:LINK.tipo},
+ {k:'cat',n:'Catálogo 3D',d:'Perfis do catálogo da CDE em 3D.',i:'▦',g:'Consulta',u:LINK.cat},
  {k:'fc',n:'Solicitação com a FC',d:'Dúvidas e pedidos de suporte direto com a FC.',i:'✉',g:'Suporte'},
  {k:'age',n:'Agenda da FC',d:'Visitas e reuniões da FC com a CDE.',i:'🗓',g:'Suporte'}
 ];
-const CCOLORS={precif:'#1f8a5b',comp:'var(--brand)',dist:'#3aa0c9',conv:'#6b7fd6',pcod:'#2f8f6f',cat:'#d5604a',ori:'var(--amber)',trein:'#c98a2b',casa:'#8a6bd6',fc:'#b0627e',age:'#7a8794'};
+/* ---- GESTOR: cartões da Central ---- */
+const GMODS=[
+ {k:'tipo',n:'Tipologia',d:'Tipologias das linhas em 3D, passo a passo e desenho técnico.',i:'◈',u:LINK.tipo},
+ {k:'cat',n:'Catálogo 3D',d:'Perfis do catálogo da CDE em 3D.',i:'▦',u:LINK.cat},
+ {k:'fc',n:'Solicitação com a FC',d:'Dúvidas e pedidos de suporte direto com a FC.',i:'✉'},
+ {k:'comp',n:'Onde comprar',d:'Perfis nas extrusoras: quem fabrica cada linha.',i:'🛒',u:LINK.comp},
+ {k:'dist',n:'Compras com distribuidoras',d:'Distribuidoras e os códigos que cada uma usa.',i:'🏬',u:LINK.dist},
+ {k:'age',n:'Agenda da FC',d:'Visitas e reuniões da FC com a CDE.',i:'🗓'},
+ {k:'equipe',n:'Equipe',d:'Vendedores e Compras: acessos, comandos, medidores, cadastros, orçamentos e conversas.',i:'👥'}
+];
+const CCOLORS={comp:'var(--brand)',dist:'#3aa0c9',tipo:'#c98a2b',cat:'#d5604a',fc:'#b0627e',age:'#7a8794'};
 const cmodsAll=v=>Object.fromEntries(CMODS.map(m=>[m.k,v]));
-function seedCompras(){return [{id:'k1',nome:'João',ativo:true,mods:cmodsAll(true),ac:{comp:6,dist:9,conv:11,pcod:14,cat:4,ori:2,trein:3,casa:1,fc:1,age:1},ult:day(2)}]}
-const COLORS={cat:'var(--brand)',trein:'var(--amber)',casa:'#6b7fd6',vento:'#3aa0c9',fc:'#b0627e'};
+function seedCompras(){return [{id:'k1',nome:'João',ativo:true,mods:cmodsAll(true),ac:{comp:6,dist:9,tipo:5,cat:4,fc:1,age:1},ult:day(2)}]}
+const COLORS={tipo:'var(--amber)',cat:'var(--brand)',fc:'#b0627e',sim:'#6b7fd6'};
 const PRODS=[
  {id:'p1',c:'SU-001',n:'Trilho superior porta/janela de correr 2 folhas',l:'Linha Suprema',g:'Trilhos superiores',kg:'0,762'},
  {id:'p2',c:'SU-005',n:'Trilho superior porta/janela de correr 2 folhas com bandeira',l:'Linha Suprema',g:'Trilhos superiores',kg:'1,105'},
@@ -311,11 +320,11 @@ const PRODS=[
 ];
 function day(n){const d=new Date();d.setHours(10,0,0,0);d.setDate(d.getDate()-n);return d.toISOString()}
 function seed(){
- const v=(id,nome,ac)=>({id,nome,ativo:true,mods:{cat:true,trein:true,casa:true,vento:true,fc:true},ac,ult:day(Math.floor(Math.random()*3))});
+ const v=(id,nome,ac)=>({id,nome,ativo:true,mods:{tipo:true,cat:true,fc:true,sim:true},ac,ult:day(Math.floor(Math.random()*3))});
  return {
-  modsOn:{cat:true,trein:true,casa:true,vento:true,fc:true},
+  modsOn:{tipo:true,cat:true,fc:true,sim:true},
   autoCadastro:true,
-  vend:[v('v1','Carlos',{cat:34,trein:12,casa:9,vento:4,fc:2}),v('v2','Juliana',{cat:41,trein:18,casa:15,vento:6,fc:3}),v('v3','Marcos',{cat:12,trein:3,casa:2,vento:1,fc:0}),v('v4','Patrícia',{cat:27,trein:9,casa:11,vento:3,fc:1})],
+  vend:[v('v1','Carlos',{tipo:12,cat:34,fc:2,sim:9}),v('v2','Juliana',{tipo:18,cat:41,fc:3,sim:15}),v('v3','Marcos',{tipo:3,cat:12,fc:0,sim:2}),v('v4','Patrícia',{tipo:9,cat:27,fc:1,sim:11})],
   visitas:[38,44,29,51,47,22,35],
   cadDia:[2,3,1,4,2,0,1],
   clientes:[
@@ -330,7 +339,7 @@ function seed(){
   ],
   slots:[
    {id:'s1',d:'Qui 29/10',h:'14:00',tema:'Catálogo 3D na venda',cap:6,ins:['v2']},
-   {id:'s2',d:'Ter 03/11',h:'09:00',tema:'Monte sua Casa 3D',cap:6,ins:[]},
+   {id:'s2',d:'Ter 03/11',h:'09:00',tema:'Simulador de obra 3D',cap:6,ins:[]},
    {id:'s3',d:'Qui 05/11',h:'14:00',tema:'Pressão de vento na prática',cap:6,ins:['v1','v4']}
   ],
   sol:[],
@@ -368,9 +377,8 @@ function seedChat(){const t=(d,h)=>{const x=new Date();x.setDate(x.getDate()-d);
 ]}
 if(!S.chat)S.chat=seedChat();
 if(!S.compras){S.compras=seedCompras();S.cmodsOn=cmodsAll(true);S.meC='k1'}
-if(S.cmodsOn&&S.cmodsOn.precif===undefined){S.cmodsOn.precif=true;(S.compras||[]).forEach(v=>{if(v.mods)v.mods.precif=true})}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
-let chatWith='gestor', role='gestor', cart=[], selVend=null, showCad={}, fVend='todos', fStat='todos', postSel={p:'p1',f:'feed',t:'Ventilação e luz o dia todo'};
+let gEquipe=false, chatWith='gestor', role='gestor', cart=[], selVend=null, showCad={}, fVend='todos', fStat='todos', postSel={p:'p1',f:'feed',t:'Ventilação e luz o dia todo'};
 const $=s=>document.querySelector(s);
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmtD=iso=>{const d=new Date(iso);return d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})};
@@ -407,17 +415,23 @@ function vGestor(){
  const maxDay=Math.max(...S.visitas.map((v,i)=>v+S.cadDia[i]),1);
  const labels=[...Array(7)].map((_,i)=>{const d=new Date();d.setDate(d.getDate()-(6-i));return d.toLocaleDateString('pt-BR',{weekday:'short'}).replace('.','')});
  let orcs=S.orc.filter(o=>(fVend==='todos'||o.vend===fVend)&&(fStat==='todos'||o.status===fStat)).sort((a,b)=>b.data.localeCompare(a.data));
- return `
+ const cards=`<div class="grid mods" id="t-gmods">${GMODS.map(m=>`
+  <button class="mod${m.k==='equipe'?' gm-eq':''}" data-act="gopen" data-m="${m.k}" id="gmod-${m.k}" ${m.k==='equipe'?`aria-expanded="${gEquipe}"`:''}>
+   ${m.k==='equipe'&&novos?`<span class="tag new">${novos} cadastro(s) novo(s)</span>`:''}
+   <div class="ic" style="font-size:20px">${m.i}</div><h3>${m.n}</h3><p>${m.d}</p>${m.k==='equipe'?`<span class="gm-mais">${gEquipe?'▲ Fechar':'▼ Abrir'}</span>`:''}</button>`).join('')}</div>`;
+ const topo=`
  <span class="demo-note">Demonstração com dados de exemplo · nomes de vendedores e clientes são fictícios</span>
- <div class="hello"><div><h1>Central do Gestor</h1><p>Equipe comercial, acessos e pedidos que chegam pelo Catálogo 3D.</p></div>
- <button class="btn" data-act="reset">Restaurar exemplo</button></div>
+ <div class="hello"><div><h1>Central do Gestor</h1><p>Suas ferramentas e a equipe comercial da CDE.</p></div>
+ <button class="btn" data-act="reset">Restaurar exemplo</button></div>${cards}`;
+ if(!gEquipe)return topo;
+ return topo+`
+ <h2 id="t-equipe" style="margin:22px 0 10px;font-size:18px">👥 Equipe</h2>
  <div class="grid kpis" id="t-kpis">
   <div class="kpi ${novos?'alert':''}"><small>Cadastros novos (não vistos)</small><b>${novos}</b><em> aprovados automaticamente</em></div>
   <div class="kpi"><small>Orçamentos em aberto</small><b>${abertos}</b><em> de ${S.orc.length} recebidos</em></div>
   <div class="kpi"><small>Acessos da equipe</small><b>${acEq}</b><em> nos módulos</em></div>
   <div class="kpi"><small>Visitas ao Catálogo 3D · 7 dias</small><b>${vis7}</b><em> ${S.clientes.length} clientes cadastrados</em></div>
  </div>
- <button class="panel pv-card" data-act="irprecif" id="t-precif"><span class="pv-ic">💲</span><span class="pv-tx"><b>Precificação de Kits</b><span>Custo e venda de cada tamanho de kit (box e instalação), com os perfis do catálogo TEXA. Abre aqui dentro do portal.</span></span><span class="btn primary sm">Abrir →</span></button>
  <div class="grid cols2">
   <section class="panel" id="t-cad">
    <div class="ph"><div><h2>🔔 Avisos de cadastro</h2><p class="sub">O cliente se cadastra no catálogo e já entra liberado. Os dados ficam ocultos até você abrir.</p></div>
@@ -483,7 +497,7 @@ function vVendedor(){
  ${!me.ativo?'<div class="empty" style="margin-bottom:14px">Seu acesso está pausado pelo gestor.</div>':''}
  <div class="grid mods" id="t-mods">${MODS.map(m=>{const ok=me.ativo&&me.mods[m.k]&&S.modsOn[m.k];return `
   <button class="mod ${ok?'':'locked'}" data-act="open" data-m="${m.k}" id="mod-${m.k}">
-   ${m.k==='trein'?'<span class="tag new">+ on-line</span>':''}${ok?'':'<span class="tag">🔒 bloqueado</span>'}
+   ${ok?'':'<span class="tag">🔒 bloqueado</span>'}
    <div class="ic" style="font-size:20px">${m.i}</div><h3>${m.n}</h3><p>${m.d}</p></button>`}).join('')}</div>
  <div class="grid cols2" style="margin-top:14px">
   <section class="panel" id="t-meus">
@@ -505,25 +519,32 @@ function vCompras(){
  const grupos=[...new Set(CMODS.map(m=>m.g))];
  return `
  <span class="demo-note">Demonstração · entrar como: <select id="meCSel" style="width:auto;display:inline-block;padding:2px 6px">${S.compras.map(v=>`<option value="${v.id}" ${v.id===me.id?'selected':''}>${esc(v.nome)}</option>`).join('')}</select></span>
- <div class="hello"><div><h1>Olá, ${esc(me.nome)}</h1><p>Suas ferramentas de compra, conversão de códigos e treinamento.</p></div></div>
+ <div class="hello"><div><h1>Olá, ${esc(me.nome)}</h1><p>Suas ferramentas de compra, consulta e suporte da FC.</p></div></div>
  ${!me.ativo?'<div class="empty" style="margin-bottom:14px">Seu acesso está pausado pelo gestor.</div>':''}
  <div id="t-cmods">${grupos.map(g=>`<h3 style="font-size:13px;color:var(--muted);margin:14px 0 8px;font-weight:600">${g}</h3>
  <div class="grid mods">${CMODS.filter(m=>m.g===g).map(m=>{const ok=me.ativo&&me.mods[m.k]&&S.cmodsOn[m.k];return `
   <button class="mod ${ok?'':'locked'}" data-act="copen" data-m="${m.k}" id="cmod-${m.k}">
-   ${m.k==='trein'?'<span class="tag new">+ on-line</span>':''}${ok?'':'<span class="tag">🔒 bloqueado</span>'}
+   ${ok?'':'<span class="tag">🔒 bloqueado</span>'}
    <div class="ic" style="font-size:20px">${m.i}</div><h3>${m.n}</h3><p>${m.d}</p></button>`}).join('')}</div>`).join('')}</div>
  <section class="panel" id="t-cagv" style="margin-top:14px">
   <h2>🗓 Treinamento on-line</h2><p class="sub">Toque em uma turma para se inscrever ou sair.</p>
   <div class="slots">${S.slots.map(s=>{const mine=s.ins.includes(me.id),full=!mine&&s.ins.length>=s.cap;return `<button class="slot ${mine?'mine':''} ${full?'full':''}" data-act="slot" data-id="${s.id}" ${full?'disabled':''}><b>${s.d} · ${s.h}</b><span>${esc(s.tema)}</span><br><span>${mine?'✓ Inscrito':(s.cap-s.ins.length)+' vagas'}</span></button>`}).join('')}</div>
  </section>${chatHTML(me.id)}`;
 }
+function openModG(k){
+ const m=GMODS.find(x=>x.k===k);
+ if(k==='equipe'){gEquipe=!gEquipe;render();if(gEquipe){const h=$('#t-equipe');if(h)h.scrollIntoView({behavior:'smooth',block:'start'})}return}
+ if(m.u){window.open(m.u,'_blank','noopener');return}
+ modal(`<h2>${m.i} ${m.n}</h2>
+ ${k==='fc'?`<p class="sub">Abre o canal de solicitações com a FC (suporte e dúvidas).</p><label>Sua solicitação<textarea id="fcTxt" rows="3" placeholder="Descreva a dúvida ou pedido"></textarea></label><div class="toolbar" style="margin-top:10px;justify-content:flex-end"><button class="btn" data-act="close">Cancelar</button><button class="btn primary" data-act="fcsend">Enviar para a FC</button></div>`
+ :`<p class="sub">As visitas e reuniões que a FC marcar com a CDE aparecem aqui.</p><div class="empty">Nenhuma visita marcada.</div><div class="toolbar" style="margin-top:10px;justify-content:flex-end"><button class="btn primary" data-act="close">Ok</button></div>`}`);
+}
 function openModC(k){
  const me=S.compras.find(v=>v.id===S.meC);const m=CMODS.find(x=>x.k===k);
  if(!(me&&me.ativo&&me.mods[k]&&S.cmodsOn[k])){toast('Módulo bloqueado pelo gestor.');return}
  me.ac[k]=(me.ac[k]||0)+1;me.ult=new Date().toISOString();save();
- if(k==='precif'){role='precif';render();scrollTo(0,0);return}
  modal(`<h2>${m.i} ${m.n}</h2><p class="sub">Acesso registrado no medidor do gestor.</p>
- <p>${k==='fc'?'Abre o canal de solicitações com a FC (suporte e dúvidas).':k==='age'?'As visitas e reuniões que a FC marcar com a CDE aparecem aqui.':k==='trein'?'Abre o Treinamento 3D. As turmas on-line ficam na agenda logo abaixo dos cartões.':'Toque em Abrir para entrar no módulo.'}</p>
+ <p>${k==='fc'?'Abre o canal de solicitações com a FC (suporte e dúvidas).':k==='age'?'As visitas e reuniões que a FC marcar com a CDE aparecem aqui.':'Toque em Abrir para entrar no módulo.'}</p>
  ${m.u?`<div class="toolbar" style="justify-content:flex-end;margin-bottom:8px"><a class="btn primary" style="text-decoration:none" target="_blank" rel="noopener" href="${m.u}">↗ Abrir ${m.n}</a></div>`:''}
  ${k==='fc'?`<label>Sua solicitação<textarea id="fcTxt" rows="3" placeholder="Descreva a dúvida ou pedido"></textarea></label><div class="toolbar" style="margin-top:10px;justify-content:flex-end"><button class="btn" data-act="close">Cancelar</button><button class="btn primary" data-act="fcsend">Enviar para a FC</button></div>`:k==='age'?`<div class="empty">Nenhuma visita marcada.</div><div class="toolbar" style="margin-top:10px;justify-content:flex-end"><button class="btn primary" data-act="close">Ok</button></div>`:`<div class="toolbar" style="justify-content:flex-end"><button class="btn primary" data-act="close">Ok</button></div>`}`);
 }
@@ -693,8 +714,8 @@ function openMod(k){
  if(!(me.ativo&&me.mods[k]&&S.modsOn[k])){toast('Módulo bloqueado pelo gestor.');return}
  me.ac[k]++;me.ult=new Date().toISOString();save();
  modal(`<h2>${m.i} ${m.n}</h2><p class="sub">Acesso registrado no medidor do gestor.</p>
- <p>${k==='trein'?'Abre o Treinamento 3D. As turmas on-line ficam na agenda logo abaixo dos cartões.':k==='fc'?'Abre o canal de solicitações com a FC (suporte e dúvidas).':'Toque em Abrir para entrar no módulo. Na versão publicada ele abre direto, já com o login do vendedor.'}</p>
- ${({cat:'https://fc-consultoria.github.io/treinamento/catalogo3d.html',trein:'https://fc-consultoria.github.io/treinamento/esquadrias/',casa:'https://fc-consultoria.github.io/treinamento/esquadrias/monte-casa.html',vento:'https://fc-consultoria.github.io/treinamento/diagramas/'})[k]?`<div class="toolbar" style="justify-content:flex-end;margin-bottom:8px"><a class="btn primary" style="text-decoration:none" target="_blank" rel="noopener" href="${({cat:'https://fc-consultoria.github.io/treinamento/catalogo3d.html',trein:'https://fc-consultoria.github.io/treinamento/esquadrias/',casa:'https://fc-consultoria.github.io/treinamento/esquadrias/monte-casa.html',vento:'https://fc-consultoria.github.io/treinamento/diagramas/'})[k]}">↗ Abrir ${m.n}</a></div>`:''}${k==='fc'?`<label>Sua solicitação<textarea id="fcTxt" rows="3" placeholder="Descreva a dúvida ou pedido"></textarea></label><div class="toolbar" style="margin-top:10px;justify-content:flex-end"><button class="btn" data-act="close">Cancelar</button><button class="btn primary" data-act="fcsend">Enviar para a FC</button></div>`:`<div class="toolbar" style="justify-content:flex-end"><button class="btn primary" data-act="close">Ok</button></div>`}`);
+ <p>${k==='fc'?'Abre o canal de solicitações com a FC (suporte e dúvidas).':'Toque em Abrir para entrar no módulo. Na versão publicada ele abre direto, já com o login do vendedor.'}</p>
+ ${({tipo:LINK.tipo,cat:LINK.cat,sim:LINK.sim})[k]?`<div class="toolbar" style="justify-content:flex-end;margin-bottom:8px"><a class="btn primary" style="text-decoration:none" target="_blank" rel="noopener" href="${({cat:'https://fc-consultoria.github.io/treinamento/catalogo3d.html',trein:'https://fc-consultoria.github.io/treinamento/esquadrias/',casa:'https://fc-consultoria.github.io/treinamento/esquadrias/monte-casa.html',vento:'https://fc-consultoria.github.io/treinamento/diagramas/'})[k]}">↗ Abrir ${m.n}</a></div>`:''}${k==='fc'?`<label>Sua solicitação<textarea id="fcTxt" rows="3" placeholder="Descreva a dúvida ou pedido"></textarea></label><div class="toolbar" style="margin-top:10px;justify-content:flex-end"><button class="btn" data-act="close">Cancelar</button><button class="btn primary" data-act="fcsend">Enviar para a FC</button></div>`:`<div class="toolbar" style="justify-content:flex-end"><button class="btn primary" data-act="close">Ok</button></div>`}`);
 }
 
 document.addEventListener('click',e=>{
@@ -703,6 +724,7 @@ document.addEventListener('click',e=>{
  if(e.target.closest('#pvRecarregar')){$('#pvFrame').setAttribute('src','../precificacao/?t='+Date.now());return}
  if(!t)return;const a=t.dataset.act,id=t.dataset.id;
  if(a==='irprecif'){role='precif';render();scrollTo(0,0);return}
+ if(a==='gopen'){openModG(t.dataset.m);return}
  if(a==='close'){if(t.classList.contains('modal')&&e.target!==t)return;closeModal();return}
  if(a==='reset'){S=seed();S.compras=seedCompras();S.mkt=seedMkt();S.chat=seedChat();save();showCad={};render();toast('Dados de exemplo restaurados.')}
  if(a==='vercad'){showCad[id]=!showCad[id];const c=cli(id);c.visto=true;save();render()}
@@ -711,7 +733,7 @@ document.addEventListener('click',e=>{
  if(a==='vmod'){const v=S.vend.find(x=>x.id===id);v.mods[t.dataset.m]=!v.mods[t.dataset.m];save();render()}
  if(a==='auto'){S.autoCadastro=!S.autoCadastro;save();render()}
  if(a==='addvend'){modal(`<h2>Cadastrar vendedor</h2><p class="sub">Ele recebe login e senha próprios.</p><div class="form"><label>Nome<input id="nvNome"></label><label>Login (e-mail ou celular)<input id="nvLogin"></label></div><div class="toolbar" style="margin-top:12px;justify-content:flex-end"><button class="btn" data-act="close">Cancelar</button><button class="btn primary" data-act="savevend">Cadastrar</button></div>`)}
- if(a==='savevend'){const n=$('#nvNome').value.trim();if(!n){toast('Informe o nome do vendedor.');return}S.vend.push({id:'v'+Date.now(),nome:n,ativo:true,mods:{cat:true,trein:true,casa:true,vento:true,fc:true},ac:{cat:0,trein:0,casa:0,vento:0,fc:0},ult:new Date().toISOString()});save();closeModal();render();toast('Vendedor cadastrado.')}
+ if(a==='savevend'){const n=$('#nvNome').value.trim();if(!n){toast('Informe o nome do vendedor.');return}S.vend.push({id:'v'+Date.now(),nome:n,ativo:true,mods:{tipo:true,cat:true,fc:true,sim:true},ac:{tipo:0,cat:0,fc:0,sim:0},ult:new Date().toISOString()});save();closeModal();render();toast('Vendedor cadastrado.')}
  if(a==='addslot'){modal(`<h2>Nova turma on-line</h2><div class="form"><label>Data<input id="nsD" placeholder="Ter 10/11"></label><label>Hora<input id="nsH" placeholder="14:00"></label><label>Tema<input id="nsT" placeholder="Tema do treinamento"></label><label>Vagas<input id="nsC" type="number" value="6"></label></div><div class="toolbar" style="margin-top:12px;justify-content:flex-end"><button class="btn" data-act="close">Cancelar</button><button class="btn primary" data-act="saveslot">Criar turma</button></div>`)}
  if(a==='saveslot'){const d=$('#nsD').value.trim(),h=$('#nsH').value.trim(),tm=$('#nsT').value.trim();if(!d||!h||!tm){toast('Preencha data, hora e tema.');return}S.slots.push({id:'s'+Date.now(),d,h,tema:tm,cap:+$('#nsC').value||6,ins:[]});save();closeModal();render();toast('Turma criada.')}
  if(a==='verorc')orcModal(id);
@@ -795,11 +817,12 @@ const TOURS={
   ['#t-rank','Aqui você vê os perfis mais vistos pelos clientes. Use para decidir o que colocar em destaque.']
  ],
  gestor:[
-  ['#t-kpis','Esta é a Central do Gestor da CDE. No topo ficam os números do dia: cadastros novos, orçamentos em aberto, acessos da equipe e visitas ao Catálogo 3D.'],
+  ['#t-gmods','Esta é a Central do Gestor da CDE. Nos cartões ficam suas ferramentas: Tipologia, Catálogo 3D, Solicitação com a FC, Onde comprar, Compras com distribuidoras, Agenda da FC e Equipe.'],
+  ['#t-kpis','Em Equipe ficam os números do dia: cadastros novos, orçamentos em aberto, acessos da equipe e visitas ao Catálogo 3D.'],
   ['#t-cad','Quando um cliente se cadastra no catálogo, ele é aprovado na hora. Aqui chega o aviso, com os dados ocultos. Toque em Ver quem cadastrou para abrir o nome, a empresa e o contato.'],
   ['#bellBtn','O sino mostra quantos cadastros novos você ainda não viu.'],
   ['#t-cat','Este gráfico mede o acesso ao Catálogo 3D: visitas por dia, novos cadastros e quanto disso virou pedido de orçamento.'],
-  ['#t-eq','O medidor da equipe mostra quantas vezes cada vendedor abriu cada ferramenta. Assim você vê quem está usando o catálogo, o treinamento e o Monte sua Casa.'],
+  ['#t-eq','O medidor da equipe mostra quantas vezes cada vendedor abriu cada ferramenta. Assim você vê quem está usando a Tipologia, o Catálogo 3D e o Simulador de obra 3D.'],
   ['#t-cmp','No setor de Compras você libera ou bloqueia cada módulo, pausa o acesso e acompanha no medidor quantas vezes cada ferramenta foi aberta.'],
   ['#t-cmd','Em Comandos você libera ou bloqueia cada módulo por vendedor, pausa o acesso de alguém, liga ou desliga o aceite automático e cadastra vendedores novos.'],
   ['#t-orc','Aqui estão todos os orçamentos que os clientes pediram, com o vendedor escolhido. Filtre por vendedor ou situação, abra um pedido e, se precisar, transfira para outro vendedor.'],
@@ -807,19 +830,21 @@ const TOURS={
   ['#t-hist','Por fim, o histórico das conversas da equipe. As conversas são individuais, e você acompanha todas aqui, só para leitura.']
  ],
  vendedor:[
-  ['#t-mods','Este é o painel do vendedor. São cinco ferramentas: Catálogo 3D, Treinamento 3D, Monte sua Casa 3D, Diagrama de pressão de vento e Solicitação com a FC. Toque no cartão e depois em Abrir para entrar no módulo. Cada acesso conta no medidor do gestor.'],
+  ['#t-mods','Este é o painel do vendedor. São quatro ferramentas: Tipologia, Catálogo 3D, Solicitação com a FC e Simulador de obra 3D. Toque no cartão e depois em Abrir para entrar no módulo. Cada acesso conta no medidor do gestor.'],
   ['#mod-cat','Use o Catálogo 3D para mostrar ao cliente os perfis das linhas Suprema e Gold em 3D durante o atendimento.'],
-  ['#mod-casa','No Monte sua Casa 3D você coloca as esquadrias na planta e apresenta o projeto ao cliente.'],
+  ['#mod-tipo','Na Tipologia você vê as esquadrias das linhas em 3D, passo a passo, com desenho técnico.'],
+  ['#mod-sim','No Simulador de obra 3D você coloca as esquadrias na planta e apresenta a obra ao cliente.'],
   ['#mod-fc','Ficou com dúvida? Abra Solicitação com a FC e envie sua pergunta direto para o suporte.'],
   ['#t-meus','Quando o cliente se cadastra no Catálogo 3D, monta o pedido e escolhe você, o pedido cai aqui. Abra, copie o resumo e responda pelo WhatsApp ou e-mail que ele pediu. Depois marque a situação.'],
   ['#t-agv','Na agenda de treinamento on-line, toque em uma turma para se inscrever.'],
   ['#t-chat','Na conversa da equipe você fala individualmente com um colega, com o gestor ou com o suporte da FC. Escolha a pessoa na lista e escreva a mensagem.']
  ],
  compras:[
-  ['#t-cmods','Este é o painel de Compras da CDE. Os módulos estão em três grupos: Compras, Treinamento e consulta, e Suporte. Toque no cartão e depois em Abrir. Cada acesso conta no medidor do gestor.'],
+  ['#t-cmods','Este é o painel de Compras da CDE. Os módulos estão em três grupos: Compras, Consulta e Suporte. Toque no cartão e depois em Abrir. Cada acesso conta no medidor do gestor.'],
   ['#cmod-comp','Em Onde comprar você vê quem fabrica cada linha de perfil nas extrusoras.'],
-  ['#cmod-conv','No Conversor de códigos você digita o código do fornecedor e vê o código de mercado equivalente.'],
-  ['#cmod-pcod','A Pesquisa de código busca no cadastro do WVetro e nos códigos de mercado.'],
+  ['#cmod-dist','Em Compras com distribuidoras você vê as distribuidoras e os códigos que cada uma usa.'],
+  ['#cmod-tipo','Na Tipologia você consulta as esquadrias das linhas em 3D, com desenho técnico.'],
+  ['#cmod-age','Na Agenda da FC aparecem as visitas e reuniões marcadas com a CDE.'],
   ['#cmod-fc','Ficou com dúvida? Abra Solicitação com a FC e envie sua pergunta direto para o suporte.'],
   ['#t-cagv','Na agenda de treinamento on-line, toque em uma turma para se inscrever.'],
   ['#t-chat','Na conversa da equipe você fala individualmente com o gestor, com os vendedores ou com o suporte da FC.']
@@ -869,7 +894,7 @@ $('#tourBtn').onclick=()=>{
  <label style="flex-direction:row;align-items:center;gap:8px;margin-top:12px;font-size:13px;color:var(--fg)"><input type="checkbox" id="tvAuto" checked style="width:auto"> Modo vídeo: avança sozinho com voz</label>
  <div class="toolbar" style="margin-top:12px;justify-content:flex-end"><button class="btn" data-act="close">Fechar</button></div>`);
  document.querySelectorAll('[data-tour]').forEach(b=>{if(b.dataset.tour!==role)b.remove()});
- document.querySelectorAll('[data-tour]').forEach(b=>b.onclick=()=>{const auto=$('#tvAuto').checked;role=b.dataset.tour;render();tour={role,i:0,voz:auto,auto};closeModal();tourStep()});
+ document.querySelectorAll('[data-tour]').forEach(b=>b.onclick=()=>{const auto=$('#tvAuto').checked;role=b.dataset.tour;if(role==='gestor')gEquipe=true;render();tour={role,i:0,voz:auto,auto};closeModal();tourStep()});
 };
 
 /* ---------- COR DA TELA ---------- */
