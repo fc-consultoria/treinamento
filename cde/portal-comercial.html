@@ -214,6 +214,7 @@ label{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:4
       <button data-role="vendedor" aria-pressed="false">Vendedor</button>
       <button data-role="compras" aria-pressed="false">Compras</button>
       <button data-role="marketing" aria-pressed="false">Marketing</button>
+      <button data-role="fabrica" aria-pressed="false">Fábrica</button>
       <button data-role="precif" aria-pressed="false">💲 Precificação</button>
     </div>
     <button class="btn bell" id="bellBtn" title="Avisos de cadastro">🔔 Avisos<span class="dot" id="bellDot" hidden>0</span></button>
@@ -277,7 +278,7 @@ label{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:4
 (function(){
 const KEY='cde-portal-v2';
 /* Links de cada módulo (troque aqui se mudar o endereço) */
-const LINK={tipo:'https://fc-consultoria.github.io/treinamento/esquadrias/',cat:'https://fc-consultoria.github.io/treinamento/catalogo3d.html',sim:'https://fc-consultoria.github.io/treinamento/esquadrias/monte-casa.html',comp:'https://fc-consultoria.github.io/treinamento/equivalencias/comprar.html',dist:'https://fc-consultoria.github.io/treinamento/equivalencias/distribuidoras.html'};
+const LINK={tipo:'https://fc-consultoria.github.io/treinamento/esquadrias/',cat:'https://fc-consultoria.github.io/treinamento/catalogo3d.html',sim:'https://fc-consultoria.github.io/treinamento/esquadrias/monte-casa.html',comp:'https://fc-consultoria.github.io/treinamento/equivalencias/comprar.html',dist:'https://fc-consultoria.github.io/treinamento/equivalencias/distribuidoras.html',mont:''};
 const MODS=[
  {k:'tipo',n:'Tipologia',d:'Tipologias das linhas em 3D, passo a passo e desenho técnico.',i:'◈'},
  {k:'cat',n:'Catálogo 3D',d:'Perfis em 3D para mostrar ao cliente.',i:'▦'},
@@ -291,6 +292,13 @@ const CMODS=[
  {k:'cat',n:'Catálogo 3D',d:'Perfis do catálogo da CDE em 3D.',i:'▦',g:'Consulta',u:LINK.cat},
  {k:'fc',n:'Solicitação com a FC',d:'Dúvidas e pedidos de suporte direto com a FC.',i:'✉',g:'Suporte'},
  {k:'age',n:'Agenda da FC',d:'Visitas e reuniões da FC com a CDE.',i:'🗓',g:'Suporte'}
+];
+/* ---- FÁBRICA ---- */
+const FMODS=[
+ {k:'tipo',n:'Tipologia',d:'Tipologias das linhas em 3D, passo a passo e desenho técnico.',i:'◈',u:LINK.tipo},
+ {k:'cat',n:'Catálogo 3D',d:'Perfis do catálogo da CDE em 3D.',i:'▦',u:LINK.cat},
+ {k:'fc',n:'Solicitação com a FC',d:'Dúvidas e pedidos de suporte direto com a FC.',i:'✉'},
+ {k:'mont',n:'Montagem da Tipologia',d:'Como montar cada tipologia na fábrica, etapa por etapa.',i:'🔧',u:LINK.mont}
 ];
 /* ---- GESTOR: cartões da Central ---- */
 const GMODS=[
@@ -564,6 +572,21 @@ function prevHTML(){return bannerHTML()+`<div style="display:flex;flex-wrap:wrap
 const fmtDay=s=>{const d=new Date(s+'T12:00');return d.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit'}).replace('.','')};
 const PST={rascunho:['Rascunho','novo'],agendado:['Agendado','and'],publicado:['Publicado','ok']};
 function capText(){const p=prod(postSel.p);return `${postSel.t||p.n}\n\n${p.n} · ${p.l}. Veja em 3D no catálogo da CDE Vidros & Esquadrias e peça seu orçamento direto ao vendedor.\n\n👉 Link na bio\n#esquadrias #esquadriasdealuminio #guaporevidros #cuiaba #sinop #arquitetura #obra`}
+function vFabrica(){
+ return `
+ <span class="demo-note">Demonstração · acesso da Fábrica</span>
+ <div class="hello"><div><h1>Fábrica</h1><p>Tipologias, catálogo, montagem e suporte da FC para a produção.</p></div></div>
+ <div class="grid mods" id="t-fmods">${FMODS.map(m=>`
+  <button class="mod" data-act="fopen" data-m="${m.k}" id="fmod-${m.k}">
+   ${m.k==='mont'&&!m.u?'<span class="tag">em preparação</span>':''}
+   <div class="ic" style="font-size:20px">${m.i}</div><h3>${m.n}</h3><p>${m.d}</p></button>`).join('')}</div>`;
+}
+function openModF(k){
+ const m=FMODS.find(x=>x.k===k);
+ if(m.u){window.open(m.u,'_blank','noopener');return}
+ if(k==='fc'){openModG('fc');return}
+ modal(`<h2>${m.i} ${m.n}</h2><p class="sub">Este módulo está em preparação pela FC e logo fica disponível aqui.</p><div class="toolbar" style="margin-top:10px;justify-content:flex-end"><button class="btn primary" data-act="close">Ok</button></div>`);
+}
 function vMarketing(){
  const M=S.mkt;
  const tot=Object.values(M.views).reduce((a,b)=>a+b,0)||1;
@@ -669,7 +692,7 @@ function render(){
  const emPrecif=role==='precif';
  pv.hidden=!emPrecif;app.hidden=emPrecif;$('#tourBtn').hidden=emPrecif;
  if(emPrecif){const f=$('#pvFrame');if(!f.getAttribute('src'))f.setAttribute('src','../precificacao/');$('#bellBtn').hidden=true;return}
- app.innerHTML=(role==='gestor'?vGestor():role==='vendedor'?vVendedor():role==='compras'?vCompras():role==='marketing'?vMarketing():vCliente())+`<p class="foot">Desenvolvido por FC Consultoria em Esquadria · © FC Consultoria em Esquadria</p>`;
+ app.innerHTML=(role==='gestor'?vGestor():role==='vendedor'?vVendedor():role==='compras'?vCompras():role==='marketing'?vMarketing():role==='fabrica'?vFabrica():vCliente())+`<p class="foot">Desenvolvido por FC Consultoria em Esquadria · © FC Consultoria em Esquadria</p>`;
  const n=S.clientes.filter(c=>!c.visto).length;$('#bellDot').hidden=!n;$('#bellDot').textContent=n;
  $('#bellBtn').hidden=role!=='gestor';
  if(role==='marketing')drawPost();
@@ -713,6 +736,7 @@ document.addEventListener('click',e=>{
  if(!t)return;const a=t.dataset.act,id=t.dataset.id;
  if(a==='irprecif'){role='precif';render();scrollTo(0,0);return}
  if(a==='gopen'){openModG(t.dataset.m);return}
+ if(a==='fopen'){openModF(t.dataset.m);return}
  if(a==='close'){if(t.classList.contains('modal')&&e.target!==t)return;closeModal();return}
  if(a==='reset'){S=seed();S.compras=seedCompras();S.mkt=seedMkt();S.chat=seedChat();save();showCad={};render();toast('Dados de exemplo restaurados.')}
  if(a==='vercad'){showCad[id]=!showCad[id];const c=cli(id);c.visto=true;save();render()}
@@ -799,6 +823,12 @@ document.addEventListener('change',e=>{
 });
 /* ---------- TUTORIAL GUIADO (legenda + voz) ---------- */
 const TOURS={
+ fabrica:[
+  ['#t-fmods','Este é o acesso da Fábrica. São quatro ferramentas: Tipologia, Catálogo 3D, Solicitação com a FC e Montagem da Tipologia.'],
+  ['#fmod-tipo','Na Tipologia você vê as esquadrias das linhas em 3D, com desenho técnico.'],
+  ['#fmod-mont','Na Montagem da Tipologia fica o passo a passo de montagem de cada tipologia.'],
+  ['#fmod-fc','Em Solicitação com a FC você manda dúvidas e pedidos direto para a FC.']
+ ],
  marketing:[
   ['#t-mkpis','Este é o painel do Marketing da CDE. Aqui você cuida dos destaques do Catálogo 3D de perfis.'],
   ['#t-vitrine','Escolha até três perfis para os Destaques 3D. Ligue o perfil na lista e ele aparece em destaque no catálogo. Para trocar, tire um e ligue outro. A busca ajuda a achar pelo código ou nome.'],
@@ -875,6 +905,7 @@ $('#tourBtn').onclick=()=>{
   <button class="row" data-tour="gestor" style="text-align:left;cursor:pointer;color:var(--fg)"><div class="who"><b>Tutorial do Gestor</b><span>${TOURS.gestor.length} passos · comandos, medidores, cadastros e orçamentos</span></div><span class="pill br">Começar</span></button>
   <button class="row" data-tour="vendedor" style="text-align:left;cursor:pointer;color:var(--fg)"><div class="who"><b>Tutorial do Vendedor</b><span>${TOURS.vendedor.length} passos · ferramentas, orçamentos recebidos e agenda</span></div><span class="pill br">Começar</span></button>
   <button class="row" data-tour="compras" style="text-align:left;cursor:pointer;color:var(--fg)"><div class="who"><b>Tutorial do Compras</b><span>${TOURS.compras.length} passos · ferramentas de compra, códigos e agenda</span></div><span class="pill br">Começar</span></button>
+  <button class="row" data-tour="fabrica" style="text-align:left;cursor:pointer;color:var(--fg)"><div class="who"><b>Tutorial da Fábrica</b><span>${TOURS.fabrica.length} passos · tipologia, catálogo, montagem e suporte</span></div></button>
   <button class="row" data-tour="marketing" style="text-align:left;cursor:pointer;color:var(--fg)"><div class="who"><b>Tutorial do Marketing</b><span>${TOURS.marketing.length} passos · escolha dos Destaques 3D e perfis mais vistos</span></div><span class="pill br">Começar</span></button>
  </div>
  <label style="flex-direction:row;align-items:center;gap:8px;margin-top:12px;font-size:13px;color:var(--fg)"><input type="checkbox" id="tvAuto" checked style="width:auto"> Modo vídeo: avança sozinho com voz</label>
