@@ -411,7 +411,6 @@ function vGestor(){
  const abertos=S.orc.filter(o=>o.status!=='enviado').length;
  const acEq=S.vend.reduce((a,v)=>a+totalAc(v),0);
  const vis7=S.visitas.reduce((a,b)=>a+b,0);
- const maxAc=Math.max(...S.vend.map(totalAc),1);
  const maxDay=Math.max(...S.visitas.map((v,i)=>v+S.cadDia[i]),1);
  const labels=[...Array(7)].map((_,i)=>{const d=new Date();d.setDate(d.getDate()-(6-i));return d.toLocaleDateString('pt-BR',{weekday:'short'}).replace('.','')});
  let orcs=S.orc.filter(o=>(fVend==='todos'||o.vend===fVend)&&(fStat==='todos'||o.status===fStat)).sort((a,b)=>b.data.localeCompare(a.data));
@@ -432,7 +431,7 @@ function vGestor(){
   <div class="kpi"><small>Acessos da equipe</small><b>${acEq}</b><em> nos módulos</em></div>
   <div class="kpi"><small>Visitas ao Catálogo 3D · 7 dias</small><b>${vis7}</b><em> ${S.clientes.length} clientes cadastrados</em></div>
  </div>
- <div class="grid cols2">
+ <div class="grid cols2" style="grid-template-columns:repeat(auto-fit,minmax(min(420px,100%),1fr))">
   <section class="panel" id="t-cad">
    <div class="ph"><div><h2>🔔 Avisos de cadastro</h2><p class="sub">O cliente se cadastra no catálogo e já entra liberado. Os dados ficam ocultos até você abrir.</p></div>
    <span class="pill ${S.autoCadastro?'ok':'novo'}">${S.autoCadastro?'Aceite automático ligado':'Aceite automático desligado'}</span></div>
@@ -447,12 +446,7 @@ function vGestor(){
    <div class="days">${labels.map(l=>`<span>${l}</span>`).join('')}</div>
    <div class="legend"><span><i style="background:var(--brand)"></i>Visitas</span><span><i style="background:var(--amber)"></i>Cadastros</span><span>Conversão em orçamento: <b>${Math.round(S.orc.length/Math.max(S.clientes.length,1)*100)}%</b></span></div>
   </section>
-  <section class="panel" id="t-eq">
-   <h2>👥 Medidor de acesso da equipe</h2><p class="sub">Quantas vezes cada vendedor abriu cada módulo.</p>
-   <div class="list">${S.vend.map(v=>{const t=totalAc(v);return `<div class="meter"><span><b>${esc(v.nome)}</b>${v.ativo?'':' <span class="pill novo">bloq.</span>'}</span><div class="bar" style="width:${Math.max(t/maxAc*100,4)}%">${MODS.map(m=>`<i title="${m.n}: ${v.ac[m.k]}" style="width:${t?v.ac[m.k]/t*100:0}%;background:${COLORS[m.k]}"></i>`).join('')}</div><span style="font-family:var(--f-mono)">${t}</span></div>`}).join('')}</div>
-   <div class="legend">${MODS.map(m=>`<span><i style="background:${COLORS[m.k]}"></i>${m.n}</span>`).join('')}</div>
-  </section>
-  <section class="panel" id="t-cmd">
+  <section class="panel" id="t-cmd" style="grid-column:1/-1">
    <h2>🎛 Comandos</h2><p class="sub">Libere ou bloqueie cada módulo por vendedor. Desligar na linha "Todos" tira o módulo da equipe inteira.</p>
    <div class="tablewrap"><table><thead><tr><th>Vendedor</th><th class="c">Acesso</th>${MODS.map(m=>`<th class="c" title="${m.n}">${m.i}</th>`).join('')}</tr></thead><tbody>
     <tr><td><b>Todos</b></td><td class="c">—</td>${MODS.map(m=>`<td class="c"><button class="sw" role="switch" aria-checked="${S.modsOn[m.k]}" aria-label="${m.n} para todos" data-act="gmod" data-m="${m.k}"></button></td>`).join('')}</tr>
@@ -816,7 +810,6 @@ const TOURS={
   ['#t-cad','Quando um cliente se cadastra no catálogo, ele é aprovado na hora. Aqui chega o aviso, com os dados ocultos. Toque em Ver quem cadastrou para abrir o nome, a empresa e o contato.'],
   ['#bellBtn','O sino mostra quantos cadastros novos você ainda não viu.'],
   ['#t-cat','Este gráfico mede o acesso ao Catálogo 3D: visitas por dia, novos cadastros e quanto disso virou pedido de orçamento.'],
-  ['#t-eq','O medidor da equipe mostra quantas vezes cada vendedor abriu cada ferramenta. Assim você vê quem está usando a Tipologia, o Catálogo 3D e o Simulador de obra 3D.'],
   ['#t-cmp','No setor de Compras você libera ou bloqueia cada módulo, pausa o acesso e acompanha no medidor quantas vezes cada ferramenta foi aberta.'],
   ['#t-cmd','Em Comandos você libera ou bloqueia cada módulo por vendedor, pausa o acesso de alguém, liga ou desliga o aceite automático e cadastra vendedores novos.'],
   ['#t-orc','Aqui estão todos os orçamentos que os clientes pediram, com o vendedor escolhido. Filtre por vendedor ou situação, abra um pedido e, se precisar, transfira para outro vendedor.'],
