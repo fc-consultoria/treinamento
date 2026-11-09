@@ -45,6 +45,10 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .bell .dot{position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;border-radius:9px;background:var(--warn);color:#fff;font-size:11px;display:grid;place-items:center;padding:0 4px;font-family:var(--f-mono)}
 main{padding-block:22px 40px}
 .demo-note{font-size:12px;color:var(--amber);background:var(--amber-soft);border-radius:8px;padding:6px 10px;display:inline-block;margin-bottom:14px}
+.pv-card{display:flex;align-items:center;gap:14px;width:100%;text-align:left;margin:0 0 14px;cursor:pointer;color:var(--fg);border-left:4px solid #1f8a5b}
+.pv-card:hover{border-color:#1f8a5b}
+.pv-ic{font-size:26px;width:46px;height:46px;border-radius:12px;display:grid;place-items:center;background:#e4f4ec;flex:none}
+.pv-tx{flex:1;display:flex;flex-direction:column;gap:3px;min-width:0}.pv-tx span{color:var(--muted);font-size:13px}
 .hello{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:18px}
 .hello h1{font-size:24px}
 .hello p{margin:2px 0 0;color:var(--muted)}
@@ -208,6 +212,7 @@ label{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:4
       <button data-role="vendedor" aria-pressed="false">Vendedor</button>
       <button data-role="compras" aria-pressed="false">Compras</button>
       <button data-role="marketing" aria-pressed="false">Marketing</button>
+      <button data-role="precif" aria-pressed="false">💲 Precificação</button>
     </div>
     <button class="btn bell" id="bellBtn" title="Avisos de cadastro">🔔 Avisos<span class="dot" id="bellDot" hidden>0</span></button>
     <div class="seg" role="group" aria-label="Fundo da tela" id="modoSeg"><button data-modo="light" aria-pressed="true">☀️ Claro</button><button data-modo="dark" aria-pressed="false">🌙 Escuro</button></div>
@@ -217,6 +222,22 @@ label{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:4
 </header>
 
 <main class="wrap" id="app"></main>
+<!-- PRECIFICAÇÃO DENTRO DO PORTAL: fica fora do #app para não recarregar a cada render -->
+<section id="precifView" hidden>
+ <div class="wrap pv-bar">
+  <div><h1>💲 Precificação de Kits</h1><p>Custo e venda por tamanho de kit, ligados ao catálogo TEXA. Entre uma vez com o acesso da CDE; nas próximas vezes abre direto neste navegador.</p></div>
+  <div class="toolbar"><button class="btn" id="pvRecarregar" title="Recarregar a precificação">↻ Recarregar</button><a class="btn" href="../precificacao/" target="_blank" rel="noopener">↗ Abrir em tela cheia</a></div>
+ </div>
+ <div class="pv-frame"><iframe id="pvFrame" title="Precificação de Kits" allow="clipboard-write; fullscreen"></iframe></div>
+</section>
+<style>
+#precifView .pv-bar{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;padding-top:16px;padding-bottom:10px}
+#precifView h1{margin:0;font-size:clamp(20px,3vw,26px)}
+#precifView .pv-bar p{margin:4px 0 0;color:var(--muted);font-size:13.5px;max-width:640px}
+#precifView .pv-frame{padding:0 max(12px,env(safe-area-inset-right,0px)) 12px max(12px,env(safe-area-inset-left,0px))}
+#precifView iframe{display:block;width:100%;height:calc(100dvh - 190px);min-height:520px;border:1px solid var(--line);border-radius:14px;background:#fff}
+@media (max-width:720px){#precifView iframe{height:calc(100dvh - 240px)}}
+</style>
 <!-- CAPA DE APRESENTAÇÃO (remover depois: apagar deste comentário até FIM CAPA) -->
 <div id="capa" role="dialog" aria-label="Abertura">
  <div class="capa-in">
@@ -263,6 +284,7 @@ const MODS=[
 const CMODS=[
  {k:'comp',n:'Onde comprar',d:'Perfis nas extrusoras: quem fabrica cada linha.',i:'🛒',g:'Compras',u:'https://fc-consultoria.github.io/treinamento/equivalencias/comprar.html'},
  {k:'dist',n:'Compras com distribuidoras',d:'Distribuidoras e os códigos que cada uma usa.',i:'🏬',g:'Compras',u:'https://fc-consultoria.github.io/treinamento/equivalencias/distribuidoras.html'},
+ {k:'precif',n:'Precificação de Kits',d:'Custo e venda por kit, ligados ao catálogo TEXA.',i:'💲',g:'Compras'},
  {k:'conv',n:'Conversor de códigos',d:'Converta o código do fornecedor para o código de mercado.',i:'🔁',g:'Compras',u:'https://fc-consultoria.github.io/treinamento/equivalencias/'},
  {k:'pcod',n:'Pesquisa de código',d:'Busca no cadastro WVetro e nos códigos de mercado.',i:'🔎',g:'Compras',u:'https://fc-consultoria.github.io/treinamento/equivalencias/pesquisa/?f=wvetro,alcoa'},
  {k:'cat',n:'Catálogo 3D',d:'Perfis do catálogo da CDE em 3D.',i:'▦',g:'Treinamento e consulta',u:'https://fc-consultoria.github.io/treinamento/catalogo3d.html'},
@@ -271,7 +293,7 @@ const CMODS=[
  {k:'fc',n:'Solicitação com a FC',d:'Dúvidas e pedidos de suporte direto com a FC.',i:'✉',g:'Suporte'},
  {k:'age',n:'Agenda da FC',d:'Visitas e reuniões da FC com a CDE.',i:'🗓',g:'Suporte'}
 ];
-const CCOLORS={comp:'var(--brand)',dist:'#3aa0c9',conv:'#6b7fd6',pcod:'#2f8f6f',cat:'#d5604a',ori:'var(--amber)',trein:'#c98a2b',casa:'#8a6bd6',fc:'#b0627e',age:'#7a8794'};
+const CCOLORS={precif:'#1f8a5b',comp:'var(--brand)',dist:'#3aa0c9',conv:'#6b7fd6',pcod:'#2f8f6f',cat:'#d5604a',ori:'var(--amber)',trein:'#c98a2b',casa:'#8a6bd6',fc:'#b0627e',age:'#7a8794'};
 const cmodsAll=v=>Object.fromEntries(CMODS.map(m=>[m.k,v]));
 function seedCompras(){return [{id:'k1',nome:'João',ativo:true,mods:cmodsAll(true),ac:{comp:6,dist:9,conv:11,pcod:14,cat:4,ori:2,trein:3,casa:1,fc:1,age:1},ult:day(2)}]}
 const COLORS={cat:'var(--brand)',trein:'var(--amber)',casa:'#6b7fd6',vento:'#3aa0c9',fc:'#b0627e'};
@@ -346,6 +368,7 @@ function seedChat(){const t=(d,h)=>{const x=new Date();x.setDate(x.getDate()-d);
 ]}
 if(!S.chat)S.chat=seedChat();
 if(!S.compras){S.compras=seedCompras();S.cmodsOn=cmodsAll(true);S.meC='k1'}
+if(S.cmodsOn&&S.cmodsOn.precif===undefined){S.cmodsOn.precif=true;(S.compras||[]).forEach(v=>{if(v.mods)v.mods.precif=true})}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 let chatWith='gestor', role='gestor', cart=[], selVend=null, showCad={}, fVend='todos', fStat='todos', postSel={p:'p1',f:'feed',t:'Ventilação e luz o dia todo'};
 const $=s=>document.querySelector(s);
@@ -394,6 +417,7 @@ function vGestor(){
   <div class="kpi"><small>Acessos da equipe</small><b>${acEq}</b><em> nos módulos</em></div>
   <div class="kpi"><small>Visitas ao Catálogo 3D · 7 dias</small><b>${vis7}</b><em> ${S.clientes.length} clientes cadastrados</em></div>
  </div>
+ <button class="panel pv-card" data-act="irprecif" id="t-precif"><span class="pv-ic">💲</span><span class="pv-tx"><b>Precificação de Kits</b><span>Custo e venda de cada tamanho de kit (box e instalação), com os perfis do catálogo TEXA. Abre aqui dentro do portal.</span></span><span class="btn primary sm">Abrir →</span></button>
  <div class="grid cols2">
   <section class="panel" id="t-cad">
    <div class="ph"><div><h2>🔔 Avisos de cadastro</h2><p class="sub">O cliente se cadastra no catálogo e já entra liberado. Os dados ficam ocultos até você abrir.</p></div>
@@ -497,6 +521,7 @@ function openModC(k){
  const me=S.compras.find(v=>v.id===S.meC);const m=CMODS.find(x=>x.k===k);
  if(!(me&&me.ativo&&me.mods[k]&&S.cmodsOn[k])){toast('Módulo bloqueado pelo gestor.');return}
  me.ac[k]=(me.ac[k]||0)+1;me.ult=new Date().toISOString();save();
+ if(k==='precif'){role='precif';render();scrollTo(0,0);return}
  modal(`<h2>${m.i} ${m.n}</h2><p class="sub">Acesso registrado no medidor do gestor.</p>
  <p>${k==='fc'?'Abre o canal de solicitações com a FC (suporte e dúvidas).':k==='age'?'As visitas e reuniões que a FC marcar com a CDE aparecem aqui.':k==='trein'?'Abre o Treinamento 3D. As turmas on-line ficam na agenda logo abaixo dos cartões.':'Toque em Abrir para entrar no módulo.'}</p>
  ${m.u?`<div class="toolbar" style="justify-content:flex-end;margin-bottom:8px"><a class="btn primary" style="text-decoration:none" target="_blank" rel="noopener" href="${m.u}">↗ Abrir ${m.n}</a></div>`:''}
@@ -631,7 +656,10 @@ function drawCanvasesOld(){
 /* ---------- RENDER ---------- */
 function render(){
  document.querySelectorAll('#roleSeg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.role===role));
- const app=$('#app');
+ const app=$('#app'),pv=$('#precifView');
+ const emPrecif=role==='precif';
+ pv.hidden=!emPrecif;app.hidden=emPrecif;$('#tourBtn').hidden=emPrecif;
+ if(emPrecif){const f=$('#pvFrame');if(!f.getAttribute('src'))f.setAttribute('src','../precificacao/');$('#bellBtn').hidden=true;return}
  app.innerHTML=(role==='gestor'?vGestor():role==='vendedor'?vVendedor():role==='compras'?vCompras():role==='marketing'?vMarketing():vCliente())+`<p class="foot">Desenvolvido por FC Consultoria em Esquadria · © FC Consultoria em Esquadria</p>`;
  const n=S.clientes.filter(c=>!c.visto).length;$('#bellDot').hidden=!n;$('#bellDot').textContent=n;
  $('#bellBtn').hidden=role!=='gestor';
@@ -672,7 +700,9 @@ function openMod(k){
 document.addEventListener('click',e=>{
  const t=e.target.closest('[data-act]');
  if(e.target.closest('[data-role]')){role=e.target.closest('[data-role]').dataset.role;render();scrollTo(0,0);return}
+ if(e.target.closest('#pvRecarregar')){$('#pvFrame').setAttribute('src','../precificacao/?t='+Date.now());return}
  if(!t)return;const a=t.dataset.act,id=t.dataset.id;
+ if(a==='irprecif'){role='precif';render();scrollTo(0,0);return}
  if(a==='close'){if(t.classList.contains('modal')&&e.target!==t)return;closeModal();return}
  if(a==='reset'){S=seed();S.compras=seedCompras();S.mkt=seedMkt();S.chat=seedChat();save();showCad={};render();toast('Dados de exemplo restaurados.')}
  if(a==='vercad'){showCad[id]=!showCad[id];const c=cli(id);c.visto=true;save();render()}
