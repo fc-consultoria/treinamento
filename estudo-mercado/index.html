@@ -297,6 +297,9 @@ function espera(){const t0=ls.get('fcext_regt_'+S.ext,Date.now());
     if(k++%4===0){try{const st=await rpc('em_status',{p_ext:S.ext,p_dev:devId()});if(st==='bloqueado'){clearInterval(espT);ls.set('fcext_bloq_'+S.ext,1);return bloqueado()}if(st==='liberado'){clearInterval(espT);ls.set('fcext_lib_'+S.ext,1);S.cover=true;return draw()}}catch(_){}}
     if(r<=0){clearInterval(espT);ls.set('fcext_lib_'+S.ext,1);reg('liberado_auto');S.cover=true;draw()}};
   tick();espT=setInterval(tick,1000)}
+/* 09/11/2026: demonstrativo sem liberação automática — o acesso é apresentado e liberado pela FC */
+function fechado(){capaMsg('Acesso liberado pela FC','O Estudo de Mercado é apresentado e liberado pela FC Consultoria. Para conhecer, fale com a FC pelo WhatsApp.',`<a href="https://wa.me/${WA}?text=${encodeURIComponent('Olá, FC! Quero conhecer o Estudo de Mercado.')}" target="_blank" rel="noopener" style="display:inline-block;background:#1f9d55;color:#fff;text-decoration:none;font-weight:700;padding:12px 20px;border-radius:10px;margin:6px 0">💬 Falar com a FC no WhatsApp</a>`);
+  rpc('em_status',{p_ext:S.ext,p_dev:devId()}).then(st=>{if(st==='liberado'){ls.set('fcext_fcok_'+S.ext,1);S.cover=true;draw();}}).catch(()=>{});}
 function bloqueado(){capaMsg('Acesso não liberado','Este acesso ao demonstrativo não foi liberado. Fale com a FC Consultoria para mais informações.')}
 function cadastro(){const E=EXTS[S.ext];
   $('#app').innerHTML=`<section class="cover"><div class="in"><div class="lg"><img src="${LOGO}" alt="FC Consultoria em Esquadria"></div><div class="rule"></div><div class="pair">FC <span>&amp;</span> ${esc(E.n)}</div><h1>Primeiro acesso ao demonstrativo</h1><p>Informe seus dados para liberar o teste de 4 dias.</p>
@@ -372,7 +375,8 @@ async function salvaCfg(k){const m=$('#cfm-'+k);const sel=[...document.querySele
     if(q.error)throw q.error;if(val)CFG[k]=val;else delete CFG[k];toast('Fornecedores salvos para FC & '+EXTS[k].n);hub()}catch(e){m.textContent='Não salvou: '+(e.message||e);m.className='cfgm err'}}
 async function carregaCfg(){try{const r=await fetch(SB+'/rest/v1/em_config?select=ext,forn',{headers:{apikey:SBK,Authorization:'Bearer '+SBK},cache:'no-store'});if(r.ok){CFG={};(await r.json()).forEach(x=>CFG[x.ext]=x.forn)}}catch(_){}}
 
-const QP=new URLSearchParams(location.search);const FCM=QP.has('fc');
+const QP=new URLSearchParams(location.search);let FCM=false;/* 09/11/2026: modo FC só com login de administrador do Painel da Matriz (antes bastava ?fc no endereço) */
+async function chkFC(){if(!QP.has('fc'))return;try{const raw=localStorage.getItem('trein-fc-auth');const t=raw&&JSON.parse(raw).access_token;if(!t)return;const r=await fetch(SB+'/rest/v1/rpc/trein_is_admin',{method:'POST',headers:{apikey:SBK,Authorization:'Bearer '+t,'Content-Type':'application/json'},body:'{}'});FCM=r.ok&&(await r.json())===true;}catch(_){FCM=false;}}
 let S={ord:ls.get('fcext_ord','preco'),cover:false,tut:null,ext:null,role:'vend',tab:'pesq',g:null,cliSel:null,abcL:'todas',relU:'todos'};
 
 function img(m,extra=''){if(!m||!m.src)return `<div class="draw none ${extra}">sem desenho no catálogo</div>`;
@@ -475,9 +479,7 @@ document.addEventListener('dragstart',e=>{if(e.target.tagName==='IMG')e.preventD
 document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&['s','p','u'].includes((e.key||'').toLowerCase())&&S&&S.ext){e.preventDefault();toast('Conteúdo confidencial · FC Consultoria')}});
 function draw(){
   if(!S.ext)return hub();
-  if(!FCM&&!ls.get('fcext_reg_'+S.ext,null))return cadastro();
-  if(!FCM&&ls.get('fcext_bloq_'+S.ext,0))return bloqueado();
-  if(!FCM&&!ls.get('fcext_lib_'+S.ext,0))return espera();
+  if(!FCM&&!ls.get('fcext_fcok_'+S.ext,0))return fechado();
   if(trialRest()<=0&&!FCM)return fim();
   if(S.cover)return capa();
   if(!abas().some(a=>a[0]===S.tab))S.tab='pesq';
@@ -813,7 +815,7 @@ function ligar(){
   document.querySelectorAll('[data-relu]').forEach(b=>b.onclick=()=>{S.relU=b.dataset.relu;draw()});
 }
 const voltarHub=()=>{};
-Promise.all([fetch(EQ+'indice.json?v=17',{cache:'no-cache'}).then(r=>r.json()),carregaCfg(),fetch('aprovadas.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():[]).catch(()=>[])]).then(([idx,,apr])=>{(apr||[]).forEach(a=>{const g=idx.g.find(x=>x.l===a.l&&x.k===a.k);if(g&&!g.m.some(m=>m[0]===a.m[0]&&norm(m[1])===norm(a.m[1])))g.m.push(a.m)});montar(idx);const e=QP.get('e');if(e&&EXTS[e]){setExt(e);setTimeout(sincDados,600);S.g=BY[norm('SU-001')];S.cover=true;try{if(ls.get('fcext_reg_'+e,null)&&!sessionStorage.getItem('fcext_ses_'+e)){sessionStorage.setItem('fcext_ses_'+e,'1');reg('acesso')}}catch(_){}}else if(!FCM){$('#app').innerHTML=`<section class="cover"><div class="in"><div class="lg"><img src="${LOGO}" alt="FC Consultoria em Esquadria"></div><div class="rule"></div><h1>Link de demonstrativo incompleto</h1><p>Use o link enviado pela FC Consultoria para a sua empresa.</p><p style="font-size:14px">WhatsApp (66) 9 9986-7984</p></div></section>`;return}draw();if(S.ext&&!FCM&&ls.get('fcext_lib_'+S.ext,0)){rpc('em_status',{p_ext:S.ext,p_dev:devId()}).then(st=>{if(st==='bloqueado'){ls.set('fcext_bloq_'+S.ext,1);draw()}}).catch(()=>{})}}).catch(()=>{$('#app').innerHTML='<p class="empty">Não foi possível carregar o banco de perfis. Atualize a página.</p>'});
+Promise.all([fetch(EQ+'indice.json?v=17',{cache:'no-cache'}).then(r=>r.json()),carregaCfg().then(r=>chkFC().then(()=>r)),fetch('aprovadas.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():[]).catch(()=>[])]).then(([idx,,apr])=>{(apr||[]).forEach(a=>{const g=idx.g.find(x=>x.l===a.l&&x.k===a.k);if(g&&!g.m.some(m=>m[0]===a.m[0]&&norm(m[1])===norm(a.m[1])))g.m.push(a.m)});montar(idx);const e=QP.get('e');if(e&&EXTS[e]){setExt(e);setTimeout(sincDados,600);S.g=BY[norm('SU-001')];S.cover=true;try{if(ls.get('fcext_reg_'+e,null)&&!sessionStorage.getItem('fcext_ses_'+e)){sessionStorage.setItem('fcext_ses_'+e,'1');reg('acesso')}}catch(_){}}else if(!FCM){$('#app').innerHTML=`<section class="cover"><div class="in"><div class="lg"><img src="${LOGO}" alt="FC Consultoria em Esquadria"></div><div class="rule"></div><h1>Link de demonstrativo incompleto</h1><p>Use o link enviado pela FC Consultoria para a sua empresa.</p><p style="font-size:14px">WhatsApp (66) 9 9986-7984</p></div></section>`;return}draw();if(S.ext&&!FCM&&ls.get('fcext_lib_'+S.ext,0)){rpc('em_status',{p_ext:S.ext,p_dev:devId()}).then(st=>{if(st==='bloqueado'){ls.set('fcext_bloq_'+S.ext,1);draw()}}).catch(()=>{})}}).catch(()=>{$('#app').innerHTML='<p class="empty">Não foi possível carregar o banco de perfis. Atualize a página.</p>'});
 </script>
 
 </body></html>
