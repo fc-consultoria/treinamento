@@ -251,10 +251,9 @@ label{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:4
 
 <script>
 (function(){
-const KEY='guaporesinop-portal-v2';
+const KEY='guaporesinop-portal-v3';
 const MODS=[
  {k:'cat',n:'Catálogo 3D',d:'Perfis das linhas Suprema e Gold em 3D para mostrar ao cliente.',i:'▦'},
- {k:'trein',n:'Treinamento 3D',d:'Montagem e conceitos em 3D + treinamento on-line com agenda.',i:'◈'},
  {k:'fc',n:'Solicitação com a FC',d:'Dúvidas e pedidos de suporte direto com a FC.',i:'✉'}
 ];
 const CMODS=[
@@ -270,7 +269,7 @@ const CMODS=[
 const CCOLORS={comp:'var(--brand)',dist:'#3aa0c9',conv:'#6b7fd6',pcod:'#2f8f6f',cat:'#d5604a',ori:'var(--amber)',trein:'#c98a2b',fc:'#b0627e',age:'#7a8794'};
 const cmodsAll=v=>Object.fromEntries(CMODS.map(m=>[m.k,v]));
 function seedCompras(){return [{id:'k1',nome:'João',ativo:true,mods:cmodsAll(true),ac:{comp:6,dist:9,conv:11,pcod:14,cat:4,ori:2,trein:3,fc:1,age:1},ult:day(2)}]}
-const COLORS={cat:'var(--brand)',trein:'var(--amber)',fc:'#b0627e'};
+const COLORS={cat:'var(--brand)',fc:'#b0627e'};
 const PRODS=[
  {id:'p1',c:'SU-001',n:'Trilho superior porta/janela de correr 2 folhas',l:'Linha Suprema',g:'Trilhos superiores',kg:'0,762'},
  {id:'p2',c:'SU-005',n:'Trilho superior porta/janela de correr 2 folhas com bandeira',l:'Linha Suprema',g:'Trilhos superiores',kg:'1,105'},
@@ -285,11 +284,11 @@ const PRODS=[
 ];
 function day(n){const d=new Date();d.setHours(10,0,0,0);d.setDate(d.getDate()-n);return d.toISOString()}
 function seed(){
- const v=(id,nome,ac)=>({id,nome,ativo:true,mods:{cat:true,trein:true,fc:true},ac,ult:day(Math.floor(Math.random()*3))});
+ const v=(id,nome,ac)=>({id,nome,ativo:true,mods:{cat:true,fc:true},ac,ult:day(Math.floor(Math.random()*3))});
  return {
-  modsOn:{cat:true,trein:true,fc:true},
+  modsOn:{cat:true,fc:true},
   autoCadastro:true,
-  vend:[v('v1','Carlos',{cat:34,trein:12,fc:2}),v('v2','Juliana',{cat:41,trein:18,fc:3}),v('v3','Marcos',{cat:12,trein:3,fc:0}),v('v4','Patrícia',{cat:27,trein:9,fc:1})],
+  vend:[v('v1','Carlos',{cat:34,fc:2}),v('v2','Juliana',{cat:41,fc:3}),v('v3','Marcos',{cat:12,fc:0}),v('v4','Patrícia',{cat:27,fc:1})],
   visitas:[38,44,29,51,47,22,35],
   cadDia:[2,3,1,4,2,0,1],
   clientes:[
@@ -434,19 +433,15 @@ function vVendedor(){
  ${!me.ativo?'<div class="empty" style="margin-bottom:14px">Seu acesso está pausado pelo gestor.</div>':''}
  <div class="grid mods" id="t-mods">${MODS.map(m=>{const ok=me.ativo&&me.mods[m.k]&&S.modsOn[m.k];return `
   <button class="mod ${ok?'':'locked'}" data-act="open" data-m="${m.k}" id="mod-${m.k}">
-   ${m.k==='trein'?'<span class="tag new">+ on-line</span>':''}${ok?'':'<span class="tag">🔒 bloqueado</span>'}
+   ${ok?'':'<span class="tag">🔒 bloqueado</span>'}
    <div class="ic" style="font-size:20px">${m.i}</div><h3>${m.n}</h3><p>${m.d}</p></button>`}).join('')}</div>
- <div class="grid cols2" style="margin-top:14px">
+ <div style="margin-top:14px">
   <section class="panel" id="t-meus">
    <h2>🧾 Orçamentos para você</h2><p class="sub">O cliente escolheu você no Catálogo 3D. Responda pelo canal que ele pediu.</p>
    <div class="list">${meus.length?meus.map(o=>`<div class="row"><div class="who"><b>${esc(cli(o.cli).nome)} · <span style="font-family:var(--f-mono);font-weight:500">${o.id}</span></b><span>${o.itens.length} perfil(is) · pediu retorno por ${o.canal} · ${fmtD(o.data)}</span></div>
      <span class="pill ${STAT[o.status][1]}">${STAT[o.status][0]}</span><button class="btn sm" data-act="verorc" data-id="${o.id}">Abrir</button></div>`).join(''):'<div class="empty">Nenhum orçamento ainda. Quando um cliente escolher você no Catálogo 3D, ele aparece aqui.</div>'}</div>
   </section>
-  <section class="panel" id="t-agv">
-   <h2>🗓 Treinamento on-line</h2><p class="sub">Toque em uma turma para se inscrever ou sair.</p>
-   <div class="slots">${S.slots.map(s=>{const mine=s.ins.includes(me.id),full=!mine&&s.ins.length>=s.cap;return `<button class="slot ${mine?'mine':''} ${full?'full':''}" data-act="slot" data-id="${s.id}" ${full?'disabled':''}><b>${s.d} · ${s.h}</b><span>${esc(s.tema)}</span><br><span>${mine?'✓ Inscrito':(s.cap-s.ins.length)+' vagas'}</span></button>`}).join('')}</div>
-  </section>
- </div>${chatHTML(me.id)}`;
+ </div>`;
 }
 
 /* ---------- COMPRAS ---------- */
@@ -656,7 +651,7 @@ document.addEventListener('click',e=>{
  if(a==='vmod'){const v=S.vend.find(x=>x.id===id);v.mods[t.dataset.m]=!v.mods[t.dataset.m];save();render()}
  if(a==='auto'){S.autoCadastro=!S.autoCadastro;save();render()}
  if(a==='addvend'){modal(`<h2>Cadastrar vendedor</h2><p class="sub">Ele recebe login e senha próprios.</p><div class="form"><label>Nome<input id="nvNome"></label><label>Login (e-mail ou celular)<input id="nvLogin"></label></div><div class="toolbar" style="margin-top:12px;justify-content:flex-end"><button class="btn" data-act="close">Cancelar</button><button class="btn primary" data-act="savevend">Cadastrar</button></div>`)}
- if(a==='savevend'){const n=$('#nvNome').value.trim();if(!n){toast('Informe o nome do vendedor.');return}S.vend.push({id:'v'+Date.now(),nome:n,ativo:true,mods:{cat:true,trein:true,fc:true},ac:{cat:0,trein:0,fc:0},ult:new Date().toISOString()});save();closeModal();render();toast('Vendedor cadastrado.')}
+ if(a==='savevend'){const n=$('#nvNome').value.trim();if(!n){toast('Informe o nome do vendedor.');return}S.vend.push({id:'v'+Date.now(),nome:n,ativo:true,mods:{cat:true,fc:true},ac:{cat:0,fc:0},ult:new Date().toISOString()});save();closeModal();render();toast('Vendedor cadastrado.')}
  if(a==='addslot'){modal(`<h2>Nova turma on-line</h2><div class="form"><label>Data<input id="nsD" placeholder="Ter 10/11"></label><label>Hora<input id="nsH" placeholder="14:00"></label><label>Tema<input id="nsT" placeholder="Tema do treinamento"></label><label>Vagas<input id="nsC" type="number" value="6"></label></div><div class="toolbar" style="margin-top:12px;justify-content:flex-end"><button class="btn" data-act="close">Cancelar</button><button class="btn primary" data-act="saveslot">Criar turma</button></div>`)}
  if(a==='saveslot'){const d=$('#nsD').value.trim(),h=$('#nsH').value.trim(),tm=$('#nsT').value.trim();if(!d||!h||!tm){toast('Preencha data, hora e tema.');return}S.slots.push({id:'s'+Date.now(),d,h,tema:tm,cap:+$('#nsC').value||6,ins:[]});save();closeModal();render();toast('Turma criada.')}
  if(a==='verorc')orcModal(id);
@@ -744,16 +739,14 @@ const TOURS={
   ['#t-cad','Quando um cliente se cadastra no catálogo, ele é aprovado na hora. Aqui chega o aviso, com os dados ocultos. Toque em Ver quem cadastrou para abrir o nome, a empresa e o contato.'],
   ['#bellBtn','O sino mostra quantos cadastros novos você ainda não viu.'],
   ['#t-cat','Este gráfico mede o acesso ao Catálogo 3D: visitas por dia, novos cadastros e quanto disso virou pedido de orçamento.'],
-  ['#t-eq','O medidor da equipe mostra quantas vezes cada vendedor abriu cada ferramenta. Assim você vê quem está usando o catálogo e o treinamento.'],
+  ['#t-eq','O medidor da equipe mostra quantas vezes cada vendedor abriu cada ferramenta. Assim você vê quem está usando o catálogo e a solicitação com a FC.'],
   ['#t-cmd','Em Comandos você libera ou bloqueia cada módulo por vendedor, pausa o acesso de alguém, liga ou desliga o aceite automático e cadastra vendedores novos.'],
  ],
  vendedor:[
-  ['#t-mods','Este é o painel do vendedor. São três ferramentas: Catálogo 3D, Treinamento 3D e Solicitação com a FC. Toque no cartão e depois em Abrir para entrar no módulo. Cada acesso conta no medidor do gestor.'],
+  ['#t-mods','Este é o painel do vendedor. São duas ferramentas: Catálogo 3D e Solicitação com a FC. Toque no cartão e depois em Abrir para entrar no módulo. Cada acesso conta no medidor do gestor.'],
   ['#mod-cat','Use o Catálogo 3D para mostrar ao cliente os perfis das linhas Suprema e Gold em 3D durante o atendimento.'],
   ['#mod-fc','Ficou com dúvida? Abra Solicitação com a FC e envie sua pergunta direto para o suporte.'],
   ['#t-meus','Quando o cliente se cadastra no Catálogo 3D, monta o pedido e escolhe você, o pedido cai aqui. Abra, copie o resumo e responda pelo WhatsApp ou e-mail que ele pediu. Depois marque a situação.'],
-  ['#t-agv','Na agenda de treinamento on-line, toque em uma turma para se inscrever.'],
-  ['#t-chat','Na conversa da equipe você fala individualmente com um colega, com o gestor ou com o suporte da FC. Escolha a pessoa na lista e escreva a mensagem.']
  ],
  compras:[
   ['#t-cmods','Este é o painel de Compras da Guaporé Sinop. Os módulos estão em três grupos: Compras, Treinamento e consulta, e Suporte. Toque no cartão e depois em Abrir. Cada acesso conta no medidor do gestor.'],
