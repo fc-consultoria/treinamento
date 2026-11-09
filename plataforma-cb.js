@@ -115,7 +115,6 @@ const CARD={
  pcod:'Na Pesquisa de código você encontra um perfil pelo código de qualquer fornecedor.',
  ori:'Treinamento · Orientativo abre o guia de esquadrias da Plataforma FC 3D, em outra aba: tipologias, componentes, catálogo de perfis e prova final. Entre com o seu login da plataforma.',
  esq:'Em Treinamento · Agenda on-line você vê os próximos treinamentos ao vivo com a FC, faz a inscrição e entra na hora marcada.',
- casa:'No Monte sua Casa 3D você coloca as esquadrias na planta e apresenta o projeto ao cliente.',
  dia:'Os Diagramas de pressão de vento ajudam a escolher o perfil adequado conforme a altura e a região da obra.',
  sol:'Em Solicitações com a FC você envia pedidos e dúvidas ao suporte e acompanha a resposta.',
  age:'Na Agenda da FC aparecem as visitas, os treinamentos e os compromissos da FC com a {cli}.',
