@@ -174,7 +174,7 @@ function barraVer(hero){
 
 /* 30/10/2026 · gestor: Central do Gestor e Painel da Equipe em destaque; demais ferramentas agrupadas em chips */
 const GRUPOS=[['🛒','Vendas',['orc','pcom','cat','rvi','pcod']],['📦','Compras e estoque',['sim','pla','est','conv','comp','dist']],
- ['🎓','Treinamento',['ori','esq','mos','casa','dia','e3d']],['🤝','Consultoria FC',['proc','acao','gal','dem','sol','age','mkt','div']]];
+ ['🎓','Treinamento',['ori','esq','mos','dia','e3d']],['🤝','Consultoria FC',['proc','acao','gal','dem','sol','age','mkt','div']]];
 const PAP={gestor:'Gestor',compras:'Compras',vendas:'Vendas',gerente:'Coordenação',marketing:'Marketing',fabrica:'Fábrica',estoque:'Estoque'};
 let EQ=null,EQc=false,EQab=false,EQf='';
 const quandoP=t=>{if(!t)return 'nunca entrou';const m=Math.round((Date.now()-new Date(t))/60000);if(m<60)return 'há '+Math.max(1,m)+' min';

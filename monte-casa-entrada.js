@@ -1,6 +1,6 @@
 /* ===== Monte sua Casa 3D dentro do Mostruário =====
    Botão na barra do aluno abre o jogo em tela cheia; a opinião enviada lá dentro é gravada com o nome do aluno. */
-(function(){
+(function(){if(true)return;/* Monte sua Casa inativo 09/11/2026 — apagar esta linha para religar */
   const st=document.createElement('style');st.textContent=`#mcBtn{background:#e3a33b!important;border-color:#e3a33b!important;color:#1b1205!important}
   #mcMd{position:fixed;inset:0;z-index:9400;background:#0f1418;display:flex;flex-direction:column}#mcMd[hidden]{display:none}
   #mcMd .h{display:flex;align-items:center;gap:10px;padding:8px 12px;background:#0f1418;color:#fff;font:700 15px Barlow,system-ui,sans-serif}
