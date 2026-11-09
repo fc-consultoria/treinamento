@@ -314,8 +314,8 @@ function cadastro(){const E=EXTS[S.ext];
     if(res==='limite'){return capaMsg('Limite de acessos atingido','Este demonstrativo permite até 3 acessos por empresa e a sua empresa já usou os 3. Fale com a FC para liberar mais um acesso.')}
     ls.set('fcext_reg_'+S.ext,{nome,emp,tel,termo:new Date().toISOString()});setTimeout(()=>reg('aceite_termo','termo de confidencialidade v1'),300);ls.set('fcext_regt_'+S.ext,Date.now());setTimeout(sincDados,900);try{sessionStorage.setItem('fcext_ses_'+S.ext,'1')}catch(_){}espera()};}
 const EXTS={texa:{n:'TEXA',lin:'City 2.5 · City 3.2'},selta:{n:'Selta',lin:'Linha Selta'},fbk:{n:'FBK',lin:'FASU · Gold (FLG)'},dist:{n:'Distribuidora',tipo:'dist'}};
-/* 09/11/2026 · plataformas TEXA, Selta e FBK desativadas (acesso e plataforma). Só o administrador da FC ainda abre, para consulta. Para religar: tirar a empresa desta lista. */
-const OFF=['texa','selta','fbk'];
+/* 09/11/2026 · plataformas TEXA, Selta, FBK e Distribuidora desativadas (acesso e plataforma). Só o administrador da FC ainda abre, para consulta. Para religar: tirar a empresa desta lista. */
+const OFF=['texa','selta','fbk','dist'];
 const DIST=()=>!!(S.ext&&EXTS[S.ext].tipo==='dist');
 const NAC=()=>DIST()?3:8;
 const EMP=()=>DIST()?'sua empresa':EXTS[S.ext].n;
@@ -430,7 +430,7 @@ function cfgPanel(k){if(!FCM)return '';const a=CFG[k],todos=Object.keys(DATA.for
   return `<div class="cfg"><div class="cfgh"><b>Fornecedores liberados${k==='dist'?' para as distribuidoras':' para FC &amp; '+esc(EXTS[k].n)}</b><small>${a?a.filter(f=>f!==k).length+' de '+todos.length:'todos'}</small></div>
   <div class="cfgc">${k!=='dist'?`<label class="ck on fix"><input type="checkbox" checked disabled> ${esc(FN(k))} (própria)</label>`:''}${todos.map(f=>`<label class="ck ${!a||a.includes(f)?'on':''}"><input type="checkbox" data-cf="${k}" value="${f}" ${!a||a.includes(f)?'checked':''}> ${esc(FN(f))}</label>`).join('')}</div>
   <div class="cfgf"><button type="button" class="btn sm" data-cfsave="${k}">Salvar fornecedores</button><span class="cfgm" id="cfm-${k}"></span></div></div>`}
-function card(k,e,ms,meta){return `<div class="cwrap">`+card0(k,e,ms,meta)+cfgPanel(k)+`</div>`}
+function card(k,e,ms,meta){const c0=card0(k,e,ms,meta);return `<div class="cwrap">`+(OFF.includes(k)?c0.replace('Entrar →','⛔ Desativada · só a FC abre'):c0)+cfgPanel(k)+`</div>`}
 function card0(k,e,ms,meta){return `<button class="ecard" data-ext="${k}"><div class="band"><small>${e.tipo==='dist'?'Demonstrativo para distribuidoras':'FC &amp; '+esc(e.n)}</small><b>FC &amp; ${esc(e.n)}</b></div><div class="thumbs">${ms.map(m=>`<div><img src="${esc(m.src)}" alt="${esc(m.c)}"></div>`).join('')}</div><div class="meta"><span>${meta}</span><span class="go">Entrar →</span></div></button>`}
 function hub(){
   setExt(null);
@@ -438,7 +438,7 @@ function hub(){
     for(const g of G){if(out.length===3)break;const m=g.m.find(x=>x.f===f&&x.src);if(m&&!out.includes(m))out.push(m)}return out};
   $('#app').innerHTML=`<div class="hub-top"><div class="brand"><div class="logo" style="width:72px;height:72px"><img src="${LOGO}" alt="FC Consultoria em Esquadria"></div><div><div class="eyebrow">FC Consultoria · Extrusoras</div><h1>Pesquisa / Estudo de Mercado / Comparativo</h1><p>Uma plataforma por empresa, para extrusoras e distribuidoras. A equipe pesquisa qualquer código do mercado, vê o desenho de catálogo de cada fornecedor e registra os preços que encontra no mercado.</p></div></div></div>
   <div class="eyebrow" style="margin:4px 0 10px">Extrusoras · equipe comercial</div>
-  <div class="cards">${Object.entries(EXTS).filter(([k,e])=>e.tipo!=='dist').map(([k,e])=>{const n=G.filter(g=>g.m.some(m=>m.f===k)).length;const c=card(k,e,pick(k),n+' perfis com equivalência no catálogo FC');return OFF.includes(k)?c.replace('Entrar →','⛔ Desativada · só a FC abre'):c}).join('')}</div>
+  <div class="cards">${Object.entries(EXTS).filter(([k,e])=>e.tipo!=='dist').map(([k,e])=>{const n=G.filter(g=>g.m.some(m=>m.f===k)).length;return card(k,e,pick(k),n+' perfis com equivalência no catálogo FC')}).join('')}</div>
   <div class="eyebrow" style="margin:28px 0 10px">Distribuidoras · compras e comercial</div>
   <div class="cards" style="grid-template-columns:repeat(auto-fit,minmax(260px,440px))">${card('dist',EXTS.dist,['texa','selta','fbk'].map(f=>pick(f)[0]).filter(Boolean),G.length+' perfis · todos os fornecedores')}</div>
   ${foot()}`;
