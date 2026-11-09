@@ -213,7 +213,6 @@ label{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:4
       <button data-role="gestor" aria-pressed="true">Gestor</button>
       <button data-role="vendedor" aria-pressed="false">Vendedor</button>
       <button data-role="compras" aria-pressed="false">Compras</button>
-      <button data-role="marketing" aria-pressed="false">Marketing</button>
       <button data-role="fabrica" aria-pressed="false">Fábrica</button>
       <button data-role="precif" aria-pressed="false">💲 Precificação</button>
     </div>
@@ -247,7 +246,7 @@ label{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:4
   <div class="capa-g" style="font-size:38px">CDE</div>
   <h1>CDE Vidros & Esquadrias</h1>
   <p class="capa-t">Plataforma Comercial · Catálogo 3D</p>
-  <p class="capa-s">Vendas · Compras · Central do Gestor · Marketing</p>
+  <p class="capa-s">Vendas · Compras · Fábrica · Central do Gestor</p>
   <button class="capa-btn" id="capaBtn">Entrar ▶</button>
   <div class="capa-foot"><img src="../midia/logo-fc.png" alt="FC Consultoria" class="capa-fc" onerror="this.remove()"><span>Desenvolvido por FC Consultoria em Esquadria</span></div>
  </div>
@@ -278,7 +277,7 @@ label{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:4
 (function(){
 const KEY='cde-portal-v2';
 /* Links de cada módulo (troque aqui se mudar o endereço) */
-const LINK={tipo:'https://fc-consultoria.github.io/treinamento/esquadrias/',cat:'https://fc-consultoria.github.io/treinamento/catalogo3d.html',sim:'https://fc-consultoria.github.io/treinamento/esquadrias/monte-casa.html',comp:'https://fc-consultoria.github.io/treinamento/equivalencias/comprar.html',dist:'https://fc-consultoria.github.io/treinamento/equivalencias/distribuidoras.html',mont:''};
+const LINK={tipo:'https://fc-consultoria.github.io/treinamento/esquadrias/',cat:'https://fc-consultoria.github.io/treinamento/catalogo3d.html',sim:'',comp:'https://fc-consultoria.github.io/treinamento/equivalencias/comprar.html',dist:'https://fc-consultoria.github.io/treinamento/equivalencias/distribuidoras.html',mont:''};
 const MODS=[
  {k:'tipo',n:'Tipologia',d:'Tipologias das linhas em 3D, passo a passo e desenho técnico.',i:'◈'},
  {k:'cat',n:'Catálogo 3D',d:'Perfis em 3D para mostrar ao cliente.',i:'▦'},
@@ -308,7 +307,7 @@ const GMODS=[
  {k:'comp',n:'Onde comprar',d:'Perfis nas extrusoras: quem fabrica cada linha.',i:'🛒',u:LINK.comp},
  {k:'dist',n:'Compras com distribuidoras',d:'Distribuidoras e os códigos que cada uma usa.',i:'🏬',u:LINK.dist},
  {k:'age',n:'Agenda da FC',d:'Visitas e reuniões da FC com a CDE.',i:'🗓'},
- {k:'equipe',n:'Equipe',d:'Vendedores e Compras: acessos, comandos, medidores, cadastros, orçamentos e conversas.',i:'👥'}
+ {k:'equipe',n:'Equipe',d:'Vendedores, Compras e Fábrica: acessos, comandos e orçamentos.',i:'👥'}
 ];
 const CCOLORS={comp:'var(--brand)',dist:'#3aa0c9',tipo:'#c98a2b',cat:'#d5604a',fc:'#b0627e',age:'#7a8794'};
 const cmodsAll=v=>Object.fromEntries(CMODS.map(m=>[m.k,v]));
@@ -424,7 +423,6 @@ function vGestor(){
  let orcs=S.orc.filter(o=>(fVend==='todos'||o.vend===fVend)&&(fStat==='todos'||o.status===fStat)).sort((a,b)=>b.data.localeCompare(a.data));
  const cards=`<div class="grid mods" id="t-gmods">${GMODS.map(m=>`
   <button class="mod${m.k==='equipe'?' gm-eq':''}" data-act="gopen" data-m="${m.k}" id="gmod-${m.k}" ${m.k==='equipe'?`aria-expanded="${gEquipe}"`:''}>
-   ${m.k==='equipe'&&novos?`<span class="tag new">${novos} cadastro(s) novo(s)</span>`:''}
    <div class="ic" style="font-size:20px">${m.i}</div><h3>${m.n}</h3><p>${m.d}</p>${m.k==='equipe'?`<span class="gm-mais">${gEquipe?'▲ Fechar':'▼ Abrir'}</span>`:''}</button>`).join('')}</div>`;
  const topo=`
  <span class="demo-note">Demonstração com dados de exemplo · nomes de vendedores e clientes são fictícios</span>
@@ -440,15 +438,7 @@ function vGestor(){
   <div class="kpi"><small>Visitas ao Catálogo 3D · 7 dias</small><b>${vis7}</b><em> ${S.clientes.length} clientes cadastrados</em></div>
  </div>
  <div class="grid cols2" style="grid-template-columns:repeat(auto-fit,minmax(min(420px,100%),1fr))">
-  <section class="panel" id="t-cad">
-   <div class="ph"><div><h2>🔔 Avisos de cadastro</h2><p class="sub">O cliente se cadastra no catálogo e já entra liberado. Os dados ficam ocultos até você abrir.</p></div>
-   <span class="pill ${S.autoCadastro?'ok':'novo'}">${S.autoCadastro?'Aceite automático ligado':'Aceite automático desligado'}</span></div>
-   <div class="list">${S.clientes.slice().sort((a,b)=>b.data.localeCompare(a.data)).map(c=>`
-    <div class="row"><div class="who">${showCad[c.id]?`<b>${esc(c.nome)} · ${esc(c.empresa)}</b><span>${esc(c.cidade)} · ${esc(c.tel)} · ${esc(c.email)}</span>`:`<b>Novo cliente cadastrado</b><span class="hidden-id">•••••• · ${esc(c.cidade)}</span>`}</div>
-    <span class="pill ${c.visto?'ok':'novo'}">${c.visto?'Visto':'Novo'}</span><span style="font-size:12px;color:var(--muted)">${fmtD(c.data)}</span>
-    <button class="btn sm" data-act="vercad" data-id="${c.id}">${showCad[c.id]?'Ocultar':'Ver quem cadastrou'}</button></div>`).join('')}</div>
-  </section>
-  <section class="panel" id="t-cat">
+  <section class="panel" id="t-cat" style="grid-column:1/-1">
    <h2>📈 Acesso ao Catálogo 3D da CDE</h2><p class="sub">Visitas de clientes e novos cadastros por dia.</p>
    <div class="chart">${S.visitas.map((v,i)=>`<div class="c"><small>${v+S.cadDia[i]}</small><div class="b" style="height:${(v+S.cadDia[i])/maxDay*100}%"><i style="height:${v/(v+S.cadDia[i]||1)*100}%;background:var(--brand);display:block"></i><i style="height:${S.cadDia[i]/(v+S.cadDia[i]||1)*100}%;background:var(--amber);display:block"></i></div></div>`).join('')}</div>
    <div class="days">${labels.map(l=>`<span>${l}</span>`).join('')}</div>
@@ -494,18 +484,13 @@ function vVendedor(){
  const me=S.vend.find(v=>v.id===S.me)||S.vend[0];
  return `
  <span class="demo-note">Demonstração · entrar como: <select id="meSel" style="width:auto;display:inline-block;padding:2px 6px">${S.vend.map(v=>`<option value="${v.id}" ${v.id===me.id?'selected':''}>${esc(v.nome)}</option>`).join('')}</select></span>
- <div class="hello"><div><h1>Olá, ${esc(me.nome)}</h1><p>Suas ferramentas de venda, agenda de treinamento e conversa da equipe.</p></div></div>
+ <div class="hello"><div><h1>Olá, ${esc(me.nome)}</h1><p>Suas ferramentas de venda.</p></div></div>
  ${!me.ativo?'<div class="empty" style="margin-bottom:14px">Seu acesso está pausado pelo gestor.</div>':''}
  <div class="grid mods" id="t-mods">${MODS.map(m=>{const ok=me.ativo&&me.mods[m.k]&&S.modsOn[m.k];return `
   <button class="mod ${ok?'':'locked'}" data-act="open" data-m="${m.k}" id="mod-${m.k}">
-   ${ok?'':'<span class="tag">🔒 bloqueado</span>'}
+   ${ok?(m.k==='sim'&&!LINK.sim?'<span class="tag">em preparação</span>':''):'<span class="tag">🔒 bloqueado</span>'}
    <div class="ic" style="font-size:20px">${m.i}</div><h3>${m.n}</h3><p>${m.d}</p></button>`}).join('')}</div>
- <div style="margin-top:14px">
-  <section class="panel" id="t-agv">
-   <h2>🗓 Treinamento on-line</h2><p class="sub">Toque em uma turma para se inscrever ou sair.</p>
-   <div class="slots">${S.slots.map(s=>{const mine=s.ins.includes(me.id),full=!mine&&s.ins.length>=s.cap;return `<button class="slot ${mine?'mine':''} ${full?'full':''}" data-act="slot" data-id="${s.id}" ${full?'disabled':''}><b>${s.d} · ${s.h}</b><span>${esc(s.tema)}</span><br><span>${mine?'✓ Inscrito':(s.cap-s.ins.length)+' vagas'}</span></button>`}).join('')}</div>
-  </section>
- </div>${chatHTML(me.id)}`;
+`;
 }
 
 /* ---------- COMPRAS ---------- */
@@ -725,7 +710,7 @@ function openMod(k){
  if(!(me.ativo&&me.mods[k]&&S.modsOn[k])){toast('Módulo bloqueado pelo gestor.');return}
  me.ac[k]++;me.ult=new Date().toISOString();save();
  modal(`<h2>${m.i} ${m.n}</h2><p class="sub">Acesso registrado no medidor do gestor.</p>
- <p>${k==='fc'?'Abre o canal de solicitações com a FC (suporte e dúvidas).':'Toque em Abrir para entrar no módulo. Na versão publicada ele abre direto, já com o login do vendedor.'}</p>
+ <p>${k==='fc'?'Abre o canal de solicitações com a FC (suporte e dúvidas).':k==='sim'&&!LINK.sim?'Este módulo está em preparação pela FC e logo fica disponível aqui.':'Toque em Abrir para entrar no módulo. Na versão publicada ele abre direto, já com o login do vendedor.'}</p>
  ${({tipo:LINK.tipo,cat:LINK.cat,sim:LINK.sim})[k]?`<div class="toolbar" style="justify-content:flex-end;margin-bottom:8px"><a class="btn primary" style="text-decoration:none" target="_blank" rel="noopener" href="${({cat:'https://fc-consultoria.github.io/treinamento/catalogo3d.html',trein:'https://fc-consultoria.github.io/treinamento/esquadrias/',casa:'https://fc-consultoria.github.io/treinamento/esquadrias/monte-casa.html',vento:'https://fc-consultoria.github.io/treinamento/diagramas/'})[k]}">↗ Abrir ${m.n}</a></div>`:''}${k==='fc'?`<label>Sua solicitação<textarea id="fcTxt" rows="3" placeholder="Descreva a dúvida ou pedido"></textarea></label><div class="toolbar" style="margin-top:10px;justify-content:flex-end"><button class="btn" data-act="close">Cancelar</button><button class="btn primary" data-act="fcsend">Enviar para a FC</button></div>`:`<div class="toolbar" style="justify-content:flex-end"><button class="btn primary" data-act="close">Ok</button></div>`}`);
 }
 
@@ -837,7 +822,6 @@ const TOURS={
  gestor:[
   ['#t-gmods','Esta é a Central do Gestor da CDE. Nos cartões ficam suas ferramentas: Tipologia, Catálogo 3D, Solicitação com a FC, Onde comprar, Compras com distribuidoras, Agenda da FC e Equipe.'],
   ['#t-kpis','Em Equipe ficam os números do dia: cadastros novos, orçamentos em aberto, acessos da equipe e visitas ao Catálogo 3D.'],
-  ['#t-cad','Quando um cliente se cadastra no catálogo, ele é aprovado na hora. Aqui chega o aviso, com os dados ocultos. Toque em Ver quem cadastrou para abrir o nome, a empresa e o contato.'],
   ['#bellBtn','O sino mostra quantos cadastros novos você ainda não viu.'],
   ['#t-cat','Este gráfico mede o acesso ao Catálogo 3D: visitas por dia, novos cadastros e quanto disso virou pedido de orçamento.'],
   ['#t-cmp','No setor de Compras você libera ou bloqueia cada módulo, pausa o acesso e acompanha no medidor quantas vezes cada ferramenta foi aberta.'],
@@ -850,10 +834,8 @@ const TOURS={
   ['#t-mods','Este é o painel do vendedor. São quatro ferramentas: Tipologia, Catálogo 3D, Solicitação com a FC e Simulador de obra 3D. Toque no cartão e depois em Abrir para entrar no módulo. Cada acesso conta no medidor do gestor.'],
   ['#mod-cat','Use o Catálogo 3D para mostrar ao cliente os perfis das linhas Suprema e Gold em 3D durante o atendimento.'],
   ['#mod-tipo','Na Tipologia você vê as esquadrias das linhas em 3D, passo a passo, com desenho técnico.'],
-  ['#mod-sim','No Simulador de obra 3D você coloca as esquadrias na planta e apresenta a obra ao cliente.'],
+  ['#mod-sim','O Simulador de obra 3D está em preparação pela FC e logo fica disponível aqui.'],
   ['#mod-fc','Ficou com dúvida? Abra Solicitação com a FC e envie sua pergunta direto para o suporte.'],
-  ['#t-agv','Na agenda de treinamento on-line, toque em uma turma para se inscrever.'],
-  ['#t-chat','Na conversa da equipe você fala individualmente com um colega, com o gestor ou com o suporte da FC. Escolha a pessoa na lista e escreva a mensagem.']
  ],
  compras:[
   ['#t-cmods','Este é o painel de Compras da CDE. Os módulos estão em três grupos: Compras, Consulta e Suporte. Toque no cartão e depois em Abrir. Cada acesso conta no medidor do gestor.'],
@@ -906,7 +888,6 @@ $('#tourBtn').onclick=()=>{
   <button class="row" data-tour="vendedor" style="text-align:left;cursor:pointer;color:var(--fg)"><div class="who"><b>Tutorial do Vendedor</b><span>${TOURS.vendedor.length} passos · ferramentas, orçamentos recebidos e agenda</span></div><span class="pill br">Começar</span></button>
   <button class="row" data-tour="compras" style="text-align:left;cursor:pointer;color:var(--fg)"><div class="who"><b>Tutorial do Compras</b><span>${TOURS.compras.length} passos · ferramentas de compra, códigos e agenda</span></div><span class="pill br">Começar</span></button>
   <button class="row" data-tour="fabrica" style="text-align:left;cursor:pointer;color:var(--fg)"><div class="who"><b>Tutorial da Fábrica</b><span>${TOURS.fabrica.length} passos · tipologia, catálogo, montagem e suporte</span></div></button>
-  <button class="row" data-tour="marketing" style="text-align:left;cursor:pointer;color:var(--fg)"><div class="who"><b>Tutorial do Marketing</b><span>${TOURS.marketing.length} passos · escolha dos Destaques 3D e perfis mais vistos</span></div><span class="pill br">Começar</span></button>
  </div>
  <label style="flex-direction:row;align-items:center;gap:8px;margin-top:12px;font-size:13px;color:var(--fg)"><input type="checkbox" id="tvAuto" checked style="width:auto"> Modo vídeo: avança sozinho com voz</label>
  <div class="toolbar" style="margin-top:12px;justify-content:flex-end"><button class="btn" data-act="close">Fechar</button></div>`);
