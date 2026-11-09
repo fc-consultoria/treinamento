@@ -252,12 +252,10 @@ label{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:4
 
 <script>
 (function(){
-const KEY='guaporesinop-portal-v1';
+const KEY='guaporesinop-portal-v2';
 const MODS=[
  {k:'cat',n:'Catálogo 3D',d:'Perfis das linhas Suprema e Gold em 3D para mostrar ao cliente.',i:'▦'},
  {k:'trein',n:'Treinamento 3D',d:'Montagem e conceitos em 3D + treinamento on-line com agenda.',i:'◈'},
- {k:'casa',n:'Monte sua Casa 3D',d:'Coloque as esquadrias na planta e apresente o projeto.',i:'⌂'},
- {k:'vento',n:'Diagrama de pressão de vento',d:'Consulta rápida de pressão por região e altura.',i:'≋'},
  {k:'fc',n:'Solicitação com a FC',d:'Dúvidas e pedidos de suporte direto com a FC.',i:'✉'}
 ];
 const CMODS=[
@@ -267,14 +265,13 @@ const CMODS=[
  {k:'pcod',n:'Pesquisa de código',d:'Busca no cadastro WVetro e no cadastro Guaporé Sinop.',i:'🔎',g:'Compras',u:'https://fc-consultoria.github.io/treinamento/equivalencias/pesquisa/?f=wvetro,guapore'},
  {k:'cat',n:'Catálogo 3D',d:'Perfis do catálogo da Guaporé Sinop em 3D.',i:'▦',g:'Treinamento e consulta',u:'https://fc-consultoria.github.io/catalogo/guapore-vidros'},
  {k:'trein',n:'Treinamento 3D',d:'Montagem e conceitos em 3D + turmas on-line.',i:'◈',g:'Treinamento e consulta',u:'https://fc-consultoria.github.io/treinamento/esquadrias/'},
- {k:'casa',n:'Monte sua Casa 3D',d:'Coloque as esquadrias na planta.',i:'⌂',g:'Treinamento e consulta',u:'https://fc-consultoria.github.io/treinamento/esquadrias/monte-casa.html'},
  {k:'fc',n:'Solicitação com a FC',d:'Dúvidas e pedidos de suporte direto com a FC.',i:'✉',g:'Suporte'},
  {k:'age',n:'Agenda da FC',d:'Visitas e reuniões da FC com a Guaporé Sinop.',i:'🗓',g:'Suporte'}
 ];
-const CCOLORS={comp:'var(--brand)',dist:'#3aa0c9',conv:'#6b7fd6',pcod:'#2f8f6f',cat:'#d5604a',ori:'var(--amber)',trein:'#c98a2b',casa:'#8a6bd6',fc:'#b0627e',age:'#7a8794'};
+const CCOLORS={comp:'var(--brand)',dist:'#3aa0c9',conv:'#6b7fd6',pcod:'#2f8f6f',cat:'#d5604a',ori:'var(--amber)',trein:'#c98a2b',fc:'#b0627e',age:'#7a8794'};
 const cmodsAll=v=>Object.fromEntries(CMODS.map(m=>[m.k,v]));
-function seedCompras(){return [{id:'k1',nome:'João',ativo:true,mods:cmodsAll(true),ac:{comp:6,dist:9,conv:11,pcod:14,cat:4,ori:2,trein:3,casa:1,fc:1,age:1},ult:day(2)}]}
-const COLORS={cat:'var(--brand)',trein:'var(--amber)',casa:'#6b7fd6',vento:'#3aa0c9',fc:'#b0627e'};
+function seedCompras(){return [{id:'k1',nome:'João',ativo:true,mods:cmodsAll(true),ac:{comp:6,dist:9,conv:11,pcod:14,cat:4,ori:2,trein:3,fc:1,age:1},ult:day(2)}]}
+const COLORS={cat:'var(--brand)',trein:'var(--amber)',fc:'#b0627e'};
 const PRODS=[
  {id:'p1',c:'SU-001',n:'Trilho superior porta/janela de correr 2 folhas',l:'Linha Suprema',g:'Trilhos superiores',kg:'0,762'},
  {id:'p2',c:'SU-005',n:'Trilho superior porta/janela de correr 2 folhas com bandeira',l:'Linha Suprema',g:'Trilhos superiores',kg:'1,105'},
@@ -289,11 +286,11 @@ const PRODS=[
 ];
 function day(n){const d=new Date();d.setHours(10,0,0,0);d.setDate(d.getDate()-n);return d.toISOString()}
 function seed(){
- const v=(id,nome,ac)=>({id,nome,ativo:true,mods:{cat:true,trein:true,casa:true,vento:true,fc:true},ac,ult:day(Math.floor(Math.random()*3))});
+ const v=(id,nome,ac)=>({id,nome,ativo:true,mods:{cat:true,trein:true,fc:true},ac,ult:day(Math.floor(Math.random()*3))});
  return {
-  modsOn:{cat:true,trein:true,casa:true,vento:true,fc:true},
+  modsOn:{cat:true,trein:true,fc:true},
   autoCadastro:true,
-  vend:[v('v1','Carlos',{cat:34,trein:12,casa:9,vento:4,fc:2}),v('v2','Juliana',{cat:41,trein:18,casa:15,vento:6,fc:3}),v('v3','Marcos',{cat:12,trein:3,casa:2,vento:1,fc:0}),v('v4','Patrícia',{cat:27,trein:9,casa:11,vento:3,fc:1})],
+  vend:[v('v1','Carlos',{cat:34,trein:12,fc:2}),v('v2','Juliana',{cat:41,trein:18,fc:3}),v('v3','Marcos',{cat:12,trein:3,fc:0}),v('v4','Patrícia',{cat:27,trein:9,fc:1})],
   visitas:[38,44,29,51,47,22,35],
   cadDia:[2,3,1,4,2,0,1],
   clientes:[
@@ -308,7 +305,7 @@ function seed(){
   ],
   slots:[
    {id:'s1',d:'Qui 29/10',h:'14:00',tema:'Catálogo 3D na venda',cap:6,ins:['v2']},
-   {id:'s2',d:'Ter 03/11',h:'09:00',tema:'Monte sua Casa 3D',cap:6,ins:[]},
+   {id:'s2',d:'Ter 03/11',h:'09:00',tema:'Treinamento 3D na prática',cap:6,ins:[]},
    {id:'s3',d:'Qui 05/11',h:'14:00',tema:'Pressão de vento na prática',cap:6,ins:['v1','v4']}
   ],
   sol:[],
@@ -341,7 +338,7 @@ function seedChat(){const t=(d,h)=>{const x=new Date();x.setDate(x.getDate()-d);
  {de:'v2',para:'v1',t:'Tenho sim, te passo agora.',h:t(1,9)},
  {de:'gestor',para:'v1',t:'Carlos, o pedido O-1032 da Sandra é seu. Retorno hoje, por favor.',h:t(0,8)},
  {de:'v1',para:'gestor',t:'Combinado, já estou montando.',h:t(0,8)},
- {de:'v4',para:'fc',t:'Como mostro o Monte sua Casa 3D no celular do cliente?',h:t(0,10)},
+ {de:'v4',para:'fc',t:'Como mostro o Catálogo 3D no celular do cliente?',h:t(0,10)},
  {de:'fc',para:'v4',t:'Abra pelo cartão e gire o celular na horizontal. Qualquer dúvida, chame aqui.',h:t(0,10)}
 ]}
 if(!S.chat)S.chat=seedChat();
@@ -666,7 +663,7 @@ function openMod(k){
  me.ac[k]++;me.ult=new Date().toISOString();save();
  modal(`<h2>${m.i} ${m.n}</h2><p class="sub">Acesso registrado no medidor do gestor.</p>
  <p>${k==='trein'?'Abre o Treinamento 3D. As turmas on-line ficam na agenda logo abaixo dos cartões.':k==='fc'?'Abre o canal de solicitações com a FC (suporte e dúvidas).':'Toque em Abrir para entrar no módulo. Na versão publicada ele abre direto, já com o login do vendedor.'}</p>
- ${({cat:'https://fc-consultoria.github.io/catalogo/guapore-vidros',trein:'https://fc-consultoria.github.io/treinamento/esquadrias/',casa:'https://fc-consultoria.github.io/treinamento/esquadrias/monte-casa.html',vento:'https://fc-consultoria.github.io/treinamento/diagramas/'})[k]?`<div class="toolbar" style="justify-content:flex-end;margin-bottom:8px"><a class="btn primary" style="text-decoration:none" target="_blank" rel="noopener" href="${({cat:'https://fc-consultoria.github.io/catalogo/guapore-vidros',trein:'https://fc-consultoria.github.io/treinamento/esquadrias/',casa:'https://fc-consultoria.github.io/treinamento/esquadrias/monte-casa.html',vento:'https://fc-consultoria.github.io/treinamento/diagramas/'})[k]}">↗ Abrir ${m.n}</a></div>`:''}${k==='fc'?`<label>Sua solicitação<textarea id="fcTxt" rows="3" placeholder="Descreva a dúvida ou pedido"></textarea></label><div class="toolbar" style="margin-top:10px;justify-content:flex-end"><button class="btn" data-act="close">Cancelar</button><button class="btn primary" data-act="fcsend">Enviar para a FC</button></div>`:`<div class="toolbar" style="justify-content:flex-end"><button class="btn primary" data-act="close">Ok</button></div>`}`);
+ ${({cat:'https://fc-consultoria.github.io/catalogo/guapore-vidros',trein:'https://fc-consultoria.github.io/treinamento/esquadrias/'})[k]?`<div class="toolbar" style="justify-content:flex-end;margin-bottom:8px"><a class="btn primary" style="text-decoration:none" target="_blank" rel="noopener" href="${({cat:'https://fc-consultoria.github.io/catalogo/guapore-vidros',trein:'https://fc-consultoria.github.io/treinamento/esquadrias/'})[k]}">↗ Abrir ${m.n}</a></div>`:''}${k==='fc'?`<label>Sua solicitação<textarea id="fcTxt" rows="3" placeholder="Descreva a dúvida ou pedido"></textarea></label><div class="toolbar" style="margin-top:10px;justify-content:flex-end"><button class="btn" data-act="close">Cancelar</button><button class="btn primary" data-act="fcsend">Enviar para a FC</button></div>`:`<div class="toolbar" style="justify-content:flex-end"><button class="btn primary" data-act="close">Ok</button></div>`}`);
 }
 
 document.addEventListener('click',e=>{
@@ -681,7 +678,7 @@ document.addEventListener('click',e=>{
  if(a==='vmod'){const v=S.vend.find(x=>x.id===id);v.mods[t.dataset.m]=!v.mods[t.dataset.m];save();render()}
  if(a==='auto'){S.autoCadastro=!S.autoCadastro;save();render()}
  if(a==='addvend'){modal(`<h2>Cadastrar vendedor</h2><p class="sub">Ele recebe login e senha próprios.</p><div class="form"><label>Nome<input id="nvNome"></label><label>Login (e-mail ou celular)<input id="nvLogin"></label></div><div class="toolbar" style="margin-top:12px;justify-content:flex-end"><button class="btn" data-act="close">Cancelar</button><button class="btn primary" data-act="savevend">Cadastrar</button></div>`)}
- if(a==='savevend'){const n=$('#nvNome').value.trim();if(!n){toast('Informe o nome do vendedor.');return}S.vend.push({id:'v'+Date.now(),nome:n,ativo:true,mods:{cat:true,trein:true,casa:true,vento:true,fc:true},ac:{cat:0,trein:0,casa:0,vento:0,fc:0},ult:new Date().toISOString()});save();closeModal();render();toast('Vendedor cadastrado.')}
+ if(a==='savevend'){const n=$('#nvNome').value.trim();if(!n){toast('Informe o nome do vendedor.');return}S.vend.push({id:'v'+Date.now(),nome:n,ativo:true,mods:{cat:true,trein:true,fc:true},ac:{cat:0,trein:0,fc:0},ult:new Date().toISOString()});save();closeModal();render();toast('Vendedor cadastrado.')}
  if(a==='addslot'){modal(`<h2>Nova turma on-line</h2><div class="form"><label>Data<input id="nsD" placeholder="Ter 10/11"></label><label>Hora<input id="nsH" placeholder="14:00"></label><label>Tema<input id="nsT" placeholder="Tema do treinamento"></label><label>Vagas<input id="nsC" type="number" value="6"></label></div><div class="toolbar" style="margin-top:12px;justify-content:flex-end"><button class="btn" data-act="close">Cancelar</button><button class="btn primary" data-act="saveslot">Criar turma</button></div>`)}
  if(a==='saveslot'){const d=$('#nsD').value.trim(),h=$('#nsH').value.trim(),tm=$('#nsT').value.trim();if(!d||!h||!tm){toast('Preencha data, hora e tema.');return}S.slots.push({id:'s'+Date.now(),d,h,tema:tm,cap:+$('#nsC').value||6,ins:[]});save();closeModal();render();toast('Turma criada.')}
  if(a==='verorc')orcModal(id);
@@ -769,7 +766,7 @@ const TOURS={
   ['#t-cad','Quando um cliente se cadastra no catálogo, ele é aprovado na hora. Aqui chega o aviso, com os dados ocultos. Toque em Ver quem cadastrou para abrir o nome, a empresa e o contato.'],
   ['#bellBtn','O sino mostra quantos cadastros novos você ainda não viu.'],
   ['#t-cat','Este gráfico mede o acesso ao Catálogo 3D: visitas por dia, novos cadastros e quanto disso virou pedido de orçamento.'],
-  ['#t-eq','O medidor da equipe mostra quantas vezes cada vendedor abriu cada ferramenta. Assim você vê quem está usando o catálogo, o treinamento e o Monte sua Casa.'],
+  ['#t-eq','O medidor da equipe mostra quantas vezes cada vendedor abriu cada ferramenta. Assim você vê quem está usando o catálogo e o treinamento.'],
   ['#t-cmp','No setor de Compras você libera ou bloqueia cada módulo, pausa o acesso e acompanha no medidor quantas vezes cada ferramenta foi aberta.'],
   ['#t-cmd','Em Comandos você libera ou bloqueia cada módulo por vendedor, pausa o acesso de alguém, liga ou desliga o aceite automático e cadastra vendedores novos.'],
   ['#t-orc','Aqui estão todos os orçamentos que os clientes pediram, com o vendedor escolhido. Filtre por vendedor ou situação, abra um pedido e, se precisar, transfira para outro vendedor.'],
@@ -777,9 +774,8 @@ const TOURS={
   ['#t-hist','Por fim, o histórico das conversas da equipe. As conversas são individuais, e você acompanha todas aqui, só para leitura.']
  ],
  vendedor:[
-  ['#t-mods','Este é o painel do vendedor. São cinco ferramentas: Catálogo 3D, Treinamento 3D, Monte sua Casa 3D, Diagrama de pressão de vento e Solicitação com a FC. Toque no cartão e depois em Abrir para entrar no módulo. Cada acesso conta no medidor do gestor.'],
+  ['#t-mods','Este é o painel do vendedor. São três ferramentas: Catálogo 3D, Treinamento 3D e Solicitação com a FC. Toque no cartão e depois em Abrir para entrar no módulo. Cada acesso conta no medidor do gestor.'],
   ['#mod-cat','Use o Catálogo 3D para mostrar ao cliente os perfis das linhas Suprema e Gold em 3D durante o atendimento.'],
-  ['#mod-casa','No Monte sua Casa 3D você coloca as esquadrias na planta e apresenta o projeto ao cliente.'],
   ['#mod-fc','Ficou com dúvida? Abra Solicitação com a FC e envie sua pergunta direto para o suporte.'],
   ['#t-meus','Quando o cliente se cadastra no Catálogo 3D, monta o pedido e escolhe você, o pedido cai aqui. Abra, copie o resumo e responda pelo WhatsApp ou e-mail que ele pediu. Depois marque a situação.'],
   ['#t-agv','Na agenda de treinamento on-line, toque em uma turma para se inscrever.'],
