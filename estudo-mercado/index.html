@@ -314,6 +314,8 @@ function cadastro(){const E=EXTS[S.ext];
     if(res==='limite'){return capaMsg('Limite de acessos atingido','Este demonstrativo permite até 3 acessos por empresa e a sua empresa já usou os 3. Fale com a FC para liberar mais um acesso.')}
     ls.set('fcext_reg_'+S.ext,{nome,emp,tel,termo:new Date().toISOString()});setTimeout(()=>reg('aceite_termo','termo de confidencialidade v1'),300);ls.set('fcext_regt_'+S.ext,Date.now());setTimeout(sincDados,900);try{sessionStorage.setItem('fcext_ses_'+S.ext,'1')}catch(_){}espera()};}
 const EXTS={texa:{n:'TEXA',lin:'City 2.5 · City 3.2'},selta:{n:'Selta',lin:'Linha Selta'},fbk:{n:'FBK',lin:'FASU · Gold (FLG)'},dist:{n:'Distribuidora',tipo:'dist'}};
+/* 09/11/2026 · plataformas TEXA, Selta e FBK desativadas (acesso e plataforma). Só o administrador da FC ainda abre, para consulta. Para religar: tirar a empresa desta lista. */
+const OFF=['texa','selta','fbk'];
 const DIST=()=>!!(S.ext&&EXTS[S.ext].tipo==='dist');
 const NAC=()=>DIST()?3:8;
 const EMP=()=>DIST()?'sua empresa':EXTS[S.ext].n;
@@ -436,11 +438,9 @@ function hub(){
     for(const g of G){if(out.length===3)break;const m=g.m.find(x=>x.f===f&&x.src);if(m&&!out.includes(m))out.push(m)}return out};
   $('#app').innerHTML=`<div class="hub-top"><div class="brand"><div class="logo" style="width:72px;height:72px"><img src="${LOGO}" alt="FC Consultoria em Esquadria"></div><div><div class="eyebrow">FC Consultoria · Extrusoras</div><h1>Pesquisa / Estudo de Mercado / Comparativo</h1><p>Uma plataforma por empresa, para extrusoras e distribuidoras. A equipe pesquisa qualquer código do mercado, vê o desenho de catálogo de cada fornecedor e registra os preços que encontra no mercado.</p></div></div></div>
   <div class="eyebrow" style="margin:4px 0 10px">Extrusoras · equipe comercial</div>
-  <div class="cards">${Object.entries(EXTS).filter(([k,e])=>e.tipo!=='dist').map(([k,e])=>{const n=G.filter(g=>g.m.some(m=>m.f===k)).length;return card(k,e,pick(k),n+' perfis com equivalência no catálogo FC')}).join('')}</div>
-  <div class="lic"><div><small>Teste</small><br><b>4 dias</b></div><div><small>Licença anual · condição de lançamento</small><br><b>R$ 7.000</b> · até 8 acessos</div><div><small>Renovação</small><br><b>R$ 5.000</b>/ano</div><div><small>Pagamento</small><br><b>até 2x</b> no cartão</div></div>
+  <div class="cards">${Object.entries(EXTS).filter(([k,e])=>e.tipo!=='dist').map(([k,e])=>{const n=G.filter(g=>g.m.some(m=>m.f===k)).length;const c=card(k,e,pick(k),n+' perfis com equivalência no catálogo FC');return OFF.includes(k)?c.replace('Entrar →','⛔ Desativada · só a FC abre'):c}).join('')}</div>
   <div class="eyebrow" style="margin:28px 0 10px">Distribuidoras · compras e comercial</div>
   <div class="cards" style="grid-template-columns:repeat(auto-fit,minmax(260px,440px))">${card('dist',EXTS.dist,['texa','selta','fbk'].map(f=>pick(f)[0]).filter(Boolean),G.length+' perfis · todos os fornecedores')}</div>
-  <div class="lic"><div><small>Teste</small><br><b>4 dias</b></div><div><small>Licença anual · condição de lançamento</small><br><b>R$ 7.000</b> · até 3 acessos</div><div><small>Renovação</small><br><b>R$ 5.000</b>/ano</div><div><small>Pagamento</small><br><b>até 2x</b> no cartão</div></div>
   ${foot()}`;
   document.querySelectorAll('[data-cf]').forEach(c=>c.onchange=()=>c.closest('.ck').classList.toggle('on',c.checked));
   document.querySelectorAll('[data-cfsave]').forEach(b=>b.onclick=()=>salvaCfg(b.dataset.cfsave));
@@ -478,7 +478,9 @@ document.addEventListener('contextmenu',e=>{if(S&&S.ext&&!e.target.closest('inpu
 document.addEventListener('dragstart',e=>{if(e.target.tagName==='IMG')e.preventDefault()});
 document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&['s','p','u'].includes((e.key||'').toLowerCase())&&S&&S.ext){e.preventDefault();toast('Conteúdo confidencial · FC Consultoria')}});
 function draw(){
+  if(!S.ext&&!FCM){$('#app').innerHTML='<p class="empty">O Estudo de Mercado é apresentado pela FC Consultoria. Fale com a FC pelo WhatsApp oficial (66) 9 9986-7984.</p>';return}
   if(!S.ext)return hub();
+  if(OFF.includes(S.ext)&&!FCM)return capaMsg('Plataforma desativada','Esta plataforma foi desativada pela FC Consultoria. Para falar com a FC, use o WhatsApp oficial (66) 9 9986-7984.','');
   if(window.EM_SEMCHAVE&&!FCM&&!S.ext){$('#app').innerHTML='<p class="empty">O Estudo de Mercado é liberado pela FC Consultoria. Fale com a FC pelo WhatsApp (66) 9 9986-7984.</p>';return}
   if(!FCM&&(!ls.get('fcext_fcok_'+S.ext,0)||window.EM_SEMCHAVE))return fechado();
   if(trialRest()<=0&&!FCM)return fim();
