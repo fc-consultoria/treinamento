@@ -507,10 +507,7 @@ function vCompras(){
   <button class="mod ${ok?'':'locked'}" data-act="copen" data-m="${m.k}" id="cmod-${m.k}">
    ${ok?'':'<span class="tag">🔒 bloqueado</span>'}
    <div class="ic" style="font-size:20px">${m.i}</div><h3>${m.n}</h3><p>${m.d}</p></button>`}).join('')}</div>`).join('')}</div>
- <section class="panel" id="t-cagv" style="margin-top:14px">
-  <h2>🗓 Treinamento on-line</h2><p class="sub">Toque em uma turma para se inscrever ou sair.</p>
-  <div class="slots">${S.slots.map(s=>{const mine=s.ins.includes(me.id),full=!mine&&s.ins.length>=s.cap;return `<button class="slot ${mine?'mine':''} ${full?'full':''}" data-act="slot" data-id="${s.id}" ${full?'disabled':''}><b>${s.d} · ${s.h}</b><span>${esc(s.tema)}</span><br><span>${mine?'✓ Inscrito':(s.cap-s.ins.length)+' vagas'}</span></button>`}).join('')}</div>
- </section>${chatHTML(me.id)}`;
+`;
 }
 function openModG(k){
  const m=GMODS.find(x=>x.k===k);
@@ -844,8 +841,6 @@ const TOURS={
   ['#cmod-tipo','Na Tipologia você consulta as esquadrias das linhas em 3D, com desenho técnico.'],
   ['#cmod-age','Na Agenda da FC aparecem as visitas e reuniões marcadas com a CDE.'],
   ['#cmod-fc','Ficou com dúvida? Abra Solicitação com a FC e envie sua pergunta direto para o suporte.'],
-  ['#t-cagv','Na agenda de treinamento on-line, toque em uma turma para se inscrever.'],
-  ['#t-chat','Na conversa da equipe você fala individualmente com o gestor, com os vendedores ou com o suporte da FC.']
  ],
  cliente:[
   ['#t-prods','Esta é a visão do cliente no Catálogo 3D. Ele escolhe a esquadria e informa largura, altura, quantidade e cor.'],
