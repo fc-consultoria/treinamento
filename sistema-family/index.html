@@ -302,7 +302,7 @@ body.visit #waBtn.has{display:inline-flex}
 <!-- LINHAS -->
 <section class="view" id="v-linhas">
   <div class="hero">
-    <div class="eyebrow">Lançamento · Linha Family by Arkial</div>
+    <div class="eyebrow">Sistema Family · Arkial</div>
     <h1>Três linhas.<br><b>Uma família.</b></h1>
     <p>Gire o corte, escolha a linha e veja cada perfil real do catálogo Arkial. Toque em um perfil para ver o código e o peso por metro.</p>
   </div>
@@ -497,7 +497,7 @@ const ORDER=['25','32','M'];
 /* ===== Ficha técnica · informações técnicas Arkial (apresentações das linhas, nov/2026) ===== */
 const TECH={
  '25':{lema:'Simplicidade e desempenho.',
-  intro:'Sistema para portas e janelas de correr em estilo moderno, com reduzido número de perfis, versatilidade e simplicidade na fabricação.',
+  intro:'Estilo moderno, com reduzido número de perfis, versatilidade e simplicidade na fabricação.',
   nums:[['7','perfis na janela de correr'],['4','perfis no maxim-ar'],['32 dB','de atenuação acústica'],['180 kg','roldanas no canal CE20 (elevador até 120 kg)']],
   grupos:[
    ['Contramarco',['Perfil único, para instalar em diversos tipos de estrutura.','Dimensionado para minimizar infiltrações entre contramarco e soleira.','Canto unido por conexão tipo gancho, facilitando montagem e vedação do canto.']],
@@ -509,7 +509,7 @@ const TECH={
       3:'Arkial: drenagem por válvulas unidirecionais embaixo do marco; roldanas até 180 kg no canal CE20.',
       5:'Arkial: canal europeu CE20 aceita fechos e cremonas multiponto de diversos fornecedores.'}},
  '32':{lema:'Harmonia e desempenho.',
-  intro:'Sistema para portas de correr em estilo moderno, com reduzido número de perfis, versatilidade e simplicidade na fabricação.',
+  intro:'Estilo moderno, com reduzido número de perfis, versatilidade e simplicidade na fabricação.',
   nums:[['29 mm','de desnível no marco'],['23 mm','de montante central'],['180 kg','roldanas no canal CE20'],['120 kg','com sistema elevador']],
   grupos:[
    ['Contramarco',['Perfil único, para instalar em diversos tipos de estrutura.','Dimensionado para minimizar infiltrações entre contramarco e soleira.','Canto unido por conexão tipo gancho.']],
@@ -534,7 +534,7 @@ const TECH={
       3:'Arkial: drenagem em várias câmaras, grelha anodizada removível e ligação direta à rede pluvial.'}}
 };
 function fichaHTML(k){const l=LINES[k],t=TECH[k];if(!t)return '';
-  return `<div class="eyebrow">Ficha técnica · Sistema Family</div><h2 id="mFichaT">${l.name}</h2><p style="margin:0 0 4px;color:var(--ink,#fff);font-weight:600">${t.lema}</p><p style="margin:0 0 12px">${t.intro}</p>
+  return `<div class="eyebrow">Sistema Family · Ficha técnica</div><h2 id="mFichaT">${l.name}</h2><p style="margin:0 0 4px;color:var(--ink,#fff);font-weight:600">${t.lema}</p><p style="margin:0 0 12px">${t.intro}</p>
   <div class="fnums">${t.nums.map(n=>`<div><b>${n[0]}</b><span>${n[1]}</span></div>`).join('')}</div>
   ${t.grupos.map(g=>`<h3 class="fg">${g[0]}</h3><ul class="fl">${g[1].map(x=>`<li>${x}</li>`).join('')}</ul>`).join('')}
   <p class="note" style="margin-top:12px">Fonte: informações técnicas Arkial. Confirme medidas, pesos e desempenho com o fabricante.</p>`}
@@ -1218,7 +1218,7 @@ const evOv=document.getElementById('evOv');
 const SCENES=[];
 function evScene(dur,enter,text){SCENES.push({dur,enter,text})}
 function revTxt(){return BRAND.revenda?`${BRAND.revenda} ${BRAND.revendaSub} apresenta`:'Arkial apresenta'}
-evScene(9,()=>{evHero()},()=>[revTxt(),'Linha <b>Family</b>','Sistemas de alumínio Arkial para arquitetura e construção. Três linhas, um mesmo cuidado no perfil.']);
+evScene(9,()=>{evHero()},()=>[revTxt(),'Sistema <b>Family</b>','Sistemas de alumínio Arkial para arquitetura e construção. Três linhas, um mesmo cuidado no perfil.']);
 ORDER.forEach(k=>{
   const l=LINES[k];
   evScene(8,()=>{evCorte(k)},()=>[l.name,k==='M'?'<b>Minimalista</b>':`Folha de <b>${l.num} mm</b>`,`Perfil real do catálogo: ${l.marco} ${P[k][l.marco].d.toLowerCase()} e ${l.folha} ${P[k][l.folha].d.toLowerCase()}.`]);
@@ -1455,9 +1455,9 @@ function brandHTML(){return (BRAND.revenda?`<div class="cde">${BRAND.revenda}<sm
   `<img class="fam" src="${window.__LOGO_FAM}" alt="Family by Texa"><span class="sep"></span><img class="ark" src="${window.__LOGO_ARK}" alt="Arkial">`}
 document.getElementById('brandTop').innerHTML=brandHTML();
 document.getElementById('bFicha').onclick=()=>openFicha(cur);
-{const wa=document.getElementById('waBtn');const n=(BRAND.whatsapp||'').replace(/\D/g,'');if(n){wa.href='https://wa.me/55'+n+'?text='+encodeURIComponent('Olá! Vi a Linha Family no lançamento e quero um orçamento.');wa.classList.add('has')}wa.textContent='Falar com a '+(BRAND.revenda||'Arkial')}document.getElementById('brandEv').innerHTML=brandHTML();
+{const wa=document.getElementById('waBtn');const n=(BRAND.whatsapp||'').replace(/\D/g,'');if(n){wa.href='https://wa.me/55'+n+'?text='+encodeURIComponent('Olá! Conheci o Sistema Family em 3D e quero um orçamento.');wa.classList.add('has')}wa.textContent='Falar com a '+(BRAND.revenda||'Arkial')}document.getElementById('brandEv').innerHTML=brandHTML();
 document.querySelectorAll('.revName').forEach(s=>s.textContent=BRAND.revenda?`${BRAND.revenda} ${BRAND.revendaSub}`:'Arkial');
-document.getElementById('leadE').textContent=(BRAND.revenda?BRAND.revenda+' · ':'')+'Lançamento Linha Family';
+document.getElementById('leadE').textContent=(BRAND.revenda?BRAND.revenda+' · ':'')+'Sistema Family';
 
 /* ================= LOOP ================= */
 function resize(){const w=stage.clientWidth,h=stage.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()}
