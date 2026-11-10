@@ -196,6 +196,7 @@ table.cut td.n{text-align:right}
 #evbar i{display:block;height:100%;width:0;background:var(--copper)}
 #evctl{position:fixed;z-index:6;right:max(16px,env(safe-area-inset-right,0px));top:84px;display:flex;gap:6px;opacity:.15;transition:opacity .3s}
 #evctl:hover{opacity:1}
+#evSom.on{color:#7fdcff;border-color:#7fdcff}
 body.evento .top,body.evento .foot{opacity:0;transition:opacity .5s}
 body.evento .brandev{display:flex}
 body.visit nav a[data-v=evento],body.visit nav a[data-v=qr]{display:none}
@@ -393,7 +394,7 @@ body.visit #waBtn.has{display:inline-flex}
 <section class="view" id="v-evento">
   <div class="ov" id="evOv"><div class="eyebrow" id="evE"></div><h1 id="evH"></h1><p id="evP"></p></div>
   <div class="panel" id="evqr"><div class="q" id="evqrc"></div><div class="t">Aponte o celular</div><div class="note" style="margin:2px 0 0">e veja a Family na sua mão</div></div>
-  <div id="evctl"><button class="btn" id="evPrev" aria-label="Cena anterior">◀</button><button class="btn" id="evPlay">Pausar</button><button class="btn" id="evNext" aria-label="Próxima cena">▶</button><button class="btn" id="evFull">Tela cheia</button><a class="btn" href="#linhas" style="text-decoration:none">Sair</a></div>
+  <div id="evctl"><button class="btn" id="evPrev" aria-label="Cena anterior">◀</button><button class="btn" id="evPlay">Pausar</button><button class="btn" id="evNext" aria-label="Próxima cena">▶</button><button class="btn" id="evSom" aria-label="Trilha sonora" aria-pressed="false">♪ Som</button><button class="btn" id="evFull">Tela cheia</button><a class="btn" href="#linhas" style="text-decoration:none">Sair</a></div>
   <div id="evbar"><i id="evbarI"></i></div>
   <div id="xlab" aria-hidden="true"><svg id="xlabS"></svg><div class="xtag">RAIO-X</div></div>
 </section>
@@ -1176,7 +1177,7 @@ function evGoto(i){ev.i=(i+SCENES.length)%SCENES.length;ev.s=performance.now();e
   document.getElementById('evqr').classList.toggle('on',ev.i===SCENES.length-1||ev.i===0);
   SCENES[ev.i].enter();evText()}
 function startEvent(){ev.on=true;ev.paused=false;document.getElementById('evPlay').textContent='Pausar';makeQR(document.getElementById('evqrc'),150);evGoto(0)}
-function stopEvent(){if(!ev.on)return;ev.on=false;state.spin=false;cycleColors=false;if(corteGroup){scene.remove(corteGroup);corteGroup=null;state.mode='janela'}}
+function stopEvent(){if(!ev.on)return;ev.on=false;sndStop();state.spin=false;cycleColors=false;if(corteGroup){scene.remove(corteGroup);corteGroup=null;state.mode='janela'}}
 let cycleColors=false,evSpin=0;
 function evHero(qr){
   root.visible=false;if(corteGroup){scene.remove(corteGroup);corteGroup=null}
@@ -1263,7 +1264,7 @@ function evRaioX(k){
   scan.position.set(-LEN/2-40,sz.y/2-20,Dm/2-Dm/2);scan.visible=false;g.add(scan);
   g.rotation.y=-0.62;scene.add(g);corteGroup=g;
   g.userData.parts=[];
-  g.userData.xray={t0:performance.now(),LEN,scan,anchors,built:false};
+  g.userData.xray={t0:performance.now(),LEN,scan,anchors,built:false,woosh:false,pinged:{}};
   if(isMob())camTo(new THREE.Vector3(0.0,0.3,1.2),new THREE.Vector3(-0.04,0.06,0),true,1.6);else camTo(new THREE.Vector3(-0.06,0.25,0.66),new THREE.Vector3(-0.13,0.1,0),true,1.6);evSpin=0;
 }
 const xlab=document.getElementById('xlab'),xlabS=document.getElementById('xlabS');
@@ -1285,6 +1286,7 @@ function updXray(now){
   g.rotation.y=-0.62+0.22*Math.sin(t*0.35);
   g.updateMatrixWorld(true);setXPlanes(g,sx);
   X.scan.visible=sx>s0+2;X.scan.position.x=sx;
+  if(!X.woosh&&t>=1.6&&t<3){X.woosh=true;sndWhoosh(2.8)}
   xScanM.opacity=0.18+0.1*Math.sin(t*6);
   // rótulos
   if(!X.built){X.built=true;xlab.querySelectorAll('.xl').forEach(e=>e.remove());
@@ -1302,14 +1304,68 @@ function updXray(now){
   order.forEach((i,j)=>{const a=X.anchors[i];const show=mob?(t>4.6&&t<dur-1.6&&i===mi%n):(t>4.6+i*0.75&&t<dur-1.6);
     const ly=mob?H*0.2:yTop+(yBot-yTop)*(n>1?j/(n-1):0.5);
     a.el.style.left=colX+'px';a.el.style.top=ly+'px';a.el.classList.toggle('on',show);
+    if(show&&!X.pinged[mob?mi:i]){X.pinged[mob?mi:i]=1;sndPing()}
     if(show){const [px,py]=pts[i];svg+=`<line x1="${colX+2}" y1="${ly}" x2="${px}" y2="${py}"/><circle cx="${px}" cy="${py}" r="3.5"/>`}
   });
   xlabS.innerHTML=svg;
 }
+
+/* ---------- Trilha sonora (gerada no navegador, original) ---------- */
+const snd={ctx:null,on:false,master:null,timer:null,next:0,step:0,noise:null,wet:null};
+const midi=n=>440*Math.pow(2,(n-69)/12);
+// Am9 · Fmaj7 · C(add9) · G6 — 2 compassos cada, 92 bpm
+const SCH=[{r:45,p:[57,60,64,67,71]},{r:41,p:[57,60,64,65,69]},{r:48,p:[55,60,62,64,67]},{r:43,p:[55,59,62,64,66]}];
+const BPM=92,SPB=60/BPM,STEP=SPB/2; // colcheias
+function sndInit(){
+  if(snd.ctx)return;const C=window.AudioContext||window.webkitAudioContext;if(!C)return;
+  const c=snd.ctx=new C();
+  const comp=c.createDynamicsCompressor();comp.threshold.value=-18;comp.ratio.value=3;comp.connect(c.destination);
+  snd.master=c.createGain();snd.master.gain.value=0;snd.master.connect(comp);
+  const d=c.createDelay(1);d.delayTime.value=STEP*3;const fb=c.createGain();fb.gain.value=.38;const lp=c.createBiquadFilter();lp.type='lowpass';lp.frequency.value=2600;
+  d.connect(lp);lp.connect(fb);fb.connect(d);lp.connect(snd.master);snd.wet=c.createGain();snd.wet.gain.value=.6;snd.wet.connect(d);
+  const b=c.createBuffer(1,c.sampleRate*2,c.sampleRate);const ch=b.getChannelData(0);for(let i=0;i<ch.length;i++)ch[i]=Math.random()*2-1;snd.noise=b;
+}
+function senv(g,t,a,peak,dec,src){g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(peak,t+a);g.gain.exponentialRampToValueAtTime(0.0001,t+a+dec);return t+a+dec+.05}
+function spad(chord,t,len){const c=snd.ctx;
+  const f=c.createBiquadFilter();f.type='lowpass';f.frequency.setValueAtTime(500,t);f.frequency.linearRampToValueAtTime(1300,t+len*0.5);f.frequency.linearRampToValueAtTime(600,t+len);f.Q.value=.7;
+  const g=c.createGain();g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(.05,t+1.4);g.gain.setValueAtTime(.05,t+len-0.6);g.gain.linearRampToValueAtTime(0.0001,t+len+1.2);
+  f.connect(g);g.connect(snd.master);
+  chord.p.slice(0,4).forEach(n=>[-6,6].forEach(dt=>{const o=c.createOscillator();o.type='sawtooth';o.frequency.value=midi(n);o.detune.value=dt;o.connect(f);o.start(t);o.stop(t+len+1.3)}));
+}
+function bass(n,t){const c=snd.ctx;const o=c.createOscillator();o.type='sine';o.frequency.value=midi(n);const g=c.createGain();o.connect(g);g.connect(snd.master);o.start(t);o.stop(senv(g,t,.02,.22,SPB*1.6))}
+function pluck(n,t,v){const c=snd.ctx;const o=c.createOscillator();o.type='triangle';o.frequency.value=midi(n);const g=c.createGain();o.connect(g);g.connect(snd.master);g.connect(snd.wet);o.start(t);o.stop(senv(g,t,.008,v,.55))}
+function kick(t){const c=snd.ctx;const o=c.createOscillator();o.type='sine';o.frequency.setValueAtTime(120,t);o.frequency.exponentialRampToValueAtTime(42,t+.18);const g=c.createGain();o.connect(g);g.connect(snd.master);o.start(t);o.stop(senv(g,t,.004,.28,.3))}
+function hat(t,v){const c=snd.ctx;const s=c.createBufferSource();s.buffer=snd.noise;const f=c.createBiquadFilter();f.type='highpass';f.frequency.value=7500;const g=c.createGain();s.connect(f);f.connect(g);g.connect(snd.master);s.start(t,Math.random());s.stop(senv(g,t,.002,v,.05))}
+const ARP=[0,2,1,3,2,4,3,1];
+function sndSchedule(){const c=snd.ctx;
+  while(snd.next<c.currentTime+0.35){
+    const t=snd.next,k=snd.step,bar=Math.floor(k/8),pos=k%8,ci=Math.floor(bar/2)%SCH.length,chd=SCH[ci],sec=Math.floor(bar/8)%2;
+    if(pos===0&&bar%2===0)spad(chd,t,SPB*8);
+    if(pos===0||pos===4)bass(chd.r,t);
+    if(pos===6&&bar%2===1)bass(chd.r+7,t);
+    if(bar>=4){if(pos%2===0)kick(t);hat(t,pos%2?.035:.015)}
+    if(bar>=2){const n=chd.p[ARP[pos]]+12;pluck(n,t,sec?.07:.05);if(sec&&pos%4===3)pluck(n+12,t+STEP/2,.03)}
+    snd.next+=STEP;snd.step++;
+  }
+}
+function sndStart(){sndInit();if(!snd.ctx)return;const c=snd.ctx;c.resume&&c.resume();
+  if(!snd.timer){snd.next=c.currentTime+.1;snd.step=0;snd.timer=setInterval(sndSchedule,90);sndSchedule()}
+  snd.master.gain.cancelScheduledValues(c.currentTime);snd.master.gain.setValueAtTime(snd.master.gain.value,c.currentTime);snd.master.gain.linearRampToValueAtTime(.8,c.currentTime+2.5);
+  snd.on=true;sndBtn()}
+function sndStop(){if(!snd.ctx||!snd.on){snd.on=false;sndBtn();return}const c=snd.ctx;
+  snd.master.gain.cancelScheduledValues(c.currentTime);snd.master.gain.setValueAtTime(snd.master.gain.value,c.currentTime);snd.master.gain.linearRampToValueAtTime(0,c.currentTime+1.2);
+  snd.on=false;sndBtn();setTimeout(()=>{if(!snd.on){clearInterval(snd.timer);snd.timer=null;c.suspend&&c.suspend()}},1400)}
+function sndBtn(){const b=document.getElementById('evSom');if(!b)return;b.classList.toggle('on',snd.on);b.setAttribute('aria-pressed',snd.on);b.textContent=snd.on?'♪ Som ligado':'♪ Som'}
+function sndWhoosh(dur){if(!snd.on||!snd.ctx)return;const c=snd.ctx,t=c.currentTime;const s=c.createBufferSource();s.buffer=snd.noise;s.loop=true;
+  const f=c.createBiquadFilter();f.type='bandpass';f.Q.value=2.2;f.frequency.setValueAtTime(260,t);f.frequency.exponentialRampToValueAtTime(3800,t+dur);
+  const g=c.createGain();g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(.16,t+dur*0.45);g.gain.exponentialRampToValueAtTime(0.0001,t+dur+.4);
+  s.connect(f);f.connect(g);g.connect(snd.master);g.connect(snd.wet);s.start(t);s.stop(t+dur+.5)}
+function sndPing(){if(!snd.on||!snd.ctx)return;const c=snd.ctx,t=c.currentTime;pluck(88,t,.035)}
+document.getElementById('evSom').onclick=()=>{if(snd.on){sndStop();ls('fam_som','0')}else{sndStart();ls('fam_som','1')}};
 document.getElementById('evNext').onclick=()=>evGoto(ev.i+1);
 document.getElementById('evPrev').onclick=()=>evGoto(ev.i-1);
 document.getElementById('evPlay').onclick=e=>{ev.paused=!ev.paused;e.target.textContent=ev.paused?'Continuar':'Pausar';ev.s=performance.now()-ev.t*1000};
-document.getElementById('evFull').onclick=()=>{try{document.documentElement.requestFullscreen().catch(()=>{})}catch(e){}};
+document.getElementById('evFull').onclick=()=>{if(!snd.on&&ls('fam_som')!=='0')sndStart();try{document.documentElement.requestFullscreen().catch(()=>{})}catch(e){}};
 window.addEventListener('keydown',e=>{if(view!=='evento')return;
   if(e.key==='ArrowRight'||e.key===' '||e.key==='PageDown'){e.preventDefault();evGoto(ev.i+1)}
   if(e.key==='ArrowLeft'||e.key==='PageUp'){evGoto(ev.i-1)}
