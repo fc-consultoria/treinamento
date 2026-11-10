@@ -1363,7 +1363,7 @@ async function entrarPessoa(){
       res(seguirPessoa(d));};});}
 const PLAT_URL='https://fc-consultoria.github.io/fc3d/clientes/',PLAT_EMP=['gs','gb','cb'],PLAT_PAP=['vendas','compras','estoque'];
 /* 08/11/2026 · CB: gerente comercial (coordenação) e marketing também entram pela Plataforma FC 3D; dentro dela a Central abre com ?plat=1 (sem redirecionar e sem repetir o que a plataforma já tem) */
-const PLAT_PAP_EMP={cb:['vendas','compras','estoque','gerente','marketing']};if(EM_PLAT){document.documentElement.classList.add('plat');document.head.insertAdjacentHTML('beforeend','<style>html.plat #app > .top{display:none!important}html.plat body{padding-top:0}</style>');}/* empresas e setores que entram direto na Plataforma FC 3D (gestor, gerente e marketing seguem na Central) */
+const PLAT_PAP_EMP={cb:['vendas','compras','estoque','gerente','marketing']};if(EM_PLAT){document.documentElement.classList.add('plat');document.head.insertAdjacentHTML('beforeend','<style>html.plat #app > .top{display:none!important}html.plat body{padding-top:0}html.plat .platVer,html.plat #acbar{display:none!important}/* 09/11/2026 · dentro da Plataforma FC 3D a prévia da FC fica igual à tela do cliente: sem Ver como e sem a barra da Matriz */</style>');}/* empresas e setores que entram direto na Plataforma FC 3D (gestor, gerente e marketing seguem na Central) */
 function seguirPessoa(p){
   if(!EM_PLAT&&(PLAT_PAP_EMP[EMPL]||PLAT_PAP).includes(p.papel)&&PLAT_EMP.includes(EMPL)){try{localStorage.setItem(tokKey(),p.token);}catch(_){}
     $('#ficha').innerHTML='<div class="body"><p style="margin:0">Seu acesso agora é pela <b>Plataforma FC 3D</b>. Abrindo…</p></div>';
