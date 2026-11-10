@@ -197,6 +197,10 @@ table.cut td.n{text-align:right}
 #evctl{position:fixed;z-index:6;right:max(16px,env(safe-area-inset-right,0px));top:84px;display:flex;gap:6px;opacity:.15;transition:opacity .3s}
 #evctl:hover{opacity:1}
 #evSom.on{color:#7fdcff;border-color:#7fdcff}
+#somHint{position:fixed;z-index:7;left:50%;top:22px;transform:translateX(-50%);padding:9px 16px;border-radius:999px;background:rgba(14,16,19,.82);border:1px solid rgba(127,220,255,.45);color:#e9f8ff;font-size:13px;font-weight:600;letter-spacing:.02em;cursor:pointer;opacity:0;pointer-events:none;transition:opacity .4s}
+#somHint.on{opacity:1;pointer-events:auto;animation:somP 2.4s ease-in-out infinite}
+@keyframes somP{50%{border-color:rgba(127,220,255,.9)}}
+@media (max-width:900px){#somHint{top:auto;bottom:calc(74px + env(safe-area-inset-bottom,0px));font-size:12px}}
 body.evento .top,body.evento .foot{opacity:0;transition:opacity .5s}
 body.evento .brandev{display:flex}
 body.visit nav a[data-v=evento],body.visit nav a[data-v=qr]{display:none}
@@ -396,6 +400,7 @@ body.visit #waBtn.has{display:inline-flex}
   <div class="panel" id="evqr"><div class="q" id="evqrc"></div><div class="t">Aponte o celular</div><div class="note" style="margin:2px 0 0">e veja a Family na sua mão</div></div>
   <div id="evctl"><button class="btn" id="evPrev" aria-label="Cena anterior">◀</button><button class="btn" id="evPlay">Pausar</button><button class="btn" id="evNext" aria-label="Próxima cena">▶</button><button class="btn" id="evSom" aria-label="Trilha sonora" aria-pressed="false">♪ Som</button><button class="btn" id="evFull">Tela cheia</button><a class="btn" href="#linhas" style="text-decoration:none">Sair</a></div>
   <div id="evbar"><i id="evbarI"></i></div>
+  <button id="somHint" type="button">🔊 Toque para ligar a trilha sonora</button>
   <div id="xlab" aria-hidden="true"><svg id="xlabS"></svg><div class="xtag">RAIO-X</div></div>
 </section>
 
@@ -1176,8 +1181,8 @@ function evText(){const t=SCENES[ev.i].text();evOv.classList.add('fade');setTime
 function evGoto(i){ev.i=(i+SCENES.length)%SCENES.length;ev.s=performance.now();ev.t=0;
   document.getElementById('evqr').classList.toggle('on',ev.i===SCENES.length-1||ev.i===0);
   SCENES[ev.i].enter();evText()}
-function startEvent(){ev.on=true;ev.paused=false;document.getElementById('evPlay').textContent='Pausar';makeQR(document.getElementById('evqrc'),150);evGoto(0)}
-function stopEvent(){if(!ev.on)return;ev.on=false;sndStop();state.spin=false;cycleColors=false;if(corteGroup){scene.remove(corteGroup);corteGroup=null;state.mode='janela'}}
+function startEvent(){ev.on=true;setTimeout(()=>somHintUpd(),600);ev.paused=false;document.getElementById('evPlay').textContent='Pausar';makeQR(document.getElementById('evqrc'),150);evGoto(0)}
+function stopEvent(){if(!ev.on)return;ev.on=false;sndStop();somHint.classList.remove('on');state.spin=false;cycleColors=false;if(corteGroup){scene.remove(corteGroup);corteGroup=null;state.mode='janela'}}
 let cycleColors=false,evSpin=0;
 function evHero(qr){
   root.visible=false;if(corteGroup){scene.remove(corteGroup);corteGroup=null}
@@ -1361,7 +1366,13 @@ function sndWhoosh(dur){if(!snd.on||!snd.ctx)return;const c=snd.ctx,t=c.currentT
   const g=c.createGain();g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(.16,t+dur*0.45);g.gain.exponentialRampToValueAtTime(0.0001,t+dur+.4);
   s.connect(f);f.connect(g);g.connect(snd.master);g.connect(snd.wet);s.start(t);s.stop(t+dur+.5)}
 function sndPing(){if(!snd.on||!snd.ctx)return;const c=snd.ctx,t=c.currentTime;pluck(88,t,.035)}
-document.getElementById('evSom').onclick=()=>{if(snd.on){sndStop();ls('fam_som','0')}else{sndStart();ls('fam_som','1')}};
+document.getElementById('evSom').onclick=()=>{if(snd.on){sndStop();ls('fam_som','0')}else{sndStart();ls('fam_som','1')}somHintUpd()};
+const somHint=document.getElementById('somHint');
+function somHintUpd(){somHint.classList.toggle('on',!!ev.on&&!snd.on&&ls('fam_som')!=='0')}
+somHint.onclick=e=>{e.stopPropagation();sndStart();ls('fam_som','1');somHintUpd()};
+// o navegador só libera som depois de um toque: o primeiro toque/clique no modo evento já liga a trilha
+addEventListener('pointerdown',e=>{if(!ev.on||snd.on||ls('fam_som')==='0')return;if(e.target.closest&&e.target.closest('#evSom,#somHint,a'))return;sndStart();somHintUpd()},true);
+addEventListener('keydown',()=>{if(ev.on&&!snd.on&&ls('fam_som')!=='0'){sndStart();somHintUpd()}},true);
 document.getElementById('evNext').onclick=()=>evGoto(ev.i+1);
 document.getElementById('evPrev').onclick=()=>evGoto(ev.i-1);
 document.getElementById('evPlay').onclick=e=>{ev.paused=!ev.paused;e.target.textContent=ev.paused?'Continuar':'Pausar';ev.s=performance.now()-ev.t*1000};
