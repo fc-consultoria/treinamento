@@ -100,6 +100,35 @@ table.cut td.n{text-align:right}
 #step.on{display:flex}
 #step .c{font-family:var(--mono);font-weight:600;color:var(--copper)}
 #step .t{font-family:var(--display);font-weight:700}
+
+.mobonly{display:none}
+#cotas{position:fixed;inset:0;width:100%;height:100%;z-index:3;pointer-events:none;display:none}
+#cotas line{stroke:#1fa9e1;stroke-width:1.2}
+#cotas text{font:600 13px var(--mono);fill:#e9f6fc;paint-order:stroke;stroke:#0d1013;stroke-width:4px}
+#pcard{left:50%;transform:translateX(-50%);top:84px;padding:10px 14px;display:none;align-items:center;gap:14px;z-index:6;max-width:calc(100% - 32px)}
+#pcard.on{display:flex}
+#pcard .c{font:600 20px var(--mono);color:var(--copper)}
+#pcard .d{font-family:var(--display);font-weight:700}
+#pcard .n{font-size:12px;color:var(--muted)}
+#lbls{position:fixed;inset:0;z-index:3;pointer-events:none}
+.lb{position:absolute;transform:translate(-50%,-120%);white-space:nowrap;font-size:11px;padding:4px 8px;border-radius:7px;background:rgba(10,12,14,.86);border:1px solid var(--line);display:flex;gap:6px;align-items:center}
+.lb i{width:8px;height:8px;border-radius:50%;display:inline-block}
+.lb b{font-family:var(--mono);font-weight:600}
+.hs{position:absolute;pointer-events:auto;transform:translate(-50%,-50%);width:30px;height:30px;border-radius:50%;border:2px solid #fff;background:rgba(176,113,79,.92);color:#fff;font:700 18px/26px var(--display);text-align:center;cursor:pointer;box-shadow:0 0 0 6px rgba(176,113,79,.25);animation:pulse 2s infinite}
+.hs span{position:absolute;left:36px;top:2px;white-space:nowrap;font:600 12px var(--body);background:rgba(10,12,14,.86);padding:3px 8px;border-radius:7px;border:1px solid var(--line);opacity:0;transition:opacity .2s}
+.hs:hover span,.hs:focus span{opacity:1}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 4px rgba(176,113,79,.35)}50%{box-shadow:0 0 0 10px rgba(176,113,79,0)}}
+#hsCard{left:50%;transform:translateX(-50%);bottom:56px;width:min(560px,calc(100% - 32px));padding:14px 16px;display:none}
+#hsCard.on{display:block}
+#hsCard h3{font-size:20px;font-weight:800;margin:2px 0 4px}
+#hsCard ul{margin:8px 0 0;padding:0;list-style:none;display:grid;gap:4px}
+#hsCard li{font-size:12px;display:flex;gap:8px;align-items:baseline}
+#hsCard li b{font-family:var(--mono);min-width:96px}
+.ci{display:grid;grid-template-columns:10px 1fr auto;gap:4px 8px;align-items:baseline;font-size:12px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.ci i{width:9px;height:9px;border-radius:50%;margin-top:3px}
+.ci b{font-family:var(--mono);font-size:11px}
+.ci span.q{font-family:var(--mono);font-size:11px;color:var(--muted);text-align:right}
+.ci .dd{grid-column:2/4;color:var(--muted);font-size:11px;margin-top:-2px}
 #tip{position:fixed;z-index:6;pointer-events:none;padding:6px 9px;border-radius:8px;background:rgba(10,12,14,.9);border:1px solid var(--line);font-size:12px;display:none}
 #tip b{font-family:var(--mono);color:var(--copper)}
 
@@ -146,6 +175,10 @@ table.cut td.n{text-align:right}
 #evctl:hover{opacity:1}
 body.evento .top,body.evento .foot{opacity:0;transition:opacity .5s}
 body.evento .brandev{display:flex}
+body.visit nav a[data-v=evento],body.visit nav a[data-v=qr]{display:none}
+#waBtn{position:fixed;z-index:6;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(40px + env(safe-area-inset-bottom,0px));display:none}
+body.visit #waBtn.has{display:inline-flex}
+@media (max-width:900px){body.visit #waBtn.has{top:118px;bottom:auto}}
 .brandev{position:fixed;z-index:4;top:calc(24px + env(safe-area-inset-top,0px));left:max(32px,env(safe-area-inset-left,0px));display:none;align-items:center;gap:18px}
 .brandev img.fam{height:54px}.brandev img.ark{height:46px}
 .brandev .cde{font-size:30px}
@@ -166,15 +199,34 @@ body.evento .brandev{display:flex}
 .ok-msg{color:var(--ok);font-weight:600}
 
 @media (max-width:900px){
+  #pcard{top:112px;left:max(10px,env(safe-area-inset-left,0px));right:max(10px,env(safe-area-inset-right,0px));transform:none;max-width:none;gap:8px;padding:8px 10px;flex-wrap:wrap}#pcard .c{font-size:16px}#pcard>div{flex:1;min-width:0}
   .brand img.fam{height:26px}.brand img.ark{height:22px}.cde{font-size:18px}
   nav{margin-left:0;width:100%;overflow-x:auto;flex-wrap:nowrap}
   nav a{white-space:nowrap;font-size:13px;padding:7px 10px}
   #v-linhas .hero{top:118px}
-  .cards{grid-template-columns:1fr;bottom:40px;gap:8px}
   .card{padding:10px 12px}.card p{display:none}.card .num{font-size:26px}
-  #ctl{top:auto;bottom:40px;left:max(16px,env(safe-area-inset-left,0px));right:max(16px,env(safe-area-inset-right,0px));width:auto;max-height:42%}
+  .mobonly{display:inline-flex;justify-content:center}
+  #ctl{top:auto;bottom:calc(30px + env(safe-area-inset-bottom,0px));left:max(10px,env(safe-area-inset-left,0px));right:max(10px,env(safe-area-inset-right,0px));width:auto;max-height:58%;padding:10px 12px}
+  #ctl .eyebrow,#ctl .sub{display:none}
+  #ctl h2{font-size:17px;margin:0 0 6px}
+  #ctl .seg{margin-bottom:8px}
+  #ctl #bMore{width:100%;margin-bottom:8px;font-size:13px;padding:8px}
+  #ctl .more{display:none}
+  #ctl.open .more{display:block;margin-bottom:8px}
+  #ctl .lbl{margin:8px 0 4px}
+  #ctl .acts{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;margin-top:0}
+  #ctl .acts .btn{font-size:12px;padding:8px 4px}
+  #ctl #bComp{grid-column:auto!important}
+  #ctl #bMontar{grid-column:1/-1;order:-1}
   #info{display:none}
-  #info.mob{display:block;top:118px;left:max(16px,env(safe-area-inset-left,0px));right:max(16px,env(safe-area-inset-right,0px));width:auto;max-height:40%}
+  #info.mob{display:block;top:auto;bottom:calc(30px + env(safe-area-inset-bottom,0px));left:max(10px,env(safe-area-inset-left,0px));right:max(10px,env(safe-area-inset-right,0px));width:auto;max-height:60%;z-index:7}
+  body.mobinfo #ctl{display:none}
+  body.focus #ctl{display:none}
+  #hsCard{bottom:calc(30px + env(safe-area-inset-bottom,0px));max-height:45%;overflow:auto}
+  .cards{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;bottom:calc(30px + env(safe-area-inset-bottom,0px));gap:10px;padding-bottom:4px}
+  .card{flex:0 0 82%;scroll-snap-align:center}
+  #v-linhas .hero h1{font-size:34px}#v-linhas .hero p{font-size:13px}
+  .lb{font-size:10px;padding:3px 6px}
   #v-qual .grid{grid-template-columns:1fr}
   #v-qual .wrap{top:112px}
   #qres{grid-template-columns:1fr}
@@ -215,6 +267,8 @@ body.evento .brandev{display:flex}
     <h2 id="tName">Family 25</h2>
     <div class="sub" id="tSub">Janela de correr · 2 folhas</div>
     <div class="seg" id="lineSeg"></div>
+    <button class="btn mobonly" id="bMore" aria-expanded="false">Medidas, cor e vidro ▾</button>
+    <div class="more">
     <div class="dims">
       <div><label for="inL">Largura do marco (mm)</label><input id="inL" type="number" min="600" max="6000" step="10"></div>
       <div><label for="inH">Altura do marco (mm)</label><input id="inH" type="number" min="400" max="3200" step="10"></div>
@@ -223,6 +277,7 @@ body.evento .brandev{display:flex}
     <div class="sw" id="cores"></div>
     <div class="lbl">Vidro</div>
     <div class="sw" id="vidros"></div>
+    </div>
     <div class="acts">
       <button class="btn" id="bAbrir">Abrir folha</button>
       <button class="btn" id="bExpl">Explodir</button>
@@ -230,13 +285,15 @@ body.evento .brandev{display:flex}
       <button class="btn" id="bCorte">Ver corte</button>
       <button class="btn" id="bGirar">Girar</button>
       <button class="btn" id="bInfo">Perfis</button>
+      <button class="btn" id="bComp" style="grid-column:1/-1">Raio-X dos componentes</button>
     </div>
   </aside>
   <aside class="panel" id="info">
-    <div class="eyebrow">Raio-X da linha</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><div class="eyebrow">Raio-X da linha</div><button class="btn mobonly" id="bInfoX" style="padding:6px 10px">Fechar</button></div>
     <div class="note" style="margin-top:4px">Toque num perfil na lista ou na janela.</div>
     <div class="plist" id="plist" style="margin-top:10px"></div>
     <div class="det" id="det"></div>
+    <div class="det" id="compbox"></div>
     <div class="det" id="cutbox"></div>
   </aside>
   <div class="panel" id="step"><span class="c" id="stC"></span><span class="t" id="stT"></span><span class="note" id="stN" style="margin:0"></span></div>
@@ -284,7 +341,7 @@ body.evento .brandev{display:flex}
   <div id="evbar"><i id="evbarI"></i></div>
 </section>
 
-<div id="tip"></div>
+<a class="btn pri" id="waBtn" target="_blank" rel="noopener">Falar com a CDE</a><svg id="cotas" aria-hidden="true"></svg><div class="panel" id="pcard"></div><div id="lbls"></div><div class="panel" id="hsCard"></div><div id="tip"></div>
 <footer class="foot">
   <span>Desenvolvido por <b>FC Consultoria em Esquadria</b> · CNPJ 52.985.682/0001-32</span>
   <span>Imagens demonstrativas · perfis do catálogo técnico Arkial (REV01) · confirme medidas e pesos com o fabricante</span>
@@ -430,6 +487,51 @@ const rubber=new THREE.MeshStandardMaterial({color:'#111214',roughness:.8,metaln
 const glassMat=new THREE.MeshPhysicalMaterial({color:GLASS[0].c,metalness:0,roughness:.04,transparent:true,opacity:GLASS[0].o,envMapIntensity:1.6,side:THREE.DoubleSide,depthWrite:false});
 const hiMat=new THREE.MeshStandardMaterial({color:'#b0714f',metalness:.5,roughness:.35,emissive:'#3a1606',emissiveIntensity:.5,side:THREE.DoubleSide});
 
+/* ===== Componentes (códigos e quantidades dos catálogos Arkial) ===== */
+const CT={ // tipo -> cor e nome
+ roldana:['#e0a24a','Roldana'],calco:['#bdbdbd','Calço da roldana'],fecho:['#1fa9e1','Fecho concha'],contra:['#56c2f0','Contrafecho'],
+ cxm:['#e0605a','Conexão de canto do marco'],cxf:['#f08a5d','Conexão de canto da folha (45°)'],escova:['#7cc35a','Escova de vedação'],
+ dreno:['#a68be6','Válvula de dreno'],ved:['#3fbf86','Vedação sup./inf. do montante'],guia:['#e6d35a','Guia do montante'],guarn:['#8f979e','Guarnição do vidro']};
+const COMP={
+ '25':{forn:['Roto Fermax','Udinese'],items:{
+   roldana:[['637616','Roldana 50 kg'],['9500566','Roldana côncava 40 kg'],'2 por folha','Folha mais pesada: 765294 tandem 100 kg (Roto) ou 9500567 côncava 80 kg (Udinese)'],
+   calco:[['478410N','Calço S001 alt. 9 mm'],null,'2 por folha'],
+   fecho:[['FEC120S','Fecho Easy Touch sem chave 160 mm'],['9212224','Fecho concha Square'],'1 por folha'],
+   contra:[['CFE81U','Contrafecho lateral 2.2/3.3'],['9212702','Contrafecho'],'1 por folha','Lingueta: LIN20042 (Roto) · 9207262 (Udinese)'],
+   cxm:[['81-11510C','Conexão Allen largura 11 mm'],['81-11510C','Conexão Allen largura 11 mm'],'8 por janela'],
+   cxf:[['81-22011C','Conexão Allen 22×10 · TFM-220'],['81-22011C','Conexão Allen 22×10 · TFM-220'],'4 por folha','+ CONALINFMY25NYPRT conexão de alinhamento, 8 por folha (Anudal)'],
+   escova:[['ESCOVA 5X6','Escova 5×6 tripla barreira plástica'],['ESCOVA 5X6','Escova 5×6 tripla barreira plástica'],'2 × largura da folha','No montante mão de amigo: escova 5×6 + GUA006 guarnição EPDM Ø5 mm'],
+   dreno:[['VDD02012','Válvula de dreno 12 mm'],['9303100','Válvula de dreno 12 mm'],'4 + (L/150)'],
+   ved:[['VDS053P022','Vedação sup. e inf. (preto)'],['9303157','Vedação sup. e inf. (preto)'],'2 por montante'],
+   guia:[['GUI43012','Guia externa Family 25 (preto)'],['9303155','Guia externa Family 25 (preto)'],'4 por montante mão amigo'],
+   guarn:[['GUARNIÇÃO','Guarnição de vedação do vidro'],null,'perímetro do vidro']}},
+ '32':{forn:['Roto Fermax','Udinese'],items:{
+   roldana:[['637617','Roldana 50 kg'],['9500523','Roldana côncava 40 kg'],'2 por folha','Folha mais pesada: 615951 120 kg (Roto) ou 9500524 80 kg / 9500525 200 kg (Udinese)'],
+   calco:[['642371','Calço da roldana'],null,'2 por folha'],
+   fecho:[['FEC125','Fecho concha sem chave'],['9212228','Fecho concha Slide sem chave'],'1 por folha lateral','Com chave: FEC126 (Roto) · 9212251 (Udinese)'],
+   contra:[['CFE60','Contrafecho'],null,'1 por folha lateral','Lingueta Roto: LIN07'],
+   cxm:[['81-11510C','Conexão Allen largura 11 mm'],['81-11510C','Conexão Allen largura 11 mm'],'8 por janela'],
+   cxf:[['81-28010C','Conexão Allen 28×10 · TFM-320'],['81-28010C','Conexão Allen 28×10 · TFM-320'],'4 por folha','+ CNA04012 conexão de alinhamento, 8 por folha (Anudal)'],
+   escova:[['ESCOVA 7X7','Escova 7×7 tripla barreira plástica'],['ESCOVA 7X7','Escova 7×7 tripla barreira plástica'],'4 × largura × nº folhas','No montante: escova 7×7 + GUA006 guarnição Ø5 mm'],
+   dreno:[['VDD02012','Válvula de dreno 12 mm'],['9303100','Válvula de dreno 12 mm'],'4 + (L/150)'],
+   guarn:[['GUARNIÇÃO','Guarnição de vedação do vidro'],null,'perímetro do vidro']}},
+ 'M':{forn:['Family Minimalista'],items:{
+   roldana:[['TT-15023X-A','Roldana fixa 2 rodas nylon, carcaça inox · até 120 kg'],null,'2 por folha','180 kg: TT3-15023X (3 rodas) · 300 kg: 2× TT3-15023X por ponto'],
+   calco:[['FMIN_CAL_ROLD_R3','Calço para roldanas'],null,'2 por folha'],
+   fecho:[['FMIN_PUX_001K','Fecho com puxador lateral'],null,'1 por folha lateral','Multiponto: + FMIN_PUX_003K haste, mais 2 pontos de travamento'],
+   cxf:[['FMIN_CNX001','Conexão de alinhamento das folhas'],null,'8 por folha'],
+   cxm:[['MP-230','Conexão do contramarco'],null,'4 por janela'],
+   ved:[['FMIN_VED001','Vedação central do marco (corta-vento)'],null,'2 por montante mão amigo'],
+   guia:[['FMIN_GUI_LAT_001','Vedação lateral sup./inf.'],null,'2 por folha lateral'],
+   dreno:[['PGT03A006','Tampa de grade da calha de drenagem'],null,'L / 1000'],
+   guarn:[['GUARNIÇÃO','Guarnição de vedação do vidro'],null,'perímetro do vidro']}}
+};
+const compMat={};for(const k in CT){compMat[k]=new THREE.MeshStandardMaterial({color:CT[k][0],metalness:.2,roughness:.45,emissive:CT[k][0],emissiveIntensity:.25})}
+const ghost=new THREE.MeshStandardMaterial({color:'#9fb2bf',metalness:.1,roughness:.6,transparent:true,opacity:.13,depthWrite:false,side:THREE.DoubleSide});
+const darkMetal=new THREE.MeshStandardMaterial({color:'#7d838a',metalness:.7,roughness:.35});
+const brushMat=new THREE.MeshStandardMaterial({color:'#18191b',roughness:1});
+const CLIP=[];[alu,aluCap,rubber,glassMat,hiMat,ghost,darkMetal,brushMat,...Object.values(compMat)].forEach(m=>m.clippingPlanes=CLIP);
+function compInfo(t){const it=COMP[cur].items[t];if(!it)return null;const f=(it[state.forn]||it[0]);return {code:f[0],desc:f[1],qty:it[2],note:it[3]||''}}
 const geoCache={};
 function shapesOf(code){
   const pr=P[cur][code]||findProf(code);
@@ -478,7 +580,7 @@ function frame(parent,code,x0,y0,x1,y1,z,kind,name,exOut){
   }
   return out;
 }
-let state={L:1500,H:1200,open:0,openT:0,explode:0,explodeT:0,color:0,glass:0,spin:false,mode:'janela'};
+let state={forn:0,comp:false,L:1500,H:1200,open:0,openT:0,explode:0,explodeT:0,color:0,glass:0,spin:false,mode:'janela'};
 let folhaGroups=[];
 function build(){
   // limpa
@@ -524,20 +626,47 @@ function build(){
     const hm=new THREE.Mesh(new THREE.BoxGeometry(16,150,10),new THREE.MeshStandardMaterial({color:'#121315',metalness:.3,roughness:.5}));
     hm.position.set(hx,sv+fh*0.48,gz+fd/2+5);
     addPiece(g,hm,'FECHO','Fecho concha',new THREE.Vector3(0,0,160),'acess');
-    folhaGroups.push({g,side:d.side,fw,baseZ:(i===0?380:620)});
+    // ---- componentes da folha (posição ilustrativa) ----
+    const fz=gz, fh_=fp.h, inw=Math.min(fh_*0.22,14);
+    const cbox=(w,h,dd,x,y,z,t,mat)=>{const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,dd),mat||darkMetal);m.position.set(x,y,z);const pc=addPiece(g,m,'C:'+t,CT[t][1],new THREE.Vector3(0,0,0),'comp');pc.ctype=t;return pc};
+    // conexões de canto da folha (L)
+    [[fx0,fy0,1,1],[fx1,fy0,-1,1],[fx0,fy1,1,-1],[fx1,fy1,-1,-1]].forEach(([cx,cy,sx,sy])=>{
+      cbox(46,8,Math.min(10,fd*0.4),cx+sx*(23+inw*0.2),cy+sy*inw,fz-4,'cxf');
+      cbox(8,46,Math.min(10,fd*0.4),cx+sx*inw,cy+sy*(23+inw*0.2),fz-4,'cxf');});
+    // calço sob roldana
+    [fx0+90,fx1-90].forEach(rx=>cbox(64,4,Math.min(14,fd-6),rx,fy0+1,fz,'calco'));
+    // escovas superior e inferior
+    if(COMP[cur].items.escova){cbox(fw-30,6,6,(fx0+fx1)/2,fy0-3,fz+fd*0.25,'escova',brushMat);cbox(fw-30,6,6,(fx0+fx1)/2,fy1+3,fz+fd*0.25,'escova',brushMat);
+      const mx=d.side==='L'?fx1-4:fx0+4;cbox(6,fh-40,6,mx,(fy0+fy1)/2,fz+(d.side==='L'?-1:1)*fd*0.55,'escova',brushMat);}
+    // guias e vedações nas pontas do montante mão de amigo
+    const mx2=d.side==='L'?fx1-fp.h*0.4:fx0+fp.h*0.4;
+    if(COMP[cur].items.guia)[fy0-6,fy1+6].forEach(yy=>cbox(fp.h*0.55,10,fd*0.9,mx2,yy,fz,'guia',rubber));
+    if(COMP[cur].items.ved)[fy0+fp.h*0.5,fy1-fp.h*0.5].forEach(yy=>cbox(fp.h*0.5,12,fd*0.6,mx2,yy,fz+(d.side==='L'?-1:1)*fd*0.3,'ved',rubber));
+    folhaGroups.push({g,side:d.side,fw,baseZ:(i===0?380:620),fx0,fx1,fy0,fy1,z:fz,track:d.track});
   });
+  // ---- componentes do marco ----
+  const mbox=(w,h,dd,x,y,z,t,mat)=>{const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,dd),mat||darkMetal);m.position.set(x,y,z);const pc=addPiece(root,m,'C:'+t,CT[t][1],new THREE.Vector3(0,0,0),'comp');pc.ctype=t;return pc};
+  const mi=Math.min(mp.h*0.18,8);
+  if(COMP[cur].items.cxm)[[x0,y0,1,1],[x1,y0,-1,1],[x0,y1,1,-1],[x1,y1,-1,-1]].forEach(([cx,cy,sx,sy])=>{
+    mbox(50,9,11,cx+sx*(26+mi),cy+sy*mi,-7,'cxm');mbox(9,50,11,cx+sx*mi,cy+sy*(26+mi),-7,'cxm');});
+  // drenos na face externa do marco inferior
+  const nd=Math.min(6,Math.max(2,Math.round(L/450)));
+  for(let k=0;k<nd;k++){const xx=x0+L*(k+0.5)/nd;mbox(28,6,4,xx,mp.h*0.35,Dm/2+2,'dreno',rubber)}
+  // contrafechos no marco lateral
+  if(COMP[cur].items.contra){mbox(10,70,12,x0+mp.h*0.55,sv+fh*0.48,Dm/2-ln.tracks[0],'contra');mbox(10,70,12,x1-mp.h*0.55,sv+fh*0.48,Dm/2-ln.tracks[1],'contra');}
+  pieces.forEach(p=>{if(p.code==='ROLDANA'){p.ctype='roldana'}if(p.code==='FECHO'){p.ctype='fecho'}if(p.code==='GUARN'){p.ctype='guarn'}});
   // marca no vidro (discreta)
   applyColor();applyGlass();
   frameCamera(false);
-  renderPList();renderCut();
+  renderPList();renderCut();renderComp();paintHi();
 }
 function applyColor(){alu.color.set(COLORS[state.color].c)}
-function applyGlass(){const g=GLASS[state.glass];glassMat.color.set(g.c);glassMat.opacity=g.o}
+function applyGlass(){const g=GLASS[state.glass];glassMat.color.set(g.c);glassMat.opacity=state.comp?0.05:g.o}
 function fitDist(L,H,k){const t=Math.tan(camera.fov*Math.PI/360);return Math.max(H/(2*t),L/(2*t*camera.aspect))*k}
 function frameCamera(anim=true){
   const L=state.L/1000,H=state.H/1000;const mob=innerWidth<=900;
-  const d=fitDist(L*1.15,H*(mob?2.3:1.25),mob?1.05:1.35);
-  camTo(new THREE.Vector3(L*0.3,H*0.6,d),new THREE.Vector3(0,mob?H*0.05:H/2,0),anim);
+  const d=fitDist(L*(mob?1.25:2.5),H*(mob?2.7:1.5),mob?1.05:1.25);
+  camTo(new THREE.Vector3(L*(mob?0.1:0.3),H*0.6,d),new THREE.Vector3(0,H/2,0),anim);setTimeout(updViewOffset,30);
 }
 let camAnim=null;
 function camTo(pos,tgt,anim=true,dur=1.4){
@@ -581,7 +710,7 @@ function pickAt(ev){
 renderer.domElement.addEventListener('pointermove',ev=>{
   if(view!=='tipologia'&&view!=='linhas'){tip.style.display='none';return}
   const o=pickAt(ev);
-  if(o){const c=o.userData.code;const nm=o.userData.name||'';tip.innerHTML=(c.startsWith('T')?`<b>${c}</b> · `:'')+nm;tip.style.display='block';tip.style.left=(ev.clientX+14)+'px';tip.style.top=(ev.clientY+12)+'px'}
+  if(o){const c=o.userData.code;const nm=o.userData.name||'';tip.innerHTML=(c.startsWith('T')?`<b>${c}</b> · `:'')+(c.startsWith('C:')&&compInfo(c.slice(2))?`<b>${compInfo(c.slice(2)).code}</b> · `:'')+nm;tip.style.display='block';tip.style.left=(ev.clientX+14)+'px';tip.style.top=(ev.clientY+12)+'px'}
   else tip.style.display='none';
   setHover(o?o.userData.code:null);
 });
@@ -598,9 +727,63 @@ function setHover(code){
   if(hovered===code)return;hovered=code;paintHi();
 }
 function paintHi(){
-  for(const p of pieces){const on=(p.code===hovered||p.code===selCode)&&p.code.startsWith('T');if(p.mesh.isMesh&&p.base===alu)p.mesh.material=on?hiMat:alu}
+  for(const p of pieces){
+    const on=(p.code===hovered||p.code===selCode)&&p.code.startsWith('T');
+    if(p.mesh.isMesh&&p.base===alu){p.mesh.material=on?hiMat:(state.comp&&focus===null?ghost:alu);continue}
+    if(p.ctype){p.obj.visible=state.comp||['escova','dreno','roldana','fecho','guarn'].includes(p.ctype);const m=state.comp?compMat[p.ctype]:null;p.mesh.traverse(o=>{if(o.isMesh){if(!o.userData.base)o.userData.base=o.material;o.material=m||o.userData.base}})}
+  }
+  glassMat.opacity=state.comp?(focus===null?0.05:0.12):GLASS[state.glass].o;
 }
 
+/* ================= PEÇA EM DESTAQUE (raio-x 3D) ================= */
+scene.add(camera);
+const show={g:null,code:null,t0:0,dims:null};
+const veil=new THREE.Mesh(new THREE.PlaneGeometry(40,40),new THREE.MeshBasicMaterial({color:'#0e1013',transparent:true,opacity:0,depthWrite:false}));
+veil.position.z=-0.9;veil.renderOrder=5;camera.add(veil);
+const cotas=document.getElementById('cotas'),pcard=document.getElementById('pcard');
+function showPiece(code,auto){
+  hidePiece(true);const pr=P[cur][code];if(!pr)return;
+  const len=Math.max(pr.w,pr.h)*2.4;
+  const geo=barGeo(code,len,false,false);
+  const m=new THREE.Mesh(geo,[aluCap,alu]);m.castShadow=false;
+  // centraliza: X comprimento, Y altura da seção, Z = -largura
+  m.position.set(-len/2,-pr.h/2,pr.w/2);
+  const inner=new THREE.Group();inner.add(m);
+  const g=new THREE.Group();g.add(inner);
+  const D=0.62;const vis=2*D*Math.tan(camera.fov*Math.PI/360);
+  const visW=vis*camera.aspect;const sc=Math.min((visW*(isMob()?0.62:0.42))/len,(vis*0.3)/Math.max(pr.h,pr.w));
+  g.scale.setScalar(sc*0.2);g.position.set(0,isMob()?vis*0.12:0,-D);
+  camera.add(g);show.g=g;show.inner=inner;show.code=code;show.t0=performance.now();show.len=len;show.pr=pr;show.sc=sc;show.auto=auto;
+  const ln=LINES[cur];let cut='';
+  if(ln.cuts){const r=ln.cuts.find(r=>r[0]===code);if(r)cut=` · corte ${r[1]} = ${mm(r[4](state.L,state.H))} mm (${r[2]})`}
+  pcard.innerHTML=`<span class="c">${code}</span><div><div class="d">${pr.d}</div><div class="n">${kgf(pr.kg)} kg/m${cut}</div></div>${auto?'':'<button class="btn" id="pcX">Voltar</button>'}`;
+  pcard.classList.add('on');cotas.style.display='block';
+  const x=document.getElementById('pcX');if(x)x.onclick=()=>{selCode=null;renderPList();paintHi();hidePiece()};
+}
+function hidePiece(instant){
+  if(show.g){camera.remove(show.g);show.g=null;show.code=null}
+  pcard.classList.remove('on');cotas.style.display='none';cotas.innerHTML='';
+  if(instant)veil.material.opacity=0;
+}
+function updPiece(now,dt){
+  const want=show.g?0.86:0;veil.material.opacity+=(want-veil.material.opacity)*Math.min(1,dt*6);veil.visible=veil.material.opacity>0.01;
+  if(!show.g)return;
+  const t=Math.max(0,(performance.now()-show.t0)/1000);const e=ease(Math.min(1,t/0.9));
+  show.g.scale.setScalar(show.sc*(0.2+0.8*e));
+  // sai da tela: vem de trás e gira mostrando a seção real
+  show.inner.rotation.y=0.95+0.4*Math.sin(t*0.6)*e + (1-e)*1.4;
+  show.inner.rotation.x=0.28;
+  // cotas na face de corte (X=0 no início da barra)
+  const pr=show.pr;const L2=show.len/2;
+  const pts={a:[-L2,-pr.h/2,pr.w/2],b:[-L2,-pr.h/2,-pr.w/2],c:[-L2,pr.h/2,-pr.w/2]};
+  const W=innerWidth,H=innerHeight;const P2={};
+  for(const k in pts){const v=new THREE.Vector3(...pts[k]);show.inner.localToWorld(v);v.project(camera);P2[k]=[(v.x+1)/2*W,(1-v.y)/2*H]}
+  const off=(p,q,d)=>{const dx=q[0]-p[0],dy=q[1]-p[1],l=Math.hypot(dx,dy)||1;return [-dy/l*d,dx/l*d]};
+  const dim=(p,q,txt,sgn)=>{const o=off(p,q,18*sgn);const a=[p[0]+o[0],p[1]+o[1]],b=[q[0]+o[0],q[1]+o[1]];
+    return `<line x1="${p[0]}" y1="${p[1]}" x2="${a[0]}" y2="${a[1]}" opacity=".5"/><line x1="${q[0]}" y1="${q[1]}" x2="${b[0]}" y2="${b[1]}" opacity=".5"/><line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}"/><text x="${(a[0]+b[0])/2+o[0]*0.9}" y="${(a[1]+b[1])/2+o[1]*0.9+4}" text-anchor="middle">${txt}</text>`};
+  if(e>0.85){cotas.innerHTML=dim(P2.a,P2.b,pr.w.toFixed(1).replace('.',',')+' mm',1)+dim(P2.b,P2.c,pr.h.toFixed(1).replace('.',',')+' mm',1);}
+}
+window.addEventListener('keydown',e=>{if(e.key==='Escape'&&show.g&&!show.auto){selCode=null;renderPList();paintHi();hidePiece()}});
 /* ================= UI: lista de perfis ================= */
 function renderPList(){
   const ln=LINES[cur];const el=document.getElementById('plist');
@@ -609,8 +792,8 @@ function renderPList(){
   renderDet();
 }
 function usedIn3D(c){return pieces.some(p=>p.code===c)}
-function selectProf(c){selCode=(selCode===c?null:c);renderPList();paintHi();
-  if(innerWidth<=900&&selCode){document.getElementById('info').classList.add('mob')}}
+function selectProf(c){selCode=(selCode===c?null:c);renderPList();paintHi();if(selCode&&view==='tipologia'&&!seq)showPiece(selCode);else hidePiece();
+  if(isMob()&&selCode){document.getElementById('info').classList.remove('mob');document.body.classList.remove('mobinfo');setTimeout(updViewOffset,30)}}
 function renderDet(){
   const el=document.getElementById('det');
   if(!selCode||!P[cur][selCode]){el.innerHTML='<div class="note">Nenhum perfil selecionado.</div>';return}
@@ -650,7 +833,80 @@ let dimT=null;[inL,inH].forEach(i=>i.addEventListener('input',()=>{clearTimeout(
 document.getElementById('bAbrir').onclick=()=>{state.open=state.open?0:1;syncUI()};
 document.getElementById('bExpl').onclick=()=>{state.explode=state.explode?0:1;seq=null;syncUI()};
 document.getElementById('bGirar').onclick=()=>{state.spin=!state.spin;syncUI()};
-document.getElementById('bInfo').onclick=()=>{document.getElementById('info').classList.toggle('mob')};
+document.getElementById('bMore').onclick=()=>{const c=document.getElementById('ctl');c.classList.toggle('open');document.getElementById('bMore').setAttribute('aria-expanded',c.classList.contains('open'));setTimeout(updViewOffset,30)};
+document.getElementById('bInfoX').onclick=()=>{document.getElementById('info').classList.remove('mob');document.body.classList.remove('mobinfo');setTimeout(updViewOffset,30)};
+function isMob(){return innerWidth<=900}
+function updViewOffset(){
+  const w=stage.clientWidth,h=stage.clientHeight;let ox=0,oy=0;
+  if(view==='tipologia'){
+    if(isMob()){const sh=[document.getElementById('ctl'),document.getElementById('info'),hsCard].map(e=>e&&e.offsetParent?e.getBoundingClientRect().height:0);oy=Math.max(...sh)/2+34}
+    else ox=20;
+  }
+  if(ox||oy)camera.setViewOffset(w,h,ox,oy,w,h);else camera.clearViewOffset();
+}
+document.getElementById('bComp').onclick=()=>{setComp(!state.comp)};
+function setComp(on){state.comp=on;if(on){state.explode=0;if(state.mode==='corte')toggleCorte()}paintHi();renderComp();syncUI()}
+function renderComp(){
+  const el=document.getElementById('compbox');if(!el)return;
+  if(!state.comp){el.innerHTML='';return}
+  const c=COMP[cur];
+  const seg=c.forn.length>1?`<div class="seg" style="margin:8px 0">${c.forn.map((f,i)=>`<button data-f="${i}" class="${i===state.forn?'on':''}">${f}</button>`).join('')}</div>`:'';
+  const rows=Object.keys(c.items).map(t=>{const ci=compInfo(t);return `<div class="ci"><i style="background:${CT[t][0]}"></i><div><b>${ci.code}</b> · ${CT[t][1]}</div><span class="q">${ci.qty}</span><div class="dd">${ci.desc}${ci.note?' · '+ci.note:''}</div></div>`}).join('');
+  el.innerHTML=`<div class="eyebrow">Componentes da janela</div>${seg}${rows}<div class="note">Códigos e quantidades do catálogo técnico Arkial ${LINES[cur].name}. No 3D, os componentes aparecem em posição ilustrativa.</div>`;
+  el.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{state.forn=+b.dataset.f;renderComp()});
+}
+/* ---- pontos de encaixe ---- */
+const lbls=document.getElementById('lbls'),hsCard=document.getElementById('hsCard');
+let focus=null;
+function hotspots(){
+  const ln=LINES[cur];if(!folhaGroups.length)return [];
+  const L=state.L,H=state.H,x0=-L/2,x1=L/2;const fL=folhaGroups[0],fR=folhaGroups[1];
+  const mp=P[cur][ln.marco];
+  return [
+   {t:'Canto do marco',a:[x0+30,H-30,0],types:['cxm','escova'],
+    txt:'O marco é cortado a 45° e travado por dentro com a conexão de canto. O corte mostra a câmara do perfil onde ela entra.',
+    clip:[0,0,-1,0],cam:[x0+260,H-180,420],tgt:[x0+40,H-50,0]},
+   {t:'Canto da folha · 45°',a:[fL.fx0+25,fL.fy0+25,fL.z],types:['cxf','guarn','escova'],
+    txt:'A folha também fecha a 45°, com conexão de canto e conexões de alinhamento para a emenda ficar sem degrau.',
+    clip:[0,0,-1,fL.z],cam:[fL.fx0+220,fL.fy0+160,fL.z+380],tgt:[fL.fx0+40,fL.fy0+40,fL.z]},
+   {t:'Encontro das folhas',a:[(fL.fx1+fR.fx0)/2,H*0.5,0],types:['escova','ved','guia','fecho'],
+    txt:'Corte horizontal no meio da janela: as duas folhas se sobrepõem no montante mão de amigo, com escova de vedação entre elas.',
+    clip:[0,-1,0,H*0.5],cam:[(fL.fx1+fR.fx0)/2+60,H*0.5+420,260],tgt:[(fL.fx1+fR.fx0)/2,H*0.5,0]},
+   {t:'Base · roldana no trilho',a:[fR.fx0+90,fR.fy0,fR.z],types:['roldana','calco','dreno','escova'],
+    txt:'Corte vertical na roldana: a folha apoia no trilho do marco pela roldana com calço. Os drenos levam a água para fora.',
+    clip:[1,0,0,-(fR.fx0+90)],cam:[fR.fx0+90-380,140,260],tgt:[fR.fx0+90,40,0]}
+  ];
+}
+function focusHS(i){
+  const h=hotspots()[i];if(!h)return;focus=i;hidePiece(true);selCode=null;
+  state.open=0;state.explode=0;state.spin=false;root.rotation.y=0;setComp(true);
+  CLIP.length=0;CLIP.push(new THREE.Plane(new THREE.Vector3(h.clip[0],h.clip[1],h.clip[2]),h.clip[3]*0.001));
+  const k=0.001;const cv=new THREE.Vector3(...h.cam).sub(new THREE.Vector3(...h.tgt)).multiplyScalar(1.35).add(new THREE.Vector3(...h.tgt));camTo(cv.multiplyScalar(k),new THREE.Vector3(...h.tgt).multiplyScalar(k),true,1.6);
+  hsCard.innerHTML=`<div class="eyebrow">Ponto de encaixe · ${LINES[cur].name}</div><h3>${h.t}</h3><div class="note" style="margin:0">${h.txt}</div><ul>${h.types.filter(t=>COMP[cur].items[t]).map(t=>{const c=compInfo(t);return `<li><i style="width:9px;height:9px;border-radius:50%;background:${CT[t][0]}"></i><b>${c.code}</b><span>${c.desc} · ${c.qty}</span></li>`}).join('')}</ul><div class="row" style="display:flex;gap:8px;margin-top:10px"><button class="btn" id="hsPrev">◀</button><button class="btn" id="hsNext">▶</button><button class="btn pri" id="hsBack">Voltar à janela</button></div>`;
+  hsCard.classList.add('on');document.body.classList.add('focus');setTimeout(updViewOffset,30);
+  document.getElementById('hsBack').onclick=unfocus;
+  document.getElementById('hsNext').onclick=()=>focusHS((i+1)%4);
+  document.getElementById('hsPrev').onclick=()=>focusHS((i+3)%4);
+}
+function unfocus(){focus=null;CLIP.length=0;hsCard.classList.remove('on');document.body.classList.remove('focus');setTimeout(updViewOffset,30);setComp(false);frameCamera()}
+function updOverlay(){
+  let html='';const W=innerWidth,Hh=innerHeight;
+  const proj=(x,y,z)=>{const v=new THREE.Vector3(x,y,z);v.project(camera);return v.z<1?[(v.x+1)/2*W,(1-v.y)/2*Hh]:null};
+  if(view==='tipologia'&&state.mode!=='corte'&&!seq){
+    if(state.comp){
+      const seen={};for(const p of pieces){if(!p.ctype||seen[p.ctype]||!p.obj.visible)continue;seen[p.ctype]=1;
+        const wp=new THREE.Vector3();p.mesh.getWorldPosition(wp);
+        if(CLIP[0]&&CLIP[0].distanceToPoint(wp)<0)continue;
+        const s2=proj(wp.x,wp.y,wp.z);const ci=compInfo(p.ctype);if(!s2||!ci)continue;
+        html+=`<div class="lb" style="left:${s2[0]}px;top:${s2[1]}px"><i style="background:${CT[p.ctype][0]}"></i><b>${ci.code}</b>${CT[p.ctype][1]}</div>`}
+    }
+    if(focus===null&&!show.g&&state.explodeT<0.05){
+      hotspots().forEach((h,i)=>{const v=new THREE.Vector3(...h.a).multiplyScalar(0.001);root.localToWorld(v.multiplyScalar(1000));const s2=proj(v.x,v.y,v.z);if(s2)html+=`<button class="hs" data-h="${i}" style="left:${s2[0]}px;top:${s2[1]}px" aria-label="${h.t}">+<span>${h.t}</span></button>`});
+    }
+  }
+  if(lbls.__h!==html){lbls.innerHTML=html;lbls.__h=html;lbls.querySelectorAll('.hs').forEach(b=>b.onclick=()=>focusHS(+b.dataset.h))}
+}
+document.getElementById('bInfo').onclick=()=>{const on=document.getElementById('info').classList.toggle('mob');document.body.classList.toggle('mobinfo',on&&isMob());setTimeout(updViewOffset,30)};
 document.getElementById('bMontar').onclick=()=>startAssembly();
 document.getElementById('bCorte').onclick=()=>toggleCorte();
 function syncUI(){
@@ -661,12 +917,14 @@ function syncUI(){
   document.getElementById('bExpl').classList.toggle('on',!!state.explode);
   document.getElementById('bGirar').classList.toggle('on',state.spin);
   document.getElementById('bCorte').classList.toggle('on',state.mode==='corte');
+  document.getElementById('bComp').classList.toggle('on',!!state.comp);
   document.getElementById('tName').textContent=LINES[cur].name;
   document.getElementById('tSub').textContent=LINES[cur].tip;
   inL.value=state.L;inH.value=state.H;
 }
 function setLine(k,rebuild){
   cur=k;selCode=null;Object.keys(geoCache).forEach(x=>delete geoCache[x]);
+  hidePiece(true);if(focus!==null){focus=null;CLIP.length=0;hsCard.classList.remove('on')}state.comp=false;
   [state.L,state.H]=LINES[k].def;state.open=0;state.openT=0;state.explode=0;state.explodeT=0;
   if(state.mode==='corte')showCorte(k);
   if(rebuild)build();syncUI();
@@ -711,7 +969,8 @@ function go(v){location.hash=v}
 function route(){
   let v=(location.hash||'#linhas').slice(1);
   if(v==='qr'){openQR();v=view==='qr'?'linhas':view;history.replaceState(null,'','#'+v)}
-  if(v==='stand'){standGate();v='tipologia'}
+  if(v==='stand'){ls('fam_visit','1');standGate();v='linhas';history.replaceState(null,'','#linhas')}
+  if(ls('fam_visit'))document.body.classList.add('visit');
   if(!['linhas','tipologia','qual','evento'].includes(v))v='linhas';
   setView(v);
 }
@@ -720,13 +979,16 @@ function setView(v){
   document.querySelectorAll('.view').forEach(s=>s.classList.toggle('on',s.id==='v-'+v));
   document.querySelectorAll('#nav a').forEach(a=>a.classList.toggle('on',a.dataset.v===v));
   document.body.classList.toggle('evento',v==='evento');
-  stepEl.classList.remove('on');tip.style.display='none';
+  stepEl.classList.remove('on');tip.style.display='none';hidePiece(true);
+  if(focus!==null&&v!=='tipologia'){focus=null;CLIP.length=0;hsCard.classList.remove('on');state.comp=false;paintHi()}
   if(v!=='evento')stopEvent();
   if(v==='linhas'){showHero()}
   else{if(heroGroup){scene.remove(heroGroup);heroGroup=null}}
   if(v==='tipologia'){root.visible=state.mode!=='corte';if(prev!=='tipologia'){build();syncUI()}}
   if(v==='qual'){root.visible=false;if(corteGroup){scene.remove(corteGroup);corteGroup=null;state.mode='janela'}renderQual();showHero(true)}
   if(v==='evento'){startEvent()}
+  document.body.classList.remove('mobinfo');document.getElementById('info').classList.remove('mob');
+  setTimeout(updViewOffset,30);
 }
 window.addEventListener('hashchange',route);
 
@@ -895,13 +1157,14 @@ document.getElementById('leadF').addEventListener('submit',async e=>{
 /* ---------- brand ---------- */
 function brandHTML(){return (BRAND.revenda?`<div class="cde">${BRAND.revenda}<small>${BRAND.revendaSub}</small></div><span class="sep"></span>`:'')+
   `<img class="fam" src="${window.__LOGO_FAM}" alt="Family by Texa"><span class="sep"></span><img class="ark" src="${window.__LOGO_ARK}" alt="Arkial">`}
-document.getElementById('brandTop').innerHTML=brandHTML();document.getElementById('brandEv').innerHTML=brandHTML();
+document.getElementById('brandTop').innerHTML=brandHTML();
+{const wa=document.getElementById('waBtn');const n=(BRAND.whatsapp||'').replace(/\D/g,'');if(n){wa.href='https://wa.me/55'+n+'?text='+encodeURIComponent('Olá! Vi a Linha Family no lançamento e quero um orçamento.');wa.classList.add('has')}wa.textContent='Falar com a '+(BRAND.revenda||'Arkial')}document.getElementById('brandEv').innerHTML=brandHTML();
 document.querySelectorAll('.revName').forEach(s=>s.textContent=BRAND.revenda?`${BRAND.revenda} ${BRAND.revendaSub}`:'Arkial');
 document.getElementById('leadE').textContent=(BRAND.revenda?BRAND.revenda+' · ':'')+'Lançamento Linha Family';
 
 /* ================= LOOP ================= */
 function resize(){const w=stage.clientWidth,h=stage.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()}
-window.addEventListener('resize',resize);resize();
+window.addEventListener('resize',()=>{resize();updViewOffset()});resize();
 const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
 let last=performance.now();
 function tick(now){
@@ -911,10 +1174,12 @@ function tick(now){
   state.explodeT+=(state.explode-state.explodeT)*Math.min(1,dt*5);
   state.openT+=(state.open-state.openT)*Math.min(1,dt*3);
   if(seq){
-    const g=seq.groups[seq.i];const t=Math.min(1,(now-seq.s)/seq.dur);
-    g.ps.forEach(p=>p.t=ease(t));
+    const g=seq.groups[seq.i];const gd=(g.code&&g.code.startsWith('T'))?seq.dur*2.6:seq.dur;const t=Math.min(1,(now-seq.s)/gd);
+    const tp=(g.code&&g.code.startsWith('T'))?Math.max(0,(t-0.62)/0.38):t;g.ps.forEach(p=>p.t=ease(tp));
     stepEl.classList.add('on');document.getElementById('stC').textContent=g.code;document.getElementById('stT').textContent=g.txt;document.getElementById('stN').textContent=g.note;
     if(g.code&&g.code.startsWith('T')){hovered=g.code;paintHi()}
+    if(!g.shown){g.shown=1;if(g.code&&g.code.startsWith('T'))showPiece(g.code,true);else hidePiece()}
+    if(g.code&&g.code.startsWith('T')&&t>0.75&&show.g)hidePiece();
     if(t>=1){seq.i++;seq.s=now;if(seq.i>=seq.groups.length){const d=seq.onDone;seq=null;hovered=null;paintHi();setTimeout(()=>stepEl.classList.remove('on'),1200);pieces.forEach(p=>p.t=1);d&&d()}}
   }
   for(const p of pieces){
@@ -937,6 +1202,7 @@ function tick(now){
     if(!ev.paused){ev.t=(now-ev.s)/1000;const sc=SCENES[ev.i];document.getElementById('evbarI').style.width=(ev.t/sc.dur*100)+'%';if(ev.t>=sc.dur)evGoto(ev.i+1)}
     if(cycleColors){const ci=Math.floor(ev.t/1.6)%COLORS.length;if(ci!==state.color){state.color=ci;applyColor()}}
   }
+  updPiece(now,dt);updOverlay();
   controls.update();
   renderer.render(scene,camera);
   requestAnimationFrame(tick);
