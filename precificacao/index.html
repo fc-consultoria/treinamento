@@ -580,7 +580,7 @@ async function load(){
     const rows = await rpc("precif_listar",{p_token:sess.token});
     const fresh={}; for (const r of rows||[]){ fresh[r.id]=r.dados; if(!pending.has(r.id)) vers[r.id]=r.atualizado_em; }
     for (const id of pending.keys()) if(models[id]) fresh[id]=models[id];
-    zerarSemCodigo(fresh); models=fresh; loaded=true; $("#who").textContent=""; $("#brandSub").textContent=(sess.nome||"")+" · FC Consultoria"; empresasFC(); $("#voltar").hidden = sess.login!=="fc"; $("#tab-acomp").hidden = sess.login!=="fc"; $("#sup").hidden = sess.login==="fc"; atualizarSuporte(); esconderAviso(); mostrarUsando(); pingSoon(); setSave(pending.size?"Salvando…":"Salvo"); renderNow();
+    zerarSemCodigo(fresh); models=fresh; loaded=true; $("#who").textContent=""; $("#brandSub").textContent=(sess.nome||"")+" · FC Consultoria"; empresasFC(); $("#voltar").hidden = sess.login!=="fc" || new URLSearchParams(location.search).has("emp"); $("#tab-acomp").hidden = sess.login!=="fc"; $("#sup").hidden = sess.login==="fc"; atualizarSuporte(); esconderAviso(); mostrarUsando(); pingSoon(); setSave(pending.size?"Salvando…":"Salvo"); renderNow();
   }catch(e){ if(e.auth){ sess=null; try{localStorage.removeItem("cde-sessao");}catch(_){} showLogin(/Acesso cheio/.test(e.message)?e.message+".":""); } else { setSave("Sem conexão"); toast("Não foi possível carregar os dados: "+e.message); } }
 }
 $("#loginForm").addEventListener("submit", async e=>{
@@ -614,6 +614,8 @@ $("#tutBtn").onclick=openTutorial; $("#lg-tut").onclick=openTutorial;
 /* FC / Matriz: escolher qual empresa abrir */
 async function empresasFC(){
   const sel=$("#empSel"); if(!sess || sess.login!=="fc"){ sel.hidden=true; return; }
+  /* 09/11/2026 · dentro do portal do cliente (?emp=cde): só a empresa dele, sem seletor de clientes */
+  const fix=(new URLSearchParams(location.search).get("emp")||"").toLowerCase(); if(fix){ sel.hidden=true; if(sess.empresa!==fix) await trocarEmpresa(fix,true); return; }
   try{
     const lst=await rpc("precif_empresas",{p_token:sess.token});
     sel.innerHTML=(lst||[]).map(e=>`<option value="${esc(e.empresa)}" ${e.empresa===sess.empresa?"selected":""}>${esc(e.nome)}</option>`).join("");

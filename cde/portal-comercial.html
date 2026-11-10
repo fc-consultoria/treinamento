@@ -214,9 +214,9 @@ label{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:4
       <button data-role="vendedor" aria-pressed="false">Vendedor</button>
       <button data-role="compras" aria-pressed="false">Compras</button>
       <button data-role="fabrica" aria-pressed="false">Fábrica</button>
-      <button data-role="precif" aria-pressed="false">💲 Precificação</button>
+      <!-- 09/11/2026 · Precificação saiu do topo: agora é card dentro de Compras -->
     </div>
-    <button class="btn bell" id="bellBtn" title="Avisos de cadastro">🔔 Avisos<span class="dot" id="bellDot" hidden>0</span></button>
+    <button class="btn bell" id="bellBtn" title="Avisos de cadastro" hidden><!-- 09/11/2026 · CDE não tem cadastro de clientes no Catálogo 3D: sino desligado -->🔔 Avisos<span class="dot" id="bellDot" hidden>0</span></button>
     <div class="seg" role="group" aria-label="Fundo da tela" id="modoSeg"><button data-modo="light" aria-pressed="true">☀️ Claro</button><button data-modo="dark" aria-pressed="false">🌙 Escuro</button></div>
     <button class="btn" id="corBtn" title="Mudar a cor principal">🎨 Cor</button>
     <button class="btn primary" id="tourBtn">▶ Tutorial</button>
@@ -228,7 +228,7 @@ label{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:4
 <section id="precifView" hidden>
  <div class="wrap pv-bar">
   <div><h1>💲 Precificação de Kits</h1><p>Custo e venda por tamanho de kit, ligados ao catálogo TEXA. Entre uma vez com o acesso da CDE; nas próximas vezes abre direto neste navegador.</p></div>
-  <div class="toolbar"><button class="btn" id="pvRecarregar" title="Recarregar a precificação">↻ Recarregar</button><a class="btn" href="../precificacao/" target="_blank" rel="noopener">↗ Abrir em tela cheia</a></div>
+  <div class="toolbar"><button class="btn" id="pvRecarregar" title="Recarregar a precificação">↻ Recarregar</button><button class="btn" data-role="compras" title="Voltar para Compras">← Compras</button><a class="btn" href="../precificacao/?emp=cde" target="_blank" rel="noopener">↗ Abrir em tela cheia</a></div>
  </div>
  <div class="pv-frame"><iframe id="pvFrame" title="Precificação de Kits" allow="clipboard-write; fullscreen"></iframe></div>
 </section>
@@ -285,6 +285,7 @@ const MODS=[
  {k:'sim',n:'Simulador de obra 3D',d:'Coloque as esquadrias na planta e apresente a obra.',i:'⌂'}
 ];
 const CMODS=[
+ {k:'precif',n:'Precificação de Kits',d:'Custo e venda por tamanho de kit, ligados ao catálogo TEXA.',i:'💲',g:'Compras'},/* 09/11/2026 */
  {k:'comp',n:'Onde comprar',d:'Perfis nas extrusoras: quem fabrica cada linha.',i:'🛒',g:'Compras',u:LINK.comp},
  {k:'dist',n:'Compras com distribuidoras',d:'Distribuidoras e os códigos que cada uma usa.',i:'🏬',g:'Compras',u:LINK.dist},
  {k:'tipo',n:'Tipologia',d:'Tipologias das linhas em 3D, passo a passo e desenho técnico.',i:'◈',g:'Consulta',u:LINK.tipo},
@@ -503,7 +504,7 @@ function vCompras(){
  <div class="hello"><div><h1>Olá, ${esc(me.nome)}</h1><p>Suas ferramentas de compra, consulta e suporte da FC.</p></div></div>
  ${!me.ativo?'<div class="empty" style="margin-bottom:14px">Seu acesso está pausado pelo gestor.</div>':''}
  <div id="t-cmods">${grupos.map(g=>`<h3 style="font-size:13px;color:var(--muted);margin:14px 0 8px;font-weight:600">${g}</h3>
- <div class="grid mods">${CMODS.filter(m=>m.g===g).map(m=>{const ok=me.ativo&&me.mods[m.k]&&S.cmodsOn[m.k];return `
+ <div class="grid mods">${CMODS.filter(m=>m.g===g).map(m=>{const ok=m.k==='precif'?(me.ativo&&me.mods.precif!==false&&S.cmodsOn.precif!==false):(me.ativo&&me.mods[m.k]&&S.cmodsOn[m.k]);return `
   <button class="mod ${ok?'':'locked'}" data-act="copen" data-m="${m.k}" id="cmod-${m.k}">
    ${ok?'':'<span class="tag">🔒 bloqueado</span>'}
    <div class="ic" style="font-size:20px">${m.i}</div><h3>${m.n}</h3><p>${m.d}</p></button>`}).join('')}</div>`).join('')}</div>
@@ -519,6 +520,7 @@ function openModG(k){
 }
 function openModC(k){
  const me=S.compras.find(v=>v.id===S.meC);const m=CMODS.find(x=>x.k===k);
+ if(k==='precif'){if(!(me&&me.ativo&&me.mods.precif!==false&&S.cmodsOn.precif!==false)){toast('Módulo bloqueado pelo gestor.');return}role='precif';render();scrollTo(0,0);return}/* 09/11/2026 */
  if(!(me&&me.ativo&&me.mods[k]&&S.cmodsOn[k])){toast('Módulo bloqueado pelo gestor.');return}
  me.ac[k]=(me.ac[k]||0)+1;me.ult=new Date().toISOString();save();
  modal(`<h2>${m.i} ${m.n}</h2><p class="sub">Acesso registrado no medidor do gestor.</p>
@@ -673,10 +675,10 @@ function render(){
  const app=$('#app'),pv=$('#precifView');
  const emPrecif=role==='precif';
  pv.hidden=!emPrecif;app.hidden=emPrecif;$('#tourBtn').hidden=emPrecif;
- if(emPrecif){const f=$('#pvFrame');if(!f.getAttribute('src'))f.setAttribute('src','../precificacao/');$('#bellBtn').hidden=true;return}
+ if(emPrecif){const f=$('#pvFrame');if(!f.getAttribute('src'))f.setAttribute('src','../precificacao/?emp=cde');$('#bellBtn').hidden=true;return}
  app.innerHTML=(role==='gestor'?vGestor():role==='vendedor'?vVendedor():role==='compras'?vCompras():role==='marketing'?vMarketing():role==='fabrica'?vFabrica():vCliente())+`<p class="foot">Desenvolvido por FC Consultoria em Esquadria · © FC Consultoria em Esquadria</p>`;
  const n=S.clientes.filter(c=>!c.visto).length;$('#bellDot').hidden=!n;$('#bellDot').textContent=n;
- $('#bellBtn').hidden=role!=='gestor';
+ $('#bellBtn').hidden=true;/* 09/11/2026 · CDE sem avisos de cadastro */
  if(role==='marketing')drawPost();
  if(role==='cliente'){drawCanvases();const g=$('#cliGrid');if(g&&innerWidth<760)g.style.gridTemplateColumns='1fr'}
  const fv=$('#fVend');if(fv)fv.onchange=e=>{fVend=e.target.value;render()};
@@ -714,7 +716,7 @@ function openMod(k){
 document.addEventListener('click',e=>{
  const t=e.target.closest('[data-act]');
  if(e.target.closest('[data-role]')){role=e.target.closest('[data-role]').dataset.role;render();scrollTo(0,0);return}
- if(e.target.closest('#pvRecarregar')){$('#pvFrame').setAttribute('src','../precificacao/?t='+Date.now());return}
+ if(e.target.closest('#pvRecarregar')){$('#pvFrame').setAttribute('src','../precificacao/?emp=cde&t='+Date.now());return}
  if(!t)return;const a=t.dataset.act,id=t.dataset.id;
  if(a==='irprecif'){role='precif';render();scrollTo(0,0);return}
  if(a==='gopen'){openModG(t.dataset.m);return}
@@ -819,7 +821,6 @@ const TOURS={
  gestor:[
   ['#t-gmods','Esta é a Central do Gestor da CDE. Nos cartões ficam suas ferramentas: Tipologia, Catálogo 3D, Solicitação com a FC, Onde comprar, Compras com distribuidoras, Agenda da FC e Equipe.'],
   ['#t-kpis','Em Equipe ficam os números do dia: cadastros novos, orçamentos em aberto, acessos da equipe e visitas ao Catálogo 3D.'],
-  ['#bellBtn','O sino mostra quantos cadastros novos você ainda não viu.'],
   ['#t-cat','Este gráfico mede o acesso ao Catálogo 3D: visitas por dia, novos cadastros e quanto disso virou pedido de orçamento.'],
   ['#t-cmp','No setor de Compras você libera ou bloqueia cada módulo, pausa o acesso e acompanha no medidor quantas vezes cada ferramenta foi aberta.'],
   ['#t-cmd','Em Comandos você libera ou bloqueia cada módulo por vendedor, pausa o acesso de alguém, liga ou desliga o aceite automático e cadastra vendedores novos.'],
