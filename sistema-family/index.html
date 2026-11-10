@@ -134,6 +134,13 @@ table.cut td.n{text-align:right}
 .hs span{position:absolute;left:36px;top:2px;white-space:nowrap;font:600 12px var(--body);background:rgba(10,12,14,.86);padding:3px 8px;border-radius:7px;border:1px solid var(--line);opacity:0;transition:opacity .2s}
 .hs:hover span,.hs:focus span{opacity:1}
 @keyframes pulse{0%,100%{box-shadow:0 0 0 4px rgba(176,113,79,.35)}50%{box-shadow:0 0 0 10px rgba(176,113,79,0)}}
+#detCard{left:50%;transform:translateX(-50%);bottom:56px;width:min(560px,calc(100% - 32px));padding:14px 16px;display:none}
+#detCard.on{display:block}#detCard h3{font-size:20px;font-weight:800;margin:2px 0 4px}
+#detCard .ddots{display:flex;gap:6px;margin-top:10px}#detCard .ddots i{width:22px;height:5px;border-radius:3px;background:rgba(255,255,255,.15);cursor:pointer}#detCard .ddots i.on{background:#2f9bff}
+#detCard .dwarn{font-size:10.5px;opacity:.85;border-top:1px solid var(--line);padding-top:8px;margin-top:10px}
+#detLbls{position:fixed;inset:0;z-index:3;pointer-events:none}
+body.det #ctl,body.det #info,body.det #lbls{display:none}
+@media (max-width:900px){#detCard{bottom:calc(30px + env(safe-area-inset-bottom,0px));padding:10px 12px;max-height:48%;overflow:auto}#detCard h3{font-size:17px}}
 #hsCard{left:50%;transform:translateX(-50%);bottom:56px;width:min(560px,calc(100% - 32px));padding:14px 16px;display:none}
 #hsCard.on{display:block}
 #hsCard h3{font-size:20px;font-weight:800;margin:2px 0 4px}
@@ -349,6 +356,8 @@ body.visit #waBtn.has{display:inline-flex}
     <div class="st"><span>6</span>Cortes e encaixes</div>
     <div class="cortes" id="cortes"></div>
     <div class="acts" style="margin-top:6px"><button class="btn" id="bCorte" style="grid-column:1/-1">Corte da linha</button></div>
+    <div id="detBox" hidden><div class="st"><span>7</span>Por dentro da Minimalista</div>
+    <div class="acts"><button class="btn" id="bDren" style="grid-column:1/-1">Drenagem · como a água sai</button></div></div>
   </aside>
   <aside class="panel" id="info">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><div class="eyebrow">Raio-X da linha</div><button class="btn mobonly" id="bInfoX" style="padding:6px 10px">Fechar</button></div>
@@ -405,7 +414,7 @@ body.visit #waBtn.has{display:inline-flex}
   <div id="xlab" aria-hidden="true"><svg id="xlabS"></svg><div class="xtag">RAIO-X</div></div>
 </section>
 
-<a class="btn pri" id="waBtn" target="_blank" rel="noopener">Falar com a Arkial</a><svg id="cotas" aria-hidden="true"></svg><div class="panel" id="pcard"></div><div id="lbls"></div><div class="panel" id="hsCard"></div><div id="tip"></div>
+<a class="btn pri" id="waBtn" target="_blank" rel="noopener">Falar com a Arkial</a><svg id="cotas" aria-hidden="true"></svg><div class="panel" id="pcard"></div><div id="lbls"></div><div class="panel" id="hsCard"></div><div class="panel" id="detCard"></div><div id="detLbls"></div><div id="tip"></div>
 <footer class="foot">
   <span>Plataforma 3D desenvolvida por <b>FC Consultoria em Esquadria</b> · CNPJ 52.985.682/0001-32</span>
   <span>Sistema Family · Arkial · imagens demonstrativas · perfis do catálogo técnico Arkial (REV01) e informações técnicas Arkial · confirme medidas e pesos com o fabricante</span>
@@ -815,6 +824,7 @@ function buildCorte(lineKey,len=200){
 const ray=new THREE.Raycaster();const mouse=new THREE.Vector2();let hovered=null,selCode=null;
 const tip=document.getElementById('tip');
 function pickAt(ev){
+  if(state.mode==='det')return null;
   const r=renderer.domElement.getBoundingClientRect();
   mouse.x=((ev.clientX-r.left)/r.width)*2-1;mouse.y=-((ev.clientY-r.top)/r.height)*2+1;
   ray.setFromCamera(mouse,camera);
@@ -953,8 +963,8 @@ function isMob(){return innerWidth<=900}
 function updViewOffset(){
   const w=stage.clientWidth,h=stage.clientHeight;let ox=0,oy=0;
   if(view==='tipologia'){
-    if(isMob()){const sh=[document.getElementById('ctl'),document.getElementById('info'),hsCard].map(e=>e&&e.offsetParent?e.getBoundingClientRect().height:0);oy=Math.max(...sh)/2+34}
-    else{ox=20;if(focus!==null&&hsCard.classList.contains('on'))oy=hsCard.getBoundingClientRect().height/2}
+    if(isMob()){const sh=[document.getElementById('ctl'),document.getElementById('info'),hsCard,document.getElementById('detCard')].map(e=>e&&e.offsetParent?e.getBoundingClientRect().height:0);oy=Math.max(...sh)/2+34}
+    else{ox=20;if(focus!==null&&hsCard.classList.contains('on'))oy=hsCard.getBoundingClientRect().height/2;if(typeof DET!=='undefined'&&DET.on)oy=detCard.getBoundingClientRect().height/2}
   }
   if(ox||oy)camera.setViewOffset(w,h,ox,oy,w,h);else camera.clearViewOffset();
 }
@@ -1018,7 +1028,7 @@ function syncCortes(){const el=document.getElementById('cortes');if(!el)return;
 function updOverlay(){
   let html='';const W=innerWidth,Hh=innerHeight;
   const proj=(x,y,z)=>{const v=new THREE.Vector3(x,y,z);v.project(camera);return v.z<1?[(v.x+1)/2*W,(1-v.y)/2*Hh]:null};
-  if(view==='tipologia'&&state.mode!=='corte'&&!seq){
+  if(view==='tipologia'&&state.mode==='janela'&&!seq){
     if(state.comp&&focus===null){
       const seen={},boxes=[];for(const p of pieces){if(!p.ctype||seen[p.ctype]||!p.obj.visible)continue;
         const wp=new THREE.Vector3();p.mesh.getWorldPosition(wp);
@@ -1049,10 +1059,12 @@ function syncUI(){
   document.getElementById('bCorte').classList.toggle('on',state.mode==='corte');
   document.getElementById('bComp').classList.toggle('on',!!state.comp);
   document.getElementById('tName').textContent=LINES[cur].name;
+  document.getElementById('detBox').hidden=cur!=='M';
   document.getElementById('tSub').textContent=LINES[cur].tip;
   inL.value=state.L;inH.value=state.H;
 }
 function setLine(k,rebuild){
+  if(typeof DET!=='undefined'&&DET.on)detClose(true);
   cur=k;selCode=null;Object.keys(geoCache).forEach(x=>delete geoCache[x]);
   hidePiece(true);if(focus!==null){focus=null;CLIP.length=0;hsCard.classList.remove('on')}state.comp=false;
   [state.L,state.H]=LINES[k].def;state.open=0;state.openT=0;state.explode=0;state.explodeT=0;
@@ -1105,6 +1117,7 @@ function route(){
   setView(v);
 }
 function setView(v){
+  if(typeof DET!=='undefined'&&DET.on&&v!=='tipologia')detClose(true);
   const prev=view;view=v;
   document.querySelectorAll('.view').forEach(s=>s.classList.toggle('on',s.id==='v-'+v));
   document.querySelectorAll('#nav a').forEach(a=>a.classList.toggle('on',a.dataset.v===v));
@@ -1499,11 +1512,153 @@ function tick(now){
     if(!ev.paused){ev.t=(now-ev.s)/1000;const sc=SCENES[ev.i];document.getElementById('evbarI').style.width=(ev.t/sc.dur*100)+'%';if(ev.t>=sc.dur)evGoto(ev.i+1)}
     if(cycleColors){const ci=Math.floor(ev.t/1.6)%COLORS.length;if(ci!==state.color){state.color=ci;applyColor()}}
   }
-  updPiece(now,dt);updOverlay();updXray(now);
+  updPiece(now,dt);updOverlay();updXray(now);updDet(now);
   controls.update();
   renderer.render(scene,camera);
   requestAnimationFrame(tick);
 }
+/* ===== Por dentro da Minimalista · cenas de montagem (Laboratório) ===== */
+/* Cena piloto: drenagem. Perfis reais do catálogo (TFM-031, TFM-002, TFM-001); calha, grelha, tubo e água são ilustrativos. */
+var DET={on:false,g:null,t0:0,step:0,stepT0:0,play:true,grUp:0,grT:0,grAuto:null,parts:null,lbl:null};
+const detCard=document.getElementById('detCard'),detLbls=document.getElementById('detLbls');
+const detMat={
+  water:new THREE.MeshStandardMaterial({color:'#2f9bff',emissive:'#0a55b8',emissiveIntensity:.55,metalness:0,roughness:.15,transparent:true,opacity:.92}),
+  fill:new THREE.MeshStandardMaterial({color:'#2f9bff',emissive:'#0a55b8',emissiveIntensity:.4,transparent:true,opacity:0,depthWrite:false}),
+  slab:new THREE.MeshStandardMaterial({color:'#4d565e',roughness:1,metalness:0,transparent:true,opacity:.07,depthWrite:false,side:THREE.DoubleSide}),
+  slabEdge:new THREE.LineBasicMaterial({color:'#8fa3b0',transparent:true,opacity:.28}),
+  calha:new THREE.MeshStandardMaterial({color:'#aab2b9',metalness:.55,roughness:.4,side:THREE.DoubleSide}),
+  grade:new THREE.MeshStandardMaterial({color:'#c3c9ce',metalness:.85,roughness:.28}),
+  tampa:new THREE.MeshStandardMaterial({color:'#2a2d31',metalness:.4,roughness:.5}),
+  tubo:new THREE.MeshStandardMaterial({color:'#d9e2e8',metalness:0,roughness:.3,transparent:true,opacity:.28,depthWrite:false,side:THREE.DoubleSide}),
+  furo:new THREE.MeshBasicMaterial({color:'#05070a'})
+};
+const DLS=700, DTX=150, DY=280; // comprimento do trecho, posição do tubo, altura do conjunto (mm)
+const DHOLES=[-220,90];
+const DSTEPS=[
+ {t:'Drenagem',p:'Como a Minimalista leva a água da chuva para fora: do vidro até a rede pluvial, sem degrau no piso.',cam:[900,380,620],tgt:[120,-40,60],lb:[]},
+ {t:'1 · A chuva escorre pelo vidro',p:'A água desce pela face externa do vidro e chega à base da folha.',cam:[760,260,330],tgt:[250,90,20],lb:[['Face externa do vidro',[40,150,26]]]},
+ {t:'2 · Pelas câmaras do marco',p:'Ela entra no marco embutido no piso e corre por dentro das câmaras até os furos de dreno.',cam:[640,90,-120],tgt:[300,5,30],lb:[['Câmara do marco · TFM-031',[260,8,20]],['Furo de dreno',[DHOLES[1],8,40]]]},
+ {t:'3 · Para a calha',p:'Pelos furos, a água cai na calha de drenagem instalada na frente da porta, no nível do piso.',cam:[700,120,-60],tgt:[300,-20,60],lb:[['Calha de drenagem',[300,-40,85]],['Furo de dreno',[DHOLES[1],8,40]]]},
+ {t:'4 · Grelha removível',p:'',cam:[700,420,480],tgt:[150,60,90],lb:[['Grelha · PGT03A006',[120,40,85]],['Tampa de acabamento',[-DLS/2,0,85]]],grelha:1},
+ {t:'5 · Para a rede pluvial',p:'Do fundo da calha, o tubo leva a água para a rede pluvial. O piso fica sem degrau e sem água acumulada.',cam:[1000,120,700],tgt:[150,-140,220],lb:[['Tubo de descida',[DTX,-170,85]],['Para a rede pluvial',[DTX,-255,470]]]}
+];
+const DDUR=[3.5,5,5,5,6,6];
+function detStepText(i){const s=DSTEPS[i];if(i!==4)return s.p;const it=COMP.M.items.dreno;return `Tampa de grade ${it[0][0]}: 1 peça a cada metro de vão (${it[2]}). Sai inteira para limpar a calha.`}
+function detBox(w,h,d,x,y,z,mat,parent){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);m.position.set(x,y,z);(parent||DET.g).add(m);return m}
+function detSlab(x0,x1,y0,y1,z0,z1){const geo=new THREE.BoxGeometry(x1-x0,y1-y0,z1-z0);const m=new THREE.Mesh(geo,detMat.slab);m.position.set((x0+x1)/2,(y0+y1)/2,(z0+z1)/2);m.renderOrder=1;DET.g.add(m);
+  const e=new THREE.LineSegments(new THREE.EdgesGeometry(geo),detMat.slabEdge);e.position.copy(m.position);DET.g.add(e)}
+// caminho da água: lista de pontos (mm) -> tempos por trecho
+function detPath(pts){const segs=[];let T=0;for(let i=1;i<pts.length;i++){const a=pts[i-1],b=pts[i];const d=Math.hypot(b[0]-a[0],b[1]-a[1],b[2]-a[2]);const dy=b[1]-a[1];const fall=dy<0&&-dy>Math.hypot(b[0]-a[0],b[2]-a[2]);const v=fall?650:210;const dt=d/v;segs.push({a,b,t0:T,dt,fall});T+=dt}return {segs,T}}
+function detBuild(){
+  const keep=cur;cur='M';
+  const g=buildCorte('M',DLS);g.position.set(0,DY*0.001,0);DET.g=g;
+  const ln=LINES.M,mp=P.M[ln.marco];const Dm=ln.marcos[1]+mp.w; // 79,3 mm
+  // contramarco TFM-001 sob os dois marcos
+  [[Dm/2+0.35],[Dm/2-Dm/2]].forEach(([z])=>{const m=new THREE.Mesh(barGeo('TFM-001',DLS,false,false),[aluCap,alu]);m.position.set(-DLS/2,-P.M['TFM-001'].h,z);m.userData={code:'TFM-001',name:P.M['TFM-001'].d};g.add(m)});
+  cur=keep;
+  const top=mp.h; // nível do piso = topo do marco
+  const zc0=Dm/2+0.4,zc1=zc0+90,ycb=-67;
+  // piso (concreto em transparência)
+  detSlab(-DLS/2,DLS/2,-DY,top,-420,-Dm/2-0.7);
+  detSlab(-DLS/2,DLS/2,-DY,-P.M['TFM-001'].h,-Dm/2-0.7,zc0);
+  detSlab(-DLS/2,DLS/2,-DY,ycb,zc0,zc1+2);
+  detSlab(-DLS/2,DLS/2,-DY,top,zc1+2,520);
+  // calha (ilustrativa)
+  detBox(DLS,2,zc1-zc0,0,ycb+1,(zc0+zc1)/2,detMat.calha);
+  detBox(DLS,top-ycb,2,0,(top+ycb)/2,zc0+1,detMat.calha);
+  detBox(DLS,top-ycb,2,0,(top+ycb)/2,zc1-1,detMat.calha);
+  detBox(4,top-ycb,zc1-zc0,-DLS/2-2,(top+ycb)/2,(zc0+zc1)/2,detMat.tampa); // tampa de acabamento (fundo)
+  // furos de dreno na face externa do marco
+  DHOLES.forEach(hx=>detBox(22,7,1.2,hx,8,Dm/2+0.3,detMat.furo));
+  // grelha removível
+  const gr=new THREE.Group();g.add(gr);DET.gr=gr;
+  const gz0=zc0+3,gz1=zc1-3,gl=DLS-16;
+  detBox(gl,4,3,0,top-2,gz0+1.5,detMat.grade,gr);detBox(gl,4,3,0,top-2,gz1-1.5,detMat.grade,gr);
+  for(let k=1;k<=8;k++){const z=gz0+(gz1-gz0)*k/9;detBox(gl,14,2.4,0,top-7,z,detMat.grade,gr)}
+  for(let x=-gl/2+30;x<gl/2;x+=110)detBox(3,10,gz1-gz0,x,top-11,(gz0+gz1)/2,detMat.grade,gr);
+  // tubo de descida e saída
+  const r=22;const tv=new THREE.Mesh(new THREE.CylinderGeometry(r,r,(ycb)-(-DY+25)+2,28,1,true),detMat.tubo);tv.position.set(DTX,(ycb+(-DY+25))/2,(zc0+zc1)/2);g.add(tv);
+  const th=new THREE.Mesh(new THREE.CylinderGeometry(r,r,520-(zc0+zc1)/2,28,1,true),detMat.tubo);th.rotation.x=Math.PI/2;th.position.set(DTX,-DY+25,(520+(zc0+zc1)/2)/2);g.add(th);
+  const el=new THREE.Mesh(new THREE.SphereGeometry(r,24,16),detMat.tubo);el.position.set(DTX,-DY+25,(zc0+zc1)/2);g.add(el);
+  // lâminas de água (enchem aos poucos)
+  DET.fillM=detBox(DLS-6,3,18,0,6.5,19.6,detMat.fill.clone());
+  DET.fillC=detBox(DLS-6,5,zc1-zc0-4,0,ycb+4.5,(zc0+zc1)/2,detMat.fill.clone());
+  // gotas
+  const paths=[];const zcm=(zc0+zc1)/2,yo=-DY+25;
+  const tail=(x)=>[[DTX,ycb+4,zcm],[DTX,yo,zcm],[DTX,yo,515]];
+  for(let i=0;i<70;i++){const x=-DLS/2+40+Math.random()*(DLS-80);const hx=DHOLES.reduce((a,b)=>Math.abs(b-x)<Math.abs(a-x)?b:a);
+    paths.push(detPath([[x,175,26],[x,42,26],[x,42,41],[x,22,37],[x,6.5,20],[hx,6.5,20],[hx,6.5,42],[hx+(DTX-hx)*0.15,ycb+4,zcm],[DTX,ycb+4,zcm],[DTX,yo,zcm],[DTX,yo,515]]))}
+  for(let i=0;i<55;i++){const x=-DLS/2+30+Math.random()*(DLS-60),z=zc1+30+Math.random()*320;
+    paths.push(detPath([[x,430,z],[x,top+3,z],[x,top+3,zc1-8],[x,ycb+4,zcm+10],[DTX,ycb+4,zcm],[DTX,yo,zcm],[DTX,yo,515]]))}
+  DET.drops=paths.map((p,i)=>({p,gap:.4+Math.random()*1.8,off:Math.random()*8,d0:i<70?0.6:4}));
+  const im=new THREE.InstancedMesh(new THREE.SphereGeometry(3.6,10,8),detMat.water,DET.drops.length);im.frustumCulled=false;g.add(im);DET.im=im;
+  scene.add(g);
+}
+function detOpen(){
+  if(cur!=='M')return;
+  if(state.mode==='corte')toggleCorte();
+  if(focus!==null){focus=null;CLIP.length=0;hsCard.classList.remove('on');document.body.classList.remove('focus')}
+  hidePiece(true);seq=null;stepEl.classList.remove('on');state.open=0;state.explode=0;state.comp=false;state.spin=false;paintHi();
+  state.mode='det';root.visible=false;DET.on=true;detBuild();
+  document.body.classList.add('det');detCard.classList.add('on');
+  DET.t0=performance.now();DET.play=true;detGoto(0);syncUI();
+}
+function detClose(noCam){
+  if(!DET.on)return;DET.on=false;if(DET.g){scene.remove(DET.g);DET.g=null}
+  state.mode='janela';root.visible=view==='tipologia';document.body.classList.remove('det');detCard.classList.remove('on');detLbls.innerHTML='';detLbls.__h='';
+  if(!noCam)frameCamera();setTimeout(updViewOffset,30);syncUI();
+}
+function detCam(i){const s=DSTEPS[i];const k=0.001,oy=DY*k,m=isMob()?1.6:1;const tg=new THREE.Vector3(s.tgt[0]*k,s.tgt[1]*k+oy,s.tgt[2]*k);
+  const ps=new THREE.Vector3(s.cam[0]*k,s.cam[1]*k+oy,s.cam[2]*k).sub(tg).multiplyScalar(m*1.3).add(tg);camTo(ps,tg,true,1.6)}
+function detGoto(i){
+  DET.step=(i+DSTEPS.length)%DSTEPS.length;DET.stepT0=performance.now();const s=DSTEPS[DET.step];
+  detCam(DET.step);clearTimeout(DET.grAuto);
+  if(s.grelha){DET.grUp=1;DET.grAuto=setTimeout(()=>{if(DET.on&&DET.step===4){DET.grUp=0;detCardHTML()}},4200)}else DET.grUp=0;
+  detCardHTML();
+}
+function detCardHTML(){
+  const i=DET.step,s=DSTEPS[i];
+  detCard.innerHTML=`<div class="eyebrow">Por dentro · Family Minimalista</div><h3>${s.t}</h3><div class="note" style="margin:0">${detStepText(i)}</div>
+  <div class="ddots">${DSTEPS.map((_,k)=>`<i class="${k===i?'on':''}" data-k="${k}"></i>`).join('')}</div>
+  <div class="row" style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><button class="btn" id="dPrev" aria-label="Etapa anterior">◀</button><button class="btn" id="dNext" aria-label="Próxima etapa">▶</button><button class="btn" id="dPlay">${DET.play?'Pausar':'Continuar'}</button><button class="btn" id="dGr">${DET.grUp?'Colocar grelha':'Tirar grelha'}</button><button class="btn pri" id="dBack">Voltar</button></div>
+  <div class="note dwarn">Representação ilustrativa do funcionamento. Medidas e componentes conforme o catálogo técnico Arkial.</div>`;
+  document.getElementById('dPrev').onclick=()=>detGoto(DET.step-1);
+  document.getElementById('dNext').onclick=()=>detGoto(DET.step+1);
+  document.getElementById('dPlay').onclick=()=>{DET.play=!DET.play;DET.stepT0=performance.now();detCardHTML()};
+  document.getElementById('dGr').onclick=()=>{clearTimeout(DET.grAuto);DET.grUp=DET.grUp?0:1;detCardHTML()};
+  document.getElementById('dBack').onclick=()=>detClose();
+  detCard.querySelectorAll('.ddots i').forEach(e=>e.onclick=()=>detGoto(+e.dataset.k));
+  setTimeout(updViewOffset,30);
+}
+const _dm=new THREE.Matrix4(),_dq=new THREE.Quaternion(),_dp=new THREE.Vector3(),_ds=new THREE.Vector3(),_dv=new THREE.Vector3();
+function updDet(now){
+  if(!DET.on||!DET.g)return;
+  const t=(now-DET.t0)/1000;
+  if(DET.play&&(now-DET.stepT0)/1000>DDUR[DET.step]&&DET.step<DSTEPS.length-1)detGoto(DET.step+1);
+  // grelha sobe e volta
+  const ddt=Math.min(.1,(now-(DET.last||now))/1000);DET.last=now;DET.grT+=(DET.grUp-DET.grT)*Math.min(1,ddt*3.5);const gk=ease(Math.min(1,Math.max(0,DET.grT)));
+  DET.gr.position.set(0,gk*170,gk*40);DET.gr.rotation.x=-gk*0.35;
+  // água acumulando
+  DET.fillM.material.opacity=Math.min(.55,Math.max(0,(t-2)/4)*.55);
+  DET.fillC.material.opacity=Math.min(.6,Math.max(0,(t-3.5)/4)*.6);
+  // gotas
+  DET.drops.forEach((d,i)=>{
+    const per=d.p.T+d.gap;const lt=t-d.d0-d.off*0.6;let s=lt<0?-1:(lt%per);
+    if(s<0||s>d.p.T){_ds.set(0,0,0);_dm.compose(_dp.set(0,-9999,0),_dq.identity(),_ds);DET.im.setMatrixAt(i,_dm);return}
+    let sg=d.p.segs[d.p.segs.length-1];for(const g of d.p.segs){if(s<=g.t0+g.dt){sg=g;break}}
+    const k=Math.min(1,(s-sg.t0)/sg.dt);
+    _dp.set(sg.a[0]+(sg.b[0]-sg.a[0])*k,sg.a[1]+(sg.b[1]-sg.a[1])*k,sg.a[2]+(sg.b[2]-sg.a[2])*k);
+    _ds.set(1,sg.fall?2.6:1,1);_dm.compose(_dp,_dq.identity(),_ds);DET.im.setMatrixAt(i,_dm);
+  });
+  DET.im.instanceMatrix.needsUpdate=true;
+  // etiquetas
+  let html='';const W=innerWidth,Hh=innerHeight;
+  DSTEPS[DET.step].lb.forEach(([txt,p])=>{_dv.set(p[0],p[1],p[2]);if(DSTEPS[DET.step].grelha&&txt.startsWith('Grelha'))_dv.add(DET.gr.position);DET.g.localToWorld(_dv);_dv.project(camera);if(_dv.z>=1)return;
+    const x=(_dv.x+1)/2*W,y=(1-_dv.y)/2*Hh;if(x<10||x>W-10||y<70||y>Hh-30)return;html+=`<div class="lb" style="left:${x}px;top:${y}px"><i style="background:#2f9bff"></i>${txt}</div>`});
+  if(detLbls.__h!==html){detLbls.innerHTML=html;detLbls.__h=html}
+}
+document.getElementById('bDren').onclick=()=>detOpen();
+
 syncUI();route();requestAnimationFrame(tick);
 </script>
 </body></html>
