@@ -57,3 +57,7 @@ begin
 end $$;
 
 grant execute on function fam_ap_pedir(text,text,text), fam_ap_status(text), fam_ap_lista(uuid), fam_ap_definir(uuid,uuid,text) to anon, authenticated;
+
+-- aviso no Painel da Matriz (só a contagem, sem dados pessoais)
+create or replace function fam_ap_pendentes() returns int language sql stable security definer set search_path=public as $$ select count(*)::int from fam_aparelhos where status='pendente' $$;
+grant execute on function fam_ap_pendentes() to anon, authenticated;
