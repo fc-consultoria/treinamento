@@ -3,15 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2c1a12">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Family CDE">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="description" content="Linha Family 32 (Arkial) em 3D dentro de casa e simulador na obra · CDE Vidros & Esquadrias · Desenvolvido por FC Consultoria em Esquadria">
 <meta property="og:title" content="Linha Family 32 · CDE Vidros & Esquadrias">
 <meta property="og:description" content="Veja como a Linha Family fica na sua casa: ambientes 3D e simulador com foto do vão.">
 <meta property="og:image" content="https://fc-consultoria.github.io/treinamento/family/og-family.jpg">
-<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}</style>
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
 <title>Family 32 em Casa</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700&family=Inter:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="fonts.css">
 <style>
 /* Layout: palco 3D à esquerda (o produto é o herói), painel de leitura à direita; no celular empilha. Visual único na identidade Arkial (marrom + creme + cobre). */
 :root{
@@ -103,6 +110,12 @@ h2{font:500 17px var(--f-display);margin:0 0 10px;text-wrap:balance}
 .simbar a{margin-left:auto;color:var(--copper-2);font-weight:600}
 .simwrap iframe{flex:1;border:0;width:100%;min-height:0;background:#fffaf8}
 
+/* app: instalar e sem internet */
+.netchip{font:600 11.5px var(--f-body);color:#f3e6d0;border:1px solid #5a3c2c;border-radius:999px;padding:6px 11px;white-space:nowrap}
+.netchip.off{background:#b4472b;border-color:#b4472b;color:#fff}
+.dica-ios{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:50;background:#fff;color:var(--brown);border-radius:14px;padding:14px 16px;box-shadow:0 10px 30px rgba(0,0,0,.35);font-size:14px;max-width:min(420px,calc(100% - 32px));line-height:1.45}
+.dica-ios b{display:block;margin-bottom:4px}
+.dica-ios button{margin-top:8px;border:0;background:var(--copper);color:#fff;border-radius:999px;padding:7px 14px;font:600 12.5px var(--f-body);cursor:pointer}
 /* QR no canto da tela */
 .qrc{position:absolute;right:max(14px,env(safe-area-inset-right,0px));bottom:26px;z-index:6;background:#fff;border-radius:14px;padding:10px 10px 8px;box-shadow:0 8px 28px rgba(0,0,0,.35);display:flex;gap:10px;align-items:flex-start}
 .qrc figure{margin:0;display:flex;flex-direction:column;align-items:center;gap:4px;width:108px}
@@ -149,6 +162,8 @@ body.evento .caption{display:block}
     <button role="tab" id="tabAmb" aria-selected="true">Ambientes 3D</button>
     <button role="tab" id="tabSim" aria-selected="false">Simulador na obra</button>
   </div>
+  <span class="netchip" id="netChip" hidden></span>
+  <button class="hbtn" id="btnInstalar" hidden>Instalar app</button>
   <button class="hbtn" id="btnEvento">Modo evento</button>
 </header>
 <main>
@@ -208,8 +223,8 @@ body.evento .caption{display:block}
 </main>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="lib/three.min.js"></script>
+<script src="lib/OrbitControls.js"></script>
 <script>
 'use strict';
 const $=s=>document.querySelector(s);
@@ -572,6 +587,23 @@ function rota(){const h=(location.hash||'').replace('#','');
  else if(h==='ambientes'){if(ev)$('#btnEvento').click();setTab(false)}
  else{try{if(localStorage.getItem('fam_tab')==='sim')setTab(true)}catch(e){}}}
 addEventListener('hashchange',rota);rota();
+/* ---------- App: funciona sem internet ---------- */
+(function(){
+ const chip=$('#netChip'),bI=$('#btnInstalar');let pronto=false,promptEv=null;
+ function net(){chip.hidden=false;if(!navigator.onLine){chip.textContent='Sem internet · usando o app do aparelho';chip.classList.add('off')}
+  else{chip.classList.remove('off');chip.textContent=pronto?'Pronto para usar sem internet':'Guardando para usar sem internet…'}}
+ addEventListener('online',net);addEventListener('offline',net);
+ if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js',{scope:'./'}).then(()=>navigator.serviceWorker.ready).then(()=>{pronto=true;net()}).catch(()=>{chip.hidden=true});net()}
+ const ios=/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+ const instalado=matchMedia('(display-mode: standalone)').matches||navigator.standalone;
+ addEventListener('beforeinstallprompt',e=>{e.preventDefault();promptEv=e;if(!instalado)bI.hidden=false});
+ if(ios&&!instalado)bI.hidden=false;
+ bI.onclick=async()=>{if(promptEv){promptEv.prompt();try{await promptEv.userChoice}catch(_){}promptEv=null;bI.hidden=true;return}
+  if(ios){const d=document.createElement('div');d.className='dica-ios';d.innerHTML='<b>Instalar no iPhone / iPad</b>Toque em <b style="display:inline">Compartilhar</b> (quadrado com seta para cima) e depois em <b style="display:inline">Adicionar à Tela de Início</b>. Abra pelo ícone Family CDE.<br><button type="button">Entendi</button>';document.body.appendChild(d);d.querySelector('button').onclick=()=>d.remove()}};
+ addEventListener('appinstalled',()=>{bI.hidden=true});
+ if(instalado)bI.hidden=true;
+})();
+
 </script>
 
 </body>

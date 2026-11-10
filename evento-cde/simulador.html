@@ -7,8 +7,10 @@
 <title>CDE · Simulador de Esquadrias e Vidros</title>
 
 <!-- Tailwind CSS via CDN -->
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<link rel="stylesheet" href="tw.css">
+<link rel="stylesheet" href="fonts.css">
+<script>window.tailwind = window.tailwind || {}; /* CSS já compilado em tw.css (funciona sem internet) */</script>
+<script src="lib/three.min.js"></script>
 <script>
   tailwind.config = {
     darkMode: 'class',
@@ -94,6 +96,9 @@
   #canvasWrap.modo-anotacao { cursor: crosshair; }
   #canvasWrap.modo-anotacao #hint { border-color: #e65c00; color: #e65c00; background: #fff; }
 </style>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-180.png">
+<script>if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js',{scope:'./'}).catch(()=>{});</script>
 </head>
 
 <body class="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-100 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800 text-slate-800 dark:text-slate-200 font-sans antialiased selection:bg-accent/20 flex flex-col transition-colors duration-300">
@@ -654,15 +659,16 @@
     const el = id => document.getElementById(id);
     api.syncCtrls = vao => {
       const fam = vao && vao.produto.tipo === 'family';
-      el('famMov').classList.toggle('hidden', !fam); if (!fam) return;
+      const mostra = (id, on) => { const e = el(id); e.classList.toggle('hidden', !on); e.style.display = on ? '' : 'none'; };
+      mostra('famMov', fam); if (!fam) return;
       const c = vao.produto.fam, mv = vao.mov;
       el('famAbrir').textContent = mv.abT > 0 ? 'Fechar' : 'Abrir';
       el('famVista').textContent = mv.vista === 'fora' ? 'Foto tirada de fora' : 'Foto tirada de dentro';
-      el('famOscilo').classList.toggle('hidden', c.type !== 'oscilo');
+      mostra('famOscilo', c.type === 'oscilo');
       el('famTombar').classList.toggle('btn-active', mv.modo === 'tombar'); el('famGirar').classList.toggle('btn-active', mv.modo === 'girar');
       el('famAb').value = Math.round(mv.abT * 100); el('famAbLbl').textContent = Math.round(mv.abT * 100) + '%';
-      el('famPersBox').classList.toggle('hidden', !c.persiana); el('famPe').value = Math.round(mv.peT * 100); el('famPeLbl').textContent = Math.round(mv.peT * 100) + '%';
-      el('famTela').classList.toggle('hidden', !c.tela); el('famTela').textContent = 'Tela mosquiteira: ' + (mv.tela ? 'ligada' : 'desligada');
+      mostra('famPersBox', !!c.persiana); el('famPe').value = Math.round(mv.peT * 100); el('famPeLbl').textContent = Math.round(mv.peT * 100) + '%';
+      mostra('famTela', !!c.tela); el('famTela').textContent = 'Tela mosquiteira: ' + (mv.tela ? 'ligada' : 'desligada');
     };
     const ativo = () => { const v = vaoAtivo(); return v && v.produto.tipo === 'family' ? v : null; };
     api.montarControles = () => {
