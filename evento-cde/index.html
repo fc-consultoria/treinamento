@@ -122,13 +122,12 @@ h2{font:500 17px var(--f-display);margin:0 0 10px;text-wrap:balance}
 .qrc img{width:108px;height:108px;display:block;image-rendering:pixelated}
 .qrc figcaption{font:600 11px/1.2 var(--f-body);color:var(--brown);text-align:center}
 .qrc .x{position:absolute;top:-10px;right:-10px;width:24px;height:24px;border-radius:50%;border:0;background:var(--brown);color:#fff;font:700 13px var(--f-body);cursor:pointer}
-.qrc .tt{position:absolute;left:10px;top:-22px;font:600 11px var(--f-body);color:#fff;letter-spacing:.06em;text-transform:uppercase;text-shadow:0 1px 3px rgba(0,0,0,.6);white-space:nowrap}
+.qrc .tt{position:absolute;right:4px;top:-22px;font:600 11px var(--f-body);color:#fff;letter-spacing:.06em;text-transform:uppercase;text-shadow:0 1px 3px rgba(0,0,0,.6);white-space:nowrap}
 .qrpill{position:absolute;right:max(14px,env(safe-area-inset-right,0px));bottom:26px;z-index:6;border:0;border-radius:999px;background:#fff;color:var(--brown);font:700 12px var(--f-body);padding:9px 13px;box-shadow:0 4px 14px rgba(0,0,0,.3);cursor:pointer}
 body.evento .qrc{bottom:34px;right:34px;padding:14px 14px 10px;gap:14px}
 body.evento .qrc figure{width:170px}body.evento .qrc img{width:170px;height:170px}body.evento .qrc figcaption{font-size:14px}
 body.evento .qrc .tt{font-size:14px;top:-28px}
-body.sim .qrc{padding:8px 8px 6px}body.sim .qrc .tt{display:none}
-body.sim .qrc figure:first-of-type{display:none}
+body.sim .qrc,body.sim .qrpill{display:none!important}
 @media (max-width:900px){.qrc figure{width:84px}.qrc img{width:84px;height:84px}}
 
 /* modo evento */
@@ -173,9 +172,8 @@ body.evento .caption{display:block}
     <nav class="amb-strip" id="ambStrip" aria-label="Ambientes"></nav>
     <div class="dock" id="dock"></div>
     <div class="caption" id="caption"><div class="k" id="capK"></div><div class="t" id="capT"></div><div class="d" id="capD"></div></div>
-    <div class="qrc" id="qrBox"><span class="tt">Abra no seu celular</span>
-      <figure><img alt="QR Code Ambientes 3D" src="data:image/png;base64,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"><figcaption>Ambientes 3D</figcaption></figure>
-      <figure><img alt="QR Code Simulador na obra" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAUgAAAFICAIAAAC9dvBkAAAGJklEQVR42u3dwY3cOBCG0b8NZ+DjxuD8A3EMPjoGOYDFHASwXFXSe+fdnp52f6CAGpKf67oCPMs3HwEIGxA2IGxA2ICwQdiAsAFhA8IGhA3CBoQNCBsQNnDC97v/w8//fqz4xX79/rP6/U/7HLa8ztu+z1Zs8CgOCBsQNiBsQNiAsCHm2KmeK6ZpDln9/re8z7uvf3cuXT2v/ur1T/1eW77PVmzwKA4IGxA2IGxA2CBsIObY2T6/PfX+v3qfXfvDT71+9Xz47tzb301YscGjOCBsQNiAsAFhA8KGmGPHOdv5h3Pgu+9n2ry3+u8CMuzvHazYgLABYQPCBmEDwgaEDcQcO7v2096dV5/676vn3tWv0/X5WLEBYQPCBoQNCBuEDQgbyGPn2NPmh6fmq2man3ftS68+D/zU92Ta/eFWbEDYgLBB2ICwAWEDwgbSNseeNqftOn+7+vzwab9vhu0/r94fbsUGhA0IGxA2CBsQNiBsoNznui6fQvrmn13z7eq5/Zbz1a3YgLABYQPCBoQNwgaEDWT9fuyn7nftmidvOdd62rx62ve2+v3ffZ9WbPAoDggbEDYgbEDYIGwgzhVP9bx6+z3bW87l7vp9t+w/r55vn3qfVmzwKA4IGxA2IGxA2CBsIObYbfuWp91HneX3ZmfJ3wV89f6rP+eu/dv2YwPCBmEDwgaEDQgbEDbE/diZth/1qfPJLeecT9sfXr3Pf/uc34oNHsUBYQPCBoQNCBuEDcR+7HTtE+66t7nrPufqc7OfOm+f9v2pns9bscGjOCBsQNiAsAFhg7CBvGiOPW1fdB46/0zTeebVrzPtnuquOXP152PFBo/igLABYQPCBoQNwgbyonPFu87rjnOwV/3ct93L3fX9tGKDR3FA2ICwAWEDwgaEDTHHHjcHfup92mk6v71633j1PLzr/U/7fKzY4FEcEDYgbEDYgLBB2EDMsR9ry33L0+a0W+b81T+36/eyYoNHcUDYgLABYQPCBmEDedH92FkyF82heWP1XLp6ztm133vaPuctf0dgxQaEDcIGhA0IGxA2IGzg/n7sLLn/eft9ztXz/y37vbfMmafdx27FBo/igLABYQPCBoQNwgZiP3a23IfctT+563zyrnOwT82N775O1/nn075vVmzwKA4IGxA2IGxA2CBsIObY2TIvPfVzT50fnmHnk0+7j3rLPu1p58BbscGjOCBsQNiAsAFhg7CBmGNn2py5+hzpaXPpU/PzLbrm9l3fZys2IGwQNiBsQNiAsAFhQ9yPnWnnNm+/5zlLzm/fcq77lnvLu+57t2KDR3FA2ICwAWEDwgZhA7EfO1vOl86wOeeW+66n3XPe9T6r7+u2YgPCBmEDwgaEDQgbEDaw51zxDDu3OcP2UW85j73685m2b7xrn7kVGzyKA8IGhA0IGxA2CBuIOfaa88Or9/1OmwN3nQO/5fW3vx8rNngUB4QNCBsQNiBsQNgQc+xM2w9cPTfeMhfdcm9z1/7naefSV8/DrdjgURwQNiBsQNiAsEHYwGKf67ri3OasP/d7yzw5S/alb7n/3IoNHsUBYQPCBoQNCBsQNsQcu23fddf54Sne1z1trj7tHPUt57dPuyfcig0exQFhA8IGhA0IG4QN5EVz7Dx0X+6WOfOWue6Wv2vo+nexHxsQNiBsEDYgbEDYgLCBHLsfe8s+2FNzwqees901l66+b7zrvPdpn5sVGzyKA8IGhA0IGxA2CBvIi+bYGTbv7ZqrT9vXPW3ee+pz6Dq3PMv//sKKDR7FAWEDwgaEDQgbhA3EHDvVc8i37Yvefn/4tPu3p50jUL0P3IoNHsUBYQPCBoQNCBuEDcQcO87Zzqr7tLf/vtPe57T7va3Y4FEcEDYgbEDYgLBB2EDMsfPUe56zZF9u133OW84Pn3Z/tRUbEDYgbBA2IGxA2ICwgbTNsbecB941T/7q5067f/vU/LlrDly9/3naueVWbPAoDggbEDYgbEDYIGwg5tjj5nhdc9Su86u7zsHefq/4qc952jzcig0exQFhA8IGhA0IG4QNLPa5rsunAFZsQNiAsAFhA8IGYQPCBoQNCBsQNggbEDYgbEDYgLCB//sLbrSrejmxKt8AAAAASUVORK5CYII="><figcaption>Simulador na obra</figcaption></figure>
+    <div class="qrc" id="qrBox"><span class="tt" id="qrTt">Este ambiente no seu celular</span>
+      <figure><img id="qrImg" alt="QR Code"><figcaption id="qrCap">Ambientes 3D</figcaption></figure>
       <button class="x" id="qrX" aria-label="Recolher QR Code">×</button></div>
     <button class="qrpill" id="qrPill" hidden>QR Code</button>
     <div class="wm">Desenvolvido por FC Consultoria em Esquadria · imagens demonstrativas</div>
@@ -225,6 +223,7 @@ body.evento .caption{display:block}
 
 <script src="lib/three.min.js"></script>
 <script src="lib/OrbitControls.js"></script>
+<script src="lib/qrcode.js"></script>
 <script>
 'use strict';
 const $=s=>document.querySelector(s);
@@ -576,6 +575,24 @@ controls.addEventListener('start',()=>{tw=null});
 
 let startId='sala';try{const s=localStorage.getItem('fam_amb');if(s&&AMB.some(a=>a.id===s))startId=s}catch(e){}
 resize();setAmb(startId);requestAnimationFrame(loop);
+/* QR no canto da tela:
+   Ambientes 3D → abre no celular do cliente exatamente o ambiente que o vendedor montou (tipologia, cor, aberta, noite…)
+   Modo evento → só o QR do próprio modo evento.  Simulador → o QR sai do botão "QR para o cliente". */
+const QR_BASE='https://fc-consultoria.github.io/treinamento/evento-cde/';
+function urlAmbiente(){const q=new URLSearchParams();q.set('a',cur.id);q.set('c',state.fin);if(target.open>0||target.tilt>0||target.turn>0)q.set('o',target.tilt>0?'t':target.turn>0?'g':'1');
+ if(state.night)q.set('n','1');if(target.blind>0)q.set('b',Math.round(target.blind*100));if(cur.tela&&!state.tela)q.set('t','0');if(viewOut)q.set('v','fora');return QR_BASE+'?'+q.toString()+'#ambientes'}
+let qrUlt='';
+function qrAtualiza(){if(typeof qrcode==='undefined'||!cur)return;const evento=!!ev;const u=evento?QR_BASE+'#evento':urlAmbiente();if(u===qrUlt)return;qrUlt=u;
+ try{const q=qrcode(0,'M');q.addData(u);q.make();$('#qrImg').src=q.createDataURL(8,2)}catch(e){}
+ $('#qrCap').textContent=evento?'Modo evento':(cur.nome+' · '+FIN[state.fin].n);$('#qrTt').textContent=evento?'Abra no seu celular':'Este ambiente no seu celular'}
+setInterval(qrAtualiza,700);
+/* abre com o ambiente que veio no QR */
+function aplicaParametros(){let q;try{q=new URLSearchParams(location.search)}catch(e){return}if(!q.get('a'))return;
+ if(AMB.some(a=>a.id===q.get('a')))setAmb(q.get('a'));if(FIN[q.get('c')])applyFinish(q.get('c'));
+ const o=q.get('o');if(o==='t')target.tilt=1;else if(o==='g')target.turn=1;else if(o)target.open=1;
+ if(q.get('b'))target.blind=Math.min(1,(+q.get('b')||0)/100);if(q.get('t')==='0')state.tela=false;if(q.get('n')==='1'){state.night=true;applyNight()}
+ if(q.get('v')==='fora'){viewOut=true;goTo(viewFor(cur,true),1.4)}renderDock()}
+aplicaParametros();
 /* QR no canto: recolhe/abre; no celular começa recolhido */
 function qrShow(on){$('#qrBox').hidden=!on;$('#qrPill').hidden=on}
 $('#qrX').onclick=()=>qrShow(false);$('#qrPill').onclick=()=>qrShow(true);

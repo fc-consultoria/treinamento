@@ -11,6 +11,7 @@
 <link rel="stylesheet" href="fonts.css">
 <script>window.tailwind = window.tailwind || {}; /* CSS já compilado em tw.css (funciona sem internet) */</script>
 <script src="lib/three.min.js"></script>
+<script src="lib/qrcode.js"></script>
 <script>
   tailwind.config = {
     darkMode: 'class',
@@ -95,6 +96,32 @@
   #canvasWrap.modo-criacao { cursor: crosshair; }
   #canvasWrap.modo-anotacao { cursor: crosshair; }
   #canvasWrap.modo-anotacao #hint { border-color: #e65c00; color: #e65c00; background: #fff; }
+
+  /* ===== Obra (vários ambientes) e modo cliente · FC ===== */
+  .obra-card{border:1px solid #ffedd5;background:#fff;border-radius:14px;padding:10px;display:flex;flex-direction:column;gap:8px;box-shadow:0 1px 3px rgba(0,0,0,.03)}
+  .dark .obra-card{background:#1e293b;border-color:#334155}
+  .obra-row{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+  .obra-in{flex:1 1 140px;min-width:0;border:1px solid #fed7aa;border-radius:10px;padding:8px 10px;font:500 13px Inter,system-ui,sans-serif;background:#fff;color:#1e293b}
+  .dark .obra-in{background:#0f172a;border-color:#334155;color:#e2e8f0}
+  .obra-tabs{display:flex;gap:6px;overflow-x:auto;flex:1 1 auto;min-width:0;padding-bottom:2px}
+  .obra-tab{flex:none;border:1px solid #fed7aa;background:#fff7ed;color:#9a3412;border-radius:999px;padding:7px 12px;font:600 12px Inter,system-ui,sans-serif;cursor:pointer;white-space:nowrap}
+  .obra-tab small{font-weight:500;opacity:.7}
+  .obra-tab.on{background:#e65c00;border-color:#e65c00;color:#fff}
+  .dark .obra-tab{background:#0f172a;border-color:#334155;color:#fdba74}.dark .obra-tab.on{background:#e65c00;color:#fff}
+  .obra-lbl{font:700 10px Inter,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#94a3b8}
+  .qr-modal{position:fixed;inset:0;z-index:60;background:rgba(15,23,42,.72);display:flex;align-items:center;justify-content:center;padding:16px}
+  .qr-card{background:#fff;color:#1e293b;border-radius:16px;padding:18px;width:min(420px,100%);display:flex;flex-direction:column;gap:10px;font:14px/1.45 Inter,system-ui,sans-serif;max-height:100%;overflow:auto}
+  .qr-card b{font-size:17px}.qr-card p{margin:0;color:#475569}
+  .qr-card label{display:flex;flex-direction:column;gap:4px;font-weight:600;font-size:12px;color:#475569}
+  .qr-card input{border:1px solid #fed7aa;border-radius:10px;padding:9px 10px;font:500 14px Inter,system-ui,sans-serif}
+  .qr-acoes{display:flex;gap:8px;flex-wrap:wrap}.qr-msg{color:#b45309!important;font-size:12.5px}
+  .qr-img{width:min(300px,100%);align-self:center;image-rendering:pixelated}
+  .qr-link{font-size:11.5px!important;word-break:break-all;color:#64748b!important}
+  #cliBar,#cliCarregando{display:none}
+  body.cliente #cliBar{display:flex}
+  body.cliente aside,body.cliente #toolbar,body.cliente #passos,body.cliente #ui,body.cliente #hint,body.cliente .obra-edit,body.cliente #themeToggle,body.cliente #dropzone{display:none!important}
+  body.cliente #canvasWrap{pointer-events:none}
+  #cliCarregando:not(.hidden){display:block}
 </style>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/apple-180.png">
@@ -129,8 +156,40 @@
 
   <!-- MAIN -->
   <main class="flex-1 flex flex-col min-h-0 overflow-y-auto">
+    <!-- Obra · vários ambientes (FC) -->
+    <div id="obraBar" class="shrink-0 px-3 pt-3">
+      <div class="max-w-3xl mx-auto obra-card">
+        <div class="obra-row obra-edit">
+          <span class="obra-lbl">Obra</span>
+          <input id="obraNome" class="obra-in" placeholder="Nome da obra (ex.: Residência Silva)">
+          <input id="obraCliente" class="obra-in" placeholder="Cliente">
+        </div>
+        <div class="obra-row obra-edit">
+          <select id="obraLista" class="obra-in"></select>
+          <button type="button" id="obraNova" class="btn">Nova obra</button>
+          <button type="button" id="obraExcluir" class="btn">Excluir obra</button>
+        </div>
+        <div id="cliBar" class="obra-row" style="justify-content:space-between">
+          <b id="cliTitulo" style="font:700 15px Inter,sans-serif;color:#9a3412"></b>
+          <button type="button" id="cliAbrir" class="btn btn-accent">Abrir as esquadrias</button>
+        </div>
+        <div class="obra-row">
+          <span class="obra-lbl">Ambientes</span>
+          <div id="ambTabs" class="obra-tabs"></div>
+          <button type="button" id="ambNovo" class="btn obra-edit">+ Ambiente</button>
+        </div>
+        <div class="obra-row obra-edit">
+          <input id="ambNome" class="obra-in" placeholder="Nome do ambiente (ex.: Sala, Quarto, Fachada)">
+          <button type="button" id="ambExcluir" class="btn">Remover ambiente</button>
+        </div>
+        <p id="obraMsg" class="obra-edit" style="margin:0;font-size:11px;color:#94a3b8">Tudo fica salvo neste aparelho, mesmo sem internet.</p>
+        <p id="cliCarregando" class="hidden" style="margin:0;font-size:13px;color:#475569">Carregando a sua obra…</p>
+        <p class="cli-rodape" style="display:none"></p>
+      </div>
+    </div>
+
     <!-- Passos -->
-    <div class="shrink-0 px-3 pt-3 pb-1">
+    <div id="passos" class="shrink-0 px-3 pt-3 pb-1">
       <div class="grid grid-cols-3 gap-2 max-w-2xl mx-auto">
         <div id="step1" class="step dark:bg-slate-800 dark:border-slate-700" data-state="active">
           <span class="step-num">1</span>
@@ -244,6 +303,8 @@
             </svg>
             Baixar
           </button>
+          <button id="btnVideoObra" class="btn">Vídeo da obra</button>
+          <button id="btnQrCliente" class="btn btn-accent">QR para o cliente</button>
         </div>
 
       </div>
@@ -679,7 +740,6 @@
       el('famTela').addEventListener('click', () => { const v = ativo(); if (!v) return; v.mov.tela = !v.mov.tela; renderizarVao(v); api.syncCtrls(v); });
       el('famTombar').addEventListener('click', () => { const v = ativo(); if (!v) return; v.mov.modo = 'tombar'; v.mov.ab = 0; v.mov.abT = 1; api.syncCtrls(v); });
       el('famGirar').addEventListener('click', () => { const v = ativo(); if (!v) return; v.mov.modo = 'girar'; v.mov.ab = 0; v.mov.abT = 1; api.syncCtrls(v); });
-      el('famVideo').addEventListener('click', gravarVideo);
       requestAnimationFrame(tick);
     };
     // animação suave de abrir/fechar
@@ -720,6 +780,222 @@
       mr.start(200); desenhar();
     }
     return api;
+  })();
+
+  // ==========================================================
+  // 1C. OBRA · vários ambientes no mesmo projeto (FC Consultoria em Esquadria)
+  // O vendedor cria a obra, fotografa cada ambiente (sala, quarto, fachada…),
+  // aplica as tipologias e tudo fica salvo no próprio aparelho (funciona sem internet).
+  // Gera vídeo passando por todos os ambientes e QR para o cliente abrir no celular.
+  // ==========================================================
+  const OBRA = (() => {
+    const API = { carregando: false };
+    const SB = { url: 'https://pawwncmfadzxfahfvhry.supabase.co', key: 'sb_publishable_b0kGoqo85joo3Vb8Xllxhw_VemwaLMs' };
+    const BASE = 'https://fc-consultoria.github.io/treinamento/evento-cde/';
+    const el = id => document.getElementById(id);
+    const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+    const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    let obra = null, idx = 0, cliente = false, assinatura = '';
+
+    // ---------- banco no aparelho (IndexedDB) ----------
+    const db = () => new Promise((ok, er) => { const r = indexedDB.open('family-cde-obras', 1); r.onupgradeneeded = () => r.result.createObjectStore('obras', { keyPath: 'id' }); r.onsuccess = () => ok(r.result); r.onerror = () => er(r.error); });
+    async function salvarDB(o) { try { const d = await db(); await new Promise(ok => { const t = d.transaction('obras', 'readwrite'); t.objectStore('obras').put(o); t.oncomplete = ok; t.onerror = ok; }); } catch (_) {} }
+    async function lerDB(id) { try { const d = await db(); return await new Promise(ok => { const r = d.transaction('obras').objectStore('obras').get(id); r.onsuccess = () => ok(r.result || null); r.onerror = () => ok(null); }); } catch (_) { return null; } }
+    async function listaDB() { try { const d = await db(); return await new Promise(ok => { const out = []; const c = d.transaction('obras').objectStore('obras').openCursor(); c.onsuccess = e => { const k = e.target.result; if (k) { const v = k.value; out.push({ id: v.id, nome: v.nome, cliente: v.cliente, em: v.em, n: (v.amb || []).length }); k.continue(); } else ok(out.sort((a, b) => (b.em || 0) - (a.em || 0))); }; c.onerror = () => ok(out); }); } catch (_) { return []; } }
+    async function apagarDB(id) { try { const d = await db(); await new Promise(ok => { const t = d.transaction('obras', 'readwrite'); t.objectStore('obras').delete(id); t.oncomplete = ok; t.onerror = ok; }); } catch (_) {} }
+    const lsGet = k => { try { return localStorage.getItem(k); } catch (_) { return null; } };
+    const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (_) {} };
+
+    const novaObra = () => ({ id: uid(), nome: '', cliente: '', em: Date.now(), amb: [{ id: uid(), nome: 'Ambiente 1', foto: null, w: 0, h: 0, vaos: [], anot: [] }] });
+
+    // ---------- vão <-> dados ----------
+    const ser = v => ({ pts: v.pts.map(p => ({ x: +p.x.toFixed(1), y: +p.y.toFixed(1) })), produto: v.produto.id, cor: v.cor.id, acab: v.acabamento.id, vidro: v.vidro.id, flipped: !!v.flipped, blend: v.blend, opacidade: v.opacidade,
+      mov: v.mov ? { abT: v.mov.abT, peT: v.mov.peT, tela: v.mov.tela, vista: v.mov.vista, modo: v.mov.modo } : null });
+    function restaurar(d) {
+      const v = criarVao(d.pts);
+      v.produto = PRODUTOS.find(p => p.id === d.produto) || v.produto; v.cor = CORES.find(c => c.id === d.cor) || v.cor;
+      v.acabamento = ACABAMENTOS.find(a => a.id === d.acab) || v.acabamento; v.vidro = VIDROS.find(x => x.id === d.vidro) || v.vidro;
+      v.flipped = !!d.flipped; v.blend = d.blend || 'normal'; v.opacidade = d.opacidade == null ? 1 : d.opacidade;
+      v.overlayCanvas.style.mixBlendMode = v.blend === 'normal' ? 'normal' : v.blend; v.overlayCanvas.style.opacity = String(v.opacidade);
+      if (d.mov) Object.assign(v.mov, d.mov, { ab: d.mov.abT || 0, pe: d.mov.peT || 0 });
+      renderizarVao(v); return v;
+    }
+    function capturar() { if (!obra || API.carregando || cliente) return; const a = obra.amb[idx]; if (!a) return; a.vaos = state.vaos.filter(v => v.pts.length === 4).map(ser); a.anot = JSON.parse(JSON.stringify(state.annotations || [])); }
+
+    // chamado no fim de configurarCanvas (foto nova escolhida pelo vendedor)
+    API.aoCarregarFoto = () => {
+      if (API.carregando || cliente || !obra) return;
+      const a = obra.amb[idx] || (obra.amb[idx] = { id: uid(), nome: 'Ambiente ' + (idx + 1), vaos: [], anot: [] });
+      a.foto = view.toDataURL('image/jpeg', 0.86); a.w = view.width; a.h = view.height; a.vaos = []; a.anot = [];
+      salvar(true); desenharBarra();
+    };
+
+    function carregarImg(src) { return new Promise((ok, er) => { const i = new Image(); i.onload = () => ok(i); i.onerror = er; i.src = src; }); }
+    async function abrirAmbiente(i, semCapturar) {
+      if (!semCapturar) capturar(); idx = Math.max(0, Math.min(i, obra.amb.length - 1)); const a = obra.amb[idx];
+      API.carregando = true;
+      try {
+        if (!a.foto) { resetar(); }
+        else {
+          const img = await carregarImg(a.foto); configurarCanvas(img);
+          (a.vaos || []).forEach(restaurar);
+          state.annotations = JSON.parse(JSON.stringify(a.anot || [])); renderAnnotations();
+          state.vaoAtivoId = cliente ? null : (state.vaos.length ? state.vaos[state.vaos.length - 1].id : null);
+          sincronizarSidebar(); renderTudo(); atualizarPassos(); atualizarDica();
+        }
+      } finally { API.carregando = false; }
+      if (!cliente) lsSet('fam_obra_amb', String(idx));
+      desenharBarra();
+    }
+    API.abrirAmbiente = abrirAmbiente;
+
+    // ---------- salvar automático ----------
+    let timer = null;
+    function salvar(agora) { if (cliente || !obra) return; clearTimeout(timer); const f = () => { capturar(); obra.em = Date.now(); salvarDB(obra); lsSet('fam_obra_atual', obra.id); assinatura = sig(); };
+      if (agora) f(); else timer = setTimeout(f, 600); }
+    const sig = () => { capturar(); return JSON.stringify([obra.nome, obra.cliente, obra.amb.map(a => [a.nome, a.w, a.h, a.vaos, a.anot, !!a.foto])]); };
+    setInterval(() => { if (!obra || cliente || API.carregando) return; const s = sig(); if (s !== assinatura) { assinatura = s; obra.em = Date.now(); salvarDB(obra); } }, 2000);
+
+    // ---------- barra da obra ----------
+    async function desenharBarra() {
+      if (!obra) return;
+      el('obraNome').value = obra.nome || ''; el('obraCliente').value = obra.cliente || '';
+      el('ambTabs').innerHTML = obra.amb.map((a, i) => `<button type="button" class="obra-tab${i === idx ? ' on' : ''}" data-i="${i}">${esc(a.nome || 'Ambiente ' + (i + 1))}${a.foto ? '' : ' <small>sem foto</small>'}</button>`).join('');
+      el('ambTabs').querySelectorAll('.obra-tab').forEach(b => b.onclick = () => { const i = +b.dataset.i; if (i !== idx) abrirAmbiente(i); });
+      el('ambNome').value = (obra.amb[idx] && obra.amb[idx].nome) || '';
+      el('ambExcluir').disabled = obra.amb.length < 2;
+      if (cliente) { el('cliTitulo').textContent = (obra.nome || 'Sua obra') + (obra.cliente ? ' · ' + obra.cliente : ''); el('cliAbrir').textContent = state.vaos.some(v => v.mov && v.mov.abT > 0) ? 'Fechar as esquadrias' : 'Abrir as esquadrias'; return; }
+      const lista = await listaDB();
+      el('obraLista').innerHTML = '<option value="">Obras salvas neste aparelho (' + lista.length + ')</option>' + lista.map(o => `<option value="${o.id}"${o.id === obra.id ? ' selected' : ''}>${esc(o.nome || 'Obra sem nome')}${o.cliente ? ' · ' + esc(o.cliente) : ''} · ${o.n} amb.</option>`).join('');
+    }
+
+    async function trocarObra(o) { if (obra) { capturar(); await salvarDB(obra); } obra = o; idx = 0; lsSet('fam_obra_atual', o.id); assinatura = ''; await abrirAmbiente(0, true); salvar(true); }
+
+    // ---------- vídeo da obra inteira ----------
+    let gravando = false;
+    const espera = ms => new Promise(r => setTimeout(r, ms));
+    async function gravarVideo() {
+      const msg = t => { el('famVideoMsg').textContent = t; const m2 = el('obraMsg'); if (m2) m2.textContent = t; };
+      if (gravando) return; capturar();
+      const lista = obra.amb.map((a, i) => i).filter(i => obra.amb[i].foto);
+      if (!lista.length) { msg('Suba a foto de pelo menos um ambiente.'); return; }
+      const W = 1280, H = 720, rec = document.createElement('canvas'); rec.width = W; rec.height = H; const g = rec.getContext('2d');
+      let mr; try { const tipo = ['video/mp4;codecs=avc1', 'video/webm;codecs=vp9', 'video/webm', 'video/mp4'].find(t => window.MediaRecorder && MediaRecorder.isTypeSupported(t)); mr = new MediaRecorder(rec.captureStream(30), tipo ? { mimeType: tipo, videoBitsPerSecond: 6e6 } : undefined); }
+      catch (e) { msg('Este aparelho não grava vídeo. Use o Chrome ou o Edge (computador ou Android).'); return; }
+      const partes = []; mr.ondataavailable = e => { if (e.data.size) partes.push(e.data); };
+      gravando = true; const voltar = idx; let rot = ''; let ativo = true;
+      ['famVideo', 'btnVideoObra'].forEach(id => { const b = el(id); if (b) b.textContent = 'Gravando a obra…'; }); msg('');
+      const desenhar = () => { if (!ativo) return;
+        g.fillStyle = '#1b120d'; g.fillRect(0, 0, W, H);
+        const c = gerarComposicao(); const k = Math.min(W / c.width, (H - 70) / c.height); const dw = c.width * k, dh = c.height * k;
+        g.drawImage(c, (W - dw) / 2, 50 + (H - 70 - dh) / 2, dw, dh);
+        g.fillStyle = 'rgba(28,18,12,.92)'; g.fillRect(0, 0, W, 50); g.fillStyle = '#f6ead3'; g.font = '600 22px Inter, sans-serif';
+        g.fillText((obra.nome || 'Obra') + (obra.cliente ? ' · ' + obra.cliente : '') + '  —  ' + rot, 18, 33);
+        g.fillStyle = 'rgba(0,0,0,.55)'; g.fillRect(0, H - 30, W, 30); g.fillStyle = '#fff'; g.font = '500 14px Inter, sans-serif';
+        g.fillText('CDE · Linha Family 32 · imagem demonstrativa · Desenvolvido por FC Consultoria em Esquadria', 16, H - 10);
+        requestAnimationFrame(desenhar); };
+      mr.start(250);
+      for (const i of lista) {
+        await abrirAmbiente(i); rot = obra.amb[i].nome || ('Ambiente ' + (i + 1));
+        state.vaos.forEach(v => { if (v.mov) { v.mov.abT = 0; v.mov.ab = 0; renderizarVao(v); } });
+        if (i === lista[0]) desenhar();
+        await espera(1300); state.vaos.forEach(v => { if (v.mov && v.produto.tipo === 'family') v.mov.abT = 1; });
+        await espera(3200); state.vaos.forEach(v => { if (v.mov && v.produto.tipo === 'family') v.mov.abT = 0; });
+        await espera(2200);
+      }
+      await new Promise(ok => { mr.onstop = ok; mr.stop(); }); ativo = false; gravando = false;
+      ['famVideo', 'btnVideoObra'].forEach(id => { const b = el(id); if (b) b.textContent = id === 'famVideo' ? 'Gravar vídeo abrindo e fechando' : 'Vídeo da obra'; });
+      await abrirAmbiente(voltar);
+      const blob = new Blob(partes, { type: mr.mimeType || 'video/webm' }); const url = URL.createObjectURL(blob);
+      const modal = el('modalPreview'), img = el('imgPreview'); let vid = el('famVid');
+      if (!vid) { vid = document.createElement('video'); vid.id = 'famVid'; vid.controls = true; vid.loop = true; vid.playsInline = true; vid.className = img.className; img.parentNode.insertBefore(vid, img); }
+      vid.src = url; vid.classList.remove('hidden'); img.classList.add('hidden'); vid.play().catch(() => {});
+      modal.classList.remove('hidden'); modal.classList.add('flex');
+      el('btnSalvarPreview').dataset.video = url; el('btnSalvarPreview').dataset.ext = /mp4/.test(blob.type) ? 'mp4' : 'webm'; el('btnSalvarPreview').textContent = 'Baixar vídeo';
+      msg('Vídeo pronto (' + lista.length + ' ambiente' + (lista.length > 1 ? 's' : '') + '). Se o botão Baixar não responder, segure o dedo no vídeo e escolha Salvar.');
+    }
+    API.gravarVideo = gravarVideo;
+
+    // ---------- QR para o cliente ----------
+    async function rpc(nome, corpo) {
+      const h = { apikey: SB.key, 'Content-Type': 'application/json' }; if (!SB.key.startsWith('sb_')) h.Authorization = 'Bearer ' + SB.key;
+      const r = await fetch(SB.url + '/rest/v1/rpc/' + nome, { method: 'POST', headers: h, body: JSON.stringify(corpo) });
+      if (!r.ok) { let t = ''; try { t = (await r.json()).message || ''; } catch (_) {} throw new Error(t || ('erro ' + r.status)); }
+      return r.json();
+    }
+    async function comprimir(src) { const img = await carregarImg(src); const k = Math.min(1, 1280 / Math.max(img.width, img.height)); const c = document.createElement('canvas'); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k); c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); return { foto: c.toDataURL('image/jpeg', 0.8), k }; }
+    function qrDataURL(txt) { if (typeof qrcode === 'undefined') return ''; const q = qrcode(0, 'M'); q.addData(txt); q.make(); return q.createDataURL(8, 2); }
+    function modalQR(html) { let m = el('qrModal'); if (!m) { m = document.createElement('div'); m.id = 'qrModal'; m.className = 'qr-modal'; document.body.appendChild(m); m.addEventListener('click', e => { if (e.target === m) m.remove(); }); } m.innerHTML = '<div class="qr-card">' + html + '</div>'; return m; }
+    function abrirQR() {
+      capturar();
+      const n = obra.amb.filter(a => a.foto).length;
+      if (!n) { modalQR('<b>QR para o cliente</b><p>Suba a foto de pelo menos um ambiente e aplique as tipologias.</p><button type="button" class="btn" id="qrFechar">Fechar</button>'); el('qrFechar').onclick = () => el('qrModal').remove(); return; }
+      modalQR(`<b>QR para o cliente</b><p>${n} ambiente${n > 1 ? 's' : ''} desta obra vão para o celular do cliente, com as tipologias abrindo e fechando.</p>
+        <label>Nome do cliente<input id="qrCli" value="${esc(obra.cliente || '')}" placeholder="Ex.: Sr. João"></label>
+        <label>Vendedor<input id="qrVend" value="${esc(lsGet('fam_vendedor') || '')}" placeholder="Seu nome"></label>
+        <div class="qr-acoes"><button type="button" class="btn btn-accent" id="qrGerar">Gerar QR</button><button type="button" class="btn" id="qrFechar">Cancelar</button></div><p id="qrMsg" class="qr-msg"></p>`);
+      el('qrFechar').onclick = () => el('qrModal').remove();
+      el('qrGerar').onclick = async () => {
+        const m = el('qrMsg'), b = el('qrGerar');
+        if (!navigator.onLine) { m.textContent = 'Sem internet agora. Ligue o Wi-Fi ou os dados móveis só para gerar o QR. A obra continua salva no aparelho.'; return; }
+        b.disabled = true; b.textContent = 'Enviando fotos…';
+        try {
+          obra.cliente = el('qrCli').value.trim(); lsSet('fam_vendedor', el('qrVend').value.trim()); salvar(true);
+          const ambs = obra.amb.filter(a => a.foto); const comp = [];
+          for (const a of ambs) comp.push(await comprimir(a.foto));
+          const dados = { v: 1, nome: obra.nome, cliente: obra.cliente, amb: ambs.map((a, i) => ({ nome: a.nome, w: Math.round(a.w * comp[i].k), h: Math.round(a.h * comp[i].k), anot: (a.anot || []).map(x => Object.assign({}, x, { x: x.x * comp[i].k, y: x.y * comp[i].k })), vaos: a.vaos.map(v => Object.assign({}, v, { pts: v.pts.map(p => ({ x: p.x * comp[i].k, y: p.y * comp[i].k })) })) })) };
+          const id = await rpc('fam_sim_salvar', { p_foto: comp[0].foto, p_dados: dados, p_cliente: obra.cliente, p_vendedor: el('qrVend').value.trim(), p_revenda: 'CDE' });
+          for (let i = 1; i < comp.length; i++) { b.textContent = 'Enviando ambiente ' + (i + 1) + '…'; await rpc('fam_sim_foto', { p_id: id, p_ordem: i, p_foto: comp[i].foto }); }
+          const link = BASE + 'simulador.html?ver=' + id;
+          const wa = 'https://wa.me/?text=' + encodeURIComponent('Olá' + (obra.cliente ? ' ' + obra.cliente : '') + '! Veja como a Linha Family fica na sua obra: ' + link);
+          modalQR(`<b>Peça para o cliente ler o QR</b><img class="qr-img" alt="QR Code da obra" src="${qrDataURL(link)}"><p class="qr-link">${esc(link)}</p>
+            <div class="qr-acoes"><a class="btn btn-accent" href="${wa}" target="_blank" rel="noopener">Enviar no WhatsApp</a><button type="button" class="btn" id="qrCopiar">Copiar link</button><button type="button" class="btn" id="qrFechar">Fechar</button></div>`);
+          el('qrFechar').onclick = () => el('qrModal').remove();
+          el('qrCopiar').onclick = () => { const ok = () => { el('qrCopiar').textContent = 'Copiado'; }; try { navigator.clipboard.writeText(link).then(ok, () => {}); } catch (_) {} };
+        } catch (e) { b.disabled = false; b.textContent = 'Gerar QR'; m.textContent = 'Não foi possível gerar agora (' + e.message + '). Confira a internet e tente de novo.'; }
+      };
+    }
+
+    // ---------- modo cliente (abre pelo QR) ----------
+    async function abrirCliente(id) {
+      cliente = true; document.body.classList.add('cliente'); document.documentElement.classList.remove('dark');
+      const tela = el('cliCarregando'); tela.classList.remove('hidden');
+      try {
+        const r = await rpc('fam_sim_abrir', { p_id: id });
+        if (!r) { tela.textContent = 'Esta simulação não foi encontrada. Peça um novo QR ao vendedor.'; return; }
+        const d = r.dados || {}; const fotos = r.fotos || [r.foto];
+        obra = { id: 'cli-' + id, nome: d.nome || '', cliente: d.cliente || r.cliente || '', amb: (d.amb || []).map((a, i) => ({ id: uid(), nome: a.nome, foto: fotos[i], w: a.w, h: a.h, vaos: a.vaos || [], anot: a.anot || [] })) };
+        tela.classList.add('hidden'); idx = 0; await abrirAmbiente(0, true);
+      } catch (e) { tela.textContent = 'Sem internet para abrir a simulação. Conecte o celular e leia o QR de novo.'; }
+    }
+
+    API.init = async () => {
+      el('famVideo').onclick = gravarVideo;
+      el('btnVideoObra').onclick = gravarVideo; el('btnQrCliente').onclick = abrirQR;
+      el('cliAbrir').onclick = () => { const algum = state.vaos.some(v => v.mov && v.mov.abT > 0); state.vaos.forEach(v => { if (v.mov && v.produto.tipo === 'family') v.mov.abT = algum ? 0 : 1; }); el('cliAbrir').textContent = algum ? 'Abrir as esquadrias' : 'Fechar as esquadrias'; };
+      const ver = new URLSearchParams(location.search).get('ver');
+      if (ver) { await abrirCliente(ver); return; }
+      el('obraNome').oninput = () => { obra.nome = el('obraNome').value; salvar(); };
+      el('obraCliente').oninput = () => { obra.cliente = el('obraCliente').value; salvar(); };
+      el('ambNome').oninput = () => { obra.amb[idx].nome = el('ambNome').value; salvar(); const t = el('ambTabs').querySelector('.obra-tab.on'); if (t) t.firstChild.textContent = el('ambNome').value || ('Ambiente ' + (idx + 1)); };
+      el('ambNovo').onclick = () => { capturar(); obra.amb.push({ id: uid(), nome: 'Ambiente ' + (obra.amb.length + 1), foto: null, w: 0, h: 0, vaos: [], anot: [] }); idx = obra.amb.length - 1; API.carregando = true; resetar(); API.carregando = false; salvar(true); desenharBarra(); setTimeout(() => el('ambNome').select(), 50); };
+      let conf = 0;
+      el('ambExcluir').onclick = () => { if (obra.amb.length < 2) return; if (Date.now() - conf > 3000) { conf = Date.now(); el('ambExcluir').textContent = 'Toque de novo para remover'; setTimeout(() => el('ambExcluir').textContent = 'Remover ambiente', 3000); return; }
+        el('ambExcluir').textContent = 'Remover ambiente'; obra.amb.splice(idx, 1); idx = Math.max(0, idx - 1); assinatura = ''; abrirAmbiente(idx, true).then(() => salvar(true)); };
+      el('obraNova').onclick = () => trocarObra(novaObra());
+      let confO = 0;
+      el('obraExcluir').onclick = async () => { if (Date.now() - confO > 3000) { confO = Date.now(); el('obraExcluir').textContent = 'Toque de novo para excluir'; setTimeout(() => el('obraExcluir').textContent = 'Excluir obra', 3000); return; }
+        el('obraExcluir').textContent = 'Excluir obra'; await apagarDB(obra.id); const l = await listaDB(); obra = null; await trocarObra(l.length ? await lerDB(l[0].id) : novaObra()); };
+      el('obraLista').onchange = async () => { const id = el('obraLista').value; if (!id || id === obra.id) return; const o = await lerDB(id); if (o) await trocarObra(o); };
+      // abre a última obra usada neste aparelho
+      const ult = lsGet('fam_obra_atual'); let o = ult ? await lerDB(ult) : null;
+      if (!o) { const l = await listaDB(); if (l.length) o = await lerDB(l[0].id); }
+      obra = o || novaObra(); if (!obra.amb || !obra.amb.length) obra.amb = novaObra().amb;
+      const ia = +(lsGet('fam_obra_amb') || 0); idx = ia < obra.amb.length ? ia : 0;
+      if (obra.amb[idx].foto) await abrirAmbiente(idx, true); else desenharBarra();
+      assinatura = sig(); salvarDB(obra); lsSet('fam_obra_atual', obra.id);
+    };
+    return API;
   })();
 
   // ==========================================================
@@ -1315,6 +1591,7 @@
     atualizarPassos();
     atualizarDica();
     renderTudo();
+    OBRA.aoCarregarFoto();
   }
 
   // ==========================================================
@@ -1850,7 +2127,7 @@
   $('btnFecharPreview').addEventListener('click', fecharPreview);
   $('btnFecharPreview2').addEventListener('click', fecharPreview);
   $('btnSalvarPreview').addEventListener('click', () => {
-    if ($('btnSalvarPreview').dataset.video) { const a = document.createElement('a'); a.download = `CDE-Family-${Date.now()}.webm`; a.href = $('btnSalvarPreview').dataset.video; a.click(); return; }
+    if ($('btnSalvarPreview').dataset.video) { const a = document.createElement('a'); a.download = `CDE-Family-${Date.now()}.${$('btnSalvarPreview').dataset.ext || 'webm'}`; a.href = $('btnSalvarPreview').dataset.video; a.click(); return; }
     const img = $('imgPreview');
     const link = document.createElement('a');
     link.download = `CDE-render-${Date.now()}.png`;
@@ -1889,6 +2166,7 @@
     montarAjustesEsteticos();
     FAM.montarControles();
     sincronizarSidebar();
+    OBRA.init();
     atualizarPassos();
     atualizarDica();
   }
