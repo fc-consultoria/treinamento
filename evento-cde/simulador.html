@@ -1,0 +1,1896 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#fffaf8" />
+<title>CDE · Simulador de Esquadrias e Vidros</title>
+
+<!-- Tailwind CSS via CDN -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+  tailwind.config = {
+    darkMode: 'class',
+    theme: {
+      extend: {
+        colors: {
+          base:   '#fffaf8',
+          panel:  '#ffffff',
+          panel2: '#fdf6f3',
+          line:   '#ffedd5',
+          accent: '#e65c00',
+          accent2:'#c93a0b'
+        },
+        fontFamily: { sans: ['Inter', 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'] }
+      }
+    }
+  };
+</script>
+
+<style>
+  html, body { -webkit-tap-highlight-color: transparent; overscroll-behavior-y: none; }
+  #canvasWrap, #view { touch-action: none; user-select: none; -webkit-user-select: none; }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-thumb { background: #fdba74; border-radius: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  input[type="range"] { accent-color: #e65c00; }
+
+  .step {
+    display: flex; align-items: center; gap: .5rem;
+    border-radius: .75rem; border: 1px solid #ffedd5;
+    background: #ffffff; padding: .5rem .55rem;
+    transition: all .25s ease; min-width: 0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+  }
+  .step .step-num {
+    width: 1.35rem; height: 1.35rem; border-radius: 9999px; flex: none;
+    display: grid; place-items: center;
+    font-size: .65rem; font-weight: 800;
+    background: #fdf6f3; color: #fdba74; transition: all .25s ease;
+  }
+  .step[data-state="active"] {
+    border-color: rgba(230, 92, 0, 0.45);
+    background: #fffcf9;
+    box-shadow: 0 0 0 1px rgba(230, 92, 0, 0.12), 0 4px 12px -4px rgba(230, 92, 0, 0.2);
+  }
+  .step[data-state="active"] .step-num { background: #e65c00; color: #ffffff; }
+  .step[data-state="done"] .step-num { background: #dcfce7; color: #166534; }
+  .step[data-state="done"] { border-color: rgba(34,197,94,.3); }
+
+  .swatch-active { outline: 2px solid #e65c00; outline-offset: 2px; }
+
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: .4rem;
+    border-radius: .75rem; font-size: .75rem; font-weight: 600;
+    padding: .55rem .85rem; transition: all .18s ease; cursor: pointer;
+    border: 1px solid #e5e5e5; background: #ffffff; color: #525252;
+    white-space: nowrap; min-height: 40px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  }
+  .btn:hover  { border-color: #d4d4d4; background: #fafafa; color: #171717; }
+  .btn:active { transform: scale(.97); }
+  .btn:disabled { opacity: .4; cursor: not-allowed; pointer-events: none; }
+  
+  .btn-active {
+    background: #fff7ed !important;
+    border-color: #e65c00 !important;
+    color: #e65c00 !important;
+  }
+
+  .btn-accent {
+    background: linear-gradient(180deg, #f0651a, #c93a0b);
+    border-color: #e65c00; color: #fff; font-weight: 700;
+    box-shadow: 0 4px 12px -4px rgba(230, 92, 0, 0.4);
+  }
+  .btn-accent:hover { background: linear-gradient(180deg, #ff7a33, #e65c00); color: #fff; border-color: #e65c00; }
+
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  .fade-up { animation: fadeUp .35s ease both; }
+
+  #modalPreview { backdrop-filter: blur(4px); }
+
+  #canvasWrap.modo-criacao { cursor: crosshair; }
+  #canvasWrap.modo-anotacao { cursor: crosshair; }
+  #canvasWrap.modo-anotacao #hint { border-color: #e65c00; color: #e65c00; background: #fff; }
+</style>
+</head>
+
+<body class="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-100 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800 text-slate-800 dark:text-slate-200 font-sans antialiased selection:bg-accent/20 flex flex-col transition-colors duration-300">
+
+<!-- TOPBAR -->
+<header class="shrink-0 border-b border-orange-100 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md px-4 py-3 flex items-center gap-3 shadow-sm z-20">
+  <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-accent to-accent2 grid place-items-center shadow-lg shadow-accent/20">
+    <span class="text-white font-black text-sm tracking-tighter">CDE</span>
+  </div>
+  <div class="min-w-0">
+    <h1 class="text-sm font-bold tracking-tight text-slate-900 dark:text-white truncate">Simulador de Esquadrias</h1>
+    <p class="text-[11px] text-slate-500 dark:text-slate-400 truncate">Visualização de produtos direto na obra</p>
+  </div>
+  
+  <!-- Botão Dark Mode -->
+  <button id="themeToggle" class="ml-auto p-2 rounded-xl border border-orange-100 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-orange-50 dark:hover:bg-slate-700 transition-colors">
+    <svg id="iconSun" class="w-5 h-5 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M1 12h2M21 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/>
+    </svg>
+    <svg id="iconMoon" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+    </svg>
+  </button>
+</header>
+
+<!-- CONTAINER PRINCIPAL -->
+<div class="flex flex-col lg:flex-row flex-1 overflow-hidden">
+
+  <!-- MAIN -->
+  <main class="flex-1 flex flex-col min-h-0 overflow-y-auto">
+    <!-- Passos -->
+    <div class="shrink-0 px-3 pt-3 pb-1">
+      <div class="grid grid-cols-3 gap-2 max-w-2xl mx-auto">
+        <div id="step1" class="step dark:bg-slate-800 dark:border-slate-700" data-state="active">
+          <span class="step-num">1</span>
+          <span class="text-[10px] leading-tight font-semibold text-slate-700 dark:text-slate-300">Suba a foto</span>
+        </div>
+        <div id="step2" class="step dark:bg-slate-800 dark:border-slate-700" data-state="idle">
+          <span class="step-num">2</span>
+          <span class="text-[10px] leading-tight font-semibold text-slate-700 dark:text-slate-300">Marque 4 cantos</span>
+        </div>
+        <div id="step3" class="step dark:bg-slate-800 dark:border-slate-700" data-state="idle">
+          <span class="step-num">3</span>
+          <span class="text-[10px] leading-tight font-semibold text-slate-700 dark:text-slate-300">Configure o produto</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Palco -->
+    <div class="flex-1 p-3 flex items-start lg:items-center justify-center">
+      <div class="w-full max-w-3xl mx-auto">
+
+        <!-- Dropzone -->
+        <div id="dropzone"
+             class="relative rounded-2xl border-2 border-dashed border-orange-200 dark:border-slate-700 bg-white/60 dark:bg-slate-800/60 p-7 sm:p-10 text-center transition-colors hover:border-accent/50 hover:bg-white/80 dark:hover:bg-slate-800">
+          <div class="mx-auto w-14 h-14 rounded-2xl bg-orange-50 dark:bg-slate-800 border border-orange-100 dark:border-slate-700 grid place-items-center mb-4 shadow-sm">
+            <svg class="w-7 h-7 text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+              <circle cx="12" cy="13" r="4"/>
+            </svg>
+          </div>
+          <h2 class="text-base font-bold text-slate-900 dark:text-white">Comece pela foto do ambiente</h2>
+          <p class="mt-1.5 text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto leading-relaxed">
+            Fotografe a parede onde a esquadria será instalada. Você poderá adicionar vários produtos na mesma foto.
+          </p>
+          <div class="mt-5 flex flex-col sm:flex-row gap-2 justify-center">
+            <label class="btn btn-accent cursor-pointer">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/>
+              </svg>
+              Galeria
+              <input id="inputGaleria" type="file" accept="image/*" class="hidden">
+            </label>
+            <label class="btn dark:bg-slate-800 dark:text-slate-200 dark:border-slate-600 cursor-pointer">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>
+              </svg>
+              Tirar foto
+              <input id="inputCamera" type="file" accept="image/*" capture="environment" class="hidden">
+            </label>
+          </div>
+        </div>
+
+        <!-- Canvas Stack -->
+        <div id="canvasWrap"
+             class="hidden relative rounded-2xl overflow-hidden border border-orange-200 dark:border-slate-700 bg-black shadow-xl shadow-orange-900/10 fade-up">
+          <canvas id="view" class="block w-full h-auto pointer-events-none"></canvas>
+          <div id="overlayContainer" class="absolute inset-0 w-full h-full pointer-events-none"></div>
+          
+          <!-- Camada de Anotações -->
+          <canvas id="annotations" class="absolute inset-0 w-full h-full pointer-events-none"></canvas>
+          
+          <!-- Camada de UI (Bordas e Pontos) -->
+          <canvas id="ui" class="absolute inset-0 w-full h-full pointer-events-none"></canvas>
+
+          <div id="hint"
+               class="absolute left-1/2 -translate-x-1/2 bottom-3 px-3 py-1.5 rounded-full bg-white/90 dark:bg-slate-800/90 backdrop-blur border border-orange-200 dark:border-slate-700 text-[10px] sm:text-[11px] text-slate-700 dark:text-slate-300 whitespace-nowrap pointer-events-none text-center transition-colors shadow-sm">
+            Toque nos cantos do vão
+          </div>
+        </div>
+
+        <!-- Toolbar -->
+        <div id="toolbar" class="hidden mt-3 flex flex-wrap items-center gap-2 justify-center sm:justify-start">
+          <button id="btnNovoVaoToolbar" class="btn dark:bg-slate-800 dark:text-slate-200 dark:border-slate-600">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/>
+            </svg>
+            Novo Vão
+          </button>
+          <button id="btnLimparTudo" class="btn dark:bg-slate-800 dark:text-slate-200 dark:border-slate-600">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/>
+            </svg>
+            Limpar Tudo
+          </button>
+          <button id="btnTrocar" class="btn dark:bg-slate-800 dark:text-slate-200 dark:border-slate-600">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/>
+            </svg>
+            Trocar Foto
+          </button>
+          
+          <div class="w-px h-6 bg-orange-200 dark:bg-slate-700 mx-1 hidden sm:block"></div>
+
+          <button id="btnAnotacaoBalao" class="btn dark:bg-slate-800 dark:text-slate-200 dark:border-slate-600" title="Adicionar Balão de Texto">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+            Balão
+          </button>
+
+          <div class="flex-1"></div>
+          
+          <button id="btnPreview" class="btn border-accent/30 text-accent hover:bg-orange-50 dark:hover:bg-slate-800 dark:border-slate-600">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>
+            </svg>
+            Visualizar
+          </button>
+          <button id="btnSalvar" class="btn btn-accent">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/>
+            </svg>
+            Baixar
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- SIDEBAR -->
+  <aside class="w-full lg:w-[380px] shrink-0 border-t lg:border-t-0 lg:border-l border-orange-100 dark:border-slate-800 bg-white dark:bg-slate-900 lg:overflow-y-auto shadow-xl shadow-orange-900/5 z-10">
+    <div class="p-4 space-y-6 pb-20 lg:pb-4">
+
+      <!-- Vãos -->
+      <section>
+        <div class="flex items-center justify-between gap-2 mb-2">
+          <div class="flex items-center gap-2">
+            <span class="w-1.5 h-4 rounded-full bg-accent"></span>
+            <h3 class="text-[11px] uppercase tracking-[0.14em] font-bold text-slate-500 dark:text-slate-400">Vãos na imagem</h3>
+          </div>
+          <button id="btnNovoVaoSidebar" class="btn text-[10px] px-2 py-1 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-600">+ Novo Vão</button>
+        </div>
+        <div class="flex gap-2">
+          <div class="relative flex-1">
+            <select id="selVao" class="w-full appearance-none rounded-xl border border-orange-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2.5 pr-9 text-sm text-slate-800 dark:text-slate-200 font-medium outline-none transition focus:border-accent/60 focus:ring-2 focus:ring-accent/10 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+            </select>
+            <svg class="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m6 9 6 6 6-6"/>
+            </svg>
+          </div>
+          <button id="btnRemoverVao" class="btn px-2.5 py-2.5 disabled:opacity-40 disabled:cursor-not-allowed dark:bg-slate-800 dark:text-slate-200 dark:border-slate-600" disabled>
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/>
+            </svg>
+          </button>
+        </div>
+        <p id="vaoInfo" class="mt-1.5 text-[10px] text-slate-500 dark:text-slate-400"></p>
+      </section>
+
+      <!-- Painel de Configuração -->
+      <div id="configPanel" class="space-y-5 transition-opacity">
+        <section>
+          <div class="flex items-center gap-2 mb-2">
+            <span class="w-1.5 h-4 rounded-full bg-accent"></span>
+            <h3 class="text-[11px] uppercase tracking-[0.14em] font-bold text-slate-500 dark:text-slate-400">Produto</h3>
+          </div>
+          <div class="relative">
+            <select id="selProduto" class="w-full appearance-none rounded-xl border border-orange-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2.5 pr-9 text-sm text-slate-800 dark:text-slate-200 font-medium outline-none transition focus:border-accent/60 focus:ring-2 focus:ring-accent/10 cursor-pointer">
+            </select>
+            <svg class="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m6 9 6 6 6-6"/>
+            </svg>
+          </div>
+          <div id="produtoInfo" class="mt-2.5 rounded-xl bg-orange-50/50 dark:bg-slate-800/50 border border-orange-100 dark:border-slate-700 p-3 text-[11px] text-slate-600 dark:text-slate-400"></div>
+          
+          <!-- Botão Inverter -->
+          <button id="btnInverter" class="btn w-full mt-2 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-600">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 3v18M7 3v18M3 7l4-4 4 4M3 17l4 4 4-4"/>
+            </svg>
+            Inverter Lado
+          </button>
+        </section>
+
+        <!-- Movimento (Linha Family 3D) -->
+        <section id="famMov" class="hidden">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="w-1.5 h-4 rounded-full bg-accent"></span>
+            <h3 class="text-[11px] uppercase tracking-[0.14em] font-bold text-slate-500 dark:text-slate-400">Movimento da esquadria</h3>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <button id="famAbrir" class="btn btn-accent">Abrir</button>
+            <button id="famVista" class="btn dark:bg-slate-800 dark:text-slate-200 dark:border-slate-600">Foto tirada de dentro</button>
+          </div>
+          <div id="famOscilo" class="grid grid-cols-2 gap-2 mt-2 hidden">
+            <button id="famTombar" class="btn dark:bg-slate-800 dark:text-slate-200 dark:border-slate-600">Tombar (ventilar)</button>
+            <button id="famGirar" class="btn dark:bg-slate-800 dark:text-slate-200 dark:border-slate-600">Abrir total</button>
+          </div>
+          <label class="block mt-3 text-[11px] text-slate-500 dark:text-slate-400">Abertura <b id="famAbLbl" class="text-accent">0%</b>
+            <input id="famAb" type="range" min="0" max="100" value="0" class="w-full mt-1"></label>
+          <div id="famPersBox" class="hidden">
+            <label class="block mt-2 text-[11px] text-slate-500 dark:text-slate-400">Persiana baixada <b id="famPeLbl" class="text-accent">0%</b>
+              <input id="famPe" type="range" min="0" max="100" value="0" class="w-full mt-1"></label>
+          </div>
+          <button id="famTela" class="btn w-full mt-2 hidden dark:bg-slate-800 dark:text-slate-200 dark:border-slate-600">Tela mosquiteira: ligada</button>
+          <button id="famVideo" class="btn w-full mt-2 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-600">Gravar vídeo abrindo e fechando</button>
+          <p id="famVideoMsg" class="mt-1.5 text-[10px] text-slate-500 dark:text-slate-400"></p>
+        </section>
+
+        <section>
+          <div class="flex items-center gap-2 mb-2">
+            <span class="w-1.5 h-4 rounded-full bg-accent"></span>
+            <h3 class="text-[11px] uppercase tracking-[0.14em] font-bold text-slate-500 dark:text-slate-400">Cor do Alumínio</h3>
+          </div>
+          <div id="gridCores" class="grid grid-cols-3 gap-2"></div>
+        </section>
+
+        <section>
+          <div class="flex items-center gap-2 mb-2">
+            <span class="w-1.5 h-4 rounded-full bg-accent"></span>
+            <h3 class="text-[11px] uppercase tracking-[0.14em] font-bold text-slate-500 dark:text-slate-400">Acabamento (Alumínio)</h3>
+          </div>
+          <div id="gridAcabamentos" class="grid grid-cols-2 gap-2"></div>
+        </section>
+
+        <section>
+          <div class="flex items-center gap-2 mb-2">
+            <span class="w-1.5 h-4 rounded-full bg-accent"></span>
+            <h3 class="text-[11px] uppercase tracking-[0.14em] font-bold text-slate-500 dark:text-slate-400">Tipo de Vidro</h3>
+          </div>
+          <div id="gridVidros" class="grid grid-cols-4 gap-1.5"></div>
+        </section>
+
+        <section>
+          <div class="flex items-center gap-2 mb-2">
+            <span class="w-1.5 h-4 rounded-full bg-accent"></span>
+            <h3 class="text-[11px] uppercase tracking-[0.14em] font-bold text-slate-500 dark:text-slate-400">Integração com a foto</h3>
+          </div>
+          <div class="rounded-xl bg-orange-50/50 dark:bg-slate-800/50 border border-orange-100 dark:border-slate-700 p-3 space-y-3">
+            <div>
+              <label class="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400 font-bold">Blend mode</label>
+              <div class="relative mt-1.5">
+                <select id="selBlend" class="w-full appearance-none rounded-lg border border-orange-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-2.5 py-2 pr-8 text-xs text-slate-700 dark:text-slate-300 outline-none focus:border-accent/60 cursor-pointer">
+                  <option value="normal">Normal · sem mistura</option>
+                  <option value="multiply">Multiply · absorve sombras</option>
+                  <option value="overlay">Overlay · realça contraste</option>
+                  <option value="soft-light">Soft-light · suave</option>
+                </select>
+                <svg class="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="m6 9 6 6 6-6"/>
+                </svg>
+              </div>
+            </div>
+            <div>
+              <div class="flex items-center justify-between">
+                <label class="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400 font-bold">Opacidade</label>
+                <span id="lblOpacidade" class="text-[11px] font-bold text-accent">100%</span>
+              </div>
+              <input id="rangeOpacidade" type="range" min="30" max="100" value="100" step="1" class="w-full mt-2 h-1.5 rounded-full appearance-none bg-orange-200 dark:bg-slate-700 cursor-pointer">
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<!-- FOOTER -->
+<footer class="shrink-0 text-center text-[10px] text-slate-400 dark:text-slate-500 py-2 border-t border-orange-100 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50">
+  Projeto Alpha V5. Desenvolvido para CDE Blindex® - 2026.
+</footer>
+
+<!-- MODAL PREVIEW -->
+<div id="modalPreview" class="fixed inset-0 z-50 bg-slate-900/80 hidden items-center justify-center p-3 sm:p-6 transition-opacity">
+  <div class="relative w-full max-w-4xl max-h-full flex flex-col items-center">
+    <button id="btnFecharPreview" class="absolute -top-10 right-0 sm:-top-12 sm:right-0 text-white/70 hover:text-white bg-black/30 hover:bg-black/50 rounded-full p-2 backdrop-blur transition-colors">
+      <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 6 6 18M6 6l12 12"/>
+      </svg>
+    </button>
+    <img id="imgPreview" class="max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl border border-white/10 bg-white" src="" alt="Preview da simulação">
+    
+    <div class="mt-4 flex flex-wrap justify-center gap-3">
+      <button id="btnFecharPreview2" class="btn bg-white/10 text-white border-white/20 hover:bg-white/20 hover:text-white">Voltar e Editar</button>
+      <button id="btnSalvarPreview" class="btn btn-accent">Baixar Imagem</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  'use strict';
+
+  // ==========================================================
+  // GERENCIAMENTO DE TEMA (DARK MODE)
+  // ==========================================================
+  const themeToggle = document.getElementById('themeToggle');
+  const iconSun = document.getElementById('iconSun');
+  const iconMoon = document.getElementById('iconMoon');
+
+  function updateThemeIcons() {
+    if (document.documentElement.classList.contains('dark')) {
+      iconSun.classList.remove('hidden');
+      iconMoon.classList.add('hidden');
+    } else {
+      iconSun.classList.add('hidden');
+      iconMoon.classList.remove('hidden');
+    }
+  }
+
+  themeToggle.addEventListener('click', () => {
+    document.documentElement.classList.toggle('dark');
+    localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+    updateThemeIcons();
+  });
+
+  if (localStorage.getItem('theme') === 'light') {
+    document.documentElement.classList.remove('dark');
+  } else {
+    document.documentElement.classList.add('dark');
+  }
+  updateThemeIcons();
+
+  // ==========================================================
+  // 1. MOCK DATABASE (BANCO DE DADOS SIMULADO)
+  // ==========================================================
+  
+  /**
+   * Definição das cores de alumínio disponíveis.
+   */
+  const CORES = [
+    { id: 'preto',      nome: 'Preto',      hex: '#202329', light: '#43494f', dark: '#0c0e11', swatch: '#202329' },
+    { id: 'branco',     nome: 'Branco',     hex: '#e9ecf0', light: '#ffffff', dark: '#aeb5bf', swatch: '#e9ecf0' },
+    { id: 'bronze',     nome: 'Bronze',     hex: '#7a5330', light: '#a97b4c', dark: '#452d1b', swatch: '#7a5330' },
+    { id: 'grafite',    nome: 'Grafite',    hex: '#474b50', light: '#6a6f75', dark: '#2a2d31', swatch: '#474b50' },
+    { id: 'natural',    nome: 'Natural',    hex: '#c3c6c9', light: '#e6e8ea', dark: '#8d9196', swatch: 'linear-gradient(135deg,#e2e4e6,#9da1a5)' },
+    { id: 'madeira',    nome: 'Madeira',    hex: '#93613b', light: '#b07a4c', dark: '#5e3a1f', swatch: 'linear-gradient(90deg,#8a5a36,#a87346 40%,#7a4b2c 70%,#9a6a42)', wood: true }
+  ];
+
+  /**
+   * Definição dos acabamentos (textura do metal).
+   */
+  const ACABAMENTOS = [
+    { id: 'metalico', nome: 'Metálico', type: 'metal' },
+    { id: 'fosco',    nome: 'Fosco', type: 'matte' },
+    { id: 'acetinado',nome: 'Acetinado', type: 'satin' },
+    { id: 'cromado',  nome: 'Cromado', type: 'chrome' }
+  ];
+
+  /**
+   * Definição dos tipos de vidro (transparência e cor).
+   */
+  const VIDROS = [
+    { id: 'incolor', nome: 'Incolor', fill: 'rgba(204,231,242,0.30)', swatch: 'linear-gradient(135deg,#e6f4fa,#b3d6e5)' },
+    { id: 'verde',   nome: 'Verde',   fill: 'rgba(118,190,150,0.38)', swatch: 'linear-gradient(135deg,#a9e2c3,#5fb184)' },
+    { id: 'fume',    nome: 'Fumê',    fill: 'rgba(58,62,70,0.52)',    swatch: 'linear-gradient(135deg,#71767e,#2c3036)' },
+    { id: 'cinza',   nome: 'Cinza',   fill: 'rgba(120,120,120,0.45)', swatch: 'linear-gradient(135deg,#a0a0a0,#606060)' },
+    { id: 'cinza_claro', nome: 'Cinza Claro', fill: 'rgba(180,180,180,0.40)', swatch: 'linear-gradient(135deg,#d0d0d0,#909090)' },
+    { id: 'refl_cinza',  nome: 'Refl. Cinza', fill: 'rgba(140,145,153,0.50)', swatch: 'linear-gradient(135deg,#e0e5ed,#70757d)' },
+    { id: 'refl_champ',  nome: 'Refl. Champanhe', fill: 'rgba(196,179,155,0.50)', swatch: 'linear-gradient(135deg,#f0e6d6,#a0907a)' }
+  ];
+
+  /**
+   * Catálogo de Produtos.
+   * --- É AQUI QUE VOCÊ ADICIONA NOVOS PRODUTOS ---
+   * - id: identificador único
+   * - nome: nome exibido no dropdown
+   * - folhas: texto descritivo (ex: "2 folhas")
+   * - tipo: define qual função de desenho será usada em criarTextura()
+   * - dimensoes: metragem fictícia
+   * - descricao: texto explicativo na sidebar
+   */
+  const PRODUTOS = [
+    // --- LINHA FAMILY 32 (Arkial) · desenhadas em 3D e com movimento ---
+    { id: 'f-jcr2', grupo: 'Family', nome: 'Janela de correr 2 folhas', folhas: '2 folhas · marco 2 vias', tipo: 'family', fam: { type: 'correr', n: 2, W: 1500, H: 1200 }, dimensoes: { largura: 1.50, altura: 1.20 }, descricao: 'Linha Family 32. Folhas de 32 mm com cantos a 45°, roldanas reguláveis e vedação em escova.' },
+    { id: 'f-jcr2b', grupo: 'Family', nome: 'Janela de correr 2 folhas com bandeira', folhas: '2 folhas + bandeira fixa', tipo: 'family', fam: { type: 'correr', n: 2, W: 1500, H: 1500, bandeira: 0.36 }, dimensoes: { largura: 1.50, altura: 1.50 }, descricao: 'Linha Family 32. Bandeira fixa superior e 2 folhas de correr.' },
+    { id: 'f-jcr3', grupo: 'Family', nome: 'Janela de correr 3 folhas', folhas: '3 folhas · marco 3 vias', tipo: 'family', fam: { type: 'correr', n: 3, W: 2000, H: 1200 }, dimensoes: { largura: 2.00, altura: 1.20 }, descricao: 'Linha Family 32. Três folhas em trilhos independentes: abre até 2/3 do vão.' },
+    { id: 'f-jcr4c', grupo: 'Family', nome: 'Janela de correr 4 folhas abre centro', folhas: '4 folhas · marco 2 vias', tipo: 'family', fam: { type: 'correr', n: 4, W: 2400, H: 1200 }, dimensoes: { largura: 2.40, altura: 1.20 }, descricao: 'Linha Family 32. As folhas centrais se encontram no meio e correm para as laterais.' },
+    { id: 'f-jper', grupo: 'Family', nome: 'Janela de correr com persiana integrada', folhas: '2 folhas + persiana', tipo: 'family', fam: { type: 'correr', n: 2, W: 1500, H: 1400, persiana: true }, dimensoes: { largura: 1.50, altura: 1.40 }, descricao: 'Linha Family 32. Persiana integrada ao marco: escurece, dá privacidade e protege do sol.' },
+    { id: 'f-jtela', grupo: 'Family', nome: 'Janela de correr com tela mosquiteira', folhas: '2 folhas + tela externa', tipo: 'family', fam: { type: 'correr', n: 2, W: 1500, H: 1200, tela: true }, dimensoes: { largura: 1.50, altura: 1.20 }, descricao: 'Linha Family 32. Tela mosquiteira externa em trilho próprio.' },
+    { id: 'f-pcr2', grupo: 'Family', nome: 'Porta de correr 2 folhas', folhas: '2 folhas · cremona', tipo: 'family', fam: { type: 'correr', n: 2, W: 2000, H: 2200, porta: true, cremona: true }, dimensoes: { largura: 2.00, altura: 2.20 }, descricao: 'Linha Family 32. Configuração do ensaio IPT: atenuação acústica de 30 dB com laminado 10 mm e cremona multiponto.' },
+    { id: 'f-pcr3', grupo: 'Family', nome: 'Porta de correr 3 folhas', folhas: '3 folhas · marco 3 vias', tipo: 'family', fam: { type: 'correr', n: 3, W: 2600, H: 2200, porta: true }, dimensoes: { largura: 2.60, altura: 2.20 }, descricao: 'Linha Family 32. Três folhas de correr, abre até 2/3 do vão.' },
+    { id: 'f-pcr4c', grupo: 'Family', nome: 'Porta de correr 4 folhas abre centro', folhas: '4 folhas · marco 2 vias', tipo: 'family', fam: { type: 'correr', n: 4, W: 3200, H: 2300, porta: true }, dimensoes: { largura: 3.20, altura: 2.30 }, descricao: 'Linha Family 32. Abre pelo centro; pode ser feita com trilho embutido no piso.' },
+    { id: 'f-pper', grupo: 'Family', nome: 'Porta de correr com persiana integrada', folhas: '2 folhas + persiana', tipo: 'family', fam: { type: 'correr', n: 2, W: 2000, H: 2400, porta: true, persiana: true }, dimensoes: { largura: 2.00, altura: 2.40 }, descricao: 'Linha Family 32. Persiana integrada (porta até 2.800 mm de altura).' },
+    { id: 'f-max1', grupo: 'Family', nome: 'Maxim-ar 1 módulo', folhas: '1 folha', tipo: 'family', fam: { type: 'maximar', mod: 1, W: 800, H: 600 }, dimensoes: { largura: 0.80, altura: 0.60 }, descricao: 'Linha Family 32. Projeta para fora com braço de articulação progressiva.' },
+    { id: 'f-max2', grupo: 'Family', nome: 'Maxim-ar 2 módulos', folhas: '2 folhas', tipo: 'family', fam: { type: 'maximar', mod: 2, W: 700, H: 1000 }, dimensoes: { largura: 0.70, altura: 1.00 }, descricao: 'Linha Family 32. Dois módulos sobrepostos, ideal para banheiro e área de serviço.' },
+    { id: 'f-osc', grupo: 'Family', nome: 'Janela oscilo-batente', folhas: '1 folha', tipo: 'family', fam: { type: 'oscilo', W: 800, H: 1100 }, dimensoes: { largura: 0.80, altura: 1.10 }, descricao: 'Linha Family 32. Tomba para ventilar ou abre total para limpar.' },
+    { id: 'f-giro1', grupo: 'Family', nome: 'Porta de giro 1 folha', folhas: '1 folha', tipo: 'family', fam: { type: 'giro', n: 1, W: 900, H: 2150 }, dimensoes: { largura: 0.90, altura: 2.15 }, descricao: 'Linha Family 32. Dobradiças para até 80 kg e maçaneta com chave.' },
+    { id: 'f-giro2', grupo: 'Family', nome: 'Porta de giro 2 folhas', folhas: '2 folhas', tipo: 'family', fam: { type: 'giro', n: 2, W: 1600, H: 2150 }, dimensoes: { largura: 1.60, altura: 2.15 }, descricao: 'Linha Family 32. Duas folhas de giro com vidro.' },
+    // --- VIDROS CDE (fora da linha Family) ---
+    { id: 'chapa-vidro', grupo: 'Vidros', nome: 'Chapa de Vidro (Sem Esquadria)', folhas: 'Vidro puro', tipo: 'chapa', dimensoes: { largura: 1.00, altura: 2.00 }, descricao: 'Chapa de vidro sem esquadria, furação ou ferragens. Apenas o pano de vidro.' },
+    { id: 'porta-pivotante', grupo: 'Vidros', nome: 'Porta Pivotante Elegance', folhas: '1 folha', tipo: 'porta1', dimensoes: { largura: 1.10, altura: 2.40 }, descricao: 'Porta pivotante em vidro temperado 10mm com ferragens aparentes.' },
+    { id: 'box-elegance', grupo: 'Vidros', nome: 'Box de Banheiro Elegance', folhas: '2 folhas', tipo: 'box', dimensoes: { largura: 1.20, altura: 2.00 }, descricao: 'Box em vidro temperado 8mm com perfis Elegance.' }
+  ];
+
+  // ==========================================================
+  // 1B. LINHA FAMILY 32 · MOTOR 3D (FC Consultoria em Esquadria)
+  // Desenha as tipologias Family em 3D (perfis com corte a 45°, folhas de 32 mm,
+  // vidro, ferragens) e entrega a imagem para a mesma deformação de perspectiva
+  // usada pelos outros produtos. Permite abrir/fechar dentro da foto.
+  // ==========================================================
+  const FAM = (() => {
+    const S = 768;
+    const api = { ok: false };
+    if (typeof THREE === 'undefined') return Object.assign(api, { render: () => null, syncCtrls: () => {}, montarControles: () => {} });
+
+    const cv3 = document.createElement('canvas'); cv3.width = S; cv3.height = S;
+    let R;
+    try {
+      R = new THREE.WebGLRenderer({ canvas: cv3, alpha: true, antialias: true, preserveDrawingBuffer: true });
+      R.setPixelRatio(1); R.setSize(S, S, false); R.outputEncoding = THREE.sRGBEncoding; R.setClearColor(0x000000, 0);
+      api.ok = true;
+    } catch (e) { return Object.assign(api, { render: () => null, syncCtrls: () => {}, montarControles: () => {} }); }
+
+    const out = document.createElement('canvas'); out.width = S; out.height = S;
+    const og = out.getContext('2d', { willReadFrequently: true });
+
+    const scene = new THREE.Scene();
+    scene.add(new THREE.HemisphereLight(0xffffff, 0x8c8a86, 0.85));
+    const d1 = new THREE.DirectionalLight(0xffffff, 0.95); d1.position.set(-2, 3, 4); scene.add(d1);
+    const d2 = new THREE.DirectionalLight(0xffffff, 0.55); d2.position.set(2, 1.5, -4); scene.add(d2);
+    const cam = new THREE.PerspectiveCamera(22, 1, 0.05, 60);
+
+    const ctex = (w, h, draw, rep) => { const c = document.createElement('canvas'); c.width = w; c.height = h; draw(c.getContext('2d'), w, h); const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; if (rep) { t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(rep[0], rep[1]); } return t; };
+    const texSlat = ctex(64, 256, (g, w, h) => { for (let y = 0; y < h; y += 32) { const gr = g.createLinearGradient(0, y, 0, y + 32); gr.addColorStop(0, '#fff'); gr.addColorStop(.75, '#cfcfcf'); gr.addColorStop(1, '#7c7c7c'); g.fillStyle = gr; g.fillRect(0, y, w, 32); } }, [1, 1]);
+    const texMesh = ctex(128, 128, (g, w, h) => { g.strokeStyle = 'rgba(40,40,40,.6)'; for (let i = 0; i <= w; i += 4) { g.beginPath(); g.moveTo(i + .5, 0); g.lineTo(i + .5, h); g.stroke(); g.beginPath(); g.moveTo(0, i + .5); g.lineTo(w, i + .5); g.stroke(); } }, [10, 10]);
+    let sd = 5; const rnd = () => { sd = (sd * 16807) % 2147483647; return (sd - 1) / 2147483646; };
+    const texWood = ctex(512, 512, (g, w, h) => { g.fillStyle = '#93613b'; g.fillRect(0, 0, w, h); for (let i = 0; i < 160; i++) { g.strokeStyle = rnd() > .5 ? 'rgba(60,30,12,.35)' : 'rgba(200,150,100,.25)'; g.lineWidth = 1 + rnd() * 3; g.beginPath(); let y = rnd() * h; g.moveTo(0, y); for (let x = 0; x <= w; x += 32) { y += (rnd() - .5) * 6; g.lineTo(x, y); } g.stroke(); } }, [2, 8]);
+
+    const alu = new THREE.MeshStandardMaterial({ color: 0x222222 });
+    const handleMat = new THREE.MeshStandardMaterial({ color: 0x1e1e1e, metalness: .6, roughness: .35 });
+    const rubber = new THREE.MeshStandardMaterial({ color: 0x151515, roughness: .9 });
+    const glass = new THREE.MeshBasicMaterial({ color: 0xcfe7f2, transparent: true, opacity: .3, depthWrite: false, side: THREE.FrontSide, toneMapped: false });
+    const meshMat = new THREE.MeshStandardMaterial({ map: texMesh, transparent: true, depthWrite: false, side: THREE.DoubleSide, roughness: 1 });
+    glass.premultipliedAlpha = true; meshMat.premultipliedAlpha = true; // transparência correta sobre a foto
+    const slatMat = new THREE.MeshStandardMaterial({ map: texSlat, side: THREE.DoubleSide, roughness: .55, metalness: .2 });
+
+    const V3 = (x, y, z) => new THREE.Vector3(x, y, z);
+    const box = (w, h, d, m, x = 0, y = 0, z = 0) => { const o = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); o.position.set(x, y, z); return o; };
+    function bar(pts, d, m) { const s = new THREE.Shape(); s.moveTo(pts[0][0], pts[0][1]); for (let i = 1; i < pts.length; i++) s.lineTo(pts[i][0], pts[i][1]); s.closePath();
+      const g = new THREE.ExtrudeGeometry(s, { depth: d, bevelEnabled: true, bevelThickness: .0015, bevelSize: .0012, bevelSegments: 1 }); g.translate(0, 0, -d / 2); return new THREE.Mesh(g, m); }
+    function frame(w, h, f, d, m, noBottom) { const g = new THREE.Group(), a = w / 2, b = h / 2;
+      if (!noBottom) g.add(bar([[-a, -b], [a, -b], [a - f, -b + f], [-a + f, -b + f]], d, m));
+      g.add(bar([[-a, b], [-a + f, b - f], [a - f, b - f], [a, b]], d, m));
+      g.add(bar(noBottom ? [[-a, -b], [-a + f, -b], [-a + f, b - f], [-a, b]] : [[-a, -b], [-a + f, -b + f], [-a + f, b - f], [-a, b]], d, m));
+      g.add(bar(noBottom ? [[a, -b], [a, b], [a - f, b - f], [a - f, -b]] : [[a, -b], [a, b], [a - f, b - f], [a - f, -b + f]], d, m)); return g; }
+    function leaf(w, h, o = {}) { const g = new THREE.Group(), f = o.f || .05, d = o.d || .032;
+      g.add(frame(w, h, f, d, alu));
+      const bead = frame(w - 2 * f + .002, h - 2 * f + .002, .012, .012, alu); bead.position.z = d / 2 - .006; g.add(bead);
+      const gk = frame(w - 2 * f + .002, h - 2 * f + .002, .006, .008, rubber); gk.position.z = -d / 2 + .005; g.add(gk);
+      const gl = new THREE.Mesh(new THREE.BoxGeometry(w - 2 * f + .01, h - 2 * f + .01, .01), glass); gl.renderOrder = 2; g.add(gl);
+      if (o.rodape) g.add(box(w - 2 * f, o.rodape, d * .9, alu, 0, -h / 2 + f + o.rodape / 2, 0));
+      return g; }
+    const concha = () => box(.022, .13, .008, handleMat);
+    function lever() { const g = new THREE.Group(); g.add(box(.034, .14, .012, handleMat)); g.add(box(.022, .15, .02, handleMat, 0, -.07, .02)); return g; }
+
+    // Monta a tipologia (medidas em metros, origem no centro do vão).
+    function build(c) {
+      const W = c.W / 1000, HF = c.H / 1000, g = new THREE.Group(), o = { g, W, HF, D: .072, upd: () => {} };
+      if (c.type === 'correr') {
+        const boxH = c.persiana ? .22 : 0, bH = c.bandeira || 0, H = HF - boxH - bH, yW = -HF / 2 + H / 2, fm = .045, D = c.n === 3 ? .105 : .072; o.D = D + (c.tela ? .03 : 0);
+        const mf = frame(W, H, fm, D, alu); mf.position.y = yW; g.add(mf);
+        const Wi = W - 2 * fm, Hi = H - 2 * fm, yb = yW - H / 2 + fm;
+        const zT = c.n === 3 ? [-.034, 0, .034] : [-.019, .019];
+        zT.forEach(z => { g.add(box(Wi, .012, .004, alu, 0, yb + .006, z)); g.add(box(Wi, .01, .004, alu, 0, yb + Hi - .005, z)); });
+        const ov = .05, L = [];
+        const hy = c.porta ? Math.min(1.05 - fm - Hi / 2, Hi / 2 - .2) : 0;
+        if (c.n === 4) { const Lw = Wi / 4 + ov / 2, x0 = -Wi / 2 + Lw / 2, x1 = -Lw / 2;
+          [[x0, 0, x0], [x1, 1, x0 + .07], [-x1, 1, -x0 - .07], [-x0, 0, -x0]].forEach(d => { const m = leaf(Lw, Hi - .004); m.position.set(d[0], yW, zT[d[1]]); g.add(m); L.push({ m, a: d[0], b: d[2] }); });
+          const h1 = concha(); h1.position.set(Lw / 2 - .03, hy, .024); L[1].m.add(h1); const h2 = concha(); h2.position.set(-Lw / 2 + .03, hy, .024); L[2].m.add(h2);
+        } else if (c.n === 3) { const Lw = (Wi + 2 * ov) / 3, x0 = -Wi / 2 + Lw / 2;
+          [[x0, 0, x0], [x0 + Lw - ov, 1, x0 + .06], [x0 + 2 * (Lw - ov), 2, x0 + .12]].forEach(d => { const m = leaf(Lw, Hi - .004); m.position.set(d[0], yW, zT[d[1]]); g.add(m); L.push({ m, a: d[0], b: d[2] }); });
+          [1, 2].forEach(i => { const h = concha(); h.position.set(-Lw / 2 + .03, hy, .024); L[i].m.add(h); });
+        } else { const Lw = (Wi + ov) / 2, xa = -Wi / 2 + Lw / 2, xb = Wi / 2 - Lw / 2;
+          const A = leaf(Lw, Hi - .004), B = leaf(Lw, Hi - .004); A.position.set(xa, yW, zT[0]); B.position.set(xb, yW, zT[1]); g.add(A, B);
+          L.push({ m: A, a: xa, b: xa }, { m: B, a: xb, b: xa + .07 });
+          const hh = c.cremona ? lever() : concha(); hh.position.set(-Lw / 2 + .026, hy, .026); B.add(hh);
+          if (c.tela) { const tg = new THREE.Group(); tg.add(frame(Lw, Hi, .028, .012, alu)); const pm = new THREE.Mesh(new THREE.PlaneGeometry(Lw - .05, Hi - .05), meshMat); pm.renderOrder = 3; tg.add(pm);
+            tg.position.set(xb, yW, -D / 2 - .016); g.add(tg); g.add(box(W, .014, .022, alu, 0, yW - H / 2 + .007, -D / 2 - .016), box(W, .014, .022, alu, 0, yW + H / 2 - .007, -D / 2 - .016)); o.tela = tg; }
+        }
+        if (bH) { const yB = yW + H / 2 + bH / 2; const bf = frame(W, bH, fm, D, alu); bf.position.y = yB; g.add(bf);
+          const gl = new THREE.Mesh(new THREE.BoxGeometry(W - 2 * fm + .01, bH - 2 * fm + .01, .01), glass); gl.position.y = yB; gl.renderOrder = 2; g.add(gl);
+          const bd = frame(W - 2 * fm, bH - 2 * fm, .012, .012, alu); bd.position.set(0, yB, D / 2 - .01); g.add(bd); }
+        if (c.persiana) { g.add(box(W, boxH, D + .03, alu, 0, HF / 2 - boxH / 2, -.015)); g.add(box(W - .02, .004, .002, rubber, 0, HF / 2 - boxH + .01, D / 2 + .001));
+          [-1, 1].forEach(sg => g.add(box(.028, H, .028, alu, sg * (W / 2 - .014), yW, -D / 2 - .016)));
+          const cm = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), slatMat); cm.position.z = -D / 2 - .016; g.add(cm); o.curtain = { m: cm, top: HF / 2 - boxH, H, W: W - .056 }; }
+        o.upd = s => { L.forEach(l => { l.m.position.x = l.a + (l.b - l.a) * s.ab; }); if (o.tela) o.tela.visible = s.tela;
+          if (o.curtain) { const h = Math.max(.001, o.curtain.H * s.pe); o.curtain.m.scale.set(o.curtain.W, h, 1); o.curtain.m.position.y = o.curtain.top - h / 2; o.curtain.m.visible = s.pe > .005; texSlat.repeat.set(1, h / .18); } };
+      }
+      if (c.type === 'maximar') { const fm = .04, D = .06, H = HF; o.D = D; g.add(frame(W, H, fm, D, alu)); const Wi = W - 2 * fm, Hi = H - 2 * fm, n = c.mod || 1;
+        const hs = n === 2 ? (Hi - .045) / 2 : Hi, P = []; if (n === 2) g.add(box(Wi, .045, D * .8, alu));
+        (n === 2 ? [Hi / 2, -.0225] : [Hi / 2]).forEach(top => { const p = new THREE.Group(); p.position.set(0, top, -.005); const s = leaf(Wi - .004, hs - .004, { f: .042, d: .04 }); s.position.y = -hs / 2; p.add(s);
+          p.add(box(.09, .018, .016, handleMat, 0, -hs + .03, .03)); g.add(p); P.push(p); });
+        o.upd = s => P.forEach(p => p.rotation.x = s.ab * .55); }
+      if (c.type === 'oscilo') { const fm = .045, D = .065, H = HF; o.D = D; g.add(frame(W, H, fm, D, alu)); const Wi = W - 2 * fm, Hi = H - 2 * fm, ws = Wi - .004, hs = Hi - .004;
+        const turn = new THREE.Group(); turn.position.set(-ws / 2, 0, 0); const tilt = new THREE.Group(); tilt.position.set(ws / 2, -hs / 2, 0); turn.add(tilt);
+        const sl = leaf(ws, hs, { f: .055, d: .045 }); sl.position.y = hs / 2; tilt.add(sl); const h = lever(); h.position.set(ws / 2 - .028, 0, .03); sl.add(h); g.add(turn);
+        o.upd = s => { const t = s.modo === 'girar' ? 0 : s.ab, r = s.modo === 'girar' ? s.ab : 0; tilt.rotation.x = t * .2; turn.rotation.y = -r * 1.3; }; }
+      if (c.type === 'giro') { const fm = .05, D = .07, H = HF; o.D = D; g.add(frame(W, H, fm, D, alu, true)); g.add(box(W, .012, D + .05, alu, 0, -H / 2 + .006, 0));
+        const n = c.n || 1, wi = W - 2 * fm - .006, lw = n === 2 ? wi / 2 - .002 : wi, lh = H - fm - .018, yc = -H / 2 + .012 + lh / 2, P = [];
+        for (let i = 0; i < n; i++) { const sgn = i === 0 ? 1 : -1; const p = new THREE.Group(); p.position.set(sgn * -wi / 2, yc, 0); const sl = leaf(lw, lh, { f: .065, d: .045, rodape: .12 }); sl.position.x = sgn * lw / 2; p.add(sl); g.add(p); P.push({ p, sgn });
+          const hy = -H / 2 + 1.05 - yc; const hd = lever(); hd.position.set(sgn * (lw / 2 - .05), hy, .03); sl.add(hd);
+          [-.85, 0, .85].forEach(k => { const hg = new THREE.Mesh(new THREE.CylinderGeometry(.011, .011, .1, 16), handleMat); hg.position.set(sgn * (-wi / 2 - .004), yc + k * lh / 2, .03); g.add(hg); }); }
+        o.upd = s => P.forEach(x => x.p.rotation.y = -x.sgn * s.ab * 1.35); }
+      scene.add(g); g.visible = false; return o;
+    }
+
+    const models = new Map();
+    const getModel = p => { if (!models.has(p.id)) models.set(p.id, build(p.fam)); return models.get(p.id); };
+    const ACAB = { metal: [.6, .3], matte: [.1, .7], satin: [.4, .45], chrome: [.95, .12] };
+    function rgba(str) { const m = /rgba?\(([^)]+)\)/.exec(str || ''); if (!m) return [204, 231, 242, .3]; const a = m[1].split(',').map(Number); return [a[0], a[1], a[2], a[3] == null ? 1 : a[3]]; }
+
+    api.render = vao => {
+      const m = getModel(vao.produto);
+      models.forEach(x => x.g.visible = x === m);
+      const cor = vao.cor, ac = ACAB[vao.acabamento.type] || ACAB.satin;
+      alu.color.set(cor.wood ? '#ffffff' : (vao.acabamento.type === 'chrome' ? '#e8eaec' : cor.hex)); alu.map = cor.wood ? texWood : null;
+      alu.metalness = cor.wood ? 0 : ac[0]; alu.roughness = cor.wood ? .6 : ac[1]; alu.needsUpdate = true;
+      slatMat.color.set(cor.wood ? '#c08a5a' : cor.hex);
+      handleMat.color.set(cor.id === 'branco' ? '#e9e9e6' : (cor.id === 'natural' ? '#b9bcbf' : '#1e1e1e'));
+      const vg = rgba(vao.vidro.fill); glass.color.setRGB(vg[0] / 255, vg[1] / 255, vg[2] / 255); glass.opacity = Math.min(.85, vg[3]);
+      m.upd(vao.mov);
+      // câmera enquadrando exatamente a face do marco (o vão marcado na foto)
+      const fora = vao.mov.vista === 'fora', z0 = (fora ? -1 : 1) * m.D / 2, fov = 22, dist = (m.HF / 2) / Math.tan(fov * Math.PI / 360);
+      cam.fov = fov; cam.aspect = m.W / m.HF; cam.position.set(0, 0, z0 + (fora ? -dist : dist)); cam.lookAt(0, 0, z0); cam.updateProjectionMatrix();
+      R.render(scene, cam);
+      og.clearRect(0, 0, S, S); og.drawImage(cv3, 0, 0);
+      // reflexo suave no vidro (mesmo espírito do desenho original)
+      og.save(); og.globalCompositeOperation = 'source-atop'; const lg = og.createLinearGradient(0, S, S, 0);
+      lg.addColorStop(0, 'rgba(255,255,255,0)'); lg.addColorStop(.45, 'rgba(255,255,255,.10)'); lg.addColorStop(.52, 'rgba(255,255,255,.18)'); lg.addColorStop(.6, 'rgba(255,255,255,0)');
+      og.fillStyle = lg; og.fillRect(0, 0, S, S); og.restore();
+      return out;
+    };
+
+    // ---------- controles do painel ----------
+    const el = id => document.getElementById(id);
+    api.syncCtrls = vao => {
+      const fam = vao && vao.produto.tipo === 'family';
+      el('famMov').classList.toggle('hidden', !fam); if (!fam) return;
+      const c = vao.produto.fam, mv = vao.mov;
+      el('famAbrir').textContent = mv.abT > 0 ? 'Fechar' : 'Abrir';
+      el('famVista').textContent = mv.vista === 'fora' ? 'Foto tirada de fora' : 'Foto tirada de dentro';
+      el('famOscilo').classList.toggle('hidden', c.type !== 'oscilo');
+      el('famTombar').classList.toggle('btn-active', mv.modo === 'tombar'); el('famGirar').classList.toggle('btn-active', mv.modo === 'girar');
+      el('famAb').value = Math.round(mv.abT * 100); el('famAbLbl').textContent = Math.round(mv.abT * 100) + '%';
+      el('famPersBox').classList.toggle('hidden', !c.persiana); el('famPe').value = Math.round(mv.peT * 100); el('famPeLbl').textContent = Math.round(mv.peT * 100) + '%';
+      el('famTela').classList.toggle('hidden', !c.tela); el('famTela').textContent = 'Tela mosquiteira: ' + (mv.tela ? 'ligada' : 'desligada');
+    };
+    const ativo = () => { const v = vaoAtivo(); return v && v.produto.tipo === 'family' ? v : null; };
+    api.montarControles = () => {
+      el('famAbrir').addEventListener('click', () => { const v = ativo(); if (!v) return; v.mov.abT = v.mov.abT > 0 ? 0 : 1; api.syncCtrls(v); });
+      el('famAb').addEventListener('input', () => { const v = ativo(); if (!v) return; v.mov.abT = el('famAb').value / 100; v.mov.ab = v.mov.abT; renderizarVao(v); api.syncCtrls(v); });
+      el('famPe').addEventListener('input', () => { const v = ativo(); if (!v) return; v.mov.peT = el('famPe').value / 100; v.mov.pe = v.mov.peT; renderizarVao(v); api.syncCtrls(v); });
+      el('famVista').addEventListener('click', () => { const v = ativo(); if (!v) return; v.mov.vista = v.mov.vista === 'fora' ? 'dentro' : 'fora'; renderizarVao(v); api.syncCtrls(v); });
+      el('famTela').addEventListener('click', () => { const v = ativo(); if (!v) return; v.mov.tela = !v.mov.tela; renderizarVao(v); api.syncCtrls(v); });
+      el('famTombar').addEventListener('click', () => { const v = ativo(); if (!v) return; v.mov.modo = 'tombar'; v.mov.ab = 0; v.mov.abT = 1; api.syncCtrls(v); });
+      el('famGirar').addEventListener('click', () => { const v = ativo(); if (!v) return; v.mov.modo = 'girar'; v.mov.ab = 0; v.mov.abT = 1; api.syncCtrls(v); });
+      el('famVideo').addEventListener('click', gravarVideo);
+      requestAnimationFrame(tick);
+    };
+    // animação suave de abrir/fechar
+    function tick() {
+      state.vaos.forEach(v => { if (!v.mov || v.produto.tipo !== 'family') return; let mudou = false;
+        ['ab', 'pe'].forEach(k => { const d = v.mov[k + 'T'] - v.mov[k]; if (Math.abs(d) > .003) { v.mov[k] += d * .12; mudou = true; } else if (d !== 0) { v.mov[k] = v.mov[k + 'T']; mudou = true; } });
+        if (mudou) renderizarVao(v); });
+      requestAnimationFrame(tick);
+    }
+    // vídeo: grava a foto com as esquadrias abrindo e fechando
+    let gravando = false;
+    function gravarVideo() {
+      if (gravando || !state.img) { if (!state.img) el('famVideoMsg').textContent = 'Suba a foto e marque um vão primeiro.'; return; }
+      const vs = state.vaos.filter(v => v.produto.tipo === 'family' && v.pts.length === 4);
+      if (!vs.length) { el('famVideoMsg').textContent = 'Coloque pelo menos uma tipologia Family em um vão.'; return; }
+      const rec = document.createElement('canvas'); rec.width = view.width; rec.height = view.height; const rg = rec.getContext('2d');
+      let stream, mr; try { stream = rec.captureStream(30); const tipo = ['video/webm;codecs=vp9', 'video/webm', 'video/mp4'].find(t => window.MediaRecorder && MediaRecorder.isTypeSupported(t)); mr = new MediaRecorder(stream, tipo ? { mimeType: tipo, videoBitsPerSecond: 6e6 } : undefined); }
+      catch (e) { el('famVideoMsg').textContent = 'Este navegador não grava vídeo. Use o Chrome ou o Edge no computador ou no Android.'; return; }
+      const partes = []; mr.ondataavailable = e => { if (e.data.size) partes.push(e.data); };
+      gravando = true; el('famVideo').textContent = 'Gravando… (9 s)'; el('famVideoMsg').textContent = '';
+      const t0 = performance.now(), dur = 9000;
+      vs.forEach(v => { v._abAntes = v.mov.abT; v.mov.abT = 0; v.mov.ab = 0; renderizarVao(v); });
+      const desenhar = () => { rg.drawImage(gerarComposicao(), 0, 0); const t = performance.now() - t0;
+        rg.fillStyle = 'rgba(0,0,0,.45)'; rg.fillRect(0, rec.height - 34, rec.width, 34); rg.fillStyle = '#fff'; rg.font = '600 15px Inter, sans-serif';
+        rg.fillText('CDE · Linha Family 32  ·  imagem demonstrativa  ·  Desenvolvido por FC Consultoria em Esquadria', 14, rec.height - 12);
+        if (t < dur) requestAnimationFrame(desenhar); else mr.stop(); };
+      setTimeout(() => vs.forEach(v => v.mov.abT = 1), 1500);
+      setTimeout(() => vs.forEach(v => v.mov.abT = 0), 5500);
+      mr.onstop = () => { gravando = false; el('famVideo').textContent = 'Gravar vídeo abrindo e fechando';
+        vs.forEach(v => { v.mov.abT = v._abAntes || 0; });
+        const blob = new Blob(partes, { type: mr.mimeType || 'video/webm' }); const url = URL.createObjectURL(blob);
+        const modal = el('modalPreview'); const img = el('imgPreview'); let vid = el('famVid');
+        if (!vid) { vid = document.createElement('video'); vid.id = 'famVid'; vid.controls = true; vid.loop = true; vid.playsInline = true; vid.className = img.className; img.parentNode.insertBefore(vid, img); }
+        vid.src = url; vid.classList.remove('hidden'); img.classList.add('hidden'); vid.play().catch(() => {});
+        modal.classList.remove('hidden'); modal.classList.add('flex');
+        el('btnSalvarPreview').dataset.video = url; el('btnSalvarPreview').textContent = 'Baixar vídeo';
+        el('famVideoMsg').textContent = 'Vídeo pronto. Se o botão Baixar vídeo não responder, clique com o botão direito no vídeo (ou segure o dedo no celular) e escolha Salvar vídeo.'; };
+      mr.start(200); desenhar();
+    }
+    return api;
+  })();
+
+  // ==========================================================
+  // 2. ESTADO GLOBAL DA APLICAÇÃO
+  // ==========================================================
+  const state = {
+    img: null,               // Imagem de fundo carregada
+    vaos: [],                // Array contendo todos os vãos adicionados
+    vaoAtivoId: null,        // ID do vão atualmente selecionado
+    modoCriacao: false,      // Flag indicando se está aguardando cliques para criar vão
+    ptsTemp: [],             // Pontos temporários durante a criação
+    escalaOverlay: 1,        // Fator de escala para o canvas de overlay
+    overlayW: 0,
+    overlayH: 0,
+    
+    annotationTool: null,    // Ferramenta ativa ('bubble' ou null)
+    annotations: [],         // Array de anotações (balões)
+    selectedAnnotationIndex: -1,
+    draggingBubble: null,    // Controle de arrasto de balão
+
+    defaultProduto: PRODUTOS[0],
+    defaultCor: CORES[0],
+    defaultAcabamento: ACABAMENTOS[0],
+    defaultVidro: VIDROS[0],
+    defaultBlend: 'normal',
+    defaultOpacidade: 1.0
+  };
+
+  // ==========================================================
+  // 3. REFERÊNCIAS DOM
+  // ==========================================================
+  const $ = (id) => document.getElementById(id);
+  const view = $('view'), overlayContainer = $('overlayContainer'), ui = $('ui');
+  const annotationsCanvas = $('annotations');
+  const vctx = view.getContext('2d'), uctx = ui.getContext('2d'), actx = annotationsCanvas.getContext('2d');
+  const wrap = $('canvasWrap'), dropzone = $('dropzone'), toolbar = $('toolbar'), hint = $('hint');
+
+  // ==========================================================
+  // 4. GERAÇÃO PROCEDURAL DE TEXTURAS
+  // ==========================================================
+  const texCache = new Map();
+
+  /**
+   * Gera o Canvas da textura do produto com base no tipo, cor, acabamento e vidro.
+   * @param {Object} produto - Objeto do produto selecionado
+   * @param {Object} cor - Objeto da cor do alumínio
+   * @param {Object} acabamento - Objeto do acabamento
+   * @param {Object} vidro - Objeto do tipo de vidro
+   * @returns {HTMLCanvasElement} Canvas contendo a textura desenhada
+   */
+  function criarTextura(produto, cor, acabamento, vidro) {
+    const S = 640;
+    const cv = document.createElement('canvas');
+    cv.width = S; cv.height = S;
+    const g = cv.getContext('2d');
+    g.clearRect(0, 0, S, S);
+    g.lineJoin = 'round';
+
+    // Função auxiliar para desenhar barras de metal com gradiente
+    const metal = (x, y, w, h) => {
+      if (w <= 0 || h <= 0) return;
+      let lg = g.createLinearGradient(x, y, x + w, y + h);
+      
+      if (acabamento.type === 'matte') {
+        lg.addColorStop(0, cor.hex);
+        lg.addColorStop(1, cor.hex);
+      } else if (acabamento.type === 'metal') {
+        lg.addColorStop(0, cor.light); 
+        lg.addColorStop(0.3, cor.hex);
+        lg.addColorStop(0.5, '#ffffff'); 
+        lg.addColorStop(0.7, cor.hex); 
+        lg.addColorStop(1, cor.dark);
+      } else if (acabamento.type === 'chrome') {
+        lg.addColorStop(0, '#ffffff');
+        lg.addColorStop(0.4, '#d0d0d0');
+        lg.addColorStop(0.6, '#ffffff');
+        lg.addColorStop(1, '#909090');
+      } else {
+        lg.addColorStop(0, cor.light); 
+        lg.addColorStop(0.4, cor.hex);
+        lg.addColorStop(0.6, cor.hex); 
+        lg.addColorStop(1, cor.dark);
+      }
+      
+      g.fillStyle = lg; 
+      g.fillRect(x, y, w, h);
+    };
+
+    // Função auxiliar para desenhar a moldura (anel)
+    const anel = (x, y, w, h, fw) => {
+      metal(x, y, w, fw); metal(x, y + h - fw, w, fw);
+      metal(x, y, fw, h); metal(x + w - fw, y, fw, h);
+      g.strokeStyle = 'rgba(0,0,0,0.28)'; g.lineWidth = 1.5;
+      g.strokeRect(x + fw, y + fw, w - fw * 2, h - fw * 2);
+    };
+
+    // Função auxiliar para desenhar o pano de vidro com reflexos
+    const panoVidro = (x, y, w, h) => {
+      if (w <= 0 || h <= 0) return;
+      g.save(); g.beginPath(); g.rect(x, y, w, h); g.clip();
+      g.fillStyle = vidro.fill; g.fillRect(x, y, w, h);
+      const lg = g.createLinearGradient(x, y + h, x + w, y);
+      lg.addColorStop(0, 'rgba(255,255,255,0)'); lg.addColorStop(0.34, 'rgba(255,255,255,0.09)');
+      lg.addColorStop(0.48, 'rgba(255,255,255,0.26)'); lg.addColorStop(0.58, 'rgba(255,255,255,0.04)');
+      lg.addColorStop(1, 'rgba(255,255,255,0.12)');
+      g.fillStyle = lg; g.fillRect(x, y, w, h);
+      g.globalAlpha = 0.20; g.fillStyle = '#fff';
+      g.beginPath(); g.moveTo(x + w * 0.56, y); g.lineTo(x + w * 0.70, y);
+      g.lineTo(x + w * 0.40, y + h); g.lineTo(x + w * 0.26, y + h); g.closePath(); g.fill();
+      g.restore();
+    };
+
+    // --- DESENHO: CHAPA DE VIDRO (SEM ESQUADRIA) ---
+    if (produto.tipo === 'chapa') {
+      panoVidro(0, 0, S, S);
+      // Borda sutil de corte de vidro
+      g.strokeStyle = 'rgba(255,255,255,0.2)';
+      g.lineWidth = 2;
+      g.strokeRect(1, 1, S - 2, S - 2);
+    }
+
+    // --- DESENHO: PORTA PIVOTANTE ---
+    if (produto.tipo === 'porta1') {
+      const fw = Math.round(S * 0.040); 
+      anel(0, 0, S, S, fw);
+      const ix = fw, iy = fw, iw = S - fw * 2, ih = S - fw * 2;
+      panoVidro(ix, iy, iw, ih);
+      anel(ix, iy, iw, ih, Math.round(S * 0.020));
+      metal(ix + iw * 0.85, iy + ih * 0.40, iw * 0.04, ih * 0.20);
+    }
+
+    // --- DESENHO: JANELA 4 FOLHAS ---
+    if (produto.tipo === 'janela4') {
+      const fw = Math.round(S * 0.048); anel(0, 0, S, S, fw);
+      const ix = fw, iy = fw, iw = S - fw * 2, ih = S - fw * 2;
+      const lw = iw / 4, lf = Math.round(S * 0.018);
+      for (let i = 0; i < 4; i++) {
+        const x = ix + i * lw; 
+        panoVidro(x, iy, lw, ih); 
+        anel(x, iy, lw, ih, lf);
+      }
+      metal(ix + lw * 2 - lf * 1.5, iy + ih * 0.45, lf * 0.8, ih * 0.10);
+      metal(ix + lw * 2 + lf * 0.7, iy + ih * 0.45, lf * 0.8, ih * 0.10);
+      metal(ix, iy + ih - lf * 0.9, iw, lf * 0.9);
+    }
+
+    // --- DESENHO: JANELA MAXIM-AR ---
+    if (produto.tipo === 'maxim') {
+      const fw = Math.round(S * 0.050); anel(0, 0, S, S, fw);
+      const ix = fw, iy = fw, iw = S - fw * 2, ih = S - fw * 2;
+      panoVidro(ix, iy, iw, ih);
+      const hingeY = iy + ih * 0.75;
+      metal(ix, hingeY, iw, Math.round(S * 0.025));
+      metal(ix + iw * 0.45, iy + ih * 0.15, iw * 0.10, Math.round(S * 0.015));
+    }
+
+    // --- DESENHO: FACHADA FIXA ---
+    if (produto.tipo === 'fachada') {
+      const fw = Math.round(S * 0.030); anel(0, 0, S, S, fw);
+      const ix = fw, iy = fw, iw = S - fw * 2, ih = S - fw * 2;
+      const cols = 3, rows = 2;
+      const w = iw / cols, h = ih / rows;
+      for(let c = 0; c < cols; c++) {
+        for(let r = 0; r < rows; r++) {
+          panoVidro(ix + c * w, iy + r * h, w, h);
+        }
+      }
+      for (let c = 1; c < cols; c++) metal(ix + c * w - fw * 0.4, iy, fw * 0.8, ih);
+      for (let r = 1; r < rows; r++) metal(ix, iy + r * h - fw * 0.4, iw, fw * 0.8);
+    }
+
+    // --- DESENHO: PORTA DE GIRO ---
+    if (produto.tipo === 'porta_giro') {
+      const fw = Math.round(S * 0.055); anel(0, 0, S, S, fw);
+      const ix = fw, iy = fw, iw = S - fw * 2, ih = S - fw * 2;
+      metal(ix, iy, iw, Math.round(S * 0.020)); 
+      const dw = iw * 0.95, dh = ih - (S * 0.020);
+      panoVidro(ix, iy + (S * 0.020), dw, dh);
+      anel(ix, iy + (S * 0.020), dw, dh, Math.round(S * 0.022));
+      metal(ix + dw * 0.85, iy + (S * 0.020) + dh * 0.48, dw * 0.06, dh * 0.03);
+      metal(ix, iy + (S * 0.020) + dh * 0.1, dw * 0.04, dh * 0.08);
+      metal(ix, iy + (S * 0.020) + dh * 0.8, dw * 0.04, dh * 0.08);
+    }
+
+    // --- DESENHO: PORTA DE CORRER 3 FOLHAS ---
+    if (produto.tipo === 'porta3') {
+      const fw = Math.round(S * 0.038); anel(0, 0, S, S, fw);
+      const ix = fw, iy = fw, iw = S - fw * 2, ih = S - fw * 2;
+      const lw = iw / 3, lf = Math.round(S * 0.024);
+      for (let i = 0; i < 3; i++) {
+        const x = ix + i * lw; panoVidro(x, iy, lw, ih); anel(x, iy, lw, ih, lf);
+      }
+      metal(ix + lw - lf * 2.6, iy + ih * 0.42, lf * 0.95, ih * 0.16);
+      metal(ix + lw * 2 - lf * 2.6, iy + ih * 0.42, lf * 0.95, ih * 0.16);
+      metal(ix, iy + ih - lf * 0.9, iw, lf * 0.9);
+    }
+    
+    // --- DESENHO: JANELA DE CORRER 2 FOLHAS ---
+    if (produto.tipo === 'janela2') {
+      const fw = Math.round(S * 0.048); anel(0, 0, S, S, fw);
+      const ix = fw, iy = fw, iw = S - fw * 2, ih = S - fw * 2;
+      const barraY = iy + ih * 0.24, barraH = Math.round(S * 0.030);
+      panoVidro(ix, iy, iw, barraY - iy); anel(ix, iy, iw, barraY - iy, Math.round(S * 0.020));
+      metal(ix, barraY - barraH * 0.5, iw, barraH);
+      const by = barraY + barraH * 0.5, bh = iy + ih - by, lw = iw / 2, lf = Math.round(S * 0.022);
+      for (let i = 0; i < 2; i++) {
+        const x = ix + i * lw; panoVidro(x, by, lw, bh); anel(x, by, lw, bh, lf);
+      }
+      metal(ix + lw - lf * 2.6, by + bh * 0.40, lf * 0.95, bh * 0.20);
+      metal(ix, iy + ih - lf * 0.9, iw, lf * 0.9);
+    }
+    
+    // --- DESENHO: BOX DE BANHEIRO ---
+    if (produto.tipo === 'box') {
+      const fw = Math.round(S * 0.022); anel(0, 0, S, S, fw);
+      const ix = fw, iy = fw, iw = S - fw * 2, ih = S - fw * 2;
+      panoVidro(ix, iy, iw, ih);
+      const dx = ix + iw * 0.60; metal(dx - fw * 0.45, iy, fw * 0.90, ih);
+      [0.10, 0.50, 0.90].forEach(t => metal(ix, iy + ih * t - ih * 0.045, iw * 0.045, ih * 0.09));
+      metal(dx + iw * 0.07, iy + ih * 0.44, iw * 0.024, ih * 0.22);
+      metal(ix + iw * 0.10, iy + ih * 0.72, iw * 0.38, Math.max(4, ih * 0.014));
+      metal(ix, iy + ih - fw * 0.9, iw, fw * 0.9);
+    }
+    return cv;
+  }
+
+  /**
+   * Verifica se a textura já está em cache, caso contrário, chama criarTextura.
+   */
+  function obterTextura(produto, cor, acabamento, vidro) {
+    const key = `${produto.id}|${cor.id}|${acabamento.id}|${vidro.id}`;
+    if (!texCache.has(key)) texCache.set(key, criarTextura(produto, cor, acabamento, vidro));
+    return texCache.get(key);
+  }
+
+  // ==========================================================
+  // 5. MATEMÁTICA: HOMOGRAFIA (PERSPECTIVA)
+  // ==========================================================
+  /**
+   * Calcula a matriz de homografia que mapeia um quadrado unitário para um quadrilátero.
+   * @param {Array} pts - Array de 4 pontos [TL, TR, BR, BL]
+   * @returns {Array} Matriz 3x3 representada em array plano
+   */
+  function homografia(pts) {
+    const [p0, p1, p2, p3] = pts;
+    const x0 = p0.x, y0 = p0.y, x1 = p1.x, y1 = p1.y;
+    const x2 = p2.x, y2 = p2.y, x3 = p3.x, y3 = p3.y;
+    const dx1 = x1 - x2, dx2 = x3 - x2, dx3 = x0 - x1 + x2 - x3;
+    const dy1 = y1 - y2, dy2 = y3 - y2, dy3 = y0 - y1 + y2 - y3;
+    let a, b, c, d, e, f, g, h;
+    if (Math.abs(dx3) < 1e-9 && Math.abs(dy3) < 1e-9) {
+      a = x1 - x0; b = x3 - x0; c = x0; d = y1 - y0; e = y3 - y0; f = y0; g = 0; h = 0;
+    } else {
+      const det = dx1 * dy2 - dx2 * dy1;
+      if (Math.abs(det) < 1e-12) return null;
+      g = (dx3 * dy2 - dx2 * dy3) / det; h = (dx1 * dy3 - dx3 * dy1) / det;
+      a = x1 - x0 + g * x1; b = x3 - x0 + h * x3; c = x0;
+      d = y1 - y0 + g * y1; e = y3 - y0 + h * y3; f = y0;
+    }
+    return [a, b, c, d, e, f, g, h, 1];
+  }
+
+  /**
+   * Inverte uma matriz 3x3.
+   */
+  function inverter3x3(m) {
+    const [a, b, c, d, e, f, g, h, i] = m;
+    const A = (e * i - f * h), B = -(d * i - f * g), C = (d * h - e * g);
+    const D = -(b * i - c * h), E = (a * i - c * g), F = -(a * h - b * g);
+    const G = (b * f - c * e), H = -(a * f - c * d), I = (a * e - b * d);
+    const det = a * A + b * B + c * C;
+    if (Math.abs(det) < 1e-12) return null;
+    const inv = 1 / det;
+    return [A * inv, D * inv, G * inv, B * inv, E * inv, H * inv, C * inv, F * inv, I * inv];
+  }
+
+  /**
+   * Aplica a distorção de perspectiva (warping) mapeando a textura para o quadrilátero.
+   * Utiliza mapeamento inverso (para cada pixel no destino, encontra a origem na textura).
+   */
+  function warpParaQuadrilatero(canvas, ctx, textura, pts) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const H = homografia(pts);
+    if (!H) return;
+    const I = inverter3x3(H);
+    if (!I) return;
+
+    const TW = textura.width, TH = textura.height;
+    const src = textura.getContext('2d').getImageData(0, 0, TW, TH).data;
+
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    pts.forEach(p => {
+      if (p.x < minX) minX = p.x; if (p.y < minY) minY = p.y;
+      if (p.x > maxX) maxX = p.x; if (p.y > maxY) maxY = p.y;
+    });
+    minX = Math.max(0, Math.floor(minX)); minY = Math.max(0, Math.floor(minY));
+    maxX = Math.min(canvas.width - 1, Math.ceil(maxX)); maxY = Math.min(canvas.height - 1, Math.ceil(maxY));
+
+    const W = maxX - minX + 1, Hh = maxY - minY + 1;
+    if (W <= 0 || Hh <= 0) return;
+
+    const imgData = ctx.createImageData(W, Hh);
+    const dst = imgData.data;
+
+    const i00 = I[0], i01 = I[1], i02 = I[2];
+    const i10 = I[3], i11 = I[4], i12 = I[5];
+    const i20 = I[6], i21 = I[7], i22 = I[8];
+
+    for (let y = 0; y < Hh; y++) {
+      const Y = minY + y + 0.5, rowBase = y * W * 4;
+      for (let x = 0; x < W; x++) {
+        const X = minX + x + 0.5;
+        const den = i20 * X + i21 * Y + i22;
+        if (den === 0) continue;
+        const u = (i00 * X + i01 * Y + i02) / den;
+        if (u < 0 || u > 1) continue;
+        const v = (i10 * X + i11 * Y + i12) / den;
+        if (v < 0 || v > 1) continue;
+
+        let fx = u * TW - 0.5, fy = v * TH - 0.5;
+        if (fx < 0) fx = 0; else if (fx > TW - 1) fx = TW - 1;
+        if (fy < 0) fy = 0; else if (fy > TH - 1) fy = TH - 1;
+
+        const x0 = fx | 0, y0 = fy | 0;
+        const x1 = x0 + 1 < TW ? x0 + 1 : TW - 1;
+        const y1 = y0 + 1 < TH ? y0 + 1 : TH - 1;
+        const ax = fx - x0, ay = fy - y0;
+        const w00 = (1 - ax) * (1 - ay), w10 = ax * (1 - ay);
+        const w01 = (1 - ax) * ay, w11 = ax * ay;
+
+        const o00 = (y0 * TW + x0) * 4, o10 = (y0 * TW + x1) * 4;
+        const o01 = (y1 * TW + x0) * 4, o11 = (y1 * TW + x1) * 4;
+        const o = rowBase + x * 4;
+
+        dst[o]     = src[o00]     * w00 + src[o10]     * w10 + src[o01]     * w01 + src[o11]     * w11;
+        dst[o + 1] = src[o00 + 1] * w00 + src[o10 + 1] * w10 + src[o01 + 1] * w01 + src[o11 + 1] * w11;
+        dst[o + 2] = src[o00 + 2] * w00 + src[o10 + 2] * w10 + src[o01 + 2] * w01 + src[o11 + 2] * w11;
+        dst[o + 3] = src[o00 + 3] * w00 + src[o10 + 3] * w10 + src[o01 + 3] * w01 + src[o11 + 3] * w11;
+      }
+    }
+    ctx.putImageData(imgData, minX, minY);
+
+    ctx.save();
+    ctx.globalCompositeOperation = 'destination-in';
+    ctx.beginPath();
+    pts.forEach((p, i) => { if (i === 0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y); });
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // ==========================================================
+  // 6. UTILITÁRIOS DE GEOMETRIA
+  // ==========================================================
+  /**
+   * Ordena 4 pontos para garantir que estejam no sentido [Top-Left, Top-Right, Bottom-Right, Bottom-Left].
+   */
+  function ordenarPontos(pts) {
+    if (pts.length !== 4) return pts.slice();
+    const cx = pts.reduce((s, p) => s + p.x, 0) / 4;
+    const cy = pts.reduce((s, p) => s + p.y, 0) / 4;
+    let arr = pts.slice().sort((a, b) => Math.atan2(a.y - cy, a.x - cx) - Math.atan2(b.y - cy, b.x - cx));
+    let area = 0;
+    for (let i = 0; i < 4; i++) {
+      const a = arr[i], b = arr[(i + 1) % 4];
+      area += a.x * b.y - b.x * a.y;
+    }
+    if (area < 0) arr.reverse();
+    const ux = -0.70710678, uy = -0.70710678;
+    let melhor = 0, melhorScore = -Infinity;
+    arr.forEach((p, i) => {
+      const dx = p.x - cx, dy = p.y - cy;
+      const len = Math.hypot(dx, dy) || 1;
+      const score = (dx / len) * ux + (dy / len) * uy;
+      if (score > melhorScore) { melhorScore = score; melhor = i; }
+    });
+    return arr.slice(melhor).concat(arr.slice(0, melhor));
+  }
+
+  // ==========================================================
+  // 7. RENDERIZAÇÃO DO CANVAS
+  // ==========================================================
+  /**
+   * Limpa o canvas principal e desenha a foto de fundo.
+   */
+  function desenharBase() {
+    vctx.clearRect(0, 0, view.width, view.height);
+    if (state.img) vctx.drawImage(state.img, 0, 0, view.width, view.height);
+  }
+
+  /**
+   * Renderiza um vão específico no seu respectivo canvas de overlay.
+   */
+  function renderizarVao(vao) {
+    const ctx = vao.overlayCtx;
+    const canvas = vao.overlayCanvas;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (!state.img || vao.pts.length !== 4) return;
+    
+    const s = state.escalaOverlay;
+    const ordem = ordenarPontos(vao.pts);
+    let ptsOverlay = ordem.map(p => ({ x: p.x * s, y: p.y * s }));
+    
+    // Lógica de Inversão (Espelhamento)
+    if (vao.flipped) {
+      // Troca TL com TR e BL com BR
+      ptsOverlay = [ptsOverlay[1], ptsOverlay[0], ptsOverlay[3], ptsOverlay[2]];
+    }
+
+    const textura = (vao.produto.tipo === 'family' && FAM.ok) ? FAM.render(vao) : obterTextura(vao.produto, vao.cor, vao.acabamento, vao.vidro);
+    warpParaQuadrilatero(canvas, ctx, textura, ptsOverlay);
+  }
+
+  /**
+   * Desenha a interface de interação (pontos de arrasto, polígonos).
+   */
+  function renderizarUI() {
+    uctx.clearRect(0, 0, ui.width, ui.height);
+
+    state.vaos.forEach(vao => {
+      if (vao.pts.length === 0) return;
+      const ativo = vao.id === state.vaoAtivoId;
+      desenharPoligono(vao.pts, ativo);
+    });
+
+    if (state.modoCriacao && state.ptsTemp.length > 0) {
+      desenharPoligono(state.ptsTemp, true, true);
+    }
+  }
+
+  /**
+   * Desenha o polígono de seleção e os pontos numerados.
+   */
+  function desenharPoligono(pts, ativo, ehTemp) {
+    const lw = Math.max(2, ui.width * 0.0045);
+    uctx.save();
+    uctx.lineJoin = 'round'; uctx.lineCap = 'round';
+
+    uctx.beginPath();
+    uctx.moveTo(pts[0].x, pts[0].y);
+    for (let i = 1; i < pts.length; i++) uctx.lineTo(pts[i].x, pts[i].y);
+    if (pts.length > 2) uctx.closePath();
+
+    if (ativo || ehTemp) {
+      uctx.shadowColor = 'rgba(230, 92, 0, 0.75)';
+      uctx.shadowBlur = 14;
+      uctx.lineWidth = lw;
+      uctx.strokeStyle = 'rgba(230, 92, 0, 0.95)';
+      uctx.stroke();
+      uctx.shadowBlur = 0;
+      if (pts.length > 2) {
+        uctx.fillStyle = 'rgba(230, 92, 0, 0.10)';
+        uctx.fill();
+      }
+    } else {
+      uctx.lineWidth = lw * 0.8;
+      uctx.strokeStyle = 'rgba(230, 92, 0, 0.35)';
+      uctx.stroke();
+    }
+
+    const r = Math.max(10, ui.width * 0.015);
+    pts.forEach((p, i) => {
+      uctx.beginPath();
+      uctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+      uctx.fillStyle = 'rgba(18, 10, 7, 0.88)';
+      uctx.fill();
+      uctx.lineWidth = Math.max(2, r * 0.30);
+      uctx.strokeStyle = (ativo || ehTemp) ? '#e65c00' : 'rgba(230, 92, 0, 0.50)';
+      uctx.stroke();
+
+      uctx.fillStyle = (ativo || ehTemp) ? '#e65c00' : 'rgba(230, 92, 0, 0.50)';
+      uctx.font = `700 ${Math.round(r * 1.15)}px Inter, system-ui, sans-serif`;
+      uctx.textAlign = 'center'; uctx.textBaseline = 'middle';
+      uctx.fillText(String(i + 1), p.x, p.y + r * 0.06);
+    });
+    uctx.restore();
+  }
+
+  /**
+   * Desenha os balões de anotação.
+   */
+  function renderAnnotations() {
+    actx.clearRect(0, 0, annotationsCanvas.width, annotationsCanvas.height);
+    
+    const drawBubble = (x, y, text, isSelected) => {
+      actx.font = '600 14px Inter, sans-serif';
+      const padding = 12;
+      const w = actx.measureText(text).width + padding * 2;
+      const h = 36;
+      
+      actx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+      actx.strokeStyle = isSelected ? '#3b82f6' : '#e65c00';
+      actx.lineWidth = 2;
+      
+      if (isSelected) {
+        actx.shadowColor = 'rgba(59,130,246,0.5)';
+        actx.shadowBlur = 10;
+      }
+
+      actx.beginPath();
+      actx.roundRect(x - w/2, y - h, w, h, 8);
+      actx.fill();
+      actx.stroke();
+
+      actx.beginPath();
+      actx.moveTo(x - 8, y);
+      actx.lineTo(x, y + 10);
+      actx.lineTo(x + 8, y);
+      actx.closePath();
+      actx.fill();
+      actx.stroke();
+      actx.shadowBlur = 0;
+
+      actx.fillStyle = '#1e293b';
+      actx.textAlign = 'center';
+      actx.textBaseline = 'middle';
+      actx.fillText(text, x, y - h/2);
+    };
+
+    state.annotations.forEach((a, i) => {
+      if (a.type === 'bubble') drawBubble(a.x, a.y, a.text, i === state.selectedAnnotationIndex);
+    });
+  }
+
+  /**
+   * Função mestre de renderização.
+   */
+  function renderTudo() {
+    desenharBase();
+    state.vaos.forEach(v => renderizarVao(v));
+    renderizarUI();
+    renderAnnotations();
+  }
+
+  // Polyfill para roundRect (compatibilidade com navegadores antigos)
+  if (!CanvasRenderingContext2D.prototype.roundRect) {
+    CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
+      if (w < 2 * r) r = w / 2;
+      if (h < 2 * r) r = h / 2;
+      this.beginPath();
+      this.moveTo(x + r, y);
+      this.arcTo(x + w, y, x + w, y + h, r);
+      this.arcTo(x + w, y + h, x, y + h, r);
+      this.arcTo(x, y + h, x, y, r);
+      this.arcTo(x, y, x + w, y, r);
+      this.closePath();
+      return this;
+    };
+  }
+
+  // ==========================================================
+  // 8. CARREGAMENTO DE IMAGEM
+  // ==========================================================
+  function carregarArquivo(file) {
+    if (!file || !file.type.startsWith('image/')) return;
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => { URL.revokeObjectURL(url); configurarCanvas(img); };
+    img.src = url;
+  }
+
+  function configurarCanvas(img) {
+    const MAX_DIM = 1400;
+    const escala = Math.min(1, MAX_DIM / Math.max(img.naturalWidth, img.naturalHeight));
+    const w = Math.max(1, Math.round(img.naturalWidth * escala));
+    const h = Math.max(1, Math.round(img.naturalHeight * escala));
+
+    view.width = w; view.height = h;
+    ui.width = w; ui.height = h;
+    annotationsCanvas.width = w; annotationsCanvas.height = h;
+
+    const escalaOverlay = Math.min(1, 900 / w);
+    state.overlayW = Math.max(1, Math.round(w * escalaOverlay));
+    state.overlayH = Math.max(1, Math.round(h * escalaOverlay));
+    state.escalaOverlay = state.overlayW / w;
+
+    state.vaos.forEach(v => v.overlayCanvas.remove());
+    state.vaos = [];
+    state.vaoAtivoId = null;
+    state.modoCriacao = false;
+    state.ptsTemp = [];
+    state.annotations = [];
+
+    state.img = img;
+
+    dropzone.classList.add('hidden');
+    wrap.classList.remove('hidden');
+    toolbar.classList.remove('hidden');
+    wrap.classList.remove('fade-up'); void wrap.offsetWidth; wrap.classList.add('fade-up');
+
+    texCache.clear();
+    sincronizarSidebar();
+    atualizarPassos();
+    atualizarDica();
+    renderTudo();
+  }
+
+  // ==========================================================
+  // 9. INTERAÇÃO COM O CANVAS (EVENTOS)
+  // ==========================================================
+  let arrastandoVao = null;
+
+  function pontoDoEvento(e) {
+    const rect = view.getBoundingClientRect();
+    return {
+      x: (e.clientX - rect.left) * (view.width / rect.width),
+      y: (e.clientY - rect.top) * (view.height / rect.height)
+    };
+  }
+
+  function onPointerDown(e) {
+    if (!state.img) return;
+    e.preventDefault();
+    try { wrap.setPointerCapture(e.pointerId); } catch (_) {}
+
+    const p = pontoDoEvento(e);
+
+    // 1. Checa clique em Anotação (Balão)
+    if (state.annotationTool === null) {
+      for (let i = state.annotations.length - 1; i >= 0; i--) {
+        const a = state.annotations[i];
+        if (a.type === 'bubble') {
+          actx.font = '600 14px Inter, sans-serif';
+          const w = actx.measureText(a.text).width + 24;
+          const h = 36;
+          if (p.x > a.x - w/2 && p.x < a.x + w/2 && p.y > a.y - h && p.y < a.y) {
+            state.selectedAnnotationIndex = i;
+            state.draggingBubble = { index: i, offsetX: p.x - a.x, offsetY: p.y - a.y };
+            renderAnnotations();
+            atualizarDica();
+            return;
+          }
+        }
+      }
+      state.selectedAnnotationIndex = -1;
+      renderAnnotations();
+      atualizarDica();
+    }
+
+    // 2. Lógica de Ferramentas
+    if (state.annotationTool === 'bubble') {
+      let text = prompt('Digite a observação:');
+      if (text && text.trim()) {
+        text = 'Obs.: ' + text.trim();
+        state.annotations.push({ type: 'bubble', x: p.x, y: p.y, text: text });
+        renderAnnotations();
+      }
+      desativarFerramentasAnotacao();
+      return;
+    }
+
+    // 3. Lógica de Criação de Vãos
+    if (state.modoCriacao) {
+      state.ptsTemp.push(p);
+      if (state.ptsTemp.length === 4) {
+        criarVao(state.ptsTemp);
+        state.modoCriacao = false;
+        state.ptsTemp = [];
+        wrap.classList.remove('modo-criacao');
+        sincronizarSidebar();
+        renderTudo();
+        atualizarPassos();
+        atualizarDica();
+      } else {
+        renderizarUI();
+        atualizarDica();
+      }
+      return;
+    }
+
+    // 4. Arrastar Vão
+    const vao = state.vaos.find(v => v.id === state.vaoAtivoId);
+    if (!vao) return;
+
+    const raio = Math.max(24, view.width * 0.035);
+    for (let i = 0; i < vao.pts.length; i++) {
+      const d = Math.hypot(vao.pts[i].x - p.x, vao.pts[i].y - p.y);
+      if (d < raio) { arrastandoVao = { vaoId: vao.id, index: i }; return; }
+    }
+  }
+
+  function onPointerMove(e) {
+    const p = pontoDoEvento(e);
+
+    if (state.draggingBubble) {
+      const a = state.annotations[state.draggingBubble.index];
+      a.x = p.x - state.draggingBubble.offsetX;
+      a.y = p.y - state.draggingBubble.offsetY;
+      renderAnnotations();
+      return;
+    }
+
+    if (!arrastandoVao) return;
+    e.preventDefault();
+    const vao = state.vaos.find(v => v.id === arrastandoVao.vaoId);
+    if (!vao) return;
+    vao.pts[arrastandoVao.index] = p;
+    renderizarUI();
+    renderizarVao(vao);
+  }
+
+  function onPointerUp(e) {
+    if (state.draggingBubble) {
+      state.draggingBubble = null;
+      return;
+    }
+
+    if (!arrastandoVao) return;
+    arrastandoVao = null;
+    try { wrap.releasePointerCapture(e.pointerId); } catch (_) {}
+    renderizarUI();
+  }
+
+  wrap.addEventListener('pointerdown', onPointerDown);
+  wrap.addEventListener('pointermove', onPointerMove);
+  wrap.addEventListener('pointerup', onPointerUp);
+  wrap.addEventListener('pointercancel', onPointerUp);
+  wrap.addEventListener('pointerleave', (e) => { 
+    if (arrastandoVao) onPointerUp(e); 
+    if (state.draggingBubble) state.draggingBubble = null;
+  });
+
+  window.addEventListener('keydown', (e) => {
+    if ((e.key === 'Backspace' || e.key === 'Delete') && state.selectedAnnotationIndex !== -1) {
+      state.annotations.splice(state.selectedAnnotationIndex, 1);
+      state.selectedAnnotationIndex = -1;
+      renderAnnotations();
+      atualizarDica();
+    }
+  });
+
+  // ==========================================================
+  // 10. GERENCIAMENTO DE VÃOS
+  // ==========================================================
+  function criarVao(pts) {
+    const id = 'vao-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7);
+    const overlayCanvas = document.createElement('canvas');
+    overlayCanvas.className = 'absolute inset-0 w-full h-full pointer-events-none';
+    overlayCanvas.width = state.overlayW;
+    overlayCanvas.height = state.overlayH;
+    overlayCanvas.style.mixBlendMode = state.defaultBlend === 'normal' ? 'normal' : state.defaultBlend;
+    overlayCanvas.style.opacity = String(state.defaultOpacidade);
+    overlayContainer.appendChild(overlayCanvas);
+
+    const vao = {
+      id,
+      pts: pts.slice(),
+      produto: state.defaultProduto,
+      cor: state.defaultCor,
+      acabamento: state.defaultAcabamento,
+      vidro: state.defaultVidro,
+      blend: state.defaultBlend,
+      opacidade: state.defaultOpacidade,
+      flipped: false, // Novo atributo para inverter
+      mov: { ab: 0, abT: 0, pe: 0, peT: 0, modo: 'tombar', tela: true, vista: 'dentro' }, // Family 3D
+      overlayCanvas,
+      overlayCtx: overlayCanvas.getContext('2d')
+    };
+    state.vaos.push(vao);
+    state.vaoAtivoId = vao.id;
+    renderizarVao(vao);
+    return vao;
+  }
+
+  function iniciarNovoVao() {
+    desativarFerramentasAnotacao();
+    state.modoCriacao = true;
+    state.ptsTemp = [];
+    state.vaoAtivoId = null;
+    wrap.classList.add('modo-criacao');
+    sincronizarSidebar();
+    renderizarUI();
+    atualizarDica();
+    atualizarPassos();
+  }
+
+  function removerVaoAtivo() {
+    const vao = state.vaos.find(v => v.id === state.vaoAtivoId);
+    if (!vao) return;
+    vao.overlayCanvas.remove();
+    state.vaos = state.vaos.filter(v => v.id !== vao.id);
+    state.vaoAtivoId = state.vaos.length > 0 ? state.vaos[0].id : null;
+    sincronizarSidebar();
+    renderTudo();
+    atualizarPassos();
+    atualizarDica();
+  }
+
+  function limparTudo() {
+    state.vaos.forEach(v => v.overlayCanvas.remove());
+    state.vaos = [];
+    state.vaoAtivoId = null;
+    state.modoCriacao = false;
+    state.ptsTemp = [];
+    state.annotations = [];
+    state.annotationTool = null;
+    state.selectedAnnotationIndex = -1;
+    wrap.classList.remove('modo-criacao');
+    wrap.classList.remove('modo-anotacao');
+    sincronizarSidebar();
+    renderTudo();
+    atualizarPassos();
+    atualizarDica();
+  }
+
+  // ==========================================================
+  // 11. SINCRONIZAÇÃO DA SIDEBAR
+  // ==========================================================
+  function vaoAtivo() {
+    return state.vaos.find(v => v.id === state.vaoAtivoId);
+  }
+
+  function sincronizarSidebar() {
+    const selVao = $('selVao');
+    const btnRemover = $('btnRemoverVao');
+    const configPanel = $('configPanel');
+    const vaoInfo = $('vaoInfo');
+
+    selVao.innerHTML = '';
+
+    if (state.vaos.length === 0) {
+      selVao.innerHTML = '<option value="">Nenhum vão</option>';
+      selVao.disabled = true;
+      btnRemover.disabled = true;
+      configPanel.classList.add('opacity-40', 'pointer-events-none');
+      FAM.syncCtrls(null);
+      vaoInfo.textContent = state.modoCriacao ? 'Clique 4 vezes na imagem para criar o vão.' : 'Clique em + Novo Vão para começar.';
+      return;
+    }
+
+    selVao.disabled = false;
+    configPanel.classList.remove('opacity-40', 'pointer-events-none');
+
+    state.vaos.forEach((v, i) => {
+      const opt = document.createElement('option');
+      opt.value = v.id;
+      opt.textContent = `Vão ${i + 1} · ${v.produto.nome}`;
+      selVao.appendChild(opt);
+    });
+
+    if (state.vaoAtivoId) {
+      selVao.value = state.vaoAtivoId;
+      btnRemover.disabled = false;
+      const vao = vaoAtivo();
+      if (vao) {
+        $('selProduto').value = vao.produto.id;
+        atualizarInfoProduto(vao.produto);
+        $('gridCores').querySelectorAll('[data-cor]').forEach(b => b.classList.toggle('swatch-active', b.dataset.cor === vao.cor.id));
+        $('gridAcabamentos').querySelectorAll('[data-acabamento]').forEach(b => b.classList.toggle('swatch-active', b.dataset.acabamento === vao.acabamento.id));
+        $('gridVidros').querySelectorAll('[data-vidro]').forEach(b => b.classList.toggle('swatch-active', b.dataset.vidro === vao.vidro.id));
+        $('selBlend').value = vao.blend;
+        $('rangeOpacidade').value = String(Math.round(vao.opacidade * 100));
+        $('lblOpacidade').textContent = Math.round(vao.opacidade * 100) + '%';
+        vaoInfo.textContent = `Vão ${state.vaos.indexOf(vao) + 1} · ${vao.pts.length} pontos`;
+        FAM.syncCtrls(vao);
+      }
+    } else {
+      selVao.value = '';
+      btnRemover.disabled = true;
+      vaoInfo.textContent = 'Selecione um vão para editar.';
+    }
+  }
+
+  function atualizarInfoProduto(produto) {
+    const p = produto || PRODUTOS[0];
+    const dim = `${p.dimensoes.largura.toFixed(2).replace('.', ',')} × ${p.dimensoes.altura.toFixed(2).replace('.', ',')} m`;
+    $('produtoInfo').innerHTML = `
+      <div class="flex items-center justify-between gap-2">
+        <span class="text-slate-700 dark:text-slate-300 font-bold">${p.folhas}</span>
+        <span class="text-accent font-bold">${dim}</span>
+      </div>
+      <p class="mt-1.5 leading-relaxed">${p.descricao}</p>
+    `;
+  }
+
+  // ==========================================================
+  // 12. MONTAGEM DE CONTROLES
+  // ==========================================================
+  function montarProdutos() {
+    const sel = $('selProduto');
+    const grp = (g, rot) => `<optgroup label="${rot}">` + PRODUTOS.filter(p => p.grupo === g).map(p => `<option value="${p.id}">${p.nome}</option>`).join('') + '</optgroup>';
+    sel.innerHTML = grp('Family', 'Linha Family 32 · 3D com movimento') + grp('Vidros', 'Vidros CDE');
+    sel.value = state.defaultProduto.id;
+
+    sel.addEventListener('change', () => {
+      const vao = vaoAtivo();
+      if (!vao) return;
+      vao.produto = PRODUTOS.find(p => p.id === sel.value);
+      atualizarInfoProduto(vao.produto);
+      vao.mov.ab = vao.mov.abT = 0; vao.mov.pe = vao.mov.peT = 0;
+      renderizarVao(vao);
+      sincronizarSidebar();
+      atualizarPassos();
+    });
+    atualizarInfoProduto(state.defaultProduto);
+  }
+
+  function montarCores() {
+    const grid = $('gridCores');
+    grid.innerHTML = CORES.map(c => `
+      <button type="button" data-cor="${c.id}" class="flex flex-col items-center gap-1 rounded-xl border border-orange-100 dark:border-slate-700 bg-white dark:bg-slate-800 p-1.5 transition hover:border-accent/60 active:scale-95 shadow-sm">
+        <span class="w-6 h-6 rounded-full ring-1 ring-black/5 shadow-inner" style="background:${c.swatch}"></span>
+        <span class="text-[9px] font-medium text-slate-500 dark:text-slate-400 text-center leading-tight">${c.nome}</span>
+      </button>
+    `).join('');
+
+    grid.querySelectorAll('[data-cor]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const vao = vaoAtivo();
+        if (!vao) return;
+        vao.cor = CORES.find(c => c.id === btn.dataset.cor);
+        grid.querySelectorAll('[data-cor]').forEach(b => b.classList.toggle('swatch-active', b.dataset.cor === vao.cor.id));
+        renderizarVao(vao);
+      });
+    });
+    grid.querySelector(`[data-cor="${state.defaultCor.id}"]`).classList.add('swatch-active');
+  }
+
+  function montarAcabamentos() {
+    const grid = $('gridAcabamentos');
+    grid.innerHTML = ACABAMENTOS.map(a => `
+      <button type="button" data-acabamento="${a.id}" class="flex flex-col items-center justify-center rounded-xl border border-orange-100 dark:border-slate-700 bg-white dark:bg-slate-800 p-2 h-12 transition hover:border-accent/60 active:scale-95 shadow-sm">
+        <span class="text-[10px] font-bold text-slate-600 dark:text-slate-300">${a.nome}</span>
+      </button>
+    `).join('');
+
+    grid.querySelectorAll('[data-acabamento]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const vao = vaoAtivo();
+        if (!vao) return;
+        vao.acabamento = ACABAMENTOS.find(a => a.id === btn.dataset.acabamento);
+        grid.querySelectorAll('[data-acabamento]').forEach(b => b.classList.toggle('swatch-active', b.dataset.acabamento === vao.acabamento.id));
+        renderizarVao(vao);
+      });
+    });
+    grid.querySelector(`[data-acabamento="${state.defaultAcabamento.id}"]`).classList.add('swatch-active');
+  }
+
+  function montarVidros() {
+    const grid = $('gridVidros');
+    grid.innerHTML = VIDROS.map(v => `
+      <button type="button" data-vidro="${v.id}" class="flex flex-col items-center gap-1 rounded-xl border border-orange-100 dark:border-slate-700 bg-white dark:bg-slate-800 p-1.5 transition hover:border-accent/60 active:scale-95 shadow-sm">
+        <span class="w-6 h-6 rounded-md ring-1 ring-black/5" style="background:${v.swatch}"></span>
+        <span class="text-[8px] font-medium text-slate-500 dark:text-slate-400 text-center leading-tight">${v.nome}</span>
+      </button>
+    `).join('');
+
+    grid.querySelectorAll('[data-vidro]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const vao = vaoAtivo();
+        if (!vao) return;
+        vao.vidro = VIDROS.find(v => v.id === btn.dataset.vidro);
+        grid.querySelectorAll('[data-vidro]').forEach(b => b.classList.toggle('swatch-active', b.dataset.vidro === vao.vidro.id));
+        renderizarVao(vao);
+      });
+    });
+    grid.querySelector(`[data-vidro="${state.defaultVidro.id}"]`).classList.add('swatch-active');
+  }
+
+  function montarAjustesEsteticos() {
+    const selBlend = $('selBlend'), range = $('rangeOpacidade'), lbl = $('lblOpacidade');
+
+    selBlend.addEventListener('change', () => {
+      const vao = vaoAtivo();
+      if (!vao) return;
+      vao.blend = selBlend.value;
+      vao.overlayCanvas.style.mixBlendMode = vao.blend === 'normal' ? 'normal' : vao.blend;
+    });
+
+    range.addEventListener('input', () => {
+      const vao = vaoAtivo();
+      if (!vao) return;
+      vao.opacidade = Number(range.value) / 100;
+      vao.overlayCanvas.style.opacity = String(vao.opacidade);
+      lbl.textContent = Math.round(vao.opacidade * 100) + '%';
+    });
+
+    selBlend.value = state.defaultBlend;
+    range.value = String(Math.round(state.defaultOpacidade * 100));
+    lbl.textContent = Math.round(state.defaultOpacidade * 100) + '%';
+  }
+
+  // ==========================================================
+  // 13. PASSOS / DICAS
+  // ==========================================================
+  function atualizarPassos() {
+    const temFoto = !!state.img;
+    const temVaoCompleto = state.vaos.some(v => v.pts.length === 4);
+    const s1 = $('step1'), s2 = $('step2'), s3 = $('step3');
+
+    s1.dataset.state = temFoto ? 'done' : 'active';
+    s2.dataset.state = temVaoCompleto ? 'done' : (temFoto ? 'active' : 'idle');
+    s3.dataset.state = temVaoCompleto ? 'active' : 'idle';
+
+    if (!temFoto) { s2.dataset.state = 'idle'; s3.dataset.state = 'idle'; }
+  }
+
+  function atualizarDica() {
+    if (!state.img) { hint.classList.add('hidden'); return; }
+    hint.classList.remove('hidden');
+
+    if (state.annotationTool === 'bubble') {
+      hint.textContent = 'Clique para inserir o balão de texto';
+    } else if (state.modoCriacao) {
+      hint.textContent = `Novo vão: ponto ${state.ptsTemp.length + 1} de 4`;
+    } else if (state.selectedAnnotationIndex !== -1) {
+      hint.textContent = 'Pressione Backspace para apagar esta anotação';
+    } else if (state.vaoAtivoId) {
+      hint.textContent = 'Arraste os pontos para ajustar';
+    } else {
+      hint.textContent = 'Clique em + Novo Vão para adicionar um produto';
+    }
+  }
+
+  // ==========================================================
+  // 14. COMPOSIÇÃO / EXPORTAÇÃO
+  // ==========================================================
+  function gerarComposicao() {
+    const out = document.createElement('canvas');
+    out.width = view.width;
+    out.height = view.height;
+    const g = out.getContext('2d');
+    g.drawImage(view, 0, 0);
+
+    state.vaos.forEach(vao => {
+      if (vao.pts.length !== 4) return;
+      g.globalAlpha = vao.opacidade;
+      g.globalCompositeOperation = vao.blend === 'normal' ? 'source-over' : vao.blend;
+      g.drawImage(vao.overlayCanvas, 0, 0, out.width, out.height);
+    });
+
+    g.globalAlpha = 1;
+    g.globalCompositeOperation = 'source-over';
+    
+    g.drawImage(annotationsCanvas, 0, 0);
+
+    return out;
+  }
+
+  function abrirPreview(srcOverride) {
+    if (!state.img) return;
+    const src = srcOverride || gerarComposicao().toDataURL('image/png');
+    $('imgPreview').src = src;
+    const fv = $('famVid'); if (fv) { fv.pause(); fv.classList.add('hidden'); }
+    $('imgPreview').classList.remove('hidden'); delete $('btnSalvarPreview').dataset.video; $('btnSalvarPreview').textContent = 'Baixar Imagem';
+    const modal = $('modalPreview');
+    modal.classList.remove('hidden'); modal.classList.add('flex');
+  }
+
+  function fecharPreview() {
+    const modal = $('modalPreview');
+    modal.classList.add('hidden'); modal.classList.remove('flex');
+    const fv = $('famVid'); if (fv) fv.pause();
+  }
+
+  function salvarImagem() {
+    if (!state.img) return;
+    const canvas = gerarComposicao();
+    const link = document.createElement('a');
+    link.download = `CDE-simulacao-${Date.now()}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  }
+
+  // ==========================================================
+  // 15. RESET / BOOTSTRAP
+  // ==========================================================
+  function resetar() {
+    state.img = null;
+    state.vaos.forEach(v => v.overlayCanvas.remove());
+    state.vaos = [];
+    state.vaoAtivoId = null;
+    state.modoCriacao = false;
+    state.ptsTemp = [];
+    state.annotations = [];
+    state.annotationTool = null;
+    state.selectedAnnotationIndex = -1;
+    wrap.classList.remove('modo-criacao');
+    wrap.classList.remove('modo-anotacao');
+    vctx.clearRect(0, 0, view.width, view.height);
+    uctx.clearRect(0, 0, ui.width, ui.height);
+    actx.clearRect(0, 0, annotationsCanvas.width, annotationsCanvas.height);
+    wrap.classList.add('hidden');
+    toolbar.classList.add('hidden');
+    dropzone.classList.remove('hidden');
+    $('inputGaleria').value = '';
+    $('inputCamera').value = '';
+    sincronizarSidebar();
+    atualizarPassos();
+    atualizarDica();
+  }
+
+  // ==========================================================
+  // 16. LÓGICA DE ANOTAÇÕES
+  // ==========================================================
+  function desativarFerramentasAnotacao(clearSelection = true) {
+    state.annotationTool = null;
+    if (clearSelection) state.selectedAnnotationIndex = -1;
+    wrap.classList.remove('modo-anotacao');
+    $('btnAnotacaoBalao').classList.remove('btn-active');
+    renderAnnotations();
+    atualizarDica();
+  }
+
+  $('btnAnotacaoBalao').addEventListener('click', () => {
+    if (state.annotationTool === 'bubble') {
+      desativarFerramentasAnotacao();
+    } else {
+      desativarFerramentasAnotacao();
+      state.annotationTool = 'bubble';
+      wrap.classList.add('modo-anotacao');
+      $('btnAnotacaoBalao').classList.add('btn-active');
+      atualizarDica();
+    }
+  });
+
+  // ==========================================================
+  // 17. EVENTOS GERAIS
+  // ==========================================================
+  $('inputGaleria').addEventListener('change', (e) => carregarArquivo(e.target.files[0]));
+  $('inputCamera').addEventListener('change', (e) => carregarArquivo(e.target.files[0]));
+
+  $('btnNovoVaoToolbar').addEventListener('click', iniciarNovoVao);
+  $('btnNovoVaoSidebar').addEventListener('click', iniciarNovoVao);
+  $('btnLimparTudo').addEventListener('click', limparTudo);
+  $('btnTrocar').addEventListener('click', resetar);
+  $('btnPreview').addEventListener('click', () => abrirPreview());
+  $('btnFecharPreview').addEventListener('click', fecharPreview);
+  $('btnFecharPreview2').addEventListener('click', fecharPreview);
+  $('btnSalvarPreview').addEventListener('click', () => {
+    if ($('btnSalvarPreview').dataset.video) { const a = document.createElement('a'); a.download = `CDE-Family-${Date.now()}.webm`; a.href = $('btnSalvarPreview').dataset.video; a.click(); return; }
+    const img = $('imgPreview');
+    const link = document.createElement('a');
+    link.download = `CDE-render-${Date.now()}.png`;
+    link.href = img.src;
+    link.click();
+  });
+  $('btnSalvar').addEventListener('click', salvarImagem);
+  $('btnRemoverVao').addEventListener('click', removerVaoAtivo);
+
+  // Lógica do Botão Inverter
+  $('btnInverter').addEventListener('click', () => {
+    const vao = vaoAtivo();
+    if (!vao) {
+      alert('Selecione um vão primeiro.');
+      return;
+    }
+    vao.flipped = !vao.flipped;
+    renderizarVao(vao);
+  });
+
+  $('selVao').addEventListener('change', () => {
+    state.vaoAtivoId = $('selVao').value || null;
+    sincronizarSidebar();
+    renderizarUI();
+    atualizarDica();
+  });
+
+  wrap.addEventListener('dragstart', (e) => e.preventDefault());
+  wrap.addEventListener('contextmenu', (e) => e.preventDefault());
+
+  function init() {
+    montarProdutos();
+    montarCores();
+    montarAcabamentos();
+    montarVidros();
+    montarAjustesEsteticos();
+    FAM.montarControles();
+    sincronizarSidebar();
+    atualizarPassos();
+    atualizarDica();
+  }
+  
+  init();
+  console.log("✅ CDE Simulador atualizado! V5 com Chapa de Vidro, Inversão e Documentação.");
+
+})();
+</script>
+</body>
+</html>
