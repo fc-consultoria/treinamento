@@ -1,0 +1,32 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">
+<title>Aparelhos · Simulador Family CDE</title>
+<style>body{margin:0;font:15px system-ui,sans-serif;background:#f7f1ea;color:#2c1a12}main{max-width:820px;margin:0 auto;padding:18px}h1{font-size:20px;margin:6px 0}
+.mute{color:#7a6a5e;font-size:13px}.box{background:#fff;border:1px solid #e6d6c6;border-radius:14px;padding:14px;margin:10px 0}
+.lin{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;border-top:1px solid #f0e4d8;padding:10px 0}.lin:first-child{border-top:0}
+.chip{font-size:12px;padding:3px 9px;border-radius:99px;font-weight:600}.pendente{background:#F2C14E;color:#4A3300}.liberado{background:#d8f0dd;color:#1d5c2c}.bloqueado{background:#f5d5d2;color:#8a1c12}
+button{border:0;border-radius:9px;padding:8px 12px;font:600 13px system-ui;cursor:pointer}.ok{background:#1d7a3a;color:#fff}.no{background:#eee;color:#8a1c12}.sec{background:#eee;color:#333}
+input{padding:10px;border:1px solid #d9c2ad;border-radius:9px;font:inherit}a{color:#8a4f2f}</style></head><body><main>
+<p><a href="painel.html">← Painel da Matriz</a></p>
+<h1>📱 Aparelhos · Simulador na obra (Family CDE)</h1>
+<p class="mute">Quem pede acesso no simulador aparece aqui. Libere só quem é da equipe da CDE. Bloqueado perde o acesso na próxima vez que o aparelho tiver internet.</p>
+<div class="box"><b>Link para a equipe:</b><br><code id="lk">https://fc-consultoria.github.io/treinamento/evento-cde/simulador.html</code> <button class="sec" id="cp">Copiar</button></div>
+<div id="app" class="box">Carregando…</div></main>
+<script>
+const SB='https://pawwncmfadzxfahfvhry.supabase.co/rest/v1/rpc/',KEY='sb_publishable_b0kGoqo85joo3Vb8Xllxhw_VemwaLMs',KT='pfc-token-painel';
+const $=s=>document.querySelector(s),e=v=>String(v==null?'':v).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const rpc=(n,b)=>fetch(SB+n,{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify(b)}).then(r=>r.json());
+const tok=()=>{try{return localStorage.getItem(KT)}catch(_){return null}};
+const dt=d=>d?new Date(d).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
+const zap=t=>{let n=String(t||'').replace(/\D/g,'');if(n.length<=11)n='55'+n;return 'https://wa.me/'+n};
+$('#cp').onclick=()=>{navigator.clipboard&&navigator.clipboard.writeText($('#lk').textContent);$('#cp').textContent='Copiado ✓'};
+let vistos=0;
+function login(msg){$('#app').innerHTML=`<p>${msg||'Entre com a senha da FC (a mesma do Acesso FC da Plataforma FC 3D).'}</p><input type="password" id="sn" placeholder="Senha da FC"> <button class="ok" id="en">Entrar</button>`;
+  $('#en').onclick=async()=>{const r=await rpc('pfc_login_matriz',{p_senha:$('#sn').value});if(r&&r.token){localStorage.setItem(KT,r.token);carrega()}else login((r&&r.erro)||'Senha incorreta')}}
+async function carrega(){const t=tok();if(!t)return login();let L;try{L=await rpc('fam_ap_lista',{p_token:t})}catch(_){$('#app').textContent='Sem conexão.';return}
+  if(!Array.isArray(L))return login('Sessão expirada. Entre de novo.');
+  const pend=L.filter(a=>a.status==='pendente').length;if(pend>vistos){try{new AudioContext().resume()}catch(_){}}vistos=pend;
+  document.title=(pend?'('+pend+') ':'')+'Aparelhos · Simulador Family CDE';
+  $('#app').innerHTML=L.length?L.map(a=>`<div class="lin"><div><b>${e(a.nome)}</b> <span class="chip ${a.status}">${a.status}</span><br><span class="mute"><a href="${zap(a.telefone)}" target="_blank" rel="noopener">${e(a.telefone)}</a> · pediu ${dt(a.criado_em)} · último uso ${dt(a.ultimo_uso)}</span></div><div>${a.status!=='liberado'?`<button class="ok" data-s="liberado" data-i="${a.id}">Liberar</button> `:''}${a.status!=='bloqueado'?`<button class="no" data-s="bloqueado" data-i="${a.id}">Bloquear</button> `:''}<button class="sec" data-s="excluir" data-i="${a.id}">Excluir</button></div></div>`).join(''):'<p class="mute">Nenhum pedido ainda. Mande o link para a equipe da CDE.</p>';
+  document.querySelectorAll('[data-s]').forEach(b=>b.onclick=async()=>{if(b.dataset.s==='excluir'&&!confirm('Excluir este aparelho? Ele terá que pedir acesso de novo.'))return;await rpc('fam_ap_definir',{p_token:tok(),p_id:b.dataset.i,p_status:b.dataset.s});carrega()});}
+carrega();setInterval(carrega,20000);
+</script></body></html>
