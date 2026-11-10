@@ -793,6 +793,7 @@ function frameCamera(anim=true){
 }
 let camAnim=null;
 function camTo(pos,tgt,anim=true,dur=1.4){
+  const _p=camera.position;if(!isFinite(_p.x+_p.y+_p.z)||!isFinite(controls.target.x+controls.target.y+controls.target.z))anim=false;
   if(!anim){camera.position.copy(pos);controls.target.copy(tgt);camAnim=null;return}
   camAnim={p0:camera.position.clone(),t0:controls.target.clone(),p1:pos,t1:tgt,s:performance.now(),d:dur*1000};
 }
