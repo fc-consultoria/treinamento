@@ -24,7 +24,13 @@
       st.nome=n;st.tel=t;salva();this.disabled=true;this.textContent='Enviando…';
       rpc('fam_ap_pedir',{p_disp:st.disp,p_nome:n,p_tel:t}).then(function(s){if(s==='liberado')libera();else if(s==='bloqueado'){st.status='bloqueado';salva();trava('🔒 Este aparelho não tem acesso ao simulador. Fale com a FC.');}else if(s==='erro')form('Confira os dados e tente de novo.');else{st.status='pendente';salva();aguardando();}})
       .catch(function(){form('Sem internet. O primeiro acesso precisa de conexão.');});};}
-  var valido=st.status==='liberado'&&st.ok&&(Date.now()-st.ok)<DIAS*864e5;
+  /* link mestre da FC (?fc=chave): libera este aparelho na hora, sem cadastro; a chave sai da barra de endereço */
+  var ch=new URLSearchParams(location.search).get('fc');
+  if(ch){try{var u=new URL(location.href);u.searchParams.delete('fc');history.replaceState(null,'',u.pathname+u.search+u.hash);}catch(_){}
+    tela('<p style="margin:0">Liberando o acesso FC…</p>');
+    rpc('fam_ap_mestre_link',{p_chave:ch,p_disp:st.disp}).then(function(s){if(s==='liberado'){st.mestre=1;libera();}else form('Link mestre inválido.');}).catch(function(){form('Sem internet. Abra o link mestre com conexão.');});
+    return;}
+  var valido=st.status==='liberado'&&st.ok&&(st.mestre||(Date.now()-st.ok)<DIAS*864e5);
   if(!valido){tela('<p style="margin:0">Conferindo o acesso…</p>');}
   rpc('fam_ap_status',{p_disp:st.disp}).then(function(s){
     if(s==='liberado'){if(!valido)libera();else{st.ok=Date.now();salva();}}
