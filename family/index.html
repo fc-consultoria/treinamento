@@ -77,7 +77,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .dims label{font-size:11px;color:var(--muted)}
 input,select{width:100%;box-sizing:border-box;background:rgba(0,0,0,.3);border:1px solid var(--line);color:var(--fg);border-radius:8px;padding:8px 9px;font:500 14px var(--mono);margin-top:3px}
 select{font-family:var(--body)}
-.acts{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:12px}
+.acts{display:grid;grid-template-columns:1fr 1fr;gap:6px}
 .acts .btn{font-size:13px;padding:9px 8px}
 #info{right:max(16px,env(safe-area-inset-right,0px));top:84px;width:330px;padding:14px;max-height:calc(100% - 140px);overflow:auto}
 .plist{display:grid;grid-template-columns:1fr 1fr;gap:8px}
@@ -102,6 +102,7 @@ table.cut td.n{text-align:right}
 #step .t{font-family:var(--display);font-weight:700}
 
 .mobonly{display:none}
+@media (min-width:901px){#bInfo{display:none}#bComp{grid-column:1/-1}}
 #cotas{position:fixed;inset:0;width:100%;height:100%;z-index:3;pointer-events:none;display:none}
 #cotas line{stroke:#1fa9e1;stroke-width:1.2}
 #cotas text{font:600 13px var(--mono);fill:#e9f6fc;paint-order:stroke;stroke:#0d1013;stroke-width:4px}
@@ -110,6 +111,13 @@ table.cut td.n{text-align:right}
 #pcard .c{font:600 20px var(--mono);color:var(--copper)}
 #pcard .d{font-family:var(--display);font-weight:700}
 #pcard .n{font-size:12px;color:var(--muted)}
+
+.cortes{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px}
+.cortes button{font:700 14px var(--display);padding:7px 0;border-radius:8px;border:1px solid var(--line);background:rgba(255,255,255,.05);color:var(--fg)}
+.cortes button.on{background:var(--copper);border-color:var(--copper);color:#fff}
+.st{display:flex;align-items:center;gap:8px;font:700 12px var(--display);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:10px 0 5px}
+.st span{width:20px;height:20px;border-radius:50%;background:rgba(176,113,79,.2);color:var(--copper);display:inline-flex;align-items:center;justify-content:center;font-size:11px;letter-spacing:0}
+.acts+.acts{margin-top:6px}
 #lbls{position:fixed;inset:0;z-index:3;pointer-events:none}
 .lb{position:absolute;transform:translate(-50%,-120%);white-space:nowrap;font-size:11px;padding:4px 8px;border-radius:7px;background:rgba(10,12,14,.86);border:1px solid var(--line);display:flex;gap:6px;align-items:center}
 .lb i{width:8px;height:8px;border-radius:50%;display:inline-block}
@@ -214,10 +222,14 @@ body.visit #waBtn.has{display:inline-flex}
   #ctl .more{display:none}
   #ctl.open .more{display:block;margin-bottom:8px}
   #ctl .lbl{margin:8px 0 4px}
-  #ctl .acts{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;margin-top:0}
+  #ctl .acts{grid-template-columns:1fr 1fr;gap:5px}
   #ctl .acts .btn{font-size:12px;padding:8px 4px}
-  #ctl #bComp{grid-column:auto!important}
-  #ctl #bMontar{grid-column:1/-1;order:-1}
+  #ctl .st{margin:6px 0 4px;font-size:11px}
+  #ctl .note{display:none}
+  #ctl .agrp{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
+  #ctl .agrp .st{display:none}
+  #ctl .agrp .acts{display:contents}
+  #ctl #bCorte{display:none}
   #info{display:none}
   #info.mob{display:block;top:auto;bottom:calc(30px + env(safe-area-inset-bottom,0px));left:max(10px,env(safe-area-inset-left,0px));right:max(10px,env(safe-area-inset-right,0px));width:auto;max-height:60%;z-index:7}
   body.mobinfo #ctl{display:none}
@@ -263,10 +275,11 @@ body.visit #waBtn.has{display:inline-flex}
 <!-- TIPOLOGIA -->
 <section class="view" id="v-tipologia">
   <aside class="panel" id="ctl">
-    <div class="eyebrow">Tipologia piloto</div>
     <h2 id="tName">Family 25</h2>
     <div class="sub" id="tSub">Janela de correr · 2 folhas</div>
+    <div class="st"><span>1</span>Escolha a linha</div>
     <div class="seg" id="lineSeg"></div>
+    <div class="st"><span>2</span>Medida, cor e vidro</div>
     <button class="btn mobonly" id="bMore" aria-expanded="false">Medidas, cor e vidro ▾</button>
     <div class="more">
     <div class="dims">
@@ -278,15 +291,27 @@ body.visit #waBtn.has{display:inline-flex}
     <div class="lbl">Vidro</div>
     <div class="sw" id="vidros"></div>
     </div>
+    <div class="agrp">
+    <div class="st"><span>3</span>Veja a janela</div>
     <div class="acts">
       <button class="btn" id="bAbrir">Abrir folha</button>
-      <button class="btn" id="bExpl">Explodir</button>
-      <button class="btn pri" id="bMontar">Montar peça por peça</button>
-      <button class="btn" id="bCorte">Ver corte</button>
       <button class="btn" id="bGirar">Girar</button>
-      <button class="btn" id="bInfo">Perfis</button>
-      <button class="btn" id="bComp" style="grid-column:1/-1">Raio-X dos componentes</button>
     </div>
+    <div class="st"><span>4</span>Como é montada</div>
+    <div class="acts">
+      <button class="btn" id="bMontar">Montar peça por peça</button>
+      <button class="btn" id="bExpl">Explodir</button>
+    </div>
+    <div class="st"><span>5</span>Perfis e componentes</div>
+    <div class="acts">
+      <button class="btn" id="bInfo">Lista de perfis</button>
+      <button class="btn" id="bComp">Componentes</button>
+    </div>
+    <div class="note" style="margin-top:4px">Toque em um perfil na janela para ele sair da tela com as medidas.</div>
+    </div>
+    <div class="st"><span>6</span>Cortes e encaixes</div>
+    <div class="cortes" id="cortes"></div>
+    <div class="acts" style="margin-top:6px"><button class="btn" id="bCorte" style="grid-column:1/-1">Corte da linha</button></div>
   </aside>
   <aside class="panel" id="info">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><div class="eyebrow">Raio-X da linha</div><button class="btn mobonly" id="bInfoX" style="padding:6px 10px">Fechar</button></div>
@@ -530,7 +555,8 @@ const compMat={};for(const k in CT){compMat[k]=new THREE.MeshStandardMaterial({c
 const ghost=new THREE.MeshStandardMaterial({color:'#9fb2bf',metalness:.1,roughness:.6,transparent:true,opacity:.13,depthWrite:false,side:THREE.DoubleSide});
 const darkMetal=new THREE.MeshStandardMaterial({color:'#7d838a',metalness:.7,roughness:.35});
 const brushMat=new THREE.MeshStandardMaterial({color:'#18191b',roughness:1});
-const CLIP=[];[alu,aluCap,rubber,glassMat,hiMat,ghost,darkMetal,brushMat,...Object.values(compMat)].forEach(m=>m.clippingPlanes=CLIP);
+const cutMat=new THREE.MeshStandardMaterial({color:'#c3c9ce',metalness:.45,roughness:.38,side:THREE.DoubleSide});
+const CLIP=[];[alu,aluCap,cutMat,rubber,glassMat,hiMat,ghost,darkMetal,brushMat,...Object.values(compMat)].forEach(m=>m.clippingPlanes=CLIP);
 function compInfo(t){const it=COMP[cur].items[t];if(!it)return null;const f=(it[state.forn]||it[0]);return {code:f[0],desc:f[1],qty:it[2],note:it[3]||''}}
 const geoCache={};
 function shapesOf(code){
@@ -658,7 +684,7 @@ function build(){
   // marca no vidro (discreta)
   applyColor();applyGlass();
   frameCamera(false);
-  renderPList();renderCut();renderComp();paintHi();
+  renderPList();renderCut();renderComp();paintHi();syncCortes();
 }
 function applyColor(){alu.color.set(COLORS[state.color].c)}
 function applyGlass(){const g=GLASS[state.glass];glassMat.color.set(g.c);glassMat.opacity=state.comp?0.05:g.o}
@@ -729,7 +755,7 @@ function setHover(code){
 function paintHi(){
   for(const p of pieces){
     const on=(p.code===hovered||p.code===selCode)&&p.code.startsWith('T');
-    if(p.mesh.isMesh&&p.base===alu){p.mesh.material=on?hiMat:(state.comp&&focus===null?ghost:alu);continue}
+    if(p.mesh.isMesh&&p.base===alu){p.mesh.material=on?hiMat:(state.comp?(focus===null?ghost:cutMat):alu);continue}
     if(p.ctype){p.obj.visible=state.comp||['escova','dreno','roldana','fecho','guarn'].includes(p.ctype);const m=state.comp?compMat[p.ctype]:null;p.mesh.traverse(o=>{if(o.isMesh){if(!o.userData.base)o.userData.base=o.material;o.material=m||o.userData.base}})}
   }
   glassMat.opacity=state.comp?(focus===null?0.05:0.12):GLASS[state.glass].o;
@@ -840,7 +866,7 @@ function updViewOffset(){
   const w=stage.clientWidth,h=stage.clientHeight;let ox=0,oy=0;
   if(view==='tipologia'){
     if(isMob()){const sh=[document.getElementById('ctl'),document.getElementById('info'),hsCard].map(e=>e&&e.offsetParent?e.getBoundingClientRect().height:0);oy=Math.max(...sh)/2+34}
-    else ox=20;
+    else{ox=20;if(focus!==null&&hsCard.classList.contains('on'))oy=hsCard.getBoundingClientRect().height/2}
   }
   if(ox||oy)camera.setViewOffset(w,h,ox,oy,w,h);else camera.clearViewOffset();
 }
@@ -874,26 +900,37 @@ function hotspots(){
     clip:[0,-1,0,H*0.5],cam:[(fL.fx1+fR.fx0)/2+60,H*0.5+420,260],tgt:[(fL.fx1+fR.fx0)/2,H*0.5,0]},
    {t:'Base · roldana no trilho',a:[fR.fx0+90,fR.fy0,fR.z],types:['roldana','calco','dreno','escova'],
     txt:'Corte vertical na roldana: a folha apoia no trilho do marco pela roldana com calço. Os drenos levam a água para fora.',
-    clip:[1,0,0,-(fR.fx0+90)],cam:[fR.fx0+90-380,140,260],tgt:[fR.fx0+90,40,0]}
+    clip:[1,0,0,-(fR.fx0+90)],cam:[fR.fx0+90-380,140,260],tgt:[fR.fx0+90,40,0]},
+   {t:'Corte vertical · topo e base',a:[(fL.fx0+fL.fx1)/2,H*0.75,0],types:['roldana','escova','dreno','guarn'],
+    txt:'Corte vertical no meio da folha: mostra o marco em cima e embaixo, a folha correndo nos trilhos e o vidro preso na folha, como no mapa de corte do catálogo.',
+    clip:[1,0,0,-(fL.fx0+fL.fx1)/2],cam:[(fL.fx0+fL.fx1)/2-fitDist(300,H*1.3,1)*0.92,H*0.55,fitDist(300,H*1.3,1)*0.38],tgt:[(fL.fx0+fL.fx1)/2,H/2,0],far:1},
+   {t:'Corte horizontal · laterais e encontro',a:[x1-60,H*0.35,0],types:['fecho','contra','escova','ved'],
+    txt:'Corte horizontal na altura do fecho: mostra o marco lateral, as duas folhas se sobrepondo no centro e o fecho na lateral.',
+    clip:[0,-1,0,H*0.48],cam:[0,H*0.48+fitDist(L*1.2,300,1)*0.9,fitDist(L*1.2,300,1)*0.42],tgt:[0,H*0.48,0],far:1}
   ];
 }
 function focusHS(i){
   const h=hotspots()[i];if(!h)return;focus=i;hidePiece(true);selCode=null;
   state.open=0;state.explode=0;state.spin=false;root.rotation.y=0;setComp(true);
   CLIP.length=0;CLIP.push(new THREE.Plane(new THREE.Vector3(h.clip[0],h.clip[1],h.clip[2]),h.clip[3]*0.001));
-  const k=0.001;const cv=new THREE.Vector3(...h.cam).sub(new THREE.Vector3(...h.tgt)).multiplyScalar(1.35).add(new THREE.Vector3(...h.tgt));camTo(cv.multiplyScalar(k),new THREE.Vector3(...h.tgt).multiplyScalar(k),true,1.6);
-  hsCard.innerHTML=`<div class="eyebrow">Ponto de encaixe · ${LINES[cur].name}</div><h3>${h.t}</h3><div class="note" style="margin:0">${h.txt}</div><ul>${h.types.filter(t=>COMP[cur].items[t]).map(t=>{const c=compInfo(t);return `<li><i style="width:9px;height:9px;border-radius:50%;background:${CT[t][0]}"></i><b>${c.code}</b><span>${c.desc} · ${c.qty}</span></li>`}).join('')}</ul><div class="row" style="display:flex;gap:8px;margin-top:10px"><button class="btn" id="hsPrev">◀</button><button class="btn" id="hsNext">▶</button><button class="btn pri" id="hsBack">Voltar à janela</button></div>`;
+  const k=0.001;const cv=new THREE.Vector3(...h.cam).sub(new THREE.Vector3(...h.tgt)).multiplyScalar(h.far?1:1.35).add(new THREE.Vector3(...h.tgt));camTo(cv.multiplyScalar(k),new THREE.Vector3(...h.tgt).multiplyScalar(k),true,1.6);
+  hsCard.innerHTML=`<div class="eyebrow">Corte ${i+1} · ${LINES[cur].name}</div><h3>${h.t}</h3><div class="note" style="margin:0">${h.txt}</div><ul>${h.types.filter(t=>COMP[cur].items[t]).map(t=>{const c=compInfo(t);return `<li><i style="width:9px;height:9px;border-radius:50%;background:${CT[t][0]}"></i><b>${c.code}</b><span>${c.desc} · ${c.qty}</span></li>`}).join('')}</ul><div class="row" style="display:flex;gap:8px;margin-top:10px"><button class="btn" id="hsPrev">◀</button><button class="btn" id="hsNext">▶</button><button class="btn pri" id="hsBack">Voltar à janela</button></div>`;
   hsCard.classList.add('on');document.body.classList.add('focus');setTimeout(updViewOffset,30);
   document.getElementById('hsBack').onclick=unfocus;
-  document.getElementById('hsNext').onclick=()=>focusHS((i+1)%4);
-  document.getElementById('hsPrev').onclick=()=>focusHS((i+3)%4);
+  document.getElementById('hsNext').onclick=()=>focusHS((i+1)%6);
+  document.getElementById('hsPrev').onclick=()=>focusHS((i+5)%6);
+  syncCortes();
 }
-function unfocus(){focus=null;CLIP.length=0;hsCard.classList.remove('on');document.body.classList.remove('focus');setTimeout(updViewOffset,30);setComp(false);frameCamera()}
+function unfocus(){focus=null;setTimeout(syncCortes,0);CLIP.length=0;hsCard.classList.remove('on');document.body.classList.remove('focus');setTimeout(updViewOffset,30);setComp(false);frameCamera()}
+function syncCortes(){const el=document.getElementById('cortes');if(!el)return;
+  if(!el.children.length){el.innerHTML=[1,2,3,4,5,6].map(n=>`<button data-c="${n-1}" title="Corte ${n}">${n}</button>`).join('');
+    el.querySelectorAll('button').forEach(b=>b.onclick=()=>{const i=+b.dataset.c;if(focus===i)unfocus();else{if(view!=='tipologia')go('tipologia');focusHS(i)}})}
+  el.querySelectorAll('button').forEach(b=>{b.classList.toggle('on',+b.dataset.c===focus);const h=hotspots()[+b.dataset.c];if(h)b.title='Corte '+(+b.dataset.c+1)+' · '+h.t})}
 function updOverlay(){
   let html='';const W=innerWidth,Hh=innerHeight;
   const proj=(x,y,z)=>{const v=new THREE.Vector3(x,y,z);v.project(camera);return v.z<1?[(v.x+1)/2*W,(1-v.y)/2*Hh]:null};
   if(view==='tipologia'&&state.mode!=='corte'&&!seq){
-    if(state.comp){
+    if(state.comp&&focus===null){
       const seen={};for(const p of pieces){if(!p.ctype||seen[p.ctype]||!p.obj.visible)continue;seen[p.ctype]=1;
         const wp=new THREE.Vector3();p.mesh.getWorldPosition(wp);
         if(CLIP[0]&&CLIP[0].distanceToPoint(wp)<0)continue;
@@ -901,7 +938,7 @@ function updOverlay(){
         html+=`<div class="lb" style="left:${s2[0]}px;top:${s2[1]}px"><i style="background:${CT[p.ctype][0]}"></i><b>${ci.code}</b>${CT[p.ctype][1]}</div>`}
     }
     if(focus===null&&!show.g&&state.explodeT<0.05){
-      hotspots().forEach((h,i)=>{const v=new THREE.Vector3(...h.a).multiplyScalar(0.001);root.localToWorld(v.multiplyScalar(1000));const s2=proj(v.x,v.y,v.z);if(s2)html+=`<button class="hs" data-h="${i}" style="left:${s2[0]}px;top:${s2[1]}px" aria-label="${h.t}">+<span>${h.t}</span></button>`});
+      hotspots().forEach((h,i)=>{const v=new THREE.Vector3(...h.a).multiplyScalar(0.001);root.localToWorld(v.multiplyScalar(1000));const s2=proj(v.x,v.y,v.z);if(s2)if(i<4)html+=`<button class="hs" data-h="${i}" style="left:${s2[0]}px;top:${s2[1]}px" aria-label="Corte ${i+1}: ${h.t}">${i+1}<span>Corte ${i+1} · ${h.t}</span></button>`});
     }
   }
   if(lbls.__h!==html){lbls.innerHTML=html;lbls.__h=html;lbls.querySelectorAll('.hs').forEach(b=>b.onclick=()=>focusHS(+b.dataset.h))}
