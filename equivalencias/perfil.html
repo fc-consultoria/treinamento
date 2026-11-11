@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="referrer" content="no-referrer">
+<title>Perfil · FC Consultoria em Esquadria</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<style>
+:root{--tl:#0f6b70;--tl2:#0b4f53;--bg:#f2f5f4;--card:#fff;--tx:#14262a;--mu:#5d6b76;--ln:#dfe6e5;--am:#c47f00;--amb:#fff6e0;--wa:#1f9d55}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--tx);font:400 16px/1.45 Barlow,system-ui,sans-serif}
+header{background:linear-gradient(135deg,var(--tl2),var(--tl));color:#fff;padding:16px 16px 14px}
+header small{display:block;letter-spacing:.14em;font-weight:700;font-size:11.5px;opacity:.85}
+header b{display:block;font-size:17px;font-weight:800;margin-top:1px}
+main{max-width:640px;margin:0 auto;padding:14px 16px 36px}
+.card{background:var(--card);border:1px solid var(--ln);border-radius:16px;overflow:hidden}
+.des{position:relative;background:#fff;aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;border-bottom:1px solid var(--ln);cursor:zoom-in;padding:14px;width:100%;border-left:0;border-right:0;border-top:0}
+.des img{max-width:100%;max-height:100%;object-fit:contain}
+.des em{color:var(--mu);font-style:normal}
+.des .zb{position:absolute;right:10px;bottom:10px;background:var(--tl);color:#fff;border-radius:999px;padding:6px 12px;font:700 14px Barlow,sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.inf{padding:14px 16px 16px}
+.cd{font-size:30px;font-weight:800;line-height:1.05;color:var(--tl)}
+.nm{font-size:19px;font-weight:700;margin-top:4px;line-height:1.2}
+.tg{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.tg span{background:var(--bg);border-radius:8px;padding:4px 10px;font-size:14.5px}
+.tg b{font-weight:700}
+.av{font-size:13px;color:var(--mu);margin:12px 2px 0;text-align:center}
+.cta{margin-top:16px;background:var(--card);border:1.5px solid var(--tl);border-radius:16px;padding:16px;text-align:center}
+.cta h2{margin:0 0 4px;font-size:19px;line-height:1.2}
+.cta p{margin:0 0 12px;color:var(--mu);font-size:14.5px}
+.bts{display:flex;flex-direction:column;gap:8px}
+.bts a{display:block;text-decoration:none;font-weight:700;border-radius:12px;padding:12px;font-size:16px}
+.bts .wa{background:var(--wa);color:#fff}
+.bts .ig{border:1.5px solid var(--tl);color:var(--tl)}
+.vazio{background:var(--card);border:1px solid var(--ln);border-radius:16px;padding:24px 16px;text-align:center}
+.vazio h1{font-size:21px;margin:0 0 6px}
+.vazio p{margin:0;color:var(--mu)}
+footer{text-align:center;font-size:12.5px;color:var(--mu);margin-top:20px;line-height:1.5}
+.lb{position:fixed;inset:0;background:#0b1a1c;display:none;z-index:50;touch-action:none;overflow:hidden}
+.lb.on{display:block}
+.lb img{position:absolute;left:50%;top:50%;max-width:94vw;max-height:80vh;background:#fff;border-radius:10px;padding:8px;transform-origin:center center;will-change:transform;user-select:none;-webkit-user-drag:none}
+.lb .x{position:absolute;top:12px;right:12px;background:#fff;border:0;border-radius:999px;width:44px;height:44px;font-size:24px;font-weight:700;cursor:pointer;z-index:2}
+.lb .ctl{position:absolute;left:0;right:0;bottom:16px;display:flex;justify-content:center;gap:10px;z-index:2}
+.lb .ctl button{background:#fff;border:0;border-radius:999px;min-width:48px;height:44px;font:800 20px Barlow,sans-serif;cursor:pointer;padding:0 14px}
+.lb .dc{position:absolute;top:18px;left:16px;color:#fff;font-weight:700;font-size:16px;z-index:2;opacity:.9}
+</style>
+</head>
+<body>
+<header><small>FC CONSULTORIA EM ESQUADRIA</small><b>Perfil em demonstração</b></header>
+<main id="app"><div class="vazio"><p>Carregando o perfil…</p></div></main>
+<div class="lb" id="lb" role="dialog" aria-modal="true" aria-label="Desenho ampliado">
+  <span class="dc" id="lbc"></span>
+  <button type="button" class="x" id="lbx" aria-label="Fechar">×</button>
+  <img id="lbi" alt="">
+  <div class="ctl"><button type="button" id="zm" aria-label="Diminuir">−</button><button type="button" id="z0" aria-label="Tamanho original" style="font-size:15px">Ajustar</button><button type="button" id="zp" aria-label="Ampliar">+</button></div>
+</div>
+<script>
+const WA='https://wa.me/5566999867984',IG='https://www.instagram.com/fc__consultoria/';
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const safe=u=>/^https?:\/\//i.test(u||'')?u:'';
+const n3=v=>Number(v).toLocaleString('pt-BR',{minimumFractionDigits:3,maximumFractionDigits:3});
+const contato=`<div class="bts"><a class="wa" href="${WA}" target="_blank" rel="noopener noreferrer">WhatsApp 66 9 9986-7984</a><a class="ig" href="${IG}" target="_blank" rel="noopener noreferrer">Instagram @fc__consultoria</a></div>`;
+const rodape='<footer>FC Consultoria em Esquadria</footer>';
+let D=null,IMG=[];
+function fim(t,m,ct){$('#app').innerHTML=`<div class="vazio"><h1>${esc(t)}</h1><p>${m}</p></div>${ct?`<div class="cta">${contato}</div>`:''}${rodape}`;}
+function tela(){IMG=(D.img||[]).map(safe).filter(Boolean);
+  document.title=(D.c||'Perfil')+' · FC Consultoria em Esquadria';
+  const im=IMG.length?`<img id="dimg" src="${esc(IMG[0])}" alt="Desenho do perfil ${esc(D.c)}">`:'<em>sem desenho</em>';
+  $('#app').innerHTML=`<div class="card">
+    <button type="button" class="des" id="des" aria-label="Ampliar o desenho">${im}${IMG.length?'<span class="zb">🔍 Ampliar</span>':''}</button>
+    <div class="inf"><div class="cd">${esc(D.c)}</div>${D.n?`<div class="nm">${esc(D.n)}</div>`:''}
+     <div class="tg">${D.lin?`<span>Linha <b>${esc(D.lin)}</b></span>`:''}${D.kg?`<span>Peso <b>${n3(D.kg)} kg/m</b></span>`:''}</div></div></div>
+   <p class="av">Imagens ilustrativas — dúvidas, consultar o catálogo do fornecedor.</p>
+   <div class="cta"><h2>Conheça a plataforma Onde comprar da FC</h2><p>Compare fornecedores e encontre o perfil certo para a sua serralheria.</p>${contato}</div>${rodape}`;
+  const di=$('#dimg');if(di)di.onerror=function(){const r=IMG.slice(IMG.indexOf(this.getAttribute('src'))+1);if(r.length)this.src=r[0];else{IMG=[];this.replaceWith(Object.assign(document.createElement('em'),{textContent:'sem desenho'}));const z=document.querySelector('.zb');if(z)z.remove();}};}
+/* zoom: pinça, arrastar, duplo toque e botões */
+const Z={s:1,x:0,y:0};const lbi=$('#lbi');
+function aplica(){lbi.style.transform=`translate(calc(-50% + ${Z.x}px),calc(-50% + ${Z.y}px)) scale(${Z.s})`;}
+function escala(s){Z.s=Math.min(6,Math.max(1,s));if(Z.s===1){Z.x=0;Z.y=0;}aplica();}
+function abre(){const di=$('#dimg');if(!di)return;lbi.src=di.currentSrc||di.src;$('#lbc').textContent=D.c||'';Z.s=1;Z.x=0;Z.y=0;aplica();$('#lb').classList.add('on');}
+function fecha(){$('#lb').classList.remove('on');}
+const P=new Map();let ini=null;
+lbi.addEventListener('pointerdown',e=>{lbi.setPointerCapture(e.pointerId);P.set(e.pointerId,{x:e.clientX,y:e.clientY});ini={s:Z.s,x:Z.x,y:Z.y,pts:[...P.values()].map(p=>({...p}))};});
+lbi.addEventListener('pointermove',e=>{if(!P.has(e.pointerId)||!ini)return;P.set(e.pointerId,{x:e.clientX,y:e.clientY});const v=[...P.values()];
+  if(v.length>=2&&ini.pts.length>=2){const d0=Math.hypot(ini.pts[0].x-ini.pts[1].x,ini.pts[0].y-ini.pts[1].y)||1,d1=Math.hypot(v[0].x-v[1].x,v[0].y-v[1].y);Z.s=Math.min(6,Math.max(1,ini.s*d1/d0));}
+  else if(v.length===1&&Z.s>1){Z.x=ini.x+(v[0].x-ini.pts[0].x);Z.y=ini.y+(v[0].y-ini.pts[0].y);}
+  aplica();});
+const solta=e=>{P.delete(e.pointerId);ini=P.size?{s:Z.s,x:Z.x,y:Z.y,pts:[...P.values()].map(p=>({...p}))}:null;if(Z.s<=1.02)escala(1);};
+lbi.addEventListener('pointerup',solta);lbi.addEventListener('pointercancel',solta);
+let ult=0;lbi.addEventListener('click',()=>{const a=Date.now();if(a-ult<320)escala(Z.s>1?1:2.5);ult=a;});
+$('#lb').addEventListener('wheel',e=>{e.preventDefault();escala(Z.s*(e.deltaY<0?1.15:1/1.15));},{passive:false});
+$('#zp').onclick=()=>escala(Z.s*1.5);$('#zm').onclick=()=>escala(Z.s/1.5);$('#z0').onclick=()=>escala(1);
+$('#lbx').onclick=fecha;$('#lb').addEventListener('click',e=>{if(e.target.id==='lb')fecha();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')fecha();});
+document.addEventListener('click',e=>{if(e.target.closest('#des'))abre();});
+(async()=>{const id=new URLSearchParams(location.search).get('p')||'';
+  if(!/^[0-9a-f]{40}$/.test(id))return fim('Link inválido','Este QR não é de um perfil válido.',true);
+  if(!navigator.onLine)return fim('Sem internet','Não consegui abrir o perfil. Confira a internet e tente de novo.');
+  let r;try{const sb=window.supabase.createClient('https://cpkjphodruyxfouirhpd.supabase.co','sb_publishable_d0HEeWsaqOeZIQKGftlF-Q_B8BUOWWg',{auth:{persistSession:false,autoRefreshToken:false}});
+    r=await Promise.race([sb.rpc('compra_perfil_qr_ver',{p_id:id}),new Promise(ok=>setTimeout(()=>ok({error:{message:'tempo'}}),10000))]);}catch(e){r={error:e};}
+  if(r.error)return fim('Sem conexão','Não consegui abrir o perfil agora. Confira a internet e tente de novo.');
+  if(!r.data||r.data.expirado)return fim('Demonstração encerrada','Esta demonstração terminou. Para ter acesso à plataforma, fale com a FC Consultoria.',true);
+  D=r.data;tela();})();
+</script>
+</body>
+</html>
