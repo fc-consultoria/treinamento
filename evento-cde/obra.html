@@ -164,6 +164,19 @@
   .cmv-card h5{margin:0;font:800 16px Inter,sans-serif}.cmv-card p{margin:3px 0 10px;font-size:13px;color:#475569;line-height:1.5}
   .cmv-card .row{display:flex;gap:8px}.cmv-card .row .btn{flex:1}
   #secValores{display:none}
+  .env-box{border:1px solid #fed7aa;border-radius:12px;padding:6px 10px;background:#fff}
+  html.dark .env-box{border-color:#334155;background:#0f172a}
+  .env-box summary{cursor:pointer;font:700 12px Inter,sans-serif;color:#9a3412;padding:4px 0}
+  html.dark .env-box summary{color:#fdba74}
+  .env-box summary span{font-weight:600;color:#94a3b8}
+  .env-it{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:8px 0;border-top:1px solid #ffedd5}
+  html.dark .env-it{border-color:#1e293b}
+  .env-it .tx{flex:1 1 220px;min-width:0;font-size:12px;line-height:1.35;color:#334155}
+  html.dark .env-it .tx{color:#cbd5e1}
+  .env-it .tx b{display:block;font-size:13px}
+  .env-it .tx small{color:#94a3b8}
+  .env-it .btn{padding:5px 9px;font-size:11px}
+  .env-vazio{font-size:12px;color:#94a3b8;padding:6px 0}
 </style>
 <link rel="manifest" href="manifest-obra.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Simulador CDE">
 <link rel="apple-touch-icon" href="icons/apple-180.png">
@@ -226,6 +239,7 @@
           <button type="button" id="ambExcluir" class="btn">Remover ambiente</button>
         </div>
         <p id="obraMsg" class="obra-edit" style="margin:0;font-size:11px;color:#94a3b8">Tudo fica salvo neste aparelho, mesmo sem internet.</p>
+        <details id="envBox" class="obra-edit env-box"><summary>Obras enviadas <span id="envN"></span></summary><div id="envLista"></div></details>
         <p id="cliCarregando" class="hidden" style="margin:0;font-size:13px;color:#475569">Carregando a sua obra…</p>
         <p class="cli-rodape" style="display:none"></p>
         <p class="aviso-fixo" style="display:none;margin-top:6px">Imagens demonstrativas. Reboco e cor da parede são efeito visual e não alteram medidas. Medidas apenas demonstrativas, não usar para produção.</p>
@@ -936,6 +950,7 @@
 
     // ---------- barra da obra ----------
     async function desenharBarra() {
+      desenharEnviadas();
       if (!obra) return;
       el('obraNome').value = obra.nome || ''; el('obraCliente').value = obra.cliente || '';
       el('ambTabs').innerHTML = obra.amb.map((a, i) => `<button type="button" class="obra-tab${i === idx ? ' on' : ''}" data-i="${i}">${esc(a.nome || 'Ambiente ' + (i + 1))}${a.foto ? '' : ' <small>sem foto</small>'}</button>`).join('');
@@ -1021,6 +1036,26 @@
     async function comprimir(src) { const img = await carregarImg(src); const k = Math.min(1, 1280 / Math.max(img.width, img.height)); const c = document.createElement('canvas'); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k); c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); return { foto: c.toDataURL('image/jpeg', 0.8), k }; }
     function qrDataURL(txt) { if (typeof qrcode === 'undefined') return ''; const q = qrcode(0, 'M'); q.addData(txt); q.make(); return q.createDataURL(8, 2); }
     function modalQR(html) { let m = el('qrModal'); if (!m) { m = document.createElement('div'); m.id = 'qrModal'; m.className = 'qr-modal'; document.body.appendChild(m); m.addEventListener('click', e => { if (e.target === m) m.remove(); }); } m.innerHTML = '<div class="qr-card">' + html + '</div>'; return m; }
+    // 11/11/2026 · FC: lista de obras enviadas ao cliente (links gerados neste aparelho)
+    const ENV_K = 'fam_enviadas';
+    function envLer() { try { return JSON.parse(localStorage.getItem(ENV_K)) || []; } catch (_) { return []; } }
+    function envGravar(l) { try { localStorage.setItem(ENV_K, JSON.stringify(l.slice(0, 300))); } catch (_) {} }
+    function envAdd(r) { const l = envLer().filter(x => x.id !== r.id); l.unshift(r); envGravar(l); desenharEnviadas(); }
+    function desenharEnviadas() {
+      const box = el('envLista'); if (!box) return; const l = envLer();
+      el('envN').textContent = l.length ? '(' + l.length + ')' : '';
+      if (!l.length) { box.innerHTML = '<p class="env-vazio">Os links gerados em "QR para o cliente" aparecem aqui para reenviar.</p>'; return; }
+      box.innerHTML = l.map((r, i) => { const d = new Date(r.em), dt = d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        return `<div class="env-it"><div class="tx"><b>${esc(r.obra)}${r.cliente ? ' · ' + esc(r.cliente) : ''}</b><small>${dt}${r.vendedor ? ' · ' + esc(r.vendedor) : ''} · ${r.ambs || 1} amb.</small></div>
+          <button type="button" class="btn" data-env="copiar" data-i="${i}">Copiar link</button><button type="button" class="btn" data-env="qr" data-i="${i}">QR</button>
+          <a class="btn" href="https://wa.me/?text=${encodeURIComponent('Olá' + (r.cliente ? ' ' + r.cliente : '') + '! Veja como a Linha Family fica na sua obra: ' + r.link)}" target="_blank" rel="noopener">WhatsApp</a>
+          <a class="btn" href="${esc(r.link)}" target="_blank" rel="noopener">Abrir</a><button type="button" class="btn" data-env="tirar" data-i="${i}" title="Tirar da lista (o link continua funcionando)">✕</button></div>`; }).join('');
+    }
+    document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-env]'); if (!b) return; const l = envLer(), r = l[+b.dataset.i]; if (!r) return;
+      if (b.dataset.env === 'copiar') { try { navigator.clipboard.writeText(r.link).then(() => { b.textContent = 'Copiado'; setTimeout(() => { b.textContent = 'Copiar link'; }, 1500); }, () => {}); } catch (_) {} }
+      else if (b.dataset.env === 'qr') { modalQR(`<b>${esc(r.obra)}${r.cliente ? ' · ' + esc(r.cliente) : ''}</b><img class="qr-img" alt="QR Code da obra" src="${qrDataURL(r.link)}"><p class="qr-link">${esc(r.link)}</p><div class="qr-acoes"><button type="button" class="btn" id="qrFechar">Fechar</button></div>`); el('qrFechar').onclick = () => el('qrModal').remove(); }
+      else if (b.dataset.env === 'tirar') { if (window.confirm('Tirar esta obra da lista? O link enviado ao cliente continua funcionando.')) { l.splice(+b.dataset.i, 1); envGravar(l); desenharEnviadas(); } } });
+
     function abrirQR() {
       capturar();
       const n = obra.amb.filter(a => a.foto).length;
@@ -1042,6 +1077,7 @@
           const id = await rpc('fam_sim_salvar', { p_foto: comp[0].foto, p_dados: dados, p_cliente: obra.cliente, p_vendedor: el('qrVend').value.trim(), p_revenda: 'CDE' });
           for (let i = 1; i < comp.length; i++) { b.textContent = 'Enviando ambiente ' + (i + 1) + '…'; await rpc('fam_sim_foto', { p_id: id, p_ordem: i, p_foto: comp[i].foto }); }
           const link = BASE + 'obra.html?ver=' + id;
+          envAdd({ id, link, obra: obra.nome || 'Obra sem nome', cliente: obra.cliente || '', vendedor: el('qrVend').value.trim(), ambs: ambs.length, em: Date.now() });
           const wa = 'https://wa.me/?text=' + encodeURIComponent('Olá' + (obra.cliente ? ' ' + obra.cliente : '') + '! Veja como a Linha Family fica na sua obra: ' + link);
           modalQR(`<b>Peça para o cliente ler o QR</b><img class="qr-img" alt="QR Code da obra" src="${qrDataURL(link)}"><p class="qr-link">${esc(link)}</p>
             <div class="qr-acoes"><a class="btn btn-accent" href="${wa}" target="_blank" rel="noopener">Enviar no WhatsApp</a><button type="button" class="btn" id="qrCopiar">Copiar link</button><button type="button" class="btn" id="qrFechar">Fechar</button></div>`);
