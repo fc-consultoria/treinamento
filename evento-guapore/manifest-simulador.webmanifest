@@ -1,0 +1,18 @@
+{
+  "id": "./simulador.html",
+  "name": "Simulador na obra · Family Guaporé",
+  "short_name": "Simulador Guaporé",
+  "description": "Foto do vão com a tipologia Family aplicada. Funciona sem internet. Desenvolvido por FC Consultoria em Esquadria.",
+  "start_url": "./simulador.html?app=1",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "lang": "pt-BR",
+  "icons": [
+    {"src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png"},
+    {"src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}
