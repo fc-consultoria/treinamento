@@ -1,0 +1,31 @@
+{
+  "id": "./obra.html",
+  "name": "Simulador na obra · contramarco, reboco e esquadria · Family CDE",
+  "short_name": "Obra CDE",
+  "description": "Vão bruto, contramarco, reboco e esquadria Family na foto da obra. Funciona sem internet. Desenvolvido por FC Consultoria em Esquadria.",
+  "start_url": "./obra.html?app=1",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "lang": "pt-BR",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

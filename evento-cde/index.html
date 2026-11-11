@@ -178,8 +178,12 @@ body.evento .caption{display:block}
     <button class="qrpill" id="qrPill" hidden>QR Code</button>
     <div class="wm">Desenvolvido por FC Consultoria em Esquadria · imagens demonstrativas</div>
     <div class="simwrap" id="simWrap" hidden>
-      <div class="simbar"><b>Simulador na obra</b><span>Foto do vão, marque os 4 cantos e veja o produto aplicado.</span><a href="simulador.html" target="_blank" rel="noopener">Abrir em tela cheia</a></div>
-      <iframe id="simFrame" title="Simulador de Esquadrias e Vidros" data-src="simulador.html" allow="camera"></iframe>
+      <div class="simbar"><b>Simulador na obra</b><span id="simDesc">Vão bruto › contramarco › reboco › esquadria Family, na foto da obra.</span><a href="#" id="simTroca" style="margin-left:auto">Versão anterior (reserva)</a><a id="simCheia" href="obra.html" target="_blank" rel="noopener" style="margin-left:0">Abrir em tela cheia</a></div>
+      <iframe id="simFrame" title="Simulador na obra" data-src="obra.html" allow="camera"></iframe>
+      <script>/* 11/11/2026 · FC: tela nova (contramarco e reboco) como padrão; a versão anterior fica como reserva */
+      (function(){var t=document.getElementById('simTroca'),f=document.getElementById('simFrame'),c=document.getElementById('simCheia'),d=document.getElementById('simDesc');
+      t.addEventListener('click',function(e){e.preventDefault();var nova=f.dataset.src!=='obra.html';f.dataset.src=nova?'obra.html':'simulador.html';c.href=f.dataset.src;
+      t.textContent=nova?'Versão anterior (reserva)':'Voltar para a versão nova';d.textContent=nova?'Vão bruto › contramarco › reboco › esquadria Family, na foto da obra.':'Versão anterior: foto do vão, 4 cantos e produto aplicado.';if(f.src)f.src=f.dataset.src;});})();</script>
     </div>
   </section>
   <aside id="panel">
