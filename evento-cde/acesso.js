@@ -32,6 +32,11 @@
     var ios=/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
     if(ios){document.querySelectorAll('link[rel="manifest"]').forEach(function(l){l.remove();});}
     else{try{var u=new URL(location.href);u.searchParams.delete('fc');history.replaceState(null,'',u.pathname+u.search+u.hash);}catch(_){}}
+    /* chave mestre conferida no próprio aparelho: abre na hora, sem internet e sem depender do que ficou guardado */
+    try{crypto.subtle.digest('SHA-256',new TextEncoder().encode(ch)).then(function(d){var x=Array.from(new Uint8Array(d)).map(function(v){return v.toString(16).padStart(2,'0');}).join('');
+      if(x==='f0a060684e0bf816f70666058e16270d4659fd0ed8806749d4013b518f9edd46'){st.mestre=1;libera();rpc('fam_ap_mestre_link',{p_chave:ch,p_disp:st.disp}).catch(function(){});}
+      else form('Link mestre inválido.');}).catch(function(){form('Link mestre inválido.');});
+      tela('<p style="margin:0">Abrindo…</p>');return;}catch(_){}
     if(st.mestre&&st.status==='liberado'){libera();rpc('fam_ap_mestre_link',{p_chave:ch,p_disp:st.disp}).catch(function(){});return;}
     tela('<p style="margin:0">Liberando o acesso FC…</p>');
     rpc('fam_ap_mestre_link',{p_chave:ch,p_disp:st.disp}).then(function(s){if(s==='liberado'){st.mestre=1;libera();}else form('Link mestre inválido.');}).catch(function(){form('Sem internet. Abra o link mestre com conexão.');});
