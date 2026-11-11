@@ -1,0 +1,647 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<script>
+/* ================= MARCA DO LICENCIADO · troque só este bloco =================
+   O mesmo bloco fica no início de index.html e de simulador.html (deixe os dois iguais).
+   Linha Family 32 · Desenvolvido por FC Consultoria em Esquadria */
+window.MARCA = {
+  nome:    'Arkial',                                   // nome do licenciado (aparece nas telas)
+  revenda: 'Arkial',                                   // nome gravado em cada QR do cliente (p_revenda)
+  cor:     '#3f5566',                                  // cor principal, em código hexadecimal
+  logo:    'ARKIAL · Linha Family 32',                 // logo em texto
+  rodape:  'Linha Family 32 · Arkial · Desenvolvido por FC Consultoria em Esquadria',
+  site:    'https://fc-consultoria.github.io/treinamento/family-arkial/', // endereço publicado (link do QR)
+  prefixo: 'ark_',                                     // separa os dados deste app no aparelho
+  banco:   'family-arkial-obras'                       // obras salvas no aparelho
+};
+/* ============================================================================== */
+</script>
+<script src="marca.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1c262e">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Family 32">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="description" content="Linha Family 32 (Arkial) em 3D dentro de casa e simulador na obra · Desenvolvido por FC Consultoria em Esquadria">
+<meta property="og:title" content="Linha Family 32">
+<meta property="og:description" content="Veja como a Linha Family fica na sua casa: ambientes 3D e simulador com foto do vão.">
+<meta property="og:image" content="https://fc-consultoria.github.io/treinamento/family/og-family.jpg">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Family 32 em Casa</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="fonts.css">
+<style>
+/* Layout: palco 3D à esquerda (o produto é o herói), painel de leitura à direita; no celular empilha. Cores tiradas da cor principal do bloco MARCA (marca.js cria as variáveis --m-*). */
+:root{
+  --brown:var(--m-funda); --brown-2:var(--m-funda2); --cream:var(--m-creme); --paper:var(--m-papel);
+  --ink:var(--m-tinta); --muted:var(--m-suave); --line:var(--m-linha); --copper:var(--m-cor); --copper-2:var(--m-escura);
+  --ok:#3f7a52; --warn:#b4472b;
+  --f-display:"Outfit",system-ui,sans-serif; --f-body:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:light;
+}
+html,body{height:100%}
+[hidden]{display:none!important}
+body{background:var(--brown);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.5;overflow:hidden}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--brown)}
+.app{height:100%;display:grid;grid-template-rows:auto 1fr}
+header{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));background:var(--brown);color:var(--cream)}
+.brand{display:flex;align-items:baseline;gap:12px;min-width:0}
+.brand b{font-family:var(--f-display);font-weight:500;font-size:22px;letter-spacing:.01em;position:relative;line-height:1}
+.brand b::after{content:"";position:absolute;left:38%;right:-4px;bottom:-6px;height:3px;border-radius:0 0 8px 8px;background:var(--m-clara)}
+.brand small{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--m-clara)}
+.tabs{display:flex;gap:4px;background:var(--brown-2);padding:4px;border-radius:999px;margin-left:auto}
+.tabs button,.hbtn{font:600 12.5px var(--f-body);border:0;background:transparent;color:var(--m-creme);padding:8px 14px;border-radius:999px;cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--cream);color:var(--brown)}
+.hbtn{border:1px solid var(--m-borda-escura)}
+.hbtn:hover,.tabs button:hover{color:#fff}
+button:focus-visible,input:focus-visible{outline:2px solid var(--copper);outline-offset:2px}
+
+main{min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 400px}
+.stage{position:relative;min-height:0;background:var(--m-palco);overflow:hidden}
+#gl{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+.wm{position:absolute;right:max(10px,env(safe-area-inset-right,0px));bottom:8px;max-width:calc(100% - 20px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:10.5px;color:rgba(255,255,255,.6);letter-spacing:.04em;pointer-events:none;text-shadow:0 1px 2px rgba(0,0,0,.5)}
+.amb-strip{position:absolute;left:0;right:0;top:0;display:flex;gap:6px;overflow-x:auto;padding:10px max(12px,env(safe-area-inset-left,0px));scrollbar-width:none}
+.amb-strip::-webkit-scrollbar{display:none}
+.amb-strip button{flex:none;border:1px solid rgba(255,255,255,.25);background:rgb(var(--m-palco-rgb)/.62);backdrop-filter:blur(6px);color:var(--m-creme);border-radius:10px;padding:6px 11px;text-align:left;cursor:pointer;font:500 12px var(--f-body)}
+.amb-strip button span{display:block;font-size:10.5px;color:var(--m-clara);font-weight:400}
+.amb-strip button[aria-pressed="true"]{background:var(--cream);color:var(--brown);border-color:var(--cream)}
+.amb-strip button[aria-pressed="true"] span{color:var(--copper-2)}
+.dock{position:absolute;left:50%;transform:translateX(-50%);bottom:28px;display:flex;gap:6px;flex-wrap:wrap;justify-content:center;max-width:calc(100% - 24px)}
+.dock button{border:0;border-radius:999px;padding:9px 15px;font:600 12.5px var(--f-body);background:rgb(var(--m-papel-rgb)/.94);color:var(--brown);cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+.dock button.main{background:var(--copper);color:#fff}
+.dock button[aria-pressed="true"]{background:var(--brown);color:var(--cream)}
+.hs{position:absolute;left:0;top:0;width:26px;height:26px;margin:-13px 0 0 -13px;border-radius:50%;border:2px solid #fff;background:var(--copper);color:#fff;font:700 12px var(--f-body);cursor:pointer;box-shadow:0 0 0 4px rgb(var(--m-cor-rgb)/.35);display:grid;place-items:center;padding:0;transition:transform .15s}
+.hs:hover,.hs.on{transform:scale(1.18);background:var(--brown)}
+.hs .tip{position:absolute;left:30px;top:50%;transform:translateY(-50%);white-space:nowrap;background:rgb(var(--m-palco-rgb)/.9);color:#fff;font-weight:500;font-size:11.5px;padding:4px 8px;border-radius:6px;pointer-events:none;opacity:0;transition:opacity .15s}
+.hs:hover .tip,.hs.on .tip{opacity:1}
+
+aside{background:var(--paper);overflow:auto;min-height:0;padding-block:18px 28px;padding-left:20px;padding-right:max(20px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:22px}
+.eyebrow{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--copper-2);font-weight:600}
+h1{font:500 25px/1.15 var(--f-display);margin:4px 0 6px;text-wrap:balance}
+h2{font:500 17px var(--f-display);margin:0 0 10px;text-wrap:balance}
+.spec{display:flex;flex-wrap:wrap;gap:6px;font-size:12px;color:var(--muted)}
+.spec span{border:1px solid var(--line);border-radius:6px;padding:2px 7px;font-variant-numeric:tabular-nums}
+.needs{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.need{border:1px solid var(--line);border-radius:10px;padding:9px 10px;background:#fff;min-width:0}
+.need b{display:block;font:600 13px var(--f-body);color:var(--brown)}
+.need p{margin:2px 0 0;font-size:12px;color:var(--muted);line-height:1.4}
+.difs{display:flex;flex-direction:column;border-top:1px solid var(--line)}
+.dif{border-bottom:1px solid var(--line)}
+.dif>button{all:unset;box-sizing:border-box;width:100%;display:flex;gap:10px;align-items:center;padding:10px 2px;cursor:pointer}
+.dif>button:focus-visible{outline:2px solid var(--copper)}
+.dif .n{flex:none;width:22px;height:22px;border-radius:50%;background:var(--copper);color:#fff;font:700 11px var(--f-body);display:grid;place-items:center}
+.dif .t{font-weight:600;color:var(--brown);flex:1;min-width:0}
+.dif .chev{color:var(--muted);transition:transform .2s}
+.dif.open .chev{transform:rotate(90deg)}
+.dif .body{display:none;padding:0 2px 12px 32px;font-size:13px;color:var(--m-tinta)}
+.dif.open .body{display:block}
+.dif .src{display:block;margin-top:6px;font-size:11px;color:var(--muted)}
+.swatches{display:flex;gap:8px;flex-wrap:wrap}
+.sw{display:flex;flex-direction:column;align-items:center;gap:4px;border:0;background:none;cursor:pointer;font-size:11px;color:var(--muted);padding:0}
+.sw i{width:34px;height:34px;border-radius:8px;border:1px solid rgba(0,0,0,.15);display:block}
+.sw[aria-pressed="true"] i{outline:2px solid var(--copper);outline-offset:2px}
+.sw[aria-pressed="true"]{color:var(--brown);font-weight:600}
+.acu{background:var(--brown);color:var(--cream);border-radius:14px;padding:16px}
+.acu h2{color:#fff}
+.acu .big{font:300 46px/1 var(--f-display);color:#fff}
+.acu .big small{font-size:16px;margin-left:4px;color:var(--m-clara)}
+.meter{display:grid;grid-template-columns:62px 1fr 52px;align-items:center;gap:8px;font-size:12px;margin-top:8px;font-variant-numeric:tabular-nums}
+.meter .bar{height:10px;border-radius:5px;background:var(--m-borda-escura);overflow:hidden}
+.meter .bar i{display:block;height:100%;border-radius:5px;background:#e3a36f;transition:width .35s}
+.meter.in .bar i{background:#8fc39d}
+.acu input[type=range]{width:100%;accent-color:var(--copper)}
+.presets{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 4px}
+.presets button,.acu .play{border:1px solid var(--m-borda-escura);background:transparent;color:var(--m-creme);border-radius:999px;padding:5px 10px;font:500 11.5px var(--f-body);cursor:pointer}
+.acu .play{background:var(--copper);border-color:var(--copper);color:#fff;font-weight:600;margin-top:10px}
+.acu .note{font-size:11px;color:var(--m-clara);margin-top:10px;line-height:1.45}
+.foot{font-size:11px;color:var(--muted);line-height:1.5;border-top:1px solid var(--line);padding-top:12px}
+
+.simwrap{position:absolute;inset:0;background:var(--m-base);display:flex;flex-direction:column}
+.simbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:8px max(12px,env(safe-area-inset-left,0px));background:var(--cream);font-size:12px;color:var(--brown)}
+.simbar a{margin-left:auto;color:var(--copper-2);font-weight:600}
+.simwrap iframe{flex:1;border:0;width:100%;min-height:0;background:var(--m-base)}
+
+/* app: instalar e sem internet */
+.netchip{font:600 11.5px var(--f-body);color:var(--m-creme);border:1px solid var(--m-borda-escura);border-radius:999px;padding:6px 11px;white-space:nowrap}
+.netchip.off{background:#b4472b;border-color:#b4472b;color:#fff}
+.dica-ios{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:50;background:#fff;color:var(--brown);border-radius:14px;padding:14px 16px;box-shadow:0 10px 30px rgba(0,0,0,.35);font-size:14px;max-width:min(420px,calc(100% - 32px));line-height:1.45}
+.dica-ios b{display:block;margin-bottom:4px}
+.dica-ios button{margin-top:8px;border:0;background:var(--copper);color:#fff;border-radius:999px;padding:7px 14px;font:600 12.5px var(--f-body);cursor:pointer}
+/* QR no canto da tela */
+.qrc{position:absolute;right:max(14px,env(safe-area-inset-right,0px));bottom:26px;z-index:6;background:#fff;border-radius:14px;padding:10px 10px 8px;box-shadow:0 8px 28px rgba(0,0,0,.35);display:flex;gap:10px;align-items:flex-start}
+.qrc figure{margin:0;display:flex;flex-direction:column;align-items:center;gap:4px;width:108px}
+.qrc img{width:108px;height:108px;display:block;image-rendering:pixelated}
+.qrc figcaption{font:600 11px/1.2 var(--f-body);color:var(--brown);text-align:center}
+.qrc .x{position:absolute;top:-10px;right:-10px;width:24px;height:24px;border-radius:50%;border:0;background:var(--brown);color:#fff;font:700 13px var(--f-body);cursor:pointer}
+.qrc .tt{position:absolute;right:4px;top:-22px;font:600 11px var(--f-body);color:#fff;letter-spacing:.06em;text-transform:uppercase;text-shadow:0 1px 3px rgba(0,0,0,.6);white-space:nowrap}
+.qrpill{position:absolute;right:max(14px,env(safe-area-inset-right,0px));bottom:26px;z-index:6;border:0;border-radius:999px;background:#fff;color:var(--brown);font:700 12px var(--f-body);padding:9px 13px;box-shadow:0 4px 14px rgba(0,0,0,.3);cursor:pointer}
+body.evento .qrc{bottom:34px;right:34px;padding:14px 14px 10px;gap:14px}
+body.evento .qrc figure{width:170px}body.evento .qrc img{width:170px;height:170px}body.evento .qrc figcaption{font-size:14px}
+body.evento .qrc .tt{font-size:14px;top:-28px}
+body.sim .qrc,body.sim .qrpill{display:none!important}
+@media (max-width:900px){.qrc figure{width:84px}.qrc img{width:84px;height:84px}}
+
+/* modo evento */
+.caption{display:none;position:absolute;left:max(24px,env(safe-area-inset-left,0px));bottom:84px;max-width:min(620px,80%);color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.55)}
+.caption .k{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--m-clara)}
+.caption .t{font:500 clamp(26px,3.4vw,44px)/1.1 var(--f-display);margin:6px 0}
+.caption .d{font-size:clamp(14px,1.4vw,19px);max-width:52ch}
+body.evento main{grid-template-columns:1fr}
+body.evento aside,body.evento .amb-strip,body.evento .hs{display:none}
+body.evento .caption{display:block}
+
+@media (max-width:900px){
+  body{overflow:auto}
+  .app{height:auto;min-height:100%}
+  main{grid-template-columns:1fr}
+  .stage{height:62vh;min-height:380px}
+  aside{overflow:visible;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+  .tabs{margin-left:0}
+  body.sim .stage{height:calc(100vh - 110px)}
+}
+@media (max-width:420px){.needs{grid-template-columns:1fr}}
+@media (max-width:600px){.wm{font-size:9px;bottom:4px}.wm .wm2{display:none}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+</head>
+<body>
+<div class="app">
+<header>
+  <div class="brand"><b data-marca="logo">ARKIAL · Linha Family 32</b></div>
+  <div class="tabs" role="tablist">
+    <button role="tab" id="tabAmb" aria-selected="true">Ambientes 3D</button>
+    <button role="tab" id="tabSim" aria-selected="false">Simulador na obra</button>
+  </div>
+  <span class="netchip" id="netChip" hidden></span>
+  <button class="hbtn" id="btnInstalar" hidden>Instalar app</button>
+  <button class="hbtn" id="btnEvento">Modo evento</button>
+</header>
+<main>
+  <section class="stage" id="stage">
+    <canvas id="gl"></canvas>
+    <div id="hsLayer"></div>
+    <nav class="amb-strip" id="ambStrip" aria-label="Ambientes"></nav>
+    <div class="dock" id="dock"></div>
+    <div class="caption" id="caption"><div class="k" id="capK"></div><div class="t" id="capT"></div><div class="d" id="capD"></div></div>
+    <div class="qrc" id="qrBox"><span class="tt" id="qrTt">Este ambiente no seu celular</span>
+      <figure><img id="qrImg" alt="QR Code"><figcaption id="qrCap">Ambientes 3D</figcaption></figure>
+      <button class="x" id="qrX" aria-label="Recolher QR Code">×</button></div>
+    <button class="qrpill" id="qrPill" hidden>QR Code</button>
+    <div class="wm"><span data-marca="rodape"></span><span class="wm2"> · imagens demonstrativas</span></div>
+    <div class="simwrap" id="simWrap" hidden>
+      <div class="simbar"><b>Simulador na obra</b><span>Foto do vão, marque os 4 cantos e veja o produto aplicado.</span><a href="simulador.html" target="_blank" rel="noopener">Abrir em tela cheia</a></div>
+      <iframe id="simFrame" title="Simulador de Esquadrias e Vidros" data-src="simulador.html" allow="camera"></iframe>
+    </div>
+  </section>
+  <aside id="panel">
+    <div>
+      <div class="eyebrow" id="pAmb"></div>
+      <h1 id="pTip"></h1>
+      <div class="spec" id="pSpec"></div>
+    </div>
+    <div>
+      <h2>O que essa esquadria resolve na sua casa</h2>
+      <div class="needs" id="pNeeds"></div>
+    </div>
+    <div>
+      <h2>Diferenciais da linha</h2>
+      <div class="difs" id="pDifs"></div>
+    </div>
+    <div>
+      <h2>Acabamento do alumínio</h2>
+      <div class="swatches" id="pSw"></div>
+    </div>
+    <div class="acu" id="acu">
+      <h2>Quanto barulho entra</h2>
+      <label for="ruaDb" style="font-size:12px;color:var(--m-clara)">Barulho lá fora: <b id="outLbl" style="color:#fff"></b></label>
+      <input type="range" id="ruaDb" min="45" max="85" step="1" value="70">
+      <div class="presets">
+        <button data-db="50">Rua tranquila</button><button data-db="70">Rua movimentada</button><button data-db="80">Avenida com ônibus</button>
+      </div>
+      <div class="meter"><span>Lá fora</span><div class="bar"><i id="barOut"></i></div><span id="vOut"></span></div>
+      <div class="meter in"><span>Dentro</span><div class="bar"><i id="barIn"></i></div><span id="vIn"></span></div>
+      <div style="margin-top:12px"><div class="big" id="bigIn"></div><div id="inLbl" style="font-size:13px;margin-top:4px"></div></div>
+      <button class="play" id="play">Ouvir a diferença</button>
+      <div class="note" id="acuNote"></div>
+    </div>
+    <div class="foot">
+      Imagens demonstrativas. Dados técnicos do Catálogo Técnico Family 32 (Arkial · Grupo TEXA Alumínio). Desempenho acústico conforme relatório IPT nº 1 145 785-203, válido para a configuração ensaiada. Pressão de vento e dimensionamento: cada obra deve ser avaliada por profissional habilitado. Confirme especificações com o fornecedor.<br>
+      Desenvolvido por FC Consultoria em Esquadria · CNPJ 52.985.682/0001-32
+    </div>
+  </aside>
+</main>
+</div>
+
+<script src="lib/three.min.js"></script>
+<script src="lib/OrbitControls.js"></script>
+<script src="lib/qrcode.js"></script>
+<script>
+'use strict';
+const $=s=>document.querySelector(s);
+/* marca do licenciado (bloco MARCA no início da página) */
+const M=window.MARCA;document.title='Family 32 em Casa · '+M.nome;M.meta('theme-color',M.tom.funda);M.meta('apple-mobile-web-app-title','Family '+M.nome);M.meta('og:title','Linha Family 32 · '+M.nome,true);
+const V3=(x,y,z)=>new THREE.Vector3(x,y,z);
+
+/* ---------- Conteúdo técnico (catálogo Family 32) ---------- */
+const DIF={
+  acustica:{t:'Atenuação acústica de 30 dB',d:'Ensaio no IPT: Rw (C;Ctr) = 30 (−1;−4) dB na porta de correr 2 folhas PCR200, folhas de 32 mm, vidro laminado 10 mm (5 mm + PVB + 5 mm) e cremona multiponto. Fechada, o barulho da rua chega bem mais baixo dentro de casa.',s:'Relatório IPT nº 1 145 785-203 · ISO 10140-2 e ISO 717-1 · ensaio de 11/09/2023'},
+  folha32:{t:'Folha de 32 mm',d:'Perfil de folha mais robusto: recebe vidro laminado e vãos maiores mantendo o visual fino. É o que dá nome à linha.',s:'Catálogo Family 32 · Lista e Mapa de Perfis'},
+  corte45:{t:'Cantos com corte a 45°',d:'Folhas montadas com corte a 45° e conexões internas. O canto fica contínuo, como a moldura de um quadro, sem emenda aparente.',s:'Catálogo Family 32 · Conexão das Folhas'},
+  cremona:{t:'Cremona multiponto',d:'Um giro na maçaneta trava a folha em vários pontos ao mesmo tempo. Mais segurança e a vedação fica pressionada por igual contra vento, poeira e ruído.',s:'Catálogo Family 32 · Aplicação de Cremonas (Roto Fermax / Udinese)'},
+  roldanas:{t:'Roldanas reguláveis',d:'Opções de roldanas de 40 kg a 200 kg conforme o peso da folha. A folha corre leve e pode ser regulada depois de instalada.',s:'Catálogo Family 32 · Aplicação de Roldanas'},
+  vedacao:{t:'Vedação e drenagem',d:'Escovas e guarnições nos marcos e folhas barram vento e poeira. Válvulas de dreno de 8 e 12 mm levam a água da chuva para fora.',s:'Catálogo Family 32 · Componentes de Vedação · Drenos'},
+  vidro:{t:'Vidro laminado',d:'Se o vidro quebrar, os pedaços ficam presos na película de PVB. Mais segurança para a família e ajuda no isolamento acústico.',s:'Catálogo Family 32 · Tabela de Vidros'},
+  trilho:{t:'Trilho embutido no piso',d:'O trilho fica no nível do piso. Passagem livre entre sala e varanda: sem degrau para tropeçar, para cadeira de rodas ou carrinho de bebê.',s:'Catálogo Family 32 · Mapa de Corte · Trilho Embutido'},
+  encontro:{t:'Abre pelo centro',d:'As duas folhas centrais se encontram no meio e correm para as laterais, liberando uma passagem larga no centro do vão.',s:'Catálogo Family 32 · Correr 4 folhas abre centro'},
+  persiana:{t:'Persiana integrada',d:'A persiana já vem no marco da esquadria, com caixa e guias próprias. Escurece o quarto, dá privacidade e protege do sol forte, sem caixa improvisada na fachada.',s:'Catálogo Family 32 · Persiana Integrada (porta até 2.800 mm de altura)'},
+  tela:{t:'Tela mosquiteira externa',d:'Tela correndo em trilho próprio do lado de fora. A janela fica aberta para ventilar e os mosquitos ficam do lado de fora.',s:'Catálogo Family 32 · Mapa de Corte · Tela Mosquiteira'},
+  oscilo:{t:'Duas aberturas em uma janela',d:'Com a maçaneta para cima ela tomba e abre uma fresta no alto para ventilar com segurança. Com a maçaneta de lado ela abre inteira para limpar o vidro por dentro.',s:'Catálogo Family 32 · Componentes Oscilo Batente'},
+  maximar:{t:'Braço com articulação progressiva',d:'Braços escolhidos pela altura e peso de cada folha. A janela projeta para fora e ventila mesmo com chuva fraca.',s:'Catálogo Family 32 · Braço do Maxim-ar'},
+  dobradica:{t:'Dobradiças para até 80 kg',d:'Dobradiças dimensionadas para folhas de até 80 kg e maçaneta com chave para portas.',s:'Catálogo Family 32 · Componentes Porta de Giro (Udinese)'},
+  acabamento:{t:'Acabamento de fábrica',d:'Pintura eletrostática a pó nas cores de mercado e pintura efeito madeira por sublimação, feitas dentro do Grupo TEXA. Troque a cor ao lado e veja na sua casa.',s:'Catálogo Family 32 · Conheça a Arkial (RT Colors)'}
+};
+const FIN={
+  preto:{n:'Preto',c:'#1f2022',m:.35,r:.5,sw:'#1f2022'},
+  grafite:{n:'Grafite',c:'#474b50',m:.55,r:.42,sw:'#474b50'},
+  branco:{n:'Branco',c:'#efeee9',m:.05,r:.45,sw:'#f4f3ee'},
+  bronze:{n:'Bronze',c:'#4d3628',m:.45,r:.45,sw:'#4d3628'},
+  natural:{n:'Natural',c:'#c3c6c9',m:.85,r:.3,sw:'linear-gradient(135deg,#e2e4e6,#9da1a5)'},
+  madeira:{n:'Madeira',c:'#ffffff',m:0,r:.62,sw:'linear-gradient(90deg,#8a5a36,#a87346 40%,#7a4b2c 70%,#9a6a42)',wood:true}
+};
+const AMB=[
+ {id:'sala',nome:'Sala de estar',tip:'Porta de correr 2 folhas',ref:'PCR · marco 2 vias · p. 82–86',type:'correr',n:2,W:2400,H:2200,sill:0,cremona:true,porta:true,fin:'preto',wall:'#ece5da',floor:'wood',ext:'cidade',props:'sala',db:72,
+  difs:['acustica','cremona','corte45','folha32','roldanas','vidro','vedacao','acabamento'],
+  needs:[['Silêncio','Fechada, a porta corta 30 dB do barulho da rua (ensaio IPT).'],['Segurança','Cremona trava em vários pontos e o vidro é laminado.'],['Luz e vista','Folhas finas e grandes panos de vidro.'],['Vento e chuva','Escovas, guarnições e drenos levam a água para fora.']]},
+ {id:'varanda',nome:'Varanda gourmet',tip:'Porta de correr 4 folhas abre centro',ref:'Trilho embutido · marco 2 vias · p. 97 e 129',type:'correr',n:4,W:3600,H:2400,sill:0,embutido:true,porta:true,fin:'grafite',wall:'#efe9df',floor:'wood',ext:'piscina',props:'varanda',db:55,
+  difs:['trilho','encontro','roldanas','corte45','folha32','vedacao','acabamento'],
+  needs:[['Sem degrau','Trilho no nível do piso: sala e varanda viram um ambiente só.'],['Abertura ampla','Abre pelo centro e libera a passagem principal.'],['Folhas grandes, uso leve','Roldanas de até 200 kg conforme o peso da folha.'],['Chuva de verão','Drenos e vedação seguram a água do lado de fora.']]},
+ {id:'quarto',nome:'Quarto do casal',tip:'Janela de correr 2 folhas com persiana integrada',ref:'Persiana integrada · p. 69 e 119',type:'correr',n:2,W:1600,H:1450,sill:950,persiana:true,fin:'branco',wall:'#e9e3d8',floor:'wood',ext:'jardim',props:'quarto',db:60,
+  difs:['persiana','acustica','vidro','corte45','vedacao','acabamento'],
+  needs:[['Escuro para dormir','Persiana fecha a luz da rua e do amanhecer.'],['Privacidade','Baixe a persiana sem fechar a janela.'],['Proteção do sol','Menos calor entrando no quarto à tarde.'],['Ventilar à noite','Persiana parcialmente baixada com a janela aberta.']]},
+ {id:'escritorio',nome:'Home office',tip:'Janela de correr 2 folhas com tela mosquiteira',ref:'Tela mosquiteira externa · p. 123–127',type:'correr',n:2,W:1500,H:1200,sill:1000,tela:true,fin:'natural',wall:'#e6e8e4',floor:'wood',ext:'jardim',props:'escritorio',db:60,
+  difs:['tela','folha32','corte45','vedacao','acabamento'],
+  needs:[['Sem mosquitos','Janela aberta com a tela do lado de fora.'],['Ar fresco','Ventilação cruzada no dia de trabalho.'],['Luz natural','Vidro amplo sobre a mesa.'],['Pouca manutenção','Alumínio pintado de fábrica, não enferruja nem apodrece.']]},
+ {id:'cozinha',nome:'Cozinha',tip:'Janela oscilo-batente 1 folha',ref:'Oscilo batente · p. 77 e 117',type:'oscilo',W:800,H:1000,sill:1150,fin:'natural',wall:'#efede7',floor:'tile',ext:'quintal',props:'cozinha',db:55,
+  difs:['oscilo','vedacao','corte45','vidro','acabamento'],
+  needs:[['Vapor e cheiro','Tombada, ventila o tempo todo sem abrir tudo.'],['Limpeza fácil','Abre inteira para dentro para limpar o vidro.'],['Segurança','Na posição tombada a fresta fica no alto.'],['Bancada livre','Abre para dentro sem bater em cortina ou grade.']]},
+ {id:'banheiro',nome:'Banheiro',tip:'Maxim-ar 2 módulos',ref:'Maxim-ar modelo A · p. 71 e 110',type:'maximar',W:700,H:1000,sill:1250,fosco:true,fin:'branco',wall:'tile',floor:'tile',ext:'jardim',props:'banheiro',db:55,
+  difs:['maximar','vedacao','corte45','acabamento'],
+  needs:[['Ventilação','Tira a umidade do banho mesmo com chuva fraca.'],['Privacidade','Instalada no alto, com vidro fosco à escolha.'],['Umidade','Alumínio pintado não estufa nem enferruja.'],['Abertura segura','Projeta para fora, sem ocupar espaço do banheiro.']]},
+ {id:'servico',nome:'Saída para a área de serviço',tip:'Porta de giro 1 folha',ref:'Porta de giro · p. 75 e 115',type:'giro',W:900,H:2150,sill:0,fin:'bronze',wall:'#ebe6dc',floor:'tile',ext:'quintal',props:'servico',db:55,
+  difs:['dobradica','vidro','corte45','vedacao','acabamento'],
+  needs:[['Passagem do dia a dia','Porta inteira, abre para dentro.'],['Segurança','Maçaneta com chave e vidro laminado.'],['Robustez','Dobradiças para folhas de até 80 kg.'],['Luz na área de serviço','Folha com vidro do rodapé até o alto.']]}
+];
+
+/* ---------- Texturas ---------- */
+let seed=7;const rnd=()=>{seed=(seed*16807)%2147483647;return(seed-1)/2147483646};
+function tex(w,h,draw,rep){const c=document.createElement('canvas');c.width=w;c.height=h;const g=c.getContext('2d');draw(g,w,h);const t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;t.anisotropy=8;if(rep){t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(rep[0],rep[1]);}return t}
+const T={};
+function makeTextures(){
+ T.wood=tex(1024,1024,(g,w,h)=>{const ph=64;for(let y=0;y<h;y+=ph){let x=-rnd()*300;while(x<w){const L=260+rnd()*340;const b=150+rnd()*35;g.fillStyle=`rgb(${b},${b*0.72|0},${b*0.5|0})`;g.fillRect(x,y,L,ph);g.globalAlpha=.12;for(let i=0;i<10;i++){g.fillStyle=rnd()>.5?'#3d2414':'#f0d2a8';g.fillRect(x,y+rnd()*ph,L,1+rnd()*2)}g.globalAlpha=1;g.fillStyle='rgba(40,22,10,.55)';g.fillRect(x,y,2,ph);x+=L}g.fillStyle='rgba(40,22,10,.5)';g.fillRect(0,y,w,2)}},[3,3]);
+ T.tile=tex(512,512,(g,w,h)=>{g.fillStyle='#cfc8bc';g.fillRect(0,0,w,h);const s=128;for(let y=0;y<h;y+=s)for(let x=0;x<w;x+=s){const b=222+rnd()*14;g.fillStyle=`rgb(${b},${b-4},${b-12})`;g.fillRect(x+2,y+2,s-4,s-4)}},[8,8]);
+ T.wallTile=tex(512,512,(g,w,h)=>{g.fillStyle='#d9d6cf';g.fillRect(0,0,w,h);const sx=256,sy=128;for(let y=0;y<h;y+=sy)for(let x=0;x<w;x+=sx){const b=236+rnd()*10;g.fillStyle=`rgb(${b},${b},${b-3})`;g.fillRect(x+2,y+2,sx-4,sy-4)}},[6,6]);
+ T.grass=tex(512,512,(g,w,h)=>{g.fillStyle='#5f8a3e';g.fillRect(0,0,w,h);for(let i=0;i<9000;i++){const b=rnd();g.fillStyle=b>.5?'rgba(120,160,70,.5)':'rgba(40,80,30,.45)';g.fillRect(rnd()*w,rnd()*h,2,3+rnd()*4)}},[40,40]);
+ T.deck=tex(512,512,(g,w,h)=>{for(let x=0;x<w;x+=64){const b=120+rnd()*30;g.fillStyle=`rgb(${b+20},${b-10|0},${b-40|0})`;g.fillRect(x,0,62,h);g.fillStyle='rgba(30,15,5,.6)';g.fillRect(x+62,0,2,h)}},[6,6]);
+ T.facade=tex(512,512,(g,w,h)=>{g.fillStyle='#d8d2c6';g.fillRect(0,0,w,h);for(let i=0;i<6000;i++){g.fillStyle=rnd()>.5?'rgba(255,255,255,.18)':'rgba(0,0,0,.06)';g.fillRect(rnd()*w,rnd()*h,2,2)}},[4,2]);
+ T.slat=tex(64,256,(g,w,h)=>{const s=32;for(let y=0;y<h;y+=s){const gr=g.createLinearGradient(0,y,0,y+s);gr.addColorStop(0,'#ffffff');gr.addColorStop(.75,'#cfcfcf');gr.addColorStop(1,'#7c7c7c');g.fillStyle=gr;g.fillRect(0,y,w,s)}},[1,1]);
+ T.mesh=tex(128,128,(g,w,h)=>{g.clearRect(0,0,w,h);g.strokeStyle='rgba(40,40,40,.55)';g.lineWidth=1;for(let i=0;i<=w;i+=4){g.beginPath();g.moveTo(i+.5,0);g.lineTo(i+.5,h);g.stroke();g.beginPath();g.moveTo(0,i+.5);g.lineTo(w,i+.5);g.stroke()}},[12,12]);
+ T.grain=tex(512,512,(g,w,h)=>{g.fillStyle='#93613b';g.fillRect(0,0,w,h);for(let i=0;i<160;i++){g.strokeStyle=rnd()>.5?'rgba(60,30,12,.35)':'rgba(200,150,100,.25)';g.lineWidth=1+rnd()*3;g.beginPath();let y=rnd()*h;g.moveTo(0,y);for(let x=0;x<=w;x+=32){y+=(rnd()-.5)*6;g.lineTo(x,y)}g.stroke()}},[2,8]);
+ T.skyDay=tex(8,256,(g,w,h)=>{const gr=g.createLinearGradient(0,0,0,h);gr.addColorStop(0,'#3f7fc0');gr.addColorStop(.46,'#a9d0ea');gr.addColorStop(.5,'#e7eef0');gr.addColorStop(1,'#cfd8d2');g.fillStyle=gr;g.fillRect(0,0,w,h)});
+ T.skyNight=tex(8,256,(g,w,h)=>{const gr=g.createLinearGradient(0,0,0,h);gr.addColorStop(0,'#070c1a');gr.addColorStop(.47,'#1f2f4d');gr.addColorStop(.5,'#3a3550');gr.addColorStop(1,'#0e1018');g.fillStyle=gr;g.fillRect(0,0,w,h)});
+ T.win=tex(256,512,(g,w,h)=>{g.fillStyle='#8a8f96';g.fillRect(0,0,w,h);for(let y=10;y<h;y+=34)for(let x=10;x<w;x+=30){g.fillStyle='#2c3440';g.fillRect(x,y,18,22)}},[1,1]);
+ T.winLit=tex(256,512,(g,w,h)=>{g.fillStyle='#000';g.fillRect(0,0,w,h);for(let y=10;y<h;y+=34)for(let x=10;x<w;x+=30){if(rnd()>.55){g.fillStyle=rnd()>.5?'#ffd391':'#ffe9c4';g.fillRect(x,y,18,22)}}},[1,1]);
+ T.rug=tex(256,256,(g,w,h)=>{g.fillStyle='#d6c8ae';g.fillRect(0,0,w,h);g.strokeStyle='#b49a76';g.lineWidth=6;g.strokeRect(14,14,w-28,h-28);g.lineWidth=2;g.strokeRect(28,28,w-56,h-56)});
+}
+
+/* ---------- Renderer / cena ---------- */
+const canvas=$('#gl');
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.outputEncoding=THREE.sRGBEncoding;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.05;
+renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+const scene=new THREE.Scene();
+const camera=new THREE.PerspectiveCamera(50,1,0.05,200);
+const controls=new THREE.OrbitControls(camera,canvas);
+controls.enableDamping=true;controls.enablePan=false;controls.minDistance=.6;controls.maxDistance=9;controls.maxPolarAngle=Math.PI*.58;
+makeTextures();
+
+const hemi=new THREE.HemisphereLight(0xdfeeff,0x8a7560,.55);scene.add(hemi);
+const sun=new THREE.DirectionalLight(0xfff1dc,2.1);sun.position.set(3.5,6.5,-7);sun.castShadow=true;
+sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-7,right:7,top:7,bottom:-7,near:1,far:30});sun.shadow.bias=-.0004;sun.shadow.normalBias=.02;
+scene.add(sun);scene.add(sun.target);sun.target.position.set(0,0,1.8);
+const fill=new THREE.PointLight(0xfff0dd,.35,12,2);fill.position.set(0,2.4,3.2);scene.add(fill);
+const lamp=new THREE.PointLight(0xffc98a,0,10,2);lamp.position.set(0,2.45,2.4);scene.add(lamp);
+const sky=new THREE.Mesh(new THREE.SphereGeometry(80,32,16),new THREE.MeshBasicMaterial({map:T.skyDay,side:THREE.BackSide,fog:false}));scene.add(sky);
+scene.fog=new THREE.Fog(0xdfe8ea,30,78);
+
+const glass=new THREE.MeshStandardMaterial({color:0xbad3d6,transparent:true,opacity:.2,roughness:.05,metalness:.3,depthWrite:false,side:THREE.DoubleSide});
+const frost=new THREE.MeshStandardMaterial({color:0xf2f5f5,transparent:true,opacity:.82,roughness:.9,metalness:0,side:THREE.DoubleSide});
+const rubber=new THREE.MeshStandardMaterial({color:0x151515,roughness:.9});
+const meshMat=new THREE.MeshStandardMaterial({map:T.mesh,transparent:true,depthWrite:false,side:THREE.DoubleSide,roughness:1});
+const alu=new THREE.MeshStandardMaterial({color:0x222222});
+const handleMat=new THREE.MeshStandardMaterial({color:0x202020,metalness:.6,roughness:.35});
+const slatMat=new THREE.MeshStandardMaterial({map:T.slat,side:THREE.DoubleSide,roughness:.55,metalness:.2});
+let lit=[]; // materiais emissivos noturnos
+
+function box(w,h,d,mat,x=0,y=0,z=0,cast=true){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);m.position.set(x,y,z);m.castShadow=cast;m.receiveShadow=true;return m}
+const mats={};const mat=(c,o={})=>{const k=c+JSON.stringify(o);return mats[k]||(mats[k]=new THREE.MeshStandardMaterial(Object.assign({color:c,roughness:.8},o)))};
+
+/* ---------- Perfis: barras com corte a 45° ---------- */
+function bar(pts,d,m){const s=new THREE.Shape();s.moveTo(pts[0][0],pts[0][1]);for(let i=1;i<pts.length;i++)s.lineTo(pts[i][0],pts[i][1]);s.closePath();
+ const g=new THREE.ExtrudeGeometry(s,{depth:d,bevelEnabled:true,bevelThickness:.0015,bevelSize:.0012,bevelSegments:1});g.translate(0,0,-d/2);
+ const me=new THREE.Mesh(g,m);me.castShadow=true;me.receiveShadow=true;return me}
+function frame(w,h,f,d,m,noBottom){const g=new THREE.Group(),a=w/2,b=h/2;
+ if(!noBottom)g.add(bar([[-a,-b],[a,-b],[a-f,-b+f],[-a+f,-b+f]],d,m));
+ g.add(bar([[-a,b],[-a+f,b-f],[a-f,b-f],[a,b]],d,m));
+ g.add(bar(noBottom?[[-a,-b],[-a+f,-b],[-a+f,b-f],[-a,b]]:[[-a,-b],[-a+f,-b+f],[-a+f,b-f],[-a,b]],d,m));
+ g.add(bar(noBottom?[[a,-b],[a,b],[a-f,b-f],[a-f,-b]]:[[a,-b],[a,b],[a-f,b-f],[a-f,-b+f]],d,m));return g}
+function leaf(w,h,o={}){const g=new THREE.Group(),f=o.f||.05,d=o.d||.032;
+ g.add(frame(w,h,f,d,alu));
+ const bead=frame(w-2*f+.002,h-2*f+.002,.012,.012,alu);bead.position.z=d/2-.006;g.add(bead);
+ const gk=frame(w-2*f+.002,h-2*f+.002,.006,.008,rubber);gk.position.z=-d/2+.005;g.add(gk);
+ const gl=new THREE.Mesh(new THREE.BoxGeometry(w-2*f+.01,h-2*f+.01,.01),o.fosco?frost:glass);gl.renderOrder=2;g.add(gl);
+ if(o.rodape){g.add(box(w-2*f,o.rodape,d*.9,alu,0,-h/2+f+o.rodape/2,0))}
+ return g}
+function concha(){return box(.022,.13,.008,handleMat,0,0,0,false)}
+function lever(){const g=new THREE.Group();g.add(box(.034,.14,.012,handleMat,0,0,0,false));const l=box(.022,.15,.02,handleMat,0,-.07,.02,false);g.add(l);return g}
+
+/* ---------- Tipologias ---------- */
+function buildWindow(c){
+ const W=c.W/1000,HF=c.H/1000,g=new THREE.Group(),o={g,hs:{},upd:()=>{},W,HF};
+ if(c.type==='correr'){
+  const boxH=c.persiana?.22:0,H=HF-boxH,yW=-HF/2+H/2,fm=.045,D=.072;
+  const mf=frame(W,H,fm,D,alu);mf.position.y=yW;g.add(mf);
+  const Wi=W-2*fm,Hi=H-2*fm,yb=yW-H/2+fm,zT=[-.019,.019];
+  zT.forEach(z=>{g.add(box(Wi,.012,.004,alu,0,yb+.006,z));g.add(box(Wi,.01,.004,alu,0,yb+Hi-.005,z))});
+  const ov=.05,L=[];
+  if(c.n===4){const Lw=Wi/4+ov/2,x0=-Wi/2+Lw/2,x1=-Lw/2;
+   [[x0,0,x0],[x1,1,x0+.07],[-x1,1,-x0-.07],[-x0,0,-x0]].forEach(d=>{const m=leaf(Lw,Hi-.004);m.position.set(d[0],yW,zT[d[1]]);g.add(m);L.push({m,a:d[0],b:d[2]})});
+   const h1=concha();h1.position.set(Lw/2-.03,0,.024);L[1].m.add(h1);const h2=concha();h2.position.set(-Lw/2+.03,0,.024);L[2].m.add(h2);
+   o.hs.encontro={obj:g,p:V3(0,yW+.25,.05)};o.hs.roldanas={obj:L[1].m,p:V3(0,-Hi/2+.04,.03)};o.hs.corte45={obj:L[0].m,p:V3(-Lw/2+.03,Hi/2-.03,.02)};
+   o.hs.folha32={obj:L[2].m,p:V3(Lw/2-.025,.35,.02)};o.hs.vedacao={obj:L[3].m,p:V3(-Lw/2+.02,-.3,.02)};
+  }else{const Lw=(Wi+ov)/2,xa=-Wi/2+Lw/2,xb=Wi/2-Lw/2;
+   const A=leaf(Lw,Hi-.004),B=leaf(Lw,Hi-.004);A.position.set(xa,yW,zT[0]);B.position.set(xb,yW,zT[1]);g.add(A,B);
+   L.push({m:A,a:xa,b:xa},{m:B,a:xb,b:xa+.07});
+   const hy=c.porta?(1.05-(c.sill/1000+fm)-Hi/2):0;
+   const hh=c.cremona?lever():concha();hh.position.set(-Lw/2+.026,hy,.026);B.add(hh);
+   o.hs.corte45={obj:A,p:V3(-Lw/2+.03,Hi/2-.03,.02)};o.hs.folha32={obj:B,p:V3(Lw/2-.025,Hi*.15,.02)};
+   o.hs.roldanas={obj:B,p:V3(0,-Hi/2+.04,.03)};o.hs.vedacao={obj:A,p:V3(Lw/2-.02,-Hi*.2,.02)};
+   o.hs.vidro={obj:A,p:V3(0,Hi*.12,.01)};o.hs.acustica={obj:B,p:V3(0,Hi*.3,.01)};
+   if(c.cremona)o.hs.cremona={obj:B,p:V3(-Lw/2+.026,hy+.05,.05)};
+   if(c.tela){const tg=new THREE.Group();tg.add(frame(Lw,Hi,.028,.012,alu));const pm=new THREE.Mesh(new THREE.PlaneGeometry(Lw-.05,Hi-.05),meshMat);pm.renderOrder=3;tg.add(pm);
+    tg.position.set(xb,yW,-D/2-.016);g.add(tg);g.add(box(W,.014,.022,alu,0,yW-H/2+.007,-D/2-.016),box(W,.014,.022,alu,0,yW+H/2-.007,-D/2-.016));
+    o.tela=tg;o.hs.tela={obj:tg,p:V3(0,0,.02)}}
+  }
+  if(c.persiana){g.add(box(W,boxH,D+.03,alu,0,HF/2-boxH/2,-.015));g.add(box(W-.02,.004,.002,rubber,0,HF/2-boxH+.01,D/2+.001,false));
+   [-1,1].forEach(s=>g.add(box(.028,H,.028,alu,s*(W/2-.014),yW,-D/2-.016)));
+   const cm=new THREE.Mesh(new THREE.PlaneGeometry(1,1),slatMat);cm.position.z=-D/2-.016;cm.castShadow=true;g.add(cm);o.curtain={m:cm,top:HF/2-boxH,H,W:W-.056};
+   o.hs.persiana={obj:g,p:V3(W*.25,HF/2-boxH/2,.06)}}
+  if(c.embutido)o.hs.trilho={obj:g,p:V3(W*.3,yb+.01,.06)};
+  o.hs.acabamento={obj:g,p:V3(W/2-.022,yW-H*.2,D/2)};
+  o.upd=s=>{L.forEach(l=>{l.m.position.x=l.a+(l.b-l.a)*s.open});if(o.tela)o.tela.visible=s.tela;
+   if(o.curtain){const h=Math.max(.001,o.curtain.H*s.blind);o.curtain.m.scale.set(o.curtain.W,h,1);o.curtain.m.position.y=o.curtain.top-h/2;o.curtain.m.visible=s.blind>.005;slatMat.map.repeat.set(1,h/.18)}};
+ }
+ if(c.type==='maximar'){const fm=.04,D=.06,H=HF;g.add(frame(W,H,fm,D,alu));const Wi=W-2*fm,Hi=H-2*fm;g.add(box(Wi,.045,D*.8,alu,0,0,0));
+  const hs=(Hi-.045)/2,P=[];[Hi/2,-.0225].forEach(top=>{const p=new THREE.Group();p.position.set(0,top,-.005);const s=leaf(Wi-.004,hs-.004,{f:.042,d:.04,fosco:c.fosco});s.position.y=-hs/2;p.add(s);
+   const h=box(.09,.018,.016,handleMat,0,-hs+.03,.03,false);p.add(h);g.add(p);P.push(p)});
+  o.hs.maximar={obj:P[0].children[0],p:V3(Wi/2-.03,-hs/2+.03,.03)};o.hs.vedacao={obj:P[1].children[0],p:V3(-Wi/2+.03,0,.03)};
+  o.hs.corte45={obj:P[1].children[0],p:V3(Wi/2-.03,-hs/2+.03,.03)};o.hs.acabamento={obj:g,p:V3(-W/2+.02,H/2-.02,D/2)};
+  o.upd=s=>P.forEach(p=>p.rotation.x=s.open*.55)}
+ if(c.type==='oscilo'){const fm=.045,D=.065,H=HF;g.add(frame(W,H,fm,D,alu));const Wi=W-2*fm,Hi=H-2*fm,ws=Wi-.004,hs=Hi-.004;
+  const turn=new THREE.Group();turn.position.set(-ws/2,0,0);const tilt=new THREE.Group();tilt.position.set(ws/2,-hs/2,0);turn.add(tilt);
+  const s=leaf(ws,hs,{f:.055,d:.045});s.position.y=hs/2;tilt.add(s);const h=lever();h.position.set(ws/2-.028,0,.03);s.add(h);g.add(turn);
+  o.hs.oscilo={obj:s,p:V3(ws/2-.028,.06,.06)};o.hs.vedacao={obj:s,p:V3(-ws/2+.03,-hs/4,.03)};o.hs.corte45={obj:s,p:V3(-ws/2+.03,hs/2-.03,.03)};
+  o.hs.vidro={obj:s,p:V3(0,0,.01)};o.hs.acabamento={obj:g,p:V3(W/2-.022,-H/3,D/2)};
+  o.upd=st=>{tilt.rotation.x=st.tilt*.2;turn.rotation.y=-st.turn*1.3}}
+ if(c.type==='giro'){const fm=.05,D=.07,H=HF;g.add(frame(W,H,fm,D,alu,true));g.add(box(W,.012,D+.05,alu,0,-H/2+.006,0));
+  const lw=W-2*fm-.006,lh=H-fm-.018,yc=-H/2+.012+lh/2;const p=new THREE.Group();p.position.set(-lw/2,yc,0);const s=leaf(lw,lh,{f:.065,d:.045,rodape:.12});s.position.x=lw/2;p.add(s);g.add(p);
+  const hy=-H/2+1.05-yc;const hdl=lever();hdl.position.set(lw/2-.05,hy,.03);s.add(hdl);s.add(box(.03,.03,.012,handleMat,lw/2-.05,hy-.12,.028,false));
+  [-.85,0,.85].forEach(k=>{const hg=new THREE.Mesh(new THREE.CylinderGeometry(.011,.011,.1,16),handleMat);hg.position.set(-lw/2-.004,k*lh/2,.03);g.add(hg)});
+  o.hs.dobradica={obj:g,p:V3(-lw/2-.004,.85*lh/2,.05)};o.hs.vidro={obj:s,p:V3(0,.2,.01)};o.hs.corte45={obj:s,p:V3(lw/2-.035,lh/2-.035,.03)};
+  o.hs.vedacao={obj:s,p:V3(lw/2-.03,-.3,.03)};o.hs.acabamento={obj:g,p:V3(W/2-.025,.4,D/2)};
+  o.upd=st=>{p.rotation.y=-st.open*1.4}}
+ return o}
+
+/* ---------- Ambiente ---------- */
+const RW=6.4,RD=5.2,RH=2.8,TW=.2;let world=null,model=null,cur=null,buildings=[];
+function tree(x,z,s=1){const g=new THREE.Group();g.add(box(.18*s,1.6*s,.18*s,mat('#5b4331'),0,.8*s,0));const f=mat(rnd()>.5?'#4e7a3a':'#3f6a33');
+ [[0,2.1,0,1],[.4,1.8,.2,.75],[-.35,1.9,-.2,.8]].forEach(q=>{const m=new THREE.Mesh(new THREE.IcosahedronGeometry(.9*s*q[3],1),f);m.position.set(q[0]*s,q[1]*s,q[2]*s);m.castShadow=true;g.add(m)});g.position.set(x,0,z);return g}
+function buildProps(a,G){const P=a.props;
+ if(P==='sala'){G.add(box(2.3,.42,.95,mat('#8b7b68'),0,.21,3.2),box(2.3,.5,.22,mat('#7d6d5b'),0,.62,3.62),box(.22,.62,.95,mat('#7d6d5b'),-1.15,.31,3.2),box(.22,.62,.95,mat('#7d6d5b'),1.15,.31,3.2));
+  G.add(box(.55,.12,.4,mat('#cdbb9c'),-.5,.5,3.1),box(.55,.12,.4,mat('#c9a77e'),.5,.5,3.1));
+  const r=new THREE.Mesh(new THREE.PlaneGeometry(3,2),new THREE.MeshStandardMaterial({map:T.rug,roughness:1}));r.rotation.x=-Math.PI/2;r.position.set(0,.004,2.2);r.receiveShadow=true;G.add(r);
+  G.add(box(1.1,.05,.6,mat('#4f3626',{roughness:.5}),0,.4,2.1));[[-.5,-.25],[.5,-.25],[-.5,.25],[.5,.25]].forEach(q=>G.add(box(.04,.38,.04,mat('#2a1d14'),q[0],.19,2.1+q[1])));
+  G.add(box(.4,.5,.4,mat('#d6cdbf'),-2.5,.25,.7));const pl=new THREE.Mesh(new THREE.IcosahedronGeometry(.42,1),mat('#4c7a3d'));pl.position.set(-2.5,.95,.7);pl.castShadow=true;G.add(pl);
+  G.add(box(.03,1.6,.03,mat('#222'),2.5,.8,.8));const sh=new THREE.Mesh(new THREE.CylinderGeometry(.16,.24,.28,24,1,true),new THREE.MeshStandardMaterial({color:0xf3e9d6,emissive:0xffcf8a,emissiveIntensity:0,side:THREE.DoubleSide}));sh.position.set(2.5,1.62,.8);G.add(sh);lit.push(sh.material)}
+ if(P==='varanda'){G.add(box(1.9,.05,.95,mat('#6b4a33',{roughness:.5}),0,.75,2.6));[[-.85,-.4],[.85,-.4],[-.85,.4],[.85,.4]].forEach(q=>G.add(box(.05,.73,.05,mat('#2a1d14'),q[0],.365,2.6+q[1])));
+  [-.55,.55].forEach(x=>[1.95,3.25].forEach(z=>{G.add(box(.45,.05,.45,mat('#c9b79b'),x,.46,z),box(.45,.5,.05,mat('#c9b79b'),x,.7,z+(z>2.6?.2:-.2)))}));
+  const pd=new THREE.Mesh(new THREE.CylinderGeometry(.2,.2,.12,24),new THREE.MeshStandardMaterial({color:0x2b2b2b,emissive:0xffcf8a,emissiveIntensity:0}));pd.position.set(0,2.25,2.6);G.add(pd);lit.push(pd.material)}
+ if(P==='quarto'){G.add(box(2.1,.35,1.7,mat('#7a6250'),1.95,.175,2.3),box(2.05,.22,1.64,mat('#f1ece3'),1.95,.46,2.3),box(1.35,.07,1.68,mat('#93a9b1'),1.55,.6,2.3),box(.08,1.05,1.8,mat('#6b5444'),3.12,.6,2.3));
+  G.add(box(.35,.16,.5,mat('#fbf8f2'),2.75,.65,1.9),box(.35,.16,.5,mat('#fbf8f2'),2.75,.65,2.7),box(.45,.5,.4,mat('#6b5444'),2.85,.25,1.1))}
+ if(P==='escritorio'){G.add(box(1.5,.04,.7,mat('#d8c3a5',{roughness:.5}),0,.74,.85));[[-.7,-.3],[.7,-.3],[-.7,.3],[.7,.3]].forEach(q=>G.add(box(.04,.72,.04,mat('#222'),q[0],.36,.85+q[1])));
+  G.add(box(.6,.36,.03,mat('#111',{roughness:.3}),0,1.0,.75),box(.5,.06,.5,mat('#333'),0,.48,1.6),box(.5,.55,.06,mat('#333'),0,.8,1.85));
+  G.add(box(.35,1.9,1.4,mat('#e6dccb'),-3.0,.95,2.2));for(let i=0;i<4;i++)G.add(box(.3,.02,1.3,mat('#cbbba0'),-2.98,.35+i*.45,2.2))}
+ if(P==='cozinha'){G.add(box(RW,.9,.62,mat('#e7e2d8'),0,.45,.31),box(RW,.04,.64,mat('#3a3633',{roughness:.3}),0,.92,.32));
+  G.add(box(.6,.02,.42,mat('#a9aeb2',{metalness:.8,roughness:.25}),1.15,.935,.33));const ft=new THREE.Mesh(new THREE.CylinderGeometry(.015,.015,.28,12),mat('#b7bcc0',{metalness:.9,roughness:.2}));ft.position.set(1.15,1.08,.15);G.add(ft);
+  [-2.25,2.25].forEach(x=>G.add(box(1.7,.72,.36,mat('#d9cfbf'),x,2.05,.18)))}
+ if(P==='banheiro'){G.add(box(1.0,.82,.5,mat('#5b4636'),-1.7,.41,.25),box(1.02,.04,.52,mat('#f4f2ee',{roughness:.2}),-1.7,.84,.26));
+  const mr=box(.8,.9,.02,mat('#cfd8da',{metalness:.9,roughness:.08}),-1.7,1.55,.012,false);G.add(mr);
+  G.add(box(.4,.4,.55,mat('#f6f6f4',{roughness:.3}),1.5,.2,.4),box(.42,.35,.18,mat('#f6f6f4',{roughness:.3}),1.5,.55,.1))}
+ if(P==='servico'){G.add(box(.62,.86,.62,mat('#f4f4f2',{roughness:.35}),2.2,.43,.4),box(.62,.86,.62,mat('#f4f4f2',{roughness:.35}),2.9,.43,.4));
+  const dr=new THREE.Mesh(new THREE.CircleGeometry(.2,32),mat('#33393f',{roughness:.2}));dr.position.set(2.2,.48,.715);G.add(dr);G.add(box(.9,.02,.55,mat('#8a7a64'),0,.01,.75,false))}
+}
+function buildExterior(a,G){const e=a.ext;
+ const gr=new THREE.Mesh(new THREE.PlaneGeometry(160,160),new THREE.MeshStandardMaterial({map:T.grass,roughness:1}));gr.rotation.x=-Math.PI/2;gr.position.y=-.06;gr.receiveShadow=true;G.add(gr);
+ const deckY=a.embutido?-.001:-.03;const dk=new THREE.Mesh(new THREE.PlaneGeometry(RW+.4,3.2),new THREE.MeshStandardMaterial({map:T.deck,roughness:.8}));dk.rotation.x=-Math.PI/2;dk.position.set(0,deckY,-TW-1.6);dk.receiveShadow=true;G.add(dk);
+ seed=11+a.id.length;
+ if(e==='cidade'){const rd=box(160,.02,9,mat('#4a4a4c',{roughness:.9}),0,-.05,-9.5,false);G.add(rd);
+  for(let i=-5;i<=5;i++){const h=8+rnd()*16,w=5+rnd()*3;const t1=T.win.clone(),t2=T.winLit.clone();t1.needsUpdate=t2.needsUpdate=true;t1.wrapS=t1.wrapT=t2.wrapS=t2.wrapT=THREE.RepeatWrapping;t1.repeat.set(w/4,h/8);t2.repeat.copy(t1.repeat);
+   const m=new THREE.MeshStandardMaterial({map:t1,emissiveMap:t2,emissive:0xffffff,emissiveIntensity:0,roughness:.9});lit.push(m);G.add(box(w,h,6,m,i*7.5,h/2,-20-rnd()*6))}
+  [-4,-1.5,2,4.5].forEach(x=>G.add(tree(x,-5,1)))}
+ if(e==='piscina'){const pool=box(4.2,.05,2.2,new THREE.MeshStandardMaterial({color:0x2f8fb3,roughness:.05,metalness:.2,emissive:0x0b3f55,emissiveIntensity:.3}),0,-.02,-5.4,false);G.add(pool);
+  G.add(box(4.6,.06,.2,mat('#e9e2d4'),0,-.03,-4.2,false),box(4.6,.06,.2,mat('#e9e2d4'),0,-.03,-6.6,false));
+  for(let i=0;i<4;i++){const h=new THREE.Mesh(new THREE.SphereGeometry(14+rnd()*8,24,12),mat('#6d8f5a'));h.scale.y=.35;h.position.set(-30+i*20,-2,-45-rnd()*10);G.add(h)}
+  [-4.5,4.8,-6,6.5].forEach((x,i)=>G.add(tree(x,-4-i*1.5,1.1)))}
+ if(e==='jardim'||e==='quintal'){for(let i=0;i<9;i++)G.add(tree(-7+i*1.8+rnd(),-4-rnd()*7,.8+rnd()*.5));
+  if(e==='quintal'){for(let x=-8;x<=8;x+=.25)G.add(box(.08,1.6,.04,mat('#9a8064'),x,.8,-9,false));G.add(box(.05,1.8,.05,mat('#888'),-1.5,.9,-3.5),box(.05,1.8,.05,mat('#888'),1.5,.9,-3.5),box(3,.01,.01,mat('#ddd'),0,1.75,-3.5,false))}}
+}
+function buildRoom(a){if(world){scene.remove(world)}lit=[];world=new THREE.Group();scene.add(world);
+ const W=a.W/1000,HF=a.H/1000,fm=.045;const sill=a.embutido?-fm:a.sill/1000;const hb=Math.max(0,sill),ht=sill+HF;
+ const shp=new THREE.Shape();shp.moveTo(-RW/2,0);shp.lineTo(RW/2,0);shp.lineTo(RW/2,RH);shp.lineTo(-RW/2,RH);shp.closePath();
+ const hole=new THREE.Path();hole.moveTo(-W/2,hb);hole.lineTo(-W/2,ht);hole.lineTo(W/2,ht);hole.lineTo(W/2,hb);hole.closePath();shp.holes.push(hole);
+ const wallMat=a.wall==='tile'?new THREE.MeshStandardMaterial({map:T.wallTile,roughness:.35}):mat(a.wall,{roughness:.92});
+ const wg=new THREE.ExtrudeGeometry(shp,{depth:TW,bevelEnabled:false});const wm=new THREE.Mesh(wg,wallMat);wm.position.z=-TW;wm.castShadow=wm.receiveShadow=true;world.add(wm);
+ const fac=new THREE.Mesh(new THREE.ShapeGeometry(shp),new THREE.MeshStandardMaterial({map:T.facade,roughness:.95}));fac.rotation.y=Math.PI;fac.position.z=-TW-.002;fac.receiveShadow=true;world.add(fac);
+ const fl=new THREE.MeshStandardMaterial({map:a.floor==='tile'?T.tile:T.wood,roughness:a.floor==='tile'?.4:.55});world.add(box(RW+2*TW,.05,RD+TW,fl,0,-.025,RD/2-TW/2));
+ world.add(box(RW+2*TW,.08,RD+TW,mat('#f3f0ea'),0,RH+.04,RD/2-TW/2));
+ [-1,1].forEach(s=>world.add(box(TW,RH,RD+TW,wallMat,s*(RW/2+TW/2),RH/2,RD/2-TW/2)));
+ world.add(box(RW,.08,.015,mat('#f6f3ee'),0,.04,.008,false));
+ buildExterior(a,world);buildProps(a,world);
+ model=buildWindow(a);model.g.position.set(0,sill+HF/2,-TW/2);world.add(model.g);
+ applyFinish(state.fin);applyNight();buildHotspots();}
+
+/* ---------- Estado e acabamento ---------- */
+const state={open:0,blind:0,tilt:0,turn:0,tela:true,fin:'preto',night:false};
+const target={open:0,blind:0,tilt:0,turn:0};
+function applyFinish(k){state.fin=k;const f=FIN[k];alu.color.set(f.c);alu.metalness=f.m;alu.roughness=f.r;alu.map=f.wood?T.grain:null;alu.needsUpdate=true;
+ slatMat.color.set(f.wood?'#c08a5a':f.c);handleMat.color.set(k==='branco'?'#e9e9e6':(k==='natural'?'#b9bcbf':'#1e1e1e'));
+ document.querySelectorAll('.sw').forEach(b=>b.setAttribute('aria-pressed',b.dataset.k===k))}
+function applyNight(){const n=state.night;sky.material.map=n?T.skyNight:T.skyDay;sky.material.needsUpdate=true;sun.intensity=n?0:2.1;hemi.intensity=n?.12:.55;
+ hemi.color.set(n?0x6070a0:0xdfeeff);fill.intensity=n?.2:.35;lamp.intensity=n?1.3:0;scene.fog.color.set(n?0x141a2a:0xdfe8ea);renderer.toneMappingExposure=n?1.25:1.05;
+ lit.forEach(m=>m.emissiveIntensity=n?(m.emissiveMap?1:1.6):0)}
+
+/* ---------- Câmera ---------- */
+let tw=null;
+function viewFor(a,out){const W=a.W/1000,HF=a.H/1000,sill=a.embutido?0:a.sill/1000;const ty=Math.min(1.6,sill+HF/2);const t=V3(0,ty,-TW/2);
+ const dist=Math.max(1.9,W*1.15+HF*.5);return out?{p:V3(.9,Math.max(1.2,ty),-dist-.6),t}:{p:V3(.7,Math.max(1.35,ty+.1),Math.min(RD-.3,dist+.4)),t}}
+function goTo(v,dur=1.1){tw={p0:camera.position.clone(),t0:controls.target.clone(),p1:v.p,t1:v.t,s:performance.now(),d:dur*1000}}
+
+/* ---------- Pontos de destaque ---------- */
+let hsList=[];
+function buildHotspots(){const L=$('#hsLayer');L.innerHTML='';hsList=[];
+ cur.difs.forEach((k,i)=>{const h=model.hs[k];if(!h)return;const b=document.createElement('button');b.className='hs';b.innerHTML=(i+1)+'<span class="tip">'+DIF[k].t+'</span>';b.setAttribute('aria-label',DIF[k].t);
+  b.onclick=()=>{openDif(k,true)};L.appendChild(b);hsList.push({k,h,b})})}
+function wpos(h){return h.obj.localToWorld(h.p.clone())}
+function focusDif(k){const h=model.hs[k];if(!h)return;const p=wpos(h);const dir=camera.position.clone().sub(controls.target).normalize();
+ if(k==='trilho'||k==='roldanas')dir.set(.35,.7,1).normalize();goTo({p:p.clone().add(dir.multiplyScalar(k==='acabamento'?.8:1.05)),t:p})}
+function openDif(k,focus){document.querySelectorAll('.dif').forEach(d=>d.classList.toggle('open',d.dataset.k===k&&!(d.classList.contains('open')&&!focus)));
+ hsList.forEach(x=>x.b.classList.toggle('on',x.k===k));const el=document.querySelector('.dif[data-k="'+k+'"]');if(el&&focus)el.scrollIntoView({block:'nearest',behavior:'smooth'});
+ if(focus)focusDif(k)}
+
+/* ---------- Painel ---------- */
+function renderStrip(){$('#ambStrip').innerHTML=AMB.map(a=>`<button data-id="${a.id}" aria-pressed="${cur&&cur.id===a.id}">${a.nome}<span>${a.tip}</span></button>`).join('');
+ document.querySelectorAll('#ambStrip button').forEach(b=>b.onclick=()=>setAmb(b.dataset.id))}
+function renderDock(){const a=cur,d=$('#dock');let h='';
+ if(a.type==='oscilo'){h+=`<button class="main" id="bTilt" aria-pressed="${target.tilt>0}">${target.tilt>0?'Fechar':'Tombar para ventilar'}</button><button id="bTurn" aria-pressed="${target.turn>0}">${target.turn>0?'Fechar':'Abrir para limpar'}</button>`}
+ else h+=`<button class="main" id="bOpen">${target.open>0?'Fechar':'Abrir'}</button>`;
+ if(a.persiana)h+=`<button id="bBlind" aria-pressed="${target.blind>0}">${target.blind>0?'Subir persiana':'Baixar persiana'}</button>`;
+ if(a.tela)h+=`<button id="bTela" aria-pressed="${state.tela}">Tela ${state.tela?'ligada':'desligada'}</button>`;
+ h+=`<button id="bOut" aria-pressed="${viewOut}">${viewOut?'Ver de dentro':'Ver de fora'}</button><button id="bNight" aria-pressed="${state.night}">${state.night?'Dia':'Noite'}</button>`;
+ d.innerHTML=h;
+ const on=(id,f)=>{const e=$(id);if(e)e.onclick=()=>{f();renderDock();updAcu()}};
+ on('#bOpen',()=>target.open=target.open>0?0:1);on('#bTilt',()=>{target.turn=0;target.tilt=target.tilt>0?0:1});on('#bTurn',()=>{target.tilt=0;target.turn=target.turn>0?0:1});
+ on('#bBlind',()=>target.blind=target.blind>0?0:.85);on('#bTela',()=>state.tela=!state.tela);
+ on('#bOut',()=>{viewOut=!viewOut;goTo(viewFor(cur,viewOut))});on('#bNight',()=>{state.night=!state.night;applyNight()})}
+let viewOut=false;
+function renderPanel(){const a=cur;$('#pAmb').textContent=a.nome;$('#pTip').textContent=a.tip;
+ $('#pSpec').innerHTML=`<span>${a.W} × ${a.H} mm</span><span>${a.ref}</span><span>Linha Family 32</span>`;
+ $('#pNeeds').innerHTML=a.needs.map(n=>`<div class="need"><b>${n[0]}</b><p>${n[1]}</p></div>`).join('');
+ $('#pDifs').innerHTML=a.difs.filter(k=>model.hs[k]||k==='acustica').map((k,i)=>`<div class="dif" data-k="${k}"><button aria-expanded="false"><span class="n">${a.difs.indexOf(k)+1}</span><span class="t">${DIF[k].t}</span><span class="chev">›</span></button><div class="body">${DIF[k].d}<span class="src">${DIF[k].s}</span></div></div>`).join('');
+ document.querySelectorAll('.dif>button').forEach(b=>b.onclick=()=>{const k=b.parentElement.dataset.k;const was=b.parentElement.classList.contains('open');
+  document.querySelectorAll('.dif').forEach(d=>d.classList.remove('open'));hsList.forEach(x=>x.b.classList.remove('on'));if(!was){b.parentElement.classList.add('open');hsList.forEach(x=>x.b.classList.toggle('on',x.k===k));focusDif(k)}});
+ $('#pSw').innerHTML=Object.entries(FIN).map(([k,f])=>`<button class="sw" data-k="${k}" aria-pressed="${state.fin===k}"><i style="background:${f.sw}"></i>${f.n}</button>`).join('');
+ document.querySelectorAll('.sw').forEach(b=>b.onclick=()=>applyFinish(b.dataset.k));
+ $('#ruaDb').value=a.db;
+ $('#acuNote').textContent=a.id==='sala'?'Esta é a configuração ensaiada no IPT: porta de correr 2 folhas, vidro laminado 10 mm e cremona multiponto. Simulação ilustrativa, valores aproximados.':
+  'O ensaio de 30 dB foi feito na porta de correr 2 folhas com vidro laminado 10 mm. Nesta tipologia o resultado depende do vidro escolhido e da instalação; aqui é uma referência ilustrativa.';
+ updAcu()}
+function setAmb(id){cur=AMB.find(a=>a.id===id);Object.assign(target,{open:0,blind:0,tilt:0,turn:0});Object.assign(state,{open:0,blind:0,tilt:0,turn:0,tela:true});state.fin=cur.fin;viewOut=false;
+ buildRoom(cur);renderStrip();renderDock();renderPanel();const v=viewFor(cur,false);camera.position.copy(v.p).add(V3(.6,.3,.8));controls.target.copy(v.t);goTo(v,1.4);try{localStorage.setItem(M.ls('fam_amb'),id)}catch(e){}}
+
+/* ---------- Acústica ---------- */
+const refDb=d=>d<35?'como um sussurro':d<45?'como uma biblioteca':d<55?'como um escritório silencioso':d<65?'como uma conversa normal':d<75?'como uma rua movimentada':'como trânsito pesado';
+function attNow(){const a=cur;const op=a.type==='oscilo'?Math.max(state.tilt*.6,state.turn):state.open;return 3+27*Math.pow(1-Math.min(1,op),8)}
+function updAcu(){const out=+$('#ruaDb').value,att=attNow(),inn=Math.round(out-att);
+ $('#outLbl').textContent=out+' dB · '+refDb(out);$('#vOut').textContent=out+' dB';$('#vIn').textContent=inn+' dB';
+ $('#barOut').style.width=(out/90*100)+'%';$('#barIn').style.width=(Math.max(0,inn)/90*100)+'%';
+ $('#bigIn').innerHTML=inn+'<small>dB dentro</small>';$('#inLbl').textContent=(att>20?'Fechada: ':'Aberta: ')+refDb(inn)+'.';
+ if(audio){audio.g.gain.setTargetAtTime(Math.pow(10,(out-85)/20)*.9*Math.pow(10,-att/20),audio.ctx.currentTime,.15);audio.f.frequency.setTargetAtTime(att>20?650:6000,audio.ctx.currentTime,.15)}}
+$('#ruaDb').oninput=updAcu;document.querySelectorAll('.presets button').forEach(b=>b.onclick=()=>{$('#ruaDb').value=b.dataset.db;updAcu()});
+let audio=null;
+$('#play').onclick=()=>{if(audio){audio.ctx.close();audio=null;$('#play').textContent='Ouvir a diferença';return}
+ try{const ctx=new (window.AudioContext||window.webkitAudioContext)();const len=ctx.sampleRate*4,buf=ctx.createBuffer(1,len,ctx.sampleRate),d=buf.getChannelData(0);let last=0;
+  for(let i=0;i<len;i++){const w=Math.random()*2-1;last=(last+.02*w)/1.02;d[i]=last*3.2*(.75+.25*Math.sin(i/ctx.sampleRate*Math.PI*.5))}
+  const src=ctx.createBufferSource();src.buffer=buf;src.loop=true;const f=ctx.createBiquadFilter();f.type='lowpass';const g=ctx.createGain();g.gain.value=0;src.connect(f).connect(g).connect(ctx.destination);src.start();
+  audio={ctx,f,g};$('#play').textContent='Parar som';updAcu()}catch(e){$('#play').textContent='Som indisponível neste aparelho'}};
+
+/* ---------- Abas e modo evento ---------- */
+let simLoaded=false;
+function setTab(sim){$('#tabAmb').setAttribute('aria-selected',!sim);$('#tabSim').setAttribute('aria-selected',sim);$('#simWrap').hidden=!sim;document.body.classList.toggle('sim',sim);
+ $('#panel').style.display=sim?'none':'';$('main').style.gridTemplateColumns=sim?'1fr':'';
+ if(sim&&!simLoaded){$('#simFrame').src=$('#simFrame').dataset.src;simLoaded=true}if(!sim)setTimeout(resize,30);try{localStorage.setItem(M.ls('fam_tab'),sim?'sim':'amb')}catch(e){}}
+$('#tabAmb').onclick=()=>setTab(false);$('#tabSim').onclick=()=>setTab(true);
+let ev=null;
+function eventStep(i){if(!ev)return;const a=AMB[i%AMB.length];setAmb(a.id);let j=0;const ks=a.difs.filter(k=>model.hs[k]);
+ const cap=(k)=>{$('#capK').textContent=M.nome+' · Linha Family 32 · '+a.nome;$('#capT').textContent=k?DIF[k].t:a.tip;$('#capD').textContent=k?DIF[k].d:a.needs.map(n=>n[0]).join(' · ')};cap(null);
+ ev.t=[setTimeout(()=>{if(a.type==='oscilo')target.tilt=1;else target.open=1;if(a.persiana)target.blind=.6},2500),
+  setTimeout(()=>{cap(ks[0]);focusDif(ks[0])},5500),setTimeout(()=>{cap(ks[1]);focusDif(ks[1])},10000),
+  setTimeout(()=>{target.open=target.tilt=target.blind=0;cap(null);goTo(viewFor(a,true),2)},14500),
+  setTimeout(()=>eventStep(i+1),19000)]}
+$('#btnEvento').onclick=()=>{if(ev){ev.t.forEach(clearTimeout);ev=null;document.body.classList.remove('evento');$('#btnEvento').textContent='Modo evento';setTimeout(resize,30);return}
+ setTab(false);ev={t:[]};document.body.classList.add('evento');qrShow(true);$('#btnEvento').textContent='Sair do modo evento';setTimeout(resize,30);
+ try{document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen().catch(()=>{})}catch(e){}eventStep(AMB.findIndex(a=>a.id===cur.id))};
+
+/* ---------- Loop ---------- */
+function resize(){const s=$('#stage');const w=s.clientWidth,h=s.clientHeight;if(!w||!h)return;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()}
+addEventListener('resize',resize);new ResizeObserver(resize).observe($('#stage'));
+let last=performance.now();const tmp=V3(0,0,0);
+function loop(now){requestAnimationFrame(loop);const dt=Math.min(.05,(now-last)/1000);last=now;
+ if(!$('#simWrap').hidden)return;
+ let moved=false;for(const k in target){const d=target[k]-state[k];if(Math.abs(d)>.0005){state[k]+=d*Math.min(1,dt*2.6);moved=true}else state[k]=target[k]}
+ if(model)model.upd(state);if(moved)updAcu();
+ if(tw){const t=Math.min(1,(now-tw.s)/tw.d),e=t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;camera.position.lerpVectors(tw.p0,tw.p1,e);controls.target.lerpVectors(tw.t0,tw.t1,e);if(t>=1)tw=null}
+ if(ev&&!tw){const a=Math.sin(now/4000)*.0009;camera.position.sub(controls.target).applyAxisAngle(V3(0,1,0),a).add(controls.target)}
+ controls.update();renderer.render(scene,camera);
+ const w=canvas.clientWidth,h=canvas.clientHeight;
+ hsList.forEach(x=>{tmp.copy(wpos(x.h)).project(camera);const vis=tmp.z<1&&Math.abs(tmp.x)<1.05&&Math.abs(tmp.y)<1.05;x.b.style.display=vis?'grid':'none';if(vis)x.b.style.transform=`translate(${(tmp.x+1)/2*w}px,${(1-tmp.y)/2*h}px)`})}
+controls.addEventListener('start',()=>{tw=null});
+
+let startId='sala';try{const s=localStorage.getItem(M.ls('fam_amb'));if(s&&AMB.some(a=>a.id===s))startId=s}catch(e){}
+resize();setAmb(startId);requestAnimationFrame(loop);
+/* QR no canto da tela:
+   Ambientes 3D → abre no celular do cliente exatamente o ambiente que o vendedor montou (tipologia, cor, aberta, noite…)
+   Modo evento → só o QR do próprio modo evento.  Simulador → o QR sai do botão "QR para o cliente". */
+const QR_BASE=M.site;
+function urlAmbiente(){const q=new URLSearchParams();q.set('a',cur.id);q.set('c',state.fin);if(target.open>0||target.tilt>0||target.turn>0)q.set('o',target.tilt>0?'t':target.turn>0?'g':'1');
+ if(state.night)q.set('n','1');if(target.blind>0)q.set('b',Math.round(target.blind*100));if(cur.tela&&!state.tela)q.set('t','0');if(viewOut)q.set('v','fora');return QR_BASE+'?'+q.toString()+'#ambientes'}
+let qrUlt='';
+function qrAtualiza(){if(typeof qrcode==='undefined'||!cur)return;const evento=!!ev;const u=evento?QR_BASE+'#evento':urlAmbiente();if(u===qrUlt)return;qrUlt=u;
+ try{const q=qrcode(0,'M');q.addData(u);q.make();$('#qrImg').src=q.createDataURL(8,2)}catch(e){}
+ $('#qrCap').textContent=evento?'Modo evento':(cur.nome+' · '+FIN[state.fin].n);$('#qrTt').textContent=evento?'Abra no seu celular':'Este ambiente no seu celular'}
+setInterval(qrAtualiza,700);
+/* abre com o ambiente que veio no QR */
+function aplicaParametros(){let q;try{q=new URLSearchParams(location.search)}catch(e){return}if(!q.get('a'))return;
+ if(AMB.some(a=>a.id===q.get('a')))setAmb(q.get('a'));if(FIN[q.get('c')])applyFinish(q.get('c'));
+ const o=q.get('o');if(o==='t')target.tilt=1;else if(o==='g')target.turn=1;else if(o)target.open=1;
+ if(q.get('b'))target.blind=Math.min(1,(+q.get('b')||0)/100);if(q.get('t')==='0')state.tela=false;if(q.get('n')==='1'){state.night=true;applyNight()}
+ if(q.get('v')==='fora'){viewOut=true;goTo(viewFor(cur,true),1.4)}renderDock()}
+aplicaParametros();
+/* QR no canto: recolhe/abre; no celular começa recolhido */
+function qrShow(on){$('#qrBox').hidden=!on;$('#qrPill').hidden=on}
+$('#qrX').onclick=()=>qrShow(false);$('#qrPill').onclick=()=>qrShow(true);
+qrShow(!matchMedia('(max-width:600px)').matches);
+/* Endereços diretos (QR Codes): #ambientes · #evento · #simulador */
+function rota(){const h=(location.hash||'').replace('#','');
+ if(h==='simulador'){if(ev)$('#btnEvento').click();setTab(true)}
+ else if(h==='evento'){if(!ev)$('#btnEvento').click()}
+ else if(h==='ambientes'){if(ev)$('#btnEvento').click();setTab(false)}
+ else{try{if(localStorage.getItem(M.ls('fam_tab'))==='sim')setTab(true)}catch(e){}}}
+addEventListener('hashchange',rota);rota();
+/* ---------- App: funciona sem internet ---------- */
+(function(){
+ const chip=$('#netChip'),bI=$('#btnInstalar');let pronto=false,promptEv=null;
+ function net(){chip.hidden=false;if(!navigator.onLine){chip.textContent='Sem internet · usando o app do aparelho';chip.classList.add('off')}
+  else{chip.classList.remove('off');chip.textContent=pronto?'Pronto para usar sem internet':'Guardando para usar sem internet…'}}
+ addEventListener('online',net);addEventListener('offline',net);
+ if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js',{scope:'./'}).then(()=>navigator.serviceWorker.ready).then(()=>{pronto=true;net()}).catch(()=>{chip.hidden=true});net()}
+ const ios=/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+ const instalado=matchMedia('(display-mode: standalone)').matches||navigator.standalone;
+ addEventListener('beforeinstallprompt',e=>{e.preventDefault();promptEv=e;if(!instalado)bI.hidden=false});
+ if(ios&&!instalado)bI.hidden=false;
+ bI.onclick=async()=>{if(promptEv){promptEv.prompt();try{await promptEv.userChoice}catch(_){}promptEv=null;bI.hidden=true;return}
+  if(ios){const d=document.createElement('div');d.className='dica-ios';d.innerHTML='<b>Instalar no iPhone / iPad</b>Toque em <b style="display:inline">Compartilhar</b> (quadrado com seta para cima) e depois em <b style="display:inline">Adicionar à Tela de Início</b>. Abra pelo ícone Family '+M.nome+'.<br><button type="button">Entendi</button>';document.body.appendChild(d);d.querySelector('button').onclick=()=>d.remove()}};
+ addEventListener('appinstalled',()=>{bI.hidden=true});
+ if(instalado)bI.hidden=true;
+})();
+
+</script>
+
+</body>
+</html>
