@@ -392,10 +392,9 @@
         </section>
         <section class="etp" id="etpReb">
           <h4><span class="n">3</span>Aplicar reboco <small style="font-weight:500;color:#94a3b8">(opcional)</small></h4>
-          <p>A parede ao redor do vão ganha acabamento, arrematando no contramarco. Escolher a cor já aplica o reboco.</p>
+          <p>Reboco de 20 cm em cada lado do vão, arrematando no contramarco. Escolher a cor já aplica o reboco.</p>
           <button type="button" id="btnReb" class="btn w-full">Aplicar reboco</button>
           <div class="parede" id="gridParede"></div>
-          <label style="display:block;margin-top:8px;font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.05em">Tamanho da parede rebocada<input id="rebArea" type="range" min="15" max="120" value="60" step="1" style="width:100%;accent-color:#e65c00"></label>
         </section>
         <section class="etp" id="etpEsq">
           <h4><span class="n">4</span>Tipologia</h4>
@@ -1489,11 +1488,11 @@
 
   function camadaReboco(vao, base) {
     const cor = PAREDES.find(p => p.id === vao.et.parede) || PAREDES[0];
-    const A = +vao.et.area || .6, c = tmpCanvas(vao, '_reb'), chave = JSON.stringify([base, cor.id, A]);
+    const md = medidasVao(vao), c = tmpCanvas(vao, '_reb'), chave = JSON.stringify([base, cor.id, md.W, md.H]);
     if (vao._rebK === chave) return c; vao._rebK = chave;
     const g = c.getContext('2d'); g.clearRect(0, 0, c.width, c.height);
     const H = homografia(base); if (!H) return c;
-    let ex = A, ey = A * .75;
+    let ex = 200 / md.W, ey = 200 / md.H; // 11/11/2026: reboco de 20 cm em cada lado do vão
     for (let t = 0; t < 8; t++) { if ([[-ex, -ey], [1 + ex, -ey], [1 + ex, 1 + ey], [-ex, 1 + ey]].every(([u, v]) => mapUV(H, u, v).w > .3)) break; ex *= .75; ey *= .75; }
     const u0 = -ex, u1 = 1 + ex, v0 = -ey, v1 = 1 + ey, S = 640;
     const tx = document.createElement('canvas'); tx.width = S; tx.height = S; const x = tx.getContext('2d');
@@ -1505,7 +1504,7 @@
     x.strokeStyle = 'rgba(0,0,0,.25)'; x.lineWidth = 3; x.strokeRect(hx - 1.5, hy - 1.5, hw + 3, hh + 3);
     x.clearRect(hx, hy, hw, hh);
     // borda externa esmaecida (a parede "some" na foto, sem corte seco)
-    x.globalCompositeOperation = 'destination-out'; const f = S * .12;
+    x.globalCompositeOperation = 'destination-out'; const f = Math.min(hx, S - hx - hw, hy, S - hy - hh) * .12;
     [[0, 0, f, 0, 0, 0, f, S], [S, 0, S - f, 0, S - f, 0, f, S], [0, 0, 0, f, 0, 0, S, f], [0, S, 0, S - f, 0, S - f, S, f]].forEach(([a, b, c2, d, rx, ry, rw, rh]) => {
       const gr = x.createLinearGradient(a, b, c2, d); gr.addColorStop(0, 'rgba(0,0,0,1)'); gr.addColorStop(1, 'rgba(0,0,0,0)'); x.fillStyle = gr; x.fillRect(rx, ry, rw, rh); });
     x.globalCompositeOperation = 'source-over';
@@ -2402,7 +2401,6 @@
       $('btnCM').onclick = () => { const x = v(); if (!x) return; x.et.cm = !x.et.cm; re(x); };
       $('btnReb').onclick = () => { const x = v(); if (!x) return; x.et.reb = !x.et.reb; re(x); };
       $('gridParede').onclick = e => { const b = e.target.closest('[data-parede]'), x = v(); if (!b || !x) return; x.et.parede = b.dataset.parede; x.et.reb = true; re(x); };
-      $('rebArea').addEventListener('input', () => { const x = v(); if (!x) return; x.et.area = $('rebArea').value / 100; x.et.reb = true; re(x); });
       $('btnEsq').onclick = () => { const x = v(); if (!x) return; x.et.esq = !x.et.esq; re(x); };
       const med = () => { const x = v(); if (!x) return; const W = +$('medW').value, H = +$('medH').value; x.med = { W: W >= 300 ? W : null, H: H >= 300 ? H : null }; x.et.esq = true; re(x); };
       $('medW').addEventListener('change', med); $('medH').addEventListener('change', med);
@@ -2424,7 +2422,6 @@
       set('btnEsq', x.et.esq, 'Colocar a esquadria', 'Tirar a esquadria');
       $('etpCM').classList.toggle('on', x.et.cm); $('etpReb').classList.toggle('on', x.et.reb); $('etpEsq').classList.toggle('on', x.et.esq);
       $('gridParede').querySelectorAll('button').forEach(b => b.classList.toggle('on', x.et.reb && b.dataset.parede === x.et.parede));
-      $('rebArea').value = Math.round((+x.et.area || .6) * 100);
       const md = medidasVao(x), mW = $('medW'), mH = $('medH');
       if (document.activeElement !== mW) mW.value = md.W; if (document.activeElement !== mH) mH.value = md.H;
     };
