@@ -1,8 +1,8 @@
 /* Family 32 · CDE — app sem internet (FC Consultoria em Esquadria)
    Guarda tudo no aparelho na primeira abertura. Sem internet ou com dados móveis fracos,
    abre direto do aparelho. Com internet, atualiza em segundo plano para a próxima abertura. */
-const V='family-cde-v5';
-const ARQ=['./','index.html','simulador.html','acesso.js','manifest.webmanifest','fonts.css','tw.css','lib/three.min.js','lib/OrbitControls.js','lib/qrcode.js',
+const V='family-cde-v6';
+const ARQ=['./','index.html','simulador.html','acesso.js','instalar.js','manifest-simulador.webmanifest','manifest.webmanifest','fonts.css','tw.css','lib/three.min.js','lib/OrbitControls.js','lib/qrcode.js',
  'icons/icon-192.png','icons/icon-512.png','icons/maskable-512.png','icons/apple-180.png',
  'fonts/inter-latin-400-normal.woff2','fonts/inter-latin-500-normal.woff2','fonts/inter-latin-600-normal.woff2','fonts/inter-latin-700-normal.woff2','fonts/inter-latin-800-normal.woff2',
  'fonts/outfit-latin-300-normal.woff2','fonts/outfit-latin-500-normal.woff2','fonts/outfit-latin-700-normal.woff2'];
