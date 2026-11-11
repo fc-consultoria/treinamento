@@ -356,7 +356,7 @@ body.visit #waBtn.has{display:inline-flex}
     <div class="st"><span>6</span>Cortes e encaixes</div>
     <div class="cortes" id="cortes"></div>
     <div class="acts" style="margin-top:6px"><button class="btn" id="bCorte" style="grid-column:1/-1">Corte da linha</button></div>
-    <div id="detBox" hidden><div class="st"><span>7</span>Por dentro da Minimalista</div>
+    <div id="detBox"><div class="st"><span>7</span>Por dentro da linha</div>
     <div class="acts"><button class="btn" id="bDren" style="grid-column:1/-1">Drenagem · como a água sai</button></div></div>
   </aside>
   <aside class="panel" id="info">
@@ -1060,7 +1060,6 @@ function syncUI(){
   document.getElementById('bCorte').classList.toggle('on',state.mode==='corte');
   document.getElementById('bComp').classList.toggle('on',!!state.comp);
   document.getElementById('tName').textContent=LINES[cur].name;
-  document.getElementById('detBox').hidden=cur!=='M';
   document.getElementById('tSub').textContent=LINES[cur].tip;
   inL.value=state.L;inH.value=state.H;
 }
@@ -1535,7 +1534,7 @@ const detMat={
 };
 const DLS=700, DTX=150, DY=280; // comprimento do trecho, posição do tubo, altura do conjunto (mm)
 const DHOLES=[-220,90];
-const DSTEPS=[
+const DSTEPS_M=[
  {t:'Drenagem',p:'Como a Minimalista leva a água da chuva para fora: do vidro até a rede pluvial, sem degrau no piso.',cam:[900,380,620],tgt:[120,-40,60],lb:[]},
  {t:'1 · A chuva escorre pelo vidro',p:'A água desce pela face externa do vidro e chega à base da folha.',cam:[760,260,330],tgt:[250,90,20],lb:[['Face externa do vidro',[40,150,26]]]},
  {t:'2 · Pelas câmaras do marco',p:'Ela entra no marco embutido no piso e corre por dentro das câmaras até os furos de dreno.',cam:[640,90,-120],tgt:[300,5,30],lb:[['Câmara do marco · TFM-031',[260,8,20]],['Furo de dreno',[DHOLES[1],8,40]]]},
@@ -1543,14 +1542,26 @@ const DSTEPS=[
  {t:'4 · Grelha removível',p:'',cam:[700,420,480],tgt:[150,60,90],lb:[['Grelha · PGT03A006',[120,40,85]],['Tampa de acabamento',[-DLS/2,0,85]]],grelha:1},
  {t:'5 · Para a rede pluvial',p:'Do fundo da calha, o tubo leva a água para a rede pluvial. O piso fica sem degrau e sem água acumulada.',cam:[1000,120,700],tgt:[150,-140,220],lb:[['Tubo de descida',[DTX,-170,85]],['Para a rede pluvial',[DTX,-255,470]]]}
 ];
-const DDUR=[3.5,5,5,5,6,6];
-function detStepText(i){const s=DSTEPS[i];if(i!==4)return s.p;const it=COMP.M.items.dreno;return `Tampa de grade ${it[0][0]}: 1 peça a cada metro de vão (${it[2]}). Sai inteira para limpar a calha.`}
+const DDUR_M=[3.5,5,5,5,6,6];
+let DSTEPS=DSTEPS_M,DDUR=DDUR_M;
+// Family 25 e 32 · apresentação Arkial: drenagem por válvulas unidirecionais na parte de baixo do marco; contramarco de perfil único
+function detStepsJ(k){const ln=LINES[k],mp=P[k][ln.marco],Dm=mp.w;const it=COMP[k].items.dreno;const cod=it[0][0]+(it[1]?' / '+it[1][0]:'');
+  return [
+  {t:'Drenagem',p:`Como a ${ln.name} leva para fora a água que chega na esquadria, sem deixar entrar no ambiente.`,cam:[820,380,640],tgt:[120,20,40],lb:[]},
+  {t:'1 · A chuva escorre pelo vidro',p:'A água desce pela face externa do vidro e chega à base da folha.',cam:[700,300,420],tgt:[250,130,20],lb:[['Face externa do vidro',[40,200,Dm/2-ln.tracks[0]+6]]]},
+  {t:'2 · Pelas câmaras do marco',p:'A água que passa pela folha cai no trilho e corre por dentro das câmaras do marco até as válvulas.',cam:[660,120,-150],tgt:[300,10,10],lb:[[`Câmara do marco · ${ln.marco}`,[260,6,Dm/2-12]]]},
+  {t:'3 · Válvula unidirecional',p:`A drenagem é feita por válvulas unidirecionais na parte de baixo do marco: a água sai e o vento não volta. Válvula de dreno ${cod} (12 mm) · quantidade no catálogo: ${it[2]}.`,cam:[640,-140,300],tgt:[230,-5,20],lb:[['Válvula de dreno',[DHOLES[1],-2,Dm/2-12]]]},
+  {t:'4 · Contramarco e espuma técnica',p:'Abaixo do marco fica o contramarco de perfil único, feito para reduzir a infiltração com a soleira. A espuma técnica adesiva preenche o espaço entre os dois.',cam:[720,60,380],tgt:[260,-20,30],lb:[['Contramarco',[300,-16,0]],['Espuma técnica',[120,-2,-Dm/2+8]]]},
+  {t:'5 · Para fora',p:k==='32'?'A água escorre pela soleira externa e cai longe da porta. O marco da 32 tem desnível de apenas 29 mm entre os ambientes.':'A água escorre pelo peitoril e cai longe da parede. O lado de dentro fica seco.',cam:[960,160,760],tgt:[150,-120,150],lb:[[k==='32'?'Soleira externa':'Peitoril',[200,-34,Dm/2+70]]]}]}
+const DDUR_J=[3.5,5,5,5.5,5.5,6];
+function detStepText(i){const s=DSTEPS[i];if(cur!=='M'||i!==4)return s.p;const it=COMP.M.items.dreno;return `Tampa de grade ${it[0][0]}: 1 peça a cada metro de vão (${it[2]}). Sai inteira para limpar a calha.`}
 function detBox(w,h,d,x,y,z,mat,parent){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);m.position.set(x,y,z);(parent||DET.g).add(m);return m}
 function detSlab(x0,x1,y0,y1,z0,z1){const geo=new THREE.BoxGeometry(x1-x0,y1-y0,z1-z0);const m=new THREE.Mesh(geo,detMat.slab);m.position.set((x0+x1)/2,(y0+y1)/2,(z0+z1)/2);m.renderOrder=1;DET.g.add(m);
   const e=new THREE.LineSegments(new THREE.EdgesGeometry(geo),detMat.slabEdge);e.position.copy(m.position);DET.g.add(e)}
 // caminho da água: lista de pontos (mm) -> tempos por trecho
 function detPath(pts){const segs=[];let T=0;for(let i=1;i<pts.length;i++){const a=pts[i-1],b=pts[i];const d=Math.hypot(b[0]-a[0],b[1]-a[1],b[2]-a[2]);const dy=b[1]-a[1];const fall=dy<0&&-dy>Math.hypot(b[0]-a[0],b[2]-a[2]);const v=fall?650:210;const dt=d/v;segs.push({a,b,t0:T,dt,fall});T+=dt}return {segs,T}}
-function detBuild(){
+function detBuild(){if(cur==='M')return detBuildM();return detBuildJ(cur)}
+function detBuildM(){
   const keep=cur;cur='M';
   const g=buildCorte('M',DLS);g.position.set(0,DY*0.001,0);DET.g=g;
   const ln=LINES.M,mp=P.M[ln.marco];const Dm=ln.marcos[1]+mp.w; // 79,3 mm
@@ -1595,8 +1606,39 @@ function detBuild(){
   const im=new THREE.InstancedMesh(new THREE.SphereGeometry(3.6,10,8),detMat.water,DET.drops.length);im.frustumCulled=false;g.add(im);DET.im=im;
   scene.add(g);
 }
+
+function detBuildJ(k){
+  const keep=cur;cur=k;
+  const g=buildCorte(k,DLS);g.position.set(0,DY*0.001,0);DET.g=g;
+  const ln=LINES[k],mp=P[k][ln.marco],fp=P[k][ln.folha],Dm=mp.w;cur=keep;
+  const sv=k==='25'?23:22,ze=Dm/2;
+  // contramarco (ilustrativo) e espuma técnica
+  const cm=new THREE.Group();g.add(cm);
+  detBox(DLS,3,Dm,0,-26.5,0,detMat.calha,cm);detBox(DLS,3,Dm,0,-6.5,0,detMat.calha,cm);
+  [-ze+1.5,ze-1.5,-ze*0.3,ze*0.3].forEach(z=>detBox(DLS,20,3,0,-16.5,z,detMat.calha,cm));
+  detBox(DLS,4,Dm*0.42,0,-3,-ze+Dm*0.24,detMat.tampa); // espuma
+  // estrutura e peitoril/soleira
+  detSlab(-DLS/2,DLS/2,-DY,-28,-ze-90,ze+6);
+  const pt=new THREE.Mesh(new THREE.BoxGeometry(DLS,18,140),new THREE.MeshStandardMaterial({color:'#3b4148',roughness:.7,metalness:.1,transparent:true,opacity:.75}));
+  pt.rotation.x=0.09;pt.position.set(0,-28-9-6,ze+64);g.add(pt);
+  // válvulas na parte de baixo do marco
+  DHOLES.forEach(hx=>{const v=detBox(30,4,14,hx,-1,ze-12,detMat.tampa);});
+  // lâmina de água na câmara
+  DET.fillM=detBox(DLS-6,3,14,0,5.5,ze-12,detMat.fill.clone());DET.fillC=null;
+  // gotas
+  const zg=ze-ln.tracks[0]+ln.glassT/2+0.8,zf=ze-ln.tracks[0]+fp.w/2,fTop=sv+fp.h,gTop=sv+ln.glassIn+150,zc=ze-12;
+  const yEdge=-28-6-Math.tan(0.09)*0-12,zEdge=ze+132;
+  const paths=[];
+  for(let i=0;i<70;i++){const x=-DLS/2+40+Math.random()*(DLS-80);const hx=DHOLES.reduce((a,b)=>Math.abs(b-x)<Math.abs(a-x)?b:a);
+    paths.push(detPath([[x,gTop,zg],[x,fTop+1,zg],[x,fTop+1,zf+1],[x,sv-2,zf+1],[x,6,zc],[hx,6,zc],[hx,-2,zc],[hx,-4,ze+3],[hx,-32,ze+12],[hx,-46,zEdge],[hx,-DY+20,zEdge+18]]))}
+  for(let i=0;i<45;i++){const x=-DLS/2+30+Math.random()*(DLS-60),z=ze+25+Math.random()*95;const ys=-32-(z-ze-12)*0.09;
+    paths.push(detPath([[x,420,z],[x,ys,z],[x,-46,zEdge],[x,-DY+20,zEdge+18]]))}
+  DET.drops=paths.map((p,i)=>({p,gap:.4+Math.random()*1.8,off:Math.random()*8,d0:i<70?0.6:4}));
+  const im=new THREE.InstancedMesh(new THREE.SphereGeometry(3.4,10,8),detMat.water,DET.drops.length);im.frustumCulled=false;g.add(im);DET.im=im;
+  DET.gr=null;scene.add(g);
+}
 function detOpen(){
-  if(cur!=='M')return;
+  DSTEPS=cur==='M'?DSTEPS_M:detStepsJ(cur);DDUR=cur==='M'?DDUR_M:DDUR_J;
   if(state.mode==='corte')toggleCorte();
   if(focus!==null){focus=null;CLIP.length=0;hsCard.classList.remove('on');document.body.classList.remove('focus')}
   hidePiece(true);seq=null;stepEl.classList.remove('on');state.open=0;state.explode=0;state.comp=false;state.spin=false;paintHi();
@@ -1619,14 +1661,14 @@ function detGoto(i){
 }
 function detCardHTML(){
   const i=DET.step,s=DSTEPS[i];
-  detCard.innerHTML=`<div class="eyebrow">Por dentro · Family Minimalista</div><h3>${s.t}</h3><div class="note" style="margin:0">${detStepText(i)}</div>
+  detCard.innerHTML=`<div class="eyebrow">Por dentro · ${LINES[cur].name}</div><h3>${s.t}</h3><div class="note" style="margin:0">${detStepText(i)}</div>
   <div class="ddots">${DSTEPS.map((_,k)=>`<i class="${k===i?'on':''}" data-k="${k}"></i>`).join('')}</div>
-  <div class="row" style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><button class="btn" id="dPrev" aria-label="Etapa anterior">◀</button><button class="btn" id="dNext" aria-label="Próxima etapa">▶</button><button class="btn" id="dPlay">${DET.play?'Pausar':'Continuar'}</button><button class="btn" id="dGr">${DET.grUp?'Colocar grelha':'Tirar grelha'}</button><button class="btn pri" id="dBack">Voltar</button></div>
+  <div class="row" style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><button class="btn" id="dPrev" aria-label="Etapa anterior">◀</button><button class="btn" id="dNext" aria-label="Próxima etapa">▶</button><button class="btn" id="dPlay">${DET.play?'Pausar':'Continuar'}</button>${cur==='M'?`<button class="btn" id="dGr">${DET.grUp?'Colocar grelha':'Tirar grelha'}</button>`:''}<button class="btn pri" id="dBack">Voltar</button></div>
   <div class="note dwarn">Representação ilustrativa do funcionamento. Medidas e componentes conforme o catálogo técnico Arkial.</div>`;
   document.getElementById('dPrev').onclick=()=>detGoto(DET.step-1);
   document.getElementById('dNext').onclick=()=>detGoto(DET.step+1);
   document.getElementById('dPlay').onclick=()=>{DET.play=!DET.play;DET.stepT0=performance.now();detCardHTML()};
-  document.getElementById('dGr').onclick=()=>{clearTimeout(DET.grAuto);DET.grUp=DET.grUp?0:1;detCardHTML()};
+  if(cur==='M')document.getElementById('dGr').onclick=()=>{clearTimeout(DET.grAuto);DET.grUp=DET.grUp?0:1;detCardHTML()};
   document.getElementById('dBack').onclick=()=>detClose();
   detCard.querySelectorAll('.ddots i').forEach(e=>e.onclick=()=>detGoto(+e.dataset.k));
   setTimeout(updViewOffset,30);
@@ -1638,10 +1680,10 @@ function updDet(now){
   if(DET.play&&(now-DET.stepT0)/1000>DDUR[DET.step]&&DET.step<DSTEPS.length-1)detGoto(DET.step+1);
   // grelha sobe e volta
   const ddt=Math.min(.1,(now-(DET.last||now))/1000);DET.last=now;DET.grT+=(DET.grUp-DET.grT)*Math.min(1,ddt*3.5);const gk=ease(Math.min(1,Math.max(0,DET.grT)));
-  DET.gr.position.set(0,gk*170,gk*40);DET.gr.rotation.x=-gk*0.35;
+  if(DET.gr){DET.gr.position.set(0,gk*170,gk*40);DET.gr.rotation.x=-gk*0.35}
   // água acumulando
   DET.fillM.material.opacity=Math.min(.55,Math.max(0,(t-2)/4)*.55);
-  DET.fillC.material.opacity=Math.min(.6,Math.max(0,(t-3.5)/4)*.6);
+  if(DET.fillC)DET.fillC.material.opacity=Math.min(.6,Math.max(0,(t-3.5)/4)*.6);
   // gotas
   DET.drops.forEach((d,i)=>{
     const per=d.p.T+d.gap;const lt=t-d.d0-d.off*0.6;let s=lt<0?-1:(lt%per);
