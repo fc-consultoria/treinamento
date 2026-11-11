@@ -321,6 +321,12 @@
             </svg>
             Trocar Foto
           </button>
+          <button id="btnExcluirFoto" class="btn dark:bg-slate-800 dark:border-slate-600" style="color:#dc2626;border-color:#fca5a5" title="Excluir esta foto do ambiente">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/>
+            </svg>
+            Excluir Foto
+          </button>
           
           <div class="w-px h-6 bg-orange-200 dark:bg-slate-700 mx-1 hidden sm:block"></div>
 
@@ -993,6 +999,15 @@
       msg('Vídeo pronto (' + lista.length + ' ambiente' + (lista.length > 1 ? 's' : '') + '). Se o botão Baixar não responder, segure o dedo no vídeo e escolha Salvar.');
     }
     API.gravarVideo = gravarVideo;
+    // 11/11/2026 · FC: excluir a foto do ambiente atual (some da obra salva; os vãos e balões dela também)
+    API.excluirFoto = () => {
+      if (cliente) return;
+      if (!window.confirm('Excluir esta foto e tudo que foi marcado nela?')) return;
+      const a = obra && obra.amb[idx];
+      if (a) { delete a.foto; a.w = 0; a.h = 0; a.vaos = []; a.anot = []; }
+      resetar();
+      if (obra) { salvar(true); desenharBarra(); }
+    };
     API.obra = () => obra; API.capturar = capturar; API.ehCliente = () => cliente; API.idx = () => idx; API.abrirQR = abrirQR;
     API.espera = espera; API.esc = esc;
 
@@ -2272,6 +2287,7 @@
   $('btnNovoVaoSidebar').addEventListener('click', iniciarNovoVao);
   $('btnLimparTudo').addEventListener('click', limparTudo);
   $('btnTrocar').addEventListener('click', resetar);
+  $('btnExcluirFoto').addEventListener('click', () => OBRA.excluirFoto());
   $('btnPreview').addEventListener('click', () => abrirPreview());
   $('btnFecharPreview').addEventListener('click', fecharPreview);
   $('btnFecharPreview2').addEventListener('click', fecharPreview);
