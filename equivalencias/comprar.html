@@ -451,7 +451,7 @@ const SFKEY=()=>'fc_compra_simf_'+(EMP||'x');const TKEY=()=>'fc_compra_simtir_'+
 const SFOP=[['todos','Todos os itens',null],['A','Só curva A',['A']],['AB','Curvas A e B',['A','B']],['C','Só curva C',['C']],['-','Sem curva',['-']]];
 function simFiltro(){const k=ls.get(SFKEY(),'todos');const o=SFOP.find(x=>x[0]===k);return o?o[2]:null;}
 /* 2ª opção do comprador: código e peso informados à mão (vale mesmo fora do nosso banco) */
-function altOp(x){const a=x.alt;if(!a||!a.f||!a.c||!(+a.p>0))return null;if(LIB()&&!LIB().includes(a.f))return null;const pr=preco(a.f,'natural');if(pr.sem||!(pr.kg>0))return null;
+function altOp(x){const a=x.alt;if(!a||!a.f||!a.c||!(+a.p>0))return null;if(codErrado(a.c,a.f))return null;if(LIB()&&!LIB().includes(a.f))return null;const pr=preco(a.f,'natural');if(pr.sem||!(pr.kg>0))return null;
   const kgb=+a.p*sM(x);return {f:a.f,c:a.c.toUpperCase(),p:+a.p,lvl:'manual',kgb,img:'',lin:'2ª opção do comprador',pg:'',kg:pr.kg,vb:kgb*pr.kg,minPed:pr.minPed,minItem:pr.minItem,alt:1,bars:1,kgmin:kgb,vmin:kgb*pr.kg};}
 const IDX_M=()=>{if(IDX&&IDX.linhas&&!IDX.linhas.__m)IDX.linhas.__m={n:'Fora do banco',img:''};};
 function simular(){IDX_M();
@@ -624,6 +624,11 @@ function buscarTroca(q){const k=norm(q);if(k.length<2)return [];const ex=buscar(
   const r=IDX.g.filter(g=>g.l!=='__m'&&!ex.includes(g)&&vis(g)&&tem(g));
   return ex.concat(r).slice(0,12);}
 /* 2ª opção: código que já existe no banco → peso (kg/m) vem sozinho e o campo fica verde */
+/* Dono do código: em quais fornecedores este código existe no banco dos catálogos (ignora pares incluídos à mão).
+   Trava contra gravar código de um fornecedor em outro (ex.: L30-0082 é FBK e tinha entrado como Texa). */
+function donoCodigo(c){const z=t=>norm(t).replace(/\d+/g,d=>String(+d));const k=z(String(c||'').replace(/[.\-\s]+[A-Z]{2,4}$/i,''));const S=new Set();if(k.length<3)return [];
+  for(const g of IDX.g){for(const m of g.m){if(m[6]===1)continue;if(z(m[1])===k)S.add(m[0]);}}return [...S];}
+function codErrado(c,f){const D=donoCodigo(c);return D.length&&!D.includes(f)?D:null;}
 function altAchaCodigo(c,f){const z=t=>norm(t).replace(/\d+/g,d=>String(+d));const k=z(String(c).replace(/[.\-\s]+[A-Z]{2,4}$/i,''));if(k.length<3)return null;
   let alt=null;for(const g of IDX.g){for(const m of g.m){if(!(+m[2]>0)||z(m[1])!==k)continue;if(m[0]===f)return {f:m[0],c:m[1],p:+m[2],g};if(!alt)alt={f:m[0],c:m[1],p:+m[2],g};}}return alt;}
 function altAuto(){const C=$('#altC'),P=$('#altP'),F=$('#altF'),M=$('#altAm');if(!C||!P||!F)return;
@@ -694,6 +699,7 @@ function chaveItem(x){const g=simGrupo(x);return g?g.l+'|'+g.k:'q|'+norm(x.q);}
 function miniImg(src,max){return new Promise(ok=>{const i=new Image();i.onload=()=>{const k=Math.min(1,max/Math.max(i.width,i.height)),c=document.createElement('canvas');c.width=Math.round(i.width*k);c.height=Math.round(i.height*k);const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(i,0,0,c.width,c.height);ok(c.toDataURL('image/jpeg',.72));};i.onerror=()=>ok('');i.src=src;});}
 async function levarCatalogo(x){/* grava o par na Conversão de códigos (equiv_edit): aparece no painel da matriz e no link do cliente */
   const g=IDX.g.find(y=>y.l===x.l&&y.k===x.a);if(!g)return null;
+  {const ce=codErrado(x.c,x.f);if(ce)return '⛔ Não foi para o catálogo: '+String(x.c).toUpperCase()+' é código da '+ce.map(f=>IDX.forn[f]||f).join(' / ')+', não da '+(IDX.forn[x.f]||x.f)+'.';}
   if(g.m.some(m=>m[0]===x.f&&norm(m[1])===norm(x.c)))return null;
   let url='';try{if(x.img&&/^data:/.test(x.img)){const b=await (await fetch(x.img)).blob();const path='equiv-2op/'+x.f+'-'+norm(x.c)+'-'+Date.now()+'.jpg';const r=await sb.storage.from('fc-anexos').upload(path,b,{contentType:'image/jpeg',upsert:false});if(!r.error)url=sb.storage.from('fc-anexos').getPublicUrl(path).data.publicUrl;}else if(x.img)url=x.img;}catch(_){}
   const ed={l:x.l,f:x.f,c:String(x.c).toUpperCase(),a:x.a,p:+x.p,n:'alta',t:'padrao',o:'Incluído pela 2ª opção de compra (print do catálogo do fornecedor).',pg:'—',img:url,em:new Date().toLocaleDateString('pt-BR')};
@@ -785,7 +791,7 @@ document.addEventListener('click',async ev=>{const t=ev.target.closest('[data-pe
      ${x.trocaDe?`<small style="color:#7c3aed">Esta linha já foi trocada (antes: <b>${esc(x.trocaDe.orig||x.trocaDe.q)}</b>). <button type="button" class="bt" data-altdesfaz="${i}" style="padding:3px 9px;font-size:12.5px">↩ Desfazer a troca</button></small>`:''}</div>
      <b style="font:800 15px var(--f-d);margin-top:4px">Ou: código de outro fornecedor (fora do banco)</b>
      <p class="sub" style="margin:0 0 6px">Código do fornecedor que o comprador quer considerar, mesmo que não esteja no nosso banco. Informe o peso por metro para o sistema calcular.</p>
-     <label>Fornecedor<select id="altF">${F.map(f=>`<option value="${f}" ${a.f===f?'selected':''}>${esc(IDX.forn[f])} · R$ ${n2(+DADOS.forn[f].natural)}/kg</option>`).join('')}</select></label>
+     <label>Fornecedor<select id="altF"><option value="" ${a.f?'':'selected'} disabled>— escolha o fornecedor —</option>${F.map(f=>`<option value="${f}" ${a.f===f?'selected':''}>${esc(IDX.forn[f])} · R$ ${n2(+DADOS.forn[f].natural)}/kg</option>`).join('')}</select></label>
      <label>Código no fornecedor<input id="altC" value="${esc(a.c||'')}" placeholder="Ex.: 25C-123"></label>
      <label>Peso (kg/m)<input id="altP" inputmode="decimal" value="${a.p?String(a.p).replace('.',','):''}" placeholder="Ex.: 0,918"></label>
      <b style="font-size:14px">Print ou PDF do produto (catálogo do fornecedor)</b><div class="altcola" id="altCola" tabindex="0"><b>📋 Cole o print aqui</b><span>Tire o print (Win+Shift+S) e aperte <kbd>Ctrl</kbd>+<kbd>V</kbd> com esta janela aberta · ou arraste a imagem para cá</span><span style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:4px"><button type="button" class="bt p" data-altcola>📋 Colar print</button><label class="bt" style="cursor:pointer">📁 Escolher arquivo<input type="file" id="altA" accept="image/*,application/pdf" hidden></label></span></div><small id="altAm" class="altmsg">${a.img||a.pdf?'':'Opcional. Com print, o sistema tenta ler o código e o peso sozinho.'}</small>
@@ -802,7 +808,12 @@ document.addEventListener('click',async ev=>{const t=ev.target.closest('[data-pe
   else if(d.altx!=null){$('#altOv').hidden=true;}
   else if(d.altrm!=null){delete SIM[+d.altrm].alt;ls.set(SKEY(),SIM);$('#altOv').hidden=true;tela();toast('2ª opção tirada.');}
   else if(d.altok!=null){const c=$('#altC').value.trim(),pp=+String($('#altP').value).replace(',','.');if(!c||!(pp>0)){const fa=!c?$('#altC'):$('#altP');[$('#altC'),$('#altP')].forEach(z=>z.style.borderColor='');fa.style.borderColor='#dc2626';fa.style.boxShadow='0 0 0 3px #fecaca';fa.focus();fa.scrollIntoView({block:'center'});const m=$('#altAm');if(m){m.style.color='#dc2626';m.textContent='⚠️ Falta preencher '+(!c?'o código no fornecedor':'o peso (kg/m)')+' para salvar.';}toast('Preencha '+(!c?'o código no fornecedor':'o peso (kg/m)')+'.');return;}
-    const ant=SIM[+d.altok].alt||{};const A2={f:$('#altF').value,c:c.toUpperCase(),p:pp};const nv=window.__altAnexo;
+    const fSel=$('#altF').value;const am=$('#altAm');
+    if(!fSel){$('#altF').style.borderColor='#dc2626';$('#altF').focus();if(am){am.style.color='#dc2626';am.textContent='⚠️ Escolha o fornecedor do código.';}toast('Escolha o fornecedor.');return;}
+    const ce=codErrado(c,fSel);if(ce){const nf=ce.map(f=>IDX.forn[f]||f).join(' / ');$('#altF').style.borderColor='#dc2626';$('#altC').style.borderColor='#dc2626';
+      if(am){am.style.color='#dc2626';am.textContent=`⛔ ${c.toUpperCase()} é código da ${nf} no banco, não da ${IDX.forn[fSel]||fSel}. Troque o fornecedor ou informe o código da ${IDX.forn[fSel]||fSel}.`;}
+      toast('Código de outro fornecedor: não salvou.');return;}
+    const ant=SIM[+d.altok].alt||{};const A2={f:fSel,c:c.toUpperCase(),p:pp};const nv=window.__altAnexo;
     if(nv&&nv.img)A2.img=nv.img;else if(nv&&nv.pdf)A2.pdf=nv.pdf;else if(nv!==null){if(ant.img)A2.img=ant.img;if(ant.pdf)A2.pdf=ant.pdf;}
     window.__altAnexo=undefined;if(A2.img)A2.th=await miniImg(A2.img,420);
     /* o mesmo perfil em outras cores/tamanhos recebe a mesma 2ª opção */
