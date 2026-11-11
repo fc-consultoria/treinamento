@@ -26,7 +26,13 @@
       .catch(function(){form('Sem internet. O primeiro acesso precisa de conexão.');});};}
   /* link mestre da FC (?fc=chave): libera este aparelho na hora, sem cadastro; a chave sai da barra de endereço */
   var ch=new URLSearchParams(location.search).get('fc');
-  if(ch){try{var u=new URL(location.href);u.searchParams.delete('fc');history.replaceState(null,'',u.pathname+u.search+u.hash);}catch(_){}
+  if(ch){
+    /* iPhone: o app da Tela de Início guarda dados separados do Safari. Mantém a chave no endereço e tira o manifesto,
+       assim o ícone adicionado já abre como mestre, sem cadastro */
+    var ios=/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+    if(ios){document.querySelectorAll('link[rel="manifest"]').forEach(function(l){l.remove();});}
+    else{try{var u=new URL(location.href);u.searchParams.delete('fc');history.replaceState(null,'',u.pathname+u.search+u.hash);}catch(_){}}
+    if(st.mestre&&st.status==='liberado'){libera();rpc('fam_ap_mestre_link',{p_chave:ch,p_disp:st.disp}).catch(function(){});return;}
     tela('<p style="margin:0">Liberando o acesso FC…</p>');
     rpc('fam_ap_mestre_link',{p_chave:ch,p_disp:st.disp}).then(function(s){if(s==='liberado'){st.mestre=1;libera();}else form('Link mestre inválido.');}).catch(function(){form('Sem internet. Abra o link mestre com conexão.');});
     return;}
