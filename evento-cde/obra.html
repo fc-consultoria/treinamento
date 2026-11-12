@@ -12,6 +12,7 @@
 <script>window.tailwind = window.tailwind || {}; /* CSS já compilado em tw.css (funciona sem internet) */</script>
 <script src="lib/three.min.js"></script>
 <script src="lib/qrcode.js"></script>
+<script src="tipologias.js?v=2"></script>
 <script>
   tailwind.config = {
     darkMode: 'class',
@@ -177,6 +178,27 @@
   .env-it .tx small{color:#94a3b8}
   .env-it .btn{padding:5px 9px;font-size:11px}
   .env-vazio{font-size:12px;color:#94a3b8;padding:6px 0}
+  /* 12/11/2026: escolha da tipologia · Family Premium e Linha Mercado */
+  .tip-abas{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px}
+  .tip-abas button{border:1px solid #fed7aa;border-radius:12px;background:#fff;padding:9px 6px;font:500 12px/1.2 Inter,sans-serif;color:#7c2d12;cursor:pointer}
+  .tip-abas button[aria-pressed="true"]{background:#e65c00;border-color:#e65c00;color:#fff;box-shadow:0 6px 16px -8px rgba(230,92,0,.7)}
+  .tip-nota{font-size:10.5px;color:#9a3412;margin:0 0 8px}
+  .tip-cats{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px}
+  .tip-cats button{display:inline-flex;align-items:baseline;gap:4px;border:1px solid #fed7aa;border-radius:999px;background:#fff;padding:4px 9px;font:600 10.5px/1.2 Inter,sans-serif;color:#334155;cursor:pointer}
+  .tip-cats button small{font-weight:700;opacity:.6}
+  .tip-cats button[aria-pressed="true"]{background:#e65c00;border-color:#e65c00;color:#fff}
+  .tip-grade{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;max-height:420px;overflow-y:auto;padding-right:2px}
+  .tip-grade button{display:flex;flex-direction:column;align-items:stretch;gap:5px;border:1px solid #ffedd5;border-radius:12px;background:#fff;padding:5px 5px 7px;cursor:pointer;text-align:center;font:600 10px/1.25 Inter,sans-serif;color:#334155}
+  .tip-grade button[aria-pressed="true"]{border-color:#e65c00;box-shadow:0 0 0 2px rgba(230,92,0,.25);color:#c2410c}
+  .tip-grade i{display:block;width:100%;aspect-ratio:4/3;border-radius:8px;overflow:hidden;background:#f6f1ee;padding:6px;box-sizing:border-box}
+  .tip-grade i svg{width:100%;height:100%;display:block}
+  .tip-grade span{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+  .tip-grade small{font-weight:500;color:#94a3b8;font-size:9.5px}
+  .tip-ico{display:flex;align-items:center;justify-content:center;aspect-ratio:4/3;border-radius:8px;background:linear-gradient(135deg,#fff1e6,#fed7aa);color:#c2410c;font:800 11px Inter,sans-serif;letter-spacing:.04em}
+  .tip-grade.fam .tip-ico{background:linear-gradient(135deg,#1f2937,#4b5563);color:#fdba74}
+  html.dark .tip-abas button,html.dark .tip-cats button,html.dark .tip-grade button{background:#1e293b;border-color:#334155;color:#cbd5e1}
+  html.dark .tip-abas button[aria-pressed="true"],html.dark .tip-cats button[aria-pressed="true"]{background:#e65c00;border-color:#e65c00;color:#fff}
+  html.dark .tip-grade i{background:#e9e4e1}
 </style>
 <link rel="manifest" href="manifest-obra.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Simulador CDE">
 <link rel="apple-touch-icon" href="icons/apple-180.png">
@@ -418,7 +440,7 @@
         </section>
         <section class="etp" id="etpEsq">
           <h4><span class="n">4</span>Tipologia</h4>
-          <p>Linha e tipologia Family, cor do perfil, vidro, largura e altura. A esquadria abre e fecha dentro do contramarco.</p>
+          <p>Family · Premium ou Linha Mercado, cor do perfil, vidro, largura e altura. A esquadria abre e fecha dentro do contramarco.</p>
           <button type="button" id="btnEsq" class="btn btn-accent w-full">Colocar a esquadria</button>
           <div class="medidas"><label>Largura (mm)<input id="medW" type="number" inputmode="numeric" min="300" max="6000" step="10"></label><label>Altura (mm)<input id="medH" type="number" inputmode="numeric" min="300" max="3500" step="10"></label></div>
         </section>
@@ -427,13 +449,14 @@
             <span class="w-1.5 h-4 rounded-full bg-accent"></span>
             <h3 class="text-[11px] uppercase tracking-[0.14em] font-bold text-slate-500 dark:text-slate-400">Produto</h3>
           </div>
-          <div class="relative">
+          <div class="relative" style="display:none">
             <select id="selProduto" class="w-full appearance-none rounded-xl border border-orange-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2.5 pr-9 text-sm text-slate-800 dark:text-slate-200 font-medium outline-none transition focus:border-accent/60 focus:ring-2 focus:ring-accent/10 cursor-pointer">
             </select>
             <svg class="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="m6 9 6 6 6-6"/>
             </svg>
           </div>
+          <div id="escolhaTip" class="mt-2.5"></div>
           <div id="produtoInfo" class="mt-2.5 rounded-xl bg-orange-50/50 dark:bg-slate-800/50 border border-orange-100 dark:border-slate-700 p-3 text-[11px] text-slate-600 dark:text-slate-400"></div>
           
           <!-- Botão Inverter -->
@@ -667,6 +690,15 @@
     { id: 'porta-pivotante', grupo: 'Vidros', nome: 'Porta Pivotante Elegance', folhas: '1 folha', tipo: 'porta1', dimensoes: { largura: 1.10, altura: 2.40 }, descricao: 'Porta pivotante em vidro temperado 10mm com ferragens aparentes.' },
     { id: 'box-elegance', grupo: 'Vidros', nome: 'Box de Banheiro Elegance', folhas: '2 folhas', tipo: 'box', dimensoes: { largura: 1.20, altura: 2.00 }, descricao: 'Box em vidro temperado 8mm com perfis Elegance.' }
   ];
+  /* 12/11/2026: dois painéis para o vendedor — Family · Premium (só o sistema Family, em 3D)
+     e Linha Mercado (Banco de Tipologias FC, 125 modelos por categoria, sem nome de linha). Vidros CDE ficam na Linha Mercado. */
+  if (window.FCTipo && FCTipo.LISTA) FCTipo.LISTA.forEach(t => {
+    let d = { W: 1500, H: 1200 }; try { d = FCTipo.dims(t.desc); } catch (e) {}
+    PRODUTOS.push({ id: t.id, grupo: t.cat, nome: t.nome, folhas: t.cat, tipo: 'fc2d', desc: t.desc, mov: !!(FCTipo.move && FCTipo.move(t.desc)), dimensoes: { largura: d.W / 1000, altura: d.H / 1000 }, descricao: 'Linha Mercado · medida sugerida. Ajuste a largura e a altura do vão. Linha definida no escritório.' });
+  });
+  /* esquadria que abre e fecha na foto: Family 3D ou tipologia da Linha Mercado que tem folha móvel */
+  function movel(v) { return !!(v && v.produto && (v.produto.tipo === 'family' || (v.produto.tipo === 'fc2d' && v.produto.mov))); }
+
 
   // ==========================================================
   // 1B. LINHA FAMILY 32 · MOTOR 3D (FC Consultoria em Esquadria)
@@ -812,7 +844,12 @@
     api.syncCtrls = vao => {
       const fam = vao && vao.produto.tipo === 'family';
       const mostra = (id, on) => { const e = el(id); e.classList.toggle('hidden', !on); e.style.display = on ? '' : 'none'; };
-      mostra('famMov', fam); if (!fam) return;
+      mostra('famMov', movel(vao)); mostra('famVista', fam);
+      if (!fam && movel(vao)) { /* Linha Mercado: abrir, fechar e abertura */
+        const mv = vao.mov; el('famAbrir').textContent = mv.abT > 0 ? 'Fechar' : 'Abrir';
+        ['famOscilo', 'famPersBox', 'famTela'].forEach(id => mostra(id, false));
+        el('famAb').value = Math.round(mv.abT * 100); el('famAbLbl').textContent = Math.round(mv.abT * 100) + '%'; return; }
+      if (!fam) return;
       const c = vao.produto.fam, mv = vao.mov;
       el('famAbrir').textContent = mv.abT > 0 ? 'Fechar' : 'Abrir';
       el('famVista').textContent = mv.vista === 'fora' ? 'Foto tirada de fora' : 'Foto tirada de dentro';
@@ -822,7 +859,7 @@
       mostra('famPersBox', !!c.persiana); el('famPe').value = Math.round(mv.peT * 100); el('famPeLbl').textContent = Math.round(mv.peT * 100) + '%';
       mostra('famTela', !!c.tela); el('famTela').textContent = 'Tela mosquiteira: ' + (mv.tela ? 'ligada' : 'desligada');
     };
-    const ativo = () => { const v = vaoAtivo(); return v && v.produto.tipo === 'family' ? v : null; };
+    const ativo = () => { const v = vaoAtivo(); return movel(v) ? v : null; };
     api.montarControles = () => {
       el('famAbrir').addEventListener('click', () => { const v = ativo(); if (!v) return; v.mov.abT = v.mov.abT > 0 ? 0 : 1; api.syncCtrls(v); });
       el('famAb').addEventListener('input', () => { const v = ativo(); if (!v) return; v.mov.abT = el('famAb').value / 100; v.mov.ab = v.mov.abT; renderizarVao(v); api.syncCtrls(v); });
@@ -835,7 +872,7 @@
     };
     // animação suave de abrir/fechar
     function tick() {
-      state.vaos.forEach(v => { if (!v.mov || v.produto.tipo !== 'family') return; let mudou = false;
+      state.vaos.forEach(v => { if (!v.mov || !movel(v)) return; let mudou = false;
         ['ab', 'pe'].forEach(k => { const d = v.mov[k + 'T'] - v.mov[k]; if (Math.abs(d) > .003) { v.mov[k] += d * .12; mudou = true; } else if (d !== 0) { v.mov[k] = v.mov[k + 'T']; mudou = true; } });
         if (mudou) renderizarVao(v); });
       requestAnimationFrame(tick);
@@ -844,7 +881,7 @@
     let gravando = false;
     function gravarVideo() {
       if (gravando || !state.img) { if (!state.img) el('famVideoMsg').textContent = 'Suba a foto e marque um vão primeiro.'; return; }
-      const vs = state.vaos.filter(v => v.produto.tipo === 'family' && v.pts.length === 4);
+      const vs = state.vaos.filter(v => movel(v) && v.pts.length === 4);
       if (!vs.length) { el('famVideoMsg').textContent = 'Coloque pelo menos uma tipologia Family em um vão.'; return; }
       const rec = document.createElement('canvas'); rec.width = view.width; rec.height = view.height; const rg = rec.getContext('2d');
       let stream, mr; try { stream = rec.captureStream(30); const tipo = ['video/webm;codecs=vp9', 'video/webm', 'video/mp4'].find(t => window.MediaRecorder && MediaRecorder.isTypeSupported(t)); mr = new MediaRecorder(stream, tipo ? { mimeType: tipo, videoBitsPerSecond: 6e6 } : undefined); }
@@ -998,8 +1035,8 @@
         if (orig.some(o => o.cm)) { fase('Contramarco', (v, o) => { v.et.cm = o.cm; }); await espera(1900); }
         if (orig.some(o => o.reb)) { fase('Reboco', (v, o) => { v.et.reb = o.reb; }); await espera(1900); }
         fase('Esquadria', (v, o) => { v.et.esq = o.esq; });
-        await espera(1300); state.vaos.forEach(v => { if (v.mov && v.produto.tipo === 'family' && v.et.esq) v.mov.abT = 1; });
-        await espera(3200); state.vaos.forEach(v => { if (v.mov && v.produto.tipo === 'family') v.mov.abT = 0; });
+        await espera(1300); state.vaos.forEach(v => { if (v.mov && movel(v) && v.et.esq) v.mov.abT = 1; });
+        await espera(3200); state.vaos.forEach(v => { if (v.mov && movel(v)) v.mov.abT = 0; });
         await espera(2200);
       }
       await new Promise(ok => { mr.onstop = ok; mr.stop(); }); ativo = false; gravando = false;
@@ -1103,7 +1140,7 @@
     API.init = async () => {
       el('famVideo').onclick = gravarVideo;
       el('btnVideoObra').onclick = gravarVideo; el('btnQrCliente').onclick = abrirQR;
-      el('cliAbrir').onclick = () => { const algum = state.vaos.some(v => v.mov && v.mov.abT > 0); state.vaos.forEach(v => { if (v.mov && v.produto.tipo === 'family') v.mov.abT = algum ? 0 : 1; }); el('cliAbrir').textContent = algum ? 'Abrir as esquadrias' : 'Fechar as esquadrias'; };
+      el('cliAbrir').onclick = () => { const algum = state.vaos.some(v => v.mov && v.mov.abT > 0); state.vaos.forEach(v => { if (v.mov && movel(v)) v.mov.abT = algum ? 0 : 1; }); el('cliAbrir').textContent = algum ? 'Abrir as esquadrias' : 'Fechar as esquadrias'; };
       const ver = new URLSearchParams(location.search).get('ver');
       if (ver) { await abrirCliente(ver); return; }
       el('obraNome').oninput = () => { obra.nome = el('obraNome').value; salvar(); };
@@ -1356,6 +1393,45 @@
   /**
    * Verifica se a textura já está em cache, caso contrário, chama criarTextura.
    */
+  /* 12/11/2026: desenho do Banco de Tipologias FC aplicado sobre a foto.
+     O desenho é gerado na medida do vão (largura × altura) e guardado; enquanto carrega, o vão fica sem esquadria por um instante. */
+  const fcTex = new Map(), fcVazio = document.createElement('canvas'); fcVazio.width = fcVazio.height = 2;
+  const FC_PASSOS = 12; // quadros do abre e fecha (0 = fechada, 12 = aberta)
+  function fcCarregar(key, p, cor, vidro, W, H, a) {
+    let e = fcTex.get(key); if (e) { fcTex.delete(key); fcTex.set(key, e); return e; } // mais recente no fim (limpeza)
+    if (fcTex.size > 90) fcTex.delete(fcTex.keys().next().value);
+    e = { ok: false, c: document.createElement('canvas') }; fcTex.set(key, e);
+    let svg = '';
+    try { svg = FCTipo.svg(p.desc, { cor, vidro, sentido: false, contexto: false, foto: true, W, H, px: (a > 0 && a < 1) ? 720 : 1024, abre: a }); } catch (er) { console.warn('tipologia', p.id, er); return e; }
+    const img = new Image();
+    img.onload = () => {
+      e.c.width = img.width || 1024; e.c.height = img.height || 768;
+      const g = e.c.getContext('2d', { willReadFrequently: true }); g.drawImage(img, 0, 0, e.c.width, e.c.height);
+      try { g.getImageData(0, 0, 1, 1); e.ok = true; } catch (er) { console.warn('desenho bloqueado pelo navegador', er); fcTex.delete(key); return; }
+      clearTimeout(fcCarregar.t); fcCarregar.t = setTimeout(() => state.vaos.forEach(v => { if (v.produto && v.produto.tipo === 'fc2d') renderizarVao(v); }), 16);
+    };
+    img.onerror = () => { fcTex.delete(key); console.warn('falha ao carregar desenho', p.id); };
+    img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+    return e;
+  }
+  function texFC(vao) {
+    if (!window.FCTipo) return fcVazio;
+    const p = vao.produto, md = Object.assign({}, medidasVao(vao)), mm = vao.med || {};
+    /* sem medida digitada: mantém a proporção do vão marcado na foto (o perfil não fica esticado) */
+    if (!(+mm.W && +mm.H) && vao.pts && vao.pts.length === 4) { try { const q = ordenarPontos(vao.pts), d = (a, b) => Math.hypot(a.x - b.x, a.y - b.y), qw = (d(q[0], q[1]) + d(q[3], q[2])) / 2, qh = (d(q[0], q[3]) + d(q[1], q[2])) / 2;
+      if (qw > 5 && qh > 5) { if (+mm.H) md.W = Math.round(md.H * qw / qh / 10) * 10; else md.H = Math.round(md.W * qh / qw / 10) * 10; } } catch (er) {} }
+    const base = [p.id, vao.cor.id, vao.vidro.id, md.W, md.H].join('|');
+    const passo = p.mov && vao.mov ? Math.round(Math.max(0, Math.min(1, vao.mov.ab || 0)) * FC_PASSOS) : 0;
+    const quadro = k => fcCarregar(base + '|' + k, p, vao.cor.id, vao.vidro.id, md.W, md.H, k / FC_PASSOS);
+    const e = quadro(passo);
+    /* vai abrir: deixa os outros quadros prontos, um de cada vez */
+    if (p.mov && vao.mov && (vao.mov.abT > 0 || passo > 0)) { const alvo = Math.round(vao.mov.abT * FC_PASSOS), dir = alvo >= passo ? 1 : -1; for (let k = passo; k !== alvo + dir && k >= 0 && k <= FC_PASSOS; k += dir) quadro(k); }
+    if (e.ok) return e.c;
+    /* quadro ainda carregando: usa o mais próximo que já está pronto */
+    for (let d = 1; d <= FC_PASSOS; d++) for (const k of [passo - d, passo + d]) { if (k < 0 || k > FC_PASSOS) continue; const o = fcTex.get(base + '|' + k); if (o && o.ok) return o.c; }
+    return fcVazio;
+  }
+
   function obterTextura(produto, cor, acabamento, vidro) {
     const key = `${produto.id}|${cor.id}|${acabamento.id}|${vidro.id}`;
     if (!texCache.has(key)) texCache.set(key, criarTextura(produto, cor, acabamento, vidro));
@@ -1604,7 +1680,7 @@
     if (et.esq) {
       let q = quad;
       if (vao.flipped) q = [q[1], q[0], q[3], q[2]];
-      const textura = (vao.produto.tipo === 'family' && FAM.ok) ? FAM.render(vao) : obterTextura(vao.produto, vao.cor, vao.acabamento, vao.vidro);
+      const textura = vao.produto.tipo === 'fc2d' ? texFC(vao) : (vao.produto.tipo === 'family' && FAM.ok) ? FAM.render(vao) : obterTextura(vao.produto, vao.cor, vao.acabamento, vao.vidro);
       const t = tmpCanvas(vao, '_esq');
       warpParaQuadrilatero(t, t.getContext('2d'), textura, q);
       ctx.drawImage(t, 0, 0);
@@ -2047,7 +2123,7 @@
       btnRemover.disabled = false;
       const vao = vaoAtivo();
       if (vao) {
-        $('selProduto').value = vao.produto.id;
+        $('selProduto').value = vao.produto.id; if (window.marcaTip) window.marcaTip();
         atualizarInfoProduto(vao.produto);
         $('gridCores').querySelectorAll('[data-cor]').forEach(b => b.classList.toggle('swatch-active', b.dataset.cor === vao.cor.id));
         $('gridAcabamentos').querySelectorAll('[data-acabamento]').forEach(b => b.classList.toggle('swatch-active', b.dataset.acabamento === vao.acabamento.id));
@@ -2083,8 +2159,34 @@
   function montarProdutos() {
     const sel = $('selProduto');
     const grp = (g, rot) => `<optgroup label="${rot}">` + PRODUTOS.filter(p => p.grupo === g).map(p => `<option value="${p.id}">${p.nome}</option>`).join('') + '</optgroup>';
-    sel.innerHTML = grp('Family', 'Linha Family 32 · 3D com movimento') + grp('Vidros', 'Vidros CDE');
+    const MERC = PRODUTOS.filter(p => p.tipo === 'fc2d');
+    const cats = ((window.FCTipo && FCTipo.CATS) || []).filter(c => MERC.some(p => p.grupo === c));
+    sel.innerHTML = grp('Family', 'Family · Premium (3D com movimento)') + cats.map(c => grp(c, 'Linha Mercado · ' + c)).join('') + grp('Vidros', 'Vidros CDE');
     sel.value = state.defaultProduto.id;
+    /* 12/11/2026: painel de escolha · Family Premium em destaque e Linha Mercado por categoria */
+    const caixa = $('escolhaTip'), thumbs = new Map(), extras = PRODUTOS.some(p => p.grupo === 'Vidros') ? ['Vidros'] : [];
+    const painelDe = p => p && (p.grupo === 'Family' ? 'family' : 'mercado');
+    let painel = painelDe(state.defaultProduto), catSel = cats[0] || 'Vidros';
+    const mini = p => { if (!thumbs.has(p.id)) { let s = ''; try { s = FCTipo.svg(p.desc, { cor: 'branco', vidro: 'incolor', sentido: true, contexto: false, foto: true, px: 200 }).replace('preserveAspectRatio="none"', 'preserveAspectRatio="xMidYMid meet"').replace(/ width="\d+" height="\d+"/, ''); } catch (e) {} thumbs.set(p.id, s); } return thumbs.get(p.id); };
+    const card = p => `<button type="button" data-tip="${p.id}" title="${p.nome}">` + (p.tipo === 'fc2d' ? `<i>${mini(p)}</i>` : `<b class="tip-ico">${p.grupo === 'Family' ? 'Family 3D' : 'Vidro'}</b>`) + `<span>${p.nome}</span>${p.tipo === 'family' ? `<small>${p.folhas || ''}</small>` : ''}</button>`;
+    const marca = () => caixa.querySelectorAll('[data-tip]').forEach(b => b.setAttribute('aria-pressed', b.dataset.tip === sel.value ? 'true' : 'false'));
+    const desenha = () => {
+      const lista = painel === 'family' ? PRODUTOS.filter(p => p.grupo === 'Family') : PRODUTOS.filter(p => p.grupo === catSel);
+      caixa.innerHTML = `<div class="tip-abas"><button type="button" data-painel="family" aria-pressed="${painel === 'family'}"><b>Family</b> · Premium</button><button type="button" data-painel="mercado" aria-pressed="${painel === 'mercado'}"><b>Linha Mercado</b></button></div>`
+        + (painel === 'family' ? '<p class="tip-nota">Sistema Family · alto padrão, em 3D com movimento.</p>'
+          : '<div class="tip-cats">' + cats.concat(extras).map(c => `<button type="button" data-cat="${c}" aria-pressed="${c === catSel}">${c === 'Vidros' ? 'Vidros CDE' : c} <small>${PRODUTOS.filter(p => p.grupo === c).length}</small></button>`).join('') + '</div>')
+        + `<div class="tip-grade${painel === 'family' ? ' fam' : ''}">` + lista.map(card).join('') + '</div>';
+      marca();
+    };
+    window.marcaTip = () => { const p = PRODUTOS.find(x => x.id === sel.value); if (!p) return; const pn = painelDe(p); if (pn !== painel || (pn === 'mercado' && p.grupo !== catSel)) { painel = pn; if (pn === 'mercado') catSel = p.grupo; desenha(); } else marca(); };
+    caixa.addEventListener('click', e => {
+      const a = e.target.closest('[data-painel]'); if (a) { painel = a.dataset.painel; desenha(); return; }
+      const c = e.target.closest('[data-cat]'); if (c) { catSel = c.dataset.cat; desenha(); return; }
+      const b = e.target.closest('[data-tip]'); if (!b) return;
+      sel.value = b.dataset.tip; sel.dispatchEvent(new Event('change')); marca();
+    });
+    if (painel === 'mercado') catSel = state.defaultProduto.grupo;
+    desenha();
 
     sel.addEventListener('change', () => {
       const vao = vaoAtivo();
