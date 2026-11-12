@@ -192,7 +192,7 @@ function make(desc,opt){
  }
  function fill(x,y,w,h,f,persiana){
   if(f&&f.includes('/')){const [a,b]=f.split('/');const hb=Math.min(h*0.48,s.porta?950:h*0.5);fill(x,y,w,h-hb-20,a,persiana);barH(x,y+h-hb-20,w,40);fill(x,y+h-hb+20,w,hb-20,b);return}
-  if(f==='vd'||!f){glass(x,y,w,h);if(persiana){R(x,y,w,h*0.38,`url(#${p}ps)`);R(x,y+h*0.38-6,w,10,`url(#${p}fh)`)}}
+  if(f==='vd'||!f){glass(x,y,w,h);if(persiana){const kp=opt.persiana==null?0.38:Math.max(0,Math.min(1,+opt.persiana)); if(kp>0.01){R(x,y,w,h*kp,`url(#${p}ps)`);R(x,y+h*kp-6,w,10,`url(#${p}fh)`)}}}
   else if(f==='tl'){glass(x,y,w,h);R(x,y,w,h,`url(#${p}tl)`)}
   else R(x,y,w,h,`url(#${p}${f})`,`stroke="#000" stroke-opacity=".2" stroke-width="2"`);
  }
@@ -482,6 +482,7 @@ function categoria(desc){
  return cat;
 }
 globalThis.FCTipo={svg:make,parse,titulo,categoria,COR,VID,dims:d=>dims(parse(d)),
+ persiana:d=>!!parse(d).integrada,
  move:d=>{const k=parse(d).kind; return !['fixo','guarda','brise','revest'].includes(k) && (k!=='fachada'||/MAXIM/.test(d)); }};
 })();
 

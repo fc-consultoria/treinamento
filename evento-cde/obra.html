@@ -12,7 +12,7 @@
 <script>window.tailwind = window.tailwind || {}; /* CSS já compilado em tw.css (funciona sem internet) */</script>
 <script src="lib/three.min.js"></script>
 <script src="lib/qrcode.js"></script>
-<script src="tipologias.js?v=2"></script>
+<script src="tipologias.js?v=3"></script>
 <script>
   tailwind.config = {
     darkMode: 'class',
@@ -319,10 +319,12 @@
              class="hidden relative rounded-2xl overflow-hidden border border-orange-200 dark:border-slate-700 bg-black shadow-xl shadow-orange-900/10 fade-up">
           <canvas id="view" class="block w-full h-auto pointer-events-none"></canvas>
           <div id="overlayContainer" class="absolute inset-0 w-full h-full pointer-events-none"></div>
+          <canvas id="trenaD" class="absolute inset-0 w-full h-full pointer-events-none"></canvas>
           
           <!-- Camada de Anotações -->
           <canvas id="annotations" class="absolute inset-0 w-full h-full pointer-events-none"></canvas>
           <img id="adBefore" alt="Foto original do vão">
+          <canvas id="trenaA" class="absolute inset-0 w-full h-full pointer-events-none" style="display:none"></canvas>
           <div id="adLinha"></div><span class="adTag" id="adTagA" style="left:8px">Antes</span><span class="adTag" id="adTagD" style="right:8px">Depois</span>
           
           <!-- Camada de UI (Bordas e Pontos) -->
@@ -427,6 +429,14 @@
 
       <!-- Painel de Configuração -->
       <div id="configPanel" class="space-y-5 transition-opacity">
+        <!-- 12/11/2026: trena · medida do vão bruto marcada na foto (referência para o lançamento) -->
+        <section class="etp" id="etpTrena">
+          <h4><span class="n">2</span>Medida do vão <small style="font-weight:500;color:#94a3b8">(trena)</small></h4>
+          <p>Passe a trena no vão e digite a medida. Ela fica marcada na foto, no lado do antes, como referência para o lançamento.</p>
+          <div class="medidas"><label>Largura (mm)<input id="trW" type="number" inputmode="numeric" min="100" max="20000" step="10"></label><label>Altura (mm)<input id="trH" type="number" inputmode="numeric" min="100" max="20000" step="10"></label></div>
+          <button type="button" id="btnTrena" class="btn w-full mt-2">Passar a trena</button>
+          <p style="font-size:10px;margin-top:4px">Medida informada pelo vendedor · conferir na obra.</p>
+        </section>
         <section class="etp" id="etpCM">
           <h4><span class="n">2</span>Aplicar contramarco <small style="font-weight:500;color:#94a3b8">(opcional)</small></h4>
           <p>Mostra o contramarco já chumbado no vão bruto.</p>
@@ -466,6 +476,23 @@
             </svg>
             Inverter Lado
           </button>
+        </section>
+
+        <!-- 12/11/2026: Está na frente (pessoa, mesa, andaime na frente do vão) -->
+        <section id="frenteBox">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="w-1.5 h-4 rounded-full bg-accent"></span>
+            <h3 class="text-[11px] uppercase tracking-[0.14em] font-bold text-slate-500 dark:text-slate-400">Está na frente do vão</h3>
+          </div>
+          <p class="text-[11px] text-slate-500 dark:text-slate-400 mb-2">Tem pessoa, mesa ou andaime na frente? Pinte por cima e a esquadria fica atrás.</p>
+          <div class="grid grid-cols-3 gap-2">
+            <button id="frPincel" class="btn dark:bg-slate-800 dark:text-slate-200 dark:border-slate-600">Pincel</button>
+            <button id="frBorracha" class="btn dark:bg-slate-800 dark:text-slate-200 dark:border-slate-600">Borracha</button>
+            <button id="frLimpar" class="btn dark:bg-slate-800 dark:text-slate-200 dark:border-slate-600">Limpar</button>
+          </div>
+          <label class="block mt-2 text-[11px] text-slate-500 dark:text-slate-400">Tamanho do pincel <b id="frTamLbl" class="text-accent">22</b>
+            <input id="frTam" type="range" min="4" max="70" value="22" class="w-full mt-1"></label>
+          <p id="frMsg" class="mt-1 text-[10px] text-slate-500 dark:text-slate-400"></p>
         </section>
 
         <!-- Movimento (Linha Family 3D) -->
@@ -694,10 +721,10 @@
      e Linha Mercado (Banco de Tipologias FC, 125 modelos por categoria, sem nome de linha). Vidros CDE ficam na Linha Mercado. */
   if (window.FCTipo && FCTipo.LISTA) FCTipo.LISTA.forEach(t => {
     let d = { W: 1500, H: 1200 }; try { d = FCTipo.dims(t.desc); } catch (e) {}
-    PRODUTOS.push({ id: t.id, grupo: t.cat, nome: t.nome, folhas: t.cat, tipo: 'fc2d', desc: t.desc, mov: !!(FCTipo.move && FCTipo.move(t.desc)), dimensoes: { largura: d.W / 1000, altura: d.H / 1000 }, descricao: 'Linha Mercado · medida sugerida. Ajuste a largura e a altura do vão. Linha definida no escritório.' });
+    PRODUTOS.push({ id: t.id, grupo: t.cat, nome: t.nome, folhas: t.cat, tipo: 'fc2d', desc: t.desc, mov: !!(FCTipo.move && FCTipo.move(t.desc)), persiana: !!(FCTipo.persiana && FCTipo.persiana(t.desc)), dimensoes: { largura: d.W / 1000, altura: d.H / 1000 }, descricao: 'Linha Mercado · medida sugerida. Ajuste a largura e a altura do vão. Linha definida no escritório.' });
   });
   /* esquadria que abre e fecha na foto: Family 3D ou tipologia da Linha Mercado que tem folha móvel */
-  function movel(v) { return !!(v && v.produto && (v.produto.tipo === 'family' || (v.produto.tipo === 'fc2d' && v.produto.mov))); }
+  function movel(v) { return !!(v && v.produto && (v.produto.tipo === 'family' || (v.produto.tipo === 'fc2d' && (v.produto.mov || v.produto.persiana)))); }
 
 
   // ==========================================================
@@ -847,9 +874,12 @@
       mostra('famMov', movel(vao)); mostra('famVista', fam);
       if (!fam && movel(vao)) { /* Linha Mercado: abrir, fechar e abertura */
         const mv = vao.mov; el('famAbrir').textContent = mv.abT > 0 ? 'Fechar' : 'Abrir';
-        ['famOscilo', 'famPersBox', 'famTela'].forEach(id => mostra(id, false));
+        ['famOscilo', 'famTela'].forEach(id => mostra(id, false));
+        mostra('famPersBox', !!vao.produto.persiana); el('famPe').value = Math.round(mv.peT * 100); el('famPeLbl').textContent = Math.round(mv.peT * 100) + '%';
+        el('famAbrir').style.display = vao.produto.mov ? '' : 'none'; el('famAb').closest('label').style.display = vao.produto.mov ? '' : 'none';
         el('famAb').value = Math.round(mv.abT * 100); el('famAbLbl').textContent = Math.round(mv.abT * 100) + '%'; return; }
       if (!fam) return;
+      el('famAbrir').style.display = ''; el('famAb').closest('label').style.display = '';
       const c = vao.produto.fam, mv = vao.mov;
       el('famAbrir').textContent = mv.abT > 0 ? 'Fechar' : 'Abrir';
       el('famVista').textContent = mv.vista === 'fora' ? 'Foto tirada de fora' : 'Foto tirada de dentro';
@@ -938,7 +968,7 @@
 
     // ---------- vão <-> dados ----------
     const ser = v => ({ pts: v.pts.map(p => ({ x: +p.x.toFixed(1), y: +p.y.toFixed(1) })), produto: v.produto.id, cor: v.cor.id, acab: v.acabamento.id, vidro: v.vidro.id, flipped: !!v.flipped, blend: v.blend, opacidade: v.opacidade,
-      mov: v.mov ? { abT: v.mov.abT, peT: v.mov.peT, tela: v.mov.tela, vista: v.mov.vista, modo: v.mov.modo } : null, et: Object.assign({}, v.et), med: v.med ? Object.assign({}, v.med) : null });
+      mov: v.mov ? { abT: v.mov.abT, peT: v.mov.peT, tela: v.mov.tela, vista: v.mov.vista, modo: v.mov.modo } : null, et: Object.assign({}, v.et), med: v.med ? Object.assign({}, v.med) : null, frente: v.frente && v.frente.length ? v.frente : undefined, bruto: v.bruto && (v.bruto.W || v.bruto.H) ? v.bruto : undefined });
     function restaurar(d) {
       const v = criarVao(d.pts);
       v.produto = PRODUTOS.find(p => p.id === d.produto) || v.produto; v.cor = CORES.find(c => c.id === d.cor) || v.cor;
@@ -947,6 +977,7 @@
       v.overlayCanvas.style.mixBlendMode = v.blend === 'normal' ? 'normal' : v.blend; v.overlayCanvas.style.opacity = String(v.opacidade);
       if (d.mov) Object.assign(v.mov, d.mov, { ab: d.mov.abT || 0, pe: d.mov.peT || 0 });
       v.et = d.et ? Object.assign({ cm: false, reb: false, parede: 'gelo', esq: true }, d.et) : { cm: false, reb: false, parede: 'gelo', esq: true }; v.med = d.med || null;
+      v.frente = Array.isArray(d.frente) ? d.frente : []; v.bruto = d.bruto || null;
       renderizarVao(v); return v;
     }
     function capturar() { if (!obra || API.carregando || cliente) return; const a = obra.amb[idx]; if (!a) return; a.vaos = state.vaos.filter(v => v.pts.length === 4).map(ser); a.anot = JSON.parse(JSON.stringify(state.annotations || [])); }
@@ -1032,6 +1063,7 @@
         fase('Vão bruto', v => { v.et.cm = false; v.et.reb = false; v.et.esq = false; });
         if (i === lista[0]) desenhar();
         await espera(1800);
+        { const ids = state.vaos.filter(v => v.bruto && (+v.bruto.W || +v.bruto.H)).map(v => v.id); if (ids.length) { rot = amb + ' · Conferindo a medida'; TRENA.tocar(ids); await espera(3000); } }
         if (orig.some(o => o.cm)) { fase('Contramarco', (v, o) => { v.et.cm = o.cm; }); await espera(1900); }
         if (orig.some(o => o.reb)) { fase('Reboco', (v, o) => { v.et.reb = o.reb; }); await espera(1900); }
         fase('Esquadria', (v, o) => { v.et.esq = o.esq; });
@@ -1397,12 +1429,12 @@
      O desenho é gerado na medida do vão (largura × altura) e guardado; enquanto carrega, o vão fica sem esquadria por um instante. */
   const fcTex = new Map(), fcVazio = document.createElement('canvas'); fcVazio.width = fcVazio.height = 2;
   const FC_PASSOS = 12; // quadros do abre e fecha (0 = fechada, 12 = aberta)
-  function fcCarregar(key, p, cor, vidro, W, H, a) {
+  function fcCarregar(key, p, cor, vidro, W, H, a, pe) {
     let e = fcTex.get(key); if (e) { fcTex.delete(key); fcTex.set(key, e); return e; } // mais recente no fim (limpeza)
     if (fcTex.size > 90) fcTex.delete(fcTex.keys().next().value);
     e = { ok: false, c: document.createElement('canvas') }; fcTex.set(key, e);
     let svg = '';
-    try { svg = FCTipo.svg(p.desc, { cor, vidro, sentido: false, contexto: false, foto: true, W, H, px: (a > 0 && a < 1) ? 720 : 1024, abre: a }); } catch (er) { console.warn('tipologia', p.id, er); return e; }
+    try { svg = FCTipo.svg(p.desc, { cor, vidro, sentido: false, contexto: false, foto: true, W, H, px: (a > 0 && a < 1) || (pe > 0 && pe < 1) ? 720 : 1024, abre: a, persiana: p.persiana ? pe : undefined }); } catch (er) { console.warn('tipologia', p.id, er); return e; }
     const img = new Image();
     img.onload = () => {
       e.c.width = img.width || 1024; e.c.height = img.height || 768;
@@ -1420,16 +1452,17 @@
     /* sem medida digitada: mantém a proporção do vão marcado na foto (o perfil não fica esticado) */
     if (!(+mm.W && +mm.H) && vao.pts && vao.pts.length === 4) { try { const q = ordenarPontos(vao.pts), d = (a, b) => Math.hypot(a.x - b.x, a.y - b.y), qw = (d(q[0], q[1]) + d(q[3], q[2])) / 2, qh = (d(q[0], q[3]) + d(q[1], q[2])) / 2;
       if (qw > 5 && qh > 5) { if (+mm.H) md.W = Math.round(md.H * qw / qh / 10) * 10; else md.H = Math.round(md.W * qh / qw / 10) * 10; } } catch (er) {} }
-    const base = [p.id, vao.cor.id, vao.vidro.id, md.W, md.H].join('|');
+    const PE = 8, peP = p.persiana && vao.mov ? Math.round(Math.max(0, Math.min(1, vao.mov.pe || 0)) * PE) : 0;
+    const base = [p.id, vao.cor.id, vao.vidro.id, md.W, md.H, peP].join('|');
     const passo = p.mov && vao.mov ? Math.round(Math.max(0, Math.min(1, vao.mov.ab || 0)) * FC_PASSOS) : 0;
-    const quadro = k => fcCarregar(base + '|' + k, p, vao.cor.id, vao.vidro.id, md.W, md.H, k / FC_PASSOS);
+    const quadro = k => fcCarregar(base + '|' + k, p, vao.cor.id, vao.vidro.id, md.W, md.H, p.mov ? k / FC_PASSOS : 0, peP / PE);
     const e = quadro(passo);
     /* vai abrir: deixa os outros quadros prontos, um de cada vez */
     if (p.mov && vao.mov && (vao.mov.abT > 0 || passo > 0)) { const alvo = Math.round(vao.mov.abT * FC_PASSOS), dir = alvo >= passo ? 1 : -1; for (let k = passo; k !== alvo + dir && k >= 0 && k <= FC_PASSOS; k += dir) quadro(k); }
-    if (e.ok) return e.c;
+    if (e.ok) { vao._fcUlt = e.c; vao._fcUltP = p.id; return e.c; }
     /* quadro ainda carregando: usa o mais próximo que já está pronto */
     for (let d = 1; d <= FC_PASSOS; d++) for (const k of [passo - d, passo + d]) { if (k < 0 || k > FC_PASSOS) continue; const o = fcTex.get(base + '|' + k); if (o && o.ok) return o.c; }
-    return fcVazio;
+    return vao._fcUlt && vao._fcUltP === p.id ? vao._fcUlt : fcVazio;
   }
 
   function obterTextura(produto, cor, acabamento, vidro) {
@@ -1663,7 +1696,84 @@
     return c;
   }
 
+  /* 12/11/2026 · Está na frente: pinta por cima do que fica na frente do vão (pessoa, mesa, andaime)
+     e a foto original volta para cima da esquadria nesses pontos. Traços guardados em coordenadas da foto. */
+  const PINCEL = { on: false, borracha: false, r: 22, cur: null, traco: null };
+  function renderFrente(vao) {
+    const c = vao.frenteCanvas; if (!c) return;
+    if (c.width !== vao.overlayCanvas.width || c.height !== vao.overlayCanvas.height) { c.width = vao.overlayCanvas.width; c.height = vao.overlayCanvas.height; }
+    const g = c.getContext('2d'); g.clearRect(0, 0, c.width, c.height);
+    if (!state.img || !vao.frente || !vao.frente.length || !(vao.et && vao.et.esq || vao.et && (vao.et.cm || vao.et.reb))) return;
+    const s = state.escalaOverlay;
+    g.lineCap = 'round'; g.lineJoin = 'round'; g.strokeStyle = g.fillStyle = '#000';
+    vao.frente.forEach(t => {
+      g.globalCompositeOperation = t.e ? 'destination-out' : 'source-over';
+      const p = t.p, r = t.r * s;
+      if (p.length <= 2) { g.beginPath(); g.arc(p[0] * s, p[1] * s, r, 0, Math.PI * 2); g.fill(); return; }
+      g.lineWidth = r * 2; g.beginPath(); g.moveTo(p[0] * s, p[1] * s);
+      for (let i = 2; i < p.length; i += 2) g.lineTo(p[i] * s, p[i + 1] * s);
+      g.stroke();
+    });
+    g.globalCompositeOperation = 'source-in'; g.drawImage(view, 0, 0, c.width, c.height);
+    if (PINCEL.on && vao.id === state.vaoAtivoId) { g.globalCompositeOperation = 'source-atop'; g.fillStyle = 'rgba(255,122,0,.32)'; g.fillRect(0, 0, c.width, c.height); }
+    g.globalCompositeOperation = 'source-over';
+  }
+
   function renderizarVao(vao) {
+    try { renderizarVaoBase(vao); } finally { renderFrente(vao); TRENA.desenhar(); }
+  }
+
+  /* 12/11/2026 · TRENA: medida do vão bruto marcada na foto como uma trena passando de canto a canto.
+     Aparece sempre que a medida for digitada, com o vão bruto ou já acabado. No "Comparar antes e depois" fica no lado do antes. */
+  const TRENA = (() => {
+    const api = {}; let anim = null; // { t0, ids }
+    const tem = v => v && v.pts && v.pts.length === 4 && v.bruto && (+v.bruto.W || +v.bruto.H);
+    function fita(g, a, b, out, prog, txt, esc) {
+      const dx = b.x - a.x, dy = b.y - a.y, L = Math.hypot(dx, dy); if (L < 4 || prog <= 0) return;
+      const ux = dx / L, uy = dy / L, nx = out.x, ny = out.y, off = 22 * esc, T = 15 * esc;
+      const A = { x: a.x + nx * off, y: a.y + ny * off }, Lp = L * Math.min(1, prog), B = { x: A.x + ux * Lp, y: A.y + uy * Lp };
+      // linhas de chamada nos cantos
+      g.strokeStyle = 'rgba(255,255,255,.85)'; g.lineWidth = 1.5 * esc; g.setLineDash([4 * esc, 3 * esc]);
+      g.beginPath(); g.moveTo(a.x, a.y); g.lineTo(a.x + nx * (off + T), a.y + ny * (off + T)); if (prog >= 1) { g.moveTo(b.x, b.y); g.lineTo(b.x + nx * (off + T), b.y + ny * (off + T)); } g.stroke(); g.setLineDash([]);
+      // fita amarela
+      g.save(); g.translate(A.x, A.y); g.rotate(Math.atan2(uy, ux)); const side = (nx * -uy + ny * ux) >= 0 ? 1 : -1;
+      g.fillStyle = '#f6c519'; g.strokeStyle = '#8a6a00'; g.lineWidth = 1 * esc; const y0 = side > 0 ? 0 : -T;
+      g.fillRect(0, y0 - T / 2 + (side > 0 ? 0 : T), Lp, T); g.strokeRect(0, y0 - T / 2 + (side > 0 ? 0 : T), Lp, T);
+      const yb = y0 - T / 2 + (side > 0 ? 0 : T);
+      g.strokeStyle = '#1f1f1f'; for (let k = 0, i = 0; k <= Lp; k += 7 * esc, i++) { const h = i % 10 === 0 ? T * .7 : i % 5 === 0 ? T * .5 : T * .3; g.lineWidth = (i % 10 === 0 ? 1.4 : .8) * esc; g.beginPath(); g.moveTo(k, yb); g.lineTo(k, yb + h); g.stroke(); }
+      // caixa da trena andando / gancho no início
+      g.fillStyle = '#1f2937'; g.fillRect(-3 * esc, yb - 2 * esc, 4 * esc, T + 4 * esc);
+      if (prog < 1) { g.fillStyle = '#e11d48'; g.beginPath(); g.roundRect ? g.roundRect(Lp - 2 * esc, yb - 7 * esc, 30 * esc, T + 14 * esc, 6 * esc) : g.rect(Lp - 2 * esc, yb - 7 * esc, 30 * esc, T + 14 * esc); g.fill(); g.fillStyle = '#fff'; g.beginPath(); g.arc(Lp + 13 * esc, yb + T / 2, 6 * esc, 0, Math.PI * 2); g.fill(); }
+      else { g.fillStyle = '#1f2937'; g.fillRect(Lp - 1 * esc, yb - 2 * esc, 4 * esc, T + 4 * esc); }
+      g.restore();
+      if (prog >= 1 && txt) { const mx = (A.x + B.x) / 2 + nx * T * 1.6, my = (A.y + B.y) / 2 + ny * T * 1.6; g.font = `800 ${15 * esc}px Inter, sans-serif`; const w = g.measureText(txt).width + 16 * esc, h = 24 * esc;
+        g.fillStyle = 'rgba(17,24,39,.88)'; g.beginPath(); g.roundRect ? g.roundRect(mx - w / 2, my - h / 2, w, h, 8 * esc) : g.rect(mx - w / 2, my - h / 2, w, h); g.fill(); g.fillStyle = '#facc15'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(txt, mx, my + 1 * esc); }
+    }
+    function pinta(c, filtro, agora) {
+      if (!c) return; if (c.width !== view.width || c.height !== view.height) { c.width = view.width; c.height = view.height; }
+      const g = c.getContext('2d'); g.clearRect(0, 0, c.width, c.height); if (!state.img) return;
+      const esc = Math.max(.7, view.width / 1000);
+      state.vaos.forEach(v => { if (!tem(v) || !filtro(v)) return; const q = ordenarPontos(v.pts), b = v.bruto;
+        let pW = 1, pH = 1; if (anim && anim.ids.includes(v.id)) { const t = (agora - anim.t0) / 1100; pW = Math.max(0, Math.min(1, t)); pH = Math.max(0, Math.min(1, t - 1.15)); }
+        const cx = (q[0].x + q[1].x + q[2].x + q[3].x) / 4, cy = (q[0].y + q[1].y + q[2].y + q[3].y) / 4;
+        const nrm = (a, bb) => { const dx = bb.x - a.x, dy = bb.y - a.y, L = Math.hypot(dx, dy) || 1; let nx = -dy / L, ny = dx / L; const mx = (a.x + bb.x) / 2, my = (a.y + bb.y) / 2; if ((mx + nx - cx) ** 2 + (my + ny - cy) ** 2 < (mx - cx) ** 2 + (my - cy) ** 2) { nx = -nx; ny = -ny; } return { x: nx, y: ny }; };
+        const fmt = n => (+n).toLocaleString('pt-BR') + ' mm';
+        if (+b.W) fita(g, q[0], q[1], nrm(q[0], q[1]), pW, fmt(b.W), esc);
+        if (+b.H) fita(g, q[0], q[3], nrm(q[0], q[3]), +b.W ? pH : pW, fmt(b.H), esc);
+      });
+    }
+    api.desenhar = (agora = performance.now()) => {
+      const ib = $('adBefore'), cmp = !!ib && ib.style.display === 'block';
+      pinta($('trenaD'), v => !v.et.esq, agora);
+      const a = $('trenaA'), i = $('adBefore');
+      if (a) { a.style.display = cmp && i && i.style.display === 'block' ? 'block' : 'none'; a.style.clipPath = a.style.webkitClipPath = i ? i.style.clipPath : ''; if (a.style.display === 'block') pinta(a, () => true, agora); }
+    };
+    api.tocar = ids => { const meu = anim = { t0: performance.now(), ids }; const f = () => { if (anim !== meu) return; const agora = performance.now(); api.desenhar(agora); if (agora - meu.t0 < 2500) requestAnimationFrame(f); else { anim = null; api.desenhar(); } }; requestAnimationFrame(f); };
+    api.tem = tem;
+    api.compor = g => { const c = $('trenaD'); if (c && state.vaos.some(v => tem(v) && !v.et.esq)) g.drawImage(c, 0, 0, g.canvas.width, g.canvas.height); };
+    return api;
+  })();
+  function renderizarVaoBase(vao) {
     const ctx = vao.overlayCtx, canvas = vao.overlayCanvas;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     if (!state.img || vao.pts.length !== 4) return;
@@ -1693,6 +1803,8 @@
    */
   function renderizarUI() {
     uctx.clearRect(0, 0, ui.width, ui.height);
+    if (PINCEL.on && PINCEL.cur) { const r = PINCEL.r * (view.width / (view.getBoundingClientRect().width || view.width)), k = ui.width / view.width;
+      uctx.save(); uctx.beginPath(); uctx.arc(PINCEL.cur.x * k, PINCEL.cur.y * k, r * k, 0, Math.PI * 2); uctx.lineWidth = 2; uctx.strokeStyle = PINCEL.borracha ? '#0ea5e9' : '#ff7a00'; uctx.setLineDash([5, 4]); uctx.stroke(); uctx.restore(); }
 
     state.vaos.forEach(vao => {
       if (vao.pts.length === 0) return;
@@ -1927,6 +2039,17 @@
       return;
     }
 
+    // 2B. Está na frente: pincel / borracha no vão ativo
+    if (PINCEL.on && !state.modoCriacao) {
+      const v = state.vaos.find(x => x.id === state.vaoAtivoId);
+      if (v && v.pts.length === 4) {
+        e.preventDefault(); try { wrap.setPointerCapture(e.pointerId); } catch (_) {}
+        const r = PINCEL.r * (view.width / view.getBoundingClientRect().width);
+        PINCEL.traco = { r: +r.toFixed(1), e: PINCEL.borracha ? 1 : 0, p: [+p.x.toFixed(1), +p.y.toFixed(1)] };
+        v.frente = v.frente || []; v.frente.push(PINCEL.traco); renderFrente(v); return;
+      }
+    }
+
     // 3. Lógica de Criação de Vãos
     if (state.modoCriacao) {
       state.ptsTemp.push(p);
@@ -1968,6 +2091,13 @@
       return;
     }
 
+    if (PINCEL.on) {
+      PINCEL.cur = p;
+      if (PINCEL.traco) { e.preventDefault(); const t = PINCEL.traco.p, lx = t[t.length - 2], ly = t[t.length - 1];
+        if (Math.hypot(p.x - lx, p.y - ly) > PINCEL.traco.r * 0.25) { t.push(+p.x.toFixed(1), +p.y.toFixed(1)); const v = state.vaos.find(x => x.id === state.vaoAtivoId); if (v) renderFrente(v); } }
+      renderizarUI();
+      if (PINCEL.traco) return;
+    }
     if (!arrastandoVao) return;
     e.preventDefault();
     const vao = state.vaos.find(v => v.id === arrastandoVao.vaoId);
@@ -1978,6 +2108,7 @@
   }
 
   function onPointerUp(e) {
+    if (PINCEL.traco) { PINCEL.traco = null; try { wrap.releasePointerCapture(e.pointerId); } catch (_) {} return; }
     if (state.draggingBubble) {
       state.draggingBubble = null;
       return;
@@ -2019,6 +2150,13 @@
     overlayCanvas.style.mixBlendMode = state.defaultBlend === 'normal' ? 'normal' : state.defaultBlend;
     overlayCanvas.style.opacity = String(state.defaultOpacidade);
     overlayContainer.appendChild(overlayCanvas);
+    /* 12/11/2026: camada "Está na frente" — a foto original volta por cima da esquadria onde o vendedor pintou */
+    const frenteCanvas = document.createElement('canvas');
+    frenteCanvas.className = 'absolute inset-0 w-full h-full pointer-events-none';
+    frenteCanvas.width = state.overlayW; frenteCanvas.height = state.overlayH;
+    overlayContainer.appendChild(frenteCanvas);
+    const rmOverlay = overlayCanvas.remove.bind(overlayCanvas);
+    overlayCanvas.remove = () => { rmOverlay(); frenteCanvas.remove(); };
 
     const vao = {
       id,
@@ -2034,7 +2172,8 @@
       et: { cm: false, reb: false, parede: 'gelo', esq: false }, // 11/11/2026: vão bruto › contramarco › reboco › esquadria
       med: null,
       overlayCanvas,
-      overlayCtx: overlayCanvas.getContext('2d')
+      overlayCtx: overlayCanvas.getContext('2d'),
+      frenteCanvas, frente: []
     };
     state.vaos.push(vao);
     state.vaoAtivoId = vao.id;
@@ -2328,11 +2467,12 @@
       g.globalAlpha = vao.opacidade;
       g.globalCompositeOperation = vao.blend === 'normal' ? 'source-over' : vao.blend;
       g.drawImage(vao.overlayCanvas, 0, 0, out.width, out.height);
+      if (vao.frenteCanvas && vao.frente && vao.frente.length) { g.globalAlpha = 1; g.globalCompositeOperation = 'source-over'; g.drawImage(vao.frenteCanvas, 0, 0, out.width, out.height); }
     });
 
     g.globalAlpha = 1;
     g.globalCompositeOperation = 'source-over';
-    
+    TRENA.compor(g);
     g.drawImage(annotationsCanvas, 0, 0);
 
     return out;
@@ -2474,7 +2614,7 @@
     api.aplicar = () => { const on = pos > 0 && !!state.img, i = $('adBefore'); if (!i) return;
       i.style.display = on ? 'block' : 'none'; i.style.clipPath = 'inset(0 ' + (100 - pos) + '% 0 0)'; i.style.webkitClipPath = i.style.clipPath;
       const l = $('adLinha'); l.style.display = on && pos < 100 ? 'block' : 'none'; l.style.left = pos + '%';
-      $('adTagA').style.display = on ? 'block' : 'none'; $('adTagD').style.display = on && pos < 100 ? 'block' : 'none'; };
+      $('adTagA').style.display = on ? 'block' : 'none'; $('adTagD').style.display = on && pos < 100 ? 'block' : 'none'; TRENA.desenhar(); };
     api.set = p => { pos = Math.max(0, Math.min(100, +p || 0)); const r = $('adRange'); if (r) r.value = String(pos); api.aplicar(); };
     api.mostrar = () => { const tem = !!state.img && state.vaos.some(v => v.pts.length === 4); const b = $('adBar'); if (b) b.style.display = tem ? 'flex' : 'none'; if (!tem) pos = 0; api.aplicar(); };
     return api;
@@ -2524,7 +2664,7 @@
       await OBRA.abrirAmbiente(i); await OBRA.espera(200); state.vaos.forEach(renderizarVao);
       const img = gerarComposicao().toDataURL('image/jpeg', .85);
       const vs = state.vaos.filter(v => v.pts.length === 4).map((v, j) => { const md = medidasVao(v), fam = v.produto.tipo === 'family'; return { n: j + 1, cm: v.et.cm ? 'Sim' : 'Não', reb: v.et.reb ? 'Sim · ' + (PAREDES.find(p => p.id === v.et.parede) || PAREDES[0]).nome : 'Não',
-        tip: v.et.esq ? v.produto.nome : 'Sem esquadria', linha: v.et.esq ? (fam ? 'Family' : 'Vidros CDE') : '—', cor: v.et.esq ? v.cor.nome + ' · ' + v.acabamento.nome : '—', vidro: v.et.esq ? v.vidro.nome : '—', med: v.et.esq ? md.W + ' × ' + md.H + ' mm' : '—' }; });
+        tip: v.et.esq ? v.produto.nome : 'Sem esquadria', linha: v.et.esq ? (fam ? 'Family' : 'Vidros CDE') : '—', cor: v.et.esq ? v.cor.nome + ' · ' + v.acabamento.nome : '—', vidro: v.et.esq ? v.vidro.nome : '—', med: (v.bruto && (+v.bruto.W || +v.bruto.H) ? 'Vão ' + (v.bruto.W || '—') + ' × ' + (v.bruto.H || '—') + ' mm' + (v.et.esq ? ' · ' : '') : '') + (v.et.esq ? 'Esquadria ' + md.W + ' × ' + md.H + ' mm' : (v.bruto ? '' : '—')) }; });
       partes.push({ nome: o.amb[i].nome || ('Ambiente ' + (i + 1)), img, vs });
     }
     await OBRA.abrirAmbiente(volta);
@@ -2559,6 +2699,9 @@
       const med = () => { const x = v(); if (!x) return; const W = +$('medW').value, H = +$('medH').value; x.med = { W: W >= 300 ? W : null, H: H >= 300 ? H : null }; x.et.esq = true; re(x); };
       $('medW').addEventListener('change', med); $('medH').addEventListener('change', med);
       $('btnCMVer').onclick = CMVER.abrir;
+      const trena = () => { const x = v(); if (!x) return; const W = +$('trW').value, H = +$('trH').value; x.bruto = (W >= 100 || H >= 100) ? { W: W >= 100 ? W : null, H: H >= 100 ? H : null } : null; renderizarVao(x); if (x.bruto) TRENA.tocar([x.id]); };
+      $('trW').addEventListener('change', trena); $('trH').addEventListener('change', trena);
+      $('btnTrena').onclick = () => { const x = v(); if (!x) return; if (!x.bruto) { $('trW').focus(); return; } TRENA.tocar([x.id]); };
       $('btnVideoObra2').onclick = () => OBRA.gravarVideo();
       $('btnQr2').onclick = () => OBRA.abrirQR();
       $('btnResumo').onclick = RESUMO;
@@ -2576,6 +2719,8 @@
       set('btnEsq', x.et.esq, 'Colocar a esquadria', 'Tirar a esquadria');
       $('etpCM').classList.toggle('on', x.et.cm); $('etpReb').classList.toggle('on', x.et.reb); $('etpEsq').classList.toggle('on', x.et.esq);
       $('gridParede').querySelectorAll('button').forEach(b => b.classList.toggle('on', x.et.reb && b.dataset.parede === x.et.parede));
+      const tW = $('trW'), tH = $('trH'); if (document.activeElement !== tW) tW.value = x.bruto && x.bruto.W ? x.bruto.W : ''; if (document.activeElement !== tH) tH.value = x.bruto && x.bruto.H ? x.bruto.H : '';
+      $('etpTrena').classList.toggle('on', !!x.bruto);
       const md = medidasVao(x), mW = $('medW'), mH = $('medH');
       if (document.activeElement !== mW) mW.value = md.W; if (document.activeElement !== mH) mH.value = md.H;
     };
@@ -2596,6 +2741,25 @@
     atualizarDica();
   }
   
+  /* 12/11/2026 · comandos do Está na frente */
+  (function () {
+    const b = id => document.getElementById(id); if (!b('frPincel')) return;
+    const vAt = () => state.vaos.find(x => x.id === state.vaoAtivoId);
+    const sync = () => {
+      b('frPincel').classList.toggle('btn-accent', PINCEL.on && !PINCEL.borracha); b('frBorracha').classList.toggle('btn-accent', PINCEL.on && PINCEL.borracha);
+      b('frPincel').textContent = PINCEL.on && !PINCEL.borracha ? 'Pintando…' : 'Pincel';
+      wrap.style.cursor = PINCEL.on ? 'crosshair' : '';
+      b('frMsg').textContent = PINCEL.on ? (vAt() ? 'Passe o dedo ou o mouse sobre o que está na frente. Toque de novo no botão para terminar.' : 'Selecione um vão primeiro.') : '';
+      state.vaos.forEach(renderFrente); if (!PINCEL.on) PINCEL.cur = null; renderizarUI();
+    };
+    const modo = borr => { if (PINCEL.on && PINCEL.borracha === borr) PINCEL.on = false; else { PINCEL.on = true; PINCEL.borracha = borr; } sync(); };
+    b('frPincel').onclick = () => modo(false);
+    b('frBorracha').onclick = () => modo(true);
+    b('frLimpar').onclick = () => { const v = vAt(); if (!v) return; v.frente = []; renderFrente(v); };
+    b('frTam').oninput = () => { PINCEL.r = +b('frTam').value; b('frTamLbl').textContent = PINCEL.r; renderizarUI(); };
+    $('selVao') && $('selVao').addEventListener('change', () => setTimeout(sync, 0));
+    window.addEventListener('keydown', e => { if (e.key === 'Escape' && PINCEL.on) { PINCEL.on = false; sync(); } });
+  })();
   init();
   
 
