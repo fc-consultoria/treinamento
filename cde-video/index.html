@@ -29,6 +29,10 @@
   .chap button{flex:none;border:1px solid #4a382e;border-radius:999px;background:transparent;color:#fff;font-size:14px;padding:8px 14px}
   .chap button.on{background:#e8622a;border-color:#e8622a}
   .hint{font-size:13px;color:#c4b8ae;text-align:center;padding:12px 16px calc(16px + env(safe-area-inset-bottom))}
+  #acu{position:absolute;left:50%;top:12px;transform:translateX(-50%);z-index:3;display:none;align-items:center;gap:10px;
+    background:rgba(30,22,18,.92);border:2px solid #e8622a;border-radius:14px;padding:10px 16px;font-weight:700;font-size:15px;max-width:92%;box-sizing:border-box}
+  #acu.on{display:flex}
+  #acu i{font-style:normal;font-size:22px}
   #tap{position:fixed;inset:0;z-index:4;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;
     background:rgba(30,22,18,.9);text-align:center;padding:24px}
   #tap .play{width:84px;height:84px;border-radius:50%;background:#e8622a;display:flex;align-items:center;justify-content:center}
@@ -42,6 +46,7 @@
 <div id="box">
   <video id="v" src="cde-linha-family.mp4" playsinline webkit-playsinline autoplay muted loop preload="auto"
     disablepictureinpicture disableremoteplayback controlslist="nodownload noremoteplayback noplaybackrate"></video>
+  <div id="acu"><i>🎧</i><span id="acuTx">Aumente o volume ou use fone: ouça a porta aberta × fechada</span></div>
   <div class="bar">
     <button id="back" aria-label="Voltar 10 segundos">−10s</button>
     <input id="seek" type="range" min="0" max="1000" value="0" aria-label="Posição do vídeo">
@@ -79,6 +84,12 @@
     else if(box.webkitRequestFullscreen){box.webkitRequestFullscreen();}
     else if(v.webkitEnterFullscreen){v.webkitEnterFullscreen();}   // iPhone
   };
+  var acu=document.getElementById('acu'),acuTx=document.getElementById('acuTx');
+  v.addEventListener('timeupdate',function(){
+    var on=v.currentTime>=110.2&&v.currentTime<173.2;acu.classList.toggle('on',on);
+    acuTx.textContent=v.muted?'Toque aqui para ligar o som e ouvir a porta aberta × fechada':'Aumente o volume ou use fone: ouça a porta aberta × fechada';
+  });
+  acu.addEventListener('click',function(){v.muted=false;v.volume=1;go();var t=document.getElementById('tap');if(t)t.remove();});
   go();
   var tap=document.getElementById('tap');
   tap.addEventListener('click',function(){v.muted=false;v.volume=1;go();tap.remove();});
