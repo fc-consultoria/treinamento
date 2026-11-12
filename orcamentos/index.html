@@ -408,7 +408,7 @@ function newState(o,lib){
  const st={hide:{},comp:{},aluPeso:num(o.pesoTotal||o.perfis.reduce((s,p)=>s+p.peso,0)),aluKg:lib.aluKg||"",aluAdd:lib.aluAdd||"",vidPrice:{},vidM2:{},
   outros:[{d:"Instalação",v:""},{d:"Frete / transporte",v:""},{d:"",v:""}],
   mg:{comp:Object.assign(blankMg(),lib.mg&&lib.mg.comp),alu:Object.assign(blankMg(),lib.mg&&lib.mg.alu),vid:Object.assign(blankMg(),lib.mg&&lib.mg.vid),mo:Object.assign(blankMg(),lib.mg&&lib.mg.mo),out:Object.assign(blankMg(),lib.mg&&lib.mg.out)},
-  rateio:"area",validade:"",cond:"",prazo:"",obs:""};
+  rateio:"area",validade:"",cond:"",prazo:"",obs:"",impFed:lib.impFed||""};
  st.emb={};o.comps.forEach(c=>{const b=DB.banco&&DB.banco[c.code];if(b&&b.preco){st.comp[c.code]=b.preco;st.emb[c.code]=Object.assign({},b.emb)}});
  [...new Set(o.tips.map(t=>t.vid))].forEach(k=>{if(lib.vid&&lib.vid[k])st.vidPrice[k]=lib.vid[k]});
  return st;
@@ -419,7 +419,7 @@ if(!DB||!Array.isArray(DB.obras)){
  o.st=newState(o,DB.lib);
  // traz os preços já digitados na versão anterior desta obra
  try{const old=JSON.parse(localStorage.getItem("fc-orc-AR_10-26-025-00")||"null");if(old){
-  ["comp","hide","outros","mg","rateio","validade","cond","prazo","obs","aluPeso","aluKg","aluAdd"].forEach(k=>{if(old[k]!==undefined)o.st[k]=old[k]});
+  ["comp","hide","outros","mg","rateio","validade","cond","prazo","obs","aluPeso","aluKg","aluAdd","impFed"].forEach(k=>{if(old[k]!==undefined)o.st[k]=old[k]});
   const map={L10:["LAMINADO 10MM INCOLOR"],T10:["TEMPERADO 10MM INCOLOR"],L8:["LAMINADO 8MM INCOLOR","LAMINADO 8MM"],TPV:["TEMPERADO"]};
   Object.keys(map).forEach(k=>map[k].forEach(nk=>{if(old.vidPrice&&old.vidPrice[k])o.st.vidPrice[nk]=old.vidPrice[k];if(old.vidM2&&old.vidM2[k]&&map[k].length===1)o.st.vidM2[nk]=old.vidM2[k]}));
   Object.assign(DB.lib.comp,old.comp||{});
@@ -486,7 +486,10 @@ function groups(O){return [
  {k:"comp",name:"Componentes",cost:compCost(O)*(1+fatorDup(O)),dup:compCost(O)*fatorDup(O)},{k:"alu",name:"Alumínio",cost:aluCost(O)*(1+fatorDup(O)),perfil:aluCost(O)*(1+fatorDup(O)),dup:aluCost(O)*fatorDup(O),mo:moCost(O),m2:m2Obra(O)},
  {k:"vid",name:"Vidros",cost:vidCost(O)},{k:"mo",name:"Mão de obra",cost:moCost(O),m2:m2Obra(O),pecas:O.tips.reduce((s,t)=>s+(+t.q||0),0)},{k:"out",name:"Outros custos",cost:outCost(O)}
 ].map(g=>Object.assign(g,{p:pv(g.cost,O.st.mg[g.k],g.k)}))}
-const totals=O=>{const gs=groups(O);return {c:gs.reduce((s,g)=>s+g.cost,0),v:gs.reduce((s,g)=>s+(g.p.ok?g.p.v:0),0),gs}};
+/* 12/11: imposto federal embutido sobre o preço de venda da obra: PV final = PV ÷ (1 − imposto%) */
+const impFed=O=>{const t=n(O&&O.st&&O.st.impFed)/100;return t>0&&t<1?t:0};
+const fatImp=O=>1/(1-impFed(O));
+const totals=O=>{const gs=groups(O);return {c:gs.reduce((s,g)=>s+g.cost,0),v:gs.reduce((s,g)=>s+(g.p.ok?g.p.v:0),0)*fatImp(O),gs}};
 
 // ================= TELA INICIAL =================
 let NEW=null; // estado do formulário de novo orçamento
@@ -716,7 +719,15 @@ function buildObra(){
 <section id="tab-res" class="tab" hidden><div class="stack">
  <div class="card"><div class="card-h"><h2>Resumo da obra</h2><div class="hint">Componentes: PV = Custo × (1 + margem). Alumínio: PV = Perfis × (1 + margem). Vidros: PV = Custo × (1 + margem). Mão de obra: PV = (Área × R$/m²) × (1 + margem).</div></div>
   <div class="tbl-wrap"><table class="sum-table"><thead><tr><th>Grupo</th><th class="r">Custo</th><th class="r">Custo médio</th><th class="r">Margem %</th><th class="r">Preço de venda</th><th class="r">Venda média</th><th class="r">Lucro R$</th><th class="r" title="Quanto o grupo representa no preço de venda total da obra (não é margem)">Participação na venda</th></tr></thead>
-  <tbody id="res-body"></tbody><tfoot><tr><td>Total da obra</td><td class="r num" id="res-c"></td><td></td><td></td><td class="r num" id="res-v"></td><td></td><td class="r num" id="res-l"></td><td class="r num">100%</td></tr></tfoot></table></div></div>
+  <tbody id="res-body"></tbody><tfoot><tr><td id="res-lbl">Total da obra</td><td class="r num" id="res-c"></td><td></td><td></td><td class="r num" id="res-v"></td><td></td><td class="r num" id="res-l"></td><td class="r num">100%</td></tr><tr id="res-imp-row" hidden><td colspan="4" style="font-weight:600;font-family:var(--body);font-size:14px">+ Imposto federal <span id="res-imp-pct"></span> (embutido)</td><td class="r num" id="res-imp-v" style="font-weight:600;font-family:var(--body);font-size:14px"></td><td colspan="3"></td></tr><tr id="res-fin-row" hidden><td colspan="4">Preço de venda final</td><td class="r num" id="res-fin"></td><td colspan="3"></td></tr></tfoot></table></div></div>
+ <div class="card" id="imp-card"><div class="card-h"><div><h2>Imposto federal</h2><div class="hint">Embutido em cima do preço de venda da obra: PV final = PV ÷ (1 − imposto%). Vale para o total, para o preço de cada tipologia na proposta e para o PDF. O lucro dos grupos não muda.</div></div></div>
+  <div class="card-b" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;align-items:end">
+   <label style="display:grid;gap:4px;font-size:12.5px;color:var(--muted)">Imposto federal %<input class="in pct num" id="imp-pct" inputmode="decimal" placeholder="0" style="text-align:right"></label>
+   <div><span class="hint">Preço antes do imposto</span><br><b class="num" id="imp-base">R$ 0,00</b></div>
+   <div><span class="hint">Divisor</span><br><b class="num" id="imp-div">1,0000</b></div>
+   <div><span class="hint">Imposto R$</span><br><b class="num" id="imp-val">R$ 0,00</b></div>
+   <div><span class="hint">Preço de venda final</span><br><b class="num" id="imp-fin" style="font-size:18px">R$ 0,00</b></div>
+  </div><div class="err" id="imp-err" hidden style="padding:0 18px 14px">O imposto precisa ficar entre 0% e 99%.</div></div>
  <!-- 05/11: Outros custos oculto; para voltar, tirar o hidden --><div class="panel-grid" id="out-sec" hidden style="display:none"><div class="card"><div class="card-h"><div><h2>Outros custos</h2><div class="hint">Opcional (instalação, frete…). Margem sobre o custo, igual aos demais grupos. Entra no resumo e no preço das tipologias.</div></div></div>
   <div class="tbl-wrap"><table><thead><tr><th>Descrição</th><th class="r">Custo R$</th></tr></thead><tbody id="out-body"></tbody></table></div></div><div id="pp-out"></div></div>
  <div class="card"><div class="card-h"><h2>Dados da proposta</h2></div><div class="card-b fields">
@@ -952,6 +963,7 @@ function buildOut(){
 }
 function wireFields(){
  [["f-numero","numero",O],["f-obra","obra",O],["f-cliente","cliente",O],["f-cor","cor",O],["f-marca","marcaNome",O],["f-marcacor","marcaCor",O]].forEach(([id,k,obj])=>{const el=$(id);el.value=obj[k]||"";el.oninput=()=>{obj[k]=el.value;touch();paintApr(groups(O))}});
+ {const el=$("imp-pct");if(el){el.value=st.impFed||"";el.oninput=()=>{st.impFed=el.value;DB.lib.impFed=el.value;touch();refresh()}}}
  [["f-rateio","rateio"],["f-validade","validade"],["f-cond","cond"],["f-prazo","prazo"],["f-obs","obs"]].forEach(([id,k])=>{const el=$(id);el.value=st[k]||(k==="rateio"?"area":"");el[el.tagName==="SELECT"?"onchange":"oninput"]=()=>{st[k]=el.value;touch();refresh()}});
 }
 
@@ -975,7 +987,12 @@ function paintRes(gs){
   const ga=gs.find(g=>g.k==="alu"),gc=gs.find(g=>g.k==="comp");nt.hidden=!ds.length;
   if(ds.length)nt.innerHTML=`➕ <b>${ds.length} ${ds.length===1?"tipologia incluída":"tipologias incluídas"} na proposta</b> (${ds.map(t=>esc(t.tipo)).join(", ")}): vidro e mão de obra entram pelo m² real; perfis (+${brl(ga.dup)}) e componentes (+${brl(gc.dup)}) por estimativa de +${pct(fatorDup(O)*100)} pelo perímetro, pois as listas do sistema são da obra toda. Para o valor exato, reimporte as listas do sistema com a tipologia nova.`}
  $("res-c").textContent=brl(totC);$("res-v").textContent=brl(totV);$("res-l").textContent=brl(lucro);
- $("k-cost").textContent=brl(totC);$("k-sale").textContent=brl(totV);
+ const tI=impFed(O),fin=totV*fatImp(O),bad=n(st.impFed)!==0&&!tI;
+ $("res-imp-row").hidden=$("res-fin-row").hidden=!tI;$("res-lbl").textContent=tI?"Subtotal (sem imposto)":"Total da obra";
+ $("res-imp-pct").textContent=tI?num(tI*100,2)+"%":"";$("res-imp-v").textContent=brl(fin-totV);$("res-fin").textContent=brl(fin);
+ if($("imp-base")){$("imp-base").textContent=brl(totV);$("imp-div").textContent=num(1-tI,4);$("imp-val").textContent=brl(fin-totV);$("imp-fin").textContent=brl(fin);$("imp-err").hidden=!bad;
+  const el=$("imp-pct");if(document.activeElement!==el)el.value=st.impFed||""}
+ $("k-cost").textContent=brl(totC);$("k-sale").textContent=brl(fin);
 }
 
 // ---------- APRESENTAÇÃO ----------
@@ -1069,8 +1086,9 @@ function paintApr(gs){
  const w=t=>st.rateio==="per"?itemPer(t):itemM2(t);const wTot=O.tips.reduce((s,t)=>s+w(t),0);
  const vS=sale("vid"),vC=vidCost(O);
  const vidItem=t=>{const c=vidCostOf(O,t.vid),a=autoM2(O,t.vid);if(!c||!vC||!a)return 0;return vS*(c/vC)*(itemM2(t)/a)};
- const precos=O.tips.map(t=>(wTot?shared*w(t)/wTot:0)+vidItem(t));
- const total=O.tips.length?precos.reduce((s,v)=>s+v,0):gs.reduce((s,x)=>s+(x.p.ok?x.p.v:0),0);
+ const fI=fatImp(O);/* 12/11: imposto federal embutido em cada tipologia */
+ const precos=O.tips.map(t=>((wTot?shared*w(t)/wTot:0)+vidItem(t))*fI);
+ const total=O.tips.length?precos.reduce((s,v)=>s+v,0):gs.reduce((s,x)=>s+(x.p.ok?x.p.v:0),0)*fI;
  const el=$("p-doc");if(!el)return;
  if(!window.PROPOSTA){el.innerHTML=`<div class="card-b hint">O modelo da proposta não carregou. Verifique a internet e atualize a página.</div>`;return}
  PROPOSTA.render(el,aprDoc(),{simular:true,simRotulo:"só a FC vê · o link do cliente não tem",estado:((window.__simEst=window.__simEst||{})[O.id]=window.__simEst[O.id]||{}),onSim:()=>paintApr(groups(O)),onSalvar:cores=>salvarCorObra(cores),precos:O.tips.length?precos:[],total,condicoes:{validade:st.validade,cond:st.cond,prazo:st.prazo,obs:st.obs},editar:true,duplicar:true,aberto:aprAberto,editor:t=>aprEditor(t),adiar:$("tab-apr").hidden});
