@@ -1,0 +1,70 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
+<title>Sala de demonstração · FC Consultoria em Esquadria</title>
+<link rel="icon" href="logo-fc.jpg">
+<style>
+*{box-sizing:border-box}
+body{margin:0;font:15px/1.5 Inter,system-ui,sans-serif;background:#f5f6f6;color:#16252b;-webkit-user-select:none;user-select:none}
+.wm{position:fixed;inset:0;pointer-events:none;z-index:50;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='360' height='190'><text x='20' y='120' transform='rotate(-18 180 95)' font-family='Arial' font-size='14' fill='%230b7f88' fill-opacity='0.08'>FC CONSULTORIA EM ESQUADRIA - uso exclusivo</text></svg>")}
+header{background:#fff;color:#16252b;border-bottom:4px solid #1bc8cc;box-shadow:0 2px 0 #b4b6ba}
+.hd{max-width:980px;margin:0 auto;padding:14px 18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.ini{width:44px;height:44px;border-radius:10px;background:#0b7f88;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px}
+.hd h1{margin:0;font-size:19px;font-weight:600}.hd small{display:block;font-size:12px;color:#5f6b70}
+.selo{margin-left:auto;display:flex;align-items:center;gap:10px}
+.tempo{font-size:12px;background:#e3f6f7;color:#025b69;padding:5px 10px;border-radius:8px;font-weight:600}
+.fcs{background:#fff;border:1px solid #d6d8db;border-radius:8px;padding:4px 10px;display:flex;align-items:center;gap:6px;font-size:11px;color:#0b7f88;font-weight:600}.fcs img{width:40px;height:40px}
+main{max-width:980px;margin:0 auto;padding:18px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.bx{background:#fff;border:1px solid #d3dde1;border-radius:14px;padding:16px}
+.bx h3{margin:6px 0 2px;font-size:16px}.mut{color:#55666e;font-size:13px}
+.ic{width:42px;height:42px;border-radius:10px;background:#e3f6f7;display:flex;align-items:center;justify-content:center;font-size:22px}
+button{font:600 14px Inter,system-ui,sans-serif;border-radius:10px;padding:10px 14px;cursor:pointer;border:1px solid #9aa7ae;background:#fff;color:#16252b}
+.bp{background:#0b7f88;border-color:#0b7f88;color:#fff;width:100%;margin-top:12px}
+.tag{font-size:11px;background:#fff3d6;color:#7a5200;padding:2px 7px;border-radius:6px;margin-left:6px;font-weight:600}
+table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:7px 5px;border-bottom:1px solid #e3e9ec;text-align:left}th{color:#55666e;font-weight:600}
+.kpi{display:flex;gap:18px;flex-wrap:wrap;margin-top:10px;font-size:13px}.kpi b{font-size:17px;display:block;color:#0b7f88}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+.pf{display:flex;gap:12px;align-items:center;padding:8px 0;border-bottom:1px solid #e3e9ec;font-size:13px}
+.st{display:flex;gap:10px;align-items:center;padding:7px 0;font-size:14px}
+.dot{width:20px;height:20px;border-radius:50%;border:2px solid #9aa7ae;flex:none}.dot.ok{background:#0b7f88;border-color:#0b7f88}
+footer{border-top:1px solid #d3dde1;background:#fff;margin-top:24px}
+.ft{max-width:980px;margin:0 auto;padding:14px 18px;display:flex;align-items:center;gap:10px;font-size:12px;color:#55666e;flex-wrap:wrap;justify-content:center;text-align:center}.ft img{width:44px;height:44px}
+.fim{max-width:460px;margin:60px auto;text-align:center}.fim img{width:96px;height:96px;border-radius:14px}
+a.zap{display:inline-block;margin-top:14px;background:#0b7f88;color:#fff;text-decoration:none;font-weight:600;padding:11px 16px;border-radius:10px}
+@media print{body{display:none}}
+</style></head><body oncontextmenu="return false">
+<div class="wm"></div>
+<div id="app"><main><p class="mut">Abrindo a sala…</p></main></div>
+<footer><div class="ft"><img src="logo-fc.jpg" alt="FC Consultoria em Esquadria"><span>Tecnologia <b>FC Consultoria em Esquadria</b> · CNPJ 52.985.682/0001-32 · © uso exclusivo · imagens e dados demonstrativos</span></div></footer>
+<script>
+const SB='https://pawwncmfadzxfahfvhry.supabase.co/rest/v1/rpc/',KEY='sb_publishable_b0kGoqo85joo3Vb8Xllxhw_VemwaLMs';
+const rpc=(n,b)=>fetch(SB+n,{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify(b)}).then(r=>r.json());
+const $=s=>document.querySelector(s),e=v=>String(v==null?'':v).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const COD=(new URLSearchParams(location.search).get('k')||'').trim();
+let K=null,EV=null,VIEW='home';
+const ini=n=>n.trim().split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase();
+function fim(){K=null;$('#app').innerHTML=`<div class="fim"><img src="logo-fc.jpg" alt="FC"><h2>Demonstração encerrada</h2><p class="mut">Este link não está mais ativo. Para uma nova apresentação, fale com a FC Consultoria em Esquadria.</p><a class="zap" href="https://wa.me/5566999867984" target="_blank" rel="noopener">WhatsApp (66) 9 9986-7984</a></div>`}
+function resta(){const r=Math.max(0,new Date(K.expira_em)-Date.now()),h=Math.floor(r/36e5),m=Math.floor(r%36e5/6e4);return (h>=24?Math.floor(h/24)+'d ':'')+(h%24)+'h '+m+'min'}
+function topo(){return `<header><div class="hd"><div class="ini">${e(ini(K.nome))}</div><div><h1>${e(K.nome)}</h1><small>Sala de demonstração · somente visualização</small></div><div class="selo"><span class="tempo" id="tp">vence em ${resta()}</span><span class="fcs"><img src="logo-fc.jpg" alt="">Tecnologia FC</span></div></div></header>`}
+const volta='<button onclick="ir(\'home\')" style="margin-bottom:14px">← Voltar aos módulos</button>';
+const fict='<span class="tag">dados fictícios</span>';
+function janela(x,y,w,h){return `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#bfe0e2" stroke="#0b7f88" stroke-width="3"/><line x1="${x+w/2}" y1="${y}" x2="${x+w/2}" y2="${y+h}" stroke="#0b7f88" stroke-width="2"/>`}
+const TELAS={
+home:()=>`<p class="mut" style="margin-top:0">Escolha um módulo para ver como funciona. Tudo aqui usa dados de exemplo.</p><div class="grid">
+${[['obra','🏗️','Combo Obra','Simulador de Obra + Obra em 3D: do croqui à apresentação da obra para o cliente final.'],
+['vendas','🛒','Combo Vendas','Catálogo 3D + Orçamento dos vendedores: perfis em 3D e orçamento rápido no balcão.'],
+['trein','🎓','Treinamento 3D','Orientativo passo a passo para a equipe aprender a usar o sistema.']].map(m=>`<div class="bx"><div class="ic">${m[1]}</div><h3>${m[2]}</h3><div class="mut">${m[3]}</div><button class="bp" onclick="ir('${m[0]}')">Abrir demonstração</button></div>`).join('')}</div>`,
+obra:()=>volta+`<div class="two"><div class="bx"><h3>Simulador de Obra · Residencial Exemplo${fict}</h3><table><tr><th>Vão</th><th>Tipologia</th><th>Medida (mm)</th><th>Qtd</th></tr>
+<tr><td>J1</td><td>Janela de correr 2 folhas</td><td>1200 × 1000</td><td>4</td></tr><tr><td>J2</td><td>Maxim-ar</td><td>600 × 600</td><td>6</td></tr><tr><td>J3</td><td>Janela de correr 4 folhas</td><td>2000 × 1200</td><td>1</td></tr><tr><td>P1</td><td>Porta de giro</td><td>800 × 2100</td><td>2</td></tr></table>
+<div class="kpi"><span><b>13</b>vãos</span><span><b>214,6 kg</b>perfis</span><span><b>47</b>barras de 6 m</span><span><b>21,8 m²</b>vidro</span></div></div>
+<div class="bx"><h3>Obra em 3D</h3><div class="mut">O cliente final recebe um link com a obra, sem preço.</div><svg viewBox="0 0 300 200" width="100%" style="margin-top:8px"><polygon points="20,80 150,18 280,80" fill="#9aa7ae"/><rect x="34" y="80" width="232" height="110" fill="#f4f1ea" stroke="#9aa7ae"/>${janela(52,100,56,40)}${janela(192,100,56,40)}<rect x="134" y="122" width="34" height="68" fill="#0b7f88"/><circle cx="162" cy="157" r="2.5" fill="#fff"/><rect x="0" y="190" width="300" height="10" fill="#c9d3d8"/></svg><div class="mut" style="font-size:12px">Imagem demonstrativa.</div></div></div>`,
+vendas:()=>volta+`<div class="two"><div class="bx"><h3>Catálogo 3D${fict}</h3>${[['DM-101','Marco de correr 2 folhas','0,812 kg/m'],['DM-102','Folha de correr','0,640 kg/m'],['DM-103','Trilho inferior','0,455 kg/m'],['DM-104','Montante de encontro','0,520 kg/m']].map(p=>`<div class="pf"><svg width="44" height="44" viewBox="0 0 44 44"><path d="M6 6h32v8H16v24H6z" fill="#c9d3d8" stroke="#0b7f88" stroke-width="1.5"/></svg><div><b>${p[0]}</b> · ${p[1]}<br><span class="mut">${p[2]}</span></div></div>`).join('')}<div class="mut" style="font-size:12px;margin-top:8px">Medidas e pesos demonstrativos: confirme sempre com o seu fornecedor.</div></div>
+<div class="bx"><h3>Orçamento do vendedor${fict}</h3><div class="mut">Cliente Exemplo · Vendedor Exemplo</div><table style="margin-top:8px"><tr><td>4× Janela de correr 2 folhas</td><td style="text-align:right">R$ 4.360,00</td></tr><tr><td>6× Maxim-ar</td><td style="text-align:right">R$ 2.520,00</td></tr><tr><td>2× Porta de giro</td><td style="text-align:right">R$ 2.060,00</td></tr><tr><th>Total</th><th style="text-align:right;color:#0b7f88">R$ 8.940,00</th></tr></table></div></div>`,
+trein:()=>{const s=['Cadastrar a linha','Cadastrar os perfis','Montar a tipologia','Conferir o corte','Gerar o orçamento'];return volta+`<div class="bx"><h3>Treinamento 3D · Orientativo${fict}</h3><div style="height:8px;background:#e3e9ec;border-radius:4px;margin:10px 0 14px"><div style="width:40%;height:8px;background:#0b7f88;border-radius:4px"></div></div>${s.map((t,i)=>`<div class="st"><span class="dot ${i<2?'ok':''}"></span>${i+1}. ${t}${i==2?' <span style="color:#0b7f88;font-weight:600">← você está aqui</span>':''}</div>`).join('')}</div>`}};
+async function ir(v){VIEW=v;EV=null;if(v!=='home'){try{EV=await rpc('sala_evento',{p_codigo:COD,p_modulo:v})}catch(_){} if(EV==null){const ok=await rpc('sala_ping',{p_codigo:COD,p_evento:null}).catch(()=>true);if(ok===false)return fim()}}
+  $('#app').innerHTML=topo()+'<main>'+TELAS[v]()+'</main>';scrollTo(0,0)}
+async function abre(){if(!COD)return fim();let r;try{r=await rpc('sala_abrir',{p_codigo:COD})}catch(_){$('#app').innerHTML='<main><p>Sem conexão. Tente de novo.</p></main>';return}
+  if(!r||!r.ok)return fim();K=r;ir('home');
+  setInterval(async()=>{if(!K)return;if(new Date(K.expira_em)<=Date.now())return fim();const t=$('#tp');if(t)t.textContent='vence em '+resta();
+    if(document.visibilityState!=='visible')return;const ok=await rpc('sala_ping',{p_codigo:COD,p_evento:EV}).catch(()=>true);if(ok===false)fim()},30000)}
+abre();
+</script></body></html>

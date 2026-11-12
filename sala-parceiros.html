@@ -1,0 +1,63 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">
+<title>Sala de demonstração · Parceiros</title>
+<link rel="icon" href="sala/logo-fc.jpg">
+<style>
+*{box-sizing:border-box}body{margin:0;font:15px/1.5 Inter,system-ui,sans-serif;background:#f5f6f6;color:#16252b}
+.wm{position:fixed;inset:0;pointer-events:none;z-index:50;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='360' height='190'><text x='20' y='120' transform='rotate(-18 180 95)' font-family='Arial' font-size='14' fill='%230b7f88' fill-opacity='0.07'>FC CONSULTORIA EM ESQUADRIA - uso exclusivo</text></svg>")}
+header{background:#fff;border-bottom:4px solid #1bc8cc;box-shadow:0 2px 0 #b4b6ba}
+.hd{max-width:880px;margin:0 auto;padding:10px 18px;display:flex;align-items:center;gap:12px}.hd img{width:54px;height:54px}
+.hd h1{margin:0;font-size:19px}.hd small{color:#5f6b70;font-size:12px;display:block}
+main{max-width:880px;margin:0 auto;padding:16px 18px}
+a{color:#0b7f88}.mut{color:#5f6b70;font-size:13px}
+.box{background:#fff;border:1px solid #d6dcdf;border-radius:14px;padding:16px;margin:12px 0}
+.f{display:grid;grid-template-columns:2fr 1fr auto;gap:10px;align-items:end}@media(max-width:620px){.f{grid-template-columns:1fr}}
+label{font-size:12px;color:#5f6b70;display:block;margin-bottom:4px}
+input,select{width:100%;height:40px;padding:0 10px;border:1px solid #b4b6ba;border-radius:9px;font:inherit;background:#fff}
+button{font:600 13px Inter,system-ui,sans-serif;border-radius:9px;padding:9px 13px;cursor:pointer;border:1px solid #b4b6ba;background:#fff;color:#16252b}
+.bp{background:#0b7f88;border-color:#0b7f88;color:#fff;height:40px}.bd{color:#a32d2d;border-color:#e3b9b9}
+.err{color:#a32d2d;font-size:13px;margin:6px 0 0;min-height:18px}
+.lin{border-top:1px solid #e6eaec;padding:12px 0}.lin:first-child{border-top:0}
+.top{display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between;align-items:center}
+.chip{font-size:12px;padding:3px 9px;border-radius:99px;font-weight:600}.on{background:#dff3e6;color:#1d6b3c}.off{background:#e8eaec;color:#5f6b70}
+.acts{display:flex;gap:6px;flex-wrap:wrap}.uso{font-size:13px;margin-top:6px}.uso b{color:#0b7f88}
+.lk{font-family:ui-monospace,monospace;font-size:12px;background:#f0f3f4;padding:3px 7px;border-radius:6px;word-break:break-all}
+footer{text-align:center;font-size:12px;color:#5f6b70;padding:18px}footer img{width:40px;vertical-align:middle;margin-right:6px}
+</style></head><body><div class="wm"></div>
+<header><div class="hd"><img src="sala/logo-fc.jpg" alt="FC Consultoria em Esquadria"><div><h1>Sala de demonstração · Parceiros</h1><small>Painel da Matriz · Vendas e site</small></div><a href="painel.html" style="margin-left:auto;font-size:13px">← Painel da Matriz</a></div></header>
+<main>
+<p class="mut" style="margin:0">Crie uma chave para cada sistemista. Ele recebe um link com a marca FC e o nome da empresa dele, vê os 3 módulos só com dados fictícios e o acesso cai sozinho na validade (máximo 2 dias).</p>
+<div class="box"><div class="f">
+<div><label for="nm">Nome da empresa do sistemista</label><input id="nm" maxlength="80" placeholder="Sistema Exemplo Software"></div>
+<div><label for="hr">Validade</label><select id="hr"><option value="48">2 dias (máximo)</option><option value="24">1 dia</option><option value="12">12 horas</option><option value="4">4 horas</option></select></div>
+<button class="bp" id="gr">🔑 Gerar chave</button></div><p class="err" id="er"></p></div>
+<div class="box" id="app">Carregando…</div>
+</main>
+<footer><img src="sala/logo-fc.jpg" alt="">Desenvolvido por FC Consultoria em Esquadria · CNPJ 52.985.682/0001-32 · uso exclusivo</footer>
+<script>
+const SB='https://pawwncmfadzxfahfvhry.supabase.co/rest/v1/rpc/',KEY='sb_publishable_b0kGoqo85joo3Vb8Xllxhw_VemwaLMs',KT='pfc-token-painel';
+const BASE=location.origin+location.pathname.replace(/[^/]*$/,'')+'sala/?k=';
+const $=s=>document.querySelector(s),e=v=>String(v==null?'':v).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const rpc=(n,b)=>fetch(SB+n,{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify(b)}).then(r=>r.json());
+const tok=()=>{try{return localStorage.getItem(KT)}catch(_){return null}};
+const dt=d=>d?new Date(d).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
+const MOD={obra:'Combo Obra',vendas:'Combo Vendas',trein:'Treinamento 3D'};
+const min=s=>{s=+s||0;return s<60?'menos de 1 min':Math.round(s/60)+' min'};
+function login(msg){$('#app').innerHTML=`<p>${msg||'Entre com a senha da FC (a mesma do Acesso FC).'}</p><input type="password" id="sn" placeholder="Senha da FC" style="max-width:260px"> <button class="bp" id="en">Entrar</button>`;
+  $('#en').onclick=async()=>{const r=await rpc('pfc_login_matriz',{p_senha:$('#sn').value});if(r&&r.token){localStorage.setItem(KT,r.token);carrega()}else login((r&&r.erro)||'Senha incorreta')}}
+function uso(m){const ab=Object.keys(MOD).filter(k=>m[k]),na=Object.keys(MOD).filter(k=>!m[k]);
+  let h=m.entrada?`Entrou na sala ${m.entrada.vezes}x · última vez ${dt(m.entrada.ultima)}<br>`:'Ainda não abriu o link<br>';
+  if(ab.length)h+='Abriu: '+ab.map(k=>`<b>${MOD[k]}</b> ${m[k].vezes}x (${min(m[k].seg)}, última ${dt(m[k].ultima)})`).join(' · ');
+  if(na.length&&m.entrada)h+=(ab.length?'<br>':'')+`<span class="mut">Não abriu: ${na.map(k=>MOD[k]).join(', ')}</span>`;return h}
+async function carrega(){const t=tok();if(!t)return login();let L;try{L=await rpc('sala_lista',{p_token:t})}catch(_){$('#app').textContent='Sem conexão.';return}
+  if(!Array.isArray(L))return login('Sessão expirada. Entre de novo.');
+  $('#app').innerHTML=L.length?L.map(k=>`<div class="lin"><div class="top"><div><b>${e(k.nome)}</b> <span class="chip ${k.ativa?'on':'off'}">${k.ativa?'Ativa':'Desligada'}</span><br><span class="mut">${k.ativa?'Vence '+dt(k.expira_em):(k.desligada_em?'Desligada '+dt(k.desligada_em):'Venceu '+dt(k.expira_em))} · criada ${dt(k.criado_em)}</span></div>
+  <div class="acts">${k.ativa?`<button data-cp="${e(k.codigo)}">📋 Copiar link</button><a href="sala/?k=${e(k.codigo)}" target="_blank" rel="noopener"><button>👁 Ver como parceiro</button></a><button class="bd" data-a="desligar" data-i="${k.id}">⏻ Desligar</button>`:`<button class="bd" data-a="excluir" data-i="${k.id}">Excluir</button>`}</div></div>
+  ${k.ativa?`<div style="margin-top:6px"><span class="lk">${e(BASE+k.codigo)}</span></div>`:''}<div class="uso">${uso(k.mods||{})}</div></div>`).join(''):'<p class="mut">Nenhuma chave ainda. Digite o nome do sistemista e clique em Gerar chave.</p>';
+  document.querySelectorAll('[data-cp]').forEach(b=>b.onclick=()=>{navigator.clipboard&&navigator.clipboard.writeText(BASE+b.dataset.cp);b.textContent='Copiado ✓';setTimeout(()=>b.textContent='📋 Copiar link',1500)});
+  document.querySelectorAll('[data-a]').forEach(b=>b.onclick=async()=>{const a=b.dataset.a;if(!confirm(a==='desligar'?'Desligar esta chave? O parceiro perde o acesso na hora.':'Excluir esta chave e o histórico dela?'))return;await rpc('sala_definir',{p_token:tok(),p_id:b.dataset.i,p_acao:a});carrega()});}
+$('#nm').oninput=()=>$('#er').textContent='';
+$('#gr').onclick=async()=>{const n=$('#nm').value.trim();if(n.length<2){$('#er').textContent='Digite o nome da empresa do sistemista.';return}
+  const r=await rpc('sala_criar',{p_token:tok(),p_nome:n,p_horas:+$('#hr').value});if(!r||r.erro){$('#er').textContent=r&&r.erro==='sem acesso'?'Sessão expirada. Entre de novo.':'Não deu para criar. Tente de novo.';return}
+  $('#nm').value='';carrega()};
+carrega();setInterval(carrega,30000);
+</script></body></html>
