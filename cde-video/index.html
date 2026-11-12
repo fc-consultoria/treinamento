@@ -57,11 +57,11 @@
 </div>
 <div class="chap" id="chap"></div>
 <div class="hint">Gire o celular ou toque em ⛶ para ver em tela cheia · use dois dedos para aproximar</div>
-<div id="tap"><div class="play"></div><h1>Linha Family · CDE</h1><p>Toque para assistir com som</p></div>
+<div id="tap"><div class="play"></div><h1>Linha Family · CDE</h1><p>Toque para começar com som<br>🎧 Ouça a diferença: porta aberta × fechada</p></div>
 <script>
 (function(){
   var v=document.getElementById('v'),box=document.getElementById('box'),seek=document.getElementById('seek'),tm=document.getElementById('tm');
-  var CH=[['Início',0],['Três linhas',7],['Encaixes',16],['Ambientes 3D',52.5],['Acústica',110.2],['Drenagem',173.2],['Simulador na obra',204.1],['Final',252]];
+  var CH=[['Acústica',0],['Linha Family',63],['Três linhas',70],['Encaixes',79],['Ambientes 3D',115.5],['Drenagem',173.2],['Simulador na obra',204.1],['Final',252]];
   var chap=document.getElementById('chap');
   CH.forEach(function(c){var b=document.createElement('button');b.textContent=c[0];b.onclick=function(){to(c[1]+0.05)};chap.appendChild(b)});
   function go(){v.play().catch(function(){});}
@@ -86,13 +86,13 @@
   };
   var acu=document.getElementById('acu'),acuTx=document.getElementById('acuTx');
   v.addEventListener('timeupdate',function(){
-    var on=v.currentTime>=110.2&&v.currentTime<173.2;acu.classList.toggle('on',on);
+    var on=v.currentTime<63;acu.classList.toggle('on',on);
     acuTx.textContent=v.muted?'Toque aqui para ligar o som e ouvir a porta aberta × fechada':'Aumente o volume ou use fone: ouça a porta aberta × fechada';
   });
   acu.addEventListener('click',function(){v.muted=false;v.volume=1;go();var t=document.getElementById('tap');if(t)t.remove();});
   go();
   var tap=document.getElementById('tap');
-  tap.addEventListener('click',function(){v.muted=false;v.volume=1;go();tap.remove();});
+  tap.addEventListener('click',function(){v.muted=false;v.volume=1;if(v.currentTime<63)v.currentTime=0;go();tap.remove();});
   // o vídeo nunca fica parado
   v.addEventListener('pause',function(){if(!dragging)setTimeout(go,200);});
   document.addEventListener('visibilitychange',function(){if(!document.hidden)go();});
