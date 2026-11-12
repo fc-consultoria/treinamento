@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex">
 <title>Orçamentos de Obra</title>
-<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0d4a48"><link rel="apple-touch-icon" href="icon-180.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Orçamentos"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.webmanifest" id="mf"><script>if(new URLSearchParams(location.search).get("e")==="cde"){document.getElementById("mf").href="manifest-cde.webmanifest";document.title="Orçamentos · CDE"}</script><meta name="theme-color" content="#0d4a48"><link rel="apple-touch-icon" href="icon-180.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Orçamentos"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap">
@@ -401,7 +401,8 @@ function pv(cost,m,k){const g=n(m.mg)/100;
 const blankMg=()=>({imp:"",desp:"",mg:"",mo:""});
 
 // ---------- BANCO LOCAL ----------
-const KEY="fc-orcamentos-v2";
+const CDE=!!(window.ORC&&ORC.esp==="cde");
+const KEY=CDE?"cde-orcamentos-v1":"fc-orcamentos-v2";
 let DB=null;
 if(window.ORC&&ORC.ativo){DB=ORC.DB}else{try{const s=localStorage.getItem(KEY);if(s)DB=JSON.parse(s)}catch(e){}}
 function newState(o,lib){
@@ -530,12 +531,12 @@ function renderBanco(){
 let SIM=null,SIM_LENDO=false;
 /* 05/11/2026 · colaborador (login "orcamentos") vê só os projetos da Guaporé Vidros; a FC marca cada projeto no card */
 const ehAdm=()=>!(window.ORC&&ORC.papel==="orcamentista");
-const gvChip=(p,attr)=>{const g=p.cliente_fc==="guapore-vidros";if(!ehAdm())return "";
+const gvChip=(p,attr)=>{const g=p.cliente_fc==="guapore-vidros";if(!ehAdm()||CDE)return "";
  return `<button type="button" class="chip ${g?"gv":""}" ${attr}="${esc(p.id)}" title="Clique para trocar">${g?"🔵 Guaporé Vidros · colaborador vê":"🔒 Só FC · tornar Guaporé"}</button>`};
 async function simGv(id){const p=SIM.find(x=>x.id===id);if(!p)return;const ant=p.cliente_fc;p.cliente_fc=p.cliente_fc==="guapore-vidros"?"fc":"guapore-vidros";p.atualizado=new Date().toISOString();
  const r=await sb.from("obra3d_projetos").upsert({id:p.id,dados:p,atualizado:p.atualizado});if(r.error){p.cliente_fc=ant;alert("Não foi possível salvar. Confira a internet e tente de novo.")}showHome()}
 async function simCarregar(){if(SIM_LENDO||typeof sb==="undefined")return;SIM_LENDO=true;
- try{const r=await sb.from("obra3d_projetos").select("dados");SIM=r.error?[]:(r.data||[]).map(x=>x.dados).filter(p=>p&&p.origem==="orc")}catch(e){SIM=[]}
+ try{const r=await sb.from("obra3d_projetos").select("dados");SIM=r.error?[]:(r.data||[]).map(x=>x.dados).filter(p=>p&&p.origem==="orc"&&(CDE?p.cliente_fc==="cde":p.cliente_fc!=="cde"))}catch(e){SIM=[]}
  SIM_LENDO=false;if(!$("view-home").hidden&&HOMETAB==="orc"&&!NEW)showHome()}
 const simVenda=p=>(p.itens||[]).reduce((t,i)=>t+(+i.pv||0),0)*(1+(+p.margem||0)/100);
 function simCards(){if(SIM===null){simCarregar();return ""}
@@ -548,7 +549,7 @@ function simCards(){if(SIM===null){simCarregar();return ""}
   <div class="hint">Criado em ${new Date(p.criado).toLocaleDateString("pt-BR")}</div></article>`}).join("")}
 const simId=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 async function simDup(id){const o=SIM.find(p=>p.id===id);if(!o)return;const c=JSON.parse(JSON.stringify(o));
- Object.assign(c,{id:simId(),criado:new Date().toISOString(),atualizado:new Date().toISOString(),copiaDe:o.id,editavel:true,obra:(o.obra||"Obra")+" (cópia)",link:null,status:"recebido",valor:"",entregue:"",pago:"",notas:"",avisos:[],origem:"orc"});
+ Object.assign(c,{id:simId(),criado:new Date().toISOString(),atualizado:new Date().toISOString(),copiaDe:o.id,editavel:true,obra:(o.obra||"Obra")+" (cópia)",link:null,status:"recebido",valor:"",entregue:"",pago:"",notas:"",avisos:[],origem:"orc"});if(CDE)c.cliente_fc="cde";
  if(typeof c.rodape!=="string")c.rodape="Desenvolvido por FC Consultoria em Esquadria · CNPJ 52.985.682/0001-32";(c.itens||[]).forEach(t=>{t.avisos=[];t.ok=true});
  const r=await sb.from("obra3d_projetos").upsert({id:c.id,dados:c,atualizado:c.atualizado});if(r.error){alert("Não foi possível duplicar. Confira a internet e tente de novo.");return}
  SIM.push(c);showHome()}
@@ -559,7 +560,7 @@ async function simDel(id){const o=SIM.find(p=>p.id===id);if(!o)return;
 function showHome(){
  location.hash=""; $("tabs").hidden=true; $("view-obra").hidden=true; $("view-home").hidden=false;
  const tot=DB.obras.reduce((s,o)=>s+totals(o).v,0);
- $("hdr").innerHTML=`<div>${window.ORC&&ORC.papel==='orcamentista'?'':'<a class="tomatriz" href="../painel.html">← Painel da Matriz</a>'}<div class="eyebrow">FC Consultoria em Esquadria</div><h1>Orçamentos de obra</h1><div class="meta">Dois formatos: pelos 3 PDFs do sistema (croqui, perfis e componentes) ou rápido, pelo Simulador de Obra 3D (Proposta comercial e Orientativo de Montagem).</div></div>
+ $("hdr").innerHTML=`<div>${window.ORC&&ORC.papel==='orcamentista'?'':'<a class="tomatriz" href="../painel.html">← Painel da Matriz</a>'}<div class="eyebrow">${CDE?"CDE Vidros &amp; Esquadrias · plataforma FC Consultoria":"FC Consultoria em Esquadria"}</div><h1>Orçamentos de obra</h1><div class="meta">Dois formatos: pelos 3 PDFs do sistema (croqui, perfis e componentes) ou rápido, pelo Simulador de Obra 3D (Proposta comercial e Orientativo de Montagem).</div></div>
   <div class="kpis"><div class="kpi"><span class="eyebrow">Obras</span><b class="num">${DB.obras.length}</b></div><div class="kpi sale"><span class="eyebrow">Total em propostas</span><b class="num">${brl(tot)}</b></div></div>`;
  if(NEW){renderNew();return}
  const cards=DB.obras.slice().reverse().map(o=>{const t=totals(o);const nP=o.comps.filter((c,i)=>!isHid(o,i)&&!(n(o.st.comp[c.code])>0)).length;
@@ -570,7 +571,7 @@ function showHome(){
   <div class="vals"><div><span>Custo</span><b class="num">${brl(t.c)}</b></div><div class="sale"><span>Venda</span><b class="num">${brl(t.v)}</b></div></div>
   <div class="acts" id="acts-${o.id}"><button class="btn" data-open="${o.id}">Abrir orçamento</button><button class="btn ghost" data-dup="${o.id}">Duplicar</button><button class="btn ghost" data-del="${o.id}">Excluir</button></div>
   <div class="hint">Criado em ${new Date(o.criado).toLocaleDateString("pt-BR")}</div></article>`}).join("");
- $("view-home").innerHTML=`<div class="hseg" id="hseg"><button aria-pressed="${HOMETAB==="orc"}" data-h="orc">Orçamentos (${DB.obras.length})</button><button aria-pressed="${HOMETAB==="banco"}" data-h="banco">Banco de componentes (${Object.keys(DB.banco).length})</button></div><div id="home-body"><div class="home-grid"><button class="newcard" id="b-new"><span class="plus">+</span><h3>Novo orçamento</h3><span class="hint">Selecione os 3 PDFs do sistema (croqui, perfis e componentes). Os preços já usados em outras obras entram automaticamente.</span></button><a class="newcard" href="obra3d.html?de=orc" style="text-decoration:none;color:inherit;border-color:#c9831a;background:#fdf5e8"><span class="plus" style="color:#a3620b">⬆</span><h3>Simulador de Obra 3D</h3><span class="hint">Orçamento rápido com 2 PDFs do sistema: Proposta comercial e Orientativo de Montagem. Sai a apresentação 3D com os perfis reais, a proposta com preço e o link para o cliente.</span></a>${simCards()}${cards}</div>
+ $("view-home").innerHTML=`<div class="hseg" id="hseg"><button aria-pressed="${HOMETAB==="orc"}" data-h="orc">Orçamentos (${DB.obras.length})</button><button aria-pressed="${HOMETAB==="banco"}" data-h="banco">Banco de componentes (${Object.keys(DB.banco).length})</button></div><div id="home-body"><div class="home-grid"><button class="newcard" id="b-new"><span class="plus">+</span><h3>Novo orçamento</h3><span class="hint">Selecione os 3 PDFs do sistema (croqui, perfis e componentes). Os preços já usados em outras obras entram automaticamente.</span></button><a class="newcard" href="obra3d.html?de=orc${CDE?"&e=cde":""}" style="text-decoration:none;color:inherit;border-color:#c9831a;background:#fdf5e8"><span class="plus" style="color:#a3620b">⬆</span><h3>Simulador de Obra 3D</h3><span class="hint">Orçamento rápido com 2 PDFs do sistema: Proposta comercial e Orientativo de Montagem. Sai a apresentação 3D com os perfis reais, a proposta com preço e o link para o cliente.</span></a>${simCards()}${cards}</div>
  <div class="card" style="margin-top:24px"><div class="card-h"><div><h2>Backup</h2><div class="hint">Os orçamentos ficam salvos neste navegador. Para levar a outro aparelho, copie os dados e cole lá.</div></div></div>
  <div class="card-b toolbar"><button class="btn" id="b-copy">Copiar todos os dados</button><textarea class="in" id="b-paste" rows="1" style="flex:1;min-width:200px" placeholder="Cole aqui os dados copiados"></textarea><button class="btn ghost" id="b-load">Carregar dados colados</button><span class="hint" id="b-msg"></span></div></div></div>`;
  $("hseg").onclick=e=>{const b=e.target.closest("button[data-h]");if(!b)return;HOMETAB=b.dataset.h;showHome()};
@@ -582,7 +583,7 @@ function showHome(){
   if(b.dataset.del){const box=$("acts-"+b.dataset.del);box.innerHTML=`<span class="err">Excluir este orçamento?</span><button class="btn danger" data-delok="${b.dataset.del}">Sim, excluir</button><button class="btn ghost" data-cancel="1">Não</button>`}
   if(b.dataset.delok){DB.obras=DB.obras.filter(x=>x.id!==b.dataset.delok);save();showHome()}
   if(b.dataset.cancel)showHome();
-  if(b.dataset.sopen)location.href="obra3d.html?de=orc#p-"+encodeURIComponent(b.dataset.sopen);
+  if(b.dataset.sopen)location.href="obra3d.html?de=orc"+(CDE?"&e=cde":"")+"#p-"+encodeURIComponent(b.dataset.sopen);
   if(b.dataset.sdup)simDup(b.dataset.sdup);
   if(b.dataset.sdel){const box=$("sacts-"+b.dataset.sdel);box.innerHTML=`<span class="err">Excluir este simulador? O link do cliente também será desativado.</span><button class="btn danger" data-sdelok="${b.dataset.sdel}">Sim, excluir</button><button class="btn ghost" data-cancel="1">Não</button>`}
   if(b.dataset.sdelok)simDel(b.dataset.sdelok);

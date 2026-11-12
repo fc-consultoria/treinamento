@@ -2,8 +2,11 @@
    Cada obra e cada componente do banco é uma linha; o resto (biblioteca de preços e margens) fica em orcobra_kv.
    O navegador continua com uma cópia local, mas a fonte é o banco. */
 (function(){
-const ORC=window.ORC={ativo:false,DB:null,papel:'',uid:'',nome:''};
-const LOCAL_KEY='fc-orcamentos-v2';
+const ORC=window.ORC={ativo:false,DB:null,papel:'',uid:'',nome:'',esp:''};
+/* 12/11/2026 · espaço CDE: orçamentos separados (tabelas cde_orc_*), sem nada da FC; link ?e=cde */
+const URL_CDE=new URLSearchParams(location.search).get('e')==='cde';
+let T={o:'orcobra_obras',b:'orcobra_banco',k:'orcobra_kv'};
+let LOCAL_KEY='fc-orcamentos-v2';
 let snap={obras:{},banco:{},resto:null},pend=null,rodando=false,ultimoLoad=null,initOk=false,timer=null;
 
 function badge(txt,cor){let b=document.getElementById('orc-sync');
@@ -22,7 +25,11 @@ function partes(DB){const resto={};Object.keys(DB).forEach(k=>{if(k!=='obras'&&k
 window.orcCarregar=async function(r){
   ORC.papel=r.perfil.papel;ORC.uid=r.session.user.id;ORC.nome=r.perfil.nome||r.perfil.login;
   badge('Carregando orçamentos…');
-  const [o,b,k]=await Promise.all([sb.from('orcobra_obras').select('id,dados'),sb.from('orcobra_banco').select('code,dados'),sb.from('orcobra_kv').select('k,dados')]);
+  let meu='';try{const e=await sb.rpc('orc_meu_espaco');meu=e.data||'';}catch(_){}
+  ORC.esp=(meu==='cde'||(URL_CDE&&ORC.papel==='admin'))?'cde':'';
+  if(ORC.esp==='cde'){T={o:'cde_orc_obras',b:'cde_orc_banco',k:'cde_orc_kv'};LOCAL_KEY='cde-orcamentos-v1';
+    if(!URL_CDE)try{history.replaceState(null,'','?e=cde'+location.hash)}catch(_){}}
+  const [o,b,k]=await Promise.all([sb.from(T.o).select('id,dados'),sb.from(T.b).select('code,dados'),sb.from(T.k).select('k,dados')]);
   if(o.error||b.error||k.error){badge('Sem conexão','#a3200b');tela('<b>Não foi possível carregar os orçamentos.</b><br>Confira a internet e atualize a página (F5).');return false;}
   ultimoLoad=new Date().toISOString();
   const kv={};(k.data||[]).forEach(x=>kv[x.k]=x.dados);
@@ -54,13 +61,13 @@ async function enviar(){if(rodando||!pend)return;rodando=true;const DB=pend;pend
   const delO=Object.keys(snap.obras).filter(id=>!(id in p.obras));
   const upB=Object.keys(p.banco).filter(c=>p.banco[c]!==snap.banco[c]).map(code=>({code,dados:JSON.parse(p.banco[code]),atualizado:agora,por:ORC.uid}));
   const delB=Object.keys(snap.banco).filter(c=>!(c in p.banco));
-  for(let i=0;i<upO.length;i+=20)ops.push(sb.from('orcobra_obras').upsert(upO.slice(i,i+20)));
-  for(let i=0;i<upB.length;i+=300)ops.push(sb.from('orcobra_banco').upsert(upB.slice(i,i+300)));
-  if(delO.length)ops.push(sb.from('orcobra_obras').delete().in('id',delO));
-  if(delB.length)ops.push(sb.from('orcobra_banco').delete().in('code',delB));
-  if(p.resto!==snap.resto)ops.push(sb.from('orcobra_kv').upsert({k:'resto',dados:JSON.parse(p.resto),atualizado:agora,por:ORC.uid}));
+  for(let i=0;i<upO.length;i+=20)ops.push(sb.from(T.o).upsert(upO.slice(i,i+20)));
+  for(let i=0;i<upB.length;i+=300)ops.push(sb.from(T.b).upsert(upB.slice(i,i+300)));
+  if(delO.length)ops.push(sb.from(T.o).delete().in('id',delO));
+  if(delB.length)ops.push(sb.from(T.b).delete().in('code',delB));
+  if(p.resto!==snap.resto)ops.push(sb.from(T.k).upsert({k:'resto',dados:JSON.parse(p.resto),atualizado:agora,por:ORC.uid}));
   let ok=true;try{const rs=await Promise.all(ops);rs.forEach(x=>{if(x.error){ok=false;console.warn(x.error)}});}catch(e){ok=false;console.warn(e)}
-  if(ok&&!initOk&&ORC.papel==='admin'){const r=await sb.from('orcobra_kv').upsert({k:'init',dados:{em:agora,por:ORC.nome},atualizado:agora,por:ORC.uid});if(r.error)ok=false;else initOk=true;}
+  if(ok&&!initOk&&ORC.papel==='admin'){const r=await sb.from(T.k).upsert({k:'init',dados:{em:agora,por:ORC.nome},atualizado:agora,por:ORC.uid});if(r.error)ok=false;else initOk=true;}
   rodando=false;
   if(ok){snap=p;if(!pend)badge('✓ Salvo','#0d6b68');}
   else{if(!pend)pend=DB;badge('Não salvou · tentando de novo','#a3200b');clearTimeout(timer);timer=setTimeout(enviar,8000);return;}
@@ -69,8 +76,8 @@ async function enviar(){if(rodando||!pend)return;rodando=true;const DB=pend;pend
 
 async function checarOutros(){if(!initOk||!ultimoLoad||document.getElementById('orc-aviso'))return;
   const f=t=>sb.from(t).select('atualizado').gt('atualizado',ultimoLoad).neq('por',ORC.uid).limit(1);
-  try{const rs=await Promise.all([f('orcobra_obras'),f('orcobra_banco'),f('orcobra_kv')]);
-    if(rs.some(x=>!x.error&&x.data&&x.data.length))aviso('<span>Outra pessoa da FC alterou orçamentos. Atualize para ver as mudanças.</span><button type="button" id="orc-at" style="font:700 14px system-ui;padding:7px 12px;border-radius:8px;border:0;background:#a3620b;color:#fff;cursor:pointer">Atualizar</button>');
+  try{const rs=await Promise.all([f(T.o),f(T.b),f(T.k)]);
+    if(rs.some(x=>!x.error&&x.data&&x.data.length))aviso('<span>Outra pessoa alterou orçamentos. Atualize para ver as mudanças.</span><button type="button" id="orc-at" style="font:700 14px system-ui;padding:7px 12px;border-radius:8px;border:0;background:#a3620b;color:#fff;cursor:pointer">Atualizar</button>');
     const bt=document.getElementById('orc-at');if(bt)bt.onclick=async()=>{bt.disabled=true;bt.textContent='Salvando…';clearTimeout(timer);while(pend||rodando){if(!rodando)await enviar();await new Promise(r=>setTimeout(r,300));}location.reload();};
   }catch(_){}
 }

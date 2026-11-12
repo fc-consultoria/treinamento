@@ -161,7 +161,8 @@ const ENCS=[["vidro","Vidro"],["lambri","Lambri"],["vidlam","Vidro em cima + lam
 const CORES=["#1d5fa8","#0d5c63","#1f7a4a","#b3261e","#c9831a","#6d4bd8","#13232e","#8a4b2a"];
 /* 05/11/2026 · modo Orçamentos de obra (Simulador de Obra 3D): só os projetos criados ali, com os dois PDFs, sem cobrança nem links de envio */
 const ORC=!!BD.orc;
-let LIST=ORC?BD.projetos.filter(p=>p&&p.origem==="orc"):BD.projetos.slice(),P=null,TAB="conf",VISTAS={},LINKS=null;
+const CDE=!!BD.cde;
+let LIST=ORC?BD.projetos.filter(p=>p&&p.origem==="orc"&&(CDE?p.cliente_fc==="cde":p.cliente_fc!=="cde")):BD.projetos.slice(),P=null,TAB="conf",VISTAS={},LINKS=null;
 
 /* ---------- salvar (debounce; o Supabase é a fonte) ---------- */
 let pend=new Set(),tm=null;
@@ -182,8 +183,8 @@ const somaPdf=p=>p.itens.reduce((s,t)=>s+(+t.pv||0),0);
 const novoId=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 
 /* ---------- cabeçalho ---------- */
-function hdr(sub){$("hdr").innerHTML=`<div>${P?`<button class="tomatriz" type="button" id="h-back">← Projetos</button>`:ORC?`<a class="tomatriz" href="index.html">← Orçamentos de obra</a>`:`<a class="tomatriz" href="../painel.html">← Painel da Matriz</a>`}
- <div class="eyebrow">FC Consultoria em Esquadria · ${ORC?"Orçamentos de obra · Simulador de Obra 3D":"serviço por projeto"}</div><h1>${P?esc(P.obra||"Projeto"):ORC?"Simulador de Obra 3D":"Obra em 3D"}</h1>
+function hdr(sub){$("hdr").innerHTML=`<div>${P?`<button class="tomatriz" type="button" id="h-back">← Projetos</button>`:ORC?`<a class="tomatriz" href="index.html${CDE?"?e=cde":""}">← Orçamentos de obra</a>`:`<a class="tomatriz" href="../painel.html">← Painel da Matriz</a>`}
+ <div class="eyebrow">FC Consultoria em Esquadria · ${CDE?"CDE Vidros &amp; Esquadrias · Simulador de Obra 3D":ORC?"Orçamentos de obra · Simulador de Obra 3D":"serviço por projeto"}</div><h1>${P?esc(P.obra||"Projeto"):ORC?"Simulador de Obra 3D":"Obra em 3D"}</h1>
  <div class="meta">${sub}</div></div>`;if($("h-back"))$("h-back").onclick=()=>{location.hash="";}}
 
 /* ======================= INÍCIO ======================= */
@@ -338,7 +339,7 @@ async function lerOri(file){NV.err="";if(!ehPdf(file)){NV.err=`"${file.name}" n�
   if(!R.itens.length||!R.itens.some(t=>t.perfis.length)){NV.lendo="";NV.err="Não encontrei a lista de corte neste PDF. Confira se é o Orientativo de Montagem (não a proposta).";return homeOrc()}
   await O3DORI.secoes(d,R);O3DORI.limpar(R);NV.ORI=R;NV.oriPdf=file.name;NV.lendo="";nvLigar()}catch(e){console.warn(e);NV.lendo="";NV.err="Não consegui ler o Orientativo. Use o PDF gerado pelo sistema."}homeOrc()}
 function criarOrc(){const O=NV.O;if(!O||!NV.lig||!NV.lig.ligados)return;const id=novoId();
- const p={id,criado:new Date().toISOString(),origem:"orc",pdf:NV.pdf,pdfOri:NV.oriPdf,empresa:O.empresa,cor:"",obra:O.cliente||"Obra",cliente:O.cliente,numero:O.numero,emissao:O.emissao,vendedor:O.vendedor,corPerfil:O.cor,
+ const p={id,criado:new Date().toISOString(),origem:"orc",...(CDE?{cliente_fc:"cde"}:{}),pdf:NV.pdf,pdfOri:NV.oriPdf,empresa:O.empresa,cor:"",obra:O.cliente||"Obra",cliente:O.cliente,numero:O.numero,emissao:O.emissao,vendedor:O.vendedor,corPerfil:O.cor,
   itens:O.itens.map(it=>Object.assign(it,{lido:{kind:it.kind,f:it.f,enc:it.enc,per:it.per||""},ok:false})),avisos:O.avisos,margem:0,valor:"",status:"recebido",entregue:"",pago:"",notas:"",link:null};
  Object.assign(NV,{O:null,ORI:null,lig:null,pdf:"",oriPdf:"",err:""});LIST.push(p);touch(p);location.hash="p-"+id;toast(`${p.itens.length} itens lidos · ${p.itens.filter(t=>t.cortes).length} com perfis reais`)}
 
@@ -619,9 +620,10 @@ gateUI(async rr=>{
 /* 05/11/2026 · biblioteca de perfis (Obra em 3D): desenho conferido vem do banco; perfil novo entra sozinho */
 window.O3DBIB={buscar:async c=>{const r=await sb.rpc("obra3d_perfis_buscar",{cods:[...new Set(c.filter(Boolean).map(x=>String(x).toUpperCase().trim()))]});return r.error?[]:r.data},salvar:async L=>{await sb.rpc("obra3d_perfis_novos",{tok:"",itens:L})}};
  const ORC=new URLSearchParams(location.search).get("de")==="orc"||(rr&&rr.perfil&&rr.perfil.papel==="orcamentista");
+ let CDE=false;try{const e=await sb.rpc("orc_meu_espaco");CDE=e.data==="cde"||(new URLSearchParams(location.search).get("e")==="cde"&&rr.perfil.papel==="admin")}catch(_){}
  const r=await sb.from("obra3d_projetos").select("dados");
  if(r.error){document.getElementById("main").innerHTML='<div class="msg"><b>Não foi possível carregar os projetos.</b><br>Confira a internet e atualize a página (F5).</div>';return}
- iniciarObra3D({orc:ORC,
+ iniciarObra3D({orc:ORC||CDE,cde:CDE,
   projetos:(r.data||[]).map(x=>x.dados),
   salvar:rows=>sb.from("obra3d_projetos").upsert(rows),
   excluir:id=>sb.from("obra3d_projetos").delete().eq("id",id),
