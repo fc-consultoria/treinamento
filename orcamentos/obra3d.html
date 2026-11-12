@@ -138,7 +138,7 @@ table.cli td.n,table.cli th.n{text-align:right}
 <script src="tip3d.js?v=20261105t"></script>
 <script src="filme.js?v=4"></script>
 <script src="proposta.js?v=20261105j"></script>
-<script src="obra3d-ler.js?v=20261105f"></script>
+<script src="obra3d-ler.js?v=20261112cde"></script>
 <script src="orientativo-ler.js?v=3"></script>
 <script src="secao-ler.js?v=2"></script>
 <script>
@@ -299,15 +299,16 @@ const nvMesmo=()=>!NV.O||!NV.ORI||!NV.O.numero||!NV.ORI.numero||String(NV.O.nume
 function nvLigar(){NV.lig=null;if(!NV.O||!NV.ORI)return;NV.O.itens.forEach(t=>delete t.cortes);if(nvMesmo())NV.lig=O3DORI.ligar(NV.O.itens,NV.ORI)}
 function homeOrc(){hdr("Monte o orçamento rápido a partir da Proposta comercial e do Orientativo de Montagem gerados pelo sistema. Sai a apresentação 3D com a marca da empresa, a proposta com preço e o link para o cliente.");
  const ent=LIST.filter(p=>p.link&&p.link.ativo!==false).length,ord=LIST.slice().sort((a,b)=>String(b.criado).localeCompare(String(a.criado)));
- const ok=!!(NV.O&&NV.ORI&&NV.lig&&NV.lig.ligados>0&&nvMesmo());
- const falta=!NV.O&&!NV.ORI?"Anexe os dois PDFs para criar o projeto.":!NV.O?"Falta a Proposta comercial.":!NV.ORI?"Falta o Orientativo de Montagem.":!nvMesmo()?`O Orientativo é do orçamento ${NV.ORI.numero} e a proposta é do ${NV.O.numero}. Anexe os dois do mesmo orçamento.`:!ok?"Nenhuma tipologia do Orientativo corresponde à proposta.":"";
+ /* 12/11/2026 · CDE: dá para criar só com a Proposta comercial; o Orientativo é opcional */
+ const ok=CDE?!!(NV.O&&(!NV.ORI||nvMesmo())):!!(NV.O&&NV.ORI&&NV.lig&&NV.lig.ligados>0&&nvMesmo());
+ const falta=CDE&&NV.O&&!NV.ORI?"Pronto para criar. O Orientativo de Montagem é opcional.":CDE&&!NV.O?"Anexe a Proposta comercial para criar o projeto.":!NV.O&&!NV.ORI?"Anexe os dois PDFs para criar o projeto.":!NV.O?"Falta a Proposta comercial.":!NV.ORI?"Falta o Orientativo de Montagem.":!nvMesmo()?`O Orientativo é do orçamento ${NV.ORI.numero} e a proposta é do ${NV.O.numero}. Anexe os dois do mesmo orçamento.`:!ok?"Nenhuma tipologia do Orientativo corresponde à proposta.":"";
  const box=(k,t,info,on)=>`<div class="drop" id="nv-${k}" tabindex="0" role="button" style="margin:0;${on?"border-color:#1f7a4a;background:#eef8f1":""}"><b>${on?"✓":"＋"} ${t}</b><span class="hint">${info}</span><input type="file" accept="application/pdf,.pdf" hidden></div>`;
  $("main").innerHTML=`
  <div class="kpis"><div class="card kpi"><span>Projetos</span><b class="num">${LIST.length}</b></div><div class="card kpi"><span>Links ativos</span><b class="num">${ent}</b></div></div>
  <div class="card sec" style="margin-bottom:14px"><h2>Novo pelo Simulador</h2>
   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;margin-top:8px">
    ${box("pro","Proposta comercial",NV.lendo==="pro"?"Lendo o PDF…":NV.O?`${esc(NV.pdf)} · ${NV.O.itens.length} itens · orçamento ${esc(NV.O.numero||"—")}`:"PDF da proposta gerada pelo sistema (local, tipologia e medidas).",!!NV.O)}
-   ${box("ori","Orientativo de Montagem",NV.lendo==="ori"?"Lendo o PDF e recortando os perfis…":NV.ORI?`${esc(NV.oriPdf)} · ${NV.lig?NV.lig.ligados+" de "+NV.lig.total+" tipologias ligadas":"aguardando a proposta"}`:"PDF do Orientativo do mesmo orçamento, com a lista de corte.",!!NV.ORI)}
+   ${box("ori",CDE?"Orientativo de Montagem (opcional)":"Orientativo de Montagem",NV.lendo==="ori"?"Lendo o PDF e recortando os perfis…":NV.ORI?`${esc(NV.oriPdf)} · ${NV.lig?NV.lig.ligados+" de "+NV.lig.total+" tipologias ligadas":"aguardando a proposta"}`:"PDF do Orientativo do mesmo orçamento, com a lista de corte.",!!NV.ORI)}
   </div>
   <div class="row" style="margin-top:10px"><button class="btn pri" type="button" id="nv-ok" ${ok?"":"disabled"}>Criar projeto</button><span class="hint" role="status">${esc(NV.err||falta)}</span>${NV.O||NV.ORI?`<button class="btn" type="button" id="nv-x" style="margin-left:auto">Limpar</button>`:""}</div>
  </div>
@@ -338,8 +339,8 @@ async function lerOri(file){NV.err="";if(!ehPdf(file)){NV.err=`"${file.name}" n�
  try{const {d,P}=await abrirDoc(file);const R=O3DORI.ler(P);
   if(!R.itens.length||!R.itens.some(t=>t.perfis.length)){NV.lendo="";NV.err="Não encontrei a lista de corte neste PDF. Confira se é o Orientativo de Montagem (não a proposta).";return homeOrc()}
   await O3DORI.secoes(d,R);O3DORI.limpar(R);NV.ORI=R;NV.oriPdf=file.name;NV.lendo="";nvLigar()}catch(e){console.warn(e);NV.lendo="";NV.err="Não consegui ler o Orientativo. Use o PDF gerado pelo sistema."}homeOrc()}
-function criarOrc(){const O=NV.O;if(!O||!NV.lig||!NV.lig.ligados)return;const id=novoId();
- const p={id,criado:new Date().toISOString(),origem:"orc",...(CDE?{cliente_fc:"cde"}:{}),pdf:NV.pdf,pdfOri:NV.oriPdf,empresa:O.empresa,cor:"",obra:O.cliente||"Obra",cliente:O.cliente,numero:O.numero,emissao:O.emissao,vendedor:O.vendedor,corPerfil:O.cor,
+function criarOrc(){const O=NV.O;if(!O)return;if(!CDE&&(!NV.lig||!NV.lig.ligados))return;const id=novoId();
+ const p={id,criado:new Date().toISOString(),origem:"orc",...(CDE?{cliente_fc:"cde"}:{}),pdf:NV.pdf,pdfOri:NV.oriPdf,empresa:O.empresa,cor:"",obra:O.obra||O.cliente||"Obra",cliente:O.cliente,numero:O.numero,emissao:O.emissao,vendedor:O.vendedor,corPerfil:O.cor,
   itens:O.itens.map(it=>Object.assign(it,{lido:{kind:it.kind,f:it.f,enc:it.enc,per:it.per||""},ok:false})),avisos:O.avisos,margem:0,valor:"",status:"recebido",entregue:"",pago:"",notas:"",link:null};
  Object.assign(NV,{O:null,ORI:null,lig:null,pdf:"",oriPdf:"",err:""});LIST.push(p);touch(p);location.hash="p-"+id;toast(`${p.itens.length} itens lidos · ${p.itens.filter(t=>t.cortes).length} com perfis reais`)}
 

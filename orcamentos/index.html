@@ -613,7 +613,7 @@ async function addFiles(list){
   if(!/\.pdf$/i.test(f.name)&&f.type!=="application/pdf"){NEW.msg=`"${f.name}" não é PDF.`;continue}
   NEW.msg=`Lendo ${f.name}…`;renderNew();
   try{const P=await readPdf(f);const t=pDetect(P);
-   if(!t){NEW.msg=`Não reconheci "${f.name}". Use os relatórios Proposta (croqui), Relação de Materiais (perfis) ou Componentes da Obra.`;continue}
+   if(!t){NEW.msg=`Não reconheci "${f.name}". Use os relatórios Proposta (croqui), Relação de Materiais (perfis) ou Componentes da Obra.`+(CDE?" Para a Proposta comercial (com valores), use o card Simulador de Obra 3D.":"");continue}
    const h=pHeader(P);let data;
    if(t==="croqui")data=pCroqui(P);else if(t==="perfis")data=pPerfis(P);else data=pComp(P);
    NEW.files[t]={name:f.name,h,data};

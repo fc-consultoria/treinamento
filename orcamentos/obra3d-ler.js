@@ -79,10 +79,45 @@ function lerCards(L,O){
  if(tot){const m=tot.t.match(/R\$:?\s*([\d.]+,\d{2})/);O.total=num(m[1])}
 }
 
+/* 12/11/2026 · Proposta SmartCEM modelo CDE (cards): descrição, Acabamento:, Vidros:, Área Esquadria:, Localização:,
+   cabeçalho "Tipo: Qtd: L: H: Linha: Valor (un.): Valor Total:" e os valores na linha de baixo */
+function ehFast(L){return L.some(r=>/^Tipo:/i.test(r.t)&&/Valor Total:/i.test(r.t)&&/\bL:/.test(r.t)&&/\bH:/.test(r.t))}
+function lerFast(L,O){
+ const rod=L.find(r=>/\t\s*\d+\s*\/\s*\d+\s*$/.test(r.t));if(rod)O.empresa=LIMPA(rod.t.split("\t")[0]);
+ L.forEach((r,i)=>{const t=r.t;
+  if(!O.numero&&/^Proposta\s+N/i.test(t)&&L[i+1])O.numero=LIMPA(L[i+1].t.replace(/\t/g," "));
+  if(!O.obra&&O.numero&&L[i-1]&&/^Proposta\s+N/i.test(L[i-1].t)&&L[i+1]&&!/:/.test(L[i+1].t))O.obra=LIMPA(L[i+1].t.replace(/\t/g," "));
+  if(!O.emissao&&/Emitido por/i.test(t)){const m=t.match(/Emitido por\s+(.+?)\s+em\s+(\d{2}\/\d{2}\/\d{4})/i);if(m){O.vendedor=LIMPA(m[1]);O.emissao=m[2]}}
+  if(!O.cliente&&/^Cliente:/i.test(t))O.cliente=entre(t,/Cliente:/i,/\t|CPF:|CNPJ:/i)||"";
+ });
+ const COLS=[["item",/^Tipo:?$/i],["q",/^Qtd:?$/i],["L",/^L:?$/i],["H",/^H:?$/i],["linha",/^Linha:?$/i],["vu",/^Valor \(un\.\):?$/i],["vt",/^Valor Total:?$/i]];
+ let cur={desc:[]};
+ for(let k=0;k<L.length;k++){const r=L[k],t=r.t,tl=LIMPA(t.replace(/\t/g," "));
+  if(!tl||/^Obra:|^Proposta\s+N|Emitido por|^Cliente:|^Contato:|^End\. Obra:|^Cidade:|Alumisoft|SmartCEM|\t\s*\d+\s*\/\s*\d+\s*$|^-$/i.test(t))continue;
+  if(/^Total [ÁA]rea/i.test(t)){const v=L[k+1];if(v){const m=v.t.match(/R\$:?\s*([\d.]+,\d{2})/);if(m)O.total=num(m[1])}break}
+  if(/^Acabamento:/i.test(t)){cur.cor=entre(t,/^Acabamento:/i,/\t|$/)||"";continue}
+  if(/^Vidros?:/i.test(t)){cur.vidro=entre(t,/^Vidros?:/i,/\t|$/)||"";continue}
+  if(/^[ÁA]rea Esquadria:/i.test(t)){cur.m2=num((entre(t,/^[ÁA]rea Esquadria:/i,/\t|$/)||"").replace(/m.*$/i,""));continue}
+  if(/^Localiza[çc][ãa]o:/i.test(t)){cur.loc=entre(t,/^Localiza[çc][ãa]o:/i,/\t|$/)||"";continue}
+  if(/^Tipo:/i.test(t)&&/Valor Total:/i.test(t)){
+   const cx=COLS.map(([c,re])=>{const it=r.it.find(i=>re.test(i.s.trim()));return it?{c,x:it.x}:null}).filter(Boolean);
+   const v=L[k+1];if(!v){continue}k++;const val={};
+   v.it.forEach(it=>{let b=cx[0],d=1e9;cx.forEach(c=>{const dd=Math.abs(c.x-it.x);if(dd<d){d=dd;b=c}});val[b.c]=LIMPA((val[b.c]?val[b.c]+" ":"")+it.s)});
+   const din=s=>num(String(s||"").replace(/R\$:?/,""));
+   const it={item:val.item||"",loc:cur.loc||"",tipo:LIMPA(cur.desc.join(" ")),linha:val.linha||"",corPerfil:cur.cor||"",corAcess:"",q:parseInt(val.q,10)||0,
+    m2:cur.m2||0,L:parseInt(val.L,10)||0,H:parseInt(val.H,10)||0,vidro:cur.vidro||"",obs:"",vt:din(val.vt),vu:din(val.vu),avisos:[]};
+   if(it.q)O.itens.push(it);else O.avisos.push(`Um bloco (${it.loc||"sem local"}) não teve a quantidade lida.`);
+   cur={desc:[]};continue}
+  if(/^Observa[çc][õo]es:|^Condi[çc][õo]es|^Forma de Pagamento|^Prazo/i.test(t))break;
+  if(tl===O.numero||tl===O.obra)continue;
+  cur.desc.push(tl);
+ }
+}
+
 function ler(P){
  const L=[];P.forEach((pag,pi)=>linhas(pag).forEach(r=>L.push(Object.assign(r,{pg:pi+1}))));
  const O={empresa:"",numero:"",emissao:"",vendedor:"",cliente:"",cor:"",itens:[],avisos:[]};
- if(ehCards(L))lerCards(L,O);else{
+ if(ehFast(L))lerFast(L,O);else if(ehCards(L))lerCards(L,O);else{
  /* cabeçalho: primeira linha da primeira página é o nome da empresa que fez o orçamento */
  const p1=L.filter(r=>r.pg===1);
  if(p1.length){const t0=p1[0].t.split("\t")[0];O.empresa=LIMPA(t0)}
