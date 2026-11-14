@@ -98,6 +98,11 @@ nav .n.on{display:grid}
   <div id="rpL"></div>
  </section>
 
+ <section class="sec" id="s-on">
+  <div class="hd"><span id="onInfo">Carregando…</span></div>
+  <div id="onL"></div>
+ </section>
+
  <section class="sec" id="s-pa">
   <a class="big" href="/fc3d/clientes/?abrir=parceiro-obras">
    <div style="font-size:28px">🤝</div>
@@ -111,6 +116,7 @@ nav .n.on{display:grid}
 <nav>
  <button type="button" data-s="ac" class="on"><span class="ic">🔑</span>Acessos<span class="n" id="nAc"></span></button>
  <button type="button" data-s="rp"><span class="ic">📥</span>Responder<span class="n" id="nRp"></span></button>
+ <button type="button" data-s="on"><span class="ic">🟢</span>On-line<span class="n" id="nOn" style="background:#1f8a4c"></span></button>
  <button type="button" data-s="pa"><span class="ic">🤝</span>Parceiro</button>
 </nav>
 
@@ -125,11 +131,11 @@ if(!app&&/iPhone|iPad/.test(navigator.userAgent))$('dicaInst').hidden=false;
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js',{scope:'./'}).catch(()=>{});
 
 /* ===== abas ===== */
-const TIT={ac:'Liberar acessos',rp:'Para responder',pa:'Parceiro de obras'};
+const TIT={ac:'Liberar acessos',rp:'Para responder',on:'Quem está on-line',pa:'Parceiro de obras'};
 let ABA='ac';
 function aba(s){ABA=s;document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.s===s));
   document.querySelectorAll('.sec').forEach(x=>x.classList.toggle('on',x.id==='s-'+s));$('tit').textContent=TIT[s];
-  try{localStorage.setItem('fc-cel-aba',s);}catch(_){}scrollTo(0,0);}
+  try{localStorage.setItem('fc-cel-aba',s);}catch(_){}scrollTo(0,0);if(s==='on'&&LOGADO)onCarregar();}
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>aba(b.dataset.s));
 
 /* ===== 🔑 Liberar acessos (cadastros pelo link de primeiro acesso) ===== */
@@ -196,13 +202,41 @@ $('rpL').addEventListener('click',e=>{const g=e.target.closest('[data-k]');if(!g
   if(k==='sol'){window.open('consultorias.html#'+encodeURIComponent(emp)+'/t=sol','_blank','noopener');return;}
   if(k==='fila'){window.open('orcamento/?e='+encodeURIComponent(emp)+'&aba=atd','_blank','noopener');}});
 
+
+/* ===== 🟢 Quem está on-line (equipe FC, equipes dos clientes e Plataforma FC 3D) ===== */
+const PL_URL='https://pawwncmfadzxfahfvhry.supabase.co/rest/v1/rpc/',PL_KEY='sb_publishable_b0kGoqo85joo3Vb8Xllxhw_VemwaLMs';
+const APPS={implantacao:'Painel de Implantação',matriz:'Painel da Matriz'};
+let PLE=null,ON=[];
+async function plRpc(f,b){const r=await fetch(PL_URL+f,{method:'POST',headers:{apikey:PL_KEY,'Content-Type':'application/json'},body:JSON.stringify(b)});if(!r.ok)throw new Error(r.status);return r.json();}
+async function pl3d(){let t=null;try{t=localStorage.getItem('pfc-token')||localStorage.getItem('pfc-token-painel');}catch(_){}if(!t)return null;
+  try{if(!PLE){try{PLE=await plRpc('pfc_matriz_empresas',{p_token:t})||[];}catch(_){PLE=[];}}
+    const d=await plRpc('fc_online_clientes',{p_token:t,janela_min:10}),nm=id=>((PLE.find(x=>x.id===id)||{}).nome)||id||'Sem empresa';
+    return (d||[]).map(p=>({grupo:'Plataforma FC 3D · '+nm(p.empresa_id),nome:p.nome||'Sem nome',sub:(PAPEL[p.papel]||(p.papel==='vendedor'?'Colaborador':p.papel)||'')+(p.tela?' · '+p.tela:''),visto:p.visto}));}catch(_){return [];}}
+async function onCarregar(){const [r,p3]=await Promise.all([sb.rpc('fc_online_lista'),pl3d()]);const l=[];
+  if(r.data){(r.data.equipe||[]).forEach(p=>l.push({grupo:'Equipe FC',nome:p.nome,sub:(APPS[p.app]||p.app||'')+(p.onde?' · '+p.onde:'')}));
+    (r.data.clientes||[]).forEach(p=>l.push({grupo:String(p.emp_nome||p.emp).split(' · ')[0],nome:p.nome,sub:PAPEL[p.papel]||p.papel,pid:p.id,n:+p.nao_lidas||0}));}
+  ON=l.concat(p3||[]);onPinta(p3===null);badges();}
+function onPinta(semPl){const G={};ON.forEach(x=>{(G[x.grupo]=G[x.grupo]||[]).push(x);});
+  $('onInfo').textContent=ON.length?ON.length+' pessoa'+(ON.length>1?'s':'')+' on-line agora':'Ninguém on-line agora';
+  let b=Object.keys(G).sort((a,c)=>a==='Equipe FC'?-1:c==='Equipe FC'?1:a.localeCompare(c)).map(g=>`<div class="gr">${h(g)}<i>${G[g].length}</i></div>`+G[g].map(x=>`<div class="cd"><div class="top"><b>🟢 ${h(x.nome)}</b><span>${x.visto?new Date(x.visto).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):'agora'}</span></div>
+    <div class="sub">${h(x.sub||'')}${x.n?` · <b style="color:#e11d48">${x.n} não lida${x.n>1?'s':''}</b>`:''}</div>
+    ${x.pid?`<div class="bts"><button class="bt n" type="button" data-pid="${h(x.pid)}">💬 Conversar</button></div>`:''}</div>`).join('')).join('');
+  if(!b)b='<div class="vazio"><i>🌙</i><b>Ninguém on-line agora</b>Quando alguém abrir a plataforma, o simulador ou o portal da empresa, aparece aqui.</div>';
+  if(semPl)b+='<div class="dica">Para ver também quem está na Plataforma FC 3D (inclusive o parceiro de obras), abra uma vez a aba 🤝 Parceiro e entre com o Acesso FC.</div>';
+  $('onL').innerHTML=b;}
+$('onL').addEventListener('click',async e=>{const g=e.target.closest('[data-pid]');if(!g)return;g.disabled=true;
+  const x=await sb.rpc('emp_chat_fc_abrir',{p_pessoa:g.dataset.pid});g.disabled=false;
+  if(x.error||!x.data){alert('Não foi possível abrir a conversa.');return;}
+  if(window.FCConversas&&FCConversas.abrirMatriz)FCConversas.abrirMatriz(x.data);});
+
 /* ===== números nas abas e no ícone do app ===== */
 function badges(){const a=AC.length,r=(RP.itens||[]).length;
   [[$('nAc'),a],[$('nRp'),r]].forEach(([el,n])=>{el.textContent=n>99?'99+':n;el.classList.toggle('on',n>0);});
+  {const o=ON.length,el=$('nOn');el.textContent=o>99?'99+':o;el.classList.toggle('on',o>0);}
   document.title=(a+r?'('+(a+r)+') ':'')+'Matriz FC';
   try{if(navigator.setAppBadge){a+r?navigator.setAppBadge(a+r):navigator.clearAppBadge();}}catch(_){}}
 
-function tudo(){return Promise.all([acCarregar(),rpCarregar()]);}
+function tudo(){return Promise.all([acCarregar(),rpCarregar(),onCarregar()]);}
 $('bAt').onclick=()=>{$('bAt').textContent='…';tudo().finally(()=>{$('bAt').textContent='↻';});};
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&$('gate').hidden&&LOGADO)tudo();});
 
@@ -211,7 +245,7 @@ gateUI(()=>{LOGADO=true;
   try{const s=localStorage.getItem('fc-cel-aba');if(TIT[s])aba(s);}catch(_){}
   const q=new URLSearchParams(location.search).get('aba');if(TIT[q])aba(q);
   try{window.FCConversas&&FCConversas.matriz&&FCConversas.matriz({semBotao:true});}catch(_){}
-  tudo();setInterval(()=>{if(!document.hidden)tudo();},60000);
+  tudo();setInterval(()=>{if(!document.hidden)tudo();},60000);setInterval(()=>{if(!document.hidden&&ABA==='on')onCarregar();},20000);
 },{soMatriz:true});
 })();
 </script>
