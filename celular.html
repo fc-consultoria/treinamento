@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Matriz FC</title>
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#0e4d5c">
+<link rel="manifest" href="manifest-celular.webmanifest">
+<link rel="apple-touch-icon" href="icons/fc-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Matriz FC">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<!-- Painel da Matriz no celular (14/11/2026): só Liberar acessos, Para responder e Parceiro de obras.
+     Mesmo login do Painel da Matriz (fica salvo no aparelho). © FC Consultoria em Esquadria · uso exclusivo -->
+<style>
+:root{--pt:#0e4d5c;--pt2:#0a3a46;--pr:#c7d0d4;--bg:#f2f4f5;--card:#fff;--fg:#14232a;--mu:#5f6b70;--ln:#dde3e6;--ok:#1f8a4c;--bad:#a32d2d;--sel:#e3f0f2}
+@media (prefers-color-scheme:dark){:root{--bg:#0d1417;--card:#162126;--fg:#e8eef0;--mu:#9aabb2;--ln:#26353b;--sel:#12343c}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--fg);font:400 15px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif;overscroll-behavior-y:contain}
+header{position:sticky;top:0;z-index:5;background:var(--pt);color:#fff;padding:calc(env(safe-area-inset-top) + 10px) 14px 10px;display:flex;align-items:center;gap:10px}
+.lg{width:34px;height:34px;border-radius:8px;border:1.5px solid var(--pr);display:grid;place-items:center;font-weight:700;font-size:14px;flex:none}
+header .t{flex:1;min-width:0}header .t b{display:block;font-size:16px}header .t small{color:var(--pr);font-size:12.5px}
+header button{background:transparent;border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:9px;padding:6px 10px;font:600 13px inherit}
+main{padding:12px 12px calc(env(safe-area-inset-bottom) + 84px)}
+.sec{display:none}.sec.on{display:block}
+.hd{display:flex;align-items:center;justify-content:space-between;margin:2px 2px 10px;color:var(--mu);font-size:13px}
+.cd{background:var(--card);border:1px solid var(--ln);border-radius:14px;padding:12px;margin-bottom:10px}
+.cd .top{display:flex;justify-content:space-between;gap:8px}.cd .top b{font-size:15.5px}.cd .top span{color:var(--mu);font-size:12.5px;white-space:nowrap}
+.cd .sub{color:var(--mu);font-size:13px}.cd p{margin:6px 0 0;font-size:14px;overflow-wrap:anywhere}
+.emp{display:inline-block;background:var(--sel);color:var(--pt);border-radius:6px;padding:0 6px;font-size:12px;font-weight:600;margin-right:6px}
+@media (prefers-color-scheme:dark){.emp{color:#8fd3df}}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 4px}
+.chips button{border:1px solid var(--ln);background:var(--card);color:var(--fg);border-radius:99px;padding:7px 12px;font:500 13.5px inherit}
+.chips button.on{background:var(--pt);border-color:var(--pt);color:#fff}
+.bts{display:flex;gap:8px;margin-top:10px}
+.bt{flex:1;border:0;border-radius:10px;padding:11px 0;font:600 14.5px inherit;text-align:center;text-decoration:none;display:block}
+.bt.p{background:var(--pt);color:#fff}.bt.r{background:transparent;color:var(--bad);border:1px solid #e9b9b9}.bt.w{background:#25d366;color:#fff}.bt.n{background:var(--sel);color:var(--fg)}
+.bt:disabled{opacity:.55}
+.st{font-size:13px;margin-top:6px;color:var(--mu)}.st.er{color:var(--bad)}
+.vazio{text-align:center;color:var(--mu);padding:40px 16px}.vazio b{display:block;color:var(--fg);font-size:16px;margin:8px 0 4px}.vazio i{font-style:normal;font-size:34px}
+.gr{font:700 12px inherit;letter-spacing:.06em;text-transform:uppercase;color:var(--mu);margin:16px 2px 8px}
+.gr i{font-style:normal;background:var(--sel);color:var(--pt);border-radius:99px;padding:0 7px;margin-left:4px;letter-spacing:0}
+.urg{border-color:#e9a3ad}
+nav{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--card);border-top:1px solid var(--ln);display:flex;padding:6px 0 calc(env(safe-area-inset-bottom) + 6px)}
+nav button{flex:1;background:none;border:0;color:var(--mu);font:500 12px inherit;display:flex;flex-direction:column;align-items:center;gap:2px;position:relative;padding:4px 0}
+nav button .ic{font-size:21px;line-height:1}
+nav button.on{color:var(--pt)}@media (prefers-color-scheme:dark){nav button.on{color:#8fd3df}}
+nav .n{position:absolute;top:0;left:calc(50% + 6px);min-width:18px;height:18px;border-radius:9px;background:#e11d48;color:#fff;font-size:11px;font-weight:700;display:none;place-items:center;padding:0 5px}
+nav .n.on{display:grid}
+.big{display:block;background:var(--card);border:1px solid #e8b04a;border-radius:16px;padding:16px;text-decoration:none;color:var(--fg);margin-bottom:10px}
+.big b{display:block;font-size:17px;margin:6px 0 4px}.big span{color:var(--mu);font-size:13.5px}.big em{display:block;font-style:normal;color:#8a5a08;font-weight:600;margin-top:10px}
+.gate{position:fixed;inset:0;z-index:20;background:var(--pt2);display:flex;align-items:center;justify-content:center;padding:20px}
+.gate[hidden]{display:none}
+.gate form{width:min(360px,100%);background:var(--card);border-radius:18px;padding:22px}
+.gate .lg{margin:0 auto 10px;width:52px;height:52px;font-size:20px;background:var(--pt);color:#fff}
+.gate h1{font-size:18px;text-align:center;margin:0 0 4px}.gate p{text-align:center;color:var(--mu);font-size:13px;margin:0 0 16px}
+.gate input{width:100%;border:1px solid var(--ln);background:var(--bg);color:var(--fg);border-radius:10px;padding:12px;font:16px inherit;margin-bottom:10px}
+.gate button{width:100%;border:0;border-radius:10px;padding:13px;background:var(--pt);color:#fff;font:600 16px inherit}
+#gateMsg{color:var(--bad);font-size:13.5px;text-align:center;margin-top:10px}
+.dica{background:var(--sel);border-radius:12px;padding:10px 12px;font-size:13px;margin-bottom:12px}
+.dica button{margin-top:8px}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="auth.js?v=20261108"></script>
+</head>
+<body>
+<div class="gate" id="gate" hidden>
+ <form id="gateForm" autocomplete="on">
+  <div class="lg">FC</div>
+  <h1>Matriz FC</h1>
+  <p>Entre uma vez. O acesso fica salvo neste celular.</p>
+  <input name="login" placeholder="E-mail ou matriz" autocapitalize="none" autocomplete="username" required>
+  <input name="senha" type="password" placeholder="Senha" autocomplete="current-password" required>
+  <button type="submit">Entrar</button>
+  <div id="gateMsg"></div>
+ </form>
+</div>
+
+<header>
+ <div class="lg">FC</div>
+ <div class="t"><b id="tit">Liberar acessos</b><small>Painel da Matriz</small></div>
+ <button type="button" id="bAt" aria-label="Atualizar">↻</button>
+</header>
+
+<main>
+ <div id="dicaInst" class="dica" hidden>Para usar como app: no Safari, toque em <b>Compartilhar</b> e depois em <b>Adicionar à Tela de Início</b>.</div>
+
+ <section class="sec on" id="s-ac">
+  <div class="hd"><span id="acInfo">Carregando…</span></div>
+  <div id="acL"></div>
+ </section>
+
+ <section class="sec" id="s-rp">
+  <div class="hd"><span id="rpInfo">Carregando…</span></div>
+  <div id="rpL"></div>
+ </section>
+
+ <section class="sec" id="s-pa">
+  <a class="big" href="https://fc-consultoria.github.io/fc3d/clientes/?abrir=parceiro-obras" target="_blank" rel="noopener">
+   <div style="font-size:28px">🤝</div>
+   <b>Parceiro de obras · Plataforma FC 3D</b>
+   <span>Simulador de obra, Tipologias e Catálogo 3D do serralheiro parceiro. Abre a plataforma como gestor mestre.</span>
+   <em>Abrir a plataforma →</em>
+  </a>
+ </section>
+</main>
+
+<nav>
+ <button type="button" data-s="ac" class="on"><span class="ic">🔑</span>Acessos<span class="n" id="nAc"></span></button>
+ <button type="button" data-s="rp"><span class="ic">📥</span>Responder<span class="n" id="nRp"></span></button>
+ <button type="button" data-s="pa"><span class="ic">🤝</span>Parceiro</button>
+</nav>
+
+<script src="conversas.js?v=8"></script>
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const h=t=>String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const quando=t=>{if(!t)return '';const m=Math.round((Date.now()-new Date(t))/60000);if(m<1)return 'agora';if(m<60)return 'há '+m+' min';const hr=Math.round(m/60);if(hr<24)return 'há '+hr+' h';const d=Math.round(hr/24);return d===1?'ontem':'há '+d+' dias';};
+const app=matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
+if(!app&&/iPhone|iPad/.test(navigator.userAgent))$('dicaInst').hidden=false;
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js',{scope:'./'}).catch(()=>{});
+
+/* ===== abas ===== */
+const TIT={ac:'Liberar acessos',rp:'Para responder',pa:'Parceiro de obras'};
+let ABA='ac';
+function aba(s){ABA=s;document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.s===s));
+  document.querySelectorAll('.sec').forEach(x=>x.classList.toggle('on',x.id==='s-'+s));$('tit').textContent=TIT[s];
+  try{localStorage.setItem('fc-cel-aba',s);}catch(_){}scrollTo(0,0);}
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>aba(b.dataset.s));
+
+/* ===== 🔑 Liberar acessos (cadastros pelo link de primeiro acesso) ===== */
+const PAPEIS=[['compras','Compras'],['vendas','Vendas'],['estoque','Estoque'],['gestor','Gestor geral'],['gerente','Gerente comercial'],['marketing','Marketing'],['fabrica','Fábrica']];
+const PN=Object.fromEntries(PAPEIS);
+const PLAT_URL='https://fc-consultoria.github.io/fc3d/clientes/',PLAT_EMP=['gs'];
+const LINK=e=>PLAT_EMP.includes(e)?PLAT_URL:'https://fc-consultoria.github.io/treinamento/consultorias.html?e='+encodeURIComponent(e);
+const PLAT={cb:'Plataforma Casa Bandeirante & FC 3D',gb:'Plataforma Guaporé Vidros & FC 3D',gs:'Plataforma FC 3D'};
+const textoLib=(p,emp,empNome)=>{const tel=p.telefone||p.login;
+  return `Olá, ${String(p.nome||'').split(' ')[0]}! Seu acesso à ${PLAT[emp]||('área da '+empNome+' na FC Consultoria')} foi liberado ✅\nSetor: ${PN[p.papel]||p.papel}\n\nEntre por aqui: ${['gs','gb','cb'].includes(emp)&&['vendas','compras','estoque'].includes(p.papel)?PLAT_URL:LINK(emp)}\nLogin: seu telefone ${tel}\nSenha: a que você criou no cadastro\n\nNo primeiro acesso, o tutorial mostra como usar. Dúvidas: (66) 9 9986-7984`;};
+let AC=[],FEITOS={};
+async function acCarregar(){const r=await sb.rpc('emp_pendentes_todos');
+  if(r.error){$('acInfo').textContent='Não carregou: '+r.error.message;return;}AC=r.data||[];acPinta();badges();}
+function acPinta(){const ks=Object.keys(FEITOS);
+  $('acInfo').textContent=AC.length?AC.length+' cadastro'+(AC.length>1?'s':'')+' esperando liberação':'Nada esperando liberação';
+  let b=ks.map(k=>{const f=FEITOS[k];return `<div class="cd" style="border-color:#9fd4b4"><div class="top"><b>✅ ${h(f.nome)}</b><span>${h(PN[f.papel]||f.papel)}</span></div>
+    <div class="sub"><span class="emp">${h(f.empNome)}</span>Acesso liberado</div>
+    <div class="bts"><a class="bt w" href="${'https://wa.me/'+(f.tel?'55'+f.tel:'')+'?text='+encodeURIComponent(f.msg)}" target="_blank" rel="noopener">Avisar no WhatsApp</a><button class="bt n" type="button" data-ok="${h(k)}">Fechar</button></div></div>`;}).join('');
+  b+=AC.map((x,i)=>`<div class="cd" data-i="${i}"><div class="top"><b>${h(x.nome)}</b><span>${quando(x.em)}</span></div>
+    <div class="sub"><span class="emp">${h(x.emp_nome||x.emp)}</span>${h(x.telefone||'')}</div>
+    <div class="chips">${PAPEIS.map(p=>`<button type="button" data-p="${p[0]}">${p[1]}</button>`).join('')}</div>
+    <div class="bts"><button class="bt p" type="button" data-lib>Liberar</button><button class="bt r" type="button" data-rec>Recusar</button></div><div class="st"></div></div>`).join('');
+  if(!b)b='<div class="vazio"><i>👍</i><b>Ninguém esperando liberação</b>Quando alguém se cadastrar pelo link de primeiro acesso, aparece aqui.</div>';
+  $('acL').innerHTML=b;}
+$('acL').addEventListener('click',async e=>{const ok=e.target.closest('[data-ok]');if(ok){delete FEITOS[ok.dataset.ok];acPinta();return;}
+  const c=e.target.closest('.cd[data-i]');if(!c)return;const x=AC[+c.dataset.i],st=c.querySelector('.st');
+  const ch=e.target.closest('[data-p]');if(ch){c.querySelectorAll('[data-p]').forEach(b=>b.classList.toggle('on',b===ch));st.textContent='';st.className='st';return;}
+  const lib=e.target.closest('[data-lib]'),rec=e.target.closest('[data-rec]');if(!lib&&!rec)return;
+  const btn=lib||rec;
+  try{
+    if(lib&&!c.querySelector('[data-p].on')){st.textContent='Escolha o setor antes de liberar.';st.className='st er';return;}
+    btn.disabled=true;st.className='st';st.textContent=lib?'Liberando…':'Recusando…';
+    const L=await sb.rpc('emp_pessoas_lista',{p_emp:x.emp});if(L.error)throw L.error;
+    const p=(L.data||[]).find(q=>q.pendente&&q.nome===x.nome&&String(q.telefone||'')===String(x.telefone||''))||(L.data||[]).find(q=>q.pendente&&q.nome===x.nome);
+    if(!p)throw new Error('Cadastro não encontrado. Toque em ↻ para atualizar.');
+    if(rec){if(!confirm('Recusar o cadastro de '+x.nome+'? O pedido será apagado.')){btn.disabled=false;st.textContent='';return;}
+      const r=await sb.rpc('emp_pessoa_recusar',{p_id:p.id});if(r.error)throw r.error;await acCarregar();return;}
+    const papel=c.querySelector('[data-p].on').dataset.p;
+    const r=await sb.rpc('emp_pessoa_salvar',{p_id:p.id,p_emp:x.emp,p_nome:p.nome,p_login:p.login,p_papel:papel,p_abas:null,p_ativo:true,p_senha:null});if(r.error)throw r.error;
+    const tel=String(p.telefone||p.login||'').replace(/\D/g,''),empNome=x.emp_nome||x.emp;
+    FEITOS[p.id]={nome:p.nome,papel,empNome,tel,msg:textoLib({nome:p.nome,papel,telefone:p.telefone,login:p.login},x.emp,empNome)};
+    await acCarregar();
+  }catch(err){btn.disabled=false;st.className='st er';st.textContent='⚠ '+(err.message||err);}});
+
+/* ===== 📥 Para responder (mesma lista do botão no Painel da Matriz) ===== */
+const TIPO={conv:['💬','Conversas das equipes','Responder'],sup:['🛟','Suporte dos vendedores','Abrir'],sol:['📨','Solicitações dos clientes','Abrir'],fila:['🛒','Pedidos do site sem vendedor','Ver fila']};
+const PAPEL={gestor:'Gestor',compras:'Compras',vendas:'Vendas',gerente:'Gerente comercial',marketing:'Marketing',fabrica:'Fábrica',estoque:'Estoque'};
+let RP={itens:[],empresas:{}};
+async function rpCarregar(){const r=await sb.rpc('fc_caixa');if(r.error||!r.data){$('rpInfo').textContent='Não carregou'+(r.error?': '+r.error.message:'');return;}RP=r.data;rpPinta();badges();}
+function rpPinta(){const D=RP,emp=k=>((D.empresas||{})[k]||k||'').split(' · ')[0];const it=D.itens||[];
+  $('rpInfo').textContent=it.length?it.length+' esperando a FC':'Tudo respondido';
+  let b='';Object.keys(TIPO).forEach(k=>{const L=it.filter(i=>i.tipo===k);if(!L.length)return;const [ic,t,ac]=TIPO[k];
+    b+=`<div class="gr">${ic} ${t}<i>${L.length}</i></div>`+L.map(i=>{const urg=k==='fila'||(Date.now()-new Date(i.em))>4*36e5;
+      const quem=k==='conv'?`${h(i.quem)} <span class="sub">· ${h(PAPEL[i.papel]||i.papel||'')}</span>`:h(i.quem||'Sem nome');
+      const sub=k==='sol'?(i.status==='aceita'?'Em andamento':'Nova')+(i.sub?' · '+h(i.sub):''):'';
+      return `<div class="cd ${urg?'urg':''}"><div class="top"><b>${quem}</b><span>${quando(i.em)}${i.n>1?' · '+i.n:''}</span></div>
+        <div class="sub"><span class="emp">${h(emp(i.emp))}</span>${sub}</div>${i.texto?`<p>${h(i.texto)}</p>`:''}
+        <div class="bts"><button class="bt p" type="button" data-k="${k}" data-id="${h(i.id)}" data-emp="${h(i.emp)}">${ac} →</button></div></div>`;}).join('');});
+  if(!b)b='<div class="vazio"><i>👍</i><b>Tudo respondido</b>Quando chegar mensagem, solicitação ou pedido parado, aparece aqui.</div>';
+  $('rpL').innerHTML=b;}
+$('rpL').addEventListener('click',e=>{const g=e.target.closest('[data-k]');if(!g)return;const k=g.dataset.k,id=g.dataset.id,emp=g.dataset.emp;
+  if(k==='conv'&&window.FCConversas&&FCConversas.abrirMatriz){FCConversas.abrirMatriz(id).then(()=>rpCarregar());return;}
+  if(k==='conv'||k==='sup'){location.href='painel.html';return;}
+  if(k==='sol'){window.open('consultorias.html#'+encodeURIComponent(emp)+'/t=sol','_blank','noopener');return;}
+  if(k==='fila'){window.open('orcamento/?e='+encodeURIComponent(emp)+'&aba=atd','_blank','noopener');}});
+
+/* ===== números nas abas e no ícone do app ===== */
+function badges(){const a=AC.length,r=(RP.itens||[]).length;
+  [[$('nAc'),a],[$('nRp'),r]].forEach(([el,n])=>{el.textContent=n>99?'99+':n;el.classList.toggle('on',n>0);});
+  document.title=(a+r?'('+(a+r)+') ':'')+'Matriz FC';
+  try{if(navigator.setAppBadge){a+r?navigator.setAppBadge(a+r):navigator.clearAppBadge();}}catch(_){}}
+
+function tudo(){return Promise.all([acCarregar(),rpCarregar()]);}
+$('bAt').onclick=()=>{$('bAt').textContent='…';tudo().finally(()=>{$('bAt').textContent='↻';});};
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&$('gate').hidden&&LOGADO)tudo();});
+
+let LOGADO=false;
+gateUI(()=>{LOGADO=true;
+  try{const s=localStorage.getItem('fc-cel-aba');if(TIT[s])aba(s);}catch(_){}
+  const q=new URLSearchParams(location.search).get('aba');if(TIT[q])aba(q);
+  try{window.FCConversas&&FCConversas.matriz&&FCConversas.matriz({semBotao:true});}catch(_){}
+  tudo();setInterval(()=>{if(!document.hidden)tudo();},60000);
+},{soMatriz:true});
+})();
+</script>
+</body>
+</html>
