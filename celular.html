@@ -12,7 +12,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Matriz FC">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<!-- Painel da Matriz no celular (14/11/2026): só Liberar acessos, Para responder e Medidor de Obras.
+<!-- Painel da Matriz no celular (14/11/2026): só Liberar acessos, Para responder e On-line.
      Mesmo login do Painel da Matriz (fica salvo no aparelho). © FC Consultoria em Esquadria · uso exclusivo -->
 <style>
 :root{--pt:#0e4d5c;--pt2:#0a3a46;--pr:#c7d0d4;--bg:#f2f4f5;--card:#fff;--fg:#14232a;--mu:#5f6b70;--ln:#dde3e6;--ok:#1f8a4c;--bad:#a32d2d;--sel:#e3f0f2}
@@ -103,21 +103,12 @@ nav .n.on{display:grid}
   <div id="onL"></div>
  </section>
 
- <section class="sec" id="s-pa">
-  <a class="big" href="/fc3d/clientes/?abrir=parceiro-obras">
-   <div style="font-size:28px">🤝</div>
-   <b>Medidor de Obras · Plataforma FC 3D</b>
-   <span>Simulador de obra, Tipologias e Catálogo 3D do serralheiro parceiro. Abre a plataforma como gestor mestre.</span>
-   <em>Abrir a plataforma →</em>
-  </a>
- </section>
 </main>
 
 <nav>
  <button type="button" data-s="ac" class="on"><span class="ic">🔑</span>Acessos<span class="n" id="nAc"></span></button>
  <button type="button" data-s="rp"><span class="ic">📥</span>Responder<span class="n" id="nRp"></span></button>
  <button type="button" data-s="on"><span class="ic">🟢</span>On-line<span class="n" id="nOn" style="background:#1f8a4c"></span></button>
- <button type="button" data-s="pa"><span class="ic">🤝</span>Parceiro</button>
 </nav>
 
 <script src="conversas.js?v=8"></script>
@@ -131,7 +122,7 @@ if(!app&&/iPhone|iPad/.test(navigator.userAgent))$('dicaInst').hidden=false;
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js',{scope:'./'}).catch(()=>{});
 
 /* ===== abas ===== */
-const TIT={ac:'Liberar acessos',rp:'Para responder',on:'Quem está on-line',pa:'Medidor de Obras'};
+const TIT={ac:'Liberar acessos',rp:'Para responder',on:'Quem está on-line'};
 let ABA='ac';
 function aba(s){ABA=s;document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.s===s));
   document.querySelectorAll('.sec').forEach(x=>x.classList.toggle('on',x.id==='s-'+s));$('tit').textContent=TIT[s];
