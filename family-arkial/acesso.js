@@ -11,7 +11,9 @@
   var ov=document.createElement('div');ov.id='famAcesso';
   ov.style.cssText='position:fixed;inset:0;z-index:2147483000;background:'+COR+';color:#fff;display:flex;align-items:center;justify-content:center;padding:20px;font:15px system-ui,sans-serif';
   function tela(h){ov.innerHTML='<div style="max-width:360px;width:100%;background:#fff;color:'+COR+';border-radius:18px;padding:22px;box-shadow:0 10px 40px rgba(0,0,0,.35)"><div style="font-weight:700;font-size:18px;margin-bottom:4px">Simulador na obra · Family</div><div style="font-size:12px;color:'+COR2+';margin-bottom:14px">'+(M.nome||'')+' · Linha Family 32 · desenvolvido por FC Consultoria em Esquadria</div>'+h+'</div>';if(!ov.isConnected)document.documentElement.appendChild(ov);}
-  function libera(){st.status='liberado';st.ok=Date.now();salva();ov.remove();}
+  /* 14/11/2026 · aparelho liberado pela FC: só agora o botão Instalar app pode aparecer (instalar.js) */
+  function apOk(){window.FC_AP_OK=1;try{dispatchEvent(new Event('fcapok'));}catch(_){}}
+  function libera(){st.status='liberado';st.ok=Date.now();salva();ov.remove();apOk();}
   function trava(msg){tela('<p style="margin:0">'+msg+'</p>');}
   var poll;
   function aguardando(){tela('<p style="margin:0 0 8px">⏳ <b>Aguardando liberação da FC</b></p><p style="margin:0;font-size:13px;color:#555">Seu pedido foi enviado. Assim que a FC liberar, o simulador abre sozinho neste aparelho.</p>');
@@ -42,6 +44,7 @@
     rpc('fam_ap_mestre_link',{p_chave:ch,p_disp:st.disp}).then(function(s){if(s==='liberado'){st.mestre=1;libera();}else form('Link mestre inválido.');}).catch(function(){form('Sem internet. Abra o link mestre com conexão.');});
     return;}
   var valido=st.status==='liberado'&&st.ok&&(st.mestre||(Date.now()-st.ok)<DIAS*864e5);
+  if(valido)apOk();
   if(!valido){tela('<p style="margin:0">Conferindo o acesso…</p>');}
   rpc('fam_ap_status',{p_disp:st.disp}).then(function(s){
     if(s==='liberado'){if(!valido)libera();else{st.ok=Date.now();salva();}}
