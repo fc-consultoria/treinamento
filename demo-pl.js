@@ -1,5 +1,5 @@
 /* ===== Painel da Matriz · Demonstrativos da Plataforma FC 3D =====
-   Lista quem entrou pelo link de 3 dias (fc3d/clientes/demo/) e avisa com som quando entra alguém novo.
+   Lista quem entrou pelo link de 24 horas (fc3d/clientes/demo/) e avisa com som quando entra alguém novo.
    Usa a sessão do Acesso FC da Plataforma (mesmo navegador) ou a senha da FC digitada aqui uma vez. */
 (function(){
   const URL0='https://pawwncmfadzxfahfvhry.supabase.co/rest/v1/rpc/',KEY='sb_publishable_b0kGoqo85joo3Vb8Xllxhw_VemwaLMs';
@@ -37,7 +37,7 @@ Se fez sentido ter a sua equipe comercial conhecendo cada perfil e componente qu
 Obrigado por conhecer a ferramenta! Se quiser que a sua equipe comercial continue com os perfis e componentes na mão, me responde aqui que te passo os planos e valores.
 
 Fernando · FC Consultoria em Esquadria`],
-    ['mais','Mais 3 dias',d=>`${d.n}, liberei mais 3 dias no seu demonstrativo da Plataforma FC 3D. Agora vai até ${d.ate}.
+    ['mais','Mais 24 horas',d=>`${d.n}, liberei mais 24 horas no seu demonstrativo da Plataforma FC 3D. Agora vai até ${d.ate}.
 
 Link: ${LINK}`]];
   const DIAS=['dom','seg','ter','qua','qui','sex','sáb'];
@@ -50,7 +50,7 @@ Link: ${LINK}`]];
   const quandoEtapa=(d,k)=>{const c=+new Date(d.criado),x=+new Date(d.expira);
     return k==='boas'?c:k==='dica'?c+H24:k==='ultimo'?Math.max(c+H24,x-H24):x;};
   const enviou=(d,k)=>{const o=envs(),t=o[d.id+'|'+k];if(!t)return 0;const m=o[d.id+'|mais']||0;
-    return (k==='ultimo'||k==='fim')&&m>t?0:t;}; /* depois de "+3 dias" o último dia/terminou contam de novo */
+    return (k==='ultimo'||k==='fim')&&m>t?0:t;}; /* depois de "+24 h" o último dia/terminou contam de novo */
   function proxima(d){if(!d.ativo)return null;const ag=Date.now();
     const venc=SEQ.filter(k=>quandoEtapa(d,k)<=ag),ult=venc[venc.length-1];
     if(ult&&!enviou(d,ult))return {k:ult,agora:true};
@@ -84,7 +84,7 @@ Link: ${LINK}`]];
     const nov=D.filter(d=>!vis.includes(d.id));
     if(nov.length&&!(primeira&&!vis.length))nov.forEach(avisar);
     ls(KV,JSON.stringify(D.map(d=>d.id).slice(0,500)));primeira=false;ui();}
-  function avisar(d){const o={k:'demo-'+d.id,titulo:`🧊 ${d.nome} (${d.empresa}) entrou no demonstrativo`,sub:'Plataforma FC 3D · link de 3 dias'+(d.cidade?' · '+d.cidade:''),texto:'WhatsApp: '+d.whats,wa:zap(d.whats),
+  function avisar(d){const o={k:'demo-'+d.id,titulo:`🧊 ${d.nome} (${d.empresa}) entrou no demonstrativo`,sub:'Plataforma FC 3D · link de 24 horas'+(d.cidade?' · '+d.cidade:''),texto:'WhatsApp: '+d.whats,wa:zap(d.whats),
       fn:()=>{try{ptab('ped');}catch(_){}ABERTO=d.id;ui();setTimeout(()=>{const c=document.getElementById('dplCard');if(c)c.scrollIntoView({behavior:'smooth',block:'start'});},300);}};
     if(window.alertaGrande)window.alertaGrande(o);
     try{if(document.hidden&&'Notification' in window&&Notification.permission==='granted'){const n=new Notification(o.titulo,{body:o.sub,tag:o.k,requireInteraction:true});n.onclick=()=>{window.focus();n.close();o.fn();};}}catch(_){}}
@@ -179,7 +179,7 @@ Link: ${LINK}`]];
       <td>${e(d.empresa)}${d.cidade?'<br><span class="note">'+e(d.cidade)+'</span>':''}</td>
       <td>${new Date(d.criado).toLocaleDateString('pt-BR')}<br><span class="note">último: ${quando(d.ultimo)} · ${d.entradas||1}x</span></td>
       <td><b style="color:${c}">${t}</b>${onl(d)}</td>
-      <td style="white-space:nowrap"><button type="button" data-dpm="${d.id}">+3 dias</button> <button type="button" class="${d.ativo?'no':'ok'}" data-dpa="${d.id}" data-v="${d.ativo?0:1}">${d.ativo?'Pausar':'Reativar'}</button></td>
+      <td style="white-space:nowrap"><button type="button" data-dpm="${d.id}">+24 h</button> <button type="button" class="${d.ativo?'no':'ok'}" data-dpa="${d.id}" data-v="${d.ativo?0:1}">${d.ativo?'Pausar':'Reativar'}</button></td>
       <td style="min-width:300px;vertical-align:top">${celMsg(d)}</td></tr>`;}).join('')}</tbody></table></div>`;}
   function gaveta(){const g=document.getElementById('dqG');if(!g)return;const d=ABERTO&&D.find(x=>String(x.id)===String(ABERTO));
     if(!d){g.innerHTML='';return;}const c=CRM[d.id]||{},fa=faseAuto(d);
@@ -191,7 +191,7 @@ Link: ${LINK}`]];
       <div class="lb">Situação</div><div style="font-size:13.5px">Entrou ${new Date(d.criado).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})} · ${d.entradas||1}x
         · ${d.status==='pendente'?'<b style="color:#8a5a00">aguardando liberação</b>':!d.ativo?'<b style="color:#b3261e">pausado</b>':'vence '+fdt(d.expira)}${onl(d)}</div>
       <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">${d.status==='pendente'?`<button type="button" class="pri" data-dpa="${d.id}" data-v="1">Liberar agora</button>`
-        :`<button type="button" data-dpm="${d.id}">+3 dias</button> <button type="button" class="${d.ativo?'no':'ok'}" data-dpa="${d.id}" data-v="${d.ativo?0:1}">${d.ativo?'Pausar':'Reativar'}</button>`}</div>
+        :`<button type="button" data-dpm="${d.id}">+24 h</button> <button type="button" class="${d.ativo?'no':'ok'}" data-dpa="${d.id}" data-v="${d.ativo?0:1}">${d.ativo?'Pausar':'Reativar'}</button>`}</div>
       <div class="lb">Responsável</div><div style="display:flex;gap:6px">${PESSOAS.map(([p,cr,bg])=>`<button type="button" data-dqr="${p}" style="${c.resp===p?`background:${bg};color:${cr};border-color:${cr};font-weight:700`:''}">${p}</button>`).join('')}
         <button type="button" data-dqr="" style="${!c.resp?'font-weight:700':''}">Ninguém</button></div>
       <div class="lb">Etapa</div><select data-dqf style="font-size:13.5px"><option value=""${!c.fase?' selected':''}>Automática (agora: ${nomeF(fa)})</option>
@@ -211,7 +211,7 @@ Link: ${LINK}`]];
     r.querySelectorAll('[data-dqf]').forEach(s=>s.onchange=()=>{crm(ABERTO).fase=s.value||null;salvar(ABERTO,{p_fase:s.value});s.blur();ui();});
     r.querySelectorAll('[data-dqn]').forEach(t=>t.onchange=async()=>{const id=ABERTO,c=crm(id);c.nota=t.value;c.atualizado=new Date().toISOString();c.por=EU()||null;
       const n=document.getElementById('dqNs');if(n)n.textContent='Salvando…';await salvar(id,{p_nota:t.value});if(n)n.textContent='✔ Anotação salva';corpo();});
-    r.querySelectorAll('[data-dpm]').forEach(b=>b.onclick=async()=>{b.disabled=true;try{await rpc('pfc_adm_demo',{p_token:TOK,p_id:b.dataset.dpm,p_ativo:true,p_mais_dias:3});ESC[b.dataset.dpm]='mais';}catch(x){alert(x.message);}carregar();});
+    r.querySelectorAll('[data-dpm]').forEach(b=>b.onclick=async()=>{b.disabled=true;try{await rpc('pfc_adm_demo',{p_token:TOK,p_id:b.dataset.dpm,p_ativo:true,p_mais_dias:1});ESC[b.dataset.dpm]='mais';}catch(x){alert(x.message);}carregar();});
     r.querySelectorAll('[data-dpa]').forEach(b=>b.onclick=async()=>{b.disabled=true;try{await rpc('pfc_adm_demo',{p_token:TOK,p_id:b.dataset.dpa,p_ativo:b.dataset.v==='1'});}catch(x){alert(x.message);}carregar();});
     ligaMsg(r);}
   function ui(){const ae=document.activeElement;
