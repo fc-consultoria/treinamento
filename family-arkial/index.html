@@ -604,7 +604,7 @@ if(window.FCRaioX){let ambIni=null,GD=null;FCRaioX.init({R:renderer,SC:scene,CAM
  marca:{l1:M.revenda+' · Linha Family 32',l2:'Esquadrias em 3D · imagens demonstrativas',l3:'Desenvolvido por FC Consultoria em Esquadria'},
  roteiro:a=>{ambIni=cur&&cur.id;const L=[],nAmb=document.querySelectorAll('#ambStrip button').length;
   L.push({d:3.4,cap:'Linha Family 32 · '+M.nome,fn:a=>a.orbita(.7)});
-  if(GD&&model)L.push({d:11,cap:'Instalação com guindaste',fn:a=>{a.orbita(0);GD.instalaAtual()}});
+  if(GD&&model)L.push({d:13.2,cap:'Instalação pela equipe',fn:a=>{a.orbita(0);GD.instalaAtual()}});
   L.push({d:3.6,cap:'Abre leve, fecha vedando',fn:a=>{a.orbita(0);a.clica('#dock .main')}});
   L.push({d:4,cap:'Raio-X: a esquadria por dentro',fn:a=>{a.raiox(1);a.orbita(.8)}});
   L.push({d:3.6,cap:'Vista de fora',fn:a=>{a.raiox(0);a.orbita(0);a.clica('#dock .main');setTimeout(()=>a.clica('#bOut'),500)}});
