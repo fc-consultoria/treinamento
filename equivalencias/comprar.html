@@ -157,7 +157,7 @@ tr.hl td{background:#fff3c4!important;transition:background .4s}
 .altan{display:flex;flex-direction:column;gap:4px}.altcola{border:2px dashed #0f6b70;border-radius:12px;background:#eef6f5;padding:14px;display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;outline:none}.altcola.on,.altcola:focus{background:#d9efec;border-color:#f2a51e}.altcola>b{font-size:17px;color:#0f6b70}.altcola>span{font-size:13px;color:#5d6b76}.altcola kbd{background:#fff;border:1px solid #c4ccd2;border-radius:4px;padding:0 5px;font:700 12px monospace}.altmsg{display:block;font-weight:500;color:#5d6b76;margin-top:4px}.altan small{font-weight:500;color:#5d6b76}.altimg{max-width:100%;max-height:180px;border:1px solid #d6dee4;border-radius:8px;cursor:zoom-in}.altpdf{font-weight:700}
 .altmini{width:34px;height:34px;object-fit:cover;border-radius:5px;float:left;margin-right:6px;cursor:zoom-in}.altlb{position:fixed;inset:0;z-index:95;background:rgba(0,0,0,.85);display:grid;place-items:center;padding:16px;cursor:zoom-out}.altlb img{max-width:100%;max-height:100%;border-radius:8px}
 .rgb{margin-top:6px;padding:6px 8px;border:1px solid #9ad0cc;background:#eef8f7;border-radius:8px;font-size:13px;display:flex;flex-direction:column;gap:2px}.rgb small{color:var(--mu,#5d6b76)}.rgb span{display:flex;gap:6px;flex-wrap:wrap;margin-top:3px}.rgb button,.rgsv{border:1px solid #0f6b70;background:#fff;color:#0f6b70;border-radius:7px;padding:2px 8px;font:600 12px var(--f-b);cursor:pointer}.rgsv{margin-top:6px;background:#0f6b70;color:#fff}@media print{.rgsv,.rgb button{display:none}}
-.simim{min-width:96px;text-align:center}.simim .th{display:block;width:88px;height:64px;margin:0 auto;cursor:zoom-in;background:#fff;border:1px solid #d8e2e6;border-radius:8px;overflow:hidden}.simim .th img{width:100%;height:100%;object-fit:contain}
+.simim{min-width:96px;text-align:center}.simim .simqr{display:block;width:88px;margin:6px auto 0;cursor:zoom-in}.simim .simqr img{width:88px;height:88px;display:block;border:1px solid #d8e2e6;border-radius:6px;background:#fff;padding:2px}.simim .th{display:block;width:88px;height:64px;margin:0 auto;cursor:zoom-in;background:#fff;border:1px solid #d8e2e6;border-radius:8px;overflow:hidden}.simim .th img{width:100%;height:100%;object-fit:contain}
 </style>
 </head>
 <body>
@@ -603,7 +603,16 @@ async function pedPdf(f){const S=simular();const oc=ls.get(OKEY(),'');const E=pe
 function simDes(t,ep){let L=[];try{if(ep)L=pedImgs({p:ep,t});else if(t.g&&t.g.m&&t.g.l!=='__m'){const bm=t.g.m.find(m=>m[3]==='base')||t.g.m[0];const u=bm?imgDe(t.g,bm):'';if(u)L=[u];}}catch(_){}
   const tit=ep?(IDX.forn[ep.o.f]+' '+ep.o.c):(t.x.orig||t.x.q);
   const im=L.length?`<span class="th" data-zoom="${esc(L[0])}" data-t="${esc(tit)}" title="Ampliar"><img src="${esc(L[0])}" alt="" loading="lazy"${L.length>1?` data-fb="${esc(L.slice(1,5).join('|'))}"`:''} onerror="const r=(this.dataset.fb||'').split('|').filter(Boolean);if(r.length){this.dataset.fb=r.slice(1).join('|');this.src=r[0];this.parentNode.dataset.zoom=r[0];}else{this.replaceWith(document.createTextNode('sem desenho'));}"></span>`:'<small>sem desenho</small>';
-  return im+(ep?`<button type="button" class="bt noprint" data-pedqr="${ep.o.f}" title="QR do pedido da ${esc(IDX.forn[ep.o.f])} para abrir no celular (sem preços)" style="padding:2px 8px;font-size:12px;margin-top:4px">▦ QR</button>`:'');}
+  if(ep)simQrAg();
+  return im+(ep?`<span class="simqr noprint" data-qrf="${ep.o.f}" data-qrc="${esc(ep.o.c)}" data-pedqr="${ep.o.f}" title="QR do pedido da ${esc(IDX.forn[ep.o.f])} · aponte o celular (sem preços). Clique para ampliar."><small>QR…</small></span>`:'');}
+/* QR de cada linha já aberto na tela: o mesmo link do pedido do fornecedor (#iN abre o item) */
+let simQrT=null;function simQrAg(){clearTimeout(simQrT);simQrT=setTimeout(simQrPinta,600);}
+async function simQrPinta(){const els=[...document.querySelectorAll('.simqr[data-qrf]')];if(!els.length||!SIM.length)return;let S;try{S=simular();}catch(_){return;}
+  const fs=[...new Set(els.map(e=>e.dataset.qrf))];
+  for(const f of fs){let QL=null;try{QL=await qrLink(f,S);}catch(_){}const E=pedItens(S,f);
+    document.querySelectorAll(`.simqr[data-qrf="${f}"]`).forEach(el=>{if(!QL){el.innerHTML='<small>QR indisponível</small>';return;}
+      const row=el.closest('tr');const id=row&&row.id?+row.id.replace('simrow-',''):null;const n=E.findIndex(e=>e.t.i===id);
+      const src=qrImg(QL+(n>=0?'#i'+(n+1):''),96,1);el.innerHTML=src?`<img src="${src}" alt="QR">`:'<small>QR indisponível</small>';});}}
 /* desenho do perfil no pedido: print da 2ª opção, desenho do fornecedor ou, se faltar, o desenho Alcoa equivalente */
 function pedImg(e){const L=pedImgs(e);
   if(!L.length)return '';const fb=L.slice(1,5).join('|');
