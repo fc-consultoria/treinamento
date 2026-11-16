@@ -52,6 +52,7 @@ function init(o){
  /* ---------- giro lento da câmera ---------- */
  api.orbita=function(v){st.orb=v?(+v||1):0;};
  api.clica=function(sel,i){var l=document.querySelectorAll(sel);if(!l.length)return false;var b=i==null?l[0]:(i<0?l[l.length+i]:l[i]);if(!b)return false;b.click();return true;};
+ api.foco=function(obj,k,seg){if(!obj||!CT)return;var b=new T.Box3().setFromObject(obj),c=b.getCenter(new T.Vector3()),s=b.getSize(new T.Vector3()),r=Math.max(s.x,s.y,s.z)*(k||1.6);var dir=CAM.position.clone().sub(c).setY(0).normalize();var p1=c.clone().add(dir.multiplyScalar(r)).add(new T.Vector3(0,r*.25,0)),p0=CAM.position.clone(),t0c=CT.target.clone(),i0=performance.now(),d=(seg||1.6)*1000;st.orb=0;(function f(){var q=Math.min(1,(performance.now()-i0)/d),e=q<.5?4*q*q*q:1-Math.pow(-2*q+2,3)/2;CAM.position.lerpVectors(p0,p1,e);CT.target.lerpVectors(t0c,c,e);if(q<1)requestAnimationFrame(f);})();};
  api.existe=function(sel){return !!document.querySelector(sel);};
  api.desliza=function(sel,de,ate,seg){var r=document.querySelector(sel);if(!r)return false;var t0=performance.now();
   (function f(t){var k=Math.min(1,(t-t0)/(seg*1000)),e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;r.value=de+(ate-de)*e;r.dispatchEvent(new Event('input',{bubbles:true}));r.dispatchEvent(new Event('change',{bubbles:true}));if(k<1&&st.tour)requestAnimationFrame(f);})(t0);return true;};
@@ -80,16 +81,37 @@ function init(o){
  var VC=document.createElement('canvas');VC.width=1080;VC.height=1920;var vx=VC.getContext('2d');
  var salvo=null,ov=null,cd=null;
  function quebra(t,w){var p=String(t).split(' '),ls=[],l='';p.forEach(function(x){var nn=l?l+' '+x:x;if(vx.measureText(nn).width>w&&l){ls.push(l);l=x;}else l=nn;});ls.push(l);return ls;}
- function quadro(){var W=1080,H=1920,cv=R.domElement;
+ var FN='-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif';
+ function rr(x,y,w,h,r){vx.beginPath();vx.moveTo(x+r,y);vx.arcTo(x+w,y,x+w,y+h,r);vx.arcTo(x+w,y+h,x,y+h,r);vx.arcTo(x,y+h,x,y,r);vx.arcTo(x,y,x+w,y,r);vx.closePath();}
+ function logoImg(){try{var e=o.logo&&o.logo();if(e&&e.complete&&e.naturalWidth)return e;}catch(x){}return null;}
+ function quadro(){var W=1080,H=1920,cv=R.domElement,E=o.estilo||{},cor=E.cor||'#38c6f4',tr=st.tour,c=tr&&tr.cenas[tr.i];
   vx.fillStyle=o.fundo||'#0f1012';vx.fillRect(0,0,W,H);
   try{vx.drawImage(cv,0,0,cv.width,cv.height,0,0,W,H);}catch(e){}
-  var g=vx.createLinearGradient(0,0,0,380);g.addColorStop(0,'rgba(0,0,0,.6)');g.addColorStop(1,'rgba(0,0,0,0)');vx.fillStyle=g;vx.fillRect(0,0,W,380);
-  var g2=vx.createLinearGradient(0,1560,0,H);g2.addColorStop(0,'rgba(0,0,0,0)');g2.addColorStop(1,'rgba(0,0,0,.7)');vx.fillStyle=g2;vx.fillRect(0,1560,W,360);
-  var lg=api.legenda();vx.textAlign='center';
-  if(lg){vx.globalAlpha=lg.a;vx.fillStyle='#fff';vx.font='800 60px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif';quebra(lg.txt,900).forEach(function(l,k){vx.fillText(l,540,178+k*72);});vx.globalAlpha=1;}
-  var m=o.marca||{};vx.fillStyle='#fff';vx.font='800 40px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif';vx.fillText(m.l1||'',540,1786);
-  vx.fillStyle='rgba(225,236,242,.85)';vx.font='500 26px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif';vx.fillText(m.l2||'',540,1834);
-  if(m.l3){vx.fillText(m.l3,540,1872);}}
+  var g=vx.createLinearGradient(0,0,0,420);g.addColorStop(0,'rgba(0,0,0,.66)');g.addColorStop(1,'rgba(0,0,0,0)');vx.fillStyle=g;vx.fillRect(0,0,W,420);
+  var g2=vx.createLinearGradient(0,1500,0,H);g2.addColorStop(0,'rgba(0,0,0,0)');g2.addColorStop(1,'rgba(0,0,0,.78)');vx.fillStyle=g2;vx.fillRect(0,1500,W,420);
+  var lg=api.legenda(),m=o.marca||{},img=logoImg();
+  /* cartão cheio (abertura / fechamento) */
+  if(c&&c.card){var a=lg?lg.a:1;vx.globalAlpha=.82*a;vx.fillStyle='#07090b';vx.fillRect(0,0,W,H);vx.globalAlpha=a;
+   var y0=760;if(img){var lw=560,lh=lw*img.naturalHeight/img.naturalWidth;vx.drawImage(img,540-lw/2,y0-lh-40,lw,lh);}
+   vx.fillStyle=cor;vx.fillRect(540-60,y0,120,5);vx.textAlign='center';
+   vx.fillStyle='#fff';vx.font='800 70px '+FN;quebra(c.card.t1||'',920).forEach(function(l,k){vx.fillText(l,540,y0+110+k*84)});
+   vx.fillStyle='rgba(235,240,244,.82)';vx.font='500 36px '+FN;quebra(c.card.t2||'',900).forEach(function(l,k){vx.fillText(l,540,y0+260+k*48)});
+   if(c.card.t3){rr(540-330,y0+390,660,92,46);vx.fillStyle=cor;vx.fill();vx.fillStyle='#111';vx.font='800 36px '+FN;vx.fillText(c.card.t3,540,y0+449);}
+   vx.globalAlpha=1;}
+  else{
+   /* selo da linha, fixo no alto */
+   if(img){var sw=250,sh=sw*img.naturalHeight/img.naturalWidth;vx.drawImage(img,64,70,sw,sh);}
+   if(E.selo){vx.font='700 24px '+FN;var tw=vx.measureText(E.selo).width;rr(1016-tw-44,74,tw+44,48,24);vx.fillStyle='rgba(0,0,0,.45)';vx.fill();vx.strokeStyle=cor;vx.lineWidth=2;vx.stroke();vx.fillStyle=cor;vx.textAlign='center';vx.fillText(E.selo,1016-(tw+44)/2,106);}
+   /* legenda moderna: barra de cor + texto à esquerda, embaixo */
+   if(lg&&lg.txt){vx.globalAlpha=lg.a;var ls=(vx.font='800 64px '+FN,quebra(lg.txt,880)),yb=1500-(ls.length-1)*76,dx=(1-lg.a)*-40;
+    var gp=vx.createLinearGradient(0,yb-140,0,yb+ls.length*76+80);gp.addColorStop(0,'rgba(0,0,0,0)');gp.addColorStop(.4,'rgba(0,0,0,.45)');gp.addColorStop(1,'rgba(0,0,0,.55)');vx.fillStyle=gp;vx.fillRect(0,yb-140,W,ls.length*76+220);
+    vx.shadowColor='rgba(0,0,0,.6)';vx.shadowBlur=14;vx.fillStyle=cor;vx.fillRect(64+dx,yb-62,10,ls.length*76+4);vx.fillStyle='#fff';vx.textAlign='left';ls.forEach(function(l,k){vx.fillText(l,98+dx,yb+k*76)});
+    if(c&&c.sub){vx.fillStyle='rgba(235,240,244,.9)';vx.font='500 32px '+FN;vx.fillText(c.sub,98+dx,yb+ls.length*76+4);}vx.shadowBlur=0;vx.globalAlpha=1;}
+   vx.textAlign='center';vx.fillStyle='rgba(255,255,255,.9)';vx.font='700 30px '+FN;vx.fillText(m.l1||'',540,1760);
+   vx.fillStyle='rgba(225,236,242,.75)';vx.font='500 24px '+FN;vx.fillText(m.l2||'',540,1800);if(m.l3)vx.fillText(m.l3,540,1834);}
+  /* barra de progresso */
+  if(tr){var tot=tr.cenas.reduce(function(s,x){return s+x.d},0),feito=tr.cenas.slice(0,tr.i).reduce(function(s,x){return s+x.d},0)+tr.t;
+   vx.fillStyle='rgba(255,255,255,.18)';vx.fillRect(64,1872,952,6);vx.fillStyle=cor;vx.fillRect(64,1872,952*Math.min(1,feito/tot),6);}}
  /* depois de cada desenho da tela, copia para o quadro do vídeo (sem precisar de preserveDrawingBuffer) */
  var render0=R.render.bind(R);
  R.render=function(s,c){if(st.tour){var v=R.getSize(new T.Vector2());if(v.x!==1080||v.y!==1920||R.getPixelRatio()!==1){R.setPixelRatio(1);R.setSize(1080,1920,false);}if(c===CAM&&Math.abs(CAM.aspect-9/16)>1e-3){CAM.aspect=9/16;CAM.updateProjectionMatrix();}}
