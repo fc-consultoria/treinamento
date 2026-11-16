@@ -57,14 +57,14 @@ function init(o){
   (function f(t){var k=Math.min(1,(t-t0)/(seg*1000)),e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;r.value=de+(ate-de)*e;r.dispatchEvent(new Event('input',{bubbles:true}));r.dispatchEvent(new Event('change',{bubbles:true}));if(k<1&&st.tour)requestAnimationFrame(f);})(t0);return true;};
  /* ---------- laço próprio ---------- */
  var n=0,last=performance.now(),Y=new T.Vector3(0,1,0),tmp=new T.Vector3();
- function laco(t){requestAnimationFrame(laco);var dt=Math.min(.05,(t-last)/1000);last=t;n++;
+ function laco(t){requestAnimationFrame(laco);var dr=Math.max(0,Math.min(.5,(t-last)/1000)),dt=Math.min(.05,dr);last=t;n++;
   if(st.rx){st.k=Math.min(1,st.k+dt*2.2);if(n%20===0){limpaMortos();aplica();}
    var pl=null;ORIG.forEach(function(m){var mm=mat0(m);if(!pl&&mm.clippingPlanes&&mm.clippingPlanes.length)pl=mm.clippingPlanes;});pl=pl||[];
    if(xAlu.clippingPlanes!==pl){xAlu.clippingPlanes=xComp.clippingPlanes=xVid.clippingPlanes=xEdge.clippingPlanes=pl;xAlu.needsUpdate=xComp.needsUpdate=xVid.needsUpdate=xEdge.needsUpdate=true;}
    xAlu.opacity=1-.84*st.k;xEdge.opacity=.9*st.k;}
   else if(ORIG.size)restaura();
   if(st.orb){var c=CT?CT.target:(o.centro?o.centro():tmp.set(0,0,0));CAM.position.sub(c).applyAxisAngle(Y,dt*.32*st.orb).add(c);if(!CT)CAM.lookAt(c);}
-  if(st.tour)passo(dt);}
+  if(st.tour)passo(dr);}
  requestAnimationFrame(laco);
 
  /* ---------- roteiro ---------- */
@@ -123,9 +123,9 @@ function init(o){
  /* ---------- botões ---------- */
  var bar=o.barra||null,btR=null,btV=null,cls=o.cls||'fcrx-b';
  if(!bar&&o.flutuar){bar=el('div','fcrx-bar fcrx-flt');var p=o.flutuar;if(getComputedStyle(p).position==='static')p.style.position='relative';p.appendChild(bar);if(o.pos)Object.assign(bar.style,o.pos);cls='fcrx-b';}
- if(bar){btR=el('button',cls,'🩻 Raio-X');btR.type='button';btR.title='Ver a esquadria por dentro: perfis transparentes e componentes em destaque';btR.onclick=function(){api.raiox(!st.rx);};
+ if(bar){if(!o.semRaioX){btR=el('button',cls,'🩻 Raio-X');btR.type='button';btR.title='Ver a esquadria por dentro: perfis transparentes e componentes em destaque';btR.onclick=function(){api.raiox(!st.rx);};}
   btV=el('button',cls,'🎬 Vídeo Reels');btV.type='button';btV.title='Gerar um vídeo em pé para Instagram e WhatsApp';btV.onclick=pergunta;
-  if(o.antes){bar.insertBefore(btV,o.antes);bar.insertBefore(btR,btV);}else{bar.appendChild(btR);bar.appendChild(btV);}}
+  if(o.antes){bar.insertBefore(btV,o.antes);if(btR)bar.insertBefore(btR,btV);}else{if(btR)bar.appendChild(btR);bar.appendChild(btV);}}
  api.gravar=function(){iniciaTour(true);};api.ver=function(){iniciaTour(false);};api.estado=st;
  return api;}
 window.FCRaioX={init:init};

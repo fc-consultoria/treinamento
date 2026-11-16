@@ -243,6 +243,7 @@ body.evento .caption{display:block}
 <script src="lib/OrbitControls.js"></script>
 <script src="lib/qrcode.js"></script>
 <script src="raiox-fc.js"></script>
+<script src="guindaste-fc.js"></script>
 <script>
 'use strict';
 const $=s=>document.querySelector(s);
@@ -597,12 +598,13 @@ controls.addEventListener('start',()=>{tw=null});
 let startId='sala';try{const s=localStorage.getItem(M.ls('fam_amb'));if(s&&AMB.some(a=>a.id===s))startId=s}catch(e){}
 resize();setAmb(startId);requestAnimationFrame(loop);
 /* Raio-X + Vídeo Reels (16/11/2026): soma aos comandos dos Ambientes 3D (abrir, ver de fora, noite, ambientes) */
-if(window.FCRaioX){let ambIni=null;FCRaioX.init({R:renderer,SC:scene,CAM:camera,CT:controls,alvo:()=>model&&model.g,
+if(window.FCRaioX){let ambIni=null,GD=null;FCRaioX.init({R:renderer,SC:scene,CAM:camera,CT:controls,alvo:()=>model&&model.g,
  ehPerfil:m=>m===alu,ehVidro:m=>m===glass||m===frost||m===meshMat,
  flutuar:$('#stage'),pos:{left:'auto',right:'12px',top:'64px'},fundo:'#1d2731',arquivo:'family32-'+(M.prefixo||'').replace(/_$/,'')+'-reels',
  marca:{l1:M.revenda+' · Linha Family 32',l2:'Esquadrias em 3D · imagens demonstrativas',l3:'Desenvolvido por FC Consultoria em Esquadria'},
  roteiro:a=>{ambIni=cur&&cur.id;const L=[],nAmb=document.querySelectorAll('#ambStrip button').length;
   L.push({d:3.4,cap:'Linha Family 32 · '+M.nome,fn:a=>a.orbita(.7)});
+  if(GD&&model)L.push({d:11,cap:'Instalação com guindaste',fn:a=>{a.orbita(0);GD.instalaAtual()}});
   L.push({d:3.6,cap:'Abre leve, fecha vedando',fn:a=>{a.orbita(0);a.clica('#dock .main')}});
   L.push({d:4,cap:'Raio-X: a esquadria por dentro',fn:a=>{a.raiox(1);a.orbita(.8)}});
   L.push({d:3.6,cap:'Vista de fora',fn:a=>{a.raiox(0);a.orbita(0);a.clica('#dock .main');setTimeout(()=>a.clica('#bOut'),500)}});
@@ -610,7 +612,10 @@ if(window.FCRaioX){let ambIni=null;FCRaioX.init({R:renderer,SC:scene,CAM:camera,
   L.push({d:3.4,cap:'À noite',fn:a=>{a.orbita(.4);a.clica('#bNight')}});
   L.push({d:3.6,cap:M.revenda+' · Linha Family 32',fn:a=>{a.clica('#bNight');a.raiox(1);a.orbita(.8)}});
   return L},
- aoTerminar:a=>{a.raiox(0);if(ambIni)setAmb(ambIni)}})}
+ aoTerminar:a=>{a.raiox(0);if(ambIni)setAmb(ambIni)}});
+ if(window.FCGuindaste)GD=FCGuindaste.init({SC:scene,CAM:camera,CT:controls,alvos:()=>model?[{obj:model.g,fora:new THREE.Vector3(0,0,-1),chao:0,solo:0,nome:(cur&&cur.tip)||'Linha Family 32'}]:[],
+  flutuar:$('#stage'),legendaEm:$('#stage'),
+  aoInicio:()=>{['#hsLayer','#dock','#qrBox','#qrPill'].forEach(s=>{const e=$(s);if(e)e.style.visibility='hidden'})},aoFim:()=>{['#hsLayer','#dock','#qrBox','#qrPill'].forEach(s=>{const e=$(s);if(e)e.style.visibility=''})}})}
 /* QR no canto da tela:
    Ambientes 3D → abre no celular do cliente exatamente o ambiente que o vendedor montou (tipologia, cor, aberta, noite…)
    Modo evento → só o QR do próprio modo evento.  Simulador → o QR sai do botão "QR para o cliente". */
