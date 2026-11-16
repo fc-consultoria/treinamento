@@ -136,12 +136,16 @@ function init(o){
   mt.forEach(function(m){m.userData.y0=chao;m.visible=false;var f=parafusadeira();f.position.set(0,-.33,.02);m.userData.cd.add(f);m.userData.fur=f;SC.add(m)});
   var eg=new T.LineSegments(new T.EdgesGeometry(new T.BoxGeometry(S.x+.06,S.y+.06,S.z+.06)),M.brilho);eg.position.copy(C);SC.add(eg);
   var ray=new T.Raycaster(),escondidos=new Set(),meus=function(x){while(x){if(x===ob||mt.indexOf(x)>=0||x===eg)return true;x=x.parent}return false};
+  /* candidatos a sair da frente da câmera: só peças pequenas da cena, fora das esquadrias (lista feita uma vez, para não pesar) */
+  var raizes=((o.alvos&&o.alvos())||[]).map(function(a){return a.obj});raizes.push(ob);
+  var dentroDe=function(x){while(x){if(raizes.indexOf(x)>=0)return true;x=x.parent}return false};
+  var cand=[],tb=new T.Box3(),tv=V();SC.traverse(function(x){if(!x.isMesh||!x.visible||dentroDe(x))return;var mm=Array.isArray(x.material)?x.material[0]:x.material;if(mm&&mm.transparent&&mm.opacity===0)return;tb.setFromObject(x).getSize(tv);if(Math.max(tv.x,tv.y,tv.z)<=6)cand.push(x);});
   /* câmera na altura das pessoas */
   var k=Math.max(5.2,tam*2.1);
   var c0=C.clone().add(dirW.clone().multiplyScalar(k*1.05)).add(lado.clone().multiplyScalar(-k*.95)).add(V(0,chao-C.y+1.75,0));
   var c1=C.clone().add(dirW.clone().multiplyScalar(k*1.0)).add(lado.clone().multiplyScalar(-k*.12)).add(V(0,chao-C.y+1.6,0));
   var camP=CAM.position.clone(),camT=CT?CT.target.clone():null,lim=null;if(CT){CT.enabled=false;lim=[CT.minDistance,CT.maxDistance,CT.minPolarAngle,CT.maxPolarAngle];CT.minDistance=0;CT.maxDistance=Infinity;CT.minPolarAngle=0;CT.maxPolarAngle=Math.PI;}
-  var DUR=13,t0=performance.now(),longe=3.6,perto=.85;
+  var DUR=13,t0=performance.now(),longe=3.6,perto=.85,ultR=-1;
   o.aoInicio&&o.aoInicio(alvo);legenda('Instalação · '+(alvo.nome||'esquadria'));
   var face=function(m,d){m.rotation.y=Math.atan2(d.x,d.z)};
   return new Promise(function(res){
@@ -187,10 +191,10 @@ function init(o){
     ue.qe.rotation.x=ue.qd.rotation.x=0;ue.je.rotation.x=ue.jd.rotation.x=0;
     M.brilho.opacity=s>10.2&&s<12?Math.max(0,Math.sin((s-10.2)/1.8*Math.PI))*.95:0;
     if(s>7.8&&s<7.9)legenda('Fixando no vão');if(s>10.2&&s<10.3)legenda('Instalada · perfis reais do catálogo');
-    if(o.limpaVista!==false&&(Math.floor(s*10)%3===0)){var alvosR=[wc.clone()];mt.forEach(function(m){if(m.visible)alvosR.push(m.getWorldPosition(V()).add(V(0,1.3,0)))});
+    if(o.limpaVista!==false&&Math.floor(s*2)!==ultR){ultR=Math.floor(s*2);var alvosR=[wc.clone()];mt.forEach(function(m){if(m.visible)alvosR.push(m.getWorldPosition(V()).add(V(0,1.3,0)))});
      alvosR.forEach(function(pt){var dir=pt.clone().sub(CAM.position),dd=dir.length();ray.set(CAM.position,dir.normalize());ray.far=dd-.3;
-      ray.intersectObjects(SC.children,true).forEach(function(h){var g=h.object;if(!g.visible||meus(g))return;if(o.naoOcultar&&o.naoOcultar(g))return;
-       var b3=new T.Box3().setFromObject(g).getSize(V());if(Math.max(b3.x,b3.y,b3.z)>6)return;if(!escondidos.has(g)){escondidos.add(g);g.visible=false;}});});}
+      ray.intersectObjects(cand,false).forEach(function(h){var g=h.object;if(!g.visible||meus(g))return;if(o.naoOcultar&&o.naoOcultar(g))return;
+       if(!escondidos.has(g)){escondidos.add(g);g.visible=false;}});});}
     /* câmera acompanha a equipe */
     var kc=ease(s/10.5);CAM.position.lerpVectors(c0,c1,kc);var tg=wc.clone().lerp(C,ease(s/7)).setY(lin(chao+1.15,C.y,ease((s-3)/5)));
     if(s>DUR-1.3){var kk=ease((s-(DUR-1.3))/1.3);if(camT){CAM.position.lerp(camP,kk);tg.lerp(camT,kk)}}
@@ -202,7 +206,7 @@ function init(o){
    requestAnimationFrame(quadro);});};
  api.alvo=function(){var l=(o.alvos&&o.alvos())||[];return l.length?((o.escolhe&&o.escolhe(l))||l[0]):null};
  api.instalaAtual=function(){return api.instala(api.alvo());};
- api.instalaTodas=function(){var l=(o.alvos&&o.alvos())||[],i=0;function prox(){if(i>=l.length)return Promise.resolve(true);var a=l[i++];return api.instala(a).then(prox);}return prox();};
+ api.parar=false;api.instalaTodas=function(){var l=(o.alvos&&o.alvos())||[],i=0;api.parar=false;function prox(){if(i>=l.length||api.parar)return Promise.resolve(true);var a=l[i++];return api.instala(a).then(prox);}return prox();};
  api.total=function(){return ((o.alvos&&o.alvos())||[]).length};
  /* ---------- botão ---------- */
  if(o.barra||o.flutuar){var b=document.createElement('button');b.type='button';b.className=o.cls||'fcrx-b';b.innerHTML='👷 Instalação';b.title='Ver a equipe trazendo a esquadria e encaixando no vão';

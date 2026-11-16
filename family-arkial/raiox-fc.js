@@ -7,6 +7,7 @@
 (function(){
 'use strict';
 if(window.FCRaioX)return;
+var BASE=(document.currentScript&&document.currentScript.src)?new URL('.',document.currentScript.src).href:'';
 var CSS='.fcrx-bar{display:flex;gap:6px;flex-wrap:wrap}'+
 '.fcrx-flt{position:absolute;z-index:6;left:12px;top:12px}'+
 '.fcrx-b{all:unset;box-sizing:border-box;cursor:pointer;display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:7px 14px;border-radius:999px;font:600 13px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:rgba(20,22,26,.78);color:#f1efea;border:1px solid rgba(255,255,255,.18);backdrop-filter:blur(8px)}'+
@@ -74,7 +75,7 @@ function init(o){
   if(CT)CT.enabled=false;st.tour={cenas:cenas,i:0,t:0,gravar:gravar};abreTela(gravar);
   SOM=null;if(o.trilha!==false){try{SOM=trilha(cenas.reduce(function(s,c){return s+c.d},0));}catch(e){SOM=null;}}
   if(gravar)iniciaGravacao();cenas[0].fn&&cenas[0].fn(api);}
- function fimTour(cancelado){var tr=st.tour;if(!tr)return;st.tour=null;st.orb=0;if(CT)CT.enabled=true;
+ function fimTour(cancelado){var tr=st.tour;if(!tr)return;if(tr.quadro){st.tour=null;st.orb=0;return;}st.tour=null;st.orb=0;if(CT)CT.enabled=true;
   var so=SOM;SOM=null;if(tr.gravar)pararGravacao(cancelado,so);else{fechaTela();so&&so.para();}
   o.aoTerminar&&o.aoTerminar(api);}
  api.legenda=function(){var tr=st.tour;if(!tr)return null;var c=tr.cenas[tr.i];return {txt:c.cap||'',a:Math.max(0,Math.min(1,tr.t/.45,(c.d-tr.t)/.35))};};
@@ -116,7 +117,7 @@ function init(o){
    vx.fillStyle='rgba(255,255,255,.18)';vx.fillRect(64,1872,952,6);vx.fillStyle=cor;vx.fillRect(64,1872,952*Math.min(1,feito/tot),6);}}
  /* depois de cada desenho da tela, copia para o quadro do vídeo (sem precisar de preserveDrawingBuffer) */
  var render0=R.render.bind(R);
- R.render=function(s,c){if(st.tour){var v=R.getSize(new T.Vector2());if(v.x!==1080||v.y!==1920||R.getPixelRatio()!==1){R.setPixelRatio(1);R.setSize(1080,1920,false);}if(c===CAM&&Math.abs(CAM.aspect-9/16)>1e-3){CAM.aspect=9/16;CAM.updateProjectionMatrix();}}
+ R.render=function(s,c){if(st.tour){var rs=st.res||[1080,1920],v=R.getSize(new T.Vector2());if(v.x!==rs[0]||v.y!==rs[1]||R.getPixelRatio()!==1){R.setPixelRatio(1);R.setSize(rs[0],rs[1],false);}if(c===CAM&&Math.abs(CAM.aspect-9/16)>1e-3){CAM.aspect=9/16;CAM.updateProjectionMatrix();}}
   render0(s,c);if(st.tour&&c===CAM)quadro();};
  function abreTela(gravar){ov=el('div','fcrx-ov');ov.appendChild(VC);cd=el('div','fcrx-cd');
   cd.innerHTML=(gravar?'<b><span class="fcrx-dot"></span>Gravando o vídeo</b><p>Formato em pé para Reels e Status (1080×1920). Não feche esta tela até terminar.</p>':'<b>Prévia do vídeo</b><p>É assim que o vídeo vai ficar. Para gerar o arquivo, use “Gravar”.</p>')+'<div class="r"><button class="fcrx-b" type="button">■ Parar</button></div><p class="m" style="font-size:12px"></p>';
@@ -131,8 +132,8 @@ function init(o){
  /* ---------- trilha sonora original (gerada no navegador · sem direitos de terceiros) ----------
     eletrônica corporativa ~124 BPM: abertura com filtro abrindo, batida 4x4, baixo pulsante, acordes, arpejo e impacto nas trocas de cena */
  var SOM=null;
- function trilha(total){var AC=window.AudioContext||window.webkitAudioContext;if(!AC)return null;var ac=new AC(),dest=ac.createMediaStreamDestination();
-  var mest=ac.createGain();mest.gain.value=.0001;var comp=ac.createDynamicsCompressor();comp.threshold.value=-14;comp.ratio.value=4;mest.connect(comp);comp.connect(dest);comp.connect(ac.destination);
+ function trilha(total,off,imps){var AC=window.AudioContext||window.webkitAudioContext;if(!off&&!AC)return null;var ac=off||new AC(),dest=off?null:ac.createMediaStreamDestination();
+  var mest=ac.createGain();mest.gain.value=.0001;var comp=ac.createDynamicsCompressor();comp.threshold.value=-14;comp.ratio.value=4;mest.connect(comp);if(dest)comp.connect(dest);comp.connect(ac.destination);
   var t0=ac.currentTime+.08,BPM=124,b=60/BPM,bar=4*b,fim=t0+total;
   mest.gain.setValueAtTime(.0001,t0);mest.gain.exponentialRampToValueAtTime(.72,t0+.6);mest.gain.setValueAtTime(.72,Math.max(t0+.7,fim-1.6));mest.gain.exponentialRampToValueAtTime(.0001,fim+.2);
   var ruidoB=ac.createBuffer(1,ac.sampleRate,ac.sampleRate),rd=ruidoB.getChannelData(0);for(var i=0;i<rd.length;i++)rd[i]=Math.random()*2-1;
@@ -158,8 +159,50 @@ function init(o){
    if(k===1){/* subida para a batida entrar */var rs=ac.createBufferSource();rs.buffer=ruidoB;rs.loop=true;var fl=ac.createBiquadFilter();fl.type='bandpass';fl.Q.value=2;fl.frequency.setValueAtTime(400,tb);fl.frequency.exponentialRampToValueAtTime(9000,tb+bar);var g=ac.createGain();g.gain.setValueAtTime(.0001,tb);g.gain.exponentialRampToValueAtTime(.25,tb+bar*.98);g.gain.linearRampToValueAtTime(.0001,tb+bar);rs.connect(fl);fl.connect(g);g.connect(mest);rs.start(tb);rs.stop(tb+bar+.02);}}
   /* impacto final */
   bumbo(fim-1.2,1.3);ruido(fim-1.2,1.4,200,.5,.45,'lowpass');acorde(fim-1.2,PROG[0],1.2,false);
-  return {ac:ac,stream:dest.stream,impacto:function(){var t=ac.currentTime+.01;ruido(t,.5,600,.6,.35,'lowpass');ruido(t,.25,3000,.8,.18);var o2=ac.createOscillator(),g=ac.createGain();o2.frequency.setValueAtTime(90,t);o2.frequency.exponentialRampToValueAtTime(35,t+.4);g.gain.setValueAtTime(.7,t);g.gain.exponentialRampToValueAtTime(.001,t+.45);o2.connect(g);g.connect(mest);o2.start(t);o2.stop(t+.46);},
+  function impactoEm(t){ruido(t,.5,600,.6,.35,'lowpass');ruido(t,.25,3000,.8,.18);var o2=ac.createOscillator(),g=ac.createGain();o2.frequency.setValueAtTime(90,t);o2.frequency.exponentialRampToValueAtTime(35,t+.4);g.gain.setValueAtTime(.7,t);g.gain.exponentialRampToValueAtTime(.001,t+.45);o2.connect(g);g.connect(mest);o2.start(t);o2.stop(t+.46);}
+  (imps||[]).forEach(function(x){impactoEm(t0+x)});
+  return {ac:ac,stream:dest?dest.stream:null,impacto:function(){var t=ac.currentTime+.01;ruido(t,.5,600,.6,.35,'lowpass');ruido(t,.25,3000,.8,.18);var o2=ac.createOscillator(),g=ac.createGain();o2.frequency.setValueAtTime(90,t);o2.frequency.exponentialRampToValueAtTime(35,t+.4);g.gain.setValueAtTime(.7,t);g.gain.exponentialRampToValueAtTime(.001,t+.45);o2.connect(g);g.connect(mest);o2.start(t);o2.stop(t+.46);},
    para:function(){try{ac.close()}catch(e){}}};}
+ /* ---------- gravação quadro a quadro (qualidade máxima em qualquer computador) ----------
+    O tempo da cena é controlado: cada quadro é desenhado e codificado em H.264 + AAC, sem depender da velocidade da placa de vídeo. */
+ function carregaMux(){return window.Mp4Muxer?Promise.resolve():new Promise(function(ok,er){var s=document.createElement('script');s.src=BASE+'mp4-muxer.js?v=1';s.onload=ok;s.onerror=er;document.head.appendChild(s);});}
+ function podeQuadro(){return !!(window.VideoEncoder&&window.VideoFrame&&window.AudioEncoder&&window.OfflineAudioContext);}
+ async function gravaQuadro(){
+  var cenas=(o.roteiro&&o.roteiro(api))||[];if(!cenas.length)return;
+  var FPS=30,total=cenas.reduce(function(s,c){return s+c.d},0),N=Math.ceil(total*FPS)+FPS,imps=[],acc=0;cenas.forEach(function(c,i){if(i){imps.push(acc)}acc+=c.d});
+  try{await carregaMux();}catch(e){aviso('Não consegui carregar o gravador. Verifique a internet e tente de novo.');return;}
+  var vcfg=null,cods=['avc1.640028','avc1.4d0028','avc1.42e028'];for(var i=0;i<cods.length;i++){var c={codec:cods[i],width:1080,height:1920,bitrate:10e6,framerate:FPS,avc:{format:'avc'}};try{if((await VideoEncoder.isConfigSupported(c)).supported){vcfg=c;break;}}catch(e){}}
+  if(!vcfg){return iniciaTour(true);}
+  var acfg=null,acod='aac';var ac1={codec:'mp4a.40.2',sampleRate:48000,numberOfChannels:2,bitrate:192000};try{if((await AudioEncoder.isConfigSupported(ac1)).supported)acfg=ac1;}catch(e){}
+  if(!acfg){var ac2={codec:'opus',sampleRate:48000,numberOfChannels:2,bitrate:160000};try{if((await AudioEncoder.isConfigSupported(ac2)).supported){acfg=ac2;acod='opus';}}catch(e){}}
+  var X=window.Mp4Muxer,mux=new X.Muxer({target:new X.ArrayBufferTarget(),video:{codec:'avc',width:1080,height:1920,frameRate:FPS},audio:acfg?{codec:acod,numberOfChannels:2,sampleRate:48000}:undefined,fastStart:'in-memory',firstTimestampBehavior:'offset'});
+  var erro=null,venc=new VideoEncoder({output:function(ch,m){mux.addVideoChunk(ch,m)},error:function(e){erro=e}});venc.configure(vcfg);
+  /* 1) trilha renderizada fora de tempo real, com os impactos nas trocas de cena */
+  if(acfg&&o.trilha!==false){try{var sr=48000,oc=new OfflineAudioContext(2,Math.ceil(sr*(total+.6)),sr);trilha(total,oc,imps);var buf=await oc.startRendering();
+    var aenc=new AudioEncoder({output:function(ch,m){mux.addAudioChunk(ch,m)},error:function(e){erro=e}});aenc.configure(acfg);
+    var c0=buf.getChannelData(0),c1=buf.getChannelData(1),L=Math.min(buf.length,Math.ceil(sr*total));
+    for(var a=0;a<L;a+=1024){var n=Math.min(1024,L-a),d=new Float32Array(n*2);d.set(c0.subarray(a,a+n),0);d.set(c1.subarray(a,a+n),n);var ad=new AudioData({format:'f32-planar',sampleRate:sr,numberOfFrames:n,numberOfChannels:2,timestamp:Math.round(a*1e6/sr),data:d});aenc.encode(ad);ad.close();}
+    await aenc.flush();}catch(e){console.warn('trilha',e);}}
+  /* 2) relógio controlado: a cena anda 1/30 s por quadro, por mais lento que o computador desenhe */
+  var rRAF=window.requestAnimationFrame,rNow=performance.now,vt=rNow.call(performance),fila=[];
+  window.requestAnimationFrame=function(cb){fila.push(cb);return fila.length};performance.now=function(){return vt};
+  var soft=false;try{var g0=R.getContext(),ex=g0.getExtension('WEBGL_debug_renderer_info');soft=/basic render|swiftshader|llvmpipe|software/i.test(ex?g0.getParameter(ex.UNMASKED_RENDERER_WEBGL):'');}catch(e){}
+  st.res=soft?[756,1344]:[1080,1920];
+  if(CT)CT.enabled=false;st.tour={cenas:cenas,i:0,t:0,gravar:true,quadro:true};abreTela(true);
+  var msgEl=cd&&cd.querySelector('p.m');cd.querySelector('b').innerHTML='<span class="fcrx-dot"></span>Gravando quadro a quadro';
+  cenas[0].fn&&cenas[0].fn(api);var cancel=false;cd.querySelector('button').onclick=function(){cancel=true};
+  var ini=Date.now();
+  try{for(var f=0;f<N&&st.tour&&!cancel&&!erro;f++){vt+=1000/FPS;var q=fila;fila=[];for(var k=0;k<q.length;k++){try{q[k](vt)}catch(e){console.error(e)}}
+    var vf=new VideoFrame(VC,{timestamp:Math.round(f*1e6/FPS),duration:Math.round(1e6/FPS)});venc.encode(vf,{keyFrame:f%60===0});vf.close();
+    if(f%2===0||venc.encodeQueueSize>3){await new Promise(function(r){setTimeout(r,0)});}
+    if(msgEl&&f%10===0){var pr=f/N,gasto=(Date.now()-ini)/1000,falta=pr>0?gasto*(1-pr)/pr:0;msgEl.textContent='Quadro '+f+' de '+N+' · '+Math.round(pr*100)+'% · faltam cerca de '+Math.max(1,Math.round(falta/60))+' min';}}}
+  finally{window.requestAnimationFrame=rRAF;performance.now=rNow;fila.forEach(function(cb){rRAF.call(window,cb)});}
+  var ok=!cancel&&!erro;st.tour=null;st.orb=0;st.res=null;if(CT)CT.enabled=true;try{o.aoTerminar&&o.aoTerminar(api)}catch(e){}
+  fechaTela();
+  if(!ok){aviso(erro?'A gravação falhou: '+(erro.message||erro):'Gravação cancelada.');try{venc.close()}catch(e){}return;}
+  await venc.flush();mux.finalize();var b=new Blob([mux.target.buffer],{type:'video/mp4'}),u=URL.createObjectURL(b),nm=(o.arquivo||'video-3d')+'.mp4';
+  var el2=document.createElement('a');el2.href=u;el2.download=nm;document.body.appendChild(el2);el2.click();el2.remove();
+  aviso('Vídeo pronto: <b>'+nm+'</b> · MP4 1080×1920 · 30 quadros/s'+(acfg?' · com trilha':'')+'. Se o download não começou, <a href="'+u+'" download="'+nm+'" style="color:#5fdcff">clique aqui</a>.',20000);}
  function iniciaGravacao(){
   if(!VC.captureStream||!window.MediaRecorder){aviso('Este navegador não grava vídeo. Use o Chrome ou o Edge no computador.');return;}
   var tipos=['video/mp4;codecs=avc1,mp4a.40.2','video/mp4;codecs=avc1.42E01E,mp4a.40.2','video/mp4','video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'],tp='';for(var i=0;i<tipos.length;i++){if(MediaRecorder.isTypeSupported(tipos[i])){tp=tipos[i];break;}}
@@ -176,7 +219,7 @@ function init(o){
   r.stop();}
  function aviso(h,ms){var a=el('div','fcrx-ov','<div class="fcrx-cd"><b>Vídeo Reels</b><p>'+h+'</p><div class="r"><button class="fcrx-b s" type="button">Ok</button></div></div>');a.style.background='rgba(5,8,11,.6)';a.querySelector('button').onclick=function(){a.remove();};document.body.appendChild(a);setTimeout(function(){a.remove();},ms||6000);}
  function pergunta(){var a=el('div','fcrx-ov','<div class="fcrx-cd"><b>🎬 Vídeo para Reels</b><p>Roteiro automático de cerca de '+Math.round(((o.roteiro&&o.roteiro(api))||[]).reduce(function(s,c){return s+c.d;},0))+' segundos usando os comandos desta tela, com legenda e marca, em pé (1080×1920).</p><div class="r"><button class="fcrx-b p" data-a="g" type="button">● Gravar</button><button class="fcrx-b s" data-a="v" type="button">▶ Só ver</button><button class="fcrx-b" data-a="x" type="button">Cancelar</button></div><p style="font-size:12px">Melhor no computador, com o Chrome. O arquivo baixa sozinho no final.</p></div>');
-  a.style.background='rgba(5,8,11,.6)';a.onclick=function(e){var b=e.target.closest('[data-a]');if(!b&&e.target!==a)return;a.remove();if(!b)return;if(b.dataset.a==='g')iniciaTour(true);if(b.dataset.a==='v')iniciaTour(false);};document.body.appendChild(a);}
+  a.style.background='rgba(5,8,11,.6)';a.onclick=function(e){var b=e.target.closest('[data-a]');if(!b&&e.target!==a)return;a.remove();if(!b)return;if(b.dataset.a==='g'){if(podeQuadro())gravaQuadro();else iniciaTour(true);}if(b.dataset.a==='v')iniciaTour(false);};document.body.appendChild(a);}
  /* ---------- botões ---------- */
  var bar=o.barra||null,btR=null,btV=null,cls=o.cls||'fcrx-b';
  if(!bar&&o.flutuar){bar=el('div','fcrx-bar fcrx-flt');var p=o.flutuar;if(getComputedStyle(p).position==='static')p.style.position='relative';p.appendChild(bar);if(o.pos)Object.assign(bar.style,o.pos);cls='fcrx-b';}
