@@ -69,11 +69,13 @@ function init(o){
  requestAnimationFrame(laco);
 
  /* ---------- roteiro ---------- */
- function passo(dt){var tr=st.tour;tr.t+=dt;var c=tr.cenas[tr.i];if(tr.t>=c.d){tr.i++;tr.t=0;if(tr.i>=tr.cenas.length){fimTour();return;}tr.cenas[tr.i].fn&&tr.cenas[tr.i].fn(api);}}
+ function passo(dt){var tr=st.tour;tr.t+=dt;var c=tr.cenas[tr.i];if(tr.t>=c.d){tr.i++;tr.t=0;if(tr.i>=tr.cenas.length){fimTour();return;}if(SOM&&tr.i<tr.cenas.length-0)SOM.impacto();tr.cenas[tr.i].fn&&tr.cenas[tr.i].fn(api);}}
  function iniciaTour(gravar){var cenas=(o.roteiro&&o.roteiro(api))||[];if(!cenas.length)return;
-  if(CT)CT.enabled=false;st.tour={cenas:cenas,i:0,t:0,gravar:gravar};abreTela(gravar);if(gravar)iniciaGravacao();cenas[0].fn&&cenas[0].fn(api);}
+  if(CT)CT.enabled=false;st.tour={cenas:cenas,i:0,t:0,gravar:gravar};abreTela(gravar);
+  SOM=null;if(o.trilha!==false){try{SOM=trilha(cenas.reduce(function(s,c){return s+c.d},0));}catch(e){SOM=null;}}
+  if(gravar)iniciaGravacao();cenas[0].fn&&cenas[0].fn(api);}
  function fimTour(cancelado){var tr=st.tour;if(!tr)return;st.tour=null;st.orb=0;if(CT)CT.enabled=true;
-  if(tr.gravar)pararGravacao(cancelado);else fechaTela();
+  var so=SOM;SOM=null;if(tr.gravar)pararGravacao(cancelado,so);else{fechaTela();so&&so.para();}
   o.aoTerminar&&o.aoTerminar(api);}
  api.legenda=function(){var tr=st.tour;if(!tr)return null;var c=tr.cenas[tr.i];return {txt:c.cap||'',a:Math.max(0,Math.min(1,tr.t/.45,(c.d-tr.t)/.35))};};
 
@@ -126,15 +128,48 @@ function init(o){
   try{window.dispatchEvent(new Event('resize'));}catch(e){}o.restaurar&&o.restaurar();}
  /* ---------- gravação ---------- */
  var rec=null,pedacos=[];
+ /* ---------- trilha sonora original (gerada no navegador · sem direitos de terceiros) ----------
+    eletrônica corporativa ~124 BPM: abertura com filtro abrindo, batida 4x4, baixo pulsante, acordes, arpejo e impacto nas trocas de cena */
+ var SOM=null;
+ function trilha(total){var AC=window.AudioContext||window.webkitAudioContext;if(!AC)return null;var ac=new AC(),dest=ac.createMediaStreamDestination();
+  var mest=ac.createGain();mest.gain.value=.0001;var comp=ac.createDynamicsCompressor();comp.threshold.value=-14;comp.ratio.value=4;mest.connect(comp);comp.connect(dest);comp.connect(ac.destination);
+  var t0=ac.currentTime+.08,BPM=124,b=60/BPM,bar=4*b,fim=t0+total;
+  mest.gain.setValueAtTime(.0001,t0);mest.gain.exponentialRampToValueAtTime(.72,t0+.6);mest.gain.setValueAtTime(.72,Math.max(t0+.7,fim-1.6));mest.gain.exponentialRampToValueAtTime(.0001,fim+.2);
+  var ruidoB=ac.createBuffer(1,ac.sampleRate,ac.sampleRate),rd=ruidoB.getChannelData(0);for(var i=0;i<rd.length;i++)rd[i]=Math.random()*2-1;
+  var duck=ac.createGain();duck.connect(mest);/* "pumping" dos acordes e do baixo com o bumbo */
+  function bumbo(t,v){var o2=ac.createOscillator(),g=ac.createGain();o2.frequency.setValueAtTime(150,t);o2.frequency.exponentialRampToValueAtTime(42,t+.12);g.gain.setValueAtTime(v||1,t);g.gain.exponentialRampToValueAtTime(.001,t+.32);o2.connect(g);g.connect(mest);o2.start(t);o2.stop(t+.34);
+   duck.gain.setValueAtTime(.35,t);duck.gain.linearRampToValueAtTime(1,t+b*.6);}
+  function ruido(t,dur,f,q,v,tipo,par){var s=ac.createBufferSource();s.buffer=ruidoB;var fl=ac.createBiquadFilter();fl.type=tipo||'highpass';fl.frequency.value=f;fl.Q.value=q||.7;var g=ac.createGain();g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+dur);s.connect(fl);fl.connect(g);g.connect(par||mest);s.start(t);s.stop(t+dur+.02);return fl;}
+  function palma(t){ruido(t,.16,1500,1.2,.5,'bandpass');ruido(t+.012,.12,1200,1.2,.35,'bandpass');}
+  function chimbal(t,v,ab){ruido(t,ab?.14:.045,8000,.7,v);}
+  var mtof=function(n){return 440*Math.pow(2,(n-69)/12)};
+  var PROG=[[57,60,64],[53,57,60],[48,52,55],[55,59,62]];/* Lá menor · Fá · Dó · Sol: energia de abertura */
+  function acorde(t,ns,dur,abre){var fl=ac.createBiquadFilter();fl.type='lowpass';fl.Q.value=4;fl.frequency.setValueAtTime(abre?600:1800,t);if(abre)fl.frequency.exponentialRampToValueAtTime(4200,t+dur);var g=ac.createGain();g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(.075,t+.02);g.gain.setValueAtTime(.075,t+dur-.05);g.gain.linearRampToValueAtTime(.0001,t+dur);fl.connect(g);g.connect(duck);
+   ns.forEach(function(n){[-8,0,8].forEach(function(dt){var o2=ac.createOscillator();o2.type='sawtooth';o2.frequency.value=mtof(n+12);o2.detune.value=dt;o2.connect(fl);o2.start(t);o2.stop(t+dur+.02);});});}
+  function baixo(t,n,dur){var o2=ac.createOscillator(),fl=ac.createBiquadFilter(),g=ac.createGain();o2.type='sawtooth';o2.frequency.value=mtof(n-24);fl.type='lowpass';fl.frequency.setValueAtTime(900,t);fl.frequency.exponentialRampToValueAtTime(180,t+dur);g.gain.setValueAtTime(.32,t);g.gain.exponentialRampToValueAtTime(.001,t+dur);o2.connect(fl);fl.connect(g);g.connect(duck);o2.start(t);o2.stop(t+dur+.02);}
+  function pluck(t,n){var o2=ac.createOscillator(),fl=ac.createBiquadFilter(),g=ac.createGain();o2.type='square';o2.frequency.value=mtof(n+24);fl.type='lowpass';fl.frequency.setValueAtTime(5000,t);fl.frequency.exponentialRampToValueAtTime(500,t+.14);g.gain.setValueAtTime(.06,t);g.gain.exponentialRampToValueAtTime(.001,t+.16);o2.connect(fl);fl.connect(g);g.connect(mest);o2.start(t);o2.stop(t+.18);}
+  var intro=2*bar,nb=Math.ceil((total+bar)/bar);
+  for(var k=0;k<nb;k++){var tb=t0+k*bar;if(tb>fim)break;var ch=PROG[k%4],emIntro=tb<t0+intro,fimB=tb+bar>fim-bar;
+   acorde(tb,ch,bar-.02,emIntro);
+   for(var q=0;q<4;q++){var tq=tb+q*b;if(tq>fim-.3)break;
+    if(!emIntro){bumbo(tq,1);if(q%2===1)palma(tq);baixo(tq+b/2,ch[0],b*.45);baixo(tq,ch[0],b*.3);}
+    for(var s16=0;s16<4;s16++){var ts=tq+s16*b/4;if(!emIntro||k===1)chimbal(ts,s16===2?.13:.05,s16===2&&q===3);
+     if(!emIntro&&(k%8>=4)){var arp=[ch[0],ch[1],ch[2],ch[1]+12];pluck(ts,arp[(q*4+s16)%4]);}}}
+   if(k===1){/* subida para a batida entrar */var rs=ac.createBufferSource();rs.buffer=ruidoB;rs.loop=true;var fl=ac.createBiquadFilter();fl.type='bandpass';fl.Q.value=2;fl.frequency.setValueAtTime(400,tb);fl.frequency.exponentialRampToValueAtTime(9000,tb+bar);var g=ac.createGain();g.gain.setValueAtTime(.0001,tb);g.gain.exponentialRampToValueAtTime(.25,tb+bar*.98);g.gain.linearRampToValueAtTime(.0001,tb+bar);rs.connect(fl);fl.connect(g);g.connect(mest);rs.start(tb);rs.stop(tb+bar+.02);}}
+  /* impacto final */
+  bumbo(fim-1.2,1.3);ruido(fim-1.2,1.4,200,.5,.45,'lowpass');acorde(fim-1.2,PROG[0],1.2,false);
+  return {ac:ac,stream:dest.stream,impacto:function(){var t=ac.currentTime+.01;ruido(t,.5,600,.6,.35,'lowpass');ruido(t,.25,3000,.8,.18);var o2=ac.createOscillator(),g=ac.createGain();o2.frequency.setValueAtTime(90,t);o2.frequency.exponentialRampToValueAtTime(35,t+.4);g.gain.setValueAtTime(.7,t);g.gain.exponentialRampToValueAtTime(.001,t+.45);o2.connect(g);g.connect(mest);o2.start(t);o2.stop(t+.46);},
+   para:function(){try{ac.close()}catch(e){}}};}
  function iniciaGravacao(){
   if(!VC.captureStream||!window.MediaRecorder){aviso('Este navegador não grava vídeo. Use o Chrome ou o Edge no computador.');return;}
-  var tipos=['video/mp4;codecs=avc1','video/mp4','video/webm;codecs=vp9','video/webm'],tp='';for(var i=0;i<tipos.length;i++){if(MediaRecorder.isTypeSupported(tipos[i])){tp=tipos[i];break;}}
-  pedacos=[];try{rec=new MediaRecorder(VC.captureStream(30),tp?{mimeType:tp,videoBitsPerSecond:12e6}:{videoBitsPerSecond:12e6});}catch(e){aviso('Não foi possível iniciar a gravação.');rec=null;return;}
+  var tipos=['video/mp4;codecs=avc1,mp4a.40.2','video/mp4;codecs=avc1.42E01E,mp4a.40.2','video/mp4','video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'],tp='';for(var i=0;i<tipos.length;i++){if(MediaRecorder.isTypeSupported(tipos[i])){tp=tipos[i];break;}}
+  var fluxo=VC.captureStream(30);if(SOM&&SOM.stream){fluxo=new MediaStream(fluxo.getVideoTracks().concat(SOM.stream.getAudioTracks()));}
+  pedacos=[];try{rec=new MediaRecorder(fluxo,tp?{mimeType:tp,videoBitsPerSecond:12e6,audioBitsPerSecond:192000}:{videoBitsPerSecond:12e6});}catch(e){aviso('Não foi possível iniciar a gravação.');rec=null;return;}
   rec.ondataavailable=function(e){if(e.data&&e.data.size)pedacos.push(e.data);};
   rec.start(250);}
- function pararGravacao(cancelado){var r=rec;rec=null;
-  if(!r||r.state==='inactive'){fechaTela();return;}
-  r.onstop=function(){fechaTela();if(cancelado){aviso('Gravação cancelada.');return;}
+ function pararGravacao(cancelado,so){var r=rec;rec=null;
+  if(!r||r.state==='inactive'){fechaTela();so&&so.para();return;}
+  r.onstop=function(){fechaTela();so&&so.para();if(cancelado){aviso('Gravação cancelada.');return;}
    var ext=(r.mimeType||'').indexOf('mp4')>=0?'mp4':'webm',b=new Blob(pedacos,{type:r.mimeType||'video/webm'}),u=URL.createObjectURL(b),nm=(o.arquivo||'video-3d')+'.'+ext;
    var a=document.createElement('a');a.href=u;a.download=nm;document.body.appendChild(a);a.click();a.remove();
    aviso('Vídeo pronto: <b>'+nm+'</b> (1080×1920). Se o download não começou, <a href="'+u+'" download="'+nm+'" style="color:#5fdcff">clique aqui</a>.'+(ext==='webm'?'<br>O Instagram aceita melhor MP4: no Chrome atualizado o arquivo já sai em MP4.':''),16000);};
