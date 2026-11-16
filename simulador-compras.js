@@ -14,7 +14,7 @@ const emp=()=>{try{return at;}catch(_){return null;}};
 const quem=()=>{try{return (typeof PESSOA!=='undefined'&&PESSOA)?PESSOA.nome:'FC';}catch(_){return 'FC';}};
 const reg=a=>{try{if(tok())sb.rpc('emp_registrar',{p_token:tok(),p_area:'simulador',p_acao:a}).then(()=>{},()=>{});}catch(_){}};
 
-let C=null,IT=[],Demp=null,carregando=false,erro='',msg='';
+let C=null,IT=[],Demp=null,carregando=false,erro='',msg='',REQ=0;/* 16/11/2026: dados presos à empresa (Demp); resposta de outra empresa é descartada */
 const S={v:'d',q:'',st:'',al:false,guard:false,verOrig:false};
 let LS=null,lsErro=false,tLs=null;
 const FILA=new Map();let tSalva=null,salvando=false;
@@ -38,19 +38,25 @@ function calc(i){const c=C||{},mes=(+c.periodo||90)/30,exc=+c.exc||2,barra=+c.ba
     estT,cobT,stG,kgPed:ped*(kgm||0)*barra,kgComp:comp*(kgm||0)*barra,al};}
 
 /* ---------- dados ---------- */
-async function carregar(){carregando=true;erro='';pinta();
-  try{const r=await sb.rpc('simc_ler',{p_token:tok(),p_emp:tok()?null:emp()});if(r.error)throw r.error;
-    C=r.data.cfg||{};IT=r.data.itens||[];Demp=emp();reg('abriu o simulador de compras');
-    try{const l=await sb.rpc('simc_listas_ler',{p_token:tok(),p_emp:tok()?null:emp()});if(l.error)throw l.error;LS=l.data||[];lsErro=false;}catch(_){LS=[];lsErro=true;}}
-  catch(e){erro=/permiss/i.test(e&&e.message||'')?'Seu acesso não inclui o Simulador de Compras. Fale com a FC.':'Não foi possível carregar o simulador agora. Tente de novo.';C=null;IT=[];}
-  carregando=false;pinta();}
-function agenda(cod,campos){const a=FILA.get(cod)||{cod};Object.assign(a,campos);FILA.set(cod,a);clearTimeout(tSalva);tSalva=setTimeout(salvaFila,700);status('Salvando…');}
-async function salvaFila(){if(salvando||!FILA.size)return;salvando=true;const L=[...FILA.values()];FILA.clear();
-  try{const r=await sb.rpc('simc_salvar',{p_token:tok(),p_emp:tok()?null:emp(),p_cfg:null,p_itens:L});if(r.error)throw r.error;status('✓ Salvo às '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}));}
-  catch(e){L.forEach(x=>{const a=FILA.get(x.cod)||{};FILA.set(x.cod,Object.assign({},x,a));});status('⚠ Não salvou. Vou tentar de novo.',true);setTimeout(salvaFila,4000);}
+async function carregar(){const e0=emp(),my=++REQ;carregando=true;erro='';
+  if(Demp!==e0){C=null;IT=[];LS=null;S.verOrig=false;}Demp=e0;pinta();
+  let c=null,it=[],ls=[],le=false,er='';
+  try{const r=await sb.rpc('simc_ler',{p_token:tok(),p_emp:tok()?null:e0});if(r.error)throw r.error;
+    c=r.data.cfg||{};it=r.data.itens||[];
+    try{const l=await sb.rpc('simc_listas_ler',{p_token:tok(),p_emp:tok()?null:e0});if(l.error)throw l.error;ls=l.data||[];}catch(_){ls=[];le=true;}}
+  catch(e){er=/permiss/i.test(e&&e.message||'')?'Seu acesso não inclui o Simulador de Compras. Fale com a FC.':'Não foi possível carregar o simulador agora. Tente de novo.';}
+  if(my!==REQ)return;if(e0!==emp()){carregando=false;C=null;IT=[];return;}/* trocou de cliente no meio: não mistura */
+  C=er?null:c;IT=er?[]:it;LS=ls;lsErro=le;erro=er;carregando=false;if(!er)reg('abriu o simulador de compras');pinta();}
+function agenda(cod,campos){const e=Demp,k=e+'\u0001'+cod,a=FILA.get(k)||{e,x:{cod}};Object.assign(a.x,campos);FILA.set(k,a);clearTimeout(tSalva);tSalva=setTimeout(salvaFila,700);status('Salvando…');}
+async function salvaFila(){if(salvando||!FILA.size)return;salvando=true;const L=[...FILA.entries()];FILA.clear();
+  const G={};L.forEach(([k,a])=>{(G[a.e]=G[a.e]||[]).push([k,a]);});/* cada empresa grava só os itens dela */
+  let falhou=false;
+  for(const e of Object.keys(G)){try{const r=await sb.rpc('simc_salvar',{p_token:tok(),p_emp:tok()?null:e,p_cfg:null,p_itens:G[e].map(([,a])=>a.x)});if(r.error)throw r.error;}
+    catch(_){falhou=true;G[e].forEach(([k,a])=>{const b=FILA.get(k);FILA.set(k,b?{e:a.e,x:Object.assign({},a.x,b.x)}:a);});}}
+  if(falhou){status('⚠ Não salvou. Vou tentar de novo.',true);setTimeout(salvaFila,4000);}else status('✓ Salvo às '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}));
   salvando=false;if(FILA.size)salvaFila();}
 async function salvaCfg(campos){Object.assign(C,campos);status('Salvando…');
-  const r=await sb.rpc('simc_salvar',{p_token:tok(),p_emp:tok()?null:emp(),p_cfg:campos,p_itens:null});status(r.error?'⚠ Não salvou o parâmetro':'✓ Parâmetro salvo',!!r.error);pinta();}
+  const r=await sb.rpc('simc_salvar',{p_token:tok(),p_emp:tok()?null:Demp,p_cfg:campos,p_itens:null});status(r.error?'⚠ Não salvou o parâmetro':'✓ Parâmetro salvo',!!r.error);pinta();}
 function status(t,ruim){const s=document.getElementById('scSt');if(s){s.textContent=t;s.style.color=ruim?'var(--bad)':'var(--muted)';}}
 
 /* ---------- tela ---------- */
@@ -117,7 +123,7 @@ function tabela(L){if(S.v==='lc'||S.v==='lt')return listaHtml(L);
    <thead><tr>${th.map(t=>`<th style="position:sticky;top:0;background:var(--surface-2);text-align:left;padding:7px 6px;font-size:12px;border-bottom:1px solid var(--line);z-index:1">${h(t)}</th>`).join('')}</tr></thead>
    <tbody>${rows.map(r=>r.replace('<tr','<tr style="border-top:1px solid var(--line)"')).join('')}</tbody></table></div>
    <p class="nota" style="margin-top:6px">${L.length} itens. Amarelo = você preenche (salva sozinho). Cobertura em branco usa o padrão dos parâmetros.</p>`;}
-function corpo(){if(carregando&&!C)return '<p class="nota">Carregando o simulador…</p>';
+function corpo(){if(Demp!==emp()||(carregando&&!C))return '<p class="nota">Carregando o simulador…</p>';
   if(erro)return `<p class="nota" style="color:var(--bad)">${h(erro)}</p>`;if(!C)return '';
   return params()+kpis()+barra()+`<div id="scTab">${tabela(lista())}</div>
    <details class="box" style="margin-top:12px"><summary style="cursor:pointer;font-weight:700">ℹ Como o cálculo funciona</summary><div class="nota" style="line-height:1.6;margin-top:8px">
@@ -141,9 +147,9 @@ const tot=L=>({b:L.reduce((a,x)=>a+(+x.barras||0),0),k:L.reduce((a,x)=>a+(+x.kg|
 function linhasCalc(){const barra=+(C&&C.barra)||6;return IT.map(i=>({i,r:calc(i)})).filter(({r})=>S.v==='lc'?r.comp>0:r.ped>0).map(({i,r})=>S.v==='lc'
   ?{cod:i.cod,material:i.material,barras:r.comp,kg:Math.round(r.kgComp*100)/100,est:+i.est_d||0,ref:r.ped,obs:'',kgm:i.kgm!=null?+i.kgm:null}
   :{cod:i.cod,material:i.material,barras:r.ped,kg:Math.round(r.kgPed*100)/100,est:+i.est_f||0,ref:Math.round(r.consM*10)/10,obs:'',kgm:i.kgm!=null?+i.kgm:null});}
-async function lsAcao(acao,extra){const r=await sb.rpc('simc_lista_acao',Object.assign({p_token:tok(),p_emp:tok()?null:emp(),p_acao:acao,p_id:null,p_tipo:null,p_nome:null,p_linhas:null},extra||{}));
+async function lsAcao(acao,extra,e){const r=await sb.rpc('simc_lista_acao',Object.assign({p_token:tok(),p_emp:tok()?null:(e||Demp),p_acao:acao,p_id:null,p_tipo:null,p_nome:null,p_linhas:null},extra||{}));
   if(r.error)throw r.error;return r.data;}
-async function recarregaLS(){try{const l=await sb.rpc('simc_listas_ler',{p_token:tok(),p_emp:tok()?null:emp()});if(l.error)throw l.error;LS=l.data||[];lsErro=false;}catch(_){lsErro=true;}}
+async function recarregaLS(){const e0=Demp;try{const l=await sb.rpc('simc_listas_ler',{p_token:tok(),p_emp:tok()?null:e0});if(l.error)throw l.error;if(e0===Demp){LS=l.data||[];lsErro=false;}}catch(_){lsErro=true;}}
 function listaHtml(Lcalc){const tp=S.v,nm=tp==='lc'?'compra':'transferência',a=ativa(),cols=COLS[tp],q=S.q.trim().toLowerCase();
   const guard=(LS||[]).filter(l=>l.tipo===tp);
   const tabRO=(L,cap)=>{const t=tot(L);return `<div style="overflow:auto;max-height:65vh;border:1px solid var(--line);border-radius:10px"><table style="width:100%;border-collapse:collapse;font-size:13px">
@@ -183,7 +189,7 @@ function listaHtml(Lcalc){const tp=S.v,nm=tp==='lc'?'compra':'transferência',a=
 function salvaLista(a){clearTimeout(tLs);const st=document.getElementById('scLsSt');if(st)st.textContent='Salvando…';
   {const t=tot(a.atual||[]),mud=JSON.stringify(a.atual)!==JSON.stringify(a.original),pl=document.getElementById('scLsPill'),tt=document.getElementById('scLsTot'),rs=document.querySelector('[data-ls="restaurar"]');
    if(pl){pl.className='pill '+(mud?'p-warn':'p-ok');pl.textContent=mud?'editada':'igual à original';}if(tt)tt.innerHTML=`${(a.atual||[]).length} itens · <b>${n(t.b)} barras · ${n(t.k,1)} kg</b>`;if(rs)rs.disabled=!mud;}
-  tLs=setTimeout(async()=>{try{await lsAcao('editar',{p_id:a.id,p_linhas:a.atual});a.atualizado=new Date().toISOString();a.por=quem();const s2=document.getElementById('scLsSt');if(s2){s2.textContent='✓ Salvo';s2.style.color='var(--muted)';}}
+  const eL=Demp;tLs=setTimeout(async()=>{try{await lsAcao('editar',{p_id:a.id,p_linhas:a.atual},eL);a.atualizado=new Date().toISOString();a.por=quem();const s2=document.getElementById('scLsSt');if(s2){s2.textContent='✓ Salvo';s2.style.color='var(--muted)';}}
     catch(e){const s2=document.getElementById('scLsSt');if(s2){s2.textContent='⚠ Não salvou. Tente de novo.';s2.style.color='var(--bad)';}}},700);}
 function wireLista(b){const a=ativa();
   b.querySelectorAll('[data-ls]').forEach(x=>x.onclick=async()=>{const k=x.dataset.ls;
@@ -227,7 +233,7 @@ function wireTab(){const b=document.getElementById('scBox');if(!b)return;wireLis
       setTimeout(()=>{const ae=document.activeElement,foco=ae&&ae.dataset&&ae.dataset.ci?[ae.dataset.ci,ae.dataset.k]:null;repinta(foco);window.scrollTo(0,y);},0);};
     x.onkeydown=ev=>{if(ev.key==='Enter'){ev.preventDefault();x.blur();}};});
   b.querySelectorAll('[data-scdel]').forEach(x=>x.onclick=async()=>{const c=x.dataset.scdel;if(!confirm('Excluir o item '+c+' do simulador?'))return;
-    const r=await sb.rpc('simc_excluir',{p_token:tok(),p_emp:tok()?null:emp(),p_cods:[c]});if(r.error){alert('Não foi possível excluir agora.');return;}IT=IT.filter(i=>i.cod!==c);reg('excluiu item '+c);pinta();});}
+    const r=await sb.rpc('simc_excluir',{p_token:tok(),p_emp:tok()?null:Demp,p_cods:[c]});if(r.error){alert('Não foi possível excluir agora.');return;}IT=IT.filter(i=>i.cod!==c);reg('excluiu item '+c);pinta();});}
 function repinta(foco){/* mantém o foco no próximo campo após salvar */
   const b=document.getElementById('scBox');if(!b)return;const sc=b.querySelector('#scTab>div'),st=sc?sc.scrollTop:0,sl=sc?sc.scrollLeft:0;
   const k=b.querySelector('#scTab');if(k)k.innerHTML=tabela(lista());
@@ -235,8 +241,7 @@ function repinta(foco){/* mantém o foco no próximo campo após salvar */
   const sc2=b.querySelector('#scTab>div');if(sc2){sc2.scrollTop=st;sc2.scrollLeft=sl;}wireTab();
   if(foco&&foco[0]){const e=b.querySelector(`[data-ci="${CSS.escape(foco[0])}"][data-k="${foco[1]}"]`);if(e)e.focus();}}
 function wire(interno){const b=document.getElementById('scBox');if(!b)return;
-  if(!interno&&Demp!==null&&Demp!==emp()){C=null;IT=[];}
-  if(!interno&&!C&&!carregando){carregar();return;}
+  if(!interno&&(Demp!==emp()||(!C&&!carregando))){carregar();return;}
   b.querySelectorAll('[data-cf]').forEach(x=>x.onchange=()=>{const k=x.dataset.cf;let v=numIn(x.value);if(v==null||v<=0){x.style.borderColor='var(--bad)';return;}
     if(k==='cob_d'||k==='cob_f')v=Math.round(v/30*1000)/1000;if(k==='periodo')v=Math.round(v);salvaCfg({[k]:v});reg('alterou parâmetro '+k);});
   b.querySelectorAll('[data-scv]').forEach(x=>x.onclick=()=>{S.v=x.dataset.scv;S.st='';pinta();});
@@ -252,7 +257,7 @@ async function novoItem(){const cod=(prompt('Código do item novo (o mesmo códi
   if(IT.some(i=>i.cod.toLowerCase()===cod.toLowerCase())){alert('Esse código já está no simulador.');return;}
   const mat=(prompt('Descrição do item:')||'').trim();if(!mat)return;
   const it={cod,material:mat,novo:true,ord:(IT.reduce((m,i)=>Math.max(m,+i.ord||0),0)+1)};
-  const r=await sb.rpc('simc_salvar',{p_token:tok(),p_emp:tok()?null:emp(),p_cfg:null,p_itens:[{cod,material:mat,novo:true}]});
+  const r=await sb.rpc('simc_salvar',{p_token:tok(),p_emp:tok()?null:Demp,p_cfg:null,p_itens:[{cod,material:mat,novo:true}]});
   if(r.error){alert('Não foi possível incluir agora.');return;}IT.push(it);reg('incluiu item '+cod);S.q=cod;S.st='';S.al=false;if(S.v!=='d'&&S.v!=='f')S.v='d';pinta();
   status('Item incluído na Distribuidora e na Fábrica. Preencha estoque, saídas e consumo.');}
 
@@ -266,7 +271,7 @@ function importar(){const w=document.createElement('div');w.style.cssText='posit
    <label class="btn" style="text-align:center;cursor:pointer">🏭 Arquivo da Fábrica (filial 1)<input type="file" hidden accept=".xlsx,.xls" data-imp="f"></label>
    <span class="nota" id="scImpSt"></span><button class="btn" type="button" data-x="1">Fechar</button></div>`;
   document.body.appendChild(w);w.onclick=ev=>{if(ev.target===w||ev.target.dataset.x)w.remove();};
-  w.querySelectorAll('[data-imp]').forEach(inp=>inp.onchange=async()=>{const f=inp.files[0];if(!f)return;const st=w.querySelector('#scImpSt'),tipo=inp.dataset.imp;
+  const eImp=Demp;w.querySelectorAll('[data-imp]').forEach(inp=>inp.onchange=async()=>{const f=inp.files[0];if(!f)return;if(eImp!==Demp){alert('Você trocou de cliente. Feche e abra a importação de novo.');return;}const st=w.querySelector('#scImpSt'),tipo=inp.dataset.imp;
     st.textContent='Lendo o arquivo…';
     try{await lib();const wb=XLSX.read(await f.arrayBuffer(),{type:'array'}),ws=wb.Sheets[wb.SheetNames[0]],A=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
       const norm=s=>String(s).normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().trim();
@@ -278,7 +283,7 @@ function importar(){const w=document.createElement('div');w.style.cssText='posit
       if(!L.length)throw new Error('Nenhum item encontrado no arquivo.');
       const novos=L.filter(x=>!IT.some(i=>i.cod===x.cod)).length,comSai=L.filter(x=>(tipo==='d'?x.sai_d:x.cons_f)>0).length;
       if(!confirm(`${tipo==='d'?'Distribuidora':'Fábrica'}: ${L.length} itens no arquivo (${novos} novos, ${comSai} com ${tipo==='d'?'saídas':'consumo'}).\n\nAtualizar o estoque e ${tipo==='d'?'as saídas':'o consumo'} no simulador?`)){st.textContent='Importação cancelada.';return;}
-      st.textContent='Gravando…';for(let k=0;k<L.length;k+=150){const r=await sb.rpc('simc_salvar',{p_token:tok(),p_emp:tok()?null:emp(),p_cfg:k?null:{base_em:new Date().toISOString().slice(0,10)},p_itens:L.slice(k,k+150)});if(r.error)throw r.error;}
+      st.textContent='Gravando…';for(let k=0;k<L.length;k+=150){const r=await sb.rpc('simc_salvar',{p_token:tok(),p_emp:tok()?null:eImp,p_cfg:k?null:{base_em:new Date().toISOString().slice(0,10)},p_itens:L.slice(k,k+150)});if(r.error)throw r.error;}
       reg('importou relatório da '+(tipo==='d'?'distribuidora':'fábrica'));st.textContent='✓ Importado: '+L.length+' itens.';await carregar();}
     catch(e){st.textContent='⚠ '+(e&&e.message||'Não foi possível importar.');st.style.color='var(--bad)';}
     inp.value='';});}

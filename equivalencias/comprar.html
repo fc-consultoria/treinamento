@@ -879,19 +879,21 @@ document.addEventListener('change',e=>{const t=e.target;if(t.dataset&&(t.dataset
  if(t.dataset&&t.dataset.simq!=null){const v=Math.max(1,Math.round(+t.value.replace(',','.')||1));SIM[+t.dataset.simq].b=v;ls.set(SKEY(),SIM);tela();}});
 
 /* ===== início ===== */
-async function carregaDados(){
+async function carregaDados(){const my=TROCA;
   let r=null;try{r=await sb.rpc('compra_dados',{p_chave:KEY||null,p_emp:ADM?EMP:null});}catch(e){r={error:e};}
+  if(my!==TROCA)return false;/* resposta de um cliente anterior: descarta */
   if(r&&r.error&&/function|does not exist|schema cache/i.test(r.error.message||'')){LOCAL=true;
     DADOS={forn:ls.get('fc_compra_local_'+EMP,{}),abc:ls.get('fc_compra_abc_'+EMP,{}),meta:ls.get('fc_compra_meta_'+EMP,null),nome:(EMPS.find(e=>e.id===EMP)||{}).nome||'',regra:ls.get('fc_compra_regra_'+EMP,{})};return true;}
   if(!r||r.error||!r.data)return false;
   LOCAL=false;DADOS={forn:r.data.forn||{},abc:r.data.abc||{},meta:r.data.meta||null,nome:r.data.nome||'',lib:r.data.lib||null,regra:r.data.regra||{}};EMP=r.data.emp;return true;}
 async function ligaCli(){CLIV.clear();if(!window.FCCli)return;await FCCli.liga(DADOS.nome||'');FCCli.todos().forEach(c=>CLIV.add(c));}
-async function trocaEmp(id){EMP=id;if(!EMPFIX)ls.set('fc_compra_emp',id);REL=ls.get(RKEY(),[]);SIM=ls.get(SKEY(),[]);await carregaDados();await ligaCli();$('#hd').textContent='Onde comprar · '+(DADOS.nome||id);}
+let TROCA=0;/* 16/11/2026: troca rápida de cliente não mistura a simulação de um com a do outro */
+async function trocaEmp(id){const my=++TROCA;clearTimeout(simT);VSIM=null;SEL=null;EMP=id;if(!EMPFIX)ls.set('fc_compra_emp',id);REL=ls.get(RKEY(),[]);SIM=ls.get(SKEY(),[]);await carregaDados();if(my!==TROCA)return;EMP=id;REL=ls.get(RKEY(),[]);SIM=ls.get(SKEY(),[]);await ligaCli();if(my!==TROCA)return;$('#hd').textContent='Onde comprar · '+(DADOS.nome||id);}
 async function iniciar(){
   await carregaIndice();
   if(ADM){const r=await sb.from('rotina_docs').select('id,data').eq('col','consultoria');EMPS=(r.data||[]).map(x=>({id:x.id,nome:(x.data&&x.data.nome)||x.id,lib:(x.data&&Array.isArray(x.data.compForn))?x.data.compForn:[]})).sort((a,b)=>a.nome.localeCompare(b.nome,'pt'));
     const s=$('#selEmp');s.hidden=false;s.innerHTML=`<option value="fc">🏠 FC Consultoria Compras · Base</option><optgroup label="Clientes">${EMPS.map(e=>`<option value="${esc(e.id)}">${esc(e.nome)}</option>`).join('')}</optgroup>`;
-    let e0=EMPFIX||'fc';if(e0!=='fc'&&!EMPS.some(e=>e.id===e0))e0='fc';s.value=e0;if(EMPFIX&&e0===EMPFIX)s.hidden=true;s.onchange=async()=>{await trocaEmp(s.value);SEL=null;tela();};
+    let e0=EMPFIX||'fc';if(e0!=='fc'&&!EMPS.some(e=>e.id===e0))e0='fc';s.value=e0;if(EMPFIX&&e0===EMPFIX)s.hidden=true;s.onchange=async()=>{const v=s.value;await trocaEmp(v);if(EMP!==v)return;SEL=null;tela();};
     await trocaEmp(e0);}
   else{const ok=await carregaDados();if(!ok&&!LOCAL){$('#app').innerHTML='<p class="vazio">Link inválido ou expirado. Fale com a FC Consultoria.</p>';return;}
     if(LOCAL){const v=await sb.rpc('cons_portal_ver',{p_chave:KEY}).catch(()=>({}));if(!v||v.error||!v.data){$('#app').innerHTML='<p class="vazio">Link inválido ou expirado. Fale com a FC Consultoria.</p>';return;}EMP=v.data.id;DADOS.nome=v.data.nome||'';DADOS.forn=ls.get('fc_compra_local_'+EMP,{});}
