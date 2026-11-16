@@ -187,7 +187,7 @@ pinta();
 
 function tela(){const O=S.O;
  $("main").innerHTML=`
- <div class="av" style="margin:0 0 14px"><b>Anexe os dois PDFs gerados pelo sistema:</b> a <b>Proposta comercial</b> e o <b>Orientativo de Montagem</b> do mesmo orçamento. Sem os dois, o envio não segue.</div>
+ <div class="av" style="margin:0 0 14px"><b>Anexe a Proposta comercial</b> gerada pelo sistema. O <b>Orientativo de Montagem</b> do mesmo orçamento é opcional: com ele, o 3D sai com os perfis reais da lista de corte.</div>
  <div class="sec"><h2><i>1</i>Proposta comercial (PDF)</h2><p class="hint">A proposta/orçamento gerada pelo sistema, com local, tipologia e medidas de cada item.</p>
   <div class="drop" id="drop" tabindex="0" role="button" aria-label="Escolher o PDF da proposta comercial"><b>${O?"✓ "+esc(S.pdf):"Escolher a Proposta comercial"}</b><span class="hint" style="margin:0">${O?"Toque para trocar o arquivo":"Arraste aqui ou toque para escolher"}</span><input type="file" id="fi" accept="application/pdf,.pdf" hidden></div>
   <p class="err" id="perr" role="alert"></p>
@@ -195,7 +195,7 @@ function tela(){const O=S.O;
    <div class="lst" aria-label="Itens lidos">${O.itens.map(t=>`<div><span>${esc(t.item)}</span><b style="font-weight:500">${esc(t.tipo)}<br><span>${esc(t.loc||"")}</span></b><em>${esc(t.q)} × ${esc(t.L)}×${esc(t.H)}</em></div>`).join("")}</div>
    ${O.itens.some(t=>t.avisos.length)?`<div class="av">Alguns itens têm observações da leitura. A FC confere tudo antes de montar o 3D.</div>`:""}`:""}
  </div>
- <div class="sec"><h2><i>2</i>Orientativo de Montagem (PDF)</h2><p class="hint">O Orientativo de Montagem do mesmo orçamento, gerado pelo sistema, com a lista de corte de cada tipologia. É dele que saem os perfis reais do 3D.</p>
+ <div class="sec"><h2><i>2</i>Orientativo de Montagem (PDF) <span style="font-weight:500;font-size:.8em;color:#5a6b72">· opcional</span></h2><p class="hint">O Orientativo de Montagem do mesmo orçamento, gerado pelo sistema, com a lista de corte de cada tipologia. É dele que saem os perfis reais do 3D.</p>
   <div class="drop" id="drop2" tabindex="0" role="button" aria-label="Escolher o PDF do Orientativo de Montagem"><b>${S.ORI?"✓ "+esc(S.oriPdf):S.oriLendo?"Lendo o Orientativo…":"Escolher o Orientativo de Montagem"}</b><span class="hint" style="margin:0">${S.ORI?"Toque para trocar o arquivo":"Arraste aqui ou toque para escolher"}</span><input type="file" id="fi2" accept="application/pdf,.pdf" hidden></div>
   <p class="err" id="oerr" role="alert"></p>
   ${S.ORI?`<div class="res"><div>Tipologias<b>${S.ORI.itens.length}</b></div><div>Perfis em 3D<b>${Object.keys(S.ORI.secoes||{}).length}</b></div><div>Ligadas à proposta<b>${S.lig?S.lig.ligados+" de "+S.lig.total:"—"}</b></div><div>Orçamento<b style="font-size:15px">${esc(S.ORI.numero||"—")}</b></div></div>
@@ -242,7 +242,7 @@ async function ler(file){const pe=$("perr");
 
 /* os dois PDFs são obrigatórios e têm de ser do mesmo orçamento */
 const mesmoNro=()=>!S.O||!S.ORI||!S.O.numero||!S.ORI.numero||String(S.O.numero)===String(S.ORI.numero);
-const pronto=()=>!!(S.O&&S.ORI&&S.lig&&S.lig.ligados>0&&mesmoNro());
+const pronto=()=>!!(S.O&&(!S.ORI||(S.lig&&S.lig.ligados>0&&mesmoNro())));/* 16/11/2026: Orientativo de Montagem opcional */
 const bloqueio=()=>!S.O&&!S.ORI?"Anexe a Proposta comercial e o Orientativo de Montagem para continuar.":!S.O?"Falta anexar a Proposta comercial.":!S.ORI?"Falta anexar o Orientativo de Montagem.":!mesmoNro()?`O Orientativo é do orçamento ${S.ORI.numero} e a proposta é do ${S.O.numero}. Anexe os dois do mesmo orçamento.`:"Nenhuma tipologia do Orientativo corresponde à proposta. Confira se os dois PDFs são do mesmo orçamento.";
 function religar(){S.lig=null;if(!S.O||!S.ORI)return;S.O.itens.forEach(t=>delete t.cortes);if(mesmoNro())S.lig=O3DORI.ligar(S.O.itens,S.ORI);}
 async function lerOri(file){const pe=$("oerr");
@@ -264,7 +264,7 @@ async function enviar(){const E=$("eerr");if(S.enviando||!S.O)return;
  const O=S.O;
  const dados={pdf:S.pdf,empresa:S.empresa.trim(),cor:S.cor,logo:S.logo,obra:O.cliente||"Obra",cliente:O.cliente,numero:O.numero,emissao:O.emissao,vendedor:O.vendedor,corPerfil:O.cor,
   itens:O.itens.map(it=>Object.assign(it,{lido:{kind:it.kind,f:it.f,enc:it.enc,per:it.per||""},ok:false})),avisos:O.avisos,
-  ori:{pdf:S.oriPdf,numero:S.ORI.numero,tipologias:S.ORI.itens.length,perfis3d:Object.keys(S.ORI.secoes||{}).length,ligados:S.lig.ligados,total:S.lig.total,avisos:S.ORI.avisos},
+  ori:S.ORI?{pdf:S.oriPdf,numero:S.ORI.numero,tipologias:S.ORI.itens.length,perfis3d:Object.keys(S.ORI.secoes||{}).length,ligados:S.lig.ligados,total:S.lig.total,avisos:S.ORI.avisos}:null,
   contato:{nome:S.nome.trim(),zap:S.zap.trim(),obs:S.obs.trim()}};
  try{const r=await sb.rpc("obra3d_envio_enviar",{tok,dados});if(r.error)throw r.error;
   $("main").innerHTML=`<div class="sec fim"><div class="ic" aria-hidden="true">✓</div><h2>Orçamento enviado</h2><p class="hint" style="margin:0 auto;max-width:440px">Recebemos os <b>${O.itens.length} itens</b> da obra <b>${esc(O.cliente||"")}</b>. A FC confere tudo, monta o 3D com a sua marca e manda o link no WhatsApp ${esc(S.zap)}.</p>
