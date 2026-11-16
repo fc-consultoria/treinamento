@@ -32,38 +32,76 @@ function init(o){
   brilho:new T.LineBasicMaterial({color:0xffd27a,transparent:true,opacity:0})};
  function bx(w,h,d,m,x,y,z,par){var ms=new T.Mesh(new T.BoxGeometry(w,h,d),m);ms.position.set(x||0,y||0,z||0);ms.castShadow=true;ms.receiveShadow=true;if(par)par.add(ms);return ms}
  function cil(r,h,m,par,seg){var ms=new T.Mesh(new T.CylinderGeometry(r,r,h,seg||20),m);ms.castShadow=true;if(par)par.add(ms);return ms}
- /* montador com proporção humana (≈1,75 m): membros arredondados, articulações, uniforme de obra e EPI */
- function membro(r1,r2,len,m){var g=new T.Group(),c=new T.Mesh(new T.CylinderGeometry(r2,r1,len,18,1,true),m);c.position.y=-len/2;c.castShadow=true;g.add(c);
-  var a=new T.Mesh(new T.SphereGeometry(r1,16,12),m);a.castShadow=true;g.add(a);var b=new T.Mesh(new T.SphereGeometry(r2,16,12),m);b.position.y=-len;b.castShadow=true;g.add(b);return g;}
- function lathe(pts,m,sz){var g=new T.LatheGeometry(pts.map(function(p){return new T.Vector2(p[0],p[1])}),28);var ms=new T.Mesh(g,m);ms.scale.z=sz||.62;ms.castShadow=true;return ms;}
- function montador(){var g=new T.Group(),u={};
-  /* pernas: calça de brim, joelheira e botina */
-  [-1,1].forEach(function(sd){var q=new T.Group();q.position.set(sd*.1,.93,0);g.add(q);var co=membro(.085,.065,.44,M.calca);q.add(co);
-   var j=new T.Group();j.position.y=-.44;q.add(j);var ca=membro(.062,.05,.42,M.calca);j.add(ca);
-   var bt=new T.Group();bt.position.y=-.43;j.add(bt);var b1=new T.Mesh(new T.SphereGeometry(.07,16,10),M.bota);b1.scale.set(.85,.75,1.65);b1.position.set(0,-.02,.05);b1.castShadow=true;bt.add(b1);
-   var sola=new T.Mesh(new T.BoxGeometry(.11,.025,.27),M.preto);sola.position.set(0,-.07,.05);bt.add(sola);
+ /* ===== montador realista (≈1,76 m): anatomia proporcional, rosto, mãos com dedos, uniforme com a marca e EPI completo ===== */
+ function membro(r1,r2,len,m,seg){var g=new T.Group(),c=new T.Mesh(new T.CylinderGeometry(r2,r1,len,seg||22,4,true),m);c.position.y=-len/2;c.castShadow=true;c.receiveShadow=true;g.add(c);
+  var a=new T.Mesh(new T.SphereGeometry(r1,20,14),m);a.castShadow=true;g.add(a);var b=new T.Mesh(new T.SphereGeometry(r2,20,14),m);b.position.y=-len;b.castShadow=true;g.add(b);return g;}
+ function lathe(pts,m,sz,seg){var g=new T.LatheGeometry(pts.map(function(p){return new T.Vector2(p[0],p[1])}),seg||36);var ms=new T.Mesh(g,m);ms.scale.z=sz||.62;ms.castShadow=true;ms.receiveShadow=true;return ms;}
+ function txt(c,w,h,fn){var cv=document.createElement('canvas');cv.width=w;cv.height=h;fn(cv.getContext('2d'),w,h);var tx=new T.CanvasTexture(cv);tx.encoding=T.sRGBEncoding;tx.anisotropy=4;return tx;}
+ /* tecido com trama leve (dá leitura de roupa de verdade) */
+ function tecido(cor,amp){return txt(0,128,128,function(g,w,h){g.fillStyle=cor;g.fillRect(0,0,w,h);for(var y=0;y<h;y+=2){g.fillStyle='rgba(0,0,0,'+(.04+Math.random()*amp)+')';g.fillRect(0,y,w,1)}for(var x=0;x<w;x+=3){g.fillStyle='rgba(255,255,255,'+(Math.random()*amp*.6)+')';g.fillRect(x,0,1,h)}});}
+ var MAT=null;function mats(){if(MAT)return MAT;var tc=function(c,a){var t=tecido(c,a||.05);t.wrapS=t.wrapT=T.RepeatWrapping;t.repeat.set(3,3);return t};
+  MAT={calca:new T.MeshStandardMaterial({map:tc('#2b3546',.06),roughness:.92}),camisa:new T.MeshStandardMaterial({map:tc('#1f3a5a',.05),roughness:.88}),
+   colete:new T.MeshStandardMaterial({map:tc('#ff6a10',.04),roughness:.7,emissive:0x2a0b00}),faixa:new T.MeshStandardMaterial({color:0xdfe6ea,metalness:.6,roughness:.25,emissive:0x555555}),
+   luva:new T.MeshStandardMaterial({map:tc('#8a6a3a',.08),roughness:.85}),bota:new T.MeshStandardMaterial({color:0x3b2a1d,roughness:.55,metalness:.05}),sola:new T.MeshStandardMaterial({color:0x151515,roughness:.9}),
+   capacete:new T.MeshPhysicalMaterial({color:0xf5f5f2,roughness:.28,clearcoat:.8,clearcoatRoughness:.2}),capacete2:new T.MeshPhysicalMaterial({color:0xf2b705,roughness:.3,clearcoat:.8}),
+   oculos:new T.MeshPhysicalMaterial({color:0x1a2a33,metalness:.2,roughness:.05,transparent:true,opacity:.55}),olho:new T.MeshStandardMaterial({color:0xf4f1ea,roughness:.3}),iris:new T.MeshStandardMaterial({color:0x2c1d12,roughness:.2}),
+   sobr:new T.MeshStandardMaterial({color:0x2a1d14,roughness:.9}),barba:new T.MeshStandardMaterial({color:0x2a1d14,roughness:1,transparent:true,opacity:.55}),
+   cinto:new T.MeshStandardMaterial({color:0x1d1a17,roughness:.6}),fivela:new T.MeshStandardMaterial({color:0xb9bec2,metalness:1,roughness:.25}),bolsa:new T.MeshStandardMaterial({color:0x5a4630,roughness:.8}),
+   trena:new T.MeshStandardMaterial({color:0xf2b705,roughness:.4}),boca:new T.MeshStandardMaterial({color:0x7a3e33,roughness:.6})};return MAT;}
+ var PELES=[0xc58c66,0x9c6a4b,0xe0ac8a];
+ function logoCostas(nome){return txt(0,512,160,function(g,w,h){g.clearRect(0,0,w,h);g.fillStyle='#fff';g.font='900 92px Arial Black,Arial,sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText(nome,w/2,h/2+4);});}
+ function montador(k){k=k||0;var A=mats(),g=new T.Group(),u={};var pele=new T.MeshStandardMaterial({color:PELES[k%3],roughness:.55});
+  var sc=[1,1.03,.97][k%3];g.scale.setScalar(sc);
+  /* pernas: calça de brim com joelheira, botina de couro com biqueira */
+  [-1,1].forEach(function(sd){var q=new T.Group();q.position.set(sd*.098,.94,0);g.add(q);q.add(membro(.088,.068,.44,A.calca));
+   var jo=new T.Mesh(new T.SphereGeometry(.072,16,10),A.calca);jo.scale.set(1,.9,.9);jo.position.set(0,-.43,.012);q.add(jo);
+   var j=new T.Group();j.position.y=-.44;q.add(j);j.add(membro(.066,.052,.42,A.calca));
+   var bt=new T.Group();bt.position.y=-.43;j.add(bt);var cano=new T.Mesh(new T.CylinderGeometry(.058,.06,.13,18),A.bota);cano.position.y=-.01;bt.add(cano);
+   var pe=new T.Mesh(new T.SphereGeometry(.07,20,12),A.bota);pe.scale.set(.82,.62,1.75);pe.position.set(0,-.045,.055);pe.castShadow=true;bt.add(pe);
+   var so=new T.Mesh(new T.BoxGeometry(.105,.022,.27),A.sola);so.position.set(0,-.083,.05);bt.add(so);
    u[sd<0?'qe':'qd']=q;u[sd<0?'je':'jd']=j;});
-  /* quadril e tronco */
-  var qd=lathe([[0,.84],[.15,.86],[.17,.95],[.155,1.02],[0,1.04]],M.calca,.7);g.add(qd);
-  var cinto=new T.Mesh(new T.TorusGeometry(.158,.018,8,28),M.preto);cinto.rotation.x=Math.PI/2;cinto.scale.y=.7;cinto.position.y=1.0;g.add(cinto);
-  var tr=lathe([[0,.98],[.155,1.0],[.15,1.12],[.17,1.3],[.185,1.42],[.16,1.48],[.07,1.52],[0,1.53]],M.camisa,.6);g.add(tr);
-  var co=lathe([[0,1.02],[.165,1.04],[.16,1.14],[.178,1.3],[.192,1.41],[.12,1.47],[0,1.475]],M.colete,.64);co.scale.x=1.03;g.add(co);
-  [1.12,1.24].forEach(function(y){var f=new T.Mesh(new T.TorusGeometry(.172,.012,6,30),M.faixa);f.rotation.x=Math.PI/2;f.scale.y=.64*.98;f.position.y=y;g.add(f)});
-  /* pescoço e cabeça */
-  var pe=new T.Mesh(new T.CylinderGeometry(.045,.05,.09,14),M.pele);pe.position.y=1.56;g.add(pe);
-  var cb=new T.Group();cb.position.y=1.66;g.add(cb);var ca=new T.Mesh(new T.SphereGeometry(.1,24,18),M.pele);ca.scale.set(.88,1.08,.98);ca.castShadow=true;cb.add(ca);
-  var na=new T.Mesh(new T.ConeGeometry(.016,.04,8),M.pele);na.rotation.x=Math.PI/2;na.position.set(0,-.005,.1);cb.add(na);
-  [-1,1].forEach(function(sd){var o=new T.Mesh(new T.SphereGeometry(.022,10,8),M.pele);o.scale.set(.5,1,.7);o.position.set(sd*.088,0,0);cb.add(o)});
-  var cpt=new T.Mesh(new T.SphereGeometry(.118,26,14,0,Math.PI*2,0,Math.PI/2),M.amar);cpt.scale.set(1,.9,1.12);cpt.position.y=.035;cpt.castShadow=true;cb.add(cpt);
-  var ab=new T.Mesh(new T.CylinderGeometry(.13,.13,.012,28),M.amar);ab.scale.z=1.18;ab.position.set(0,.03,.018);cb.add(ab);
-  var ns=new T.Mesh(new T.BoxGeometry(.02,.012,.2),M.amar2);ns.position.set(0,.14,0);cb.add(ns);
-  /* braços: ombro, cotovelo, luva */
-  [-1,1].forEach(function(sd){var om=new T.Group();om.position.set(sd*.2,1.45,0);g.add(om);var ma=new T.Mesh(new T.SphereGeometry(.068,14,10),M.colete);om.add(ma);
-   var br=membro(.058,.045,.29,M.camisa);om.add(br);var cv=new T.Group();cv.position.y=-.29;om.add(cv);var ab2=membro(.045,.036,.26,M.pele);cv.add(ab2);
-   var lu=new T.Mesh(new T.SphereGeometry(.045,12,10),M.luva);lu.scale.set(.8,1.3,.55);lu.position.y=-.3;cv.add(lu);
+  /* quadril, cinto de ferramentas */
+  g.add(lathe([[0,.84],[.152,.855],[.172,.93],[.16,1.0],[.148,1.04],[0,1.05]],A.calca,.72));
+  var ci=new T.Mesh(new T.TorusGeometry(.162,.02,10,36),A.cinto);ci.rotation.x=Math.PI/2;ci.scale.y=.72;ci.position.y=1.0;g.add(ci);
+  var fv=new T.Mesh(new T.BoxGeometry(.05,.035,.012),A.fivela);fv.position.set(0,1.0,.12);g.add(fv);
+  var bo=new T.Mesh(new T.BoxGeometry(.09,.11,.05),A.bolsa);bo.position.set(.15,.95,.04);bo.rotation.y=.6;g.add(bo);
+  var tr=new T.Mesh(new T.CylinderGeometry(.034,.034,.03,20),A.trena);tr.rotation.z=Math.PI/2;tr.position.set(-.17,.97,.02);g.add(tr);
+  /* tronco: camisa manga longa + colete refletivo com faixas e a marca nas costas */
+  var to=lathe([[0,.99],[.15,1.0],[.145,1.1],[.165,1.26],[.19,1.39],[.19,1.43],[.15,1.48],[.08,1.52],[0,1.53]],A.camisa,.6);g.add(to);
+  var co=lathe([[0,1.03],[.158,1.04],[.153,1.12],[.172,1.27],[.196,1.385],[.17,1.44],[.09,1.465],[0,1.47]],A.colete,.64);co.scale.x=1.03;g.add(co);
+  [1.13,1.25].forEach(function(y){var f=new T.Mesh(new T.TorusGeometry(.163+(y-1.13)*.13,.011,6,40),A.faixa);f.rotation.x=Math.PI/2;f.scale.y=.64*.99;f.position.y=y;g.add(f)});
+  [-1,1].forEach(function(sd){var f=new T.Mesh(new T.BoxGeometry(.022,.3,.008),A.faixa);f.position.set(sd*.07,1.33,.112);f.rotation.x=-.12;g.add(f)});
+  if(o.marcaUniforme){var lg=new T.Mesh(new T.PlaneGeometry(.26,.08),new T.MeshStandardMaterial({map:logoCostas(o.marcaUniforme),transparent:true,roughness:.6}));lg.position.set(0,1.335,-.122);lg.rotation.y=Math.PI;g.add(lg);}
+  /* pescoço e cabeça com rosto */
+  var pc=new T.Mesh(new T.CylinderGeometry(.046,.054,.1,16),pele);pc.position.y=1.56;g.add(pc);
+  var gola=new T.Mesh(new T.TorusGeometry(.055,.014,8,22),A.camisa);gola.rotation.x=Math.PI/2;gola.position.y=1.525;g.add(gola);
+  var cb=new T.Group();cb.position.y=1.665;g.add(cb);u.cab=cb;
+  var cr=new T.Mesh(new T.SphereGeometry(.1,32,24),pele);cr.scale.set(.86,1.06,.97);cr.castShadow=true;cb.add(cr);
+  var qx=new T.Mesh(new T.SphereGeometry(.07,20,14),pele);qx.scale.set(.95,.8,.9);qx.position.set(0,-.055,.02);cb.add(qx);
+  if(k===1){var bb=new T.Mesh(new T.SphereGeometry(.074,20,14,0,Math.PI*2,Math.PI*.45,Math.PI*.55),A.barba);bb.scale.set(.98,.85,.95);bb.position.set(0,-.05,.022);cb.add(bb);}
+  var na=new T.Mesh(new T.ConeGeometry(.017,.05,10),pele);na.rotation.x=Math.PI/2+.25;na.position.set(0,-.008,.1);cb.add(na);
+  [-1,1].forEach(function(sd){var ol=new T.Mesh(new T.SphereGeometry(.012,12,10),A.olho);ol.position.set(sd*.032,.018,.085);cb.add(ol);var ir=new T.Mesh(new T.SphereGeometry(.0065,10,8),A.iris);ir.position.set(sd*.032,.018,.096);cb.add(ir);
+   var so2=new T.Mesh(new T.BoxGeometry(.034,.007,.01),A.sobr);so2.position.set(sd*.033,.04,.09);so2.rotation.z=-sd*.12;cb.add(so2);
+   var or=new T.Mesh(new T.SphereGeometry(.022,12,10),pele);or.scale.set(.45,1,.75);or.position.set(sd*.088,.005,0);cb.add(or);});
+  var bc=new T.Mesh(new T.BoxGeometry(.034,.006,.008),A.boca);bc.position.set(0,-.045,.088);cb.add(bc);
+  var oc=new T.Mesh(new T.CylinderGeometry(.092,.092,.032,28,1,true,-1.1,2.2),A.oculos);oc.position.set(0,.018,.005);oc.scale.z=1.08;cb.add(oc);
+  /* capacete com aba, nervura e jugular */
+  var cm=k===2?A.capacete2:A.capacete;var ca=new T.Mesh(new T.SphereGeometry(.118,32,16,0,Math.PI*2,0,Math.PI/2),cm);ca.scale.set(1,.92,1.13);ca.position.y=.04;ca.castShadow=true;cb.add(ca);
+  var ab=new T.Mesh(new T.CylinderGeometry(.128,.131,.012,32),cm);ab.scale.z=1.16;ab.position.set(0,.04,.012);cb.add(ab);
+  var pk=new T.Mesh(new T.CylinderGeometry(.06,.06,.01,24,1,false,-.9,1.8),cm);pk.position.set(0,.04,.11);cb.add(pk);
+  var nv=new T.Mesh(new T.BoxGeometry(.018,.014,.22),cm);nv.position.set(0,.145,0);cb.add(nv);
+  var jg=new T.Mesh(new T.TorusGeometry(.085,.004,6,30,Math.PI),A.cinto);jg.rotation.y=Math.PI/2;jg.rotation.z=Math.PI;jg.position.set(0,.0,.0);jg.scale.set(1,1.15,1);cb.add(jg);
+  /* braços: ombro, cotovelo, mão com luva e dedos */
+  [-1,1].forEach(function(sd){var om=new T.Group();om.position.set(sd*.205,1.45,0);g.add(om);var ma=new T.Mesh(new T.SphereGeometry(.07,16,12),A.camisa);om.add(ma);
+   om.add(membro(.06,.047,.29,A.camisa));var cv=new T.Group();cv.position.y=-.29;om.add(cv);cv.add(membro(.047,.038,.26,A.camisa));
+   var pu=new T.Mesh(new T.CylinderGeometry(.041,.041,.03,16),A.luva);pu.position.y=-.255;cv.add(pu);
+   var mao=new T.Group();mao.position.y=-.28;cv.add(mao);var pa=new T.Mesh(new T.BoxGeometry(.075,.085,.03),A.luva);pa.position.y=-.03;mao.add(pa);
+   for(var d=0;d<4;d++){var dd=new T.Mesh(new T.CylinderGeometry(.009,.008,.055,8),A.luva);dd.position.set(-.027+d*.018,-.095,.006);dd.rotation.x=.35;mao.add(dd);}
+   var po=new T.Mesh(new T.CylinderGeometry(.01,.009,.045,8),A.luva);po.position.set(sd*.04,-.04,.018);po.rotation.z=sd*.7;mao.add(po);
    u[sd<0?'oe':'od']=om;u[sd<0?'ce':'cd']=cv;});
   var tab=new T.Mesh(new T.BoxGeometry(.2,.28,.012),M.preto);tab.position.set(0,-.36,.06);tab.rotation.x=-.5;tab.visible=false;u.cd.add(tab);u.tab=tab;
-  g.userData=u;return g;}
+  var tela=new T.Mesh(new T.PlaneGeometry(.18,.25),new T.MeshStandardMaterial({color:0x2a7fb8,emissive:0x1a5c88,emissiveIntensity:.6}));tela.position.z=.007;tab.add(tela);
+  u.sc=sc;g.userData=u;return g;}
  /* ---------- utilidades ---------- */
  function liga(ms,a,b){var d=b.clone().sub(a),L=d.length();ms.position.copy(a).add(b).multiplyScalar(.5);ms.scale.set(1,Math.max(.001,L),1);ms.quaternion.setFromUnitVectors(UP,d.normalize());}
  var ease=function(t){t=Math.max(0,Math.min(1,t));return t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2},lin=function(a,b,t){return a+(b-a)*Math.max(0,Math.min(1,t))};
@@ -94,7 +132,7 @@ function init(o){
   var lado=V().crossVectors(UP,dirW).normalize(),larg=Math.max(S.x,S.z),alt=S.y,tam=Math.max(larg,alt);
   var baseY=bb.min.y,carga=(chao+.22)-baseY;/* deslocamento vertical durante o transporte: base a ~22 cm do piso */
   /* equipe: dois carregando, um encarregado com tablet */
-  var mt=[montador(),montador(),montador()],enc=mt[2];enc.userData.tab.visible=true;
+  var mt=[montador(0),montador(1),montador(2)],enc=mt[2];enc.userData.tab.visible=true;
   mt.forEach(function(m){m.userData.y0=chao;m.visible=false;var f=parafusadeira();f.position.set(0,-.33,.02);m.userData.cd.add(f);m.userData.fur=f;SC.add(m)});
   var eg=new T.LineSegments(new T.EdgesGeometry(new T.BoxGeometry(S.x+.06,S.y+.06,S.z+.06)),M.brilho);eg.position.copy(C);SC.add(eg);
   var ray=new T.Raycaster(),escondidos=new Set(),meus=function(x){while(x){if(x===ob||mt.indexOf(x)>=0||x===eg)return true;x=x.parent}return false};
@@ -164,9 +202,11 @@ function init(o){
    requestAnimationFrame(quadro);});};
  api.alvo=function(){var l=(o.alvos&&o.alvos())||[];return l.length?((o.escolhe&&o.escolhe(l))||l[0]):null};
  api.instalaAtual=function(){return api.instala(api.alvo());};
+ api.instalaTodas=function(){var l=(o.alvos&&o.alvos())||[],i=0;function prox(){if(i>=l.length)return Promise.resolve(true);var a=l[i++];return api.instala(a).then(prox);}return prox();};
+ api.total=function(){return ((o.alvos&&o.alvos())||[]).length};
  /* ---------- botão ---------- */
  if(o.barra||o.flutuar){var b=document.createElement('button');b.type='button';b.className=o.cls||'fcrx-b';b.innerHTML='👷 Instalação';b.title='Ver a equipe trazendo a esquadria e encaixando no vão';
-  b.onclick=function(){if(api.ativo)return;var l=(o.alvos&&o.alvos())||[];if(!l.length){o.semAlvo&&o.semAlvo();return;}var a=(o.escolhe&&o.escolhe(l))||l[0];Promise.resolve(o.antesDe&&o.antesDe()).then(function(){api.instala(a)});};
+  b.onclick=function(){if(api.ativo)return;var l=(o.alvos&&o.alvos())||[];if(!l.length){o.semAlvo&&o.semAlvo();return;}Promise.resolve(o.antesDe&&o.antesDe()).then(function(){if(o.todas&&l.length>1)api.instalaTodas();else api.instala((o.escolhe&&o.escolhe(l))||l[0]);});};
   var bar=o.barra;if(!bar){bar=document.querySelector('.fcrx-flt');if(!bar){bar=document.createElement('div');bar.className='fcrx-bar fcrx-flt';o.flutuar.appendChild(bar);if(o.pos)Object.assign(bar.style,o.pos);}}
   if(o.antes&&o.antes.parentNode===bar)bar.insertBefore(b,o.antes);else bar.appendChild(b);api.botao=b;}
  return api;}

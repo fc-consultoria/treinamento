@@ -613,7 +613,7 @@ if(window.FCRaioX){let ambIni=null,GD=null;FCRaioX.init({R:renderer,SC:scene,CAM
   L.push({d:3.6,cap:M.revenda+' · Linha Family 32',fn:a=>{a.clica('#bNight');a.raiox(1);a.orbita(.8)}});
   return L},
  aoTerminar:a=>{a.raiox(0);if(ambIni)setAmb(ambIni)}});
- if(window.FCGuindaste)GD=FCGuindaste.init({SC:scene,CAM:camera,CT:controls,alvos:()=>model?[{obj:model.g,fora:new THREE.Vector3(0,0,-1),chao:0,solo:0,nome:(cur&&cur.tip)||'Linha Family 32'}]:[],
+ if(window.FCGuindaste)GD=FCGuindaste.init({SC:scene,CAM:camera,CT:controls,marcaUniforme:(M.revenda||M.nome||'').toUpperCase(),alvos:()=>model?[{obj:model.g,fora:new THREE.Vector3(0,0,-1),chao:0,solo:0,nome:(cur&&cur.tip)||'Linha Family 32'}]:[],
   flutuar:$('#stage'),legendaEm:$('#stage'),
   aoInicio:()=>{['#hsLayer','#dock','#qrBox','#qrPill'].forEach(s=>{const e=$(s);if(e)e.style.visibility='hidden'})},aoFim:()=>{['#hsLayer','#dock','#qrBox','#qrPill'].forEach(s=>{const e=$(s);if(e)e.style.visibility=''})}})}
 /* QR no canto da tela:

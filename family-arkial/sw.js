@@ -4,7 +4,7 @@
    O nome do cache sai do nome da pasta (family-arkial -> "family-arkial-v1"): cada licenciado,
    na sua pasta, tem o próprio cache e não apaga o dos outros. */
 const PASTA=(new URL(self.registration.scope).pathname.split('/').filter(Boolean).pop()||'family-app');
-const V=PASTA+'-v5';
+const V=PASTA+'-v6';
 const ARQ=['./','index.html','simulador.html','marca.js','raiox-fc.js','guindaste-fc.js','acesso.js','instalar.js','manifest-simulador.webmanifest','manifest.webmanifest','fonts.css','tw.css','lib/three.min.js','lib/OrbitControls.js','lib/qrcode.js',
  'icons/icon-192.png','icons/icon-512.png','icons/maskable-512.png','icons/apple-180.png',
  'fonts/inter-latin-400-normal.woff2','fonts/inter-latin-500-normal.woff2','fonts/inter-latin-600-normal.woff2','fonts/inter-latin-700-normal.woff2','fonts/inter-latin-800-normal.woff2',
