@@ -45,13 +45,16 @@
        return `<tr><td><b>${e(d.nome)}</b>${d.tela?'<br><span class="note">vendo: '+e(d.tela)+'</span>':''}</td><td><a href="${zap(d.whats)}" target="_blank" rel="noopener">${e(d.whats)}</a></td>
         <td>${quando(d.criado)}${d.entradas?'<br><span class="note">'+d.entradas+' entrada'+(d.entradas>1?'s':'')+'</span>':''}</td><td style="color:${c};font-weight:600">${t}</td>
         <td style="white-space:nowrap">${d.status==='pendente'?`<button type="button" class="ok" data-dpl="${d.id}" data-v="1">Liberar agora</button> <button type="button" class="no" data-dpl="${d.id}" data-v="0">Recusar</button>`
-          :`<button type="button" data-dpm="${d.id}">+24 h</button> <button type="button" class="${d.ativo?'no':'ok'}" data-dpa="${d.id}" data-v="${d.ativo?0:1}">${d.ativo?'Pausar':'Reativar'}</button>`}</td></tr>`;}).join('')}</tbody></table></div>`
+          :`<button type="button" data-dpm="${d.id}">+24 h</button> <button type="button" class="${d.ativo?'no':'ok'}" data-dpa="${d.id}" data-v="${d.ativo?0:1}">${d.ativo?'Pausar':'Reativar'}</button>`} <button type="button" class="no" data-dpx="${d.id}" title="Apaga o cadastro">🗑 Excluir</button></td></tr>`;}).join('')}</tbody></table></div>`
       :'<p class="note" style="margin:0">Ninguém entrou pelo demonstrativo ainda. Quando alguém se cadastrar, aparece aqui e o painel avisa.</p>'}`;
     document.getElementById('dplCp').onclick=async ev=>{try{await navigator.clipboard.writeText(LINK);ev.target.textContent='✔ Link copiado';}catch(_){prompt('Copie o link:',LINK);}setTimeout(()=>{ev.target.textContent='🔗 Copiar link do demonstrativo';},2500);};
     el.querySelectorAll('[data-dpl]').forEach(b=>b.onclick=async()=>{if(b.dataset.v==='0'&&!confirm('Recusar este pedido? A pessoa não vai conseguir entrar.'))return;b.disabled=true;
       try{await rpc('pfc_adm_demo_liberar',{p_token:TOK,p_id:b.dataset.dpl,p_liberar:b.dataset.v==='1'});}catch(x){alert(x.message);}carregar();});
     el.querySelectorAll('[data-dpm]').forEach(b=>b.onclick=async()=>{b.disabled=true;try{await rpc('pfc_adm_demo',{p_token:TOK,p_id:b.dataset.dpm,p_ativo:true,p_mais_dias:1});}catch(x){alert(x.message);}carregar();});
     el.querySelectorAll('[data-dpa]').forEach(b=>b.onclick=async()=>{b.disabled=true;try{await rpc('pfc_adm_demo',{p_token:TOK,p_id:b.dataset.dpa,p_ativo:b.dataset.v==='1'});}catch(x){alert(x.message);}carregar();});}
+  document.addEventListener('click',async ev=>{const b=ev.target.closest('#dplBox [data-dpx]');if(!b)return;const d=(D||[]).find(x=>String(x.id)===b.dataset.dpx);
+    if(!confirm('Excluir o cadastro de '+(d?d.nome:'')+'?\nO acesso dele termina na hora e o cadastro some da lista. Não dá para desfazer.'))return;b.disabled=true;
+    try{await rpc('pfc_adm_demo_excluir',{p_token:TOK,p_id:b.dataset.dpx});}catch(x){alert('Não foi possível excluir: '+x.message);}carregar();});
   setTimeout(carregar,3500);setInterval(carregar,30000);
   document.addEventListener('visibilitychange',()=>{if(!document.hidden)carregar();});
   window.FCDemoPl={carregar};

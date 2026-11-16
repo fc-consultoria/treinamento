@@ -246,10 +246,13 @@ function dmPinta(){const L=$('dmL');
     <div class="sub">${h(d.whats||'')}${d.status==='pendente'?' · aguardando liberação':' · '+(d.ativo?resta(d):'pausado')}${d.tela?' · '+h(d.tela):''}${d.entradas?' · '+d.entradas+' entrada'+(d.entradas>1?'s':''):''}</div>
     <div class="bts">${d.status==='pendente'?`<button class="bt p" type="button" data-dl="${d.id}" data-v="1">Liberar agora</button><button class="bt r" type="button" data-dl="${d.id}" data-v="0">Recusar</button>`
       :`<button class="bt n" type="button" data-dmais="${d.id}">+24 h</button><button class="bt ${d.ativo?'r':'p'}" type="button" data-da="${d.id}" data-v="${d.ativo?0:1}">${d.ativo?'Pausar':'Reativar'}</button>`}
-      <a class="bt w" href="${zapDm(d.whats)}" target="_blank" rel="noopener">WhatsApp</a></div></div>`;};
+      <a class="bt w" href="${zapDm(d.whats)}" target="_blank" rel="noopener">WhatsApp</a></div>
+    <div class="bts"><button class="bt r" type="button" data-dx="${d.id}">🗑 Excluir cadastro</button></div></div>`;};
   L.innerHTML=DM.length?DM.map(card).join('')+'<div class="dica">Link para enviar: https://fc-consultoria.github.io/fc3d/clientes/demo/ · vale 24 h a partir do primeiro acesso.</div>'
     :'<div class="vazio"><i>🧪</i><b>Ninguém se cadastrou ainda</b>Quando alguém abrir o link do demonstrativo, aparece aqui.</div>';}
-$('dmL').addEventListener('click',async e=>{const b=e.target.closest('[data-dl],[data-dmais],[data-da]');if(!b)return;
+$('dmL').addEventListener('click',async e=>{const b=e.target.closest('[data-dl],[data-dmais],[data-da],[data-dx]');if(!b)return;
+  if(b.dataset.dx){const d=(DM||[]).find(x=>String(x.id)===b.dataset.dx);if(!confirm('Excluir o cadastro de '+(d?d.nome:'')+'? O acesso termina na hora. Não dá para desfazer.'))return;
+    b.disabled=true;try{await plRpc('pfc_adm_demo_excluir',{p_token:DMTOK,p_id:b.dataset.dx});}catch(x){alert('Não foi possível excluir: '+x.message);}dmCarregar();return;}
   if(b.dataset.dl&&b.dataset.v==='0'&&!confirm('Recusar este pedido? A pessoa não vai conseguir entrar.'))return;b.disabled=true;
   try{if(b.dataset.dl)await plRpc('pfc_adm_demo_liberar',{p_token:DMTOK,p_id:b.dataset.dl,p_liberar:b.dataset.v==='1'});
     else if(b.dataset.dmais)await plRpc('pfc_adm_demo',{p_token:DMTOK,p_id:b.dataset.dmais,p_ativo:true,p_mais_dias:1});
