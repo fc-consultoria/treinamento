@@ -226,12 +226,27 @@ $('onL').addEventListener('click',async e=>{const g=e.target.closest('[data-pid]
   if(window.FCConversas&&FCConversas.abrirMatriz)FCConversas.abrirMatriz(x.data);});
 
 /* ===== 🧪 Demonstrativos de 24 h (link fc3d/clientes/demo/) · 16/11/2026 ===== */
-const DM_KT='pfc-token-painel';let DM=null,DMTOK=null;
+const DM_KT='pfc-token-painel';let DM=null,DMTOK=null,DMU=null;
+const DMODS=[['Visita de Obra','#c26a00'],['Fábrica 3D','#02717d'],['Catálogo 3D','#5b4bc4'],['Início e outras telas','#8a9a9c']];
+const dmMod=t=>{t=String(t||'');if(/^Visita de Obra/.test(t))return 'Visita de Obra';if(/^(Fábrica 3D|Orientativo 3D|Simulador Fábrica|Montagens|Tipologias|Desenho técnico)/.test(t))return 'Fábrica 3D';if(/^Catálogo 3D/.test(t))return 'Catálogo 3D';return 'Início e outras telas';};
+const dmTmp=sg=>{sg=Math.round(sg||0);if(sg<60)return sg?sg+' s':'0 min';const m=Math.round(sg/60);return m<60?m+' min':Math.floor(m/60)+' h '+(m%60?m%60+' min':'');};
+const dmPor=L=>{const o={};(L||[]).forEach(x=>{const k=dmMod(x.tela);o[k]=(o[k]||0)+(x.seg||0);});return o;};
+function dmGraf(){if(!DMU||!DMU.geral||!DMU.geral.length)return '';const m=dmPor(DMU.geral),tot=Object.values(m).reduce((a,b)=>a+b,0)||1;
+  const bars=DMODS.filter(([k])=>m[k]).sort((a,b)=>m[b[0]]-m[a[0]]).map(([k,c])=>{const pc=Math.round(m[k]*100/tot);
+    return `<div style="margin:7px 0"><div style="display:flex;justify-content:space-between;font-size:13px"><b>${k}</b><span><b>${pc}%</b> · ${dmTmp(m[k])}</span></div>
+      <div style="background:#eef2f4;border-radius:6px;height:12px;overflow:hidden;margin-top:3px"><div style="width:${Math.max(pc,2)}%;height:100%;background:${c}"></div></div></div>`;}).join('');
+  const tips=DMU.geral.filter(x=>/^Fábrica 3D · /.test(x.tela)).slice(0,3).map(x=>h(x.tela.replace('Fábrica 3D · ',''))+' ('+dmTmp(x.seg)+')').join(' · ');
+  const H=DMU.horas||[],mx=Math.max(1,...H);
+  const hs=H.map((v,i)=>`<div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center"><div style="width:100%;height:${Math.round(v*36/mx)}px;background:${v?'#02717d':'transparent'};border-radius:2px 2px 0 0"></div><span style="font-size:8.5px;color:#8a9a9c">${i%6?'':i}</span></div>`).join('');
+  return `<div class="cd"><b>📊 Onde mais usaram</b><div class="sub">todos os demonstrativos · ${dmTmp(tot)} no total</div>${bars}
+    ${tips?`<div class="sub" style="margin-top:6px">Tipologias mais vistas: ${tips}</div>`:''}
+    <div class="sub" style="margin-top:8px">Horários de uso</div><div style="display:flex;gap:1px;height:48px;align-items:flex-end">${hs}</div></div>`;}
 const zapDm=w=>{let n=String(w||'').replace(/\D/g,'');if(n.length<=11)n='55'+n;return 'https://wa.me/'+n;};
 const resta=d=>{const ms=new Date(d.expira)-Date.now();if(ms<=0)return 'terminou';const hs=Math.floor(ms/36e5),mi=Math.floor(ms/6e4)%60;return 'faltam '+(hs?hs+' h ':'')+mi+' min';};
 async function dmToken(){for(const t of [DMTOK,localStorage.getItem(DM_KT),localStorage.getItem('pfc-token')]){if(!t)continue;try{await plRpc('pfc_adm_demo_lista',{p_token:t});DMTOK=t;return t;}catch(_){}}DMTOK=null;return null;}
 async function dmCarregar(){if(!DMTOK&&!(await dmToken())){DM=null;dmPinta();return;}
-  try{DM=await plRpc('pfc_adm_demo_lista',{p_token:DMTOK})||[];}catch(_){DMTOK=null;DM=null;}dmPinta();badges();}
+  try{DM=await plRpc('pfc_adm_demo_lista',{p_token:DMTOK})||[];}catch(_){DMTOK=null;DM=null;}
+  try{DMU=DMTOK?await plRpc('pfc_adm_demo_uso',{p_token:DMTOK}):null;}catch(_){DMU=null;}dmPinta();badges();}
 function dmPinta(){const L=$('dmL');
   if(DM===null){$('dmInfo').textContent='Entrar com o Acesso FC';
     L.innerHTML=`<div class="cd"><div class="sub" style="margin-bottom:8px">Informe uma vez a senha do <b>Acesso FC</b> da Plataforma FC 3D. Fica guardada neste celular.</div>
@@ -244,11 +259,12 @@ function dmPinta(){const L=$('dmL');
   const card=d=>{const vivo=d.status!=='pendente'&&d.ativo&&new Date(d.expira)>Date.now();
     return `<div class="cd"><div class="top"><b>${d.status==='pendente'?'⏳':vivo?'🟢':'⚪'} ${h(d.nome)}</b><span>${quando(d.criado)}</span></div>
     <div class="sub">${h(d.whats||'')}${d.status==='pendente'?' · aguardando liberação':' · '+(d.ativo?resta(d):'pausado')}${d.tela?' · '+h(d.tela):''}${d.entradas?' · '+d.entradas+' entrada'+(d.entradas>1?'s':''):''}</div>
+    <div class="sub">⏱ Tempo logado: <b>${dmTmp(d.uso_seg)}</b>${(()=>{const m=dmPor(DMU&&DMU.por_pessoa&&DMU.por_pessoa[d.id]);const L=DMODS.filter(([k])=>m[k]>=30).map(([k])=>k.replace('Início e outras telas','Início')+' '+dmTmp(m[k]));return L.length?' · '+L.join(' · '):'';})()}</div>
     <div class="bts">${d.status==='pendente'?`<button class="bt p" type="button" data-dl="${d.id}" data-v="1">Liberar agora</button><button class="bt r" type="button" data-dl="${d.id}" data-v="0">Recusar</button>`
       :`<button class="bt n" type="button" data-dmais="${d.id}">+24 h</button><button class="bt ${d.ativo?'r':'p'}" type="button" data-da="${d.id}" data-v="${d.ativo?0:1}">${d.ativo?'Pausar':'Reativar'}</button>`}
       <a class="bt w" href="${zapDm(d.whats)}" target="_blank" rel="noopener">WhatsApp</a></div>
     <div class="bts"><button class="bt r" type="button" data-dx="${d.id}">🗑 Excluir cadastro</button></div></div>`;};
-  L.innerHTML=DM.length?DM.map(card).join('')+'<div class="dica">Link para enviar: https://fc-consultoria.github.io/fc3d/clientes/demo/ · vale 24 h a partir do primeiro acesso.</div>'
+  L.innerHTML=DM.length?dmGraf()+DM.map(card).join('')+'<div class="dica">Link para enviar: https://fc-consultoria.github.io/fc3d/clientes/demo/ · vale 24 h a partir do primeiro acesso.</div>'
     :'<div class="vazio"><i>🧪</i><b>Ninguém se cadastrou ainda</b>Quando alguém abrir o link do demonstrativo, aparece aqui.</div>';}
 $('dmL').addEventListener('click',async e=>{const b=e.target.closest('[data-dl],[data-dmais],[data-da],[data-dx]');if(!b)return;
   if(b.dataset.dx){const d=(DM||[]).find(x=>String(x.id)===b.dataset.dx);if(!confirm('Excluir o cadastro de '+(d?d.nome:'')+'? O acesso termina na hora. Não dá para desfazer.'))return;

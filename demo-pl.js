@@ -14,10 +14,28 @@
   const online=d=>d.visto_em&&((d.agora?new Date(d.agora):new Date())-new Date(d.visto_em))/1e3<75;
   async function rpc(fn,a){const r=await fetch(URL0+fn,{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify(a||{})});
     const j=await r.json().catch(()=>null);if(!r.ok)throw new Error((j&&(j.message||j.hint))||'Falha');return j;}
-  let TOK=null,D=null,primeira=true;
+  let TOK=null,D=null,U=null,primeira=true;
+  /* 16/11/2026 · tempo logado e onde mais usaram (pfc_demo_uso, gravado a cada 30 s pelo convite.js da Plataforma) */
+  const MODS=[['Visita de Obra','#c26a00'],['Fábrica 3D','#02717d'],['Catálogo 3D','#5b4bc4'],['Início e outras telas','#8a9a9c']];
+  const modDe=t=>{t=String(t||'');if(/^Visita de Obra/.test(t))return 'Visita de Obra';if(/^(Fábrica 3D|Orientativo 3D|Simulador Fábrica|Montagens|Tipologias|Desenho técnico)/.test(t))return 'Fábrica 3D';if(/^Catálogo 3D/.test(t))return 'Catálogo 3D';return 'Início e outras telas';};
+  const tmp=sg=>{sg=Math.round(sg||0);if(sg<60)return sg?sg+' s':'0 min';const m=Math.round(sg/60);return m<60?m+' min':Math.floor(m/60)+' h '+(m%60?m%60+' min':'');};
+  const porMod=L=>{const o={};(L||[]).forEach(x=>{const k=modDe(x.tela);o[k]=(o[k]||0)+(x.seg||0);});return o;};
+  function grafico(){if(!U||!U.geral||!U.geral.length)return '<p class="note" style="margin:8px 0 0">O gráfico aparece assim que alguém usar a plataforma pelo demonstrativo.</p>';
+    const m=porMod(U.geral),tot=Object.values(m).reduce((a,b)=>a+b,0)||1,pes={};U.geral.forEach(x=>{const k=modDe(x.tela);pes[k]=Math.max(pes[k]||0,x.pessoas||0);});
+    const bar=MODS.filter(([k])=>m[k]).sort((a,b)=>m[b[0]]-m[a[0]]).map(([k,c])=>{const pc=Math.round(m[k]*100/tot);
+      return `<div style="display:grid;grid-template-columns:150px 1fr 120px;gap:10px;align-items:center;margin:6px 0"><b style="font-size:13.5px">${k}</b>
+        <div style="background:#eef2f4;border-radius:6px;height:20px;overflow:hidden"><div style="width:${Math.max(pc,2)}%;height:100%;background:${c};border-radius:6px"></div></div>
+        <span style="font-size:13px"><b>${pc}%</b> · ${tmp(m[k])}</span></div>`;}).join('');
+    const tips=U.geral.filter(x=>/^Fábrica 3D · /.test(x.tela)).slice(0,5).map(x=>`${e(x.tela.replace('Fábrica 3D · ',''))} (${tmp(x.seg)})`).join(' · ');
+    const H=U.horas||[],mx=Math.max(1,...H);
+    const hs=H.map((v,h)=>`<div title="${h}h · ${tmp(v)}" style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:2px"><div style="width:100%;height:${Math.round(v*44/mx)}px;background:${v?'#02717d':'transparent'};border-radius:3px 3px 0 0"></div><span style="font-size:9.5px;color:#7a8a8c">${h%3?'':h}</span></div>`).join('');
+    return `<div style="border:1px solid #e1e9ec;border-radius:12px;padding:12px 14px;margin:0 0 12px"><b>📊 Onde mais usaram · todos os demonstrativos</b> <span class="note">tempo total ${tmp(tot)}</span>${bar}
+      ${tips?`<p class="note" style="margin:8px 0 0">Tipologias mais vistas na Fábrica 3D: ${tips}</p>`:''}
+      <p class="note" style="margin:10px 0 2px">Horários de uso</p><div style="display:flex;gap:2px;height:60px;align-items:flex-end">${hs}</div></div>`;}
   async function token(){for(const t of [TOK,lg(KT),lg('pfc-token')]){if(!t)continue;try{await rpc('pfc_adm_demo_lista',{p_token:t});TOK=t;return t;}catch(_){}}TOK=null;return null;}
   async function carregar(){if(!TOK&&!await token()){D=null;ui();return;}
     try{D=await rpc('pfc_adm_demo_lista',{p_token:TOK})||[];}catch(_){TOK=null;D=null;ui();return;}
+    try{U=await rpc('pfc_adm_demo_uso',{p_token:TOK});}catch(_){U=null;}
     let vis=[];try{vis=JSON.parse(lg(KV))||[];}catch(_){}
     const nov=D.filter(d=>!vis.includes(d.id));
     if(nov.length&&!(primeira&&!vis.length))nov.forEach(avisar);
@@ -41,9 +59,10 @@
     el.innerHTML=`<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:0 0 10px">
        <span class="note"><b>${D.length}</b> cadastro${D.length===1?'':'s'} · <b>${at.length}</b> com acesso · <b style="color:#1d7a45">${D.filter(online).length}</b> on-line · <b style="color:#8a5a00">${pend.length}</b> aguardando</span>
        <span style="flex:1"></span><button type="button" id="dplCp">🔗 Copiar link do demonstrativo</button><a href="${ADM}" target="_blank" rel="noopener" style="font-size:13.5px">Abrir na Plataforma ↗</a></div>
-     ${D.length?`<div class="tw"><table><thead><tr><th>Nome</th><th>WhatsApp</th><th>Cadastro</th><th>Situação</th><th></th></tr></thead><tbody>${D.map(d=>{const [t,c]=situacao(d);
+     ${D.length?grafico():''}
+     ${D.length?`<div class="tw"><table><thead><tr><th>Nome</th><th>WhatsApp</th><th>Cadastro</th><th>Tempo logado</th><th>Situação</th><th></th></tr></thead><tbody>${D.map(d=>{const [t,c]=situacao(d);
        return `<tr><td><b>${e(d.nome)}</b>${d.tela?'<br><span class="note">vendo: '+e(d.tela)+'</span>':''}</td><td><a href="${zap(d.whats)}" target="_blank" rel="noopener">${e(d.whats)}</a></td>
-        <td>${quando(d.criado)}${d.entradas?'<br><span class="note">'+d.entradas+' entrada'+(d.entradas>1?'s':'')+'</span>':''}</td><td style="color:${c};font-weight:600">${t}</td>
+        <td>${quando(d.criado)}${d.entradas?'<br><span class="note">'+d.entradas+' entrada'+(d.entradas>1?'s':'')+'</span>':''}</td><td><b>${tmp(d.uso_seg)}</b>${(()=>{const m=porMod(U&&U.por_pessoa&&U.por_pessoa[d.id]);const L=MODS.filter(([k])=>m[k]>=30).map(([k])=>k.replace('Início e outras telas','Início')+' '+tmp(m[k]));return L.length?'<br><span class="note">'+L.join(' · ')+'</span>':'';})()}</td><td style="color:${c};font-weight:600">${t}</td>
         <td style="white-space:nowrap">${d.status==='pendente'?`<button type="button" class="ok" data-dpl="${d.id}" data-v="1">Liberar agora</button> <button type="button" class="no" data-dpl="${d.id}" data-v="0">Recusar</button>`
           :`<button type="button" data-dpm="${d.id}">+24 h</button> <button type="button" class="${d.ativo?'no':'ok'}" data-dpa="${d.id}" data-v="${d.ativo?0:1}">${d.ativo?'Pausar':'Reativar'}</button>`} <button type="button" class="no" data-dpx="${d.id}" title="Apaga o cadastro">🗑 Excluir</button></td></tr>`;}).join('')}</tbody></table></div>`
       :'<p class="note" style="margin:0">Ninguém entrou pelo demonstrativo ainda. Quando alguém se cadastrar, aparece aqui e o painel avisa.</p>'}`;
