@@ -126,7 +126,7 @@ td.n{text-align:right;white-space:nowrap}tr.best td{background:#effaf2;font-weig
 @media print{body.pedp>*:not(#pedPrint){display:none!important}body.pedp #pedPrint{display:block;color:#111;font:13px/1.4 Arial,sans-serif}
  .pp-h{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:3px solid #0f6b70;padding-bottom:8px;margin-bottom:10px}.pp-h small{display:block;letter-spacing:.2em;font-weight:700;color:#0f6b70;font-size:11px}.pp-h b{font-size:24px}
  .pp-r{text-align:right;display:flex;flex-direction:column}.pp-r span{font-size:11px;color:#555}.pp-r b{font-size:18px}
- .pp-f{display:flex;gap:10px;align-items:baseline;margin:6px 0}.pp-f span{font-size:11px;color:#555;text-transform:uppercase;letter-spacing:.1em}.pp-f b{font-size:20px}
+ .pp-f{display:flex;gap:10px;align-items:baseline;margin:6px 0}.pp-f span{font-size:11px;color:#555;text-transform:uppercase;letter-spacing:.1em}.pp-f b{font-size:20px}.pp-pr{flex-wrap:wrap;border:1.5px solid #0f6b70;border-radius:6px;padding:6px 10px}.pp-pr b{font-size:16px;margin-right:18px}.pp-pr small{font-size:10px;font-weight:400}
  .pp-o{border:1.5px solid #c47f00;background:#fff6e0;padding:6px 10px;border-radius:6px;font-weight:700;-webkit-print-color-adjust:exact;print-color-adjust:exact}
  .pp-t{width:100%;border-collapse:collapse;margin-top:8px}.pp-t th{background:#0f6b70!important;color:#fff!important;text-align:left;padding:5px 6px;font-size:11px;-webkit-print-color-adjust:exact;print-color-adjust:exact}.pp-t td{border-bottom:1px solid #ccc;padding:5px 6px}.pp-t .n{text-align:right}
  .pp-t tr.pg td{background:#eef3f4;border-top:2px solid #0f6b70;-webkit-print-color-adjust:exact;print-color-adjust:exact}.pp-t tr.pt td{border-top:2px solid #111}.pp-t tr{break-inside:avoid}
@@ -590,15 +590,17 @@ async function pedPdf(f){const S=simular();const oc=ls.get(OKEY(),'');const E=pe
   toast('Preparando o pedido com QR…');const QL=await qrLink(f,S);const qrH=QL?qrImg(QL,240):'';
   const n2b=v=>Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
   const cores=[...new Set(E.map(e=>sCor(e.t.x)))];
+  const kgT=E.reduce((a,e)=>a+e.p.kg,0),vT=E.reduce((a,e)=>a+e.p.v,0);const pks=[...new Set(E.map(e=>Math.round(e.p.o.kg*100)))];const pkM=kgT?vT/kgT:0;
   const tb=cores.map(c=>{const L=E.filter(e=>sCor(e.t.x)===c);const x=CORES.find(y=>y[0]===c);
-    return `<tr class="pg"><td colspan="8"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${x?x[2]:'#ccc'};border:1px solid #555;vertical-align:-1px;margin-right:6px"></span><b>Cor: ${esc(CORN[c])}</b> · ${L.length} ${L.length===1?'item':'itens'} · ${L.reduce((a,e)=>a+e.p.br,0)} barras · ${n2b(L.reduce((a,e)=>a+e.p.kg,0))} kg</td></tr>`+
-     L.map(e=>`<tr><td>${E.indexOf(e)+1}</td><td class="pp-im${QL?' q':''}"><div class="pp-imw">${pedImg(e)}${QL?`<img class="pp-iq" src="${qrImg(QL+'#i'+(E.indexOf(e)+1),120,1)}" alt="" title="ver foto">`:''}</div></td><td style="white-space:nowrap"><b>${esc(e.p.o.c)}</b><br><small class="pp-cl">${esc(e.p.o.lin)}</small></td><td>${e.t.cl?`<span class="pp-abc" title="Curva ABC do cliente">${e.t.cl}</span> `:''}<b>${esc(e.t.x.orig||e.t.x.q)}</b>${e.t.x.desc?'<br><span class="pp-ds">'+esc(e.t.x.desc)+'</span>':''}</td><td>${esc(CORN[c])}</td><td class="n">${e.p.br}</td><td class="n">${String(sM(e.t.x)).replace('.',',')} m</td><td class="n">${n2b(e.p.kg)}</td></tr>`).join('');}).join('');
+    return `<tr class="pg"><td colspan="10"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${x?x[2]:'#ccc'};border:1px solid #555;vertical-align:-1px;margin-right:6px"></span><b>Cor: ${esc(CORN[c])}</b> · ${L.length} ${L.length===1?'item':'itens'} · ${L.reduce((a,e)=>a+e.p.br,0)} barras · ${n2b(L.reduce((a,e)=>a+e.p.kg,0))} kg · R$ ${n2b(L.reduce((a,e)=>a+e.p.v,0))}</td></tr>`+
+     L.map(e=>`<tr><td>${E.indexOf(e)+1}</td><td class="pp-im${QL?' q':''}"><div class="pp-imw">${pedImg(e)}${QL?`<img class="pp-iq" src="${qrImg(QL+'#i'+(E.indexOf(e)+1),120,1)}" alt="" title="ver foto">`:''}</div></td><td style="white-space:nowrap"><b>${esc(e.p.o.c)}</b><br><small class="pp-cl">${esc(e.p.o.lin)}</small></td><td>${e.t.cl?`<span class="pp-abc" title="Curva ABC do cliente">${e.t.cl}</span> `:''}<b>${esc(e.t.x.orig||e.t.x.q)}</b>${e.t.x.desc?'<br><span class="pp-ds">'+esc(e.t.x.desc)+'</span>':''}</td><td>${esc(CORN[c])}</td><td class="n">${e.p.br}</td><td class="n">${String(sM(e.t.x)).replace('.',',')} m</td><td class="n">${n2b(e.p.kg)}</td><td class="n">${n2b(e.p.o.kg)}</td><td class="n">${n2b(e.p.v)}</td></tr>`).join('');}).join('');
   let d=document.getElementById('pedPrint');if(!d){d=document.createElement('div');d.id='pedPrint';document.body.appendChild(d);}
   d.innerHTML=`<div class="pp-h"><div><small>PEDIDO DE COMPRA</small><b>${esc(DADOS.nome||'')}</b></div>${qrH?`<div class="pp-qr"><img src="${qrH}" alt=""><span><strong>Pedido no celular</strong><br>Aponte a câmera para ver os itens. O QR ao lado de cada desenho abre a foto ampliada. Sem preços.</span></div>`:''}<div class="pp-r">${oc?`<span>Ordem de compra</span><b>${esc(oc)}</b>`:''}<span>Data: ${new Date().toLocaleDateString('pt-BR')}</span></div></div>
    <div class="pp-f"><span>Fornecedor</span><b>${esc(IDX.forn[f])}</b></div>
-   <p class="pp-o">⚠ Pintar cada item na cor indicada. Barras no tamanho pedido.</p>
-   <table class="pp-t"><thead><tr><th>Item</th><th>Desenho</th><th>Código ${esc(IDX.forn[f])}</th><th>Cliente · código e descrição</th><th>Cor (pintura)</th><th class="n">Barras</th><th class="n">Tamanho</th><th class="n">kg</th></tr></thead><tbody>${tb}
-   <tr class="pt"><td colspan="5"><b>Total</b></td><td class="n"><b>${E.reduce((a,e)=>a+e.p.br,0)}</b></td><td></td><td class="n"><b>${n2b(E.reduce((a,e)=>a+e.p.kg,0))}</b></td></tr></tbody></table>
+   <div class="pp-f pp-pr"><span>Preço negociado (natural)</span><b>R$ ${n2b(pks.length===1?E[0].p.o.kg:pkM)}/kg${pks.length>1?' <small>(média)</small>':''}</b><span>Valor da simulação do pedido</span><b>R$ ${n2b(vT)}</b><span>Peso total</span><b>${n2b(kgT)} kg</b></div>
+   <p class="pp-o">⚠ Pintar cada item na cor indicada. Barras no tamanho pedido. Valores pelo preço natural (sem a pintura).</p>
+   <table class="pp-t"><thead><tr><th>Item</th><th>Desenho</th><th>Código ${esc(IDX.forn[f])}</th><th>Cliente · código e descrição</th><th>Cor (pintura)</th><th class="n">Barras</th><th class="n">Tamanho</th><th class="n">kg</th><th class="n">R$/kg natural</th><th class="n">Valor R$</th></tr></thead><tbody>${tb}
+   <tr class="pt"><td colspan="5"><b>Total</b></td><td class="n"><b>${E.reduce((a,e)=>a+e.p.br,0)}</b></td><td></td><td class="n"><b>${n2b(kgT)}</b></td><td class="n"><b>${n2b(pkM)}</b></td><td class="n"><b>${n2b(vT)}</b></td></tr></tbody></table>
    <div class="pp-a"><div>Comprador · ${esc(DADOS.nome||'')}</div><div>${esc(IDX.forn[f])} · recebido em ___/___/______</div></div>
    <p class="pp-fc">Pedido gerado pelo Onde comprar · FC Consultoria em Esquadria</p>`;
   document.body.classList.add('pedp');const fim=()=>{document.body.classList.remove('pedp');removeEventListener('afterprint',fim);};addEventListener('afterprint',fim);
@@ -632,10 +634,12 @@ function pedImgs(e){const L=[];
 function pedForn(f){const S=simular();const oc=ls.get(OKEY(),'');const E=S.esc.filter(e=>e.p&&e.p.o.f===f).sort((a,b)=>CORES.findIndex(c=>c[0]===sCor(a.t.x))-CORES.findIndex(c=>c[0]===sCor(b.t.x)));
   const n=v=>String(Math.round(v*100)/100).replace('.',',');
   const L=[['Pedido de compra · '+IDX.forn[f]],['Cliente',DADOS.nome||''],['Data',new Date().toLocaleDateString('pt-BR')]];if(oc)L.push(['Ordem de compra',oc]);
-  L.push(['Observação','Pintar cada item na cor indicada.']);L.push([]);
-  L.push(['Item','Código '+IDX.forn[f],'Linha','Curva','Código do cliente','Descrição (lista do cliente)','Cor (pintura)','Barras','Tamanho da barra (m)','Peso kg/m','kg total']);
-  E.forEach((e,i)=>L.push([i+1,e.p.o.c,e.p.o.lin,e.t.cl||'',e.t.x.orig||e.t.x.q,e.t.x.desc||'',CORN[sCor(e.t.x)],e.p.br,n(sM(e.t.x)),String(Math.round(e.p.o.p*1000)/1000).replace('.',','),n(e.p.kg)]));
-  L.push([]);L.push(['Total','','','',E.reduce((a,e)=>a+e.p.br,0),'','',n(E.reduce((a,e)=>a+e.p.kg,0))]);
+  const kgT=E.reduce((a,e)=>a+e.p.kg,0),vT=E.reduce((a,e)=>a+e.p.v,0);
+  L.push(['Preço negociado (natural) R$/kg',n(kgT?vT/kgT:0)]);L.push(['Valor da simulação do pedido R$',n(vT)]);
+  L.push(['Observação','Pintar cada item na cor indicada. Valores pelo preço natural (sem a pintura).']);L.push([]);
+  L.push(['Item','Código '+IDX.forn[f],'Linha','Curva','Código do cliente','Descrição (lista do cliente)','Cor (pintura)','Barras','Tamanho da barra (m)','Peso kg/m','kg total','R$/kg natural','Valor R$']);
+  E.forEach((e,i)=>L.push([i+1,e.p.o.c,e.p.o.lin,e.t.cl||'',e.t.x.orig||e.t.x.q,e.t.x.desc||'',CORN[sCor(e.t.x)],e.p.br,n(sM(e.t.x)),String(Math.round(e.p.o.p*1000)/1000).replace('.',','),n(e.p.kg),n(e.p.o.kg),n(e.p.v)]));
+  L.push([]);L.push(['Total','','','','','','',E.reduce((a,e)=>a+e.p.br,0),'','',n(kgT),n(kgT?vT/kgT:0),n(vT)]);
   const t='\ufeff'+L.map(r=>r.map(c=>{c=String(c);return /[;"\n]/.test(c)?'"'+c.replace(/"/g,'""')+'"':c;}).join(';')).join('\r\n');
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'text/csv;charset=utf-8'}));a.download='pedido-'+f+(oc?'-OC-'+oc.replace(/[^\w-]+/g,'_'):'')+'-'+new Date().toISOString().slice(0,10)+'.csv';a.click();
   registrar('pedido_fornecedor',{forn:f,itens:E.length,oc});simEnvia(IDX.forn[f]||f);}
