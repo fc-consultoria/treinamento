@@ -142,8 +142,14 @@ function init(o){
   var cand=[],tb=new T.Box3(),tv=V();SC.traverse(function(x){if(!x.isMesh||!x.visible||dentroDe(x))return;var mm=Array.isArray(x.material)?x.material[0]:x.material;if(mm&&mm.transparent&&mm.opacity===0)return;tb.setFromObject(x).getSize(tv);if(Math.max(tv.x,tv.y,tv.z)<=6)cand.push(x);});
   /* câmera na altura das pessoas */
   var k=Math.max(5.2,tam*2.1);
-  var c0=C.clone().add(dirW.clone().multiplyScalar(k*1.05)).add(lado.clone().multiplyScalar(-k*.95)).add(V(0,chao-C.y+1.75,0));
-  var c1=C.clone().add(dirW.clone().multiplyScalar(k*1.0)).add(lado.clone().multiplyScalar(-k*.12)).add(V(0,chao-C.y+1.6,0));
+  /* a câmera fica sempre do lado de fora da obra (nunca dentro de um cômodo) e nunca atrás de parede */
+  var ladoF=V().crossVectors(UP,foraW).normalize(),hC=dentro?Math.max(1.6,C.y-solo+.6):1.7;
+  var c0=C.clone().add(foraW.clone().multiplyScalar(k*1.05)).add(ladoF.clone().multiplyScalar(-k*.95)).setY(solo+hC+.1);
+  var c1=C.clone().add(foraW.clone().multiplyScalar(k*1.0)).add(ladoF.clone().multiplyScalar(-k*.12)).setY(solo+hC);
+  var livre=function(cp){var alvoC=C.clone(),d=cp.clone().sub(alvoC),L=d.length();var rc=new T.Raycaster(alvoC.clone().add(d.clone().normalize().multiplyScalar(.45)),d.clone().normalize(),0,L-.45);
+   var hs=rc.intersectObjects(SC.children,true).filter(function(h){var x=h.object;if(!x.isMesh||!x.visible)return false;var p=x;while(p){if(p===ob)return false;p=p.parent}var mm=Array.isArray(x.material)?x.material[0]:x.material;if(mm&&mm.transparent&&mm.opacity<.3)return false;var sz=new T.Box3().setFromObject(x).getSize(V());return Math.max(sz.x,sz.y,sz.z)>6;});
+   if(hs.length){var dd=Math.max(1.6,hs[0].distance+.45-.35);return alvoC.add(d.normalize().multiplyScalar(dd));}return cp;};
+  c0=livre(c0);c1=livre(c1);
   var camP=CAM.position.clone(),camT=CT?CT.target.clone():null,lim=null;if(CT){CT.enabled=false;lim=[CT.minDistance,CT.maxDistance,CT.minPolarAngle,CT.maxPolarAngle];CT.minDistance=0;CT.maxDistance=Infinity;CT.minPolarAngle=0;CT.maxPolarAngle=Math.PI;}
   var DUR=13,t0=performance.now(),longe=3.6,perto=.85,ultR=-1;
   o.aoInicio&&o.aoInicio(alvo);legenda('Instalação · '+(alvo.nome||'esquadria'));
