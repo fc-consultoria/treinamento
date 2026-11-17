@@ -59,7 +59,8 @@ function init(o){
   (function f(t){var k=Math.min(1,(t-t0)/(seg*1000)),e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;r.value=de+(ate-de)*e;r.dispatchEvent(new Event('input',{bubbles:true}));r.dispatchEvent(new Event('change',{bubbles:true}));if(k<1&&st.tour)requestAnimationFrame(f);})(t0);return true;};
  /* ---------- laço próprio ---------- */
  var n=0,last=performance.now(),Y=new T.Vector3(0,1,0),tmp=new T.Vector3();
- function laco(t){requestAnimationFrame(laco);var dr=Math.max(0,Math.min(.5,(t-last)/1000)),dt=Math.min(.05,dr);last=t;n++;
+ var tok=0;function agenda(){var me=++tok;requestAnimationFrame(function(t){if(me===tok)laco(t)})}
+ function laco(t){agenda();var dr=Math.max(0,Math.min(.5,(t-last)/1000)),dt=Math.min(.05,dr);last=t;n++;
   if(st.rx){st.k=Math.min(1,st.k+dt*2.2);if(n%20===0){limpaMortos();aplica();}
    var pl=null;ORIG.forEach(function(m){var mm=mat0(m);if(!pl&&mm.clippingPlanes&&mm.clippingPlanes.length)pl=mm.clippingPlanes;});pl=pl||[];
    if(xAlu.clippingPlanes!==pl){xAlu.clippingPlanes=xComp.clippingPlanes=xVid.clippingPlanes=xEdge.clippingPlanes=pl;xAlu.needsUpdate=xComp.needsUpdate=xVid.needsUpdate=xEdge.needsUpdate=true;}
@@ -67,7 +68,7 @@ function init(o){
   else if(ORIG.size)restaura();
   if(st.orb){var c=CT?CT.target:(o.centro?o.centro():tmp.set(0,0,0));CAM.position.sub(c).applyAxisAngle(Y,dt*.32*st.orb).add(c);if(!CT)CAM.lookAt(c);}
   if(st.tour)passo(dr);}
- requestAnimationFrame(laco);
+ agenda();
 
  /* ---------- roteiro ---------- */
  function passo(dt){var tr=st.tour;tr.t+=dt;var c=tr.cenas[tr.i];if(tr.t>=c.d){tr.i++;tr.t=0;if(tr.i>=tr.cenas.length){fimTour();return;}if(SOM&&tr.i<tr.cenas.length-0)SOM.impacto();tr.cenas[tr.i].fn&&tr.cenas[tr.i].fn(api);}}
@@ -118,7 +119,7 @@ function init(o){
  /* depois de cada desenho da tela, copia para o quadro do vídeo (sem precisar de preserveDrawingBuffer) */
  var render0=R.render.bind(R);
  R.render=function(s,c){if(st.tour){var rs=st.res||[1080,1920],v=R.getSize(new T.Vector2());if(v.x!==rs[0]||v.y!==rs[1]||R.getPixelRatio()!==1){R.setPixelRatio(1);R.setSize(rs[0],rs[1],false);}if(c===CAM&&Math.abs(CAM.aspect-9/16)>1e-3){CAM.aspect=9/16;CAM.updateProjectionMatrix();}}
-  render0(s,c);if(st.tour&&c===CAM)quadro();};
+  render0(s,c);if(c===CAM)st.rendeu=1;if(st.tour&&c===CAM)quadro();};
  function abreTela(gravar){ov=el('div','fcrx-ov');ov.appendChild(VC);cd=el('div','fcrx-cd');
   cd.innerHTML=(gravar?'<b><span class="fcrx-dot"></span>Gravando o vídeo</b><p>Formato em pé para Reels e Status (1080×1920). Não feche esta tela até terminar.</p>':'<b>Prévia do vídeo</b><p>É assim que o vídeo vai ficar. Para gerar o arquivo, use “Gravar”.</p>')+'<div class="r"><button class="fcrx-b" type="button">■ Parar</button></div><p class="m" style="font-size:12px"></p>';
   cd.querySelector('button').onclick=function(){fimTour(true);};ov.appendChild(cd);document.body.appendChild(ov);
@@ -192,7 +193,9 @@ function init(o){
   var msgEl=cd&&cd.querySelector('p.m');cd.querySelector('b').innerHTML='<span class="fcrx-dot"></span>Gravando quadro a quadro';
   cenas[0].fn&&cenas[0].fn(api);var cancel=false;cd.querySelector('button').onclick=function(){cancel=true};
   var ini=Date.now();
-  try{for(var f=0;f<N&&st.tour&&!cancel&&!erro;f++){vt+=1000/FPS;var q=fila;fila=[];for(var k=0;k<q.length;k++){try{q[k](vt)}catch(e){console.error(e)}}
+  try{agenda();for(var f=0;f<N&&st.tour&&!cancel&&!erro;f++){vt+=1000/FPS;var q=fila;fila=[];st.rendeu=0;for(var k=0;k<q.length;k++){try{q[k](vt)}catch(e){console.error(e)}}
+    /* a aba pode estar escondida: se a página não desenhou neste quadro, desenha aqui */
+    if(!st.rendeu){try{R.render(SC,CAM);}catch(e){console.error(e)}}
     /* quadro a partir dos pixels (funciona também em computador sem placa de vídeo, onde o VideoFrame direto do canvas sai preto) */
     var px=vx.getImageData(0,0,1080,1920);var vf=new VideoFrame(px.data,{format:'RGBA',codedWidth:1080,codedHeight:1920,timestamp:Math.round(f*1e6/FPS),duration:Math.round(1e6/FPS)});venc.encode(vf,{keyFrame:f%60===0});vf.close();
     if(f%2===0||venc.encodeQueueSize>3){await new Promise(function(r){setTimeout(r,0)});}
