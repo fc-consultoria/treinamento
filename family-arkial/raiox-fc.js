@@ -81,7 +81,7 @@ function init(o){
  api.legenda=function(){var tr=st.tour;if(!tr)return null;var c=tr.cenas[tr.i];return {txt:c.cap||'',a:Math.max(0,Math.min(1,tr.t/.45,(c.d-tr.t)/.35))};};
 
  /* ---------- quadro 9:16 ---------- */
- var VC=document.createElement('canvas');VC.width=1080;VC.height=1920;var vx=VC.getContext('2d');
+ var VC=document.createElement('canvas');VC.width=1080;VC.height=1920;var vx=VC.getContext('2d',{willReadFrequently:true});
  var salvo=null,ov=null,cd=null;
  function quebra(t,w){var p=String(t).split(' '),ls=[],l='';p.forEach(function(x){var nn=l?l+' '+x:x;if(vx.measureText(nn).width>w&&l){ls.push(l);l=x;}else l=nn;});ls.push(l);return ls;}
  var FN='-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif';
@@ -193,7 +193,8 @@ function init(o){
   cenas[0].fn&&cenas[0].fn(api);var cancel=false;cd.querySelector('button').onclick=function(){cancel=true};
   var ini=Date.now();
   try{for(var f=0;f<N&&st.tour&&!cancel&&!erro;f++){vt+=1000/FPS;var q=fila;fila=[];for(var k=0;k<q.length;k++){try{q[k](vt)}catch(e){console.error(e)}}
-    var vf=new VideoFrame(VC,{timestamp:Math.round(f*1e6/FPS),duration:Math.round(1e6/FPS)});venc.encode(vf,{keyFrame:f%60===0});vf.close();
+    /* quadro a partir dos pixels (funciona também em computador sem placa de vídeo, onde o VideoFrame direto do canvas sai preto) */
+    var px=vx.getImageData(0,0,1080,1920);var vf=new VideoFrame(px.data,{format:'RGBA',codedWidth:1080,codedHeight:1920,timestamp:Math.round(f*1e6/FPS),duration:Math.round(1e6/FPS)});venc.encode(vf,{keyFrame:f%60===0});vf.close();
     if(f%2===0||venc.encodeQueueSize>3){await new Promise(function(r){setTimeout(r,0)});}
     if(msgEl&&f%10===0){var pr=f/N,gasto=(Date.now()-ini)/1000,falta=pr>0?gasto*(1-pr)/pr:0;msgEl.textContent='Quadro '+f+' de '+N+' · '+Math.round(pr*100)+'% · faltam cerca de '+Math.max(1,Math.round(falta/60))+' min';}}}
   finally{window.requestAnimationFrame=rRAF;performance.now=rNow;fila.forEach(function(cb){rRAF.call(window,cb)});}
