@@ -207,7 +207,7 @@ function init(o){
        if(!escondidos.has(g)){escondidos.add(g);g.visible=false;}});});}
     /* câmera acompanha a equipe */
     /* câmera de perto, acompanhando os montadores: lateral no transporte, frente no encaixe, close na fixação, plano médio no ok */
-    var y0c=solo+hO,pA=wc.clone().add(foraW.clone().multiplyScalar(kf*.95)).add(ladoF.clone().multiplyScalar(-kf*.85)).setY(y0c+.15),tA=wc.clone().setY(chao+1.1);
+    var y0c=solo+hO,m0=mt[0].position,pA=m0.clone().add(foraW.clone().multiplyScalar(2.5)).add(ladoF.clone().multiplyScalar(-1.7)).setY(y0c+.1),tA=m0.clone().lerp(wc,.35).setY(chao+1.2);
     var pB=C.clone().add(foraW.clone().multiplyScalar(kf*1.05)).add(ladoF.clone().multiplyScalar(-kf*.25)).setY(y0c),tB=C.clone().setY(chao+1.15);
     var lp=mt[1].position.clone(),pC=lp.clone().add(foraW.clone().multiplyScalar(1.55)).add(ladoF.clone().multiplyScalar(.75)).setY(chao+1.45),tC=lp.clone().add(foraW.clone().multiplyScalar(-.2)).setY(chao+1.2);
     var pD=C.clone().add(foraW.clone().multiplyScalar(kf*1.25)).add(ladoF.clone().multiplyScalar(kf*.35)).setY(y0c+.2),tD=C.clone().setY(chao+1.05);
