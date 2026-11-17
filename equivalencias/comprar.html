@@ -444,7 +444,13 @@ function regraUI(t,ep){const R=t.rg,i=t.i;
   if(R)return `<div class="rgb">📌 <b>Sempre ${esc(IDX.forn[R.f]||R.f)} · ${esc(R.c)}</b><small>regra fixa do cliente · todas as cores${R.por?' · '+esc(R.por):''}</small>${t.rgFalta?'<small style="color:var(--md)">⚠️ fornecedor sem preço liberado: o item ficou no automático</small>':''}<span>${ep&&t.x.fx&&!fxOk(ep.o,regraFx(R))?`<button type="button" data-regsalva="${i}">Trocar para ${esc(IDX.forn[ep.o.f])}</button>`:''}<button type="button" data-regtira="${i}">Tirar regra</button></span></div>`;
   if(t.x.fx&&ep)return `<button type="button" class="rgsv" data-regsalva="${i}" title="Grava no banco: este perfil, em todas as cores, sempre neste fornecedor nos próximos pedidos">📌 Lembrar sempre (todas as cores)</button>`;
   return '';}
-function simGrupo(x){let g=x.g?IDX.g.find(y=>y.l+'|'+y.k===x.g):null;if(!g){const r=buscar(x.q);g=r[0]||null;}return g;}
+/* 17/11/2026: o grupo gravado no item só vale se o código ainda estiver nele. Se o par foi corrigido depois
+   (ex.: TBX100 saiu do PLK-0100 e voltou ao PLK-0027), refaz a busca e atualiza o item — senão o pedido
+   mostrava o desenho e o peso do perfil errado (TBX100 com 0,093 kg/m do TBX690). */
+function simGrupo(x){let g=x.g?IDX.g.find(y=>y.l+'|'+y.k===x.g):null;
+  if(g&&x.q){const k=norm(x.q);const tem=norm(g.k)===k||g.m.some(m=>norm(m[1])===k)||(g.al||[]).some(c=>norm(c)===k);
+    if(!tem){const r=buscar(x.q);if(r.length&&!r.includes(g)){g=r[0];x.g=g.l+'|'+g.k;}}}
+  if(!g){const r=buscar(x.q);g=r[0]||null;}return g;}
 function opcao(o,q){/* custo de levar q barras deste código, respeitando a compra mínima por item */
   /* a compra mínima por item vale para o perfil natural (somando as cores): é conferida depois, no pedido inteiro */
   const br=q;return {o,br,kg:br*o.kgb,v:br*o.kgb*o.kg,forc:false};}
