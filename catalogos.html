@@ -179,7 +179,7 @@ function mostraMsg(t){const m=modal(`<h2 style="margin:0 0 8px;font:800 22px var
 function editor(){const c=CUR,L=linhasDo(c);if(!L.length){cc().innerHTML='<p style="padding:30px">Nenhuma linha liberada.</p>';return;}const lin=L.find(l=>l.id===LI)||L[0];LI=lin.id;const t=nz(Q);
  const rows=lin.p.filter(q=>{const e=itemOf(c,q);if(t&&!nz((e.c||q.c)+' '+q.c+' '+(e.cg||'')+' '+(e.n||q.n)).includes(t))return false;if(FL==='sc')return e.sc!==false;if(FL==='oc')return e.oc;return true;});
  const pc=c.cores||['branco','preto','natural'];
- cc().innerHTML=`<div class="ph" style="background:${esc(c.cor)}"><div class="w"><div><small>${MKT?'Painel do Marketing · Catálogo 3D':'Painel do gestor · catálogo virtual'}</small><h1>${esc(c.nome)}</h1></div><div class="acts">${ADM?'<button class="btn" data-a="voltar">← Catálogos dos clientes</button>':''}<a class="btn or" target="_blank" rel="noopener" href="${esc(pubUrl(c))}">👁 Ver como o cliente vê</a><a class="btn" target="_blank" rel="noopener" href="${esc(PUB+c.slug)}?print=1">🖨 Imprimir catálogo</a><button class="btn" onclick="sair()">Sair</button></div></div></div>
+ cc().innerHTML=`<div class="ph" style="background:${esc(c.cor)}"><div class="w"><div><small>${MKT?'Painel do Marketing · Catálogo 3D':'Painel do gestor · catálogo virtual'}</small><h1>${esc(c.nome)}</h1></div><div class="acts">${ADM?'<button class="btn" data-a="voltar">← Catálogos dos clientes</button>':''}<a class="btn or" target="_blank" rel="noopener" href="${esc(pubUrl(c))}">👁 Ver como o cliente vê</a><a class="btn" target="_blank" rel="noopener" href="${esc(PUB+c.slug)}?print=1">🖨 Imprimir catálogo</a><button class="btn" type="button" data-tut>📘 Tutorial</button><button class="btn" onclick="sair()">Sair</button></div></div></div>
  <main><div class="w">${LIM?'':`<div class="card"><h2>Sua marca no catálogo</h2><div class="lk" style="margin-bottom:10px">🔗 Link do catálogo: <b>${esc(pubUrl(c))}</b></div><div class="cfg">
   <label>Nome da empresa<input data-k="nome" value="${esc(c.nome)}"></label><label>Sigla do logo<input data-k="sigla" maxlength="3" value="${esc(c.sigla||'')}"></label><label>Cor principal<input data-k="cor" type="color" value="${esc(c.cor||'#17606b')}"></label><label>WhatsApp de atendimento<input data-k="zap" value="${esc(c.zap||'')}"></label><label>Cidade<input data-k="cidade" value="${esc(c.cidade||'')}"></label>
   <label style="grid-column:1/-1">Texto do topo do catálogo<textarea data-k="texto" rows="2">${esc(c.texto||'')}</textarea></label>
@@ -338,4 +338,64 @@ gateUI(async({session,perfil})=>{UID=session.user.id;ADM=perfil.papel==='admin';
 
 <script src="conversa-equipe.js?v=11"></script>
 <script src="ubar-menu.js?v=1"></script>
+
+<!-- 17/11/2026 · Tutorial do editor do catálogo (botão 📘 Tutorial no topo do editor) -->
+<style>
+#tutCat{position:fixed;inset:0;z-index:300;background:#0008;display:flex;align-items:flex-start;justify-content:center;padding:24px 12px;overflow:auto}
+#tutCat[hidden]{display:none}
+#tutCat .tc{background:#fff;color:#1b232a;border-radius:16px;max-width:760px;width:100%;padding:22px 24px 26px;box-shadow:0 20px 50px #0005;font:15px/1.55 Barlow,system-ui,sans-serif}
+#tutCat h2{font:800 26px 'Barlow Condensed',sans-serif;margin:0 0 4px}#tutCat h3{font:800 19px 'Barlow Condensed',sans-serif;margin:20px 0 6px;color:#0d5c8f}
+#tutCat p{margin:6px 0}#tutCat ol,#tutCat ul{margin:6px 0;padding-left:22px}#tutCat li{margin:3px 0}
+#tutCat table{border-collapse:collapse;width:100%;font-size:14px;margin:6px 0}#tutCat td{border-top:1px solid #e3e9ec;padding:6px 8px;vertical-align:top}#tutCat td:first-child{font-weight:700;white-space:nowrap}
+#tutCat .tx{float:right;border:0;background:#eef2f4;border-radius:10px;padding:8px 12px;font-weight:700;cursor:pointer}
+#tutCat .nt{background:#f3f8fb;border-radius:10px;padding:10px 12px;margin-top:14px;font-size:14px}
+</style>
+<div id="tutCat" hidden role="dialog" aria-label="Tutorial do editor do catálogo"><div class="tc">
+<button class="tx" type="button" data-tutx>✕ Fechar</button>
+<h2>📘 Como usar o editor do catálogo</h2>
+<p>Tudo o que você altera aqui aparece sozinho no catálogo do cliente, sem ele precisar recarregar. Seu login só mexe no catálogo da sua empresa.</p>
+<h3>1. Sua marca no catálogo</h3>
+<table>
+<tr><td>Nome da empresa</td><td>Aparece no topo do catálogo e no link enviado aos clientes.</td></tr>
+<tr><td>Sigla do logo</td><td>Letras mostradas enquanto não houver logo.</td></tr>
+<tr><td>Cor principal</td><td>Cor da barra do topo e dos botões.</td></tr>
+<tr><td>WhatsApp de atendimento</td><td>Número que recebe as cotações e os contatos dos clientes.</td></tr>
+<tr><td>Texto do topo</td><td>Frase de apresentação abaixo do nome.</td></tr>
+<tr><td>Observação do "Sob consulta"</td><td>Aviso mostrado nos perfis sob consulta.</td></tr>
+<tr><td>Cores marcadas</td><td>Cores que todos os perfis mostram, se o perfil não tiver cor própria.</td></tr>
+</table>
+<p>Salva sozinho ao sair de cada campo. O botão <b>Salvar</b> grava tudo de uma vez.</p>
+<h3>2. Páginas do catálogo</h3>
+<p>Só aparecem com a caixa <b>Mostrar as páginas de apresentação no catálogo</b> marcada.</p>
+<ol><li><b>Capa:</b> foto da empresa (deitada fica melhor), logo e uma frase curta.</li>
+<li><b>Quem somos:</b> apresentação, missão, valores e objetivo.</li>
+<li><b>Contato e redes sociais:</b> telefone, e-mail, Instagram, Facebook, site, endereço e horário.</li></ol>
+<p>Campo vazio não aparece no catálogo.</p>
+<h3>3. Vitrine lateral (destaques e ofertas)</h3>
+<ol><li><b>＋ Perfil em destaque:</b> o cliente clica e abre o perfil em 3D.</li>
+<li><b>＋ Oferta</b> com <b>Foto ou folder:</b> o cliente clica e abre o WhatsApp da empresa.</li>
+<li><b>Trocar a cada … s:</b> tempo de troca entre os itens.</li></ol>
+<p>No celular a vitrine vira o botão <b>Destaques</b>. Mantenha as ofertas sempre atualizadas.</p>
+<h3>4. Perfis do catálogo</h3>
+<p>As linhas (Suprema, Gold, 25, 30, Portão, Acessórios…) ficam em abas. Clique no código ou no nome para editar; salva sozinho.</p>
+<table>
+<tr><td>Código no seu catálogo</td><td>Código da empresa. Quando preenchido, é ele que aparece no catálogo, na cotação e no WhatsApp; a busca acha pelos dois.</td></tr>
+<tr><td>Descrição · Foto · Peso · Cores</td><td>O que o cliente vê em cada perfil. O peso pode ficar oculto.</td></tr>
+<tr><td>Sob consulta</td><td>Prazo e disponibilidade a confirmar. <b>Mostrar observação</b> decide se o aviso aparece.</td></tr>
+<tr><td>Publicado</td><td>Desmarcado, o perfil some do catálogo do cliente.</td></tr>
+</table>
+<p><b>Vários de uma vez:</b> marque as caixinhas (ou <b>Selecionar todos</b>) e use a barra do topo: <b>Publicar</b>, <b>Não publicar</b>, <b>Sob consulta</b>, <b>Pronta entrega</b>, <b>Mostrar peso</b>, <b>Ocultar peso</b>. Depois, <b>Limpar seleção</b>.</p>
+<p><b>Conferir:</b> os filtros <b>Só sob consulta</b> e <b>Só ocultos</b> mostram o que está pendente ou escondido. <b>Cores da linha</b> muda as cores da linha inteira.</p>
+<h3>5. Antes de divulgar</h3>
+<ul><li><b>Ver como o cliente vê:</b> abre o catálogo exatamente como o cliente vai ver.</li>
+<li><b>Imprimir catálogo:</b> versão em PDF ou papel.</li>
+<li><b>Sair:</b> use sempre em computador compartilhado.</li></ul>
+<div class="nt">Dúvidas ou algo que não funcionou: FC Consultoria · WhatsApp <a href="https://wa.me/5566999867984" target="_blank" rel="noopener">(66) 9 9986-7984</a>.</div>
+</div></div>
+<script>
+document.addEventListener('click',e=>{const t=document.getElementById('tutCat');if(!t)return;
+  if(e.target.closest('[data-tut]')){t.hidden=false;t.scrollTop=0;return;}
+  if(e.target.closest('[data-tutx]')||e.target===t)t.hidden=true;});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){const t=document.getElementById('tutCat');if(t)t.hidden=true;}});
+</script>
 </body></html>
