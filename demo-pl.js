@@ -27,11 +27,11 @@
         <div style="background:#eef2f4;border-radius:6px;height:20px;overflow:hidden"><div style="width:${Math.max(pc,2)}%;height:100%;background:${c};border-radius:6px"></div></div>
         <span style="font-size:13px"><b>${pc}%</b> · ${tmp(m[k])}</span></div>`;}).join('');
     const tips=U.geral.filter(x=>/^Fábrica 3D · /.test(x.tela)).slice(0,5).map(x=>`${e(x.tela.replace('Fábrica 3D · ',''))} (${tmp(x.seg)})`).join(' · ');
-    const H=U.horas||[],mx=Math.max(1,...H);
-    const hs=H.map((v,h)=>`<div title="${h}h · ${tmp(v)}" style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:2px"><div style="width:100%;height:${Math.round(v*44/mx)}px;background:${v?'#02717d':'transparent'};border-radius:3px 3px 0 0"></div><span style="font-size:9.5px;color:#7a8a8c">${h%3?'':h}</span></div>`).join('');
+    const H=(U.horas||[]).slice(6),mx=Math.max(1,...H);/* 17/11/2026: 00h–06h não conta (madrugada) */
+    const hs=H.map((v,h)=>`<div title="${h+6}h · ${tmp(v)}" style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:2px"><div style="width:100%;height:${Math.round(v*44/mx)}px;background:${v?'#02717d':'transparent'};border-radius:3px 3px 0 0"></div><span style="font-size:9.5px;color:#7a8a8c">${(h+6)%3?'':h+6}</span></div>`).join('');
     return `<div style="border:1px solid #e1e9ec;border-radius:12px;padding:12px 14px;margin:0 0 12px"><b>📊 Onde mais usaram · todos os demonstrativos</b> <span class="note">tempo total ${tmp(tot)}</span>${bar}
       ${tips?`<p class="note" style="margin:8px 0 0">Tipologias mais vistas na Fábrica 3D: ${tips}</p>`:''}
-      <p class="note" style="margin:10px 0 2px">Horários de uso</p><div style="display:flex;gap:2px;height:60px;align-items:flex-end">${hs}</div></div>`;}
+      <p class="note" style="margin:10px 0 2px">Horários de uso (06h às 24h · a madrugada não conta no prazo de 24 h)</p><div style="display:flex;gap:2px;height:60px;align-items:flex-end">${hs}</div></div>`;}
   async function token(){for(const t of [TOK,lg(KT),lg('pfc-token')]){if(!t)continue;try{await rpc('pfc_adm_demo_lista',{p_token:t});TOK=t;return t;}catch(_){}}TOK=null;return null;}
   async function carregar(){if(!TOK&&!await token()){D=null;ui();return;}
     try{D=await rpc('pfc_adm_demo_lista',{p_token:TOK})||[];}catch(_){TOK=null;D=null;ui();return;}

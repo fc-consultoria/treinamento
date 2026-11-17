@@ -236,11 +236,11 @@ function dmGraf(){if(!DMU||!DMU.geral||!DMU.geral.length)return '';const m=dmPor
     return `<div style="margin:7px 0"><div style="display:flex;justify-content:space-between;font-size:13px"><b>${k}</b><span><b>${pc}%</b> · ${dmTmp(m[k])}</span></div>
       <div style="background:#eef2f4;border-radius:6px;height:12px;overflow:hidden;margin-top:3px"><div style="width:${Math.max(pc,2)}%;height:100%;background:${c}"></div></div></div>`;}).join('');
   const tips=DMU.geral.filter(x=>/^Fábrica 3D · /.test(x.tela)).slice(0,3).map(x=>h(x.tela.replace('Fábrica 3D · ',''))+' ('+dmTmp(x.seg)+')').join(' · ');
-  const H=DMU.horas||[],mx=Math.max(1,...H);
-  const hs=H.map((v,i)=>`<div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center"><div style="width:100%;height:${Math.round(v*36/mx)}px;background:${v?'#02717d':'transparent'};border-radius:2px 2px 0 0"></div><span style="font-size:8.5px;color:#8a9a9c">${i%6?'':i}</span></div>`).join('');
+  const H=(DMU.horas||[]).slice(6),mx=Math.max(1,...H);
+  const hs=H.map((v,i)=>`<div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center"><div style="width:100%;height:${Math.round(v*36/mx)}px;background:${v?'#02717d':'transparent'};border-radius:2px 2px 0 0"></div><span style="font-size:8.5px;color:#8a9a9c">${(i+6)%6?'':i+6}</span></div>`).join('');
   return `<div class="cd"><b>📊 Onde mais usaram</b><div class="sub">todos os demonstrativos · ${dmTmp(tot)} no total</div>${bars}
     ${tips?`<div class="sub" style="margin-top:6px">Tipologias mais vistas: ${tips}</div>`:''}
-    <div class="sub" style="margin-top:8px">Horários de uso</div><div style="display:flex;gap:1px;height:48px;align-items:flex-end">${hs}</div></div>`;}
+    <div class="sub" style="margin-top:8px">Horários de uso (06h às 24h)</div><div style="display:flex;gap:1px;height:48px;align-items:flex-end">${hs}</div></div>`;}
 const zapDm=w=>{let n=String(w||'').replace(/\D/g,'');if(n.length<=11)n='55'+n;return 'https://wa.me/'+n;};
 const resta=d=>{const ms=new Date(d.expira)-Date.now();if(ms<=0)return 'terminou';const hs=Math.floor(ms/36e5),mi=Math.floor(ms/6e4)%60;return 'faltam '+(hs?hs+' h ':'')+mi+' min';};
 async function dmToken(){for(const t of [DMTOK,localStorage.getItem(DM_KT),localStorage.getItem('pfc-token')]){if(!t)continue;try{await plRpc('pfc_adm_demo_lista',{p_token:t});DMTOK=t;return t;}catch(_){}}DMTOK=null;return null;}
@@ -264,7 +264,7 @@ function dmPinta(){const L=$('dmL');
       :`<button class="bt n" type="button" data-dmais="${d.id}">+24 h</button><button class="bt ${d.ativo?'r':'p'}" type="button" data-da="${d.id}" data-v="${d.ativo?0:1}">${d.ativo?'Pausar':'Reativar'}</button>`}
       <a class="bt w" href="${zapDm(d.whats)}" target="_blank" rel="noopener">WhatsApp</a></div>
     <div class="bts"><button class="bt r" type="button" data-dx="${d.id}">🗑 Excluir cadastro</button></div></div>`;};
-  L.innerHTML=DM.length?dmGraf()+DM.map(card).join('')+'<div class="dica">Link para enviar: https://fc-consultoria.github.io/fc3d/clientes/demo/ · vale 24 h a partir do primeiro acesso.</div>'
+  L.innerHTML=DM.length?dmGraf()+DM.map(card).join('')+'<div class="dica">Link para enviar: https://fc-consultoria.github.io/fc3d/clientes/demo/ · vale 24 h a partir do primeiro acesso (00h às 06h não conta).</div>'
     :'<div class="vazio"><i>🧪</i><b>Ninguém se cadastrou ainda</b>Quando alguém abrir o link do demonstrativo, aparece aqui.</div>';}
 $('dmL').addEventListener('click',async e=>{const b=e.target.closest('[data-dl],[data-dmais],[data-da],[data-dx]');if(!b)return;
   if(b.dataset.dx){const d=(DM||[]).find(x=>String(x.id)===b.dataset.dx);if(!confirm('Excluir o cadastro de '+(d?d.nome:'')+'? O acesso termina na hora. Não dá para desfazer.'))return;
