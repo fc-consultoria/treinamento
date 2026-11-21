@@ -74,6 +74,7 @@ nav .n.on{display:grid}
 <script src="auth.js?v=20261108"></script>
 </head>
 <body>
+<div class="gate" id="trava" style="z-index:19"><form onsubmit="return false"><div class="lg">FC</div><h1>Matriz FC</h1><p id="trTx">Carregando…</p><div id="trC"></div><div id="trMsg" style="color:var(--bad);font-size:13.5px;text-align:center;margin-top:10px"></div></form></div>
 <div class="gate" id="gate" hidden>
  <form id="gateForm" autocomplete="on">
   <div class="lg">FC</div>
@@ -114,6 +115,7 @@ nav .n.on{display:grid}
  <section class="sec" id="s-fi">
   <div class="hd"><span id="fiInfo">Carregando…</span><button type="button" class="bt p" id="fiNovo" style="flex:none;padding:7px 14px">+ Novo</button></div>
   <div class="chips" id="fiF"><button type="button" data-fif="ab" class="on">Em aberto</button><button type="button" data-fif="ok">Feitos</button></div>
+  <div id="fiCad"></div>
   <div id="fiForm"></div>
   <div id="fiL"></div>
  </section>
@@ -562,7 +564,8 @@ function hjPinta(){const el=$('hjL');if(!el)return;const H=hoje(),em7=maisDias(7
   b+=`<div class="cd" style="border-color:#9fd3c1"><div class="sub">📍 Onde você está</div><div class="top" style="margin-top:4px"><b>${agora?h(agora.cidade||agora.cliente||'Viagem'):'Sinop · escritório'}</b><span>${agora&&agora.cliente&&agora.cidade?h(agora.cliente):''}</span></div>${prox?`<p class="sub">✈️ Próxima saída: ${dSem(prox.data_ida)} ${dBR(prox.data_ida)}${prox.hora_ida?' · '+h(prox.hora_ida):''} · ${h(prox.cidade||prox.cliente||'')}</p>`:''}${datas.map(x=>`<p><span class="tag ${x.b?'tg-x':'tg-c'}">${x.b?'🎂':'🗓'} ${x.d===H?'hoje':dSem(x.d)} · ${h(x.t)}</span></p>`).join('')}${ps?`<p><span class="tag tg-a">✈️ ${ps} aviso${ps>1?'s':''} de passagem</span></p>`:''}</div>`;
   b+=`<div class="cd${par.length?' urg':''}" data-ir="cx" role="button"><div class="top"><b>📥 Caixa de entrada</b><span>${ab.length?ab.length+' aberto'+(ab.length>1?'s':''):'em dia'}</span></div>${par.length?`<p><span class="tag tg-x">${par.length} há mais de 4 h úteis</span> <span class="sub">${h(par[0].cliente)} desde ${desde(par[0].criado)}</span></p>`:''}</div>`;
   b+=`<div class="cd" data-ir="de" role="button"><div class="top"><b>✅ Demandas abertas</b><span>${dem.length} de ${MAXDEM}</span></div>${dem.length?dem.slice(0,MAXDEM).map(x=>`<div style="display:flex;justify-content:space-between;gap:8px;padding:5px 0;font-size:14px;border-top:1px solid var(--ln)"><span>${x.cliente?'<span class="emp">'+h(x.cliente)+'</span>':''}${h(x.titulo)}</span><span class="sub" style="white-space:nowrap;${x.prazo&&x.prazo<H?'color:var(--bad)':''}">${x.prazo?(x.prazo===H?'hoje':dSem(x.prazo)+' '+dBR(x.prazo)):''}</span></div>`).join(''):'<p class="sub">Nenhuma demanda aberta.</p>'}</div>`;
-  b+=`<div class="cd" data-ir="fi" role="button"><div class="top"><b>💰 Vencimentos da semana</b><span>${ven.length||'em dia'}</span></div>${ven.map(x=>`<div style="display:flex;justify-content:space-between;gap:8px;padding:5px 0;font-size:14px;border-top:1px solid var(--ln)"><span><span class="tag ${FIT[x.tipo][1]}">${FIT[x.tipo][0]}</span> ${h(x.titulo)}${x.parcelas>1?' '+x.parcela+'/'+x.parcelas:''}</span><span class="sub" style="white-space:nowrap;${x.vencimento<H?'color:var(--bad)':''}">${x.vencimento<H?'vencido ':''}${dSem(x.vencimento)} ${dBR(x.vencimento)}${x.valor?' · '+brl(x.valor):''}</span></div>`).join('')}</div>`;
+  if(!LSKEY)b+=`<div class="cd" data-ir="fi" role="button"><div class="top"><b>💰 Vencimentos da semana</b><span>🔒 trancado</span></div></div>`;
+  else b+=`<div class="cd" data-ir="fi" role="button"><div class="top"><b>💰 Vencimentos da semana</b><span>${ven.length||'em dia'}</span></div>${ven.map(x=>`<div style="display:flex;justify-content:space-between;gap:8px;padding:5px 0;font-size:14px;border-top:1px solid var(--ln)"><span><span class="tag ${FIT[x.tipo][1]}">${FIT[x.tipo][0]}</span> ${h(x.titulo)}${x.parcelas>1?' '+x.parcela+'/'+x.parcelas:''}</span><span class="sub" style="white-space:nowrap;${x.vencimento<H?'color:var(--bad)':''}">${x.vencimento<H?'vencido ':''}${dSem(x.vencimento)} ${dBR(x.vencimento)}${x.valor?' · '+brl(x.valor):''}</span></div>`).join('')}</div>`;
   b+=`<div class="mt"><div data-ir="ac" role="button"><small>🔑 Pedidos de acesso</small><b>${acs||'—'}</b></div><div data-ir="rp" role="button"><small>📩 Para responder</small><b>${rps||'—'}</b></div></div>`;
   el.innerHTML=b;}
 
@@ -649,6 +652,11 @@ function dePinta(){const el=$('deL');if(!el)return;const H=hoje(),ab=deAbertas()
 
 /* ---------- 💰 Financeiro ---------- */
 function fiPinta(){const el=$('fiL');if(!el)return;const H=hoje(),ab=fiAbertos();
+  /* 🔒 Financeiro protegido pela mesma senha mestra do Login Acessos Sistema */
+  const trav=!LSKEY;['fiF','fiForm','fiL','fiNovo'].forEach(i=>{if($(i))$(i).style.display=trav?'none':'';});
+  $('fiCad').innerHTML=trav?(LSCFG?`<div class="cd ag-f"><b>🔒 Financeiro trancado</b><p class="sub">Digite a senha mestra (a mesma do Login Acessos Sistema).</p><input type="password" id="fiM" autocomplete="current-password" placeholder="Senha mestra"><div class="bts"><button class="bt p" type="button" id="fiAbrir">Destravar</button></div><div class="st" id="fiMsg"></div></div>`
+    :`<div class="cd" style="border-color:#e8b04a"><b>🔒 Financeiro protegido</b><p class="sub">Crie primeiro a senha mestra em ☰ Mais › 🔐 Login Acessos Sistema. Depois ela abre o Financeiro também.</p><div class="bts"><button class="bt p" type="button" data-ir="ls">Criar senha mestra</button></div></div>`):'';
+  if(trav){$('fiInfo').textContent='Trancado';FIFORM=null;return;}
   const rec=ab.filter(x=>x.tipo==='receber').reduce((s,x)=>s+(+x.valor||0),0),pag=ab.filter(x=>x.tipo!=='receber').reduce((s,x)=>s+(+x.valor||0),0);
   $('fiInfo').textContent=ab.length+' em aberto';
   document.querySelectorAll('#fiF button').forEach(b=>b.classList.toggle('on',b.dataset.fif===FIF));
@@ -669,11 +677,28 @@ async function lsDeriva(senha,sal){const k=await crypto.subtle.importKey('raw',_
   return crypto.subtle.deriveKey({name:'PBKDF2',salt:b64d(sal),iterations:310000,hash:'SHA-256'},k,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);}
 async function lsCifra(obj,key){const iv=crypto.getRandomValues(new Uint8Array(12));const c=await crypto.subtle.encrypt({name:'AES-GCM',iv},key||LSKEY,_en.encode(JSON.stringify(obj)));return {cofre:b64e(c),iv:b64e(iv)};}
 async function lsDecifra(c,iv,key){const p=await crypto.subtle.decrypt({name:'AES-GCM',iv:b64d(iv)},key||LSKEY,b64d(c));return JSON.parse(_de.decode(p));}
-function lsTranca(){LSKEY=null;LSVER={};if(ABA==='ls')lsPinta();}
+function lsTranca(){LSKEY=null;LSVER={};lsPinta();fiPinta();hjPinta();trPinta();}
+/* 🔒 tela de senha ao abrir o app (mesma senha mestra) */
+function trPinta(){const el=$('trava');if(LSKEY){el.hidden=true;return;}el.hidden=false;if(!LOGADO)return;
+  if(!LSCFG){if($('trM1'))return;$('trTx').textContent='Crie a senha para abrir o app. Ela também protege o Financeiro e os Logins dos clientes.';
+    $('trC').innerHTML='<input type="password" id="trM1" placeholder="Nova senha (mín. 8)" autocomplete="new-password"><input type="password" id="trM2" placeholder="Repita a senha" autocomplete="new-password"><button type="button" id="trCriar">Criar senha</button>';return;}
+  if($('trM'))return;$('trTx').textContent='Digite sua senha mestra para abrir.';
+  $('trC').innerHTML='<input type="password" id="trM" placeholder="Senha mestra" autocomplete="current-password"><button type="button" id="trAbrir">Abrir</button>';setTimeout(()=>{try{$('trM').focus();}catch(_){}},50);}
+document.addEventListener('click',async e=>{const t=e.target,m=$('trMsg');
+  if(t.id==='trAbrir'){t.disabled=true;m.textContent='';try{await lsDestrava($('trM').value);$('trC').innerHTML='';}catch(_){t.disabled=false;$('trM').value='';m.textContent='Senha errada.';}}
+  if(t.id==='trCriar'){const a=$('trM1').value,b=$('trM2').value;if(a.length<8){m.textContent='Use pelo menos 8 caracteres.';return;}if(a!==b){m.textContent='As duas senhas não são iguais.';return;}
+    t.disabled=true;const sal=b64e(crypto.getRandomValues(new Uint8Array(16))),key=await lsDeriva(a,sal),c=await lsCifra('FC-OK',key);
+    const r=await sb.from('fc_login_cfg').insert({id:1,sal,teste:c.cofre,teste_iv:c.iv});if(r.error){t.disabled=false;m.textContent='⚠ '+r.error.message;return;}
+    LSKEY=key;lsReinicia();$('trC').innerHTML='';await lsCarregar();fiPinta();hjPinta();trPinta();}});
+async function lsDestrava(senha){const key=await lsDeriva(senha,LSCFG.sal);if(await lsDecifra(LSCFG.teste,LSCFG.teste_iv,key)!=='FC-OK')throw 0;LSKEY=key;lsReinicia();lsPinta();fiPinta();hjPinta();trPinta();}
+document.addEventListener('click',async e=>{if(e.target.id!=='fiAbrir')return;const t=e.target,m=$('fiMsg');t.disabled=true;m.className='st';m.textContent='Conferindo…';
+  try{await lsDestrava($('fiM').value);}catch(_){t.disabled=false;m.className='st er';m.textContent='Senha mestra errada.';}});
+document.addEventListener('keydown',e=>{if(e.key!=='Enter')return;if(e.target.id==='fiM')$('fiAbrir').click();if(e.target.id==='trM')$('trAbrir').click();if(e.target.id==='lsM')$('lsAbrir').click();});
 function lsReinicia(){clearTimeout(LSTRAVA);LSTRAVA=setTimeout(lsTranca,10*60000);}
+['touchstart','click','keydown'].forEach(ev=>document.addEventListener(ev,()=>{if(LSKEY)lsReinicia();},{passive:true}));
 document.addEventListener('visibilitychange',()=>{if(document.hidden)lsTranca();});
 async function lsCarregar(){const [a,b]=await Promise.all([sb.from('fc_login_sistema').select('*').order('cliente'),sb.from('fc_login_cfg').select('*').eq('id',1).maybeSingle()]);
-  if(a.error){$('lsInfo').textContent='Não carregou: '+a.error.message;return;}LS=a.data||[];LSCFG=b.data||null;lsPinta();}
+  if(a.error){$('lsInfo').textContent='Não carregou: '+a.error.message;return;}LS=a.data||[];LSCFG=b.data||null;lsPinta();fiPinta();trPinta();}
 const dBRc=d=>d?d.split('-').reverse().join('/'):'';
 function lsVence(x){if(!x.fim)return '';const dias=Math.round((new Date(x.fim+'T12:00')-new Date(hoje()+'T12:00'))/864e5);
   if(dias<0)return '<span class="tag tg-x">Contrato vencido</span> ';if(dias<=30)return `<span class="tag tg-a">Vence em ${dias} dia${dias===1?'':'s'}</span> `;return '';}
@@ -727,8 +752,8 @@ $('s-ls').addEventListener('click',async e=>{const t=e.target,msg=$('lsMsg');
   if(t.id==='lsCriar'){const a=$('lsM1').value,b=$('lsM2').value;if(a.length<8){msg.className='st er';msg.textContent='Use pelo menos 8 caracteres.';return;}if(a!==b){msg.className='st er';msg.textContent='As duas senhas não são iguais.';return;}
     t.disabled=true;msg.textContent='Criando…';const sal=b64e(crypto.getRandomValues(new Uint8Array(16))),key=await lsDeriva(a,sal),c=await lsCifra('FC-OK',key);
     const r=await sb.from('fc_login_cfg').insert({id:1,sal,teste:c.cofre,teste_iv:c.iv});if(r.error){t.disabled=false;msg.className='st er';msg.textContent='⚠ '+r.error.message;return;}
-    LSKEY=key;lsReinicia();await lsCarregar();return;}
-  if(t.id==='lsAbrir'){t.disabled=true;msg.className='st';msg.textContent='Conferindo…';try{const key=await lsDeriva($('lsM').value,LSCFG.sal);if(await lsDecifra(LSCFG.teste,LSCFG.teste_iv,key)!=='FC-OK')throw 0;LSKEY=key;lsReinicia();lsPinta();}catch(_){t.disabled=false;msg.className='st er';msg.textContent='Senha mestra errada.';}return;}
+    LSKEY=key;lsReinicia();await lsCarregar();fiPinta();hjPinta();return;}
+  if(t.id==='lsAbrir'){t.disabled=true;msg.className='st';msg.textContent='Conferindo…';try{await lsDestrava($('lsM').value);}catch(_){t.disabled=false;msg.className='st er';msg.textContent='Senha mestra errada.';}return;}
   if(t.closest('[data-lsexc]')){LSEXC=!LSEXC;lsPinta();return;}
   if(t.closest('[data-lsxc]')){LSDEL=null;lsPinta();return;}
   const id=(t.closest('[data-lsv],[data-lsc],[data-lsu],[data-lse],[data-lsd],[data-lsx],[data-lsr]')||{}).dataset;if(!id)return;
@@ -773,7 +798,7 @@ function badges(){const a=AC.length,r=(RP.itens||[]).length,cx=CX.length,H=hoje(
   const tot=a+r+cx;document.title=(tot?'('+tot+') ':'')+'Matriz FC';
   try{if(navigator.setAppBadge){tot?navigator.setAppBadge(tot):navigator.clearAppBadge();}}catch(_){}}
 
-function tudo(){return Promise.all([acCarregar(),rpCarregar(),onCarregar(),dmCarregar(),agCarregar(),hjCarregar()]).then(()=>hjPinta());}
+function tudo(){return Promise.all([lsCarregar(),acCarregar(),rpCarregar(),onCarregar(),dmCarregar(),agCarregar(),hjCarregar()]).then(()=>hjPinta());}
 $('bAt').onclick=()=>{$('bAt').textContent='…';tudo().finally(()=>{$('bAt').textContent='↻';});};
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&$('gate').hidden&&LOGADO)tudo();});
 
