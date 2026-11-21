@@ -12,7 +12,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Matriz FC">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<!-- Painel da Matriz no celular (14/11/2026): só Liberar acessos, Para responder e On-line.
+<!-- Painel da Matriz no celular (14/11/2026): só Liberar acessos, Para responder e On-line. 21/11/2026: + Agenda (visitas, viagens, treinamentos · tabela fc_agenda).
      Mesmo login do Painel da Matriz (fica salvo no aparelho). © FC Consultoria em Esquadria · uso exclusivo -->
 <style>
 :root{--pt:#0e4d5c;--pt2:#0a3a46;--pr:#c7d0d4;--bg:#f2f4f5;--card:#fff;--fg:#14232a;--mu:#5f6b70;--ln:#dde3e6;--ok:#1f8a4c;--bad:#a32d2d;--sel:#e3f0f2}
@@ -62,6 +62,12 @@ nav .n.on{display:grid}
 #gateMsg{color:var(--bad);font-size:13.5px;text-align:center;margin-top:10px}
 .dica{background:var(--sel);border-radius:12px;padding:10px 12px;font-size:13px;margin-bottom:12px}
 .dica button{margin-top:8px}
+.ag-f label{display:block;font-size:12.5px;color:var(--mu);margin:8px 0 3px}
+.ag-f input,.ag-f select,.ag-f textarea{width:100%;border:1px solid var(--ln);background:var(--bg);color:var(--fg);border-radius:10px;padding:10px;font:16px inherit;box-sizing:border-box}
+.ag-f .dois{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tag{display:inline-block;border-radius:6px;padding:1px 7px;font-size:12px;font-weight:600}
+.tg-a{background:#fdf0d5;color:#8a5a08}.tg-c{background:#e3f0f2;color:#0e4d5c}.tg-r{background:#e2f3e8;color:#1f6b3c}.tg-x{background:#f3e1e1;color:#a32d2d}
+.mt{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}.mt div{background:var(--card);border:1px solid var(--ln);border-radius:12px;padding:10px}.mt small{color:var(--mu);font-size:12.5px}.mt b{display:block;font-size:19px}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="auth.js?v=20261108"></script>
@@ -107,6 +113,13 @@ nav .n.on{display:grid}
   <div class="hd"><span id="dmInfo">Carregando…</span></div>
   <div id="dmL"></div>
  </section>
+<section class="sec" id="s-ag">
+  <div class="hd"><span id="agInfo">Carregando…</span><button type="button" class="bt p" id="agNovo" style="flex:none;padding:7px 14px">+ Novo</button></div>
+  <div class="chips" id="agF"><button type="button" data-f="pro" class="on">Próximos</button><button type="button" data-f="rea">Realizados</button><button type="button" data-f="mes">Gastos do mês</button></div>
+  <div id="agAv"></div>
+  <div id="agForm"></div>
+  <div id="agL"></div>
+ </section>
 </main>
 
 <nav>
@@ -114,6 +127,7 @@ nav .n.on{display:grid}
  <button type="button" data-s="rp"><span class="ic">📥</span>Responder<span class="n" id="nRp"></span></button>
  <button type="button" data-s="on"><span class="ic">🟢</span>On-line<span class="n" id="nOn" style="background:#1f8a4c"></span></button>
  <button type="button" data-s="dm"><span class="ic">🧪</span>Teste 24 h<span class="n" id="nDm" style="background:#02717d"></span></button>
+ <button type="button" data-s="ag"><span class="ic">📅</span>Agenda<span class="n" id="nAg" style="background:#c26a00"></span></button>
 </nav>
 
 <script src="conversas.js?v=8"></script>
@@ -127,11 +141,11 @@ if(!app&&/iPhone|iPad/.test(navigator.userAgent))$('dicaInst').hidden=false;
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js',{scope:'./'}).catch(()=>{});
 
 /* ===== abas ===== */
-const TIT={ac:'Liberar acessos',rp:'Para responder',on:'Quem está on-line',dm:'Demonstrativos de 24 h'};
+const TIT={ac:'Liberar acessos',rp:'Para responder',on:'Quem está on-line',dm:'Demonstrativos de 24 h',ag:'Agenda · visitas e viagens'};
 let ABA='ac';
 function aba(s){ABA=s;document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.s===s));
   document.querySelectorAll('.sec').forEach(x=>x.classList.toggle('on',x.id==='s-'+s));$('tit').textContent=TIT[s];
-  try{localStorage.setItem('fc-cel-aba',s);}catch(_){}scrollTo(0,0);if(s==='on'&&LOGADO)onCarregar();if(s==='dm'&&LOGADO)dmCarregar();}
+  try{localStorage.setItem('fc-cel-aba',s);}catch(_){}scrollTo(0,0);if(s==='on'&&LOGADO)onCarregar();if(s==='dm'&&LOGADO)dmCarregar();if(s==='ag'&&LOGADO)agCarregar();}
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>aba(b.dataset.s));
 
 /* ===== 🔑 Liberar acessos (cadastros pelo link de primeiro acesso) ===== */
@@ -275,15 +289,104 @@ $('dmL').addEventListener('click',async e=>{const b=e.target.closest('[data-dl],
     else await plRpc('pfc_adm_demo',{p_token:DMTOK,p_id:b.dataset.da,p_ativo:b.dataset.v==='1'});}catch(x){alert('Não foi possível: '+x.message);}
   dmCarregar();});
 
+/* ===== 📅 Agenda · visitas, viagens e treinamentos (21/11/2026) ===== */
+const AGT={visita:['📍','Visita presencial'],viagem:['✈️','Viagem'],treinamento:['🎓','Treinamento']};
+const AGTR={carro:'Carro próprio',onibus:'Ônibus',aviao:'Avião',outro:'Outro'};
+const AGS={a_confirmar:['A confirmar','tg-a'],confirmado:['Confirmado','tg-c'],realizado:['Realizado','tg-r'],cancelado:['Cancelado','tg-x']};
+const brl=v=>(+v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const dBR=d=>d?d.split('-').reverse().slice(0,2).join('/'):'';
+const hoje=()=>{const d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,10);};
+const maisDias=(n)=>{const d=new Date();d.setDate(d.getDate()+n);d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,10);};
+const SEM=['dom','seg','ter','qua','qui','sex','sáb'];const dSem=d=>SEM[new Date(d+'T12:00').getDay()];
+let AG=[],AGF='pro',AGMES=hoje().slice(0,7);
+/* Datas que o Fernando não pode viajar (aniversários) · MM-DD · 21/11/2026 */
+const AGBLOQ=['01-11','04-16','11-28','11-03'];
+function pascoa(y){const a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),hh=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-hh-k)%7,m=Math.floor((a+11*hh+22*l)/451),mo=Math.floor((hh+l-7*m+114)/31),di=((hh+l-7*m+114)%31)+1;return new Date(y,mo-1,di,12);}
+const iso=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+function feriados(y){const F={[y+'-01-01']:'Confraternização Universal',[y+'-04-21']:'Tiradentes',[y+'-05-01']:'Dia do Trabalho',[y+'-09-07']:'Independência',[y+'-10-12']:'Nossa Senhora Aparecida',[y+'-11-02']:'Finados',[y+'-11-15']:'Proclamação da República',[y+'-11-20']:'Consciência Negra',[y+'-12-25']:'Natal'};
+  const p=pascoa(y),add=(n,t)=>{const d=new Date(p);d.setDate(d.getDate()+n);F[iso(d)]=t;};add(-48,'Carnaval (ponto facultativo)');add(-47,'Carnaval (ponto facultativo)');add(-2,'Sexta-feira Santa');add(60,'Corpus Christi');return F;}
+function marca(dt){const y=+dt.slice(0,4),F=feriados(y);const r=[];if(AGBLOQ.includes(dt.slice(5)))r.push({b:true,t:'Aniversário · não viajar'});if(F[dt])r.push({b:false,t:F[dt]});return r;}
+function diasEntre(a,b){const L=[];let d=new Date(a+'T12:00');const f=new Date((b||a)+'T12:00');while(d<=f&&L.length<60){L.push(iso(d));d.setDate(d.getDate()+1);}return L;}
+const conflitos=x=>diasEntre(x.data_ida,x.data_volta).flatMap(d=>marca(d).map(m=>({d,...m})));
+function agDatas(){const L=[];for(let i=0;i<=60;i++){const d=maisDias(i);marca(d).forEach(m=>L.push({d,...m}));}
+  return L.length?`<div class="gr">Datas importantes · próximos 60 dias</div><div class="cd" style="padding:8px 12px">${L.map(x=>`<div style="display:flex;justify-content:space-between;gap:8px;padding:5px 0;font-size:13.5px"><span>${dSem(x.d)} ${dBR(x.d)}</span><span class="tag ${x.b?'tg-x':'tg-c'}">${x.b?'🎂 ':'🗓 '}${h(x.t)}</span></div>`).join('')}</div>`:'';}
+async function agCarregar(){const r=await sb.from('fc_agenda').select('*').order('data_ida');
+  if(r.error){$('agInfo').textContent='Não carregou: '+r.error.message;return;}AG=r.data||[];agPinta();badges();}
+const agCusto=x=>(+x.valor_passagem||0)+(+x.valor_hospedagem||0);
+function agPinta(){const H=hoje(),A=maisDias(1);
+  document.querySelectorAll('#agF button').forEach(b=>b.classList.toggle('on',b.dataset.f===AGF));
+  const prox=AG.filter(x=>x.status!=='realizado'&&x.status!=='cancelado'&&(x.data_volta||x.data_ida)>=H);
+  const atras=AG.filter(x=>x.status!=='realizado'&&x.status!=='cancelado'&&(x.data_volta||x.data_ida)<H);
+  const av=prox.filter(x=>x.data_ida===H||x.data_ida===A);
+  $('agAv').innerHTML=av.map(x=>`<div class="dica" style="background:#fdf0d5;color:#5c3c05">🔔 <b>${x.data_ida===H?'Hoje':'Amanhã'}${x.hora_ida?' às '+h(x.hora_ida):''}:</b> ${AGT[x.tipo][1].toLowerCase()} · ${h(x.cliente)}${x.cidade?' · '+h(x.cidade):''}${x.localizador?' · localizador <b>'+h(x.localizador)+'</b>':''}</div>`).join('')
+    +[[H,'Hoje'],[A,'Amanhã']].flatMap(([d,t])=>marca(d).filter(m=>m.b).map(()=>`<div class="dica" style="background:#f3e1e1;color:#7a1f1f">🎂 <b>${t}</b> é aniversário · não marcar viagem</div>`)).join('')
+    +(atras.length?`<div class="dica" style="background:#f3e1e1;color:#7a1f1f">${atras.length} compromisso${atras.length>1?'s':''} já passou e não foi marcado como realizado. Veja em Próximos.</div>`:'');
+  if(AGF==='mes'){const L=AG.filter(x=>x.data_ida.slice(0,7)===AGMES&&x.status!=='cancelado');const tot=L.reduce((a,x)=>a+agCusto(x),0);
+    const rb=L.filter(x=>x.quem_paga==='cliente'&&!x.reembolsado);const arb=rb.reduce((a,x)=>a+agCusto(x),0);const por={};L.forEach(x=>{por[x.cliente]=(por[x.cliente]||0)+agCusto(x);});
+    const [y,m]=AGMES.split('-');const nm=new Date(+y,+m-1,1).toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
+    $('agInfo').textContent=L.length+' compromisso'+(L.length===1?'':'s')+' no mês';
+    $('agL').innerHTML=`<div class="bts" style="margin:0 0 10px"><button class="bt n" type="button" data-mes="-1">‹</button><div style="flex:3;text-align:center;align-self:center;font-weight:600">${nm}</div><button class="bt n" type="button" data-mes="1">›</button></div>
+      <div class="mt"><div><small>Gasto no mês</small><b>${brl(tot)}</b></div><div><small>A cobrar reembolso</small><b style="color:#8a5a08">${brl(arb)}</b></div></div>
+      ${Object.keys(por).length?'<div class="gr">Por cliente</div>'+Object.keys(por).sort((a,b)=>por[b]-por[a]).map(c=>`<div class="cd" style="padding:10px 12px"><div class="top"><b>${h(c)}</b><span>${brl(por[c])}</span></div></div>`).join(''):''}
+      ${rb.length?'<div class="gr">Reembolso pendente</div>'+rb.map(x=>`<div class="cd" style="padding:10px 12px"><div class="top"><b>${h(x.cliente)}</b><span>${brl(agCusto(x))}</span></div><div class="sub">${dBR(x.data_ida)} · ${AGT[x.tipo][1]}${x.cidade?' · '+h(x.cidade):''}</div><div class="bts"><button class="bt p" type="button" data-rb="${x.id}">Marcar como reembolsado</button></div></div>`).join(''):''}
+      ${!L.length?'<div class="vazio"><i>📅</i><b>Nada neste mês</b>Os gastos com passagem e hospedagem aparecem aqui.</div>':''}`;return;}
+  const lst=AGF==='rea'?AG.filter(x=>x.status==='realizado'||x.status==='cancelado').sort((a,b)=>b.data_ida.localeCompare(a.data_ida)):atras.concat(prox);
+  $('agInfo').textContent=AGF==='rea'?lst.length+' realizado'+(lst.length===1?'':'s'):(prox.length?prox.length+' compromisso'+(prox.length>1?'s':'')+' pela frente':'Nada marcado');
+  $('agL').innerHTML=lst.length?lst.map(x=>{const [st,cl]=AGS[x.status];const at=atras.includes(x);
+    return `<div class="cd${at?' urg':''}" data-ag="${x.id}"><div class="top"><b>${AGT[x.tipo][0]} ${dSem(x.data_ida)} ${dBR(x.data_ida)}${x.hora_ida?' · '+h(x.hora_ida):''}${x.data_volta&&x.data_volta!==x.data_ida?' → '+dBR(x.data_volta):''}</b><span class="tag ${cl}">${st}</span></div>
+      <div class="sub"><span class="emp">${h(x.cliente)}</span>${x.cidade?h(x.cidade)+' · ':''}${AGT[x.tipo][1]}</div>
+      ${x.transporte||x.localizador||agCusto(x)?`<div class="sub">${x.transporte?AGTR[x.transporte]:''}${x.companhia?' '+h(x.companhia):''}${x.localizador?' · loc. <b>'+h(x.localizador)+'</b>':''}${agCusto(x)?' · '+brl(agCusto(x))+(x.quem_paga==='cliente'?(x.reembolsado?' (reembolsado)':' (cliente reembolsa)'):''):''}</div>`:''}
+      ${(()=>{const c=conflitos(x);return c.length?`<div class="sub" style="color:${c.some(k=>k.b)?'#a32d2d':'#0e4d5c'};font-weight:600">⚠ ${c.map(k=>dBR(k.d)+' '+h(k.t)).join(' · ')}</div>`:'';})()}${x.hospedagem?`<div class="sub">🏨 ${h(x.hospedagem)}</div>`:''}${x.obs?`<p>${h(x.obs)}</p>`:''}
+      <div class="bts">${x.status==='a_confirmar'?`<button class="bt p" type="button" data-st="confirmado">Confirmar</button>`:''}${x.status==='confirmado'?`<button class="bt p" type="button" data-st="realizado">Realizado</button>`:''}${x.status==='realizado'||x.status==='cancelado'?`<button class="bt n" type="button" data-st="confirmado">Reabrir</button>`:''}<button class="bt n" type="button" data-ed>Editar</button></div></div>`;}).join('')
+    :`<div class="vazio"><i>📅</i><b>${AGF==='rea'?'Nada realizado ainda':'Nenhum compromisso marcado'}</b>${AGF==='rea'?'':'Toque em + Novo para marcar uma visita, viagem ou treinamento.'}</div>`;
+  if(AGF==='pro')$('agL').insertAdjacentHTML('beforeend',agDatas());}
+function agForm(x){x=x||{tipo:'visita',quem_paga:'fc',status:'a_confirmar'};const o=(m,v)=>Object.entries(m).map(([k,t])=>`<option value="${k}"${k===v?' selected':''}>${Array.isArray(t)?t[1]:t}</option>`).join('');
+  $('agForm').innerHTML=`<div class="cd ag-f"><b>${x.id?'Editar compromisso':'Novo compromisso'}</b>
+   <label>Tipo</label><select id="fTipo">${o(AGT,x.tipo)}</select>
+   <div class="dois"><div><label>Cliente *</label><input id="fCli" value="${h(x.cliente||'')}" placeholder="CDE Vidros"></div><div><label>Cidade</label><input id="fCid" value="${h(x.cidade||'')}" placeholder="Manaus"></div></div>
+   <div class="dois"><div><label>Data (ida) *</label><input id="fDi" type="date" value="${x.data_ida||''}"></div><div><label>Horário</label><input id="fHi" type="time" value="${h(x.hora_ida||'')}"></div></div>
+   <div class="dois"><div><label>Volta</label><input id="fDv" type="date" value="${x.data_volta||''}"></div><div><label>Horário volta</label><input id="fHv" type="time" value="${h(x.hora_volta||'')}"></div></div>
+   <div class="dois"><div><label>Transporte</label><select id="fTr"><option value="">—</option>${o(AGTR,x.transporte)}</select></div><div><label>Companhia</label><input id="fCo" value="${h(x.companhia||'')}" placeholder="Azul"></div></div>
+   <div class="dois"><div><label>Localizador</label><input id="fLo" value="${h(x.localizador||'')}" autocapitalize="characters"></div><div><label>Valor passagem R$</label><input id="fVp" type="number" inputmode="decimal" step="0.01" min="0" value="${x.valor_passagem??''}"></div></div>
+   <div class="dois"><div><label>Hospedagem</label><input id="fHo" value="${h(x.hospedagem||'')}" placeholder="Hotel"></div><div><label>Valor hospedagem R$</label><input id="fVh" type="number" inputmode="decimal" step="0.01" min="0" value="${x.valor_hospedagem??''}"></div></div>
+   <div class="dois"><div><label>Quem paga</label><select id="fPg">${o({fc:'FC',cliente:'Cliente reembolsa'},x.quem_paga)}</select></div><div><label>Status</label><select id="fSt">${o(Object.fromEntries(Object.entries(AGS).map(([k,v])=>[k,v[0]])),x.status)}</select></div></div>
+   <label>Observação</label><textarea id="fOb" rows="2">${h(x.obs||'')}</textarea>
+   <div class="st" id="fMsg"></div>
+   <div class="bts"><button class="bt p" type="button" id="fSalva">Salvar</button><button class="bt n" type="button" id="fCanc">Cancelar</button></div>
+   ${x.id?`<div class="bts"><button class="bt r" type="button" id="fDel">🗑 Excluir</button></div>`:''}</div>`;
+  ['fCli','fDi'].forEach(i=>$(i).oninput=()=>{$('fMsg').textContent='';});
+  $('fCanc').onclick=()=>{$('agForm').innerHTML='';};
+  if(x.id)$('fDel').onclick=async()=>{if(!confirm('Excluir este compromisso? Não dá para desfazer.'))return;const r=await sb.from('fc_agenda').delete().eq('id',x.id);if(r.error){$('fMsg').className='st er';$('fMsg').textContent='⚠ '+r.error.message;return;}$('agForm').innerHTML='';agCarregar();};
+  $('fSalva').onclick=async()=>{const v=i=>$(i).value.trim(),n=i=>v(i)===''?null:Math.round(+v(i)*100)/100;
+    if(!v('fCli')||!v('fDi')){$('fMsg').className='st er';$('fMsg').textContent='Preencha cliente e data de ida.';return;}
+    if(v('fDv')&&v('fDv')<v('fDi')){$('fMsg').className='st er';$('fMsg').textContent='A volta não pode ser antes da ida.';return;}
+    const d={tipo:v('fTipo'),cliente:v('fCli'),cidade:v('fCid')||null,data_ida:v('fDi'),hora_ida:v('fHi')||null,data_volta:v('fDv')||null,hora_volta:v('fHv')||null,transporte:v('fTr')||null,companhia:v('fCo')||null,localizador:v('fLo').toUpperCase()||null,valor_passagem:n('fVp'),hospedagem:v('fHo')||null,valor_hospedagem:n('fVh'),quem_paga:v('fPg'),status:v('fSt'),obs:v('fOb')||null,atualizado:new Date().toISOString()};
+    {const c=conflitos({data_ida:v('fDi'),data_volta:v('fDv')||null});const b=c.filter(k=>k.b),f=c.filter(k=>!k.b);
+     if(b.length&&!confirm('Atenção: '+b.map(k=>dBR(k.d)).join(', ')+' é aniversário (dia sem viagem). Salvar mesmo assim?'))return;
+     if(f.length&&!b.length&&!confirm('Este compromisso cai em feriado: '+f.map(k=>dBR(k.d)+' '+k.t).join(', ')+'. Salvar mesmo assim?'))return;}
+    $('fSalva').disabled=true;$('fMsg').className='st';$('fMsg').textContent='Salvando…';
+    const r=x.id?await sb.from('fc_agenda').update(d).eq('id',x.id):await sb.from('fc_agenda').insert(d);
+    if(r.error){$('fSalva').disabled=false;$('fMsg').className='st er';$('fMsg').textContent='⚠ '+r.error.message;return;}
+    $('agForm').innerHTML='';AGF='pro';agCarregar();};
+  $('agForm').scrollIntoView({behavior:'smooth',block:'start'});}
+$('agNovo').onclick=()=>agForm();
+$('agF').addEventListener('click',e=>{const b=e.target.closest('[data-f]');if(!b)return;AGF=b.dataset.f;agPinta();});
+$('agL').addEventListener('click',async e=>{const m=e.target.closest('[data-mes]');if(m){const [y,mo]=AGMES.split('-').map(Number);const d=new Date(y,mo-1+(+m.dataset.mes),1);AGMES=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');agPinta();return;}
+  const rb=e.target.closest('[data-rb]');if(rb){rb.disabled=true;const r=await sb.from('fc_agenda').update({reembolsado:true,atualizado:new Date().toISOString()}).eq('id',rb.dataset.rb);if(r.error)alert('Não foi possível: '+r.error.message);agCarregar();return;}
+  const c=e.target.closest('[data-ag]');if(!c)return;const x=AG.find(i=>i.id===c.dataset.ag);
+  if(e.target.closest('[data-ed]')){agForm(x);return;}
+  const s=e.target.closest('[data-st]');if(s){s.disabled=true;const r=await sb.from('fc_agenda').update({status:s.dataset.st,atualizado:new Date().toISOString()}).eq('id',x.id);if(r.error)alert('Não foi possível: '+r.error.message);agCarregar();}});
+
 /* ===== números nas abas e no ícone do app ===== */
 function badges(){const a=AC.length,r=(RP.itens||[]).length;
   [[$('nAc'),a],[$('nRp'),r]].forEach(([el,n])=>{el.textContent=n>99?'99+':n;el.classList.toggle('on',n>0);});
   {const o=ON.length,el=$('nOn');el.textContent=o>99?'99+':o;el.classList.toggle('on',o>0);}
   {const p=(DM||[]).filter(d=>d.status==='pendente').length,el=$('nDm');el.textContent=p;el.classList.toggle('on',p>0);}
+  {const H=hoje(),A=maisDias(1),g=AG.filter(x=>x.status!=='realizado'&&x.status!=='cancelado'&&(x.data_ida===H||x.data_ida===A)).length,el=$('nAg');el.textContent=g;el.classList.toggle('on',g>0);}
   document.title=(a+r?'('+(a+r)+') ':'')+'Matriz FC';
   try{if(navigator.setAppBadge){a+r?navigator.setAppBadge(a+r):navigator.clearAppBadge();}}catch(_){}}
 
-function tudo(){return Promise.all([acCarregar(),rpCarregar(),onCarregar(),dmCarregar()]);}
+function tudo(){return Promise.all([acCarregar(),rpCarregar(),onCarregar(),dmCarregar(),agCarregar()]);}
 $('bAt').onclick=()=>{$('bAt').textContent='…';tudo().finally(()=>{$('bAt').textContent='↻';});};
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&$('gate').hidden&&LOGADO)tudo();});
 
