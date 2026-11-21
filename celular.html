@@ -12,7 +12,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Matriz FC">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<!-- Painel da Matriz no celular (14/11/2026): só Liberar acessos, Para responder e On-line. 21/11/2026: + Agenda (visitas, viagens, treinamentos · tabela fc_agenda). 21/11/2026: + Despesas por viagem com foto do comprovante (tabela fc_despesa, bucket privado despesas). 21/11/2026: + Agenda › ✈️ Passagens Sinop⇄Cuiabá com teto (fc_passagem_preco/cfg, SerpApi via pg_net + pg_cron).
+<!-- Painel da Matriz no celular (14/11/2026): só Liberar acessos, Para responder e On-line. 21/11/2026: + Agenda (visitas, viagens, treinamentos · tabela fc_agenda). 21/11/2026: + Despesas por viagem com foto do comprovante (tabela fc_despesa, bucket privado despesas). 21/11/2026: + 🏠 Hoje, 📥 Caixa de entrada (captura rápida, fc_caixa_entrada + bucket caixa), ✅ Demandas (máx. 5, fc_demanda) e 💰 Financeiro (fc_financeiro) — substituem a Rotina FC; Acessos, Responder, On-line e Teste 24 h foram para ☰ Mais. 21/11/2026: + Agenda › ✈️ Passagens Sinop⇄Cuiabá com teto (fc_passagem_preco/cfg, SerpApi via pg_net + pg_cron).
      Mesmo login do Painel da Matriz (fica salvo no aparelho). © FC Consultoria em Esquadria · uso exclusivo -->
 <style>
 :root{--pt:#0e4d5c;--pt2:#0a3a46;--pr:#c7d0d4;--bg:#f2f4f5;--card:#fff;--fg:#14232a;--mu:#5f6b70;--ln:#dde3e6;--ok:#1f8a4c;--bad:#a32d2d;--sel:#e3f0f2}
@@ -88,14 +88,41 @@ nav .n.on{display:grid}
 
 <header>
  <div class="lg">FC</div>
- <div class="t"><b id="tit">Liberar acessos</b><small>Painel da Matriz</small></div>
+ <div class="t"><b id="tit">Hoje</b><small>Painel da Matriz</small></div>
  <button type="button" id="bAt" aria-label="Atualizar">↻</button>
 </header>
 
 <main>
  <div id="dicaInst" class="dica" hidden>Para usar como app: no Safari, toque em <b>Compartilhar</b> e depois em <b>Adicionar à Tela de Início</b>.</div>
 
- <section class="sec on" id="s-ac">
+ <div id="avTopo"></div>
+ <section class="sec on" id="s-hj">
+  <div class="hd"><span id="hjInfo">Carregando…</span></div>
+  <div id="hjL"></div>
+ </section>
+ <section class="sec" id="s-cx">
+  <div class="hd"><span id="cxInfo">Carregando…</span><button type="button" class="bt p" id="cxNovo" style="flex:none;padding:7px 14px">+ Anotar</button></div>
+  <div id="cxForm"></div>
+  <div id="cxL"></div>
+ </section>
+ <section class="sec" id="s-de">
+  <div class="hd"><span id="deInfo">Carregando…</span><button type="button" class="bt p" id="deNovo" style="flex:none;padding:7px 14px">+ Nova</button></div>
+  <div class="chips" id="deF"><button type="button" data-def="ab" class="on">Abertas</button><button type="button" data-def="ok">Concluídas</button></div>
+  <div id="deForm"></div>
+  <div id="deL"></div>
+ </section>
+ <section class="sec" id="s-fi">
+  <div class="hd"><span id="fiInfo">Carregando…</span><button type="button" class="bt p" id="fiNovo" style="flex:none;padding:7px 14px">+ Novo</button></div>
+  <div class="chips" id="fiF"><button type="button" data-fif="ab" class="on">Em aberto</button><button type="button" data-fif="ok">Feitos</button></div>
+  <div id="fiForm"></div>
+  <div id="fiL"></div>
+ </section>
+ <section class="sec" id="s-ma">
+  <div class="hd"><span>Outras funções do Painel da Matriz</span></div>
+  <div id="maL"></div>
+ </section>
+
+ <section class="sec" id="s-ac">
   <div class="hd"><span id="acInfo">Carregando…</span></div>
   <div id="acL"></div>
  </section>
@@ -124,11 +151,12 @@ nav .n.on{display:grid}
 </main>
 
 <nav>
- <button type="button" data-s="ac" class="on"><span class="ic">🔑</span>Acessos<span class="n" id="nAc"></span></button>
- <button type="button" data-s="rp"><span class="ic">📥</span>Responder<span class="n" id="nRp"></span></button>
- <button type="button" data-s="on"><span class="ic">🟢</span>On-line<span class="n" id="nOn" style="background:#1f8a4c"></span></button>
- <button type="button" data-s="dm"><span class="ic">🧪</span>Teste 24 h<span class="n" id="nDm" style="background:#02717d"></span></button>
+ <button type="button" data-s="hj" class="on"><span class="ic">🏠</span>Hoje</button>
+ <button type="button" data-s="cx"><span class="ic">📥</span>Caixa<span class="n" id="nCx"></span></button>
  <button type="button" data-s="ag"><span class="ic">📅</span>Agenda<span class="n" id="nAg" style="background:#c26a00"></span></button>
+ <button type="button" data-s="de"><span class="ic">✅</span>Demandas<span class="n" id="nDe" style="background:#0e4d5c"></span></button>
+ <button type="button" data-s="fi"><span class="ic">💰</span>Financeiro<span class="n" id="nFi" style="background:#c26a00"></span></button>
+ <button type="button" data-s="ma"><span class="ic">☰</span>Mais<span class="n" id="nMa"></span></button>
 </nav>
 
 <script src="conversas.js?v=8"></script>
@@ -142,11 +170,11 @@ if(!app&&/iPhone|iPad/.test(navigator.userAgent))$('dicaInst').hidden=false;
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js',{scope:'./'}).catch(()=>{});
 
 /* ===== abas ===== */
-const TIT={ac:'Liberar acessos',rp:'Para responder',on:'Quem está on-line',dm:'Demonstrativos de 24 h',ag:'Agenda · visitas e viagens'};
-let ABA='ac';
-function aba(s){ABA=s;document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.s===s));
+const TIT={hj:'Hoje',cx:'Caixa de entrada',de:'Demandas',fi:'Financeiro',ma:'Mais',ac:'Liberar acessos',rp:'Para responder',on:'Quem está on-line',dm:'Demonstrativos de 24 h',ag:'Agenda · visitas e viagens'};
+let ABA='hj';const NAVDE={ac:'ma',rp:'ma',on:'ma',dm:'ma'};
+function aba(s){ABA=s;document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.s===(NAVDE[s]||s)));
   document.querySelectorAll('.sec').forEach(x=>x.classList.toggle('on',x.id==='s-'+s));$('tit').textContent=TIT[s];
-  try{localStorage.setItem('fc-cel-aba',s);}catch(_){}scrollTo(0,0);if(s==='on'&&LOGADO)onCarregar();if(s==='dm'&&LOGADO)dmCarregar();if(s==='ag'&&LOGADO)agCarregar();}
+  try{localStorage.setItem('fc-cel-aba',s);}catch(_){}scrollTo(0,0);if(s==='on'&&LOGADO)onCarregar();if(s==='dm'&&LOGADO)dmCarregar();if(s==='ag'&&LOGADO)agCarregar();if(s==='ma')maPinta();if(s==='hj')hjPinta();}
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>aba(b.dataset.s));
 
 /* ===== 🔑 Liberar acessos (cadastros pelo link de primeiro acesso) ===== */
@@ -488,16 +516,152 @@ document.addEventListener('click',async e=>{
   const ok=e.target.closest('[data-dpok]');if(ok){if(!confirm('Marcar todas as despesas desta viagem como reembolsadas pelo cliente?'))return;const r=await sb.from('fc_despesa').update({reembolsado:true}).eq('agenda_id',ok.dataset.dpok).eq('quem_paga','cliente');if(r.error){alert('Não foi possível: '+r.error.message);return;}await dpCarregar();dpPinta(ok.dataset.dpok);}
 });
 
-/* ===== números nas abas e no ícone do app ===== */
-function badges(){const a=AC.length,r=(RP.itens||[]).length;
-  [[$('nAc'),a],[$('nRp'),r]].forEach(([el,n])=>{el.textContent=n>99?'99+':n;el.classList.toggle('on',n>0);});
-  {const o=ON.length,el=$('nOn');el.textContent=o>99?'99+':o;el.classList.toggle('on',o>0);}
-  {const p=(DM||[]).filter(d=>d.status==='pendente').length,el=$('nDm');el.textContent=p;el.classList.toggle('on',p>0);}
-  {const H=hoje(),A=maisDias(1),g=AG.filter(x=>x.status!=='realizado'&&x.status!=='cancelado'&&(x.data_ida===H||x.data_ida===A)).length+psLista().filter(v=>v.alertas.length).length,el=$('nAg');el.textContent=g;el.classList.toggle('on',g>0);}
-  document.title=(a+r?'('+(a+r)+') ':'')+'Matriz FC';
-  try{if(navigator.setAppBadge){a+r?navigator.setAppBadge(a+r):navigator.clearAppBadge();}}catch(_){}}
+/* ===== 21/11/2026 · Hoje + Caixa de entrada (captura rápida) + Demandas (máx. 5) + Financeiro · substitui a Rotina FC =====
+   Tabelas: fc_caixa_entrada, fc_demanda, fc_financeiro · bucket privado caixa · só admin (trein_is_admin) */
+let CX=[],DE=[],FI=[],DEF='ab',FIF='ab',CXFORM=false,DEFORM=false,FIFORM=null;
+const MAXDEM=5;
+/* minutos úteis: seg–sex, 08:00–12:00 e 13:30–18:00 */
+function minUteis(de,ate){let t=new Date(de),f=new Date(ate||Date.now()),m=0;if(f<=t)return 0;
+  const J=[[480,720],[810,1080]];let guarda=0;
+  while(t<f&&guarda<400){guarda++;const d=new Date(t);d.setHours(0,0,0,0);const dw=d.getDay();
+    if(dw>0&&dw<6){J.forEach(([a,b])=>{const ia=new Date(d.getTime()+a*60000),ib=new Date(d.getTime()+b*60000);const s=Math.max(ia,t),e=Math.min(ib,f);if(e>s)m+=(e-s)/60000;});}
+    d.setDate(d.getDate()+1);t=d;}
+  return Math.round(m);}
+const parado=x=>minUteis(x.criado)>=240;
+const hhmm=t=>{const d=new Date(t);return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');};
+const desde=t=>{const d=new Date(t),H=hoje();const dd=iso(d);void H;return (dd===H?'':dSem(dd)+' '+dBR(dd)+' ')+hhmm(t);};
+const deAbertas=()=>DE.filter(x=>x.status==='aberta').sort((a,b)=>(a.prazo||'9999').localeCompare(b.prazo||'9999'));
+const fiAbertos=()=>FI.filter(x=>x.status==='aberto').sort((a,b)=>(a.vencimento||'9999').localeCompare(b.vencimento||'9999'));
+const FIT={pagar:['A pagar','tg-x'],receber:['A receber','tg-r'],contador:['Contador','tg-c'],extrato:['Extrato','tg-a']};
 
-function tudo(){return Promise.all([acCarregar(),rpCarregar(),onCarregar(),dmCarregar(),agCarregar()]);}
+async function hjCarregar(){const [a,b,c]=await Promise.all([sb.from('fc_caixa_entrada').select('*').eq('status','aberto').order('criado'),sb.from('fc_demanda').select('*').order('criado',{ascending:false}).limit(60),sb.from('fc_financeiro').select('*').order('vencimento').limit(200)]);
+  if(!a.error)CX=a.data||[];if(!b.error)DE=b.data||[];if(!c.error)FI=c.data||[];
+  hjPinta();cxPinta();dePinta();fiPinta();badges();alertas();}
+
+/* ---------- 🏠 Hoje ---------- */
+function ondeEstou(){const H=hoje();const v=AG.filter(x=>x.status!=='cancelado');
+  const agora=v.find(x=>x.data_ida<=H&&(x.data_volta||x.data_ida)>=H);
+  const prox=v.filter(x=>x.data_ida>H).sort((a,b)=>a.data_ida.localeCompare(b.data_ida))[0];
+  return {agora,prox};}
+function hjPinta(){const el=$('hjL');if(!el)return;const H=hoje(),em7=maisDias(7),d=new Date();
+  const {agora,prox}=ondeEstou();const ab=CX,par=ab.filter(parado),dem=deAbertas(),ven=fiAbertos().filter(x=>x.vencimento&&x.vencimento<=em7);
+  const acs=AC.length,rps=(RP.itens||[]).length,ps=psLista().filter(v=>v.alertas.length).length;
+  const datas=[0,1,2].map(i=>maisDias(i)).flatMap(x=>marca(x).map(m=>({d:x,...m})));
+  $('hjInfo').textContent=SEM[d.getDay()].replace(/^./,c=>c.toUpperCase())+', '+dBR(H);
+  let b='';
+  const fd=fecharDiaHora();if(fd&&ab.length)b+=`<div class="cd urg"><div class="top"><b>🌙 Fechar o dia</b><span>${ab.length} aberto${ab.length>1?'s':''}</span></div><p class="sub">Para cada assunto: virou demanda, respondido ou descartar.</p><div class="bts"><button class="bt p" data-ir="cx">Fechar agora</button></div></div>`;
+  b+=`<div class="cd" style="border-color:#9fd3c1"><div class="sub">📍 Onde você está</div><div class="top" style="margin-top:4px"><b>${agora?h(agora.cidade||agora.cliente||'Viagem'):'Sinop · escritório'}</b><span>${agora&&agora.cliente&&agora.cidade?h(agora.cliente):''}</span></div>${prox?`<p class="sub">✈️ Próxima saída: ${dSem(prox.data_ida)} ${dBR(prox.data_ida)}${prox.hora_ida?' · '+h(prox.hora_ida):''} · ${h(prox.cidade||prox.cliente||'')}</p>`:''}${datas.map(x=>`<p><span class="tag ${x.b?'tg-x':'tg-c'}">${x.b?'🎂':'🗓'} ${x.d===H?'hoje':dSem(x.d)} · ${h(x.t)}</span></p>`).join('')}${ps?`<p><span class="tag tg-a">✈️ ${ps} aviso${ps>1?'s':''} de passagem</span></p>`:''}</div>`;
+  b+=`<div class="cd${par.length?' urg':''}" data-ir="cx" role="button"><div class="top"><b>📥 Caixa de entrada</b><span>${ab.length?ab.length+' aberto'+(ab.length>1?'s':''):'em dia'}</span></div>${par.length?`<p><span class="tag tg-x">${par.length} há mais de 4 h úteis</span> <span class="sub">${h(par[0].cliente)} desde ${desde(par[0].criado)}</span></p>`:''}</div>`;
+  b+=`<div class="cd" data-ir="de" role="button"><div class="top"><b>✅ Demandas abertas</b><span>${dem.length} de ${MAXDEM}</span></div>${dem.length?dem.slice(0,MAXDEM).map(x=>`<div style="display:flex;justify-content:space-between;gap:8px;padding:5px 0;font-size:14px;border-top:1px solid var(--ln)"><span>${x.cliente?'<span class="emp">'+h(x.cliente)+'</span>':''}${h(x.titulo)}</span><span class="sub" style="white-space:nowrap;${x.prazo&&x.prazo<H?'color:var(--bad)':''}">${x.prazo?(x.prazo===H?'hoje':dSem(x.prazo)+' '+dBR(x.prazo)):''}</span></div>`).join(''):'<p class="sub">Nenhuma demanda aberta.</p>'}</div>`;
+  b+=`<div class="cd" data-ir="fi" role="button"><div class="top"><b>💰 Vencimentos da semana</b><span>${ven.length||'em dia'}</span></div>${ven.map(x=>`<div style="display:flex;justify-content:space-between;gap:8px;padding:5px 0;font-size:14px;border-top:1px solid var(--ln)"><span><span class="tag ${FIT[x.tipo][1]}">${FIT[x.tipo][0]}</span> ${h(x.titulo)}</span><span class="sub" style="white-space:nowrap;${x.vencimento<H?'color:var(--bad)':''}">${x.vencimento<H?'vencido ':''}${dSem(x.vencimento)} ${dBR(x.vencimento)}${x.valor?' · '+brl(x.valor):''}</span></div>`).join('')}</div>`;
+  b+=`<div class="mt"><div data-ir="ac" role="button"><small>🔑 Pedidos de acesso</small><b>${acs||'—'}</b></div><div data-ir="rp" role="button"><small>📩 Para responder</small><b>${rps||'—'}</b></div></div>`;
+  el.innerHTML=b;}
+
+/* ---------- 📥 Caixa de entrada ---------- */
+function cxClientes(){const s=new Set();[...DE,...CX,...FI].forEach(x=>x.cliente&&s.add(x.cliente));AG.forEach(x=>x.cliente&&s.add(x.cliente));return [...s].sort();}
+function cxPinta(){const el=$('cxL');if(!el)return;
+  $('cxInfo').textContent=CX.length?CX.length+' assunto'+(CX.length>1?'s':'')+' aberto'+(CX.length>1?'s':''):'Tudo respondido';
+  $('cxForm').innerHTML=CXFORM?`<div class="cd ag-f"><label>Cliente</label><input id="cxC" list="cxCl" placeholder="Guaporé Vidros" autocomplete="off"><datalist id="cxCl">${cxClientes().map(c=>`<option value="${h(c)}">`).join('')}</datalist>
+    <label>Assunto ou texto da conversa</label><textarea id="cxA" rows="3" placeholder="Pediu o prazo do catálogo 3D"></textarea>
+    <label class="dpfoto" style="display:block;margin-top:8px">📷 <span id="cxFn">Anexar print (opcional)</span><input type="file" id="cxF" accept="image/*" hidden></label>
+    <div class="bts"><button class="bt n" data-cx="cancela">Cancelar</button><button class="bt p" data-cx="salva">Salvar</button></div><div class="st er" id="cxM"></div></div>`:'';
+  if(!CX.length){el.innerHTML='<div class="vazio"><i>📭</i><b>Caixa vazia</b>Toque em + Anotar quando um cliente pedir algo.</div>';return;}
+  el.innerHTML=CX.map(x=>{const p=parado(x);return `<div class="cd${p?' urg':''}"><div class="top"><b>${h(x.cliente||'Sem cliente')}</b><span style="${p?'color:var(--bad)':''}">desde ${desde(x.criado)}</span></div><p>${h(x.assunto)}</p>${x.foto?`<button class="bt n" style="margin-top:8px;padding:7px 0" data-cxv="${x.id}">🖼 Ver print</button>`:''}
+    <div class="bts"><button class="bt p" data-cxh="${x.id}">🤖 Pedir ajuda ao Claude</button></div>
+    <div class="bts"><button class="bt n" data-cxd="${x.id}">→ Virou demanda</button><button class="bt n" data-cxr="${x.id}">✓ Respondido</button><button class="bt r" style="flex:.6" data-cxx="${x.id}">Descartar</button></div><div class="st" id="cxm-${x.id}"></div></div>`;}).join('');}
+function textoClaude(x){return `Claude, me ajude a responder este cliente pelo WhatsApp (curto, cordial, em nome da FC Consultoria).\n\nCliente: ${x.cliente||'-'}\nAssunto: ${x.assunto||'-'}\nRecebido: ${desde(x.criado)}${x.foto?'\n(Vou anexar o print da conversa.)':''}`;}
+async function cxFecha(id,st){const r=await sb.from('fc_caixa_entrada').update({status:st,fechado:new Date().toISOString()}).eq('id',id);if(r.error)throw r.error;CX=CX.filter(i=>i.id!==id);}
+document.addEventListener('click',async e=>{
+  const ir=e.target.closest('[data-ir]');if(ir){aba(ir.dataset.ir);return;}
+  if(e.target.closest('#cxNovo')){CXFORM=!CXFORM;cxPinta();if(CXFORM)setTimeout(()=>{const i=$('cxC');i&&i.focus();},50);return;}
+  const cx=e.target.closest('[data-cx]');if(cx){if(cx.dataset.cx==='cancela'){CXFORM=false;cxPinta();return;}
+    const c=$('cxC').value.trim(),a=$('cxA').value.trim(),f=$('cxF').files[0];if(!c||!a){$('cxM').textContent='Preencha o cliente e o assunto.';return;}
+    cx.disabled=true;cx.textContent='Salvando…';let foto=null;
+    try{if(f){const bl=await dpReduz(f);foto=Date.now()+'-'+Math.random().toString(36).slice(2,8)+'.jpg';const u=await sb.storage.from('caixa').upload(foto,bl,{contentType:'image/jpeg'});if(u.error)throw u.error;}
+      const r=await sb.from('fc_caixa_entrada').insert({cliente:c,assunto:a,foto}).select().single();if(r.error)throw r.error;CX.push(r.data);CXFORM=false;cxPinta();hjPinta();badges();}
+    catch(err){$('cxM').textContent='Não salvou: '+(err.message||err);cx.disabled=false;cx.textContent='Salvar';}return;}
+  const hh=e.target.closest('[data-cxh]');if(hh){const x=CX.find(i=>i.id===hh.dataset.cxh);const t=textoClaude(x);let ok=false;try{await navigator.clipboard.writeText(t);ok=true;}catch(_){}
+    $('cxm-'+x.id).textContent=ok?'Texto copiado. Abra o app do Claude, cole'+(x.foto?' e anexe o print':'')+'.':'';if(!ok)prompt('Copie o texto:',t);return;}
+  const v=e.target.closest('[data-cxv]');if(v){const x=CX.find(i=>i.id===v.dataset.cxv);const w=window.open('','_blank');const r=await sb.storage.from('caixa').createSignedUrl(x.foto,600);if(r.error){w&&w.close();alert('Não abriu: '+r.error.message);return;}if(w)w.location=r.data.signedUrl;else location.href=r.data.signedUrl;return;}
+  const dd=e.target.closest('[data-cxd]');if(dd){const x=CX.find(i=>i.id===dd.dataset.cxd);
+    if(deAbertas().length>=MAXDEM){$('cxm-'+x.id).textContent='Já tem '+MAXDEM+' demandas abertas. Conclua uma antes de abrir outra.';$('cxm-'+x.id).className='st er';return;}
+    try{const r=await sb.from('fc_demanda').insert({titulo:x.assunto.slice(0,140),cliente:x.cliente,origem:'caixa'}).select().single();if(r.error)throw r.error;DE.unshift(r.data);await cxFecha(x.id,'demanda');cxPinta();dePinta();hjPinta();badges();}catch(err){alert('Não foi possível: '+(err.message||err));}return;}
+  const rr=e.target.closest('[data-cxr],[data-cxx]');if(rr){const id=rr.dataset.cxr||rr.dataset.cxx;if(rr.dataset.cxx&&!confirm('Descartar este assunto?'))return;try{await cxFecha(id,rr.dataset.cxr?'resolvido':'descartado');cxPinta();hjPinta();badges();}catch(err){alert('Não foi possível: '+(err.message||err));}return;}
+
+  /* ✅ Demandas */
+  if(e.target.closest('#deNovo')){if(deAbertas().length>=MAXDEM&&!DEFORM){alert('Já tem '+MAXDEM+' demandas abertas. Conclua uma antes de abrir outra.');return;}DEFORM=!DEFORM;dePinta();return;}
+  const df=e.target.closest('[data-def]');if(df){DEF=df.dataset.def;dePinta();return;}
+  const ds=e.target.closest('[data-de]');if(ds){if(ds.dataset.de==='cancela'){DEFORM=false;dePinta();return;}
+    const t=$('deT').value.trim();if(!t){$('deM').textContent='Escreva a demanda.';return;}
+    const r=await sb.from('fc_demanda').insert({titulo:t,cliente:$('deC').value.trim(),prazo:$('deP').value||null,origem:'app'}).select().single();if(r.error){$('deM').textContent='Não salvou: '+r.error.message;return;}DE.unshift(r.data);DEFORM=false;dePinta();hjPinta();badges();return;}
+  const dk=e.target.closest('[data-deok]');if(dk){const x=DE.find(i=>i.id===dk.dataset.deok);const nv=x.status==='aberta'?'concluida':'aberta';
+    if(nv==='aberta'&&deAbertas().length>=MAXDEM){alert('Já tem '+MAXDEM+' demandas abertas.');return;}
+    const r=await sb.from('fc_demanda').update({status:nv,concluido:nv==='concluida'?new Date().toISOString():null}).eq('id',x.id);if(r.error){alert(r.error.message);return;}x.status=nv;dePinta();hjPinta();badges();return;}
+  const dx=e.target.closest('[data-dedel]');if(dx){if(!confirm('Apagar esta demanda?'))return;const r=await sb.from('fc_demanda').delete().eq('id',dx.dataset.dedel);if(r.error){alert(r.error.message);return;}DE=DE.filter(i=>i.id!==dx.dataset.dedel);dePinta();hjPinta();badges();return;}
+
+  /* 💰 Financeiro */
+  if(e.target.closest('#fiNovo')){FIFORM=FIFORM?null:{tipo:'pagar'};fiPinta();return;}
+  const ff=e.target.closest('[data-fif]');if(ff){FIF=ff.dataset.fif;fiPinta();return;}
+  const fs=e.target.closest('[data-fi]');if(fs){if(fs.dataset.fi==='cancela'){FIFORM=null;fiPinta();return;}
+    const t=$('fiT').value.trim(),v=$('fiV').value;if(!t){$('fiM').textContent='Escreva a descrição.';return;}
+    const o={titulo:t,tipo:$('fiTp').value,cliente:$('fiC').value.trim(),valor:v===''?null:+String(v).replace(',','.'),vencimento:$('fiD').value||null,recorrente:$('fiR').checked,obs:$('fiO').value.trim()||null};
+    const r=FIFORM.id?await sb.from('fc_financeiro').update(o).eq('id',FIFORM.id).select().single():await sb.from('fc_financeiro').insert({...o,origem:'app'}).select().single();
+    if(r.error){$('fiM').textContent='Não salvou: '+r.error.message;return;}FI=FI.filter(i=>i.id!==r.data.id).concat(r.data);FIFORM=null;fiPinta();hjPinta();badges();return;}
+  const fe=e.target.closest('[data-fied]');if(fe){FIFORM={...FI.find(i=>i.id===fe.dataset.fied)};fiPinta();scrollTo(0,0);return;}
+  const fk=e.target.closest('[data-fiok]');if(fk){const x=FI.find(i=>i.id===fk.dataset.fiok);const nv=x.status==='aberto'?'feito':'aberto';
+    const r=await sb.from('fc_financeiro').update({status:nv,feito_em:nv==='feito'?new Date().toISOString():null}).eq('id',x.id);if(r.error){alert(r.error.message);return;}x.status=nv;
+    if(nv==='feito'&&x.recorrente&&x.vencimento){const [y,m,d]=x.vencimento.split('-').map(Number);const ult=new Date(y,m+1,0).getDate();const prox=y+(m===12?1:0)+'-'+String(m===12?1:m+1).padStart(2,'0')+'-'+String(Math.min(d,ult)).padStart(2,'0');
+      if(!FI.some(i=>i.titulo===x.titulo&&i.vencimento===prox)){const n=await sb.from('fc_financeiro').insert({titulo:x.titulo,tipo:x.tipo,cliente:x.cliente,valor:x.valor,vencimento:prox,recorrente:true,obs:x.obs,origem:'recorrente'}).select().single();if(!n.error)FI.push(n.data);}}
+    fiPinta();hjPinta();badges();return;}
+  const fx=e.target.closest('[data-fidel]');if(fx){if(!confirm('Apagar este lançamento?'))return;const r=await sb.from('fc_financeiro').delete().eq('id',fx.dataset.fidel);if(r.error){alert(r.error.message);return;}FI=FI.filter(i=>i.id!==fx.dataset.fidel);fiPinta();hjPinta();badges();return;}
+  if(e.target.closest('#avFecha')){$('avTopo').innerHTML='';return;}
+});
+document.addEventListener('change',e=>{if(e.target.id==='cxF'){const f=e.target.files[0];$('cxFn').textContent=f?'📎 '+f.name:'Anexar print (opcional)';}});
+
+/* ---------- ✅ Demandas ---------- */
+function dePinta(){const el=$('deL');if(!el)return;const H=hoje(),ab=deAbertas();
+  $('deInfo').textContent=ab.length+' de '+MAXDEM+' abertas';
+  document.querySelectorAll('#deF button').forEach(b=>b.classList.toggle('on',b.dataset.def===DEF));
+  $('deForm').innerHTML=DEFORM?`<div class="cd ag-f"><label>Demanda</label><input id="deT" placeholder="Enviar tabela de kits"><div class="dois"><div><label>Cliente</label><input id="deC" list="deCl" autocomplete="off"><datalist id="deCl">${cxClientes().map(c=>`<option value="${h(c)}">`).join('')}</datalist></div><div><label>Prazo</label><input id="deP" type="date"></div></div><div class="bts"><button class="bt n" data-de="cancela">Cancelar</button><button class="bt p" data-de="salva">Salvar</button></div><div class="st er" id="deM"></div></div>`:'';
+  const L=DEF==='ab'?ab:DE.filter(x=>x.status==='concluida').slice(0,20);
+  el.innerHTML=L.length?L.map(x=>`<div class="cd"><div class="top"><b>${x.cliente?'<span class="emp">'+h(x.cliente)+'</span>':''}${h(x.titulo)}</b><span style="${x.status==='aberta'&&x.prazo&&x.prazo<H?'color:var(--bad)':''}">${x.prazo?dSem(x.prazo)+' '+dBR(x.prazo):''}</span></div>${x.origem==='caixa'?'<p class="sub">veio da caixa de entrada</p>':''}<div class="bts"><button class="bt ${x.status==='aberta'?'p':'n'}" data-deok="${x.id}">${x.status==='aberta'?'✓ Concluir':'↺ Reabrir'}</button><button class="bt r" style="flex:.5" data-dedel="${x.id}">Apagar</button></div></div>`).join(''):`<div class="vazio"><i>${DEF==='ab'?'🎯':'📂'}</i><b>${DEF==='ab'?'Nenhuma demanda aberta':'Nada concluído ainda'}</b>${DEF==='ab'?'Abra no máximo '+MAXDEM+' por vez.':''}</div>`;}
+
+/* ---------- 💰 Financeiro ---------- */
+function fiPinta(){const el=$('fiL');if(!el)return;const H=hoje(),ab=fiAbertos();
+  const rec=ab.filter(x=>x.tipo==='receber').reduce((s,x)=>s+(+x.valor||0),0),pag=ab.filter(x=>x.tipo!=='receber').reduce((s,x)=>s+(+x.valor||0),0);
+  $('fiInfo').textContent=ab.length+' em aberto';
+  document.querySelectorAll('#fiF button').forEach(b=>b.classList.toggle('on',b.dataset.fif===FIF));
+  const F=FIFORM,o=(m,v)=>Object.entries(m).map(([k,t])=>`<option value="${k}"${k===v?' selected':''}>${t[0]}</option>`).join('');
+  $('fiForm').innerHTML=F?`<div class="cd ag-f"><label>Descrição</label><input id="fiT" value="${h(F.titulo||'')}" placeholder="Honorário do contador"><div class="dois"><div><label>Tipo</label><select id="fiTp">${o(FIT,F.tipo)}</select></div><div><label>Vencimento</label><input id="fiD" type="date" value="${h(F.vencimento||'')}"></div></div><div class="dois"><div><label>Valor (R$)</label><input id="fiV" inputmode="decimal" value="${F.valor??''}"></div><div><label>Cliente</label><input id="fiC" value="${h(F.cliente||'')}"></div></div><label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="fiR" style="width:auto"${F.recorrente?' checked':''}> Repete todo mês</label><label>Obs.</label><input id="fiO" value="${h(F.obs||'')}"><div class="bts"><button class="bt n" data-fi="cancela">Cancelar</button><button class="bt p" data-fi="salva">Salvar</button></div><div class="st er" id="fiM"></div></div>`:'';
+  const L=FIF==='ab'?ab:FI.filter(x=>x.status==='feito').sort((a,b)=>(b.feito_em||'').localeCompare(a.feito_em||'')).slice(0,30);
+  el.innerHTML=(FIF==='ab'?`<div class="mt"><div><small>A receber</small><b style="color:var(--ok)">${brl(rec)}</b></div><div><small>A pagar</small><b>${brl(pag)}</b></div></div>`:'')+(L.length?L.map(x=>{const venc=x.status==='aberto'&&x.vencimento&&x.vencimento<H;return `<div class="cd${venc?' urg':''}"><div class="top"><b>${h(x.titulo)}</b><span style="${venc?'color:var(--bad)':''}">${x.vencimento?(venc?'vencido · ':'')+dSem(x.vencimento)+' '+dBR(x.vencimento):''}</span></div><p><span class="tag ${FIT[x.tipo][1]}">${FIT[x.tipo][0]}</span>${x.recorrente?' <span class="tag tg-c">↻ mensal</span>':''}${x.cliente?' <span class="emp">'+h(x.cliente)+'</span>':''}${x.valor?' <b>'+brl(x.valor)+'</b>':''}</p>${x.obs?`<p class="sub">${h(x.obs)}</p>`:''}<div class="bts"><button class="bt ${x.status==='aberto'?'p':'n'}" data-fiok="${x.id}">${x.status==='aberto'?(x.tipo==='receber'?'✓ Recebido':x.tipo==='extrato'?'✓ Enviado':'✓ Pago'):'↺ Reabrir'}</button>${x.status==='aberto'?`<button class="bt n" style="flex:.6" data-fied="${x.id}">Editar</button>`:''}<button class="bt r" style="flex:.5" data-fidel="${x.id}">Apagar</button></div></div>`;}).join(''):`<div class="vazio"><i>💰</i><b>${FIF==='ab'?'Nada em aberto':'Nada feito ainda'}</b>${FIF==='ab'?'Guias, honorário, notas, a receber e o extrato do mês.':''}</div>`);}
+
+/* ---------- ☰ Mais ---------- */
+function maPinta(){const el=$('maL');if(!el)return;const n=[['ac','🔑','Liberar acessos',AC.length],['rp','📩','Para responder',(RP.itens||[]).length],['on','🟢','Quem está on-line',ON.length],['dm','🧪','Demonstrativos de 24 h',(DM||[]).filter(d=>d.status==='pendente').length]];
+  el.innerHTML=n.map(([k,i,t,c])=>`<div class="cd" data-ir="${k}" role="button"><div class="top"><b>${i} ${t}</b><span>${c?'<span class="tag tg-x">'+c+'</span>':'›'}</span></div></div>`).join('');}
+
+/* ---------- 🔔 Alertas (com o app aberto): 4 h úteis sem resposta e "Fechar o dia" às 17:30, só seg–sex ---------- */
+function fecharDiaHora(){const d=new Date(),m=d.getHours()*60+d.getMinutes();return d.getDay()>0&&d.getDay()<6&&m>=1050;}
+function alertas(){const el=$('avTopo');if(!el)return;const av=[];
+  const novos=CX.filter(parado).filter(x=>{try{return !localStorage.getItem('cx-av-'+x.id);}catch(_){return true;}});
+  novos.forEach(x=>{av.push(`⏰ ${h(x.cliente)} está esperando retorno desde ${desde(x.criado)}`);try{localStorage.setItem('cx-av-'+x.id,'1');}catch(_){}});
+  const kd='cx-fd-'+hoje();let fd=false;try{fd=!localStorage.getItem(kd);}catch(_){}
+  if(fecharDiaHora()&&CX.length&&fd){av.push(`🌙 Fechar o dia: ${CX.length} assunto${CX.length>1?'s':''} aberto${CX.length>1?'s':''}`);try{localStorage.setItem(kd,'1');}catch(_){}}
+  if(!av.length)return;try{navigator.vibrate&&navigator.vibrate(200);}catch(_){}
+  el.innerHTML=`<div class="cd urg" style="background:#fdf0d5;border-color:#e8b04a;color:#5c3c05">${av.map(t=>`<p style="margin:2px 0">${t}</p>`).join('')}<div class="bts"><button class="bt p" data-ir="cx">Ver caixa</button><button class="bt n" id="avFecha">Ok</button></div></div>`;}
+setInterval(()=>{if(!document.hidden&&LOGADO){alertas();if(ABA==='hj')hjPinta();if(ABA==='cx')cxPinta();}},60000);
+
+
+/* ===== números nas abas e no ícone do app ===== */
+function badges(){const a=AC.length,r=(RP.itens||[]).length,cx=CX.length,H=hoje();
+  const pn=(el,n)=>{if(!el)return;el.textContent=n>99?'99+':n;el.classList.toggle('on',n>0);};
+  pn($('nCx'),cx);pn($('nMa'),a+r);pn($('nDe'),deAbertas().filter(x=>x.prazo&&x.prazo<=H).length);pn($('nFi'),fiAbertos().filter(x=>x.vencimento&&x.vencimento<=maisDias(1)).length);
+  if(ABA==='ma')maPinta();if(ABA==='hj')hjPinta();
+  {const H=hoje(),A=maisDias(1),g=AG.filter(x=>x.status!=='realizado'&&x.status!=='cancelado'&&(x.data_ida===H||x.data_ida===A)).length+psLista().filter(v=>v.alertas.length).length,el=$('nAg');el.textContent=g;el.classList.toggle('on',g>0);}
+  const tot=a+r+cx;document.title=(tot?'('+tot+') ':'')+'Matriz FC';
+  try{if(navigator.setAppBadge){tot?navigator.setAppBadge(tot):navigator.clearAppBadge();}}catch(_){}}
+
+function tudo(){return Promise.all([acCarregar(),rpCarregar(),onCarregar(),dmCarregar(),agCarregar(),hjCarregar()]).then(()=>hjPinta());}
 $('bAt').onclick=()=>{$('bAt').textContent='…';tudo().finally(()=>{$('bAt').textContent='↻';});};
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&$('gate').hidden&&LOGADO)tudo();});
 
