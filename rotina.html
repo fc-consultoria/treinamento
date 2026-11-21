@@ -2032,22 +2032,11 @@ document.addEventListener('focusout',e=>{if(e.target.classList&&e.target.classLi
 <script src="conversa-equipe.js?v=11"></script>
 <script>/* Sair (27/10) */(function(){const r=document.querySelector('header.top .row');if(r&&window.FCSessao&&typeof sair==='function')FCSessao.botaoSair(r,()=>sair());})();</script>
 <script>
-/* 21/11/2026 · A Rotina FC foi substituída pelo app Matriz FC (Hoje, Caixa, Demandas, Financeiro). Este aviso leva as demandas e os lançamentos em aberto deste aparelho para o app. */
+/* 21/11/2026 · A Rotina FC foi substituída pelo app Matriz FC (Hoje, Caixa, Demandas, Financeiro). O app começou do zero: nada daqui foi levado. */
 (function(){
 const d=document.createElement('div');d.style.cssText='position:sticky;top:0;z-index:9998;background:#0e4d5c;color:#fff;padding:12px 16px;font:14px system-ui,sans-serif;display:flex;flex-wrap:wrap;gap:10px;align-items:center';
-let L={};try{L=JSON.parse(localStorage.getItem('rotina-fc')||'{}')||{};}catch(_){}
-const dem=Object.values(L.demandas||{}).filter(x=>x&&x.status!=='concluido'&&x.titulo);
-const fin=Object.values(L.financeiro||{}).filter(x=>x&&x.status!=='pago'&&x.status!=='feito'&&x.titulo&&(x.status||'aberto')==='aberto');
-let feito=false;try{feito=!!localStorage.getItem('rotina-fc-migrada');}catch(_){}
-const dt=v=>/^\d{4}-\d{2}-\d{2}$/.test(String(v||''))?v:null;
-const tp=c=>({receber:'receber',contador:'contador',pagar:'pagar'})[c]||'pagar';
-d.innerHTML='<b style="flex:1;min-width:220px">A Rotina FC agora fica no app Matriz FC (Hoje, Caixa de entrada, Demandas e Financeiro).</b>'+((dem.length||fin.length)&&!feito?'<button id="rfMig" style="background:#fff;color:#0e4d5c;border:0;border-radius:8px;padding:8px 12px;font-weight:600">Levar '+dem.length+' demanda(s) e '+fin.length+' lançamento(s) em aberto</button>':'')+'<a href="celular.html" style="color:#fff;border:1px solid rgba(255,255,255,.5);border-radius:8px;padding:8px 12px;text-decoration:none">Abrir o Matriz FC</a><span id="rfMsg"></span>';
+d.innerHTML='<b style="flex:1;min-width:220px">A Rotina FC foi desativada. Agora tudo fica no app Matriz FC (Hoje, Caixa de entrada, Demandas e Financeiro).</b><a href="celular.html" style="color:#fff;border:1px solid rgba(255,255,255,.5);border-radius:8px;padding:8px 12px;text-decoration:none">Abrir o Matriz FC</a>';
 document.body.prepend(d);
-const b=document.getElementById('rfMig');if(b)b.onclick=async()=>{b.disabled=true;b.textContent='Levando…';const m=document.getElementById('rfMsg');
-  try{if(dem.length){const r=await sb.from('fc_demanda').insert(dem.map(x=>({titulo:String(x.titulo).slice(0,200),cliente:x.cliente||'',prazo:dt(x.prazo),origem:'rotina',obs:x.proximoPasso||null})));if(r.error)throw r.error;}
-    if(fin.length){const r=await sb.from('fc_financeiro').insert(fin.map(x=>({titulo:String(x.titulo).slice(0,200),tipo:tp(x.categoria),cliente:x.cliente||'',valor:+x.valor||null,vencimento:dt(x.vencimento),recorrente:x.recorrente==='mensal',origem:'rotina',obs:x.obs||null})));if(r.error)throw r.error;}
-    try{localStorage.setItem('rotina-fc-migrada',new Date().toISOString());}catch(_){}b.remove();m.textContent='✓ Levado para o app.';}
-  catch(e){b.disabled=false;b.textContent='Tentar de novo';m.textContent='Não levou: '+(e.message||e)+' (entre pelo Painel da Matriz).';}};
 })();
 </script>
 </body></html>
