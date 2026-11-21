@@ -613,6 +613,8 @@ async function carregarClientes(){
   CLIENTS.forEach(cl=>{ cl.fixoChecklist = {}; checklistRows.filter(r=>r.cliente_id===cl.id && r.fornecedor_fixo).forEach(r=>{ cl.fixoChecklist[(r.linha||'')+'|'+r.codigo] = r.fornecedor_fixo; }); });
   // Preço para alimentação ajustado à mão (por cliente/linha/código). Vazio = segue o automático.
   CLIENTS.forEach(cl=>{ cl.ajustePreco = {}; checklistRows.filter(r=>r.cliente_id===cl.id && r.preco_ajustado!=null).forEach(r=>{ cl.ajustePreco[(r.linha||'')+'|'+r.codigo] = Number(r.preco_ajustado); }); });
+  // Escolha do preço que fica: painel (automático), alimentado (o que está no sistema) ou manual
+  CLIENTS.forEach(cl=>{ cl.precoAlim = {}; cl.precoManual = {}; cl.precoEsc = {}; checklistRows.filter(r=>r.cliente_id===cl.id).forEach(r=>{ const k=(r.linha||'')+'|'+r.codigo; if(r.preco_alimentado!=null) cl.precoAlim[k]=Number(r.preco_alimentado); if(r.preco_manual!=null) cl.precoManual[k]=Number(r.preco_manual); if(r.preco_escolha) cl.precoEsc[k]=r.preco_escolha; }); });
   CLIENTS.forEach(cl=>{ cl.wvLinhas = {}; cl._wvCache = {}; checklistRows.filter(r=>r.cliente_id===cl.id && r.base_codigo && r.linha).forEach(r=>{ (cl.wvLinhas[r.linha] = cl.wvLinhas[r.linha]||[]).push({codigo:r.codigo, base:r.base_codigo, desc:r.desc_sistema||''}); }); });
   // Itens do WVetro do cliente que não estão no Banco de Preços nas linhas contratadas → painel "Em avaliação"
   try{ const {data:avRows} = await fetchAllRows('impl_wv_avaliacao', '*', 'codigo'); CLIENTS.forEach(cl=>{ cl.wvAval = (avRows||[]).filter(r=>r.cliente_id===cl.id); }); }
@@ -4398,13 +4400,46 @@ function btnAjustesParaBanco(c){
   return n ? `<button class="btn btn-sm" data-action="ajustes-para-banco" title="Grava os preços ajustados deste cliente no Banco de Preços geral">⬆ Gravar ${n} ajuste(s) no banco geral</button>` : '';
 }
 function legendaAjusteAlim(esc){ return esc && esc.ajuste ? `<div style="font-size:11.5px; color:#b26b00; font-weight:650;">✏️ Ajustado${esc.auto?` · auto ${fmtMoney(esc.auto.v)} (${escapeHtml(esc.auto.f)})`:''}</div>` : ''; }
+// Preço do painel = automático (1º fornecedor da ordem ou fixado), sem nenhum ajuste.
+function precoPainelAuto(c, key, db, it){
+  const k = key+'|'+it.codigo, aj = (c.ajustePreco||{})[k];
+  if(aj!=null) delete c.ajustePreco[k];
+  const r = precoAlimentacao(c, key, db, it);
+  if(aj!=null) c.ajustePreco[k] = aj;
+  return r;
+}
+const LIMITE_DIF_ALIM = 0.20;
+// Qual preço fica: 'painel' | 'alimentado' | 'manual'. Sem escolha gravada: alimentado se tiver; senão manual se houver ajuste; senão painel.
+function escolhaPreco(c, k){
+  const e = (c.precoEsc||{})[k]; if(e) return e;
+  if((c.precoAlim||{})[k]>0) return 'alimentado';
+  if((c.ajustePreco||{})[k]>0) return 'manual';
+  return 'painel';
+}
+function valorManual(c, k){ const m = (c.precoManual||{})[k]; if(m>0) return m; const e = (c.precoEsc||{})[k]; return (!e && !((c.precoAlim||{})[k]>0) && (c.ajustePreco||{})[k]>0) ? c.ajustePreco[k] : null; }
 function celulaPrecoAlimentacao(c, key, db, it){
-  const {esc, comPreco, alerta} = precoAlimentacao(c, key, db, it);
-  const fixo = (c.fixoChecklist||{})[key+'|'+it.codigo] || '';
+  const k = key+'|'+it.codigo;
+  const {esc, comPreco, alerta} = precoPainelAuto(c, key, db, it);
+  const fixo = (c.fixoChecklist||{})[k] || '';
   const sel = ehAdminEspelho() && comPreco.length>1 ? `<select class="select-inline" style="font-size:11.5px; padding:2px 4px; margin-top:4px; max-width:150px;" data-action="fixar-fornecedor-item" data-key="${escapeHtml(key)}" data-codigo="${escapeHtml(it.codigo)}" title="Só a matriz muda: fixa este item num fornecedor">
       <option value="">Automático (ordem)</option>${comPreco.map(x=>`<option value="${escapeHtml(x.f)}" ${chaveFornAjuste(fixo)===chaveFornAjuste(x.f)?'selected':''}>📌 ${escapeHtml(x.f)} · ${fmtMoney(x.v)}</option>`).join('')}</select>` : '';
-  if(!esc) return `<td style="white-space:nowrap;">${inputPrecoAlimentacao(key, it, null)}${sel}</td>`;
-  return `<td style="white-space:nowrap;">${inputPrecoAlimentacao(key, it, esc)}${esc.ajuste ? legendaAjusteAlim(esc)+(ehAdminEspelho()?`<button class="btn btn-sm" style="margin-top:4px; font-size:11px; padding:2px 8px;" data-action="ajuste-para-banco" data-key="${escapeHtml(key)}" data-codigo="${escapeHtml(it.codigo)}" title="Grava este preço no Banco de Preços geral (${escapeHtml(esc.auto?esc.auto.f:'1º fornecedor da ordem')})">⬆ Gravar no banco geral</button>`:'') : `<div style="font-size:11.5px; color:var(--text-3);">${esc.fixo?'📌 ':''}${escapeHtml(esc.f)} · ${esc.pos}º</div>`}${alerta?`<div style="font-size:11.5px; font-weight:650; color:#b42318;" title="${escapeHtml(alerta.a.f)}: ${fmtMoney(alerta.a.v)} · ${escapeHtml(alerta.b.f)}: ${fmtMoney(alerta.b.v)}">⚠️ diferença de ${alerta.pct}%</div>`:''}${sel}</td>`;
+  const painelV = esc ? esc.v : null;
+  const tdPainel = `<td class="tright" style="white-space:nowrap;"><b>${painelV!=null?fmtPrecoAlim(painelV):'—'}</b>${esc?`<div style="font-size:11.5px; color:var(--text-3);">${esc.fixo?'📌 ':''}${escapeHtml(esc.f)} · ${esc.pos}º</div>`:''}${alerta?`<div style="font-size:11.5px; font-weight:650; color:#b42318;" title="${escapeHtml(alerta.a.f)}: ${fmtMoney(alerta.a.v)} · ${escapeHtml(alerta.b.f)}: ${fmtMoney(alerta.b.v)}">⚠️ diferença de ${alerta.pct}%</div>`:''}${sel}</td>`;
+  const alim = (c.precoAlim||{})[k];
+  const tdAlim = `<td class="tright" style="white-space:nowrap;">${alim>0?`<b>${fmtPrecoAlim(alim)}</b>`:'<span style="color:var(--text-3)">—</span>'}</td>`;
+  const man = valorManual(c, k);
+  const tdMan = `<td><input class="editable-price" inputmode="decimal" style="width:84px; text-align:right;${man>0?' background:#fff4d6; border-color:#e8a317;':''}" value="${man>0?fmtPrecoAlim(man):''}" placeholder="0,00" data-action="preco-manual-alim" data-key="${escapeHtml(key)}" data-codigo="${escapeHtml(it.codigo)}" title="Digite para usar um preço manual. Apague para limpar."></td>`;
+  let tdDif = '<td class="tright" style="color:var(--text-3)">—</td>';
+  if(alim>0 && painelV>0){ const d = (alim-painelV)/painelV, pct = Math.round(d*100), big = Math.abs(d)>LIMITE_DIF_ALIM; tdDif = `<td class="tright" style="white-space:nowrap;${big?' color:#b42318; font-weight:700;':' color:var(--text-3);'}" title="Alimentado comparado com o preço do painel">${pct>0?'+':''}${pct}%</td>`; }
+  const e = escolhaPreco(c, k);
+  const btn = (val, rot, ok)=>`<button type="button" class="btn btn-sm" style="font-size:11px; padding:2px 7px;${e===val?' background:var(--accent); color:#fff; border-color:var(--accent);':''}" data-action="escolher-preco-alim" data-escolha="${val}" data-key="${escapeHtml(key)}" data-codigo="${escapeHtml(it.codigo)}" ${ok?'':'disabled'}>${rot}</button>`;
+  const tdFica = `<td style="white-space:nowrap;">${btn('painel','Painel',painelV>0)}${btn('alimentado','Alim.',alim>0)}${btn('manual','Manual',man>0)}</td>`;
+  const fed = !!((key==='vidro'?c.alimentadosVidro:key==='perfis'?c.alimentadosPerfis:(c.alimentadosComponentes||{})[key])||{})[it.codigo];
+  const fica = e==='alimentado' ? alim : e==='manual' ? man : painelV;
+  let sit = '<span style="color:var(--text-3)">—</span>';
+  if(fed && alim>0 && fica>0 && Math.abs(fica-alim)>0.004) sit = '<span class="badge badge-warn" title="O preço escolhido é diferente do que está no sistema">Reenviar WVetro</span>';
+  else if(fed) sit = '<span class="badge badge-ok">Ok</span>';
+  return tdPainel+tdAlim+tdMan+tdDif+tdFica+`<td style="white-space:nowrap;">${sit}</td>`;
 }
 // Liberação de preços por linha: a equipe só alimenta o que a matriz conferiu e liberou
 function vistaEquipe(){ return !ehAdminEspelho() || !!STATE.verComoEquipe; }
@@ -4466,7 +4501,7 @@ function renderChecklistEquipe(cliente, todas, titulo, bloqueadas){
       </tr>`).join('')}</tbody></table></div>`}
   </div>`;
 }
-const thPrecoAlimentacao = `<th title="Preço que a equipe usa: 1º fornecedor da ordem com preço (Contrato & Acesso), ou o fixado no item">Preço p/ alimentação</th>`;
+const thPrecoAlimentacao = `<th class="tright" title="Preço automático: 1º fornecedor da ordem com preço (Contrato & Acesso), ou o fixado no item">Preço painel</th><th class="tright" title="Preço que está lançado no sistema do cliente">Alimentado</th><th title="Preço digitado à mão">Ajuste manual</th><th class="tright" title="Alimentado comparado com o painel (vermelho acima de 20%)">Dif.</th><th title="Qual preço fica valendo">Fica</th><th>Situação</th>`;
 async function salvarOrdemFornecedores(c, cat){
   const lista = fornecedoresSelecionadosCliente(c, cat);
   const {error} = await sb.from('impl_cliente_fornecedores').upsert(lista.map((f,i)=>({cliente_id:c.id, categoria:cat, fornecedor:f, ordem:i+1})), {onConflict:'cliente_id,categoria,fornecedor'});
@@ -5047,6 +5082,19 @@ async function salvarChecklistLote(clienteId, lista, alimentado){
   if(erro) avisarErroSalvar(erro); else toastSalvo('Salvo');
 }
 
+// Ao marcar como alimentado, guarda o preço que estava valendo (é o que foi lançado no sistema do cliente).
+function registrarPrecoAlimentado(c, pares){
+  const ups = [];
+  pares.forEach(([key,codigo])=>{
+    if(key==='vidro' || key==='perfis') return;
+    const k = key+'|'+codigo; if((c.precoAlim||{})[k]>0) return;
+    const db = dbCliente(c, key), it = db && (db.itens||[]).find(x=>x.codigo===codigo);
+    const esc = it ? precoAlimentacao(c, key, db, it).esc : null; if(!(esc && esc.v>0)) return;
+    c.precoAlim = c.precoAlim || {}; c.precoAlim[k] = esc.v;
+    ups.push({cliente_id:c.id, codigo, linha:key, preco_alimentado:esc.v});
+  });
+  for(let i=0;i<ups.length;i+=200) sb.from('impl_checklist').upsert(ups.slice(i,i+200), {onConflict:'cliente_id,codigo,linha'}).then(({error})=>{ if(error) avisarErroSalvar(error); });
+}
 function aplicarMarcarTodosCategoria(c, lista, marcar, semP){
   if(!c || !lista.length) return false;
   if(!confirm((marcar ? 'Marcar ' : 'Desmarcar ')+lista.length+' item(ns) exibidos como '+(marcar?'JÁ ALIMENTADOS':'pendentes')+'?'+(marcar && semP?'\n\n'+semP+' item(ns) sem preço NÃO serão marcados.':''))) return false;
@@ -5058,6 +5106,7 @@ function aplicarMarcarTodosCategoria(c, lista, marcar, semP){
     mapa[codigo] = marcar;
     if(key!=='vidro' && key!=='perfis') sincronizarAlimentadoMetroPorCodigo(c, codigo, marcar);
   });
+  if(marcar) registrarPrecoAlimentado(c, lista);
   render();
   salvarChecklistLote(c.id, lista, marcar);
   return true;
@@ -6763,6 +6812,7 @@ function wireEvents(){
         else { c.alimentadosComponentes = c.alimentadosComponentes || {}; mapa = c.alimentadosComponentes[key] = c.alimentadosComponentes[key] || {}; }
         mapa[codigo] = el.checked;
         if(key!=='vidro' && key!=='perfis') sincronizarAlimentadoMetroPorCodigo(c, codigo, el.checked);
+        if(el.checked) registrarPrecoAlimentado(c, [[key, codigo]]);
         render();
         salvarChecklistCategoria(c.id, codigo, el.checked, key);
       };
@@ -6826,6 +6876,38 @@ function wireEvents(){
         if(error){ if(anterior!=null) c.ajustePreco[k]=anterior; else delete c.ajustePreco[k]; render(); avisarErroSalvar(error); }
         else toastSalvo(novo!=null ? 'Preço ajustado: '+fmtMoney(novo) : 'Voltou ao preço automático');
       };
+      return;
+    }
+    if(action==='escolher-preco-alim' || action==='preco-manual-alim'){
+      const aplicar = async (escolha, manual)=>{
+        const c = CLIENTS.find(x=>x.id===STATE.clientId); if(!c) return;
+        const {key, codigo} = el.dataset, k = key+'|'+codigo;
+        c.precoEsc = c.precoEsc || {}; c.precoManual = c.precoManual || {}; c.ajustePreco = c.ajustePreco || {};
+        const antes = {esc:c.precoEsc[k], man:c.precoManual[k], aj:c.ajustePreco[k]};
+        if(manual!==undefined){ if(manual!=null) c.precoManual[k] = manual; else delete c.precoManual[k]; }
+        else if(c.precoManual[k]==null){ const vm = valorManual(c, k); if(vm>0) c.precoManual[k] = vm; }
+        const alim = (c.precoAlim||{})[k], man = c.precoManual[k];
+        if(!escolha || (escolha==='manual' && !(man>0))) escolha = (alim>0) ? 'alimentado' : 'painel';
+        const ajuste = escolha==='alimentado' ? (alim>0?alim:null) : escolha==='manual' ? man : null;
+        c.precoEsc[k] = escolha;
+        if(ajuste!=null) c.ajustePreco[k] = ajuste; else delete c.ajustePreco[k];
+        render();
+        const agora = new Date().toISOString();
+        const {error} = await sb.from('impl_checklist').upsert({cliente_id:c.id, codigo, linha:key, preco_escolha:escolha, preco_manual:(man>0?man:null), preco_ajustado:ajuste, preco_ajustado_em: ajuste!=null?agora:null, preco_ajustado_por: ajuste!=null?(meuEmail()||null):null}, {onConflict:'cliente_id,codigo,linha'});
+        if(error){ if(antes.esc!=null) c.precoEsc[k]=antes.esc; else delete c.precoEsc[k]; if(antes.man!=null) c.precoManual[k]=antes.man; else delete c.precoManual[k]; if(antes.aj!=null) c.ajustePreco[k]=antes.aj; else delete c.ajustePreco[k]; render(); avisarErroSalvar(error); }
+        else toastSalvo('Fica: '+(escolha==='painel'?'preço do painel':escolha==='alimentado'?'preço alimentado':'ajuste manual')+(ajuste!=null?' '+fmtMoney(ajuste):''));
+      };
+      if(action==='escolher-preco-alim') el.onclick = ()=>aplicar(el.dataset.escolha);
+      else {
+        el.onkeydown = (e)=>{ if(e.key==='Enter') el.blur(); };
+        el.onchange = (e)=>{
+          const t = e.target.value.trim(), v = t ? Number(t.replace(/\s|R\$/g,'').replace(/\.(?=\d{3}(\D|$))/g,'').replace(',','.')) : null;
+          if(t && !(v>0)){ alert('Preço inválido. Use, por exemplo, 12,50'); render(); return; }
+          const c = CLIENTS.find(x=>x.id===STATE.clientId); if(!c) return;
+          const k = el.dataset.key+'|'+el.dataset.codigo;
+          aplicar(v!=null ? 'manual' : escolhaPreco(c, k)==='manual' ? null : escolhaPreco(c, k), v);
+        };
+      }
       return;
     }
     if(action==='fixar-fornecedor-item'){
