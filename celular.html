@@ -12,7 +12,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Matriz FC">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<!-- Painel da Matriz no celular (14/11/2026): só Liberar acessos, Para responder e On-line. 21/11/2026: + Agenda (visitas, viagens, treinamentos · tabela fc_agenda). 21/11/2026: + Despesas por viagem com foto do comprovante (tabela fc_despesa, bucket privado despesas).
+<!-- Painel da Matriz no celular (14/11/2026): só Liberar acessos, Para responder e On-line. 21/11/2026: + Agenda (visitas, viagens, treinamentos · tabela fc_agenda). 21/11/2026: + Despesas por viagem com foto do comprovante (tabela fc_despesa, bucket privado despesas). 21/11/2026: + Agenda › ✈️ Passagens Sinop⇄Cuiabá com teto (fc_passagem_preco/cfg, SerpApi via pg_net + pg_cron).
      Mesmo login do Painel da Matriz (fica salvo no aparelho). © FC Consultoria em Esquadria · uso exclusivo -->
 <style>
 :root{--pt:#0e4d5c;--pt2:#0a3a46;--pr:#c7d0d4;--bg:#f2f4f5;--card:#fff;--fg:#14232a;--mu:#5f6b70;--ln:#dde3e6;--ok:#1f8a4c;--bad:#a32d2d;--sel:#e3f0f2}
@@ -116,7 +116,7 @@ nav .n.on{display:grid}
  </section>
 <section class="sec" id="s-ag">
   <div class="hd"><span id="agInfo">Carregando…</span><button type="button" class="bt p" id="agNovo" style="flex:none;padding:7px 14px">+ Novo</button></div>
-  <div class="chips" id="agF"><button type="button" data-f="pro" class="on">Próximos</button><button type="button" data-f="rea">Realizados</button><button type="button" data-f="mes">Gastos do mês</button></div>
+  <div class="chips" id="agF"><button type="button" data-f="pro" class="on">Próximos</button><button type="button" data-f="rea">Realizados</button><button type="button" data-f="mes">Gastos do mês</button><button type="button" data-f="pas">✈️ Passagens</button></div>
   <div id="agAv"></div>
   <div id="agForm"></div>
   <div id="agL"></div>
@@ -312,16 +312,17 @@ const conflitos=x=>diasEntre(x.data_ida,x.data_volta).flatMap(d=>marca(d).map(m=
 function agDatas(){const L=[];for(let i=0;i<=60;i++){const d=maisDias(i);marca(d).forEach(m=>L.push({d,...m}));}
   return L.length?`<div class="gr">Datas importantes · próximos 60 dias</div><div class="cd" style="padding:8px 12px">${L.map(x=>`<div style="display:flex;justify-content:space-between;gap:8px;padding:5px 0;font-size:13.5px"><span>${dSem(x.d)} ${dBR(x.d)}</span><span class="tag ${x.b?'tg-x':'tg-c'}">${x.b?'🎂 ':'🗓 '}${h(x.t)}</span></div>`).join('')}</div>`:'';}
 async function agCarregar(){const r=await sb.from('fc_agenda').select('*').order('data_ida');
-  if(r.error){$('agInfo').textContent='Não carregou: '+r.error.message;return;}AG=r.data||[];await dpCarregar();agPinta();badges();}
+  if(r.error){$('agInfo').textContent='Não carregou: '+r.error.message;return;}AG=r.data||[];await Promise.all([dpCarregar(),psCarregar()]);agPinta();badges();}
 const agCusto=x=>(+x.valor_passagem||0)+(+x.valor_hospedagem||0);
 function agPinta(){const H=hoje(),A=maisDias(1);
   document.querySelectorAll('#agF button').forEach(b=>b.classList.toggle('on',b.dataset.f===AGF));
+  if(AGF==='pas'){$('agAv').innerHTML=psAvisos();psPinta();return;}
   const prox=AG.filter(x=>x.status!=='realizado'&&x.status!=='cancelado'&&(x.data_volta||x.data_ida)>=H);
   const atras=AG.filter(x=>x.status!=='realizado'&&x.status!=='cancelado'&&(x.data_volta||x.data_ida)<H);
   const av=prox.filter(x=>x.data_ida===H||x.data_ida===A);
   $('agAv').innerHTML=av.map(x=>`<div class="dica" style="background:#fdf0d5;color:#5c3c05">🔔 <b>${x.data_ida===H?'Hoje':'Amanhã'}${x.hora_ida?' às '+h(x.hora_ida):''}:</b> ${AGT[x.tipo][1].toLowerCase()} · ${h(x.cliente)}${x.cidade?' · '+h(x.cidade):''}${x.localizador?' · localizador <b>'+h(x.localizador)+'</b>':''}</div>`).join('')
     +[[H,'Hoje'],[A,'Amanhã']].flatMap(([d,t])=>marca(d).filter(m=>m.b).map(()=>`<div class="dica" style="background:#f3e1e1;color:#7a1f1f">🎂 <b>${t}</b> é aniversário · não marcar viagem</div>`)).join('')
-    +(atras.length?`<div class="dica" style="background:#f3e1e1;color:#7a1f1f">${atras.length} compromisso${atras.length>1?'s':''} já passou e não foi marcado como realizado. Veja em Próximos.</div>`:'');
+    +psAvisos()+(atras.length?`<div class="dica" style="background:#f3e1e1;color:#7a1f1f">${atras.length} compromisso${atras.length>1?'s':''} já passou e não foi marcado como realizado. Veja em Próximos.</div>`:'');
   if(AGF==='mes'){const L=AG.filter(x=>x.data_ida.slice(0,7)===AGMES&&x.status!=='cancelado');const tot=L.reduce((a,x)=>a+agCusto(x),0);const DM=DP.filter(d=>d.data.slice(0,7)===AGMES);const tdp=dpTot(DM),ardp=dpTot(DM.filter(d=>d.quem_paga==='cliente'&&!d.reembolsado));
     const rb=L.filter(x=>x.quem_paga==='cliente'&&!x.reembolsado);const arb=rb.reduce((a,x)=>a+agCusto(x),0);const por={};L.forEach(x=>{por[x.cliente]=(por[x.cliente]||0)+agCusto(x);});DM.forEach(d=>{por[d.cliente]=(por[d.cliente]||0)+(+d.valor||0);});
     const [y,m]=AGMES.split('-');const nm=new Date(+y,+m-1,1).toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
@@ -379,6 +380,60 @@ $('agL').addEventListener('click',async e=>{const m=e.target.closest('[data-mes]
   const s=e.target.closest('[data-st]');if(s){s.disabled=true;const r=await sb.from('fc_agenda').update({status:s.dataset.st,atualizado:new Date().toISOString()}).eq('id',x.id);if(r.error)alert('Não foi possível: '+r.error.message);agCarregar();}});
 
 
+
+/* ===== ✈️ Passagens Sinop ⇄ Cuiabá · teto pago pela empresa (21/11/2026) · preços do Google Voos (SerpApi) gravados 1x/dia em fc_passagem_preco ===== */
+let PS=[],PSCFG={teto:1200,janela_dias:120},PSUSO=null,PSABRE=null;
+async function psCarregar(){const [a,b]=await Promise.all([sb.from('fc_passagem_preco').select('*').order('consultado'),sb.from('fc_passagem_cfg').select('*').eq('id',1).maybeSingle()]);
+  if(!a.error)PS=a.data||[];if(!b.error&&b.data)PSCFG=b.data;}
+const psComprada=x=>x.valor_passagem!=null||!!(x.localizador||'').trim();
+const psDias=d=>Math.round((new Date(d+'T12:00')-new Date(hoje()+'T12:00'))/864e5);
+const psDecolar=x=>`https://www.decolar.com/shop/flights/results/roundtrip/OPS/CGB/${x.data_ida}/${x.data_volta}/1/0/0`;
+function psLista(){const H=hoje(),T=+PSCFG.teto||1200;
+  return AG.filter(x=>/cuiab/i.test(x.cidade||'')&&x.status!=='realizado'&&x.status!=='cancelado'&&x.data_ida>H&&x.data_volta).map(x=>{
+    const hs=PS.filter(p=>p.agenda_id===x.id&&p.preco!=null),ult=hs[hs.length-1],ant=hs[hs.length-2],min=hs.length?Math.min(...hs.map(p=>+p.preco)):null;
+    const err=PS.filter(p=>p.agenda_id===x.id).slice(-1)[0];const dias=psDias(x.data_ida),comp=psComprada(x),alertas=[];
+    if(!comp){if(ult&&+ult.preco<=T)alertas.push(['ok',`🟢 Dentro do teto: ${brl(ult.preco)} (teto ${brl(T)}). Bom momento para comprar.`]);
+      if(ult&&ant&&+ult.preco<+ant.preco)alertas.push(['bx',`📉 Baixou ${brl(ant.preco-ult.preco)} desde a última consulta.`]);
+      if(dias<=30)alertas.push(['ur',`⏰ Faltam ${dias} dias e a passagem ainda não foi comprada.`]);else if(dias<=45)alertas.push(['pz',`⏳ Faltam ${dias} dias: hora de comprar para não passar do teto.`]);}
+    return {x,hs,ult,ant,min,err,dias,comp,alertas,ini:maisDias(dias-(+PSCFG.janela_dias||120))};});}
+function psAvisos(){return psLista().filter(v=>v.alertas.length).map(v=>{const c=v.alertas[0][0];const cor=c==='ok'||c==='bx'?'background:#e2f3e8;color:#1f6b3c':c==='ur'?'background:#f3e1e1;color:#7a1f1f':'background:#fdf0d5;color:#5c3c05';
+  return `<div class="dica" style="${cor}">✈️ <b>Cuiabá ${dBR(v.x.data_ida)} → ${dBR(v.x.data_volta)}:</b> ${v.alertas.map(a=>a[1]).join(' ')}</div>`;}).join('');}
+function psGraf(hs){if(hs.length<2)return '';const v=hs.slice(-30).map(p=>+p.preco),T=+PSCFG.teto||1200,mx=Math.max(...v,T),mn=Math.min(...v,T),W=300,Hh=54,y=n=>Hh-4-(n-mn)/((mx-mn)||1)*(Hh-8),x=i=>4+i*(W-8)/(v.length-1);
+  return `<svg viewBox="0 0 ${W} ${Hh}" style="width:100%;height:54px;margin-top:6px"><line x1="0" x2="${W}" y1="${y(T)}" y2="${y(T)}" stroke="#1f8a4c" stroke-dasharray="4 3" stroke-width="1"/><polyline fill="none" stroke="#02717d" stroke-width="2" points="${v.map((n,i)=>x(i)+','+y(n)).join(' ')}"/>${v.map((n,i)=>`<circle cx="${x(i)}" cy="${y(n)}" r="2.5" fill="${n<=T?'#1f8a4c':'#a32d2d'}"/>`).join('')}</svg><div class="sub" style="margin-top:0">Linha verde tracejada = teto de ${brl(T)}</div>`;}
+function psPinta(){const L=psLista(),T=+PSCFG.teto||1200;const qt=L.filter(v=>!v.comp&&v.ult&&+v.ult.preco<=T).length;
+  $('agInfo').textContent=L.length?L.length+' viage'+(L.length>1?'ns':'m')+' para Cuiabá':'Nenhuma viagem para Cuiabá';
+  $('agL').innerHTML=`<div class="mt"><div><small>Teto da empresa (ida e volta)</small><b>${brl(T)}</b></div><div><small>Dentro do teto hoje</small><b style="color:${qt?'#1f6b3c':'inherit'}">${qt}</b></div></div>
+    <div class="sub" style="margin:-4px 0 10px">Sinop ⇄ Cuiabá · Azul · ida no domingo, volta na sexta. O preço do Google Voos é consultado todo dia às 6h, para as viagens dos próximos ${PSCFG.janela_dias} dias ainda não compradas. A Decolar pode ter valor um pouco diferente.${PSUSO!=null?' Buscas usadas no mês: '+PSUSO+' de 250.':''} <a href="#" data-psteto>Alterar teto</a></div>`
+  +(L.length?L.map(v=>{const x=v.x,u=v.ult,dent=u&&+u.preco<=T;
+    const topo=v.comp?`<span class="tag tg-r">Comprada</span>`:u?`<span class="tag ${dent?'tg-r':'tg-x'}">${brl(u.preco)}</span>`:`<span class="tag tg-a">Sem preço ainda</span>`;
+    let corpo='';
+    if(v.comp)corpo=`<div class="sub">✅ ${x.companhia?h(x.companhia)+' · ':''}${x.valor_passagem!=null?brl(x.valor_passagem)+(+x.valor_passagem<=T?' · dentro do teto':' · <b style="color:#a32d2d">'+brl(x.valor_passagem-T)+' acima do teto</b>'):''}${x.localizador?' · loc. <b>'+h(x.localizador)+'</b>':''}</div>`;
+    else if(u)corpo=`<div class="sub">Hoje: <b>${brl(u.preco)}</b> ${h(u.cia||'Azul')}${u.direto?' direto':' com conexão'}${u.saida?' · sai '+h(u.saida.slice(11))+' chega '+h((u.chegada||'').slice(11)):''} · menor já visto ${brl(v.min)}${v.ant?' · antes '+brl(v.ant.preco):''}</div>
+      ${u.preco_outra?`<div class="sub">Outra cia. mais barata: ${h(u.cia_outra||'')} ${brl(u.preco_outra)}</div>`:''}<div class="sub">Consultado ${quando(u.consultado)}</div>${psGraf(v.hs)}`;
+    else corpo=`<div class="sub">${v.dias>(+PSCFG.janela_dias||120)?'O acompanhamento automático começa em '+dBR(v.ini)+'/'+v.ini.slice(0,4)+'. Pode consultar antes pelo botão.':(v.err&&v.err.erro?'⚠ '+h(v.err.erro):'Aguardando a primeira consulta.')}</div>`;
+    return `<div class="cd${v.alertas.some(a=>a[0]==='ur')?' urg':''}" data-ps="${x.id}"><div class="top"><b>✈️ ${dSem(x.data_ida)} ${dBR(x.data_ida)} → ${dSem(x.data_volta)} ${dBR(x.data_volta)}</b>${topo}</div>
+      <div class="sub"><span class="emp">${h(x.cliente)}</span>Faltam ${v.dias} dias</div>${corpo}
+      ${v.alertas.map(a=>`<div class="sub" style="font-weight:600;color:${a[0]==='ur'?'#a32d2d':a[0]==='pz'?'#8a5a08':'#1f6b3c'}">${a[1]}</div>`).join('')}
+      ${v.comp?'':`<div class="bts"><a class="bt p" href="${psDecolar(x)}" target="_blank" rel="noopener" style="text-align:center;text-decoration:none">🛒 Comprar na Decolar</a><button class="bt n" type="button" data-psja>↻ Consultar agora</button></div>
+      <div class="bts">${u&&u.google_url?`<a class="bt n" href="${h(u.google_url)}" target="_blank" rel="noopener" style="text-align:center;text-decoration:none">🔎 Google Voos</a>`:''}<button class="bt n" type="button" data-pscomp>✓ Já comprei</button></div>`}
+      ${PSABRE===x.id?`<div class="ag-f" style="margin-top:8px"><label>Valor pago (ida e volta)<input id="psV" type="number" inputmode="decimal" step="0.01" placeholder="Ex.: 1150"></label><label>Localizador<input id="psL" placeholder="Ex.: ABC123" autocapitalize="characters"></label><div class="bts"><button class="bt p" type="button" data-pssal>Salvar compra</button><button class="bt n" type="button" data-psfec>Cancelar</button></div></div>`:''}</div>`;}).join('')
+    :'<div class="vazio"><i>✈️</i><b>Nenhuma viagem para Cuiabá</b>As viagens com cidade Cuiabá na Agenda aparecem aqui.</div>');}
+async function psUso(){try{const r=await sb.rpc('fc_passagem_atualizar');if(!r.error&&r.data){PSUSO=r.data.usadas_mes;return r.data;}}catch(_){}return null;}
+$('agL').addEventListener('click',async e=>{if(AGF!=='pas')return;
+  if(e.target.closest('[data-psteto]')){e.preventDefault();const v=prompt('Teto da empresa para ida e volta (R$):',PSCFG.teto);if(v==null)return;const n=+String(v).replace(/\./g,'').replace(',','.');if(!(n>0)){alert('Valor inválido');return;}
+    const r=await sb.from('fc_passagem_cfg').update({teto:n}).eq('id',1);if(r.error){alert('Não foi possível: '+r.error.message);return;}PSCFG.teto=n;agPinta();badges();return;}
+  const c=e.target.closest('[data-ps]');if(!c)return;const id=c.dataset.ps,x=AG.find(i=>i.id===id);
+  if(e.target.closest('[data-pscomp]')){PSABRE=id;psPinta();return;}
+  if(e.target.closest('[data-psfec]')){PSABRE=null;psPinta();return;}
+  if(e.target.closest('[data-pssal]')){const v=+String($('psV').value).replace(',','.'),l=$('psL').value.trim().toUpperCase();if(!(v>0)){alert('Informe o valor pago');return;}
+    const r=await sb.from('fc_agenda').update({valor_passagem:v,localizador:l||null,transporte:'aviao',companhia:x.companhia||'Azul',status:x.status==='a_confirmar'?'confirmado':x.status,atualizado:new Date().toISOString()}).eq('id',id);
+    if(r.error){alert('Não foi possível: '+r.error.message);return;}PSABRE=null;agCarregar();return;}
+  const b=e.target.closest('[data-psja]');if(b){b.disabled=true;b.textContent='Consultando…';const r=await sb.rpc('fc_passagem_agora',{p_ag:id});
+    if(r.error){alert('Não foi possível: '+r.error.message);b.disabled=false;b.textContent='↻ Consultar agora';return;}
+    if(r.data==='recente'){alert('Esta viagem foi consultada há menos de 3 horas. O preço mostrado já é o atual.');b.disabled=false;b.textContent='↻ Consultar agora';return;}
+    if(r.data==='limite'){alert('As buscas grátis do mês acabaram. Voltam no mês que vem.');b.disabled=false;b.textContent='↻ Consultar agora';return;}
+    for(let i=0;i<8;i++){await new Promise(z=>setTimeout(z,5000));const u=await psUso();if(u&&u.fila===0)break;}
+    await psCarregar();agPinta();badges();}});
 /* ===== 🧾 Despesas por viagem/compromisso, com foto do comprovante (21/11/2026) · tabela fc_despesa + bucket privado 'despesas' ===== */
 const DPC={alimentacao:['🍽','Alimentação'],transporte:['🚕','Uber / táxi / transporte'],hospedagem:['🏨','Hospedagem'],passagem:['✈️','Passagem'],combustivel:['⛽','Combustível'],carro:['🚗','Aluguel de carro'],outro:['🧾','Outro']};
 const DPF={pix:'PIX',cartao:'Cartão',dinheiro:'Dinheiro'};
@@ -438,7 +493,7 @@ function badges(){const a=AC.length,r=(RP.itens||[]).length;
   [[$('nAc'),a],[$('nRp'),r]].forEach(([el,n])=>{el.textContent=n>99?'99+':n;el.classList.toggle('on',n>0);});
   {const o=ON.length,el=$('nOn');el.textContent=o>99?'99+':o;el.classList.toggle('on',o>0);}
   {const p=(DM||[]).filter(d=>d.status==='pendente').length,el=$('nDm');el.textContent=p;el.classList.toggle('on',p>0);}
-  {const H=hoje(),A=maisDias(1),g=AG.filter(x=>x.status!=='realizado'&&x.status!=='cancelado'&&(x.data_ida===H||x.data_ida===A)).length,el=$('nAg');el.textContent=g;el.classList.toggle('on',g>0);}
+  {const H=hoje(),A=maisDias(1),g=AG.filter(x=>x.status!=='realizado'&&x.status!=='cancelado'&&(x.data_ida===H||x.data_ida===A)).length+psLista().filter(v=>v.alertas.length).length,el=$('nAg');el.textContent=g;el.classList.toggle('on',g>0);}
   document.title=(a+r?'('+(a+r)+') ':'')+'Matriz FC';
   try{if(navigator.setAppBadge){a+r?navigator.setAppBadge(a+r):navigator.clearAppBadge();}}catch(_){}}
 
