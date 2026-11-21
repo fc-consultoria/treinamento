@@ -151,8 +151,7 @@ nav .n.on{display:grid}
  <section class="sec" id="s-ls">
   <div class="hd"><span id="lsInfo">Carregando…</span><button type="button" class="bt p" id="lsNovo" style="flex:none;padding:7px 14px">+ Novo</button></div>
   <div id="lsCad"></div>
-  <div class="ag-f"><input id="lsBusca" type="search" placeholder="Buscar cliente, contato ou usuário"></div>
-  <div class="chips" id="lsF"><button type="button" data-lsf="at" class="on">Ativos</button><button type="button" data-lsf="pe">Pendentes</button><button type="button" data-lsf="qu">Quitados</button><button type="button" data-lsf="ca">Cancelados</button><button type="button" data-lsf="to">Todos</button></div>
+  <div class="ag-f"><input id="lsBusca" type="search" placeholder="Buscar cliente ou login"></div>
   <div id="lsForm"></div>
   <div id="lsL"></div>
  </section>
@@ -676,12 +675,9 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden)lsTranca();
 async function lsCarregar(){const [a,b]=await Promise.all([sb.from('fc_login_sistema').select('*').order('cliente'),sb.from('fc_login_cfg').select('*').eq('id',1).maybeSingle()]);
   if(a.error){$('lsInfo').textContent='Não carregou: '+a.error.message;return;}LS=a.data||[];LSCFG=b.data||null;lsPinta();}
 const dBRc=d=>d?d.split('-').reverse().join('/'):'';
-function lsVence(x){if(!x.fim||['cancelado','nao_contratado'].includes(x.status))return '';const dias=Math.round((new Date(x.fim+'T12:00')-new Date(hoje()+'T12:00'))/864e5);
+function lsVence(x){if(!x.fim)return '';const dias=Math.round((new Date(x.fim+'T12:00')-new Date(hoje()+'T12:00'))/864e5);
   if(dias<0)return '<span class="tag tg-x">Contrato vencido</span> ';if(dias<=30)return `<span class="tag tg-a">Vence em ${dias} dia${dias===1?'':'s'}</span> `;return '';}
-function lsLista(){const q=LSQ.trim().toLowerCase();return LS.filter(x=>{
-  if(LSF==='at'&&!['ativo','pendente'].includes(x.status))return false;if(LSF==='pe'&&x.status!=='pendente')return false;
-  if(LSF==='qu'&&x.status!=='quitado')return false;if(LSF==='ca'&&!['cancelado','nao_contratado'].includes(x.status))return false;
-  return !q||[x.cliente,x.contato,x.usuario,x.sistema,x.obs].join(' ').toLowerCase().includes(q);});}
+function lsLista(){const q=LSQ.trim().toLowerCase();return LS.filter(x=>!q||[x.cliente,x.usuario].join(' ').toLowerCase().includes(q));}
 function lsCadeado(){if(LSKEY)return `<div class="dica" style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span>🔓 Senhas destravadas · trava sozinho em 10 min ou ao sair do app</span><button class="bt n" type="button" id="lsTrancar" style="flex:none;padding:6px 12px;margin:0">Trancar</button></div>`;
   if(!LSCFG)return `<div class="cd ag-f" style="border-color:#e8b04a"><b>🔐 Crie sua senha mestra</b><p class="sub">Ela embaralha as senhas dos clientes aqui no celular. Ninguém consegue ver sem ela — nem o banco, nem a FC. <b>Se esquecer, as senhas guardadas se perdem</b> (os outros dados ficam). Use no mínimo 8 caracteres e não use a mesma do login.</p>
     <label>Senha mestra</label><input type="password" id="lsM1" autocomplete="new-password"><label>Repita</label><input type="password" id="lsM2" autocomplete="new-password">
@@ -689,37 +685,30 @@ function lsCadeado(){if(LSKEY)return `<div class="dica" style="display:flex;just
   return `<div class="cd ag-f"><b>🔒 Senhas trancadas</b><p class="sub">Digite a senha mestra para ver ou copiar senhas e licenças.</p><input type="password" id="lsM" autocomplete="current-password" placeholder="Senha mestra">
     <div class="bts"><button class="bt p" type="button" id="lsAbrir">Destravar</button></div><div class="st" id="lsMsg"></div></div>`;}
 function lsPinta(){const el=$('lsL');if(!el)return;const L=lsLista();
-  const venc=LS.filter(x=>lsVence(x)).length,pend=LS.filter(x=>x.status==='pendente').length;
-  $('lsInfo').textContent=LS.length+' cliente'+(LS.length===1?'':'s')+(pend?' · '+pend+' com pagamento pendente':'')+(venc?' · '+venc+' vencendo':'');
+  const venc=LS.filter(x=>lsVence(x)).length;
+  $('lsInfo').textContent=LS.length+' cliente'+(LS.length===1?'':'s')+(venc?' · '+venc+' vencendo':'');
   $('lsCad').innerHTML=lsCadeado();
-  el.innerHTML=L.length?L.map(x=>{const st=LSST[x.status]||[x.status,'tg-c'],v=LSVER[x.id];
+  el.innerHTML=L.length?L.map(x=>{const v=LSVER[x.id];
     const seg=(rot,k)=>`<div class="dpi"><span><span class="sub">${rot}</span><br>${v?h(v[k]||'—'):(x.cofre?'••••••':'<span class="sub">não cadastrada</span>')}</span>${x.cofre?`<span class="dpa"><button class="bt n" type="button" data-lsv="${x.id}">${v?'Ocultar':'Ver'}</button><button class="bt n" type="button" data-lsc="${x.id}" data-k="${k}">Copiar</button></span>`:''}</div>`;
-    return `<div class="cd"><div class="top"><b>${h(x.cliente)}</b><span>${h(x.sistema||'')}</span></div>
-    <div class="sub">${x.contato?h(x.contato)+' · ':''}<span class="tag ${st[1]}">${st[0]}</span> ${lsVence(x)}</div>
-    <p class="sub">📅 Início: <b style="color:var(--fg)">${dBRc(x.inicio)||'—'}</b> · Final: <b style="color:var(--fg)">${dBRc(x.fim)||'—'}</b>${x.ultimo_acesso?' · último acesso '+dBRc(x.ultimo_acesso):''}</p>
-    <div class="dp"><div class="dpi"><span><span class="sub">Usuário</span><br>${h(x.usuario||'—')}</span>${x.usuario?`<span class="dpa"><button class="bt n" type="button" data-lsu="${x.id}">Copiar</button></span>`:''}</div>${seg('Senha','senha')}${seg('Licença','licenca')}
-    ${x.endereco?`<div class="dpi"><span><span class="sub">Endereço de acesso</span><br>${h(x.endereco)}</span></div>`:''}</div>
-    ${x.obs?`<p>📝 ${h(x.obs)}</p>`:''}
-    <div class="bts"><button class="bt n" type="button" data-lsh="${x.id}">✓ Acessei hoje</button><button class="bt p" type="button" data-lse="${x.id}">Editar</button></div></div>`;}).join('')
+    return `<div class="cd"><div class="top"><b>${h(x.cliente)}</b><span>${lsVence(x)}</span></div>
+    <div class="dp"><div class="dpi"><span><span class="sub">Login</span><br>${h(x.usuario||'—')}</span>${x.usuario?`<span class="dpa"><button class="bt n" type="button" data-lsu="${x.id}">Copiar</button></span>`:''}</div>${seg('Senha','senha')}${seg('Licença','licenca')}</div>
+    <p class="sub">📅 Início: <b style="color:var(--fg)">${dBRc(x.inicio)||'—'}</b> · Final: <b style="color:var(--fg)">${dBRc(x.fim)||'—'}</b></p>
+    <div class="bts"><button class="bt p" type="button" data-lse="${x.id}">Editar</button></div></div>`;}).join('')
     :'<div class="vazio"><i>🔐</i><b>Nenhum cliente aqui</b>Toque em "+ Novo" para cadastrar.</div>';}
-function lsForm(x){x=x||{status:'ativo',sistema:'WVetro'};const o=(v,t)=>`<option value="${v}"${(x.status===v||x.sistema===v)?' selected':''}>${t}</option>`;
+function lsForm(x){x=x||{};
   $('lsForm').innerHTML=`<div class="cd ag-f" style="border-color:var(--pt)"><b>${x.id?'Editar '+h(x.cliente):'Novo cliente'}</b>
-  <label>Cliente</label><input id="lf_cliente" value="${h(x.cliente||'')}"><label>Contato</label><input id="lf_contato" value="${h(x.contato||'')}">
-  <div class="dois"><div><label>Sistema</label><select id="lf_sistema">${o('WVetro','WVetro')}${o('CEM','CEM')}${o('Outro','Outro')}</select></div><div><label>Situação</label><select id="lf_status">${Object.entries(LSST).map(([k,v])=>o(k,v[0])).join('')}</select></div></div>
-  <div class="dois"><div><label>Início do contrato</label><input type="date" id="lf_inicio" value="${x.inicio||''}"></div><div><label>Final do contrato</label><input type="date" id="lf_fim" value="${x.fim||''}"></div></div>
-  <label>Usuário</label><input id="lf_usuario" value="${h(x.usuario||'')}" autocapitalize="off">
-  ${LSKEY?`<div class="dois"><div><label>Senha</label><input id="lf_senha" autocapitalize="off" autocomplete="off" placeholder="${x.cofre?'(manter a atual)':''}"></div><div><label>Licença</label><input id="lf_licenca" autocomplete="off" inputmode="numeric" placeholder="${x.cofre?'(manter a atual)':''}"></div></div>`
+  <label>Nome</label><input id="lf_cliente" value="${h(x.cliente||'')}">
+  <label>Login</label><input id="lf_usuario" value="${h(x.usuario||'')}" autocapitalize="off">
+  ${LSKEY?`<label>Senha</label><input id="lf_senha" autocapitalize="off" autocomplete="off" placeholder="${x.cofre?'(manter a atual)':''}"><label>Licença</label><input id="lf_licenca" autocomplete="off" inputmode="numeric" placeholder="${x.cofre?'(manter a atual)':''}">`
     :'<p class="st er">🔒 Destrave com a senha mestra (no topo) para cadastrar ou trocar senha e licença.</p>'}
-  <label>Endereço de acesso (opcional)</label><input id="lf_endereco" value="${h(x.endereco||'')}" autocapitalize="off">
-  <label>Último acesso</label><input type="date" id="lf_ultimo" value="${x.ultimo_acesso||''}">
-  <label>Anotações (pagamento, pendências — não coloque senha aqui)</label><textarea id="lf_obs" rows="2">${h(x.obs||'')}</textarea>
+  <div class="dois"><div><label>Início do contrato</label><input type="date" id="lf_inicio" value="${x.inicio||''}"></div><div><label>Final do contrato</label><input type="date" id="lf_fim" value="${x.fim||''}"></div></div>
   <div class="bts"><button class="bt p" type="button" id="lfSalvar">Salvar</button><button class="bt n" type="button" id="lfCanc">Cancelar</button>${x.id?'<button class="bt r" type="button" id="lfDel">Excluir</button>':''}</div><div class="st" id="lfMsg"></div></div>`;
   $('lfCanc').onclick=()=>{$('lsForm').innerHTML='';};
-  if(x.id)$('lfDel').onclick=async()=>{if(!confirm('Excluir '+x.cliente+' com usuário, senha e licença? Não dá para desfazer.'))return;const r=await sb.from('fc_login_sistema').delete().eq('id',x.id);if(r.error){$('lfMsg').className='st er';$('lfMsg').textContent='⚠ '+r.error.message;return;}$('lsForm').innerHTML='';lsCarregar();};
+  if(x.id)$('lfDel').onclick=async()=>{if(!confirm('Excluir '+x.cliente+' com login, senha e licença? Não dá para desfazer.'))return;const r=await sb.from('fc_login_sistema').delete().eq('id',x.id);if(r.error){$('lfMsg').className='st er';$('lfMsg').textContent='⚠ '+r.error.message;return;}$('lsForm').innerHTML='';lsCarregar();};
   $('lfSalvar').onclick=async()=>{const g=k=>($('lf_'+k)?$('lf_'+k).value.trim():''),m=$('lfMsg');
     if(!g('cliente')){m.className='st er';m.textContent='Coloque o nome do cliente.';return;}
     if(g('inicio')&&g('fim')&&g('fim')<g('inicio')){m.className='st er';m.textContent='O final do contrato está antes do início.';return;}
-    const d={cliente:g('cliente'),contato:g('contato')||null,sistema:g('sistema'),status:g('status'),inicio:g('inicio')||null,fim:g('fim')||null,usuario:g('usuario')||null,endereco:g('endereco')||null,ultimo_acesso:g('ultimo')||null,obs:g('obs')||null,atualizado:new Date().toISOString()};
+    const d={cliente:g('cliente'),usuario:g('usuario')||null,inicio:g('inicio')||null,fim:g('fim')||null,atualizado:new Date().toISOString()};
     try{if(LSKEY&&(g('senha')||g('licenca')||!x.cofre)){let ant={};if(x.cofre){try{ant=await lsDecifra(x.cofre,x.iv);}catch(_){}}
         const c=await lsCifra({senha:g('senha')||ant.senha||'',licenca:g('licenca')||ant.licenca||''});d.cofre=c.cofre;d.iv=c.iv;delete LSVER[x.id];}
       $('lfSalvar').disabled=true;const r=x.id?await sb.from('fc_login_sistema').update(d).eq('id',x.id):await sb.from('fc_login_sistema').insert(d);if(r.error)throw r.error;
@@ -728,7 +717,6 @@ function lsForm(x){x=x||{status:'ativo',sistema:'WVetro'};const o=(v,t)=>`<optio
 async function lsCopia(t,btn){try{await navigator.clipboard.writeText(t);const o=btn.textContent;btn.textContent='Copiado ✓';setTimeout(()=>btn.textContent=o,1500);}catch(_){prompt('Copie:',t);}}
 $('lsNovo').onclick=()=>lsForm();
 $('lsBusca').oninput=e=>{LSQ=e.target.value;lsPinta();};
-$('lsF').addEventListener('click',e=>{const b=e.target.closest('[data-lsf]');if(!b)return;LSF=b.dataset.lsf;$('lsF').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));lsPinta();});
 $('s-ls').addEventListener('click',async e=>{const t=e.target,msg=$('lsMsg');
   if(t.id==='lsTrancar'){lsTranca();return;}
   if(t.id==='lsCriar'){const a=$('lsM1').value,b=$('lsM2').value;if(a.length<8){msg.className='st er';msg.textContent='Use pelo menos 8 caracteres.';return;}if(a!==b){msg.className='st er';msg.textContent='As duas senhas não são iguais.';return;}
@@ -740,8 +728,7 @@ $('s-ls').addEventListener('click',async e=>{const t=e.target,msg=$('lsMsg');
   const x=LS.find(q=>q.id===(id.lsv||id.lsc||id.lsu||id.lse||id.lsh));if(!x)return;
   if(id.lse){lsForm(x);return;}
   if(id.lsu){lsCopia(x.usuario,t);return;}
-  if(id.lsh){t.disabled=true;const r=await sb.from('fc_login_sistema').update({ultimo_acesso:hoje(),atualizado:new Date().toISOString()}).eq('id',x.id);if(r.error)alert('Não foi possível: '+r.error.message);lsCarregar();return;}
-  if(!LSKEY){$('lsCad').scrollIntoView({behavior:'smooth'});const i=$('lsM');if(i)i.focus();return;}
+    if(!LSKEY){$('lsCad').scrollIntoView({behavior:'smooth'});const i=$('lsM');if(i)i.focus();return;}
   lsReinicia();
   try{if(!LSVER[x.id])LSVER[x.id]=await lsDecifra(x.cofre,x.iv);}catch(_){alert('Não consegui abrir esta senha.');return;}
   if(id.lsv){if(t.textContent==='Ocultar'){delete LSVER[x.id];}lsPinta();return;}
