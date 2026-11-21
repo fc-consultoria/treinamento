@@ -169,6 +169,16 @@ details summary{cursor:pointer;color:var(--teal-d);font-weight:500;margin-top:8p
 .kgt{width:100%;border-collapse:collapse;font-size:14px;margin-top:6px}.kgt td{padding:7px 4px;border-top:1px solid var(--line)}.kgt td.v{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
 .vchip{display:inline-flex;gap:5px;align-items:center;font-size:13px;border:1px solid var(--line);border-radius:99px;padding:3px 10px;margin:0 6px 6px 0;background:#fff}.vchip.ok{border-color:#9fd4b4;background:#eefaf2;color:#1f7a45}
 .fora{background:#f6f8f9;border:1px dashed var(--line);border-radius:10px;padding:10px 12px;font-size:14px;margin-top:12px}
+.resumo{display:flex;gap:18px;align-items:center;flex-wrap:wrap;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+.resumo .big{font-family:var(--display);font-size:40px;font-weight:600;color:var(--teal-d);line-height:1}
+.rbar{height:10px;background:#e6ecee;border-radius:6px;overflow:hidden}.rbar i{display:block;height:100%;background:var(--teal)}
+.falta{background:var(--card);border:1.5px solid #f2b24b;border-radius:14px;padding:12px 16px;margin-top:12px}
+.falta h3{margin:0 0 4px;font-size:16px}.falta .it{padding:10px 0;border-top:1px solid var(--line)}.falta .it:first-of-type{border-top:0}
+.lrow{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,2fr) 48px;gap:12px;align-items:center;padding:9px 0;border-top:1px solid var(--line);font-size:14.5px}
+.lrow .pct{text-align:right;font-weight:600}.lrow .pl{font-size:12px;padding:2px 8px;border-radius:8px;margin-left:6px;white-space:nowrap}
+.pl.con{background:var(--teal-soft);color:var(--teal-d)}.pl.man{background:#fff3df;color:#8a5300}.pl.agu{background:#f1f3f5;color:#5d6f75}
+.etc li{font-size:14px}details.mais summary{cursor:pointer;color:var(--teal-d);font-size:13.5px;margin-top:6px}
+.foot a{color:var(--teal-d)}
 </style>
 <script src="/whats.js?v=1"></script>
 </head>
@@ -281,11 +291,13 @@ function etapasHtml(et){
   const atual=et.findIndex(e=>!e.feita);
   const dcurta=d=>d?new Date(d+'T12:00:00').toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit'}).replace('.',''):'';
   const feitas=et.filter(e=>e.feita).length;
-  return `<section class="sec card"><h2>Etapas da implantação <span class="muted" style="font-family:var(--body);font-size:13px;font-weight:500;margin-left:auto">${feitas} de ${et.length} concluídas</span></h2><ol class="etapas">${et.map((e,i)=>{
+  const li=(e,i)=>{
     const cls=e.feita?'feita':(i===atual?'atual':'');
     const andamento=e.status==='andamento'||e.status==='aguardando'||i===atual;
     const st=e.feita?'<span class="st ok">✓ Concluída</span>':(andamento?((e.responsavel==='cliente'||e.status==='aguardando')?'<span class="st and">Aguardando sua equipe</span>':'<span class="st and">Em andamento</span>'):'<span class="st prev">Prevista</span>');
-    return `<li class="et ${cls}" data-en="${i+1}"><span class="nb">${e.feita?'✓':i+1}</span><div><div class="ti">${esc(e.titulo)} ${e.responsavel==='cliente'?'<span class="tag cli">Sua equipe</span>':''}</div>${e.data?`<div class="dd">${esc(dcurta(e.data))}</div>`:''}${acoesEtapa(e,i)}</div>${st}</li>`;}).join('')}</ol></section>`;
+    return `<li class="et ${cls}" data-en="${i+1}"><span class="nb">${e.feita?'✓':i+1}</span><div><div class="ti">${esc(e.titulo)} ${e.responsavel==='cliente'?'<span class="tag cli">Sua equipe</span>':''}</div>${e.data?`<div class="dd">${esc(dcurta(e.data))}</div>`:''}</div>${st}</li>`;};
+  const lim=atual<0?et.length:atual+1, vis=et.slice(0,lim).map((e,i)=>li(e,i)).join(''), resto=et.slice(lim).map((e,i)=>li(e,i+lim)).join('');
+  return `<section class="sec card etc"><h2>Etapas da implantação <span class="muted" style="font-family:var(--body);font-size:13px;font-weight:500;margin-left:auto">${feitas} de ${et.length} concluídas</span></h2><ol class="etapas">${vis}</ol>${resto?`<details class="mais"><summary>Ver as próximas ${et.length-lim} etapas</summary><ol class="etapas" start="${lim+1}">${resto}</ol></details>`:''}</section>`;
 }
 const normCod=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[\s\-\.\/_]+/g,'');
 
@@ -324,7 +336,9 @@ function render(r){
   const pctDe=(a,t)=>t?Math.min(100,Math.round(a/t*100)):0;
   const somaFoto=f=>{const ls=(f&&f.dados&&f.dados.linhas)||[];return {a:ls.reduce((s,l)=>s+Number(l.alimentados||0),0),t:ls.reduce((s,l)=>s+Number(l.total||0),0)};};
   const avanco=(antes,depois,itens)=>{const d=pctDe(depois.a,depois.t)-pctDe(antes.a,antes.t);return d>0?'+'+d+'%':(itens>0?'+<1%':'+0%');};
-  const pctGeral=pctDe(alim,total);
+  const pctGeral=(()=>{const Gx=atual.dados.grupos;if(!Gx||!(Gx.linhas||[]).length)return pctDe(alim,total);let t=0,a=0;
+    (Gx.linhas||[]).forEach(l=>{const tt=(+((l.perfis||{}).total)||0)+(+((l.componentes||{}).total)||0),aa=(+((l.perfis||{}).alimentados)||0)+(+((l.componentes||{}).alimentados)||0);t+=tt;a+=(l.status==='concluida'?tt:Math.min(aa,tt));});
+    const V=Gx.vidros||[];t+=V.length;a+=Gx.vidro_status==='concluida'?V.length:V.filter(v=>v.ok).length;return pctDe(a,t);})();
   const avancoGeral=ant?avanco(somaFoto(ant),{a:alim,t:total},deltaTotal):(pctGeral+'%');
 
   // ritmo: diferença entre fotos consecutivas (mais recente primeiro), até 5
@@ -381,16 +395,24 @@ function render(r){
     const notaSt=(st,dd,pct)=>st==='manual'?`<div class="revnota">O sistema já está alimentado e funcionando nesta linha${dd&&dd.manual?` desde ${dBR(dd.manual)}`:''}. Nossa equipe está revisando os preços item a item${pct!=null?` (<b>${pct}% revisados</b>)`:''}. Abaixo aparecem só os itens já revisados.</div>`
       :st==='concluida'&&dd&&dd.concluida?`<div class="cem">✅ <b>Sistema alimentado 100% em ${dBR(dd.concluida)}</b> · preços revisados até esta data.</div>`:'';
     const LS=G.linhas||[];
-    const cards=LS.map(l=>{const st=stDe(l),[c,r]=ST[st]||ST.aguardando;const t=(+((l.perfis||{}).total)||0)+(+((l.componentes||{}).total)||0),a=(+((l.perfis||{}).alimentados)||0)+(+((l.componentes||{}).alimentados)||0),pct=t?Math.round(a/t*100):0;
+    const pctL=l=>{const t=(+((l.perfis||{}).total)||0)+(+((l.componentes||{}).total)||0),a=(+((l.perfis||{}).alimentados)||0)+(+((l.componentes||{}).alimentados)||0);return t?Math.round(a/t*100):0;};
+    const PL={concluida:['con',REV?'Revisada':'Concluída'],manual:['man','Liberada · em revisão']};
+    const rowL=(nome,st,pct)=>{const p=st==='concluida'?100:pct;const pl=PL[st]||(p>=100?PL.concluida:null);return `<div class="lrow"><span><b style="font-weight:600">${esc(nome)}</b>${pl?`<span class="pl ${pl[0]}">${pl[1]}</span>`:''}</span><div class="rbar"><i style="width:${p}%"></i></div><span class="pct">${p}%</span></div>`;};
+    const ordem=x=>x.st==='concluida'?-1000:-x.pct;
+    const vivas=LS.map(l=>({nome:l.nome,st:stDe(l),pct:pctL(l)})).filter(x=>x.st!=='aguardando'||x.pct>0).sort((a,b)=>ordem(a)-ordem(b));
+    const agu=LS.filter(l=>stDe(l)==='aguardando'&&!pctL(l)).map(l=>l.nome);
+    const cards=vivas.map(x=>rowL(x.nome,x.st,x.pct)).join('')+(agu.length?`<div class="lrow" style="color:var(--muted)"><span>${agu.map(esc).join(', ')}</span><span><span class="pl agu" style="margin-left:0">Aguardando liberação</span></span><span></span></div>`:'');
+    const cardsOld=LS.map(l=>{const st=stDe(l),[c,r]=ST[st]||ST.aguardando;const t=(+((l.perfis||{}).total)||0)+(+((l.componentes||{}).total)||0),a=(+((l.perfis||{}).alimentados)||0)+(+((l.componentes||{}).alimentados)||0),pct=t?Math.round(a/t*100):0;
       return `<div class="gl ${c}"><div class="lh"><b>${esc(l.nome)}</b><span class="st ${c}">${r}</span>${t?`<span class="q"><strong>${pct}%</strong> ${st==='manual'?'dos preços revisados':'concluído'}</span>`:''}</div>${notaSt(st,l.datas,t?pct:null)}
         ${(G.base==='kg'?kgHtml(l.nome):subHtml(l.nome,'perfis','Perfis · metro linear',l.perfis,'nenhum perfil desta linha na lista'))+subHtml(l.nome,'componentes','Componentes',l.componentes)}</div>`;}).join('');
     const op=G.outros_perfis&&+G.outros_perfis.total?`<div class="gl"><div class="lh"><b>Outros perfis</b><span class="muted" style="font-size:13px">perfis avulsos, fora das linhas acima</span></div>${subHtml('__outros','perfis','Perfis · metro linear',G.outros_perfis)}</div>`:'';
     const brl=v=>'R$ '+Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
     const kg=(kgUma||(G.base!=='kg'&&(G.kg||[]).length))?`<div class="gl"><div class="lh"><b>Perfis por kg · preço por cor</b><span class="q"><strong>${G.kg.length?Math.round(G.kg.filter(x=>x.ok).length/G.kg.length*100):0}%</strong> das cores lançadas</span></div>${kgTab(G.kg)}</div>`:'';
     const VL=G.vidros||[],vOk=VL.filter(x=>x.ok).length,vSt=G.vidro_status||(VL.length&&vOk>=VL.length?'concluida':vOk>0?'alimentando':'aguardando'),[vc,vr]=ST[vSt]||ST.aguardando,vNota=notaSt(vSt,G.vidro_datas,VL.length?Math.round(vOk/VL.length*100):null);
-    const vd=(VL.length||G.vidro_status)?`<div class="gl ${vc==='agu'?'agu':''}"><div class="lh"><b>Vidro</b><span class="st ${vc}">${vr}</span>${VL.length?`<span class="q"><strong>${Math.round(vOk/VL.length*100)}%</strong> ${vSt==='manual'?'revisados':'alimentados'}</span>`:''}</div>${vNota}${VL.length?`<div style="margin-top:8px">${VL.map(x=>`<span class="vchip ${x.ok?'ok':''}">${x.ok?'✓':'○'} ${esc(x.nome)}</span>`).join('')}</div>`:`<div class="muted" style="font-size:13.5px;margin-top:6px">${vSt==='aguardando'?'Aguardando a tabela de preços dos vidros.':'Tabela de vidros em alimentação.'}</div>`}</div>`:'';
+    const vd=(VL.length||G.vidro_status)?((vSt==='aguardando'&&!vOk)?`<div class="lrow" style="color:var(--muted)"><span>Vidro</span><span><span class="pl agu" style="margin-left:0">Aguardando a tabela de preços</span></span><span></span></div>`:rowL('Vidro',vSt,VL.length?Math.round(vOk/VL.length*100):0)):'';
+    const vdOld=(VL.length||G.vidro_status)?`<div class="gl ${vc==='agu'?'agu':''}"><div class="lh"><b>Vidro</b><span class="st ${vc}">${vr}</span>${VL.length?`<span class="q"><strong>${Math.round(vOk/VL.length*100)}%</strong> ${vSt==='manual'?'revisados':'alimentados'}</span>`:''}</div>${vNota}${VL.length?`<div style="margin-top:8px">${VL.map(x=>`<span class="vchip ${x.ok?'ok':''}">${x.ok?'✓':'○'} ${esc(x.nome)}</span>`).join('')}</div>`:`<div class="muted" style="font-size:13.5px;margin-top:6px">${vSt==='aguardando'?'Aguardando a tabela de preços dos vidros.':'Tabela de vidros em alimentação.'}</div>`}</div>`:'';
     const fora=(G.fora||[]).length?`<div class="fora"><b>Linhas liberadas no sistema, fora do contrato:</b> ${G.fora.map(esc).join(', ')}.<br><span class="muted" style="font-size:13px">Elas aparecem no seu sistema, mas não fazem parte desta alimentação.</span></div>`:'';
-    const conc=LS.filter(l=>stDe(l)==='concluida').length;
+    const conc=LS.filter(l=>stDe(l)==='concluida'||pctL(l)>=100).length;
     const todas=LS.map(l=>({st:stDe(l),dd:l.datas||{}})).concat((VL.length||G.vidro_status)?[{st:vSt,dd:G.vidro_datas||{}}]:[]);
     const algumMan=todas.some(x=>x.st==='manual'), algumLib=todas.some(x=>x.st==='manual'||x.st==='concluida');
     const tudoCon=todas.length&&todas.every(x=>x.st==='concluida'), tudoLib=todas.length&&todas.every(x=>x.st==='manual'||x.st==='concluida');
@@ -400,31 +422,32 @@ function render(r){
       :tudoLib?`<div class="liberado rev">✅ <b>Sistema liberado em todas as linhas contratadas</b> · revisão de preços em andamento: <b>${pctRev}%</b>.</div>`:'';
     const atualiz=algumLib?`<div class="atualiz">⚠️ <b>Atenção às atualizações do WVetro / CEM</b><br>Quando o sistema recebe uma atualização, podem surgir itens novos sem preço. A empresa do sistema nem sempre avisa a FC sobre essas atualizações. Se aparecer algum item sem preço, <a href="#supSec" style="color:#0a6d6f;font-weight:600">chame o Suporte FC aqui no link</a>.</div>`:'';
     return `<section class="sec card"><h2>Andamento por linha contratada <span class="muted" style="font-family:var(--body);font-size:13px;font-weight:500;margin-left:auto">${conc} de ${LS.length} ${LS.length===1?'linha concluída':'linhas concluídas'}</span></h2>
-      <div class="legst"><span class="st con">✓ Concluída</span>${algumMan?'<span class="st man">✅ Alimentado · em revisão</span>':''}<span class="st ali">${REV?'● Em revisão':'● Em alimentação'}</span><span class="st agu">○ Aguardando liberação</span></div>${topoLib}${atualiz}
-      ${baseHtml(atual.dados.fornecedores)}${cards}${op}${kg}${vd}${fora}</section>`;};
+      ${topoLib}${atualiz}${cards}${vd}${fora}</section>`;};
   const proxHtml=faltam>0?`<div class="prox"><span class="cad">🔒</span><span><b style="color:var(--fg)">${faltam} ${faltam>1?'próximas linhas contratadas':'próxima linha contratada'}</b> · ${faltam>1?'aparecem':'aparece'} aqui assim que a linha em alimentação chegar a 100%.</span></div>`:'';
   const etAll0=etapasDaFoto(atual.dados),concluida=etAll0.length>0&&etAll0.every(e=>e.feita);
   if(concluida){const k='fc-portal-festa-'+(ENVIO.chave||'demo').slice(0,12);let ja=false;try{ja=!ENVIO.demo&&localStorage.getItem(k)==='1';}catch(_){}
     if(!ja&&!render._festa){render._festa=true;setTimeout(confete,500);try{if(!ENVIO.demo)localStorage.setItem(k,'1');}catch(_){}}}
   const etAll=etapasDaFoto(atual.dados), etAt=etAll.find(e=>!e.feita);
-  $('#topo').innerHTML=`<div class="topo"><span><span class="num">${pctGeral}%</span> <span class="muted">${atual.dados.tipo_cliente==='ativo'?'dos preços revisados (todas as linhas)':'da alimentação concluída (todas as linhas)'}</span></span>
+  $('#topo').innerHTML='';const topoOld=`<div class="topo"><span><span class="num">${pctGeral}%</span> <span class="muted">${atual.dados.tipo_cliente==='ativo'?'dos preços revisados (todas as linhas)':'da alimentação concluída (todas as linhas)'}</span></span>
     ${etAll.length?`<span class="sep"></span><span>${etAt?`<span class="muted">Etapa ${etAll.indexOf(etAt)+1} de ${etAll.length}:</span> <b>${esc(etAt.titulo)}</b>`:'<b>Implantação concluída ✓</b>'}</span>`:''}
     <a class="ver" href="#andamento">Ver andamento completo ↓</a></div>`;
-  document.getElementById('siteSec').hidden=false;
+  document.getElementById('siteSec').hidden=true;
+  const faltaL=etAll.map((e,i)=>({e,i})).filter(({e,i})=>e.responsavel==='cliente'&&[3,4,5].includes(i+1)&&!e.feita);
+  const faltaHtml=faltaL.length?`<section class="falta"><h3>⚠️ Falta da sua equipe</h3><div class="muted" style="font-size:13px;margin-bottom:4px">Assim que recebermos, a implantação continua.</div>${faltaL.map(({e,i})=>`<div class="it"><b style="font-weight:600">${esc(e.titulo)}</b>${acoesEtapa(e,i)}</div>`).join('')}</section>`:'';
   $('#app').innerHTML=`
     ${ENVIO.nome?`<div class="ola">👋 Olá, <b>${esc(ENVIO.nome)}</b><button type="button" id="trocarPessoa">Não é você? Trocar</button></div>`:''}
     <h2 class="andtit" id="andamento">${atual.dados.tipo_cliente==='ativo'?'Andamento da revisão de preços':'Andamento da sua implantação'}</h2>
     ${atual.dados.tipo_cliente==='ativo'?`<div class="liberado rev" style="margin:0 0 12px">🔄 <b>Seu sistema está em revisão de preços.</b> Ele continua funcionando normalmente: nossa equipe está conferindo e atualizando os preços linha a linha. Os itens já revisados aparecem abaixo.</div>`:''}
-    <div class="kpis">
-      <div class="kpi hi"><div class="l">${atual.dados.tipo_cliente==='ativo'?'Preços revisados':'Alimentação concluída'}</div><div class="v">${pctGeral}%</div><div class="l" style="margin-top:2px">somando todas as linhas</div></div>
-      <div class="kpi"><div class="l">Etapas concluídas</div><div class="v">${etAll.filter(e=>e.feita).length} <small>de ${etAll.length||10}</small></div></div>
-    </div>
+    <div class="resumo"><div><div class="big">${pctGeral}%</div><div class="muted" style="font-size:13px">${atual.dados.tipo_cliente==='ativo'?'dos preços revisados':'da alimentação concluída'}</div></div>
+      <div style="flex:1;min-width:200px"><div class="rbar"><i style="width:${pctGeral}%"></i></div>
+      <div class="muted" style="font-size:13.5px;margin-top:8px">${etAll.length?(etAt?`Etapa atual: <b style="color:var(--fg)">${esc(etAt.titulo)}</b> · ${etAll.filter(e=>e.feita).length} de ${etAll.length}`:'<b style="color:var(--fg)">Implantação concluída ✓</b>'):''}</div></div></div>
+    ${faltaHtml}
     ${concluida?`<section class="festa" role="status"><div class="fx">🎉</div><h2>${atual.dados.tipo_cliente==='ativo'?'Revisão concluída!':'Implantação concluída!'}</h2><p>Todas as linhas contratadas foram alimentadas, conferidas e com margem ajustada. Obrigado pela parceria. Qualquer dúvida no uso do sistema, fale com a FC.</p></section>`:''}
     ${situacaoHtml(atual.dados.situacao)}
     ${etapasHtml(etapasDaFoto(atual.dados))}
     ${G?gruposHtml():`<section class="sec card"><h2>Andamento por linha <span class="muted" style="font-family:var(--body);font-size:13px;font-weight:500;margin-left:auto">${L.filter(feitaL).length} de ${L.length} ${L.length>1?'linhas concluídas':'linha concluída'}</span></h2>${seqInfo}${baseHtml(atual.dados.fornecedores)}${vis.map(linhaHtml).join('')}${proxHtml}</section>`}
     <section class="sec card" id="supSec"></section>
-    <div class="foot">FC Consultoria e Representação · Atendimento de segunda a sexta, das 08:00 às 11:00 e das 13:00 às 17:00 (horário de Sinop/MT, 1 hora a menos que Brasília)</div>`;
+    <div class="foot"><b>FC Consultoria em Esquadria</b> · <a href="https://fc-consultoria.github.io/" target="_blank" rel="noopener">site</a> · <a href="https://www.instagram.com/fc__consultoria/" target="_blank" rel="noopener">Instagram</a><br>Atendimento de segunda a sexta, das 08:00 às 11:00 e das 13:00 às 17:00 (horário de Sinop/MT, 1 hora a menos que Brasília)</div>`;
 }
 
 function confete(){if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;const c=document.createElement('canvas');c.style.cssText='position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:200';document.body.appendChild(c);
