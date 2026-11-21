@@ -12,7 +12,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Matriz FC">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<!-- Painel da Matriz no celular (14/11/2026): só Liberar acessos, Para responder e On-line. 21/11/2026: + Agenda (visitas, viagens, treinamentos · tabela fc_agenda). 21/11/2026: + Despesas por viagem com foto do comprovante (tabela fc_despesa, bucket privado despesas). 21/11/2026: + 🏠 Hoje, 📥 Caixa de entrada (captura rápida, fc_caixa_entrada + bucket caixa), ✅ Demandas (máx. 5, fc_demanda) e 💰 Financeiro (fc_financeiro) — substituem a Rotina FC; Acessos, Responder, On-line e Teste 24 h foram para ☰ Mais. 21/11/2026: + Agenda › ✈️ Passagens Sinop⇄Cuiabá com teto (fc_passagem_preco/cfg, SerpApi via pg_net + pg_cron).
+<!-- Painel da Matriz no celular (14/11/2026): só Liberar acessos, Para responder e On-line. 21/11/2026: + Agenda (visitas, viagens, treinamentos · tabela fc_agenda). 21/11/2026: + Despesas por viagem com foto do comprovante (tabela fc_despesa, bucket privado despesas). 21/11/2026: + 🏠 Hoje, 📥 Caixa de entrada (captura rápida, fc_caixa_entrada + bucket caixa), ✅ Demandas (máx. 5, fc_demanda) e 💰 Financeiro (fc_financeiro) — substituem a Rotina FC; Acessos, Responder, On-line e Teste 24 h foram para ☰ Mais. 21/11/2026: + ☰ Mais › 🔐 Login Acessos Sistema (fc_login_sistema/fc_login_cfg, senha e licença cifradas no aparelho com senha mestra). 21/11/2026: + Agenda › ✈️ Passagens Sinop⇄Cuiabá com teto (fc_passagem_preco/cfg, SerpApi via pg_net + pg_cron).
      Mesmo login do Painel da Matriz (fica salvo no aparelho). © FC Consultoria em Esquadria · uso exclusivo -->
 <style>
 :root{--pt:#0e4d5c;--pt2:#0a3a46;--pr:#c7d0d4;--bg:#f2f4f5;--card:#fff;--fg:#14232a;--mu:#5f6b70;--ln:#dde3e6;--ok:#1f8a4c;--bad:#a32d2d;--sel:#e3f0f2}
@@ -148,6 +148,14 @@ nav .n.on{display:grid}
   <div id="agForm"></div>
   <div id="agL"></div>
  </section>
+ <section class="sec" id="s-ls">
+  <div class="hd"><span id="lsInfo">Carregando…</span><button type="button" class="bt p" id="lsNovo" style="flex:none;padding:7px 14px">+ Novo</button></div>
+  <div id="lsCad"></div>
+  <div class="ag-f"><input id="lsBusca" type="search" placeholder="Buscar cliente, contato ou usuário"></div>
+  <div class="chips" id="lsF"><button type="button" data-lsf="at" class="on">Ativos</button><button type="button" data-lsf="pe">Pendentes</button><button type="button" data-lsf="qu">Quitados</button><button type="button" data-lsf="ca">Cancelados</button><button type="button" data-lsf="to">Todos</button></div>
+  <div id="lsForm"></div>
+  <div id="lsL"></div>
+ </section>
 </main>
 
 <nav>
@@ -170,11 +178,11 @@ if(!app&&/iPhone|iPad/.test(navigator.userAgent))$('dicaInst').hidden=false;
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js',{scope:'./'}).catch(()=>{});
 
 /* ===== abas ===== */
-const TIT={hj:'Hoje',cx:'Caixa de entrada',de:'Demandas',fi:'Financeiro',ma:'Mais',ac:'Liberar acessos',rp:'Para responder',on:'Quem está on-line',dm:'Demonstrativos de 24 h',ag:'Agenda · visitas e viagens'};
-let ABA='hj';const NAVDE={ac:'ma',rp:'ma',on:'ma',dm:'ma'};
+const TIT={hj:'Hoje',cx:'Caixa de entrada',de:'Demandas',fi:'Financeiro',ma:'Mais',ac:'Liberar acessos',rp:'Para responder',on:'Quem está on-line',dm:'Demonstrativos de 24 h',ag:'Agenda · visitas e viagens',ls:'Login Acessos Sistema'};
+let ABA='hj';const NAVDE={ac:'ma',rp:'ma',on:'ma',dm:'ma',ls:'ma'};
 function aba(s){ABA=s;document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.s===(NAVDE[s]||s)));
   document.querySelectorAll('.sec').forEach(x=>x.classList.toggle('on',x.id==='s-'+s));$('tit').textContent=TIT[s];
-  try{localStorage.setItem('fc-cel-aba',s);}catch(_){}scrollTo(0,0);if(s==='on'&&LOGADO)onCarregar();if(s==='dm'&&LOGADO)dmCarregar();if(s==='ag'&&LOGADO)agCarregar();if(s==='ma')maPinta();if(s==='hj')hjPinta();}
+  try{localStorage.setItem('fc-cel-aba',s);}catch(_){}scrollTo(0,0);if(s==='on'&&LOGADO)onCarregar();if(s==='dm'&&LOGADO)dmCarregar();if(s==='ag'&&LOGADO)agCarregar();if(s==='ls'&&LOGADO)lsCarregar();if(s==='ma')maPinta();if(s==='hj')hjPinta();}
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>aba(b.dataset.s));
 
 /* ===== 🔑 Liberar acessos (cadastros pelo link de primeiro acesso) ===== */
@@ -650,8 +658,98 @@ function fiPinta(){const el=$('fiL');if(!el)return;const H=hoje(),ab=fiAbertos()
   const L=FIF==='ab'?ab:FI.filter(x=>x.status==='feito').sort((a,b)=>(b.feito_em||'').localeCompare(a.feito_em||'')).slice(0,30);
   el.innerHTML=(FIF==='ab'?`<div class="mt"><div><small>A receber</small><b style="color:var(--ok)">${brl(rec)}</b></div><div><small>A pagar</small><b>${brl(pag)}</b></div></div>`:'')+(L.length?L.map(x=>{const venc=x.status==='aberto'&&x.vencimento&&x.vencimento<H;return `<div class="cd${venc?' urg':''}"><div class="top"><b>${h(x.titulo)}</b><span style="${venc?'color:var(--bad)':''}">${x.vencimento?(venc?'vencido · ':'')+dSem(x.vencimento)+' '+dBR(x.vencimento):''}</span></div><p><span class="tag ${FIT[x.tipo][1]}">${FIT[x.tipo][0]}</span>${x.recorrente?' <span class="tag tg-c">↻ mensal</span>':''}${x.parcelas>1?' <span class="tag tg-a">'+x.parcela+'/'+x.parcelas+'</span>':''}${x.cliente?' <span class="emp">'+h(x.cliente)+'</span>':''}${x.valor?' <b>'+brl(x.valor)+'</b>':''}</p>${x.obs?`<p class="sub">${h(x.obs)}</p>`:''}<div class="bts"><button class="bt ${x.status==='aberto'?'p':'n'}" data-fiok="${x.id}">${x.status==='aberto'?(x.tipo==='receber'?'✓ Recebido':x.tipo==='extrato'?'✓ Enviado':'✓ Pago'):'↺ Reabrir'}</button>${x.status==='aberto'?`<button class="bt n" style="flex:.6" data-fied="${x.id}">Editar</button>`:''}<button class="bt r" style="flex:.5" data-fidel="${x.id}">Apagar</button></div></div>`;}).join(''):`<div class="vazio"><i>💰</i><b>${FIF==='ab'?'Nada em aberto':'Nada feito ainda'}</b>${FIF==='ab'?'Guias, honorário, notas, a receber e o extrato do mês.':''}</div>`);}
 
+
+/* ===== 🔐 Login Acessos Sistema (21/11/2026) · logins dos clientes no WVetro/CEM
+   Tabelas fc_login_sistema + fc_login_cfg (só admin). Senha e licença são criptografadas NO APARELHO
+   (PBKDF2 310 mil voltas + AES-GCM 256) com a senha mestra — o banco só guarda texto embaralhado. */
+const LSST={ativo:['Ativo','tg-c'],pendente:['Pagamento pendente','tg-a'],quitado:['Quitado','tg-r'],cancelado:['Cancelado','tg-x'],nao_contratado:['Não contratado','tg-x']};
+let LS=[],LSCFG=null,LSKEY=null,LSF='at',LSQ='',LSVER={},LSTRAVA=null;
+const _en=new TextEncoder(),_de=new TextDecoder();
+const b64e=u=>btoa(String.fromCharCode(...new Uint8Array(u))),b64d=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+async function lsDeriva(senha,sal){const k=await crypto.subtle.importKey('raw',_en.encode(senha),'PBKDF2',false,['deriveKey']);
+  return crypto.subtle.deriveKey({name:'PBKDF2',salt:b64d(sal),iterations:310000,hash:'SHA-256'},k,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);}
+async function lsCifra(obj,key){const iv=crypto.getRandomValues(new Uint8Array(12));const c=await crypto.subtle.encrypt({name:'AES-GCM',iv},key||LSKEY,_en.encode(JSON.stringify(obj)));return {cofre:b64e(c),iv:b64e(iv)};}
+async function lsDecifra(c,iv,key){const p=await crypto.subtle.decrypt({name:'AES-GCM',iv:b64d(iv)},key||LSKEY,b64d(c));return JSON.parse(_de.decode(p));}
+function lsTranca(){LSKEY=null;LSVER={};if(ABA==='ls')lsPinta();}
+function lsReinicia(){clearTimeout(LSTRAVA);LSTRAVA=setTimeout(lsTranca,10*60000);}
+document.addEventListener('visibilitychange',()=>{if(document.hidden)lsTranca();});
+async function lsCarregar(){const [a,b]=await Promise.all([sb.from('fc_login_sistema').select('*').order('cliente'),sb.from('fc_login_cfg').select('*').eq('id',1).maybeSingle()]);
+  if(a.error){$('lsInfo').textContent='Não carregou: '+a.error.message;return;}LS=a.data||[];LSCFG=b.data||null;lsPinta();}
+const dBRc=d=>d?d.split('-').reverse().join('/'):'';
+function lsVence(x){if(!x.fim||['cancelado','nao_contratado'].includes(x.status))return '';const dias=Math.round((new Date(x.fim+'T12:00')-new Date(hoje()+'T12:00'))/864e5);
+  if(dias<0)return '<span class="tag tg-x">Contrato vencido</span> ';if(dias<=30)return `<span class="tag tg-a">Vence em ${dias} dia${dias===1?'':'s'}</span> `;return '';}
+function lsLista(){const q=LSQ.trim().toLowerCase();return LS.filter(x=>{
+  if(LSF==='at'&&!['ativo','pendente'].includes(x.status))return false;if(LSF==='pe'&&x.status!=='pendente')return false;
+  if(LSF==='qu'&&x.status!=='quitado')return false;if(LSF==='ca'&&!['cancelado','nao_contratado'].includes(x.status))return false;
+  return !q||[x.cliente,x.contato,x.usuario,x.sistema,x.obs].join(' ').toLowerCase().includes(q);});}
+function lsCadeado(){if(LSKEY)return `<div class="dica" style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span>🔓 Senhas destravadas · trava sozinho em 10 min ou ao sair do app</span><button class="bt n" type="button" id="lsTrancar" style="flex:none;padding:6px 12px;margin:0">Trancar</button></div>`;
+  if(!LSCFG)return `<div class="cd ag-f" style="border-color:#e8b04a"><b>🔐 Crie sua senha mestra</b><p class="sub">Ela embaralha as senhas dos clientes aqui no celular. Ninguém consegue ver sem ela — nem o banco, nem a FC. <b>Se esquecer, as senhas guardadas se perdem</b> (os outros dados ficam). Use no mínimo 8 caracteres e não use a mesma do login.</p>
+    <label>Senha mestra</label><input type="password" id="lsM1" autocomplete="new-password"><label>Repita</label><input type="password" id="lsM2" autocomplete="new-password">
+    <div class="bts"><button class="bt p" type="button" id="lsCriar">Criar senha mestra</button></div><div class="st" id="lsMsg"></div></div>`;
+  return `<div class="cd ag-f"><b>🔒 Senhas trancadas</b><p class="sub">Digite a senha mestra para ver ou copiar senhas e licenças.</p><input type="password" id="lsM" autocomplete="current-password" placeholder="Senha mestra">
+    <div class="bts"><button class="bt p" type="button" id="lsAbrir">Destravar</button></div><div class="st" id="lsMsg"></div></div>`;}
+function lsPinta(){const el=$('lsL');if(!el)return;const L=lsLista();
+  const venc=LS.filter(x=>lsVence(x)).length,pend=LS.filter(x=>x.status==='pendente').length;
+  $('lsInfo').textContent=LS.length+' cliente'+(LS.length===1?'':'s')+(pend?' · '+pend+' com pagamento pendente':'')+(venc?' · '+venc+' vencendo':'');
+  $('lsCad').innerHTML=lsCadeado();
+  el.innerHTML=L.length?L.map(x=>{const st=LSST[x.status]||[x.status,'tg-c'],v=LSVER[x.id];
+    const seg=(rot,k)=>`<div class="dpi"><span><span class="sub">${rot}</span><br>${v?h(v[k]||'—'):(x.cofre?'••••••':'<span class="sub">não cadastrada</span>')}</span>${x.cofre?`<span class="dpa"><button class="bt n" type="button" data-lsv="${x.id}">${v?'Ocultar':'Ver'}</button><button class="bt n" type="button" data-lsc="${x.id}" data-k="${k}">Copiar</button></span>`:''}</div>`;
+    return `<div class="cd"><div class="top"><b>${h(x.cliente)}</b><span>${h(x.sistema||'')}</span></div>
+    <div class="sub">${x.contato?h(x.contato)+' · ':''}<span class="tag ${st[1]}">${st[0]}</span> ${lsVence(x)}</div>
+    <p class="sub">📅 Início: <b style="color:var(--fg)">${dBRc(x.inicio)||'—'}</b> · Final: <b style="color:var(--fg)">${dBRc(x.fim)||'—'}</b>${x.ultimo_acesso?' · último acesso '+dBRc(x.ultimo_acesso):''}</p>
+    <div class="dp"><div class="dpi"><span><span class="sub">Usuário</span><br>${h(x.usuario||'—')}</span>${x.usuario?`<span class="dpa"><button class="bt n" type="button" data-lsu="${x.id}">Copiar</button></span>`:''}</div>${seg('Senha','senha')}${seg('Licença','licenca')}
+    ${x.endereco?`<div class="dpi"><span><span class="sub">Endereço de acesso</span><br>${h(x.endereco)}</span></div>`:''}</div>
+    ${x.obs?`<p>📝 ${h(x.obs)}</p>`:''}
+    <div class="bts"><button class="bt n" type="button" data-lsh="${x.id}">✓ Acessei hoje</button><button class="bt p" type="button" data-lse="${x.id}">Editar</button></div></div>`;}).join('')
+    :'<div class="vazio"><i>🔐</i><b>Nenhum cliente aqui</b>Toque em "+ Novo" para cadastrar.</div>';}
+function lsForm(x){x=x||{status:'ativo',sistema:'WVetro'};const o=(v,t)=>`<option value="${v}"${(x.status===v||x.sistema===v)?' selected':''}>${t}</option>`;
+  $('lsForm').innerHTML=`<div class="cd ag-f" style="border-color:var(--pt)"><b>${x.id?'Editar '+h(x.cliente):'Novo cliente'}</b>
+  <label>Cliente</label><input id="lf_cliente" value="${h(x.cliente||'')}"><label>Contato</label><input id="lf_contato" value="${h(x.contato||'')}">
+  <div class="dois"><div><label>Sistema</label><select id="lf_sistema">${o('WVetro','WVetro')}${o('CEM','CEM')}${o('Outro','Outro')}</select></div><div><label>Situação</label><select id="lf_status">${Object.entries(LSST).map(([k,v])=>o(k,v[0])).join('')}</select></div></div>
+  <div class="dois"><div><label>Início do contrato</label><input type="date" id="lf_inicio" value="${x.inicio||''}"></div><div><label>Final do contrato</label><input type="date" id="lf_fim" value="${x.fim||''}"></div></div>
+  <label>Usuário</label><input id="lf_usuario" value="${h(x.usuario||'')}" autocapitalize="off">
+  ${LSKEY?`<div class="dois"><div><label>Senha</label><input id="lf_senha" autocapitalize="off" autocomplete="off" placeholder="${x.cofre?'(manter a atual)':''}"></div><div><label>Licença</label><input id="lf_licenca" autocomplete="off" inputmode="numeric" placeholder="${x.cofre?'(manter a atual)':''}"></div></div>`
+    :'<p class="st er">🔒 Destrave com a senha mestra (no topo) para cadastrar ou trocar senha e licença.</p>'}
+  <label>Endereço de acesso (opcional)</label><input id="lf_endereco" value="${h(x.endereco||'')}" autocapitalize="off">
+  <label>Último acesso</label><input type="date" id="lf_ultimo" value="${x.ultimo_acesso||''}">
+  <label>Anotações (pagamento, pendências — não coloque senha aqui)</label><textarea id="lf_obs" rows="2">${h(x.obs||'')}</textarea>
+  <div class="bts"><button class="bt p" type="button" id="lfSalvar">Salvar</button><button class="bt n" type="button" id="lfCanc">Cancelar</button>${x.id?'<button class="bt r" type="button" id="lfDel">Excluir</button>':''}</div><div class="st" id="lfMsg"></div></div>`;
+  $('lfCanc').onclick=()=>{$('lsForm').innerHTML='';};
+  if(x.id)$('lfDel').onclick=async()=>{if(!confirm('Excluir '+x.cliente+' com usuário, senha e licença? Não dá para desfazer.'))return;const r=await sb.from('fc_login_sistema').delete().eq('id',x.id);if(r.error){$('lfMsg').className='st er';$('lfMsg').textContent='⚠ '+r.error.message;return;}$('lsForm').innerHTML='';lsCarregar();};
+  $('lfSalvar').onclick=async()=>{const g=k=>($('lf_'+k)?$('lf_'+k).value.trim():''),m=$('lfMsg');
+    if(!g('cliente')){m.className='st er';m.textContent='Coloque o nome do cliente.';return;}
+    if(g('inicio')&&g('fim')&&g('fim')<g('inicio')){m.className='st er';m.textContent='O final do contrato está antes do início.';return;}
+    const d={cliente:g('cliente'),contato:g('contato')||null,sistema:g('sistema'),status:g('status'),inicio:g('inicio')||null,fim:g('fim')||null,usuario:g('usuario')||null,endereco:g('endereco')||null,ultimo_acesso:g('ultimo')||null,obs:g('obs')||null,atualizado:new Date().toISOString()};
+    try{if(LSKEY&&(g('senha')||g('licenca')||!x.cofre)){let ant={};if(x.cofre){try{ant=await lsDecifra(x.cofre,x.iv);}catch(_){}}
+        const c=await lsCifra({senha:g('senha')||ant.senha||'',licenca:g('licenca')||ant.licenca||''});d.cofre=c.cofre;d.iv=c.iv;delete LSVER[x.id];}
+      $('lfSalvar').disabled=true;const r=x.id?await sb.from('fc_login_sistema').update(d).eq('id',x.id):await sb.from('fc_login_sistema').insert(d);if(r.error)throw r.error;
+      $('lsForm').innerHTML='';lsCarregar();}catch(err){$('lfSalvar').disabled=false;m.className='st er';m.textContent='⚠ '+(err.message||err);}};
+  $('lsForm').scrollIntoView({behavior:'smooth'});}
+async function lsCopia(t,btn){try{await navigator.clipboard.writeText(t);const o=btn.textContent;btn.textContent='Copiado ✓';setTimeout(()=>btn.textContent=o,1500);}catch(_){prompt('Copie:',t);}}
+$('lsNovo').onclick=()=>lsForm();
+$('lsBusca').oninput=e=>{LSQ=e.target.value;lsPinta();};
+$('lsF').addEventListener('click',e=>{const b=e.target.closest('[data-lsf]');if(!b)return;LSF=b.dataset.lsf;$('lsF').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));lsPinta();});
+$('s-ls').addEventListener('click',async e=>{const t=e.target,msg=$('lsMsg');
+  if(t.id==='lsTrancar'){lsTranca();return;}
+  if(t.id==='lsCriar'){const a=$('lsM1').value,b=$('lsM2').value;if(a.length<8){msg.className='st er';msg.textContent='Use pelo menos 8 caracteres.';return;}if(a!==b){msg.className='st er';msg.textContent='As duas senhas não são iguais.';return;}
+    t.disabled=true;msg.textContent='Criando…';const sal=b64e(crypto.getRandomValues(new Uint8Array(16))),key=await lsDeriva(a,sal),c=await lsCifra('FC-OK',key);
+    const r=await sb.from('fc_login_cfg').insert({id:1,sal,teste:c.cofre,teste_iv:c.iv});if(r.error){t.disabled=false;msg.className='st er';msg.textContent='⚠ '+r.error.message;return;}
+    LSKEY=key;lsReinicia();await lsCarregar();return;}
+  if(t.id==='lsAbrir'){t.disabled=true;msg.className='st';msg.textContent='Conferindo…';try{const key=await lsDeriva($('lsM').value,LSCFG.sal);if(await lsDecifra(LSCFG.teste,LSCFG.teste_iv,key)!=='FC-OK')throw 0;LSKEY=key;lsReinicia();lsPinta();}catch(_){t.disabled=false;msg.className='st er';msg.textContent='Senha mestra errada.';}return;}
+  const id=(t.closest('[data-lsv],[data-lsc],[data-lsu],[data-lse],[data-lsh]')||{}).dataset;if(!id)return;
+  const x=LS.find(q=>q.id===(id.lsv||id.lsc||id.lsu||id.lse||id.lsh));if(!x)return;
+  if(id.lse){lsForm(x);return;}
+  if(id.lsu){lsCopia(x.usuario,t);return;}
+  if(id.lsh){t.disabled=true;const r=await sb.from('fc_login_sistema').update({ultimo_acesso:hoje(),atualizado:new Date().toISOString()}).eq('id',x.id);if(r.error)alert('Não foi possível: '+r.error.message);lsCarregar();return;}
+  if(!LSKEY){$('lsCad').scrollIntoView({behavior:'smooth'});const i=$('lsM');if(i)i.focus();return;}
+  lsReinicia();
+  try{if(!LSVER[x.id])LSVER[x.id]=await lsDecifra(x.cofre,x.iv);}catch(_){alert('Não consegui abrir esta senha.');return;}
+  if(id.lsv){if(t.textContent==='Ocultar'){delete LSVER[x.id];}lsPinta();return;}
+  if(id.lsc){const v=LSVER[x.id][id.k]||'';if(!v){alert('Não cadastrada.');return;}lsCopia(v,t);}
+});
+
 /* ---------- ☰ Mais ---------- */
-function maPinta(){const el=$('maL');if(!el)return;const n=[['ac','🔑','Liberar acessos',AC.length],['rp','📩','Para responder',(RP.itens||[]).length],['on','🟢','Quem está on-line',ON.length],['dm','🧪','Demonstrativos de 24 h',(DM||[]).filter(d=>d.status==='pendente').length]];
+function maPinta(){const el=$('maL');if(!el)return;const n=[['ac','🔑','Liberar acessos',AC.length],['rp','📩','Para responder',(RP.itens||[]).length],['on','🟢','Quem está on-line',ON.length],['dm','🧪','Demonstrativos de 24 h',(DM||[]).filter(d=>d.status==='pendente').length],['ls','🔐','Login Acessos Sistema',0]];
   el.innerHTML=n.map(([k,i,t,c])=>`<div class="cd" data-ir="${k}" role="button"><div class="top"><b>${i} ${t}</b><span>${c?'<span class="tag tg-x">'+c+'</span>':'›'}</span></div></div>`).join('');}
 
 /* ---------- 🔔 Alertas (com o app aberto): 4 h úteis sem resposta e "Fechar o dia" às 17:30, só seg–sex ---------- */
