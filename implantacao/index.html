@@ -615,6 +615,8 @@ async function carregarClientes(){
   CLIENTS.forEach(cl=>{ cl.ajustePreco = {}; checklistRows.filter(r=>r.cliente_id===cl.id && r.preco_ajustado!=null).forEach(r=>{ cl.ajustePreco[(r.linha||'')+'|'+r.codigo] = Number(r.preco_ajustado); }); });
   // Escolha do preço que fica: painel (automático), alimentado (o que está no sistema) ou manual
   CLIENTS.forEach(cl=>{ cl.precoAlim = {}; cl.precoManual = {}; cl.precoEsc = {}; checklistRows.filter(r=>r.cliente_id===cl.id).forEach(r=>{ const k=(r.linha||'')+'|'+r.codigo; if(r.preco_alimentado!=null) cl.precoAlim[k]=Number(r.preco_alimentado); if(r.preco_manual!=null) cl.precoManual[k]=Number(r.preco_manual); if(r.preco_escolha) cl.precoEsc[k]=r.preco_escolha; }); });
+  // Custo e venda lidos da tabela de preços do WVetro do cliente (só leitura)
+  CLIENTS.forEach(cl=>{ cl.custoWv = {}; cl.vendaWv = {}; checklistRows.filter(r=>r.cliente_id===cl.id).forEach(r=>{ const k=(r.linha||'')+'|'+r.codigo; if(r.custo_wvetro!=null) cl.custoWv[k]=Number(r.custo_wvetro); if(r.venda_wvetro!=null) cl.vendaWv[k]=Number(r.venda_wvetro); }); });
   CLIENTS.forEach(cl=>{ cl.wvLinhas = {}; cl._wvCache = {}; checklistRows.filter(r=>r.cliente_id===cl.id && r.base_codigo && r.linha).forEach(r=>{ (cl.wvLinhas[r.linha] = cl.wvLinhas[r.linha]||[]).push({codigo:r.codigo, base:r.base_codigo, desc:r.desc_sistema||''}); }); });
   // Itens do WVetro do cliente que não estão no Banco de Preços nas linhas contratadas → painel "Em avaliação"
   try{ const {data:avRows} = await fetchAllRows('impl_wv_avaliacao', '*', 'codigo'); CLIENTS.forEach(cl=>{ cl.wvAval = (avRows||[]).filter(r=>r.cliente_id===cl.id); }); }
@@ -4435,7 +4437,7 @@ function celulaPrecoAlimentacao(c, key, db, it){
   const btn = (val, rot, ok)=>`<button type="button" class="btn btn-sm" style="font-size:11px; padding:2px 7px;${e===val?' background:var(--accent); color:#fff; border-color:var(--accent);':''}" data-action="escolher-preco-alim" data-escolha="${val}" data-key="${escapeHtml(key)}" data-codigo="${escapeHtml(it.codigo)}" ${ok?'':'disabled'}>${rot}</button>`;
   const tdFica = `<td style="white-space:nowrap;">${btn('painel','Painel',painelV>0)}${btn('alimentado','Alim.',alim>0)}${btn('manual','Manual',man>0)}</td>`;
   const fed = !!((key==='vidro'?c.alimentadosVidro:key==='perfis'?c.alimentadosPerfis:(c.alimentadosComponentes||{})[key])||{})[it.codigo];
-  const fica = e==='alimentado' ? alim : e==='manual' ? man : painelV;
+  const fica = e==='alimentado' ? alim : e==='manual' ? man : e==='painel' ? painelV : ((c.ajustePreco||{})[k]>0 ? c.ajustePreco[k] : painelV);
   let sit = '<span style="color:var(--text-3)">—</span>';
   if(fed && alim>0 && fica>0 && Math.abs(fica-alim)>0.004) sit = '<span class="badge badge-warn" title="O preço escolhido é diferente do que está no sistema">Reenviar WVetro</span>';
   else if(fed) sit = '<span class="badge badge-ok">Ok</span>';
@@ -4927,6 +4929,95 @@ function resolverSelecaoFornecedoresChecklist(filtroKey, fornecedoresDisponiveis
   return { verTodos, selecionados, modoGrade: selecionados.length>1 };
 }
 
+
+// ---------- Definição de preços dos componentes (custo do WVetro × banco de preços) ----------
+function temDefPreco(c){ return Object.keys(c.custoWv||{}).length>0; }
+function fornDefPreco(c, termo){ return fornecedoresSelecionadosCliente(c, 'componentes').find(f=>normalizeText(f).includes(termo)) || null; }
+function linhaDefPreco(c, r){
+  const k = r.linha+'|'+r.it.codigo, custo = (c.custoWv||{})[k], venda = (c.vendaWv||{})[k];
+  const ordem = ordemFornecedoresItem(c, 'componentes', r.db);
+  const fG = ordem.find(f=>normalizeText(f).includes('guapore')), fV = ordem.find(f=>normalizeText(f).includes('vitrasul'));
+  const gua = fG ? precoFornecedor(r.it, fG, 'componentes') : null, vit = fV ? precoFornecedor(r.it, fV, 'componentes') : null;
+  const pa = precoPainelAuto(c, r.linha, r.db, r.it), painel = pa.esc ? pa.esc.v : null;
+  const dif = (custo>0 && painel>0) ? (custo-painel)/painel : null;
+  const man = (c.precoManual||{})[k], esc = (c.precoEsc||{})[k];
+  const vals = {wvetro:custo>0?custo:null, guapore:gua>0?gua:null, vitrasul:vit>0?vit:null, manual:man>0?man:null};
+  const escolha = vals.hasOwnProperty(esc) ? esc : null, fica = escolha ? vals[escolha] : null;
+  const motivos = [];
+  if(!(custo>0)) motivos.push('sem custo na tabela geral do WVetro (fora da tabela ou preço por cor)');
+  if(!(gua>0) && !(vit>0)) motivos.push('sem preço no banco (Guaporé/Vitrasul)');
+  return {...r, k, custo, venda, gua, vit, painel, painelF: pa.esc ? pa.esc.f : '', dif, man, escolha, fica, vals, semBase: motivos.length>0, motivos};
+}
+const LIMITE_DIF_DEF = 0.20;
+function renderDefinicaoPrecos(cliente, todasLinhasRows){
+  const fG = fornDefPreco(cliente, 'guapore'), fV = fornDefPreco(cliente, 'vitrasul');
+  const pG = fG ? ajusteFornecedor(fG, 'componentes') : 0, pV = fV ? ajusteFornecedor(fV, 'componentes') : 0;
+  const search = normalizeText(STATE.search), searchCodigo = normalizeCodigo(STATE.search), filtro = STATE.defFiltro || 'todos';
+  const R = todasLinhasRows.map(r=>linhaDefPreco(cliente, r));
+  const busca = r=>!search || (searchCodigo && normalizeCodigo(r.it.codigo).includes(searchCodigo)) || normalizeText(r.it.descricao||'').includes(search);
+  const comBase = R.filter(r=>!r.semBase), semBase = R.filter(r=>r.semBase);
+  const nSemEsc = comBase.filter(r=>!r.escolha).length, nDif = comBase.filter(r=>r.dif!=null && Math.abs(r.dif)>LIMITE_DIF_DEF).length, nDef = R.filter(r=>r.escolha).length;
+  const rows = comBase.filter(busca).filter(r=> filtro==='sem-escolha' ? !r.escolha : filtro==='dif' ? (r.dif!=null && Math.abs(r.dif)>LIMITE_DIF_DEF) : filtro==='definidos' ? !!r.escolha : true);
+  const rowsSem = semBase.filter(busca);
+  const pr = v=> v>0 ? fmtPrecoAlim(v) : '<span style="color:var(--text-3)">—</span>';
+  const btn = (r, val, rot)=>`<button type="button" class="btn btn-sm" style="font-size:11px; padding:2px 7px;${r.escolha===val?' background:var(--accent); color:#fff; border-color:var(--accent);':''}" data-action="def-preco-escolha" data-escolha="${val}" data-key="${escapeHtml(r.linha)}" data-codigo="${escapeHtml(r.it.codigo)}" data-v="${r.vals[val]||''}" ${r.vals[val]>0?'':'disabled'} title="${r.escolha===val?'Clique de novo para tirar a escolha':''}">${rot}</button>`;
+  const tdMan = r=>`<td><input class="editable-price" inputmode="decimal" style="width:84px; text-align:right;${r.man>0?' background:#fff4d6; border-color:#e8a317;':''}" value="${r.man>0?fmtPrecoAlim(r.man):''}" placeholder="0,00" data-action="def-preco-manual" data-key="${escapeHtml(r.linha)}" data-codigo="${escapeHtml(r.it.codigo)}" title="Digite um preço manual (já fica escolhido). Apague para limpar."></td>`;
+  const tdFica = r=>`<td style="white-space:nowrap;">${btn(r,'wvetro','WVetro')}${btn(r,'guapore','Guaporé')}${btn(r,'vitrasul','Vitrasul')}${btn(r,'manual','Manual')}${r.fica>0?`<div style="font-size:12px; font-weight:700; margin-top:3px;">Fica: ${fmtMoney(r.fica)}</div>`:''}</td>`;
+  const tdDif = r=> r.dif==null ? '<td class="tright" style="color:var(--text-3)">—</td>' : (()=>{ const pct = Math.round(r.dif*100), big = Math.abs(r.dif)>LIMITE_DIF_DEF; return `<td class="tright" style="white-space:nowrap;${big?' color:#b42318; font-weight:700;':' color:var(--text-3);'}" title="Custo WVetro comparado com o preço do painel (${escapeHtml(r.painelF)} ${fmtMoney(r.painel)})">${pct>0?'+':''}${pct}%</td>`; })();
+  const chip = (val, rot)=>`<button class="chip ${filtro===val?'active':''}" data-action="def-preco-filtro" data-filtro="${val}">${rot}</button>`;
+  return `
+  <div class="panel">
+    <div class="panel-head">
+      <div><h3>${icon('calculator')} Definição de preços dos componentes</h3><div class="desc">Custo e venda lidos da tabela de preços do WVetro de ${escapeHtml(cliente.nome)} (só leitura) comparados com o banco de preços. Escolha qual preço fica em cada item — nada é alterado no WVetro por aqui. Definidos: <b>${nDef}</b> de ${R.length}.</div></div>
+      <button class="btn btn-sm" data-action="def-preco-modo" data-v="0">↩ Voltar ao checklist</button>
+    </div>
+    <div class="panel-head" style="border-top:1px solid var(--border-2);">
+      <div class="chiprow">
+        ${chip('todos', `Com base (${comBase.length})`)}
+        ${chip('sem-escolha', `Sem escolha (${nSemEsc})`)}
+        ${chip('dif', `⚠️ Dif. &gt; ${Math.round(LIMITE_DIF_DEF*100)}% (${nDif})`)}
+        ${chip('definidos', `Definidos (${comBase.filter(r=>r.escolha).length})`)}
+        <a class="chip" href="#sem-base-def" style="text-decoration:none;">Sem base (${semBase.length}) ↓</a>
+      </div>
+      <div class="searchbox">${icon('search')}<input placeholder="Buscar código ou descrição" value="${STATE.search}" data-action="buscar-item"></div>
+    </div>
+    ${rows.length===0 ? emptyState('search-x','Nada por aqui','Nenhum item bate com esse filtro/busca.') : `
+    <div style="overflow-x:auto;"><table>
+      <thead><tr><th>Código</th><th>Descrição</th><th>Linha</th><th class="tright">Custo WVetro</th><th class="tright">Venda WVetro</th><th class="tright">${escapeHtml(fG||'Guaporé')} ${pG?'+'+pG+'%':''}</th><th class="tright">${escapeHtml(fV||'Vitrasul')} ${pV?'+'+pV+'%':''}</th><th class="tright" title="Custo do WVetro comparado com o preço do painel (vermelho acima de ${Math.round(LIMITE_DIF_DEF*100)}%)">Dif. %</th><th>Preço que fica</th><th>Manual</th></tr></thead>
+      <tbody>${rows.map(r=>`<tr>
+        <td class="mono">${escapeHtml(r.it.codigo)}</td><td>${escapeHtml(r.it.descricao||'—')}</td><td><span class="badge badge-muted">${escapeHtml(r.linha)}</span></td>
+        <td class="tright"><b>${pr(r.custo)}</b></td><td class="tright">${pr(r.venda)}</td><td class="tright">${pr(r.gua)}</td><td class="tright">${pr(r.vit)}</td>
+        ${tdDif(r)}${tdFica(r)}${tdMan(r)}</tr>`).join('')}</tbody></table></div>`}
+  </div>
+  <div class="panel" id="sem-base-def">
+    <div class="panel-head"><div><h3>${icon('help-circle')} Sem base (${semBase.length})</h3><div class="desc">Itens sem custo no WVetro e/ou sem preço no banco. Defina a base depois — se já souber o valor, digite em Manual.</div></div></div>
+    ${rowsSem.length===0 ? emptyState('check','Nenhum item sem base','Todos os itens têm custo no WVetro e preço no banco.') : `
+    <div style="overflow-x:auto;"><table>
+      <thead><tr><th>Código</th><th>Descrição</th><th>Linha</th><th>Por que está aqui</th><th class="tright">Custo WVetro</th><th class="tright">Venda WVetro</th><th class="tright">Guaporé</th><th class="tright">Vitrasul</th><th>Preço que fica</th><th>Manual</th></tr></thead>
+      <tbody>${rowsSem.map(r=>`<tr>
+        <td class="mono">${escapeHtml(r.it.codigo)}</td><td>${escapeHtml(r.it.descricao||'—')}</td><td><span class="badge badge-muted">${escapeHtml(r.linha)}</span></td>
+        <td style="font-size:12px; color:#a15c00;">${r.motivos.map(escapeHtml).join(' · ')}</td>
+        <td class="tright">${pr(r.custo)}</td><td class="tright">${pr(r.venda)}</td><td class="tright">${pr(r.gua)}</td><td class="tright">${pr(r.vit)}</td>
+        ${tdFica(r)}${tdMan(r)}</tr>`).join('')}</tbody></table></div>`}
+  </div>`;
+}
+async function salvarDefPreco(c, key, codigo, escolha, manual){
+  const k = key+'|'+codigo;
+  c.precoEsc = c.precoEsc||{}; c.precoManual = c.precoManual||{}; c.ajustePreco = c.ajustePreco||{};
+  const antes = {esc:c.precoEsc[k], man:c.precoManual[k], aj:c.ajustePreco[k]};
+  if(manual!==undefined){ if(manual>0) c.precoManual[k] = manual; else delete c.precoManual[k]; }
+  const db = dbCliente(c, key), it = db && (db.itens||[]).find(x=>x.codigo===codigo);
+  const r = it ? linhaDefPreco(c, {it, linha:key, db}) : null;
+  const v = (escolha && r) ? r.vals[escolha] : null;
+  if(!(v>0)) escolha = null;
+  if(escolha) c.precoEsc[k] = escolha; else delete c.precoEsc[k];
+  if(v>0) c.ajustePreco[k] = v; else delete c.ajustePreco[k];
+  render();
+  const man = c.precoManual[k], agora = new Date().toISOString();
+  const {error} = await sb.from('impl_checklist').upsert({cliente_id:c.id, codigo, linha:key, preco_escolha:escolha, preco_manual:(man>0?man:null), preco_ajustado:(v>0?v:null), preco_ajustado_em:(v>0?agora:null), preco_ajustado_por:(v>0?(meuEmail()||null):null)}, {onConflict:'cliente_id,codigo,linha'});
+  if(error){ ['esc','man','aj'].forEach((n,i)=>{ const m=[c.precoEsc,c.precoManual,c.ajustePreco][i]; if(antes[n]!=null) m[k]=antes[n]; else delete m[k]; }); render(); avisarErroSalvar(error); }
+  else toastSalvo(escolha ? codigo+' · fica '+({wvetro:'WVetro',guapore:'Guaporé',vitrasul:'Vitrasul',manual:'Manual'})[escolha]+' '+fmtMoney(v) : codigo+' · escolha removida');
+}
 function renderChecklistComponentesTodas(cliente, contratadas){
   // "Todas": a visão simplificada da equipe só entra quando todas as linhas contratadas estiverem liberadas
   if(vistaEquipe() && contratadas.length && contratadas.every(l=>linhaLiberada(cliente, l))){
@@ -4973,6 +5064,7 @@ function renderChecklistComponentesTodas(cliente, contratadas){
     });
   });
   const pct = totalItens ? Math.round(totalAlimentados/totalItens*100) : 0;
+  if(STATE.defPreco===cliente.id && temDefPreco(cliente) && ehAdminEspelho()) return renderDefinicaoPrecos(cliente, todasLinhasRows);
 
   const rows = todasLinhasRows.filter(r=>{
     if(search && !(searchCodigo && normalizeCodigo(r.it.codigo).includes(searchCodigo)) && !normalizeText(r.it.descricao||'').includes(search)) return false;
@@ -5007,6 +5099,7 @@ function renderChecklistComponentesTodas(cliente, contratadas){
         <button class="chip ${filtro==='revisao'?'active':''}" data-action="set-filtro" data-filtro="revisao">🔎 Em revisão (${todasLinhasRows.filter(r=>emRevComp(cliente, r.linha, r.it.codigo)).length})</button>
         ${btnMarcarTodosAlimentados(rows, r=>r.linha)}
         ${btnAjustesParaBanco(cliente)}
+        ${temDefPreco(cliente) && ehAdminEspelho() ? `<button class="btn btn-sm btn-primary" data-action="def-preco-modo" data-v="1" title="Custo do WVetro × Guaporé × Vitrasul: escolha o preço que fica">💲 Definição de preços</button>` : ''}
       </div>
       <div class="searchbox">${icon('search')}<input placeholder="Buscar código ou descrição em todas as linhas" value="${STATE.search}" data-action="buscar-item"></div>
     </div>
@@ -6855,6 +6948,22 @@ function wireEvents(){
         render();
         salvarMetroItem(item._id, {em_revisao:item.emRevisao, revisao_em:item.revisaoEm});
       };
+      return;
+    }
+    if(action==='def-preco-modo'){ el.onclick = ()=>{ STATE.defPreco = el.dataset.v==='1' ? STATE.clientId : null; STATE.defFiltro='todos'; STATE.search=''; render(); window.scrollTo(0,0); }; return; }
+    if(action==='def-preco-filtro'){ el.onclick = ()=>{ STATE.defFiltro = el.dataset.filtro; render(); }; return; }
+    if(action==='def-preco-escolha'){
+      el.onclick = ()=>{ const c = CLIENTS.find(x=>x.id===STATE.clientId); if(!c) return; const {key, codigo, escolha} = el.dataset;
+        const atual = (c.precoEsc||{})[key+'|'+codigo]; salvarDefPreco(c, key, codigo, atual===escolha ? null : escolha); };
+      return;
+    }
+    if(action==='def-preco-manual'){
+      el.onkeydown = (e)=>{ if(e.key==='Enter') el.blur(); };
+      el.onchange = (e)=>{ const c = CLIENTS.find(x=>x.id===STATE.clientId); if(!c) return; const {key, codigo} = el.dataset;
+        const t = e.target.value.trim(), v = t ? Number(t.replace(/\s|R\$/g,'').replace(/\.(?=\d{3}(\D|$))/g,'').replace(',','.')) : null;
+        if(t && !(v>0)){ alert('Preço inválido. Use, por exemplo, 12,50'); render(); return; }
+        const atual = (c.precoEsc||{})[key+'|'+codigo];
+        salvarDefPreco(c, key, codigo, v>0 ? 'manual' : (atual==='manual' ? null : atual), v>0 ? v : null); };
       return;
     }
     if(action==='ajustar-preco-alim'){
