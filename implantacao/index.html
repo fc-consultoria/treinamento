@@ -4411,6 +4411,12 @@ function precoPainelAuto(c, key, db, it){
   return r;
 }
 const LIMITE_DIF_ALIM = 0.20;
+// Preço da Vitrasul no banco, SEM o reajuste % do fornecedor (igual ao site).
+function precoVitrasulBase(db, it){
+  const f = ((db&&db.fornecedores)||[]).find(x=>normalizeText(x).trim()==='vitrasul') || 'Vitrasul';
+  const v = it && it.precos ? Number(it.precos[f]) : NaN;
+  return v>0 ? v : null;
+}
 // Qual preço fica: 'painel' | 'alimentado' | 'manual'. Sem escolha gravada: alimentado se tiver; senão manual se houver ajuste; senão painel.
 function escolhaPreco(c, k){
   const e = (c.precoEsc||{})[k]; if(e) return e;
@@ -4427,6 +4433,8 @@ function celulaPrecoAlimentacao(c, key, db, it){
       <option value="">Automático (ordem)</option>${comPreco.map(x=>`<option value="${escapeHtml(x.f)}" ${chaveFornAjuste(fixo)===chaveFornAjuste(x.f)?'selected':''}>📌 ${escapeHtml(x.f)} · ${fmtMoney(x.v)}</option>`).join('')}</select>` : '';
   const painelV = esc ? esc.v : null;
   const tdPainel = `<td class="tright" style="white-space:nowrap;"><b>${painelV!=null?fmtPrecoAlim(painelV):'—'}</b>${esc?`<div style="font-size:11.5px; color:var(--text-3);">${esc.fixo?'📌 ':''}${escapeHtml(esc.f)} · ${esc.pos}º</div>`:''}${alerta?`<div style="font-size:11.5px; font-weight:650; color:#b42318;" title="${escapeHtml(alerta.a.f)}: ${fmtMoney(alerta.a.v)} · ${escapeHtml(alerta.b.f)}: ${fmtMoney(alerta.b.v)}">⚠️ diferença de ${alerta.pct}%</div>`:''}${sel}</td>`;
+  const vitB = precoVitrasulBase(db, it);
+  const tdVit = `<td class="tright" style="white-space:nowrap;" title="Vitrasul do banco, sem o reajuste de ${ajusteFornecedor('Vitrasul','componentes')||0}%">${vitB>0?fmtPrecoAlim(vitB):'<span style="color:var(--text-3)">—</span>'}</td>`;
   const alim = (c.precoAlim||{})[k];
   const tdAlim = `<td class="tright" style="white-space:nowrap;">${alim>0?`<b>${fmtPrecoAlim(alim)}</b>`:'<span style="color:var(--text-3)">—</span>'}</td>`;
   const man = valorManual(c, k);
@@ -4434,14 +4442,14 @@ function celulaPrecoAlimentacao(c, key, db, it){
   let tdDif = '<td class="tright" style="color:var(--text-3)">—</td>';
   if(alim>0 && painelV>0){ const d = (alim-painelV)/painelV, pct = Math.round(d*100), big = Math.abs(d)>LIMITE_DIF_ALIM; tdDif = `<td class="tright" style="white-space:nowrap;${big?' color:#b42318; font-weight:700;':' color:var(--text-3);'}" title="Alimentado comparado com o preço do painel">${pct>0?'+':''}${pct}%</td>`; }
   const e = escolhaPreco(c, k);
-  const btn = (val, rot, ok)=>`<button type="button" class="btn btn-sm" style="font-size:11px; padding:2px 7px;${e===val?' background:var(--accent); color:#fff; border-color:var(--accent);':''}" data-action="escolher-preco-alim" data-escolha="${val}" data-key="${escapeHtml(key)}" data-codigo="${escapeHtml(it.codigo)}" ${ok?'':'disabled'}>${rot}</button>`;
-  const tdFica = `<td style="white-space:nowrap;">${btn('painel','Painel',painelV>0)}${btn('alimentado','Alim.',alim>0)}${btn('manual','Manual',man>0)}</td>`;
+  const btn = (val, rot, ok)=>`<button type="button" class="btn btn-sm" style="font-size:11px; padding:2px 7px;${e===val?' background:var(--accent); color:#fff; border-color:var(--accent);':''}" data-action="escolher-preco-alim" data-escolha="${val}" data-key="${escapeHtml(key)}" data-codigo="${escapeHtml(it.codigo)}" data-vit="${vitB||''}" ${ok?'':'disabled'}>${rot}</button>`;
+  const tdFica = `<td style="white-space:nowrap;">${btn('painel','Painel',painelV>0)}${btn('vitrasul_base','Vitr.',vitB>0)}${btn('alimentado','Alim.',alim>0)}${btn('manual','Manual',man>0)}</td>`;
   const fed = !!((key==='vidro'?c.alimentadosVidro:key==='perfis'?c.alimentadosPerfis:(c.alimentadosComponentes||{})[key])||{})[it.codigo];
-  const fica = e==='alimentado' ? alim : e==='manual' ? man : e==='painel' ? painelV : ((c.ajustePreco||{})[k]>0 ? c.ajustePreco[k] : painelV);
+  const fica = e==='alimentado' ? alim : e==='manual' ? man : e==='painel' ? painelV : e==='vitrasul_base' ? vitB : ((c.ajustePreco||{})[k]>0 ? c.ajustePreco[k] : painelV);
   let sit = '<span style="color:var(--text-3)">—</span>';
   if(fed && alim>0 && fica>0 && Math.abs(fica-alim)>0.004) sit = '<span class="badge badge-warn" title="O preço escolhido é diferente do que está no sistema">Reenviar WVetro</span>';
   else if(fed) sit = '<span class="badge badge-ok">Ok</span>';
-  return tdPainel+tdAlim+tdMan+tdDif+tdFica+`<td style="white-space:nowrap;">${sit}</td>`;
+  return tdPainel+tdVit+tdAlim+tdMan+tdDif+tdFica+`<td style="white-space:nowrap;">${sit}</td>`;
 }
 // Liberação de preços por linha: a equipe só alimenta o que a matriz conferiu e liberou
 function vistaEquipe(){ return !ehAdminEspelho() || !!STATE.verComoEquipe; }
@@ -4503,7 +4511,7 @@ function renderChecklistEquipe(cliente, todas, titulo, bloqueadas){
       </tr>`).join('')}</tbody></table></div>`}
   </div>`;
 }
-const thPrecoAlimentacao = `<th class="tright" title="Preço automático: 1º fornecedor da ordem com preço (Contrato & Acesso), ou o fixado no item">Preço painel</th><th class="tright" title="Preço que está lançado no sistema do cliente">Alimentado</th><th title="Preço digitado à mão">Ajuste manual</th><th class="tright" title="Alimentado comparado com o painel (vermelho acima de 20%)">Dif.</th><th title="Qual preço fica valendo">Fica</th><th>Situação</th>`;
+const thPrecoAlimentacao = `<th class="tright" title="Preço automático: 1º fornecedor da ordem com preço (Contrato & Acesso), ou o fixado no item">Preço painel</th><th class="tright" title="Preço da Vitrasul no banco, sem o reajuste do fornecedor (igual ao site)">Vitrasul s/ reaj.</th><th class="tright" title="Preço que está lançado no sistema do cliente">Alimentado</th><th title="Preço digitado à mão">Ajuste manual</th><th class="tright" title="Alimentado comparado com o painel (vermelho acima de 20%)">Dif.</th><th title="Qual preço fica valendo">Fica</th><th>Situação</th>`;
 async function salvarOrdemFornecedores(c, cat){
   const lista = fornecedoresSelecionadosCliente(c, cat);
   const {error} = await sb.from('impl_cliente_fornecedores').upsert(lista.map((f,i)=>({cliente_id:c.id, categoria:cat, fornecedor:f, ordem:i+1})), {onConflict:'cliente_id,categoria,fornecedor'});
@@ -6997,14 +7005,15 @@ function wireEvents(){
         else if(c.precoManual[k]==null){ const vm = valorManual(c, k); if(vm>0) c.precoManual[k] = vm; }
         const alim = (c.precoAlim||{})[k], man = c.precoManual[k];
         if(!escolha || (escolha==='manual' && !(man>0))) escolha = (alim>0) ? 'alimentado' : 'painel';
-        const ajuste = escolha==='alimentado' ? (alim>0?alim:null) : escolha==='manual' ? man : null;
+        if(escolha==='vitrasul_base' && !(Number(el.dataset.vit)>0)) escolha = (alim>0) ? 'alimentado' : 'painel';
+        const ajuste = escolha==='alimentado' ? (alim>0?alim:null) : escolha==='manual' ? man : escolha==='vitrasul_base' ? Number(el.dataset.vit) : null;
         c.precoEsc[k] = escolha;
         if(ajuste!=null) c.ajustePreco[k] = ajuste; else delete c.ajustePreco[k];
         render();
         const agora = new Date().toISOString();
         const {error} = await sb.from('impl_checklist').upsert({cliente_id:c.id, codigo, linha:key, preco_escolha:escolha, preco_manual:(man>0?man:null), preco_ajustado:ajuste, preco_ajustado_em: ajuste!=null?agora:null, preco_ajustado_por: ajuste!=null?(meuEmail()||null):null}, {onConflict:'cliente_id,codigo,linha'});
         if(error){ if(antes.esc!=null) c.precoEsc[k]=antes.esc; else delete c.precoEsc[k]; if(antes.man!=null) c.precoManual[k]=antes.man; else delete c.precoManual[k]; if(antes.aj!=null) c.ajustePreco[k]=antes.aj; else delete c.ajustePreco[k]; render(); avisarErroSalvar(error); }
-        else toastSalvo('Fica: '+(escolha==='painel'?'preço do painel':escolha==='alimentado'?'preço alimentado':'ajuste manual')+(ajuste!=null?' '+fmtMoney(ajuste):''));
+        else toastSalvo('Fica: '+(escolha==='painel'?'preço do painel':escolha==='vitrasul_base'?'Vitrasul sem reajuste':escolha==='alimentado'?'preço alimentado':'ajuste manual')+(ajuste!=null?' '+fmtMoney(ajuste):''));
       };
       if(action==='escolher-preco-alim') el.onclick = ()=>aplicar(el.dataset.escolha);
       else {
