@@ -12,7 +12,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Matriz FC">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<!-- Painel da Matriz no celular (14/11/2026): só Liberar acessos, Para responder e On-line. 21/11/2026: + Agenda (visitas, viagens, treinamentos · tabela fc_agenda). 21/11/2026: + Despesas por viagem com foto do comprovante (tabela fc_despesa, bucket privado despesas). 21/11/2026: + 🏠 Hoje, 📥 Caixa de entrada (captura rápida, fc_caixa_entrada + bucket caixa), ✅ Demandas (máx. 5, fc_demanda) e 💰 Financeiro (fc_financeiro) — substituem a Rotina FC; Acessos, Responder, On-line e Teste 24 h foram para ☰ Mais. 21/11/2026: + ☰ Mais › 🔐 Login Acessos Sistema (fc_login_sistema/fc_login_cfg, senha e licença cifradas no aparelho com senha mestra). 21/11/2026: + Agenda › ✈️ Passagens Sinop⇄Cuiabá com teto (fc_passagem_preco/cfg, SerpApi via pg_net + pg_cron).
+<!-- Painel da Matriz no celular (14/11/2026): só Liberar acessos, Para responder e On-line. 21/11/2026: + Agenda (visitas, viagens, treinamentos · tabela fc_agenda). 21/11/2026: + Despesas por viagem com foto do comprovante (tabela fc_despesa, bucket privado despesas). 21/11/2026: + 🏠 Hoje, 📥 Caixa de entrada (captura rápida, fc_caixa_entrada + bucket caixa), ✅ Demandas (máx. 5, fc_demanda) e 💰 Financeiro (fc_financeiro) — substituem a Rotina FC; Acessos, Responder, On-line e Teste 24 h foram para ☰ Mais. 21/11/2026: + ☰ Mais › 🔐 Login Acessos Sistema (fc_login_sistema/fc_login_cfg, senha e licença cifradas no aparelho com senha mestra). 21/11/2026: + Agenda › ✈️ Passagens Sinop⇄Cuiabá com teto (fc_passagem_preco/cfg, SerpApi via pg_net + pg_cron). 24/11/2026: + ☰ Mais › 🏗 Obras · acertos com parceiros (fc_obra, fc_obra_etapa, fc_obra_mov, fc_obra_anexo, bucket privado obras) + cartão na tela Hoje.
      Mesmo login do Painel da Matriz (fica salvo no aparelho). © FC Consultoria em Esquadria · uso exclusivo -->
 <style>
 :root{--pt:#0e4d5c;--pt2:#0a3a46;--pr:#c7d0d4;--bg:#f2f4f5;--card:#fff;--fg:#14232a;--mu:#5f6b70;--ln:#dde3e6;--ok:#1f8a4c;--bad:#a32d2d;--sel:#e3f0f2}
@@ -150,6 +150,11 @@ nav .n.on{display:grid}
   <div id="agForm"></div>
   <div id="agL"></div>
  </section>
+ <section class="sec" id="s-ob">
+  <div class="hd"><span id="obInfo">Carregando…</span><button type="button" class="bt p" id="obNovo" style="flex:none;padding:7px 14px">+ Nova obra</button></div>
+  <div id="obForm"></div>
+  <div id="obL"></div>
+ </section>
  <section class="sec" id="s-ls">
   <div class="hd"><span id="lsInfo">Carregando…</span><button type="button" class="bt p" id="lsNovo" style="flex:none;padding:7px 14px">+ Novo</button></div>
   <div id="lsCad"></div>
@@ -179,11 +184,11 @@ if(!app&&/iPhone|iPad/.test(navigator.userAgent))$('dicaInst').hidden=false;
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js',{scope:'./'}).catch(()=>{});
 
 /* ===== abas ===== */
-const TIT={hj:'Hoje',cx:'Caixa de entrada',de:'Demandas',fi:'Financeiro',ma:'Mais',ac:'Liberar acessos',rp:'Para responder',on:'Quem está on-line',dm:'Demonstrativos de 24 h',ag:'Agenda · visitas e viagens',ls:'Login Acessos Sistema'};
-let ABA='hj';const NAVDE={ac:'ma',rp:'ma',on:'ma',dm:'ma',ls:'ma'};
+const TIT={hj:'Hoje',cx:'Caixa de entrada',de:'Demandas',fi:'Financeiro',ma:'Mais',ac:'Liberar acessos',rp:'Para responder',on:'Quem está on-line',dm:'Demonstrativos de 24 h',ag:'Agenda · visitas e viagens',ls:'Login Acessos Sistema',ob:'Obras · acertos com parceiros'};
+let ABA='hj';const NAVDE={ac:'ma',rp:'ma',on:'ma',dm:'ma',ls:'ma',ob:'ma'};
 function aba(s){ABA=s;document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.s===(NAVDE[s]||s)));
   document.querySelectorAll('.sec').forEach(x=>x.classList.toggle('on',x.id==='s-'+s));$('tit').textContent=TIT[s];
-  try{localStorage.setItem('fc-cel-aba',s);}catch(_){}scrollTo(0,0);if(s==='on'&&LOGADO)onCarregar();if(s==='dm'&&LOGADO)dmCarregar();if(s==='ag'&&LOGADO)agCarregar();if(s==='ls'&&LOGADO)lsCarregar();if(s==='ma')maPinta();if(s==='hj')hjPinta();}
+  try{localStorage.setItem('fc-cel-aba',s);}catch(_){}scrollTo(0,0);if(s==='on'&&LOGADO)onCarregar();if(s==='dm'&&LOGADO)dmCarregar();if(s==='ag'&&LOGADO)agCarregar();if(s==='ls'&&LOGADO)lsCarregar();if(s==='ob'&&LOGADO)obCarregar();if(s==='ma')maPinta();if(s==='hj')hjPinta();}
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>aba(b.dataset.s));
 
 /* ===== 🔑 Liberar acessos (cadastros pelo link de primeiro acesso) ===== */
@@ -566,6 +571,7 @@ function hjPinta(){const el=$('hjL');if(!el)return;const H=hoje(),em7=maisDias(7
   b+=`<div class="cd" data-ir="de" role="button"><div class="top"><b>✅ Demandas abertas</b><span>${dem.length} de ${MAXDEM}</span></div>${dem.length?dem.slice(0,MAXDEM).map(x=>`<div style="display:flex;justify-content:space-between;gap:8px;padding:5px 0;font-size:14px;border-top:1px solid var(--ln)"><span>${x.cliente?'<span class="emp">'+h(x.cliente)+'</span>':''}${h(x.titulo)}</span><span class="sub" style="white-space:nowrap;${x.prazo&&x.prazo<H?'color:var(--bad)':''}">${x.prazo?(x.prazo===H?'hoje':dSem(x.prazo)+' '+dBR(x.prazo)):''}</span></div>`).join(''):'<p class="sub">Nenhuma demanda aberta.</p>'}</div>`;
   if(!LSKEY)b+=`<div class="cd" data-ir="fi" role="button"><div class="top"><b>💰 Vencimentos da semana</b><span>🔒 trancado</span></div></div>`;
   else b+=`<div class="cd" data-ir="fi" role="button"><div class="top"><b>💰 Vencimentos da semana</b><span>${ven.length||'em dia'}</span></div>${ven.map(x=>`<div style="display:flex;justify-content:space-between;gap:8px;padding:5px 0;font-size:14px;border-top:1px solid var(--ln)"><span><span class="tag ${FIT[x.tipo][1]}">${FIT[x.tipo][0]}</span> ${h(x.titulo)}${x.parcelas>1?' '+x.parcela+'/'+x.parcelas:''}</span><span class="sub" style="white-space:nowrap;${x.vencimento<H?'color:var(--bad)':''}">${x.vencimento<H?'vencido ':''}${dSem(x.vencimento)} ${dBR(x.vencimento)}${x.valor?' · '+brl(x.valor):''}</span></div>`).join('')}</div>`;
+  {const at=OB.filter(o=>o.status==='andamento');if(at.length)b+=`<div class="cd" data-ir="ob" role="button"><div class="top"><b>🏗 Obras · acertos</b><span>${at.length} em andamento</span></div>${at.map(o=>{const c=obConta(o),al=c.sP<-0.004||c.sFC<-0.004;return `<div style="display:flex;justify-content:space-between;gap:8px;padding:5px 0;font-size:14px;border-top:1px solid var(--ln)"><span>${al?'⚠ ':''}${h(o.nome)}</span><b>${LSKEY?'FC '+brl(c.sFC):'🔒'}</b></div>`;}).join('')}</div>`;}
   b+=`<div class="mt"><div data-ir="ac" role="button"><small>🔑 Pedidos de acesso</small><b>${acs||'—'}</b></div><div data-ir="rp" role="button"><small>📩 Para responder</small><b>${rps||'—'}</b></div></div>`;
   el.innerHTML=b;}
 
@@ -774,7 +780,117 @@ $('s-ls').addEventListener('click',async e=>{const t=e.target,msg=$('lsMsg');
 });
 
 /* ---------- ☰ Mais ---------- */
-function maPinta(){const el=$('maL');if(!el)return;const n=[['ac','🔑','Liberar acessos',AC.length],['rp','📩','Para responder',(RP.itens||[]).length],['on','🟢','Quem está on-line',ON.length],['dm','🧪','Demonstrativos de 24 h',(DM||[]).filter(d=>d.status==='pendente').length],['ls','🔐','Login Acessos Sistema',0]];
+
+/* ===== 🏗 Obras · acertos com parceiros (24/11/2026) · fc_obra, fc_obra_etapa, fc_obra_mov, fc_obra_anexo · bucket privado obras · só admin =====
+   Regra: cada etapa (proposta ao cliente) vale X; FC fica com pct_fc% e o parceiro com o resto.
+   Lançamentos: "retirada" = quem retirou mercadoria/recebeu do cliente (usa a parte dele); "pagamento" = um parceiro pagou ao outro (quem = quem pagou). */
+let OB=[],OE=[],OM=[],OA=[],OBA=null,OBFORM=false,OEFORM=false,OMFORM=false;
+const OES={proposta:['Proposta','tg-x'],aprovada:['Aprovada',''],executada:['Executada',''],cancelada:['Cancelada','tg-x']};
+const OAT={proposta:'📄 Proposta ao cliente',acerto:'🤝 Acerto entre parceiros',outro:'📎 Outro'};
+const r2=v=>Math.round(v*100)/100;
+const obCurto=p=>String(p||'Parceiro').split(' ')[0];
+async function obCarregar(){const [a,b,c,d]=await Promise.all([sb.from('fc_obra').select('*').order('criado',{ascending:false}),sb.from('fc_obra_etapa').select('*').order('ordem'),sb.from('fc_obra_mov').select('*').order('data').order('criado'),sb.from('fc_obra_anexo').select('*').order('criado')]);
+  if(a.error){$('obInfo').textContent='Não carregou: '+a.error.message;return;}OB=a.data||[];OE=b.data||[];OM=c.data||[];OA=d.data||[];obPinta();if(ABA==='hj')hjPinta();}
+function obConta(o){const E=OE.filter(e=>e.obra_id===o.id&&e.status!=='cancelada'),M=OM.filter(m=>m.obra_id===o.id),p=(+o.pct_fc||0)/100;
+  const tot=r2(E.reduce((a,e)=>a+(+e.valor||0),0)),exe=r2(E.filter(e=>e.status==='executada').reduce((a,e)=>a+(+e.valor||0),0)),apr=r2(E.filter(e=>e.status!=='proposta').reduce((a,e)=>a+(+e.valor||0),0));
+  const sm=(t,q)=>r2(M.filter(m=>m.tipo===t&&m.quem===q).reduce((a,m)=>a+(+m.valor||0),0));
+  const dFC=r2(tot*p),dP=r2(tot-dFC),rFC=sm('retirada','fc'),rP=sm('retirada','parceiro'),pFC=sm('pagamento','fc'),pP=sm('pagamento','parceiro');
+  const sFC=r2(dFC-rFC-pP+pFC),sP=r2(dP-rP-pFC+pP);
+  return {tot,exe,apr,dFC,dP,rFC,rP,uFC:r2(rFC+pP-pFC),uP:r2(rP+pFC-pP),sFC,sP,cred:r2(tot-rFC-rP)};}
+function obSituacao(o,c){const P=obCurto(o.parceiro);
+  if(c.sP<-0.004)return `⚠ ${h(P)} já usou ${brl(-c.sP)} acima da parte dele — esse valor é da FC (abater nas próximas retiradas ou acertar em PIX).`;
+  if(c.sFC<-0.004)return `⚠ A FC já usou ${brl(-c.sFC)} acima da parte dela — esse valor é de ${h(P)}.`;
+  if(c.cred<=0.004)return '✅ Acertado: crédito todo usado e cada um ficou com a sua parte.';
+  return `Ainda há ${brl(c.cred)} de crédito com ${h(o.cliente||'o cliente')}: FC pode usar ${brl(c.sFC)} e ${h(P)} ${brl(c.sP)}.`;}
+function obPinta(){const el=$('obL');if(!el)return;
+  if(OBFORM){poeForm('obForm','novo',`<div class="ag-f"><b>Nova obra</b>
+    <label>Obra *</label><input id="onN" placeholder="Ex.: Show Room Guaporé Vidros">
+    <div class="dois"><div><label>Cliente</label><input id="onC"></div><div><label>Parceiro</label><input id="onP" placeholder="Carvalho Vidros e Esquadrias"></div></div>
+    <div class="dois"><div><label>Contato do parceiro</label><input id="onK" placeholder="Elias"></div><div><label>% da FC</label><input id="onF" type="number" inputmode="decimal" value="30"></div></div>
+    <label>Como o cliente paga</label><input id="onG" placeholder="Mercadoria retirada no cliente, PIX…">
+    <div class="st" id="onM"></div><div class="bts"><button class="bt p" type="button" id="onS">Salvar obra</button><button class="bt n" type="button" id="onX">Cancelar</button></div></div>`);}
+  else poeForm('obForm','','');
+  if(!OBA){const at=OB.filter(o=>o.status==='andamento');$('obInfo').textContent=at.length?at.length+' obra'+(at.length>1?'s':'')+' em andamento':'Nenhuma obra em andamento';$('obNovo').hidden=false;
+    el.innerHTML=OB.length?OB.map(o=>{const c=obConta(o);return `<div class="cd" data-obab="${o.id}" role="button"><div class="top"><b>🏗 ${h(o.nome)}</b><span>${o.status==='andamento'?'›':'<span class="tag tg-x">'+(o.status==='concluida'?'concluída':'encerrada')+'</span>'}</span></div>
+      <p class="sub">${h(o.cliente||'')}${o.parceiro?' · com '+h(o.parceiro):''} · FC ${+o.pct_fc}%</p>
+      <div class="mt" style="margin-top:8px"><div><small>Total</small><b>${brl(c.tot)}</b></div><div><small>Saldo FC</small><b style="color:#0e4d5c">${brl(c.sFC)}</b></div><div><small>Saldo ${h(obCurto(o.parceiro))}</small><b>${brl(c.sP)}</b></div></div></div>`;}).join(''):'<p class="sub">Toque em + Nova obra para começar.</p>';return;}
+  const o=OB.find(x=>x.id===OBA);if(!o){OBA=null;obPinta();return;}const c=obConta(o),P=obCurto(o.parceiro),pf=+o.pct_fc,pp=r2(100-pf);
+  $('obInfo').innerHTML=`<button type="button" class="bt n" data-obvolta style="padding:6px 12px">‹ Obras</button>`;$('obNovo').hidden=true;
+  const E=OE.filter(e=>e.obra_id===o.id),M=OM.filter(m=>m.obra_id===o.id),A=OA.filter(a=>a.obra_id===o.id);
+  const barra=(u,d)=>{const pc=d>0?Math.min(100,Math.max(0,u/d*100)):0;return `<div style="height:6px;border-radius:3px;background:var(--ln);margin-top:4px"><div style="height:6px;border-radius:3px;width:${pc}%;background:${u>d+0.004?'#e11d48':'#0e4d5c'}"></div></div>`;};
+  let b=`<div class="cd"><div class="top"><b>🏗 ${h(o.nome)}</b><span class="tag">${o.status==='andamento'?'em andamento':o.status==='concluida'?'concluída':'encerrada'}</span></div>
+   <p class="sub">${h(o.cliente||'')}${o.parceiro?' · parceiro: '+h(o.parceiro):''}${o.contato?' ('+h(o.contato)+')':''}</p>${o.pagamento?`<p class="sub">Pagamento: ${h(o.pagamento)}</p>`:''}
+   <div class="mt" style="margin-top:10px"><div><small>Total mão de obra</small><b>${brl(c.tot)}</b></div><div><small>Aprovado</small><b>${brl(c.apr)}</b></div><div><small>Executado</small><b>${brl(c.exe)}</b></div></div></div>
+  <div class="cd"><div class="top"><b>🤝 Acerto ${pf}% FC · ${pp}% ${h(P)}</b></div>
+   ${[['FC Consultoria · '+pf+'%',c.dFC,c.uFC,c.sFC,'#0e4d5c'],[(o.parceiro||'Parceiro')+' · '+pp+'%',c.dP,c.uP,c.sP,'']].map(([n,d,u,sl,cor])=>`<div style="margin-top:10px"><b style="font-size:14px">${h(n)}</b>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:4px;font-size:13px"><div><div class="sub">Direito</div><b>${brl(d)}</b></div><div><div class="sub">Já usado</div><b>${brl(u)}</b></div><div><div class="sub">Saldo</div><b style="color:${sl<-0.004?'#e11d48':cor||'inherit'}">${brl(sl)}</b></div></div>${barra(u,d)}</div>`).join('')}
+   <p class="sub" style="margin-top:10px;font-weight:600">${obSituacao(o,c)}</p>
+   <div class="bts"><button class="bt p" type="button" data-obmn="${o.id}">+ Lançar retirada / pagamento</button><button class="bt n" type="button" data-obzap="${o.id}">📋 Resumo p/ ${h(o.contato||P)}</button></div>
+   <div id="omForm"></div></div>`;
+  b+=`<div class="hd" style="margin-top:14px"><span><b>Etapas (propostas ao cliente)</b></span><button type="button" class="bt n" data-oen style="flex:none;padding:6px 12px">+ Etapa</button></div><div id="oeForm"></div>`;
+  b+=E.map(e=>{const it=Array.isArray(e.itens)?e.itens:[];return `<div class="cd"${e.status==='cancelada'?' style="opacity:.55"':''}><div class="top"><b>${h(e.titulo)}</b><b>${brl(e.valor)}</b></div>
+    <p class="sub">FC ${brl(r2(e.valor*pf/100))} · ${h(P)} ${brl(r2(e.valor-r2(e.valor*pf/100)))}${e.data?' · '+dBR(e.data):''}</p>
+    ${it.length?`<details style="margin-top:6px"><summary class="sub">${it.length} ite${it.length>1?'ns':'m'}</summary>${it.map((x,i)=>`<div class="sub" style="display:flex;justify-content:space-between;gap:8px;padding:3px 0;border-bottom:1px solid var(--ln)"><span>${i+1}. ${h(x.d)}</span><span>${brl(x.v)} · FC ${brl(r2(x.v*pf/100))}</span></div>`).join('')}</details>`:''}
+    <div class="chips" style="margin-top:8px">${Object.entries(OES).map(([k,[t]])=>`<button type="button" data-oest="${e.id}" data-v="${k}" class="${e.status===k?'on':''}">${t}</button>`).join('')}<button type="button" data-oedel="${e.id}" aria-label="Excluir etapa">🗑</button></div></div>`;}).join('')||'<p class="sub">Nenhuma etapa lançada.</p>';
+  b+=`<div class="hd" style="margin-top:14px"><span><b>Lançamentos do acerto</b></span></div>`;
+  b+=M.length?M.slice().reverse().map(m=>`<div class="dpi"><div><b>${m.tipo==='retirada'?'🛒':'💸'} ${brl(m.valor)}</b> <span class="sub" style="display:inline">${dBR(m.data)} · ${m.tipo==='retirada'?(m.quem==='fc'?'FC retirou':h(P)+' retirou'):(m.quem==='fc'?'FC pagou a '+h(P):h(P)+' pagou à FC')}</span>${m.descricao?`<div class="sub">${h(m.descricao)}</div>`:''}</div>
+    <div class="dpa">${m.anexo?`<button class="bt n" type="button" data-obver="${h(m.anexo)}">📎</button>`:''}<button class="bt n" type="button" data-omdel="${m.id}" aria-label="Excluir">🗑</button></div></div>`).join(''):'<p class="sub">Nenhuma retirada ou pagamento lançado ainda.</p>';
+  b+=`<div class="hd" style="margin-top:14px"><span><b>Anexos</b></span></div>`+(A.length?A.map(a=>`<div class="dpi"><div><b>${OAT[a.tipo]||'📎'}</b><div class="sub">${h(a.nome)} · ${dBR(String(a.criado).slice(0,10))}</div></div><div class="dpa"><button class="bt n" type="button" data-obver="${h(a.caminho)}">Abrir</button><button class="bt n" type="button" data-oadel="${a.id}" aria-label="Excluir">🗑</button></div></div>`).join(''):'<p class="sub">Nenhum anexo. Anexe as propostas e o acerto assinado.</p>')+
+   `<div class="ag-f"><div class="dois"><div><label>Tipo</label><select id="oaT">${Object.entries(OAT).map(([k,t])=>`<option value="${k}">${t}</option>`).join('')}</select></div><div><label>&nbsp;</label><label class="dpfoto" style="margin:0"><input type="file" id="oaArq" accept="image/*,application/pdf" multiple hidden><span>📎 Anexar arquivo</span></label></div></div><div class="st" id="oaM"></div></div>
+   <div class="bts" style="margin-top:12px">${o.status==='andamento'?`<button class="bt n" type="button" data-obst="${o.id}" data-v="concluida">✓ Obra concluída e acertada</button>`:`<button class="bt n" type="button" data-obst="${o.id}" data-v="andamento">Reabrir obra</button>`}</div>`;
+  el.innerHTML=b;
+  if(OMFORM)$('omForm').innerHTML=`<div class="ag-f"><b>Novo lançamento</b>
+    <div class="dois"><div><label>O que foi</label><select id="omT"><option value="retirada">🛒 Retirada de mercadoria / recebimento</option><option value="pagamento">💸 Pagamento entre parceiros</option></select></div><div><label>Quem</label><select id="omQ"><option value="parceiro">${h(P)}</option><option value="fc">FC</option></select></div></div>
+    <div class="sub" id="omDica" style="margin:-2px 0 6px">Quem retirou mercadoria (ou recebeu do cliente). Desconta da parte dele.</div>
+    <div class="dois"><div><label>Valor R$ *</label><input id="omV" type="number" inputmode="decimal" step="0.01" min="0"></div><div><label>Data</label><input id="omD" type="date" value="${hoje()}"></div></div>
+    <label>Descrição</label><input id="omX" placeholder="Pedido nº, vidros, perfis…">
+    <label class="dpfoto"><input type="file" id="omArq" accept="image/*,application/pdf" hidden><span id="omArqT">📷 Foto do pedido/comprovante (opcional)</span></label>
+    <div class="st" id="omM"></div><div class="bts"><button class="bt p" type="button" id="omS">Salvar</button><button class="bt n" type="button" id="omC">Cancelar</button></div></div>`;
+  if(OEFORM)$('oeForm').innerHTML=`<div class="ag-f"><b>Nova etapa</b><label>Descrição *</label><input id="oeT" placeholder="Etapa 4 — …"><div class="dois"><div><label>Valor R$ *</label><input id="oeV" type="number" inputmode="decimal" step="0.01" min="0"></div><div><label>Data da proposta</label><input id="oeD" type="date" value="${hoje()}"></div></div>
+    <div class="st" id="oeM"></div><div class="bts"><button class="bt p" type="button" id="oeS">Salvar etapa</button><button class="bt n" type="button" id="oeC">Cancelar</button></div></div>`;
+  const ar=$('omArq');if(ar)ar.onchange=()=>{$('omArqT').textContent=ar.files[0]?'✓ '+ar.files[0].name:'📷 Foto do pedido/comprovante (opcional)';};
+  const tt=$('omT');if(tt)tt.onchange=()=>{$('omDica').textContent=tt.value==='retirada'?'Quem retirou mercadoria (ou recebeu do cliente). Desconta da parte dele.':'Quem pagou ao outro parceiro (PIX/dinheiro) para acertar a diferença.';};
+  const oa=$('oaArq');if(oa)oa.onchange=()=>obAnexa(o,[...oa.files]);}
+async function obSobe(o,f){const blob=await dpReduz(f);const ext=blob.type==='application/pdf'?'pdf':(blob.type==='image/jpeg'?'jpg':(f.name.split('.').pop()||'bin').toLowerCase());
+  const path=`${slug(o.nome)}/${Date.now()}-${Math.random().toString(36).slice(2,6)}.${ext}`;const u=await sb.storage.from('obras').upload(path,blob,{contentType:blob.type||f.type,upsert:false});if(u.error)throw u.error;return path;}
+async function obAnexa(o,fs){const m=$('oaM');if(!fs.length)return;m.className='st';m.textContent='Enviando '+fs.length+' arquivo(s)…';
+  try{for(const f of fs){const p=await obSobe(o,f);const r=await sb.from('fc_obra_anexo').insert({obra_id:o.id,tipo:$('oaT').value,nome:f.name,caminho:p});if(r.error){await sb.storage.from('obras').remove([p]);throw r.error;}}await obCarregar();}
+  catch(err){m.className='st er';m.textContent='⚠ Não subiu: '+(err.message||err);}}
+async function obZap(o){const c=obConta(o),P=obCurto(o.parceiro),E=OE.filter(e=>e.obra_id===o.id&&e.status!=='cancelada'),M=OM.filter(m=>m.obra_id===o.id);
+  const t=`Acerto · ${o.nome}\n${o.parceiro||''} ${100-o.pct_fc}% · FC ${+o.pct_fc}%\n\n`+E.map(e=>`• ${e.titulo}: ${brl(e.valor)} (${OES[e.status][0].toLowerCase()})`).join('\n')+
+   `\nTotal: ${brl(c.tot)}\n\nParte ${P}: ${brl(c.dP)} · usado ${brl(c.uP)} · saldo ${brl(c.sP)}\nParte FC: ${brl(c.dFC)} · usado ${brl(c.uFC)} · saldo ${brl(c.sFC)}`+
+   (M.length?'\n\nLançamentos:\n'+M.map(m=>`${dBR(m.data)} · ${m.tipo==='retirada'?(m.quem==='fc'?'FC retirou':P+' retirou'):(m.quem==='fc'?'FC pagou a '+P:P+' pagou à FC')} ${brl(m.valor)}${m.descricao?' ('+m.descricao+')':''}`).join('\n'):'')+
+   '\n\n'+obSituacao(o,c).replace(/<[^>]+>/g,'').replace(/&amp;/g,'&');
+  try{await navigator.clipboard.writeText(t);alert('Resumo copiado. Cole no WhatsApp.');}catch(e){prompt('Copie o resumo:',t);}}
+$('obNovo').onclick=()=>{OBFORM=true;obPinta();};
+document.addEventListener('click',async e=>{const q=s=>e.target.closest(s);let x;
+  if(q('#onX')){OBFORM=false;obPinta();return;}
+  if(q('#onS')){const n=$('onN').value.trim();if(!n){$('onM').className='st er';$('onM').textContent='Informe o nome da obra.';return;}
+    const r=await sb.from('fc_obra').insert({nome:n,cliente:$('onC').value.trim()||null,parceiro:$('onP').value.trim()||null,contato:$('onK').value.trim()||null,pct_fc:+$('onF').value||0,pagamento:$('onG').value.trim()||null}).select().single();
+    if(r.error){$('onM').className='st er';$('onM').textContent='⚠ '+r.error.message;return;}OBFORM=false;OBA=r.data.id;await obCarregar();return;}
+  if(x=q('[data-obab]')){OBA=x.dataset.obab;OMFORM=OEFORM=false;obPinta();scrollTo(0,0);return;}
+  if(q('[data-obvolta]')){OBA=null;obPinta();return;}
+  if(q('[data-obmn]')){OMFORM=!OMFORM;obPinta();return;}
+  if(q('#omC')){OMFORM=false;obPinta();return;}
+  if(x=q('#omS')){const o=OB.find(i=>i.id===OBA),v=r2(+$('omV').value);if(!(v>0)){$('omM').className='st er';$('omM').textContent='Informe o valor.';return;}
+    x.disabled=true;let p=null;try{const f=$('omArq').files[0];if(f){$('omM').className='st';$('omM').textContent='Enviando foto…';p=await obSobe(o,f);}
+      const r=await sb.from('fc_obra_mov').insert({obra_id:o.id,tipo:$('omT').value,quem:$('omQ').value,valor:v,data:$('omD').value||hoje(),descricao:$('omX').value.trim()||null,anexo:p});if(r.error)throw r.error;OMFORM=false;await obCarregar();}
+    catch(err){x.disabled=false;$('omM').className='st er';$('omM').textContent='⚠ '+(err.message||err);if(p)sb.storage.from('obras').remove([p]);}return;}
+  if(x=q('[data-omdel]')){const m=OM.find(i=>i.id===x.dataset.omdel);if(!confirm('Excluir o lançamento de '+brl(m.valor)+'?'))return;const r=await sb.from('fc_obra_mov').delete().eq('id',m.id);if(r.error){alert(r.error.message);return;}if(m.anexo)await sb.storage.from('obras').remove([m.anexo]);obCarregar();return;}
+  if(q('[data-oen]')){OEFORM=!OEFORM;obPinta();return;}
+  if(q('#oeC')){OEFORM=false;obPinta();return;}
+  if(q('#oeS')){const t=$('oeT').value.trim(),v=r2(+$('oeV').value);if(!t||!(v>0)){$('oeM').className='st er';$('oeM').textContent='Informe descrição e valor.';return;}
+    const ord=OE.filter(i=>i.obra_id===OBA).reduce((a,i)=>Math.max(a,i.ordem||0),0)+1;const r=await sb.from('fc_obra_etapa').insert({obra_id:OBA,ordem:ord,titulo:t,valor:v,data:$('oeD').value||null});if(r.error){$('oeM').className='st er';$('oeM').textContent='⚠ '+r.error.message;return;}OEFORM=false;obCarregar();return;}
+  if(x=q('[data-oest]')){const r=await sb.from('fc_obra_etapa').update({status:x.dataset.v}).eq('id',x.dataset.oest);if(r.error){alert(r.error.message);return;}obCarregar();return;}
+  if(x=q('[data-oedel]')){const et=OE.find(i=>i.id===x.dataset.oedel);if(!confirm('Excluir a etapa "'+et.titulo+'"? Se o cliente só desistiu, prefira marcar Cancelada.'))return;const r=await sb.from('fc_obra_etapa').delete().eq('id',et.id);if(r.error){alert(r.error.message);return;}obCarregar();return;}
+  if(x=q('[data-oadel]')){const a=OA.find(i=>i.id===x.dataset.oadel);if(!confirm('Excluir o anexo '+a.nome+'?'))return;const r=await sb.from('fc_obra_anexo').delete().eq('id',a.id);if(r.error){alert(r.error.message);return;}await sb.storage.from('obras').remove([a.caminho]);obCarregar();return;}
+  if(x=q('[data-obver]')){const w=window.open('','_blank');const r=await sb.storage.from('obras').createSignedUrl(x.dataset.obver,600);if(r.error){w&&w.close();alert('Não abriu: '+r.error.message);return;}if(w)w.location=r.data.signedUrl;else location.href=r.data.signedUrl;return;}
+  if(x=q('[data-obzap]')){obZap(OB.find(i=>i.id===x.dataset.obzap));return;}
+  if(x=q('[data-obst]')){const r=await sb.from('fc_obra').update({status:x.dataset.v,atualizado:new Date().toISOString()}).eq('id',x.dataset.obst);if(r.error){alert(r.error.message);return;}obCarregar();return;}
+});
+
+
+function maPinta(){const el=$('maL');if(!el)return;const n=[['ac','🔑','Liberar acessos',AC.length],['rp','📩','Para responder',(RP.itens||[]).length],['on','🟢','Quem está on-line',ON.length],['dm','🧪','Demonstrativos de 24 h',(DM||[]).filter(d=>d.status==='pendente').length],['ob','🏗','Obras · acertos com parceiros',0],['ls','🔐','Login Acessos Sistema',0]];
   el.innerHTML=n.map(([k,i,t,c])=>`<div class="cd" data-ir="${k}" role="button"><div class="top"><b>${i} ${t}</b><span>${c?'<span class="tag tg-x">'+c+'</span>':'›'}</span></div></div>`).join('');}
 
 /* ---------- 🔔 Alertas (com o app aberto): 4 h úteis sem resposta e "Fechar o dia" às 17:30, só seg–sex ---------- */
@@ -798,7 +914,7 @@ function badges(){const a=AC.length,r=(RP.itens||[]).length,cx=CX.length,H=hoje(
   const tot=a+r+cx;document.title=(tot?'('+tot+') ':'')+'Matriz FC';
   try{if(navigator.setAppBadge){tot?navigator.setAppBadge(tot):navigator.clearAppBadge();}}catch(_){}}
 
-function tudo(){return Promise.all([lsCarregar(),acCarregar(),rpCarregar(),onCarregar(),dmCarregar(),agCarregar(),hjCarregar()]).then(()=>hjPinta());}
+function tudo(){return Promise.all([lsCarregar(),acCarregar(),rpCarregar(),onCarregar(),dmCarregar(),agCarregar(),hjCarregar(),obCarregar()]).then(()=>hjPinta());}
 $('bAt').onclick=()=>{$('bAt').textContent='…';tudo().finally(()=>{$('bAt').textContent='↻';});};
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&$('gate').hidden&&LOGADO)tudo();});
 
