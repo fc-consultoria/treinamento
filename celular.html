@@ -12,7 +12,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Matriz FC">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<!-- Painel da Matriz no celular (14/11/2026): só Liberar acessos, Para responder e On-line. 21/11/2026: + Agenda (visitas, viagens, treinamentos · tabela fc_agenda). 21/11/2026: + Despesas por viagem com foto do comprovante (tabela fc_despesa, bucket privado despesas). 21/11/2026: + 🏠 Hoje, 📥 Caixa de entrada (captura rápida, fc_caixa_entrada + bucket caixa), ✅ Demandas (máx. 5, fc_demanda) e 💰 Financeiro (fc_financeiro) — substituem a Rotina FC; Acessos, Responder, On-line e Teste 24 h foram para ☰ Mais. 21/11/2026: + ☰ Mais › 🔐 Login Acessos Sistema (fc_login_sistema/fc_login_cfg, senha e licença cifradas no aparelho com senha mestra). 21/11/2026: + Agenda › ✈️ Passagens Sinop⇄Cuiabá com teto (fc_passagem_preco/cfg, SerpApi via pg_net + pg_cron). 24/11/2026: + ☰ Mais › 🏗 Obras · acertos com parceiros (fc_obra, fc_obra_etapa, fc_obra_mov, fc_obra_anexo, bucket privado obras) + cartão na tela Hoje.
+<!-- Painel da Matriz no celular (14/11/2026): só Liberar acessos, Para responder e On-line. 21/11/2026: + Agenda (visitas, viagens, treinamentos · tabela fc_agenda). 21/11/2026: + Despesas por viagem com foto do comprovante (tabela fc_despesa, bucket privado despesas). 21/11/2026: + 🏠 Hoje, 📥 Caixa de entrada (captura rápida, fc_caixa_entrada + bucket caixa), ✅ Demandas (máx. 5, fc_demanda) e 💰 Financeiro (fc_financeiro) — substituem a Rotina FC; Acessos, Responder, On-line e Teste 24 h foram para ☰ Mais. 21/11/2026: + ☰ Mais › 🔐 Login Acessos Sistema (fc_login_sistema/fc_login_cfg, senha e licença cifradas no aparelho com senha mestra). 21/11/2026: + Agenda › ✈️ Passagens Sinop⇄Cuiabá com teto (fc_passagem_preco/cfg, SerpApi via pg_net + pg_cron). 24/11/2026: + ☰ Mais › 🏗 Obras · acertos com parceiros (fc_obra, fc_obra_etapa, fc_obra_mov, fc_obra_anexo, bucket privado obras) + cartão na tela Hoje. 26/11/2026: + Agenda › 📆 Ano (calendário anual em casa × viagens, lido da fc_agenda).
      Mesmo login do Painel da Matriz (fica salvo no aparelho). © FC Consultoria em Esquadria · uso exclusivo -->
 <style>
 :root{--pt:#0e4d5c;--pt2:#0a3a46;--pr:#c7d0d4;--bg:#f2f4f5;--card:#fff;--fg:#14232a;--mu:#5f6b70;--ln:#dde3e6;--ok:#1f8a4c;--bad:#a32d2d;--sel:#e3f0f2}
@@ -27,6 +27,12 @@ header button{background:transparent;border:1px solid rgba(255,255,255,.35);colo
 main{padding:12px 12px calc(env(safe-area-inset-bottom) + 84px)}
 .sec{display:none}.sec.on{display:block}
 .hd{display:flex;align-items:center;justify-content:space-between;margin:2px 2px 10px;color:var(--mu);font-size:13px}
+.an-st{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px}.an-st div{background:var(--card);border:1px solid var(--ln);border-radius:12px;padding:8px;text-align:center}.an-st b{display:block;font-size:20px}.an-st small{font-size:11px;color:var(--mu)}
+.an-lg{display:flex;flex-wrap:wrap;gap:8px 12px;font-size:12px;color:var(--mu);margin:0 0 10px}.an-lg i{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-1px;margin-right:4px}
+.an-m h3{font-size:15px;margin:0 0 6px;display:flex;justify-content:space-between;align-items:baseline}.an-m h3 small{font-size:11.5px;color:#2f8a5b;font-weight:600}
+.an-g{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}.an-g .dw{font-size:10px;color:var(--mu);text-align:center;font-weight:700}
+.an-d{height:34px;border-radius:7px;font-size:12.5px;display:grid;place-items:center;position:relative;font-weight:600;border:0;padding:0;color:#16502f;background:#d9f0e3}
+.an-d.fo{color:#fff}.an-d.fe{box-shadow:inset 0 0 0 2px #13252c}.an-d.ab:after{content:"🎂";position:absolute;top:-5px;right:-3px;font-size:10px}.an-d.hj{outline:2px solid #0e4a5a;outline-offset:1px}.an-d.se{outline:3px solid #c26a00;outline-offset:1px}
 .cd{background:var(--card);border:1px solid var(--ln);border-radius:14px;padding:12px;margin-bottom:10px}
 .cd .top{display:flex;justify-content:space-between;gap:8px}.cd .top b{font-size:15.5px}.cd .top span{color:var(--mu);font-size:12.5px;white-space:nowrap}
 .cd .sub{color:var(--mu);font-size:13px}.cd p{margin:6px 0 0;font-size:14px;overflow-wrap:anywhere}
@@ -145,7 +151,7 @@ nav .n.on{display:grid}
  </section>
 <section class="sec" id="s-ag">
   <div class="hd"><span id="agInfo">Carregando…</span><button type="button" class="bt p" id="agNovo" style="flex:none;padding:7px 14px">+ Novo</button></div>
-  <div class="chips" id="agF"><button type="button" data-f="pro" class="on">Próximos</button><button type="button" data-f="rea">Realizados</button><button type="button" data-f="mes">Gastos do mês</button><button type="button" data-f="pas">✈️ Passagens</button></div>
+  <div class="chips" id="agF"><button type="button" data-f="pro" class="on">Próximos</button><button type="button" data-f="ano">📆 Ano</button><button type="button" data-f="rea">Realizados</button><button type="button" data-f="mes">Gastos do mês</button><button type="button" data-f="pas">✈️ Passagens</button></div>
   <div id="agAv"></div>
   <div id="agForm"></div>
   <div id="agL"></div>
@@ -359,6 +365,7 @@ const agCusto=x=>(+x.valor_passagem||0)+(+x.valor_hospedagem||0);
 function agPinta(){const H=hoje(),A=maisDias(1);
   document.querySelectorAll('#agF button').forEach(b=>b.classList.toggle('on',b.dataset.f===AGF));
   if(AGF==='pas'){$('agAv').innerHTML=psAvisos();psPinta();return;}
+  if(AGF==='ano'){$('agAv').innerHTML='';anoPinta();return;}
   const prox=AG.filter(x=>x.status!=='realizado'&&x.status!=='cancelado'&&(x.data_volta||x.data_ida)>=H);
   const atras=AG.filter(x=>x.status!=='realizado'&&x.status!=='cancelado'&&(x.data_volta||x.data_ida)<H);
   const av=prox.filter(x=>x.data_ida===H||x.data_ida===A);
@@ -413,6 +420,37 @@ function agForm(x){x=x||{tipo:'visita',quem_paga:'fc',status:'a_confirmar'};cons
     if(r.error){$('fSalva').disabled=false;$('fMsg').className='st er';$('fMsg').textContent='⚠ '+r.error.message;return;}
     $('agForm').innerHTML='';AGF='pro';agCarregar();};
   $('agForm').scrollIntoView({behavior:'smooth',block:'start'});}
+/* ===== 📆 Ano · calendário anual em casa × viagens (26/11/2026) · lido ao vivo da fc_agenda ===== */
+let ANOY=2027,ANOSEL=null;
+const ANCOR=c=>{c=(c||'').toLowerCase();return c.includes('cuiab')?'#3b7dd8':c.includes('manaus')?'#e0782f':c.includes('serra')?'#8a5cc7':c.includes('florian')?'#d24b4b':'#0e7c86';};
+function anoDias(y){const D={};AG.filter(x=>x.status!=='cancelado'&&x.data_ida).forEach(x=>{const L=diasEntre(x.data_ida,x.data_volta||x.data_ida);
+  L.forEach((d,i)=>{if(+d.slice(0,4)!==y)return;const s=L.length===1?'um':i===0?'ida':i===L.length-1?'volta':'fora';(D[d]=D[d]||[]).push({s,x});});});return D;}
+function anoTexto(d,D){const v=D[d]||[];let t=`<b>${SEM[new Date(d+'T12:00').getDay()]}, ${dBR(d)}</b> — `;
+  t+=v.length?v.map(({s,x})=>{const o=(x.cidade||x.cliente);return s==='ida'?`ida para ${h(o)} (${h(x.cliente)})`:s==='volta'?`volta de ${h(o)} para casa`:s==='um'?`${AGT[x.tipo][1].toLowerCase()} · ${h(x.cliente)}`:`fora · ${h(o)} (${h(x.cliente)})`;}).join(' + '):'em casa, com a família';
+  marca(d).forEach(m=>t+=` · ${m.b?'🎂 ':'🗓 '}${h(m.t)}`);
+  const ag=v.map(z=>z.x).filter((x,i,a)=>a.indexOf(x)===i);
+  return t+(ag.length?`<div class="bts" style="margin-top:8px">${ag.map(x=>`<button class="bt n" type="button" data-anab="${x.id}">Abrir ${h(x.cidade||x.cliente)} ${dBR(x.data_ida)}</button>`).join('')}</div>`:'');}
+function anoPinta(){const y=ANOY,D=anoDias(y),H=hoje(),M=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  let casa=0,meio=0,fora=0,html='';
+  for(let m=0;m<12;m++){const f=new Date(y,m,1),n=new Date(y,m+1,0).getDate();let c='',em=0;
+    'DSTQQSS'.split('').forEach(k=>c+=`<div class="dw">${k}</div>`);for(let i=0;i<f.getDay();i++)c+='<div></div>';
+    for(let d=1;d<=n;d++){const k=iso(new Date(y,m,d)),v=D[k]||[],mk=marca(k);let st='',cl='';
+      if(!v.length){casa++;em++;}else{const a=v[0],cor=ANCOR(a.x.cidade||a.x.cliente);
+        if(a.s==='fora'||a.s==='um'||v.length>1){fora++;cl='fo';st=`background:${cor}`;}
+        else if(a.s==='ida'){meio++;st=`background:linear-gradient(135deg,#d9f0e3 50%,${cor} 50%)`;}
+        else{meio++;st=`background:linear-gradient(135deg,${cor} 50%,#d9f0e3 50%)`;}}
+      if(mk.some(z=>!z.b))cl+=' fe';if(mk.some(z=>z.b))cl+=' ab';if(k===H)cl+=' hj';if(k===ANOSEL)cl+=' se';
+      c+=`<button type="button" class="an-d ${cl}" style="${st}" data-dia="${k}">${d}</button>`;}
+    html+=`<div class="cd an-m"><h3>${M[m]}<small>${em} dias em casa</small></h3><div class="an-g">${c}</div></div>`;}
+  const nv=AG.filter(x=>x.status!=='cancelado'&&x.data_ida&&+x.data_ida.slice(0,4)===y).length;
+  $('agInfo').textContent=nv+' compromisso'+(nv===1?'':'s')+' em '+y;
+  $('agL').innerHTML=`<div class="bts" style="margin:0 0 10px"><button class="bt n" type="button" data-ano="-1">‹</button><div style="flex:3;text-align:center;align-self:center;font-weight:700">${y}</div><button class="bt n" type="button" data-ano="1">›</button></div>
+   <div class="an-st"><div><b style="color:#2f8a5b">${casa}</b><small>dias em casa</small></div><div><b>${meio}</b><small>dias de viagem</small></div><div><b>${fora}</b><small>dias fora</small></div></div>
+   <div class="an-lg"><span><i style="background:#d9f0e3;border:1px solid #2f8a5b"></i>Em casa</span><span><i style="background:linear-gradient(135deg,#d9f0e3 50%,#5d7078 50%)"></i>Ida/volta</span><span><i style="background:#3b7dd8"></i>Cuiabá</span><span><i style="background:#e0782f"></i>Manaus</span><span><i style="background:#8a5cc7"></i>Serra Talhada</span><span><i style="background:#d24b4b"></i>Florianópolis</span><span><i style="background:#0e7c86"></i>Outros</span><span><i style="box-shadow:inset 0 0 0 2px #13252c"></i>Feriado</span><span>🎂 Aniversário</span></div>
+   <div class="cd" id="anDet" style="font-size:14px">${ANOSEL&&+ANOSEL.slice(0,4)===y?anoTexto(ANOSEL,D):'Toque num dia para ver o detalhe.'}</div>${html}`;}
+$('agL').addEventListener('click',e=>{const a=e.target.closest('[data-ano]');if(a){ANOY+=+a.dataset.ano;ANOSEL=null;anoPinta();return;}
+  const d=e.target.closest('[data-dia]');if(d){ANOSEL=d.dataset.dia;anoPinta();$('anDet').scrollIntoView({behavior:'smooth',block:'center'});return;}
+  const o=e.target.closest('[data-anab]');if(o){const x=AG.find(i=>i.id===o.dataset.anab);AGF='pro';agPinta();if(x)agForm(x);}});
 $('agNovo').onclick=()=>agForm();
 $('agF').addEventListener('click',e=>{const b=e.target.closest('[data-f]');if(!b)return;AGF=b.dataset.f;agPinta();});
 $('agL').addEventListener('click',async e=>{const m=e.target.closest('[data-mes]');if(m){const [y,mo]=AGMES.split('-').map(Number);const d=new Date(y,mo-1+(+m.dataset.mes),1);AGMES=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');agPinta();return;}
